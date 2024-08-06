@@ -16,11 +16,11 @@ Deprecation Notes
 
   :meth:`qiskit_ibm_runtime.RuntimeJob.program_id` is deprecated and will be replaced by
   :meth:`qiskit_ibm_runtime.RuntimeJob.primitive_id`. (`1238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1238>`__)
-- The ``backend`` argument in `Sampler <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-the-qiskit-runtime-sampler>`__ 
-  and `Estimator <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-qiskit-runtime-estimator>`__ has been deprecated. 
+- The ``backend`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has been deprecated. 
   Please use ``mode`` instead.
-  The ``session`` argument in `Sampler <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-the-qiskit-runtime-sampler>`__ 
-  and `Estimator <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
+  The ``session`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
   Please use ``mode`` instead. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
 - :meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
   :meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.

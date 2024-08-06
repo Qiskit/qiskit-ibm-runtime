@@ -17,7 +17,7 @@ New Features
    allows for different execution modes. Batch mode is now supported
    through ``Batch``, and `Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
    will work the same as way as before. Please see
-   `run/sessions <https://docs.quantum.ibm.com/run/sessions>`__ for more information.
+   `run/sessions <https://docs.quantum.ibm.com/guides/sessions>`__ for more information.
 
    Note that ``Session`` and ``Batch`` created from
    ``qiskit-ibm-runtime`` prior to this release will no longer be
@@ -42,9 +42,9 @@ Deprecation Notes
 
 -  Circuits that do not match the target hardware definition will no
    longer be supported after March 1, 2024. See the transpilation
-   documentation (`transpile <https://docs.quantum.ibm.com/transpile>`__) for instructions to
+   documentation (`transpile <https://docs.quantum.ibm.com/guides/transpile>`__) for instructions to
    transform circuits and the primitive examples
-   (`run/primitives-examples <https://docs.quantum.ibm.com/run/primitives-examples>`__) to see this
+   (`run/primitives-examples <https://docs.quantum.ibm.com/guides/primitives-examples>`__) to see this
    coupled with operator transformations.
 
 Bug Fixes
