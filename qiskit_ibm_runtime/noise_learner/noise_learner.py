@@ -110,7 +110,8 @@ class NoiseLearner:
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
 
-            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`__
+            Refer to the
+            `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`__
             for more information about the execution modes.
 
         options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be

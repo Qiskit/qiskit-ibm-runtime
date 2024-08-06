@@ -122,7 +122,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 * A :class:`Session` if you are using session execution mode.
                 * A :class:`Batch` if you are using batch execution mode.
 
-                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
+                Refer to the
+                `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
                 for more information about the ``Execution modes``.
 
             backend: (DEPRECATED) Backend to run the primitive. This can be a backend name
