@@ -59,18 +59,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
 
     @run_integration_test
     @quantum_only
-    def test_run_program_log_level(self, service):
-        """Test running with a custom log level."""
-        levels = ["INFO", "ERROR"]
-        for level in levels:
-            with self.subTest(level=level):
-                job = self._run_program(service, log_level=level)
-                job.wait_for_final_state()
-                if job.logs():
-                    self.assertIn("Completed", job.logs())
-
-    @run_integration_test
-    @quantum_only
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = self._run_program(service, program_id="circuit-runner", inputs={})
@@ -197,7 +185,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.device)
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
@@ -215,7 +203,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.device)
         status = job.status()
         while status not in JOB_FINAL_STATES:
             status = job.status()

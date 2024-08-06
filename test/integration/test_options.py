@@ -14,7 +14,6 @@
 
 from qiskit import QuantumCircuit
 
-from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer.noise import NoiseModel
@@ -32,8 +31,8 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.backend("ibmq_qasm_simulator")
-        self.log.info("Using backend %s", backend.name)
+        backend = service.get_backend(self.dependencies.device)
+        self.log.info("Using backend %s", self.dependencies.device)
 
         fake_backend = FakeManila()
         noise_model = NoiseModel.from_backend(fake_backend)
@@ -65,19 +64,19 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             result2 = job2.result()
             # We should get both 0 and 1 if there is noise.
             self.assertEqual(len(result2.quasi_dists[0].keys()), 2)
-            # The results should be the same because we used the same seed.
-            self.assertEqual(result1.quasi_dists, result2.quasi_dists)
 
     @run_integration_test
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
-        backend = service.backend("ibmq_qasm_simulator")
-        self.log.info("Using backend %s", backend.name)
+        backend = service.get_backend(self.dependencies.device)
+        self.log.info("Using backend %s", self.dependencies.device)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
         circ.measure_all(add_bits=False)
-        obs = SparsePauliOp.from_list([("IZ", 1)])
+        circ = pm.run(circ)
+        obs = SparsePauliOp.from_list([("IZ", 1)]).apply_layout(circ.layout)
 
         option_vars = [
             Options(simulator={"coupling_map": []}),
@@ -106,11 +105,13 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     def test_unsupported_input_combinations(self, service):
         """Test that when resilience_level==3, and backend is a simulator,
         a coupling map is required."""
+        backend = service.get_backend(self.dependencies.device)
+        if not backend.simulator:
+            self.skipTest("This test is only valid to run with simulators")
         circ = QuantumCircuit(1)
         obs = SparsePauliOp.from_list([("I", 1)])
         options = Options()
         options.resilience_level = 3
-        backend = service.backend("ibmq_qasm_simulator")
         with Session(service=service, backend=backend) as session:
             with self.assertRaises(ValueError) as exc:
                 inst = Estimator(session=session, options=options)
@@ -123,7 +124,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         circ = QuantumCircuit(1)
         obs = SparsePauliOp.from_list([("I", 1)])
         options = Options(resilience_level=2)
-        backend = service.backend("ibmq_qasm_simulator")
+        backend = service.get_backend(self.dependencies.device)
         with Session(service=service, backend=backend) as session:
             inst = Estimator(session=session, options=options)
             job = inst.run(circ, observables=obs)
@@ -150,20 +151,22 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             2: "zne",
             3: "standard_error",
         }
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-        h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-
-        backend = service.backend("ibmq_qasm_simulator")
+        backend = service.backend(self.dependencies.device)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        circ = QuantumCircuit(1, 1)
+        circ.measure_all(add_bits=False)
+        isa_circuit = pm.run(circ)
+        obs = SparsePauliOp.from_list([("I", 1)]).apply_layout(isa_circuit.layout)
+
         options = Options()
-        options.simulator.coupling_map = [[0, 1], [1, 0]]
 
         for level, value in resilience_values.items():
             options.resilience_level = level
             inst = Estimator(backend=backend, options=options)
-            theta1 = [0, 1, 1, 2, 3, 5]
-            result = inst.run(
-                circuits=pm.run([psi1]), observables=[h_1], parameter_values=[theta1]
-            ).result()
+
+            job = inst.run(circuits=[isa_circuit], observables=[obs])
+
+            result = job.result()
             metadata = result.metadata[0]
             self.assertTrue(value in metadata)

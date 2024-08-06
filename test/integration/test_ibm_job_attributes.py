@@ -49,7 +49,7 @@ class TestIBMJobAttributes(IBMTestCase):
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
-        cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
+        cls.sim_backend = dependencies.service.backend(dependencies.device)
         cls.bell = transpile(bell(), cls.sim_backend)
         sampler = Sampler(backend=cls.sim_backend)
         cls.sim_job = sampler.run([cls.bell])
