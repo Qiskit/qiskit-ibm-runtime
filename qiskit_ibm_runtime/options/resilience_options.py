@@ -17,6 +17,7 @@ from dataclasses import asdict
 
 from pydantic import model_validator, Field
 
+from ..utils.noise_learner_result import LayerError
 from .utils import Unset, UnsetType, Dict, primitive_dataclass
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .zne_options import ZneOptions
@@ -65,6 +66,10 @@ class ResilienceOptionsV2:
 
         layer_noise_learning: Layer noise learning options.
             See :class:`LayerNoiseLearningOptions` for all options.
+
+        layer_noise_model: A sequence of :class:`LayerError` objects.
+            If present, all the mitigation strategies that require learning the noise will skip the
+            noise learning stage, and will use these :class:`LayerError`\\s instead.
     """
 
     measure_mitigation: Union[UnsetType, bool] = Unset
