@@ -240,9 +240,15 @@ class QiskitRuntimeService:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
                 account = AccountManager.get(filename=filename, name=name, channel=channel)
         elif any([token, url]):
-            # Let's not infer based on these attributes as they may change in the future.
-            raise ValueError(
-                "'channel' is required if 'token', or 'url' is specified but 'name' is not."
+            logger.warning("No channel given, using custom url.")
+            account = Account.create_account(
+                channel=None,
+                token=token,
+                url=url,
+                instance=instance,
+                proxies=proxies,
+                verify=verify_,
+                channel_strategy=channel_strategy,
             )
 
         # channel is not defined yet, get it from the AccountManager
@@ -261,7 +267,6 @@ class QiskitRuntimeService:
 
         # ensure account is valid, fail early if not
         account.validate()
-
         return account
 
     def _validate_channel_strategy(self) -> None:
