@@ -12,7 +12,7 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, Union, Optional
+from typing import List, Sequence, Literal, Union, Optional
 from dataclasses import asdict
 
 from pydantic import model_validator, Field
@@ -67,9 +67,11 @@ class ResilienceOptionsV2:
         layer_noise_learning: Layer noise learning options.
             See :class:`LayerNoiseLearningOptions` for all options.
 
-        layer_noise_model: A sequence of :class:`LayerError` objects.
-            If present, all the mitigation strategies that require learning the noise will skip the
-            noise learning stage, and will use these :class:`LayerError`\\s instead.
+        layer_noise_model: A list of :class:`LayerError` objects.
+            If set, all the mitigation strategies that require noise data (e.g., PEC) skip the
+            noise learning stage, and instead gather the required information from
+            ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
+            are treated as noiseless and their noise is not mitigated.
     """
 
     measure_mitigation: Union[UnsetType, bool] = Unset
@@ -83,6 +85,7 @@ class ResilienceOptionsV2:
     layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
         default_factory=LayerNoiseLearningOptions
     )
+    layer_noise_model: Union[UnsetType, List[LayerError]] = Unset
 
     @model_validator(mode="after")
     def _validate_options(self) -> "ResilienceOptionsV2":
