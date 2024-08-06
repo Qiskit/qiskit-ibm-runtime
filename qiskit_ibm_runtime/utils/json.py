@@ -277,7 +277,7 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, LayerError):
-            out_val = {"circuit": obj.circuit, "qubits": obj.qubits, "errors": obj.errors}
+            out_val = {"circuit": obj.circuit, "qubits": obj.qubits, "errors": obj.error}
             return {"__type__": "LayerError", "__value__": out_val}
         if isinstance(obj, PauliLindbladError):
             out_val = {"paulis": obj.paulis, "rates": obj.rates}

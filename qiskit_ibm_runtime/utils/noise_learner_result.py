@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence, Union
+from typing import Any, Iterator, Sequence
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -56,7 +56,7 @@ class PauliLindbladError:
         return self._rates
 
     @property
-    def num_qubits(self):
+    def num_qubits(self) -> int:
         r"""
         The number of qubits in this :class:`~.PauliLindbladError`.
         """
@@ -91,23 +91,30 @@ class LayerError:
     @property
     def circuit(self) -> QuantumCircuit:
         r"""
-        The circuit in this :class:`LayerError`.
+        The circuit in this :class:`.~LayerError`.
         """
         return self._circuit
 
     @property
     def qubits(self) -> Sequence[int]:
         r"""
-        The qubits in this :class:`LayerError`.
+        The qubits in this :class:`.~LayerError`.
         """
         return self._qubits
 
     @property
     def error(self) -> PauliLindbladError:
         r"""
-        The error channel in this :class:`LayerError`.
+        The error channel in this :class:`.~LayerError`.
         """
         return self._error
+
+    @property
+    def num_qubits(self) -> int:
+        r"""
+        The number of qubits in this :class:`~.LayerError`.
+        """
+        return len(self.qubits)
 
     def __repr__(self) -> str:
         ret = f"circuit={repr(self.circuit)}, qubits={self.qubits}, error={self.error})"

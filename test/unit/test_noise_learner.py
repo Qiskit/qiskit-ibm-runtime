@@ -16,9 +16,8 @@ from ddt import ddt
 
 from qiskit import QuantumCircuit, transpile
 
-from qiskit_ibm_runtime import EstimatorOptions
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.options import NoiseLearnerOptions
+from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
@@ -26,8 +25,8 @@ from ..utils import combine, get_mocked_backend
 
 
 @ddt
-class TestEstimatorV2(IBMTestCase):
-    """Class for testing the Estimator class."""
+class TestNoiseLearner(IBMTestCase):
+    """Class for testing the NoiseLearner class."""
 
     def setUp(self):
         super().setUp()
