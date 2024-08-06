@@ -12,9 +12,7 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
-from ddt import ddt
-
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
@@ -22,7 +20,6 @@ from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, La
 from ..ibm_test_case import IBMTestCase
 
 
-@ddt
 class TestPauliLindbladError(IBMTestCase):
     """Class for testing the PauliLindbladError class."""
 

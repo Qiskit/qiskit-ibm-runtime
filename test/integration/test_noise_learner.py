@@ -14,7 +14,6 @@
 
 from copy import deepcopy
 from unittest import SkipTest
-import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JobStatus
