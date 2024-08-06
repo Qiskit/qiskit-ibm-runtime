@@ -14,7 +14,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator, List, Sequence
+from numpy.typing import NDArray
+import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -26,32 +28,33 @@ class PauliLindbladError:
     model.
 
     Args:
-        paulis: A list of the Pauli generators for the error channel.
-        rates: A list of the rates for the Pauli-Lindblad ``paulis``.
+        generators: A list of the Pauli Lindblad generators for the error channel.
+        rates: A list of the rates for the Pauli-Lindblad ``generators``.
 
     Raises:
-        ValueError: If ``paulis`` and ``rates`` have different lengths.
+        ValueError: If ``generators`` and ``rates`` have different lengths.
     """
 
-    def __init__(self, paulis: PauliList, rates: Sequence[float]) -> None:
-        if len(paulis) != len(rates):
-            msg = f"``paulis`` has length {len(paulis)} but ``rates`` has length {len(rates)}."
+    def __init__(self, generators: PauliList, rates: Sequence[float]) -> None:
+        if len(generators) != len(rates):
+            msg = f"``generators`` has length {len(generators)} "
+            msg += f"but ``rates`` has length {len(rates)}."
             raise ValueError(msg)
 
-        self._paulis = paulis
-        self._rates = rates
+        self._generators = generators
+        self._rates = np.asarray(rates, dtype=float)
 
     @property
-    def paulis(self) -> PauliList:
+    def generators(self) -> PauliList:
         r"""
-        The Pauli generators of this :class:`~.PauliLindbladError`.
+        The Pauli Lindblad generators of this :class:`~.PauliLindbladError`.
         """
-        return self._paulis
+        return self._generators
 
     @property
-    def rates(self) -> Sequence[float]:
+    def rates(self) -> NDArray[np.float64]:
         r"""
-        The rates of this :class:`~.PauliLindbladError`.
+        The Lindblad generator rates of this quantum error.
         """
         return self._rates
 
@@ -60,10 +63,10 @@ class PauliLindbladError:
         r"""
         The number of qubits in this :class:`~.PauliLindbladError`.
         """
-        return self.paulis.num_qubits
+        return self.generators.num_qubits
 
     def __repr__(self) -> str:
-        return f"PauliLindbladError(paulis={self.paulis}, rates={self.rates})"
+        return f"PauliLindbladError(generators={self.generators}, rates={self.rates.tolist()})"
 
 
 class LayerError:
@@ -81,12 +84,12 @@ class LayerError:
     def __init__(
         self, circuit: QuantumCircuit, qubits: Sequence[int], error: PauliLindbladError
     ) -> None:
-        if len({circuit.num_qubits, len(qubits), error.num_qubits}) != 1:
-            raise ValueError("Mistmatching numbers of qubits.")
-
         self._circuit = circuit
-        self._qubits = qubits
+        self._qubits = list(qubits)
         self._error = error
+
+        if len({self.circuit.num_qubits, len(self.qubits), self.error.num_qubits}) != 1:
+            raise ValueError("Mistmatching numbers of qubits.")
 
     @property
     def circuit(self) -> QuantumCircuit:
@@ -96,7 +99,7 @@ class LayerError:
         return self._circuit
 
     @property
-    def qubits(self) -> Sequence[int]:
+    def qubits(self) -> List[int]:
         r"""
         The qubits in this :class:`.~LayerError`.
         """
@@ -135,7 +138,7 @@ class NoiseLearnerResult:
         self._metadata = metadata.copy() or {}
 
     @property
-    def data(self) -> Sequence[LayerError]:
+    def data(self) -> List[LayerError]:
         """The data of this noise learner result."""
         return self._data
 

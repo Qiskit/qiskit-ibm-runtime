@@ -26,10 +26,10 @@ class TestPauliLindbladError(IBMTestCase):
     def setUp(self):
         super().setUp()
 
-        # A set of paulis
-        paulis1 = PauliList(["X", "Z"])
-        paulis2 = PauliList(["XX", "ZZ", "IY"])
-        self.paulis = [paulis1, paulis2]
+        # A set of generators
+        generators1 = PauliList(["X", "Z"])
+        generators2 = PauliList(["XX", "ZZ", "IY"])
+        self.generators = [generators1, generators2]
 
         # A set of rates
         rates1 = [0.1, 0.2]
@@ -38,16 +38,16 @@ class TestPauliLindbladError(IBMTestCase):
 
     def test_valid_inputs(self):
         """Test PauliLindbladError with valid inputs."""
-        for paulis, rates in zip(self.paulis, self.rates):
-            error = PauliLindbladError(paulis, rates)
-            self.assertEqual(error.paulis, paulis)
-            self.assertEqual(error.rates, rates)
-            self.assertEqual(error.num_qubits, paulis.num_qubits)
+        for generators, rates in zip(self.generators, self.rates):
+            error = PauliLindbladError(generators, rates)
+            self.assertEqual(error.generators, generators)
+            self.assertEqual(error.rates.tolist(), rates)
+            self.assertEqual(error.num_qubits, generators.num_qubits)
 
     def test_invalid_inputs(self):
         """Test PauliLindbladError with invalid inputs."""
         with self.assertRaises(ValueError):
-            PauliLindbladError(self.paulis[0], self.rates[1])
+            PauliLindbladError(self.generators[0], self.rates[1])
 
 
 class TestLayerError(IBMTestCase):
