@@ -317,7 +317,7 @@ class BasePrimitiveV1(ABC):
             "The Sampler and Estimator V1 primitives have been deprecated",
             "0.23.0",
             "Please use the V2 Primitives. See the `V2 migration guide "
-            "<https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
+            "<https://docs.quantum.ibm.com/migration-guides/v2-primitives>`_. for more details",
             3,
         )
 

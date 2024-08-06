@@ -71,7 +71,7 @@ class Batch(Session):
                 print(f"Counts for the first PUB: {pub_result.data.cr.get_counts()}")
 
     For more details, check the "`Run jobs in a batch
-    <https://docs.quantum.ibm.com/run/run-jobs-batch>`_" tutorial.
+    <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" tutorial.
     """
 
     def __init__(
@@ -95,7 +95,7 @@ class Batch(Session):
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://docs.quantum.ibm.com/run/max-execution-time>`_.
+                <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
 
         Raises:
             ValueError: If an input value is invalid.
