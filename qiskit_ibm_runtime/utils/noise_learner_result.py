@@ -52,13 +52,13 @@ class PauliLindbladError:
     """
 
     def __init__(self, generators: PauliList, rates: Sequence[float]) -> None:
-        if len(generators) != len(rates):
-            msg = f"``generators`` has length {len(generators)} "
-            msg += f"but ``rates`` has length {len(rates)}."
-            raise ValueError(msg)
-
         self._generators = generators
         self._rates = np.asarray(rates, dtype=float)
+
+        if len(generators) != len(self._rates):
+            msg = f"``generators`` has length {len(generators)} "
+            msg += f"but ``rates`` has length {len(self.rates)}."
+            raise ValueError(msg)
 
     @property
     def generators(self) -> PauliList:
