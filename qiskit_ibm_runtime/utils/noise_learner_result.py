@@ -30,8 +30,8 @@ class PauliLindbladError:
     :math:`D_P(ρ) = P ρ P - ρ`, where :math:`P_j` are N-qubit :class:`~.Pauli` operators.
 
     The list of Pauli generator terms are stored as a :class:`~.PauliList` and can be
-    accessed via the :attr:`generators` attribute. The array of dissipator rates
-    :math:`r_j` can be accessed via the :attr:`rates` attribute.
+    accessed via the :attr:`~generators` attribute. The array of dissipator rates
+    :math:`r_j` can be accessed via the :attr:`~rates` attribute.
 
     The equivalent Pauli error channel can be constructed as a composition
     of single-Pauli channel terms
