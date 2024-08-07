@@ -55,10 +55,11 @@ class PauliLindbladError:
         self._generators = generators
         self._rates = np.asarray(rates, dtype=float)
 
-        if len(generators) != len(self._rates):
-            msg = f"``generators`` has length {len(generators)} "
-            msg += f"but ``rates`` has length {len(self.rates)}."
-            raise ValueError(msg)
+        if (len(generators),) != self._rates.shape:
+            raise ValueError(
+                f"``generators`` has length {len(generators)} "
+                f"but ``rates`` has shape {self._rates.shape}."
+            )
 
     @property
     def generators(self) -> PauliList:
