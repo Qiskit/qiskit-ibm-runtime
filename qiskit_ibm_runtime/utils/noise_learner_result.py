@@ -42,8 +42,7 @@ class PauliLindbladError:
         E = e^{\sum_j r_j D_{P_j}} = \prod_j e^{r_j D_{P_j}}
         = prod_j \left( (1 - p_j) S_I + p_j S_{P_j} \right)
 
-    where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}`, see Supplementary Materials Sec. III in ref.
-    [1].
+    where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}` [1].
 
     Args:
         generators: A list of the Pauli Lindblad generators for the error channel.
