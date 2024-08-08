@@ -42,7 +42,8 @@ class PauliLindbladError:
         E = e^{\sum_j r_j D_{P_j}} = \prod_j e^{r_j D_{P_j}}
         = prod_j \left( (1 - p_j) S_I + p_j S_{P_j} \right)
 
-    where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}`.
+    where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}`, see Supplementary Materials Sec. III in ref.
+    [1].
 
     Args:
         generators: A list of the Pauli Lindblad generators for the error channel.
@@ -50,6 +51,12 @@ class PauliLindbladError:
 
     Raises:
         ValueError: If ``generators`` and ``rates`` have different lengths.
+
+    References:
+        1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
+           cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
+           Nature Physics volume 19, pages1116–1121 (2023).
+           `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
     def __init__(self, generators: PauliList, rates: Sequence[float]) -> None:
