@@ -145,7 +145,7 @@ class LayerError:
         """
         issue_deprecation_msg(
             "The ``generators`` property is deprecated",
-            "0.26.1",
+            "0.27.0",
             "Instead, you can access the generators through the ``error`` property.",
             1,
         )
@@ -158,7 +158,7 @@ class LayerError:
         """
         issue_deprecation_msg(
             "The ``rates`` property is deprecated",
-            "0.26.1",
+            "0.27.0",
             "Instead, you can access the rates through the ``error`` property.",
             1,
         )
