@@ -38,7 +38,7 @@ class Batch(Session):
           if a job's results do not meet your expectations, you can cancel the remaining jobs, or
           simply re-submit that individual job and avoid re-running the entire workload.
 
-    Batch mode can shorten processing time if all jobs are at the outset. 
+    Batch mode can shorten processing time if all jobs are provided at the outset.
     If you want to submit iterative jobs, use ``session`` mode instead.
 
     You can open a Qiskit Runtime batch by using this ``Batch`` class, then submit jobs
