@@ -1,1 +1,0 @@
-Added ``PauliLindbladError`` and ``LayerError`` classes to represent layers noise processes.
