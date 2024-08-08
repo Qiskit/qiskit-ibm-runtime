@@ -14,15 +14,14 @@
 
 from copy import deepcopy
 from unittest import SkipTest
-import numpy as np
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import PauliList
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.compiler import transpile
 
 from qiskit_ibm_runtime import RuntimeJob, Session
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
+from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
 from ..decorators import run_integration_test
@@ -145,17 +144,15 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         for datum in result.data:
             circuit = datum.circuit
             qubits = datum.qubits
-            generators = datum.generators
-            rates = datum.rates
+            error = datum.error
 
+            self.assertIsInstance(datum, LayerError)
             self.assertIsInstance(circuit, QuantumCircuit)
             self.assertIsInstance(qubits, list)
-            self.assertIsInstance(generators, PauliList)
-            self.assertIsInstance(rates, np.ndarray)
+            self.assertIsInstance(error, PauliLindbladError)
 
             self.assertEqual(circuit.num_qubits, len(qubits))
-            self.assertEqual(circuit.num_qubits, generators.num_qubits)
-            self.assertEqual(len(generators), len(rates))
+            self.assertEqual(circuit.num_qubits, error.num_qubits)
 
         metadata = deepcopy(result.metadata)
         self.assertEqual(metadata.pop("backend", None), self.backend.name)
