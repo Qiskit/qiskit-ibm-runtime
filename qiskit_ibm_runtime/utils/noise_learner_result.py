@@ -141,7 +141,7 @@ class LayerError:
     @property
     def generators(self) -> PauliList:
         r"""
-        The Pauli Lindblad generators of the error channel in this :class:`.~LayerError`.
+        (DEPRECATED) The Pauli Lindblad generators of the error channel in this :class:`.~LayerError`.
         """
         issue_deprecation_msg(
             "The ``generators`` property is deprecated",
@@ -154,7 +154,7 @@ class LayerError:
     @property
     def rates(self) -> NDArray[np.float64]:
         r"""
-        The Lindblad generator rates of the error channel in this :class:`.~LayerError`.
+        (DEPRECATED) The Lindblad generator rates of the error channel in this :class:`.~LayerError`.
         """
         issue_deprecation_msg(
             "The ``rates`` property is deprecated",
