@@ -12,16 +12,17 @@
 
 """Execution span classes."""
 
-from typing import Sequence, Union, Iterable
+from typing import Union, Iterable, Sequence, TypeVar
 from datetime import datetime
 from dataclasses import dataclass
 
 
-# The format accepted by ``numpy.ndarray.__getitem__()``.
+"""The format accepted by ``numpy.ndarray.__getitem__()``."""
 SliceType = tuple[Union[slice, int, list[int]], ...]
+ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
 
 
-@dataclass(frozen=True)  # TODO: add `slots=True` when we move to Python >= 3.10
+@dataclass(frozen=True, slots=True)
 class ExecutionSpan:
     """Stores an execution time span for a subset of job data."""
 
@@ -31,30 +32,29 @@ class ExecutionSpan:
     stop: datetime
     """The stop time of the span, in UTC."""
 
-    uuid: str
-    """A UUID for this execution.
+    data_slices: dict[int, SliceType]
+    r"""Which data have dependence on this execution span.
 
-    When execution spans from different pub results share a UUID, it indicates that their
-    executions occurred in the same hardware batch.
-    """
-
-    data_slice: SliceType
-    r"""Which data has dependence on this execution span.
-    
     Data from the primitives are array-based, with every field in a 
     :class:`~PubResult`\s :class:`~.DataBin` sharing the same base shape.
-    Therefore, the format of this field is the same format accepted by 
-    NumPy slicing, where the value indicates which slice of each field in the
+    Therefore, the format of this field is a mapping from pub indexes to 
+    the same format accepted by 
+    NumPy slicing, where each value indicates which slice of each field in the
     data bin depend on raw data collected during this execution span.
-
-    ```python
-    pub_result = job.result()[0]
-    data = pub_result.data
-
-    # this is the subset of data collected during this span
-    span_data = data.my_field[execution_span.data_slice]
-    ```
     """
+
+    @property
+    def duration(self) -> float:
+        return (self.stop - self.start).seconds
+
+    def contains_pub(self, pub_idx: int | Iterable[int]):
+        pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
+        return not pub_idx.isdisjoint(self.data_slices)
+
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpanT:
+        pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
+        slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
+        return ExecutionSpan(self.start, self.stop, slices)
 
 
 class ExecutionSpanCollection(Sequence[ExecutionSpan]):
