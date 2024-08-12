@@ -1,0 +1,7 @@
+0.27.1 (2024-08-12)
+===================
+
+New Features
+------------
+
+- Added logic to encode and decode ``PauliLindbladError`` and ``LayerError``. (`1853 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1853>`__)
