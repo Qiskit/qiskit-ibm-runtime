@@ -14,10 +14,12 @@
 
 from __future__ import annotations
 
+import os
 import math
 import copy
 import logging
 import warnings
+import pickle
 from dataclasses import asdict
 from typing import Callable, Dict, List, Literal, Optional, Union
 
@@ -36,6 +38,7 @@ from qiskit.utils import optionals
 from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
 from ..ibm_backend import IBMBackend
+from ..utils import RuntimeEncoder
 from ..runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
@@ -215,12 +218,14 @@ class QiskitRuntimeLocalService:
             )
         else:
             primitive_inputs = {"pubs": inputs.pop("pubs")}
-            return self._run_backend_primitive_v2(
+            job =  self._run_backend_primitive_v2(
                 backend=backend,
                 primitive=program_id,
                 options=inputs.get("options", {}),
                 inputs=primitive_inputs,
             )
+            self._save_job(job, inputs.get("options", {}).get('filename'))
+            return job
 
     def _run_aer_primitive_v1(
         self, primitive: Literal["sampler", "estimator"], options: dict, inputs: dict
@@ -344,3 +349,30 @@ class QiskitRuntimeLocalService:
             warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
 
         return primitive_inst.run(**inputs)
+    
+    def job(self, job_id: str) -> PrimitiveJob:
+        """"""
+        return
+    
+    def jobs() -> List[PrimitiveJob]:
+        """"""
+        return
+    
+    @staticmethod
+    def _save_job(job: PrimitiveJob, filename):
+        """Pickle and save job locally in the local_jobs folder.
+        
+        Args:
+            job: PrimitiveJob.
+            filename: file location to store job.
+        """
+        try:
+            job._prepare_dump()
+
+            file_path = filename or (f"{os.path.dirname(os.path.realpath(__file__))}/local_jobs")
+            os.makedirs(f"{file_path}", exist_ok=True)
+            with open(f"{file_path}/{job.job_id()}.pkl", "wb") as file:
+                pickle.dump(job, file)
+        except Exception as ex: # pylint: disable=broad-except
+            logger.warning('Unable to save job %s. %s', job.job_id(), ex)
+        
