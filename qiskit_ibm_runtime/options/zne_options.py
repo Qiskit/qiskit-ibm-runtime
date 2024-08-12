@@ -44,7 +44,7 @@ class ZneOptions:
 
         In particular, suppose an input pub has observable array shape ``obs_shape`` and parameter
         values shape ``par_shape``, with corresponding pub shape
-        ``shape=np.broadcast_shapes(obs_shape, par_shap)``. Then the corresponding pub result will
+        ``shape=np.broadcast_shapes(obs_shape, par_shape)``. Then the corresponding pub result will
         additionally contain:
 
         1. `pub_result.data.evs_extrapolated` and `pub_result.data.stds_extrapolated`,
