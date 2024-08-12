@@ -43,8 +43,9 @@ class ZneOptions:
         When ZNE options are enabled in the runtime estimator, additional data is returned.
 
         In particular, suppose an input pub has observable array shape ``obs_shape`` and parameter
-        values shape ``par_shape``, with corresponding pub shape ``shape``. Then the corresponding
-        pub result will additionally contain:
+        values shape ``par_shape``, with corresponding pub shape
+        ``shape=np.broadcast_shapes(obs_shape, par_shap)``. Then the corresponding pub result will
+        additionally contain:
 
         1. `pub_result.data.evs_extrapolated` and `pub_result.data.stds_extrapolated`,
             both with shape ``(*shape, num_extrapolators, num_evaluation_points)``, where
@@ -60,23 +61,12 @@ class ZneOptions:
            ``stds_noise_factors`` is derived from the spread over twirling samples, whereas
            ``ensemble_stds_noise_factors`` assumes only shot noise and no drift.
 
-        Metadata is formatted as follows:
-
-        - ``PrimitiveResult.metadata["resilience"]["zne"]``
-            - ``["extrapolator"]`` The specified extrapolators.
-            - ``["noise_factors"]`` The noise amplification factors that were used to inject noise.
-            - ``["extrapolated_noise_factors"]`` The extrapolation points corresponding to
-              ``num_evaluation_points`` mentioned above in (1).
-
-        - ``PubResult.metadata["resilience"]["zne"]["extrapolator"]`` which extrapolators were
-          used for this pub in particular.
-
         Technical note: for single observables with multiple basis terms it might turn out that
         multiple extrapolation methods are used in _the same_ expectation value, for example, ``XX``
         gets linearly extrapolated but ``XY`` gets exponentially extrapolated in the observable
-        ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (3) is
+        ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (2) is
         evaluated from heterogeneous fits by selecting the best fit for every individual distinct
-        term, whereas data from (2) is evaluated from forced homogenous fits, one for each provided
+        term, whereas data from (1) is evaluated from forced homogenous fits, one for each provided
         extrapolator. If your work requires a nuanced distinction in this regard, we presently
         recommend that you use single-term observables in addition to your multi-term observables.
 
@@ -96,6 +86,9 @@ class ZneOptions:
             * `"pea"` uses a technique called probabalistic error amplification (`PEA
               <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify
               noise.
+
+              When this option is selected, gate twirling will always be used whether or not it has
+              been enabled in the options.
 
               In this technique, the twirled noise model of each each unique layer of
               entangling gates in your ISA circuits is learned beforehand, see
