@@ -57,6 +57,7 @@ class TestPauliLindbladError(IBMTestCase):
             self.assertEqual(error1.generators, error2.generators)
             self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
+
 class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
