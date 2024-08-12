@@ -90,7 +90,7 @@ class PauliLindbladError:
         The number of qubits in this :class:`~.PauliLindbladError`.
         """
         return self.generators.num_qubits
-    
+
     @property
     def settings(self):
         """Return settings."""
@@ -175,7 +175,7 @@ class LayerError:
         The number of qubits in this :class:`~.LayerError`.
         """
         return len(self.qubits)
-    
+
     @property
     def settings(self):
         """Return settings."""
