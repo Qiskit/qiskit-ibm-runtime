@@ -92,7 +92,7 @@ class PauliLindbladError:
         return self.generators.num_qubits
 
     @property
-    def settings(self):
+    def settings(self) -> dict:
         """Return settings."""
         return {"generators": self.generators, "rates": self.rates}
 
@@ -177,7 +177,7 @@ class LayerError:
         return len(self.qubits)
 
     @property
-    def settings(self):
+    def settings(self) -> dict:
         """Return settings."""
         return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
 
