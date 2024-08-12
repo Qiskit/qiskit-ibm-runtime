@@ -388,7 +388,7 @@ class RuntimeDecoder(json.JSONDecoder):
                         settings=_cast_strings_keys_to_int(obj_val),
                     )
             if obj_type == "_json":
-                if obj["__module__"] == "qiskit.quantum_info.operators":
+                if obj["__module__"] == "qiskit_ibm_runtime.utils.noise_learner_result":
                     return _deserialize_from_json(
                         mod_name=obj["__module__"],
                         class_name=obj["__class__"],
