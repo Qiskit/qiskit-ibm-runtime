@@ -91,9 +91,8 @@ class PauliLindbladError:
         """
         return self.generators.num_qubits
 
-    @property
-    def settings(self) -> dict:
-        """Return settings."""
+    def _json(self) -> dict:
+        """Return a dictionary containing all the information to re-initialize this object."""
         return {"generators": self.generators, "rates": self.rates}
 
     def __repr__(self) -> str:
@@ -176,9 +175,8 @@ class LayerError:
         """
         return len(self.qubits)
 
-    @property
-    def settings(self) -> dict:
-        """Return settings."""
+    def _json(self) -> dict:
+        """Return a dictionary containing all the information to re-initialize this object."""
         return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
 
     def __repr__(self) -> str:

@@ -71,7 +71,6 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -154,6 +153,27 @@ def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -
     for name, clz in inspect.getmembers(mod, inspect.isclass):
         if name == class_name:
             return clz(**settings)
+    raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
+
+
+def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> Any:
+    """Deserialize an object from its ``_json`` dictionary.
+
+    Args:
+        mod_name: Name of the module.
+        class_name: Name of the class.
+        json_dict: json dictionary.
+
+    Returns:
+        Deserialized object.
+
+    Raises:
+        ValueError: If unable to find the class.
+    """
+    mod = importlib.import_module(mod_name)
+    for name, clz in inspect.getmembers(mod, inspect.isclass):
+        if name == class_name:
+            return clz(**json_dict)
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
@@ -307,6 +327,13 @@ class RuntimeEncoder(json.JSONEncoder):
                 "__class__": obj.__class__.__name__,
                 "__value__": _set_int_keys_flag(copy.deepcopy(obj.settings)),
             }
+        if hasattr(obj, "_json"):
+            return {
+                "__type__": "_json",
+                "__module__": obj.__class__.__module__,
+                "__class__": obj.__class__.__name__,
+                "__value__": _set_int_keys_flag(copy.deepcopy(obj._json())),
+            }
         if callable(obj):
             warnings.warn(f"Callable {obj} is not JSON serializable and will be set to None.")
             return None
@@ -353,12 +380,16 @@ class RuntimeDecoder(json.JSONDecoder):
                 return circuit.data[0][0]
             if obj_type == "settings":
                 if obj["__module__"].startswith(
-                    (
-                        "qiskit.quantum_info.operators",
-                        "qiskit_ibm_runtime.utils.noise_learner_result",
-                    )
+                    "qiskit.quantum_info.operators",
                 ):
                     return _deserialize_from_settings(
+                        mod_name=obj["__module__"],
+                        class_name=obj["__class__"],
+                        settings=_cast_strings_keys_to_int(obj_val),
+                    )
+            if obj_type == "_json":
+                if obj["__module__"] == "qiskit.quantum_info.operators":
+                    return _deserialize_from_json(
                         mod_name=obj["__module__"],
                         class_name=obj["__class__"],
                         settings=_cast_strings_keys_to_int(obj_val),
@@ -389,10 +420,6 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 return DataBin(shape=shape, **obj_val["fields"])
-            if obj_type == "LayerError":
-                return LayerError(**obj_val)
-            if obj_type == "PauliLindbladError":
-                return PauliLindbladError(**obj_val)
             if obj_type == "SamplerPubResult":
                 return SamplerPubResult(**obj_val)
             if obj_type == "PubResult":
