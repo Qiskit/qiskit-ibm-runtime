@@ -38,8 +38,8 @@ class Batch(Session):
           if a job's results do not meet your expectations, you can cancel the remaining jobs, or
           simply re-submit that individual job and avoid re-running the entire workload.
 
-    All jobs need to be provided at the outset. To submit iterative jobs, use the ``session``
-    mode instead.
+    Batch mode can shorten processing time if all jobs are provided at the outset.
+    If you want to submit iterative jobs, use ``session`` mode instead.
 
     You can open a Qiskit Runtime batch by using this ``Batch`` class, then submit jobs
     to one or more primitives.
@@ -71,7 +71,7 @@ class Batch(Session):
                 print(f"Counts for the first PUB: {pub_result.data.cr.get_counts()}")
 
     For more details, check the "`Run jobs in a batch
-    <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" tutorial.
+    <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" page.
     """
 
     def __init__(
