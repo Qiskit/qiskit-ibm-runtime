@@ -133,7 +133,7 @@ class OptionsV2(BaseOptions):
 
             Refer to the
             `Max execution time documentation
-            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
             for more information.
 
         environment: Options related to the execution environment. See
@@ -260,7 +260,7 @@ class Options(BaseOptions):
 
             Refer to the
             `Qiskit Runtime documentation
-            <https://docs.quantum.ibm.com/run/configure-error-mitigation>`_.
+            <https://docs.quantum.ibm.com/guides/configure-error-mitigation>`_.
             for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds, which is based
@@ -271,7 +271,7 @@ class Options(BaseOptions):
 
             Refer to the
             `Max execution time documentation
-            <https://docs.quantum.ibm.com/run/max-execution-time>`_.
+            <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
             for more information.
 
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
