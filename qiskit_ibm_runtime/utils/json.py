@@ -392,7 +392,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     return _deserialize_from_json(
                         mod_name=obj["__module__"],
                         class_name=obj["__class__"],
-                        settings=_cast_strings_keys_to_int(obj_val),
+                        json_dict=_cast_strings_keys_to_int(obj_val),
                     )
             if obj_type == "Result":
                 return Result.from_dict(obj_val)
