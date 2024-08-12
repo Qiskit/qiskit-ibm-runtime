@@ -49,6 +49,14 @@ class TestPauliLindbladError(IBMTestCase):
         with self.assertRaises(ValueError):
             PauliLindbladError(self.generators[0], self.rates[1])
 
+    def test_json_roundtrip(self):
+        """Tests a roundtrip with `_json`."""
+        for generators, rates in zip(self.generators, self.rates):
+            error1 = PauliLindbladError(generators, rates)
+            error2 = PauliLindbladError(**error1._json())
+            self.assertEqual(error1.generators, error2.generators)
+            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
+
 
 class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
@@ -97,3 +105,13 @@ class TestLayerError(IBMTestCase):
 
         with self.assertRaises(ValueError):
             LayerError(self.circuits[0], self.qubits[0], self.errors[1])
+
+    def test_json_roundtrip(self):
+        """Tests a roundtrip with `_json`."""
+        for circuit, qubits, error in zip(self.circuits, self.qubits, self.errors):
+            layer_error1 = LayerError(circuit, qubits, error)
+            layer_error2 = LayerError(**layer_error1._json())
+            self.assertEqual(layer_error1.circuit, layer_error2.circuit)
+            self.assertEqual(layer_error1.qubits, layer_error2.qubits)
+            self.assertEqual(layer_error1.generators, layer_error2.generators)
+            self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
