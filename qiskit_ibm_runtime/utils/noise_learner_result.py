@@ -10,7 +10,17 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""NoiseLearner result class"""
+"""
+==================================================================================
+NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`)
+==================================================================================
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   PauliLindbladError
+   LayerError
+"""
 
 from __future__ import annotations
 
