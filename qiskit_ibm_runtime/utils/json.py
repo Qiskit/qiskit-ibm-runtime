@@ -171,9 +171,8 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> A
         ValueError: If unable to find the class.
     """
     mod = importlib.import_module(mod_name)
-    for name, clz in inspect.getmembers(mod, inspect.isclass):
-        if name == class_name:
-            return clz(**json_dict)
+    if clz := getattr(mod, class_name, None):
+        return clz(**json_dict)
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
