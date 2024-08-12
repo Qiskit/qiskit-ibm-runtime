@@ -276,12 +276,6 @@ class RuntimeEncoder(json.JSONEncoder):
                 "fields": dict(obj.items()),
             }
             return {"__type__": "DataBin", "__value__": out_val}
-        if isinstance(obj, LayerError):
-            out_val = {"circuit": obj.circuit, "qubits": obj.qubits, "error": obj.error}
-            return {"__type__": "LayerError", "__value__": out_val}
-        if isinstance(obj, PauliLindbladError):
-            out_val = {"generators": obj.generators, "rates": obj.rates}
-            return {"__type__": "PauliLindbladError", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
             return (
                 obj.circuit,
@@ -357,14 +351,15 @@ class RuntimeDecoder(json.JSONDecoder):
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
-            if obj_type == "settings" and obj["__module__"].startswith(
-                "qiskit.quantum_info.operators"
-            ):
-                return _deserialize_from_settings(
-                    mod_name=obj["__module__"],
-                    class_name=obj["__class__"],
-                    settings=_cast_strings_keys_to_int(obj_val),
-                )
+            if obj_type == "settings":
+                deserialize = obj["__module__"].startswith("qiskit.quantum_info.operators")
+                deserialize = deserialize or obj["__class__"] in [PauliLindbladError, LayerError]
+                if deserialize is True:
+                    return _deserialize_from_settings(
+                        mod_name=obj["__module__"],
+                        class_name=obj["__class__"],
+                        settings=_cast_strings_keys_to_int(obj_val),
+                    )
             if obj_type == "Result":
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":

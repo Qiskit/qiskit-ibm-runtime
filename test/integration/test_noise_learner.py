@@ -17,15 +17,17 @@ from unittest import SkipTest
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.compiler import transpile
 
-from qiskit_ibm_runtime import RuntimeJob, Session
+from qiskit_ibm_runtime import RuntimeJob, Session, EstimatorV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
-from qiskit_ibm_runtime.options import NoiseLearnerOptions
+from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
+
+# TODO: remove
+image = "prim-custom-img-noise-learner-phase2:56a77a61da2801fdf8b1e957157f9373ccf243f7"
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
@@ -39,12 +41,12 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             raise SkipTest("test_eagle not available in this environment")
 
         c1 = QuantumCircuit(2)
-        c1.cx(0, 1)
+        c1.ecr(0, 1)
 
         c2 = QuantumCircuit(3)
-        c2.cx(0, 1)
-        c2.cx(1, 2)
-        c2.cx(0, 1)
+        c2.ecr(0, 1)
+        c2.ecr(1, 2)
+        c2.ecr(0, 1)
 
         self.circuits = [c1, c2]
 
@@ -64,11 +66,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=backend, options=options)
+        learner.options.experimental = {"image": image}
 
-        circuits = transpile(self.circuits, backend=backend)
-        job = learner.run(circuits)
+        job = learner.run(self.circuits)
 
-        self._verify(job, self.default_input_options)
+        self._verify(job, self.default_input_options, 3)
 
     @run_integration_test
     def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
@@ -80,13 +82,13 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.layer_pair_depths = [0, 1]
         learner = NoiseLearner(mode=backend, options=options)
 
-        circuits = transpile(self.circuits, backend=backend)
-        job = learner.run(circuits)
+        job = learner.run(self.circuits)
+        learner.options.experimental = {"image": image}
 
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
-        self._verify(job, input_options)
+        self._verify(job, input_options, 1)
 
     @run_integration_test
     def test_in_session(self, service):
@@ -94,29 +96,28 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         backend = self.backend
 
         options = NoiseLearnerOptions()
-        options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
 
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
 
-        circuits = transpile(self.circuits, backend=backend)
-
         with Session(service, backend) as session:
             options.twirling_strategy = "all"
             learner1 = NoiseLearner(mode=session, options=options)
-            job1 = learner1.run(circuits)
+            learner1.options.experimental = {"image": image}
+            job1 = learner1.run(self.circuits)
 
             input_options["twirling_strategy"] = "all"
-            self._verify(job1, input_options)
+            self._verify(job1, input_options, 2)
 
             options.twirling_strategy = "active-circuit"
             learner2 = NoiseLearner(mode=session, options=options)
-            job2 = learner2.run(circuits)
+            learner2.options.experimental = {"image": image}
+            job2 = learner2.run(self.circuits)
 
             input_options["twirling_strategy"] = "active-circuit"
-            self._verify(job2, input_options)
+            self._verify(job2, input_options, 3)
 
     @run_integration_test
     def test_with_no_layers(self, service):  # pylint: disable=unused-argument
@@ -126,21 +127,49 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=backend, options=options)
+        learner.options.experimental = {"image": image}
 
-        circuits = transpile(self.circuits, backend=backend)
-        job = learner.run(circuits)
+        job = learner.run(self.circuits)
 
         self.assertEqual(job.result().data, [])
 
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 0
-        self._verify(job, input_options)
+        self._verify(job, input_options, 0)
 
-    def _verify(self, job: RuntimeJob, expected_input_options: dict) -> None:
+    @run_integration_test
+    def test_learner_plus_estimator(self, service):  # pylint: disable=unused-argument
+        """Test feeding noise learner data to estimator."""
+        backend = self.backend
+
+        options = EstimatorOptions()
+        options.resilience.zne_mitigation = True
+        options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
+        options.twirling.strategy = "all"
+        # TODO: remove experimental options
+        options.experimental = {"image": image, "resilience": {"zne": {"amplifier": "pea"}}}
+
+        with Session(service, backend) as session:
+            learner = NoiseLearner(mode=session, options=options)
+            nl_job = learner.run(self.circuits)
+            layer_noise_model = nl_job.result()
+            self.assertEqual(len(layer_noise_model), 2)
+
+            estimator = EstimatorV2(mode=session, options=options)
+            estimator.options.resilience.pec_mitigation = True
+            estimator.options.resilience.layer_noise_model = layer_noise_model
+
+            pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
+            e_job = estimator.run(pubs)
+            self.assertEqual(e_job.metadata["resilience"]["layer_noise_model"], layer_noise_model)
+
+    def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
         self.assertEqual(job.status(), JobStatus.DONE, job.error_message())
 
         result = job.result()
+        self.assertEqual(len(result), n_results)
+
         for datum in result.data:
             circuit = datum.circuit
             qubits = datum.qubits

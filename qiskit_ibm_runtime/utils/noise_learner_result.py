@@ -90,6 +90,11 @@ class PauliLindbladError:
         The number of qubits in this :class:`~.PauliLindbladError`.
         """
         return self.generators.num_qubits
+    
+    @property
+    def settings(self):
+        """Return settings."""
+        return {"generators": self.generators, "rates": self.rates}
 
     def __repr__(self) -> str:
         return f"PauliLindbladError(generators={self.generators}, rates={self.rates.tolist()})"
@@ -170,6 +175,11 @@ class LayerError:
         The number of qubits in this :class:`~.LayerError`.
         """
         return len(self.qubits)
+    
+    @property
+    def settings(self):
+        """Return settings."""
+        return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
 
     def __repr__(self) -> str:
         ret = f"circuit={repr(self.circuit)}, qubits={self.qubits}, error={self.error})"
