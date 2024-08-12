@@ -352,7 +352,12 @@ class RuntimeDecoder(json.JSONDecoder):
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":
-                if obj["__module__"].startswith(("qiskit.quantum_info.operators", "qiskit_ibm_runtime.utils.noise_learner_result")):
+                if obj["__module__"].startswith(
+                    (
+                        "qiskit.quantum_info.operators",
+                        "qiskit_ibm_runtime.utils.noise_learner_result",
+                    )
+                ):
                     return _deserialize_from_settings(
                         mod_name=obj["__module__"],
                         class_name=obj["__class__"],
