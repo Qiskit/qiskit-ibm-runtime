@@ -58,7 +58,7 @@ class Batch(Session):
         backend = service.least_busy(operational=True, simulator=False, min_num_qubits=n_qubits)
  
         rng = np.random.default_rng()
-        mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(3)]
+        mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(30)]
         circuits = [IQP(mat) for mat in mats]
         for circuit in circuits:
             circuit.measure_all()
