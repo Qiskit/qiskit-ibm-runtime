@@ -125,7 +125,7 @@ class ZneOptions:
     extrapolated_noise_factors: Union[UnsetType, Sequence[float]] = Unset
 
     def _default_noise_factors(self) -> Sequence[float]:
-        return (1, 1.5, 2) if self.amplifier == "pea" else (1, 3, 5)
+        return (1, 1.5, 2, 2.5, 3) if self.amplifier == "pea" else (1, 3, 5)
 
     @classmethod
     def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
