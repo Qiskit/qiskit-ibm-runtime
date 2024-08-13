@@ -49,29 +49,6 @@ V2 Estimator options, respectively.
    default values are subject to change. Refer to this current module's documentation
    for the latest defaults.
 
-
-V1 Primitives
-=============
-
-The :class:`Options` class encapsulates all the options you can specify
-when invoking a V1 primitive. It includes frequently used options,
-such as ``optimization_level`` and ``resilience_level`` as well as
-sub-categories, such as ``transpilation`` and ``execution``.
-You can use auto-complete to easily find the options inside each
-sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options()
-   options.transpilation.initial_layout = [0, 1, 2, 3]  # This an be done using auto-complete
-
-You can also pass dictionaries to each sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options(transpilation={"initial_layout": [0, 1, 2, 3]})
-
-
 Classes
 =======
 
@@ -111,17 +88,6 @@ Suboptions for both V1 and V2 primitives
 
    EnvironmentOptions
    SimulatorOptions
-
-
-Suboptions for V1 primitives only
----------------------------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   TranspilationOptions
-   ExecutionOptions
-   ResilienceOptions
 
 """
 
