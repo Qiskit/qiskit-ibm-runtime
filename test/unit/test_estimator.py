@@ -20,7 +20,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions, IBMInputValueError
+from qiskit_ibm_runtime import Session, EstimatorV2, EstimatorOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -33,32 +33,6 @@ from ..utils import (
     remap_observables,
     get_transpiled_circuit,
 )
-
-
-class TestEstimator(IBMTestCase):
-    """Class for testing the Estimator class."""
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.circuit = QuantumCircuit(1, 1)
-        self.observables = SparsePauliOp.from_list([("I", 1)])
-
-    def test_unsupported_values_for_estimator_options(self):
-        """Test exception when options levels are not supported."""
-        options_bad = [
-            {"resilience_level": 4, "optimization_level": 1},
-            {"optimization_level": 4, "resilience_level": 2},
-        ]
-
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
-        ) as session:
-            for bad_opt in options_bad:
-                inst = Estimator(session=session)
-                with self.assertRaises(ValueError) as exc:
-                    _ = inst.run(self.circuit, observables=self.observables, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
 
 @ddt

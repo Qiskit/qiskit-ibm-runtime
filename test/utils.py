@@ -33,8 +33,6 @@ from qiskit_ibm_runtime import (
     Session,
     EstimatorV2,
     SamplerV2,
-    SamplerV1,
-    EstimatorV1,
     Batch,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManila
@@ -454,15 +452,6 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
     elif isinstance(primitive, SamplerV2):
         circ.measure_all()
         return {"pubs": [(circ, param_val)] * num_sets}
-    elif isinstance(primitive, EstimatorV1):
-        return {
-            "circuits": [circ] * num_sets,
-            "observables": [obs] * num_sets,
-            "parameter_values": [param_val] * num_sets,
-        }
-    elif isinstance(primitive, SamplerV1):
-        circ.measure_all()
-        return {"circuits": [circ] * num_sets, "parameter_values": [param_val] * num_sets}
     else:
         raise ValueError(f"Invalid primitive type {type(primitive)}")
 

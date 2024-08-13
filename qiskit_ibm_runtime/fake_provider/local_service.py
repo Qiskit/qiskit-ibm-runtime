@@ -22,16 +22,13 @@ from dataclasses import asdict
 from typing import Callable, Dict, List, Literal, Optional, Union
 
 from qiskit.primitives import (
-    BackendEstimator,
     BackendEstimatorV2,
-    BackendSampler,
     BackendSamplerV2,
 )
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
-from qiskit.utils import optionals
 
 from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
@@ -188,123 +185,14 @@ class QiskitRuntimeLocalService:
             )
 
         inputs = copy.deepcopy(inputs)
-        primitive_version = inputs.pop("version", 1)
-        if primitive_version == 1:
-            primitive_inputs = {
-                "circuits": inputs.pop("circuits"),
-                "parameter_values": inputs.pop("parameter_values"),
-            }
-            if program_id == "estimator":
-                primitive_inputs["observables"] = inputs.pop("observables")
-            inputs.pop("parameters", None)
 
-            if optionals.HAS_AER:
-                # pylint: disable=import-outside-toplevel
-                from qiskit_aer.backends.aerbackend import AerBackend
-
-                if isinstance(backend, AerBackend):
-                    return self._run_aer_primitive_v1(
-                        primitive=program_id, options=inputs, inputs=primitive_inputs
-                    )
-
-            return self._run_backend_primitive_v1(
-                backend=backend,
-                primitive=program_id,
-                options=inputs,
-                inputs=primitive_inputs,
-            )
-        else:
-            primitive_inputs = {"pubs": inputs.pop("pubs")}
-            return self._run_backend_primitive_v2(
-                backend=backend,
-                primitive=program_id,
-                options=inputs.get("options", {}),
-                inputs=primitive_inputs,
-            )
-
-    def _run_aer_primitive_v1(
-        self, primitive: Literal["sampler", "estimator"], options: dict, inputs: dict
-    ) -> PrimitiveJob:
-        """Run V1 Aer primitive.
-
-        Args:
-            primitive: Name of the primitive.
-            options: Primitive options to use.
-            inputs: Primitive inputs.
-
-        Returns:
-            The job object of the result of the primitive.
-        """
-        # pylint: disable=import-outside-toplevel
-        from qiskit_aer.primitives import Estimator, Sampler
-
-        # TODO: issue warning if extra options are used
-        options_copy = copy.deepcopy(options)
-        transpilation_options = options_copy.get("transpilation_settings", {})
-        skip_transpilation = transpilation_options.pop("skip_transpilation", False)
-        optimization_level = transpilation_options.pop("optimization_settings", {}).pop(
-            "level", None
+        primitive_inputs = {"pubs": inputs.pop("pubs")}
+        return self._run_backend_primitive_v2(
+            backend=backend,
+            primitive=program_id,
+            options=inputs.get("options", {}),
+            inputs=primitive_inputs,
         )
-        transpilation_options["optimization_level"] = optimization_level
-        input_run_options = options_copy.get("run_options", {})
-        run_options = {
-            "shots": input_run_options.pop("shots", None),
-            "seed_simulator": input_run_options.pop("seed_simulator", None),
-        }
-        backend_options = {"noise_model": input_run_options.pop("noise_model", None)}
-
-        if primitive == "sampler":
-            primitive_inst = Sampler(
-                backend_options=backend_options,
-                transpile_options=transpilation_options,
-                run_options=run_options,
-                skip_transpilation=skip_transpilation,
-            )
-        else:
-            primitive_inst = Estimator(
-                backend_options=backend_options,
-                transpile_options=transpilation_options,
-                run_options=run_options,
-                skip_transpilation=skip_transpilation,
-            )
-        return primitive_inst.run(**inputs)
-
-    def _run_backend_primitive_v1(
-        self,
-        backend: BackendV1 | BackendV2,
-        primitive: Literal["sampler", "estimator"],
-        options: dict,
-        inputs: dict,
-    ) -> PrimitiveJob:
-        """Run V1 backend primitive.
-
-        Args:
-            backend: The backend to run the primitive on.
-            primitive: Name of the primitive.
-            options: Primitive options to use.
-            inputs: Primitive inputs.
-
-        Returns:
-            The job object of the result of the primitive.
-        """
-        options_copy = copy.deepcopy(options)
-        transpilation_options = options_copy.get("transpilation_settings", {})
-        skip_transpilation = transpilation_options.pop("skip_transpilation", False)
-        optimization_level = transpilation_options.pop("optimization_settings", {}).get("level")
-        transpilation_options["optimization_level"] = optimization_level
-        input_run_options = options.get("run_options", {})
-        run_options = {
-            "shots": input_run_options.get("shots"),
-            "seed_simulator": input_run_options.get("seed_simulator"),
-            "noise_model": input_run_options.get("noise_model"),
-        }
-        if primitive == "sampler":
-            primitive_inst = BackendSampler(backend=backend, skip_transpilation=skip_transpilation)
-        else:
-            primitive_inst = BackendEstimator(backend=backend)
-
-        primitive_inst.set_transpile_options(**transpilation_options)
-        return primitive_inst.run(**inputs, **run_options)
 
     def _run_backend_primitive_v2(
         self,
