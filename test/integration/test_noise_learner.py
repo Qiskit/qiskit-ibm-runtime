@@ -27,7 +27,7 @@ from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 # TODO: remove
-image = "prim-custom-img-noise-learner-phase2:56a77a61da2801fdf8b1e957157f9373ccf243f7"
+image = "prim-custom-img-noise-learner-phase2:56a77a61da2801fdf8b1e957157f9373ccf243f7"  # pylint: disable=invalid-name
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
@@ -143,11 +143,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         backend = self.backend
 
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
+        options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
-        options.twirling.strategy = "all"
-        # TODO: remove experimental options
-        options.experimental = {"image": image, "resilience": {"zne": {"amplifier": "pea"}}}
+        options.experimental = {"image": image}
 
         with Session(service, backend) as session:
             learner = NoiseLearner(mode=session, options=options)
