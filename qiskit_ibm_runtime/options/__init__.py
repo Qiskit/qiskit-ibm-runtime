@@ -60,7 +60,6 @@ Base primitive options
 
    EstimatorOptions
    SamplerOptions
-   Options
 
 
 Suboptions for V2 primitives only

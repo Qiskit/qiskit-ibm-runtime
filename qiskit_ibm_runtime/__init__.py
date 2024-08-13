@@ -185,9 +185,7 @@ Classes
    :toctree: ../stubs/
 
    QiskitRuntimeService
-   Estimator
    EstimatorV2
-   Sampler
    SamplerV2
    Session
    Batch
@@ -219,7 +217,12 @@ from .estimator import (  # pylint: disable=reimported
     EstimatorV2 as Estimator,
 )
 from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
-from .options import EstimatorOptions, SamplerOptions, OptionsV2
+from .options import (  # pylint: disable=reimported
+    EstimatorOptions,
+    SamplerOptions,
+    OptionsV2,
+    OptionsV2 as Options,
+)
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
