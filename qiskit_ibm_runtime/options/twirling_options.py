@@ -30,7 +30,7 @@ class TwirlingOptions:
     """Twirling options. This is only used by V2 primitives.
 
     Args:
-        enable_gates: Whether to apply 2-qubit gate twirling. Default: False.
+        enable_gates: Whether to apply 2-qubit Clifford gate twirling. Default: False.
 
         enable_measure: Whether to enable twirling of measurements. Twirling will only be applied to
          those measurement registers not involved within a conditional logic.

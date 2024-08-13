@@ -80,7 +80,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 * A :class:`Session` if you are using session execution mode.
                 * A :class:`Batch` if you are using batch execution mode.
 
-                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                Refer to the
+                `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
                 for more information about the ``Execution modes``.
 
             backend: (DEPRECATED) Backend to run the primitive. This can be a backend name or
@@ -180,7 +181,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     .. deprecated:: 0.23
        The ``SamplerV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
-       See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_.
+       See the `V2 migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`_.
        for more details.
        The ``SamplerV1`` support will be removed no earlier than July 15, 2024.
 

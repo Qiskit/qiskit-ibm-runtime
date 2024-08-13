@@ -178,7 +178,7 @@ class TestLocalModeV2(IBMTestCase):
         inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
-        self.assertDictEqual(pub_result.metadata, {"target_precision": 0.03125})
+        self.assertIn(("target_precision", 0.03125), pub_result.metadata.items())
         self.assertEqual(pub_result.data.evs[0], 0.056640625)
 
     @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
@@ -188,7 +188,7 @@ class TestLocalModeV2(IBMTestCase):
         inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
-        self.assertDictEqual(pub_result.metadata, {"target_precision": 0.1})
+        self.assertIn(("target_precision", 0.1), pub_result.metadata.items())
 
     @combine(
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
@@ -204,13 +204,28 @@ class TestLocalModeV2(IBMTestCase):
         with warnings.catch_warnings(record=True) as warns:
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             _ = job.result()
-            self.assertIn("dynamical_decoupling", str(warns[0].message))
+            warning_messages = "".join([str(warn.message) for warn in warns])
+            self.assertIn("dynamical_decoupling", warning_messages)
 
     @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session(self, session_cls, backend):
         """Testing running v2 sampler inside session."""
         with session_cls(backend=backend) as session:
             inst = SamplerV2(session=session)
+            job = inst.run(**get_primitive_inputs(inst, backend=backend))
+            result = job.result()
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertEqual(len(result), 1)
+            for pub_result in result:
+                self.assertIsInstance(pub_result, PubResult)
+                self.assertIsInstance(pub_result.data, DataBin)
+                self.assertIsInstance(pub_result.metadata, dict)
+
+    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    def test_sampler_v2_session_no_params(self, session_cls, backend):
+        """Testing running v2 sampler inside session."""
+        with session_cls(backend=backend):
+            inst = SamplerV2()
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             result = job.result()
             self.assertIsInstance(result, PrimitiveResult)

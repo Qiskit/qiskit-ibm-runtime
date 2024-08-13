@@ -7,7 +7,7 @@ jupyter
 scipy>=1.0
 nbformat>=4.4.0
 nbconvert>=5.3.1
-qiskit-aer>=0.11
+qiskit-aer>=0.14.2
 websockets>=8
 black~=24.1
 coverage>=6.3

@@ -122,7 +122,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 * A :class:`Session` if you are using session execution mode.
                 * A :class:`Batch` if you are using batch execution mode.
 
-                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                Refer to the
+                `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
                 for more information about the ``Execution modes``.
 
             backend: (DEPRECATED) Backend to run the primitive. This can be a backend name
@@ -222,7 +223,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 version="0.25.0",
                 remedy="Instead, you can perform circuit optimization using Qiskit transpiler "
                 "or Qiskit transpiler service. "
-                "See https://docs.quantum.ibm.com/transpile for more information.",
+                "See https://docs.quantum.ibm.com/guides/transpile for more information.",
             )
 
     @classmethod
@@ -236,7 +237,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
 
     .. deprecated:: 0.23
        The ``EstimatorV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
-       See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_.
+       See the `V2 migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`_.
        for more details.
        The ``EstimatorV1`` support will be removed no earlier than July 15, 2024.
 

@@ -34,7 +34,42 @@ ExtrapolatorType = Literal[
 
 @primitive_dataclass
 class ZneOptions:
-    """Zero noise extrapolation mitigation options. This is only used by V2 Estimator.
+    """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.
+
+    ..note::
+
+        Any V2 estimator is guaranteed to return data fields called ``evs`` and ``stds`` that
+        report the desired expectation value estimates and errors, respectively.
+        When ZNE options are enabled in the runtime estimator, additional data is returned.
+
+        In particular, suppose an input pub has observable array shape ``obs_shape`` and parameter
+        values shape ``par_shape``, with corresponding pub shape
+        ``shape=np.broadcast_shapes(obs_shape, par_shape)``. Then the corresponding pub result will
+        additionally contain:
+
+        1. `pub_result.data.evs_extrapolated` and `pub_result.data.stds_extrapolated`,
+            both with shape ``(*shape, num_extrapolators, num_evaluation_points)``, where
+            ``num_extrapolators`` is the length of the list of
+            ``options.resilience.zne.extrapolators``, and ``num_evaluation_points`` is the length of
+            the list ``options.resilience.extrapolated_noise_factors``. These values provide
+            evaluations of every extrapolator at every specified noise extrapolation value.
+        2. ``pub_result.data.evs_noise_factors``, ``pub_result.data.stds_noise_factors``, and
+           ``ensemble_stds_noise_factors`` all have shape ``(*shape, num_noise_factors)`` where
+           ``num_noise_factors`` is the length of ``options.resilience.zne.noise_factors``. These
+           values provide evaluations of the best-fit model at each of the noise amplifications.
+           In the case of no twirling, both ``*stds*`` arrays will be equal, otherwise,
+           ``stds_noise_factors`` is derived from the spread over twirling samples, whereas
+           ``ensemble_stds_noise_factors`` assumes only shot noise and no drift.
+
+        Technical note: for single observables with multiple basis terms it might turn out that
+        multiple extrapolation methods are used in _the same_ expectation value, for example, ``XX``
+        gets linearly extrapolated but ``XY`` gets exponentially extrapolated in the observable
+        ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (2) is
+        evaluated from heterogeneous fits by selecting the best fit for every individual distinct
+        term, whereas data from (1) is evaluated from forced homogenous fits, one for each provided
+        extrapolator. If your work requires a nuanced distinction in this regard, we presently
+        recommend that you use single-term observables in addition to your multi-term observables.
+
 
     Args:
         amplifier: Which technique to use for amplifying noise. One of:
@@ -48,8 +83,28 @@ class ZneOptions:
             * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
               factor requires amplifying only a subset of the gates, then these gates are selected
               from the back of the topologically ordered DAG circuit.
+            * `"pea"` uses a technique called probabalistic error amplification (`PEA
+              <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify
+              noise.
 
-        noise_factors: Noise factors to use for noise amplification. Default: (1, 3, 5).
+              When this option is selected, gate twirling will always be used whether or not it has
+              been enabled in the options.
+
+              In this technique, the twirled noise model of each each unique layer of
+              entangling gates in your ISA circuits is learned beforehand, see
+              :class:`~.LayerNoiseLearningOptions` for relevant learning options. Once complete,
+              your circuits are executed at each noise factor, where every entangling layer of
+              your circuits is amplified by probabilistically injecting single-qubit noise
+              proportional to the corresponding learned noise model.
+
+        noise_factors: Noise factors to use for noise amplification. Default: (1, 1.5, 2) for PEA,
+            and (1, 3, 5) otherwise.
+
+        extrapolated_noise_factors: Noise factors to evaluate the fit extrapolation models at.
+            If unset, this will default to ``[0, *noise_factors]``. This
+            option does not affect execution or model fitting in any way, it only determines the
+            points at which the ``extrapolator``s are evaluated to be returned in the data fields
+            called ``evs_extrapolated`` and ``stds_extrapolated``.
 
         extrapolator: Extrapolator(s) to try (in order) for extrapolating to zero noise.
             One or more of:
@@ -63,14 +118,14 @@ class ZneOptions:
     """
 
     amplifier: Union[
-        UnsetType, Literal["gate_folding", "gate_folding_front", "gate_folding_back"]
+        UnsetType, Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
     ] = Unset
     noise_factors: Union[UnsetType, Sequence[float]] = Unset
     extrapolator: Union[UnsetType, ExtrapolatorType, Sequence[ExtrapolatorType]] = Unset
+    extrapolated_noise_factors: Union[UnsetType, Sequence[float]] = Unset
 
-    @classmethod
-    def _default_noise_factors(cls) -> Sequence[float]:
-        return (1, 3, 5)
+    def _default_noise_factors(self) -> Sequence[float]:
+        return (1, 1.5, 2, 2.5, 3) if self.amplifier == "pea" else (1, 3, 5)
 
     @classmethod
     def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
