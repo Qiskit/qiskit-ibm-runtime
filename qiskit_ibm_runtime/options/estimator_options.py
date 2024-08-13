@@ -20,14 +20,13 @@ from .utils import (
     Dict,
     Unset,
     UnsetType,
-    primitive_dataclass,
-    make_constraint_validator,
 )
 from .execution_options import ExecutionOptionsV2
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .options import OptionsV2
+from .utils import primitive_dataclass, make_constraint_validator
 
 MAX_RESILIENCE_LEVEL: int = 2
 MAX_OPTIMIZATION_LEVEL: int = 1
