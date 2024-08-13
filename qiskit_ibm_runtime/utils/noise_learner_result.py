@@ -106,6 +106,10 @@ class PauliLindbladError:
         """Return settings."""
         return {"generators": self.generators, "rates": self.rates}
 
+    def _json(self) -> dict:
+        """Return a dictionary containing all the information to re-initialize this object."""
+        return {"generators": self.generators, "rates": self.rates}
+
     def __repr__(self) -> str:
         return f"PauliLindbladError(generators={self.generators}, rates={self.rates.tolist()})"
 
@@ -189,6 +193,10 @@ class LayerError:
     @property
     def settings(self):
         """Return settings."""
+        return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
+
+    def _json(self) -> dict:
+        """Return a dictionary containing all the information to re-initialize this object."""
         return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
 
     def __repr__(self) -> str:

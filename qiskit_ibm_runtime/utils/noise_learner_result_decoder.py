@@ -30,8 +30,12 @@ class NoiseLearnerResultDecoder(ResultDecoder):
 
         data = []
         for layer in decoded["data"]:
-            error = PauliLindbladError(layer[1]["generators"], layer[1]["rates"])
-            datum = LayerError(layer[0]["circuit"], layer[0]["qubits"], error)
-            data.append(datum)
+            if isinstance(layer, LayerError):
+                data.append(layer)
+            else:
+                # supports the legacy result format
+                error = PauliLindbladError(layer[1]["generators"], layer[1]["rates"])
+                datum = LayerError(layer[0]["circuit"], layer[0]["qubits"], error)
+                data.append(datum)
 
         return NoiseLearnerResult(data=data, metadata=decoded["metadata"])
