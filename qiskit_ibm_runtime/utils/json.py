@@ -71,7 +71,6 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -420,10 +419,6 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 return DataBin(shape=shape, **obj_val["fields"])
-            if obj_type == "LayerError":
-                return LayerError(**obj_val)
-            if obj_type == "PauliLindbladError":
-                return PauliLindbladError(**obj_val)
             if obj_type == "SamplerPubResult":
                 return SamplerPubResult(**obj_val)
             if obj_type == "PubResult":
