@@ -27,7 +27,7 @@ from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 # TODO: remove
-image = "prim-custom-img-noise-learner-phase2:56a77a61da2801fdf8b1e957157f9373ccf243f7"  # pylint: disable=invalid-name
+image = "prim-custom-img-noise-learner-phase2:9e702bd778e41a6d14153facfc1bd4444468eba8"  # pylint: disable=invalid-name
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
@@ -149,8 +149,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         with Session(service, backend) as session:
             learner = NoiseLearner(mode=session, options=options)
-            nl_job = learner.run(self.circuits)
-            layer_noise_model = nl_job.result()
+            learner_job = learner.run(self.circuits)
+            layer_noise_model = learner_job.result()
             self.assertEqual(len(layer_noise_model), 2)
 
             estimator = EstimatorV2(mode=session, options=options)
@@ -158,8 +158,10 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             estimator.options.resilience.layer_noise_model = layer_noise_model
 
             pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
-            e_job = estimator.run(pubs)
-            self.assertEqual(e_job.metadata["resilience"]["layer_noise_model"], layer_noise_model)
+            estimator_job = estimator.run(pubs)
+            result = estimator_job.result()
+            
+            self.assertEqual(result.metadata["resilience"]["layer_noise_model"], layer_noise_model)
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
