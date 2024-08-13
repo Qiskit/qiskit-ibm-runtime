@@ -219,7 +219,7 @@ from .estimator import (  # pylint: disable=reimported
     EstimatorV2 as Estimator,
 )
 from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
-from .options import Options, EstimatorOptions, SamplerOptions, OptionsV2
+from .options import EstimatorOptions, SamplerOptions, OptionsV2
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
