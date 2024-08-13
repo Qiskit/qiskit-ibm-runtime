@@ -66,7 +66,7 @@ class Batch(Session):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuits = pm.run(circuits)
  
-        max_circuits = 100
+        max_circuits = 10
         all_partitioned_circuits = []
         for i in range(0, len(isa_circuits), max_circuits):
             all_partitioned_circuits.append(isa_circuits[i : i + max_circuits])
