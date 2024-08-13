@@ -190,11 +190,11 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             Submitted job.
 
         Raises:
-            ValueError: if precision is not strictly greater than 0.
+            ValueError: if precision value is not strictly greater than 0.
         """
         if precision is not None:
             if precision <= 0:
-                raise ValueError("The precision must be strictly greater than 0.")
+                raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
         validate_estimator_pubs(coerced_pubs)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
