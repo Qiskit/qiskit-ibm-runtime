@@ -17,7 +17,7 @@ from unittest import SkipTest
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit.primitives import EstimatorResult, SamplerResult
+from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
@@ -35,31 +35,30 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     def test_estimator_sampler(self, service):
         """Test calling both estimator and sampler."""
 
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        backend = service.backend("ibmq_qasm_simulator")
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        psi1 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=2))
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        backend = service.backend("ibmq_qasm_simulator")
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(service, backend=backend) as session:
             estimator = EstimatorV2(session=session)
             result = estimator.run([(psi1, H1, [theta1])]).result()
-            self.assertIsInstance(result, EstimatorResult)
+            self.assertIsInstance(result, PrimitiveResult)
 
             sampler = SamplerV2(session=session)
             result = sampler.run([pm.run(bell())]).result()
-            self.assertIsInstance(result, SamplerResult)
+            self.assertIsInstance(result, PrimitiveResult)
 
             result = estimator.run([(psi1, H1, [theta1])]).result()
-            self.assertIsInstance(result, EstimatorResult)
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 300)
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertEqual(result[0].metadata["shots"], 4096)
 
             result = sampler.run([pm.run(bell())]).result()
-            self.assertIsInstance(result, SamplerResult)
+            self.assertIsInstance(result, PrimitiveResult)
             session.close()
 
     @run_integration_test
