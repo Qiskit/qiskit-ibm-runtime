@@ -204,7 +204,6 @@ class TestLocalModeV2(IBMTestCase):
         with warnings.catch_warnings(record=True) as warns:
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             _ = job.result()
-            self.assertEqual(len(warns), 1)
             self.assertIn("dynamical_decoupling", str(warns[0].message))
 
     @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])

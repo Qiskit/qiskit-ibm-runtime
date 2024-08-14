@@ -24,14 +24,7 @@ import re
 from typing import List, Iterable, Union
 
 from qiskit import circuit, QuantumCircuit
-from qiskit.providers.models import (
-    BackendProperties,
-    BackendConfiguration,
-    PulseDefaults,
-    BackendStatus,
-    QasmBackendConfiguration,
-    PulseBackendConfiguration,
-)
+
 from qiskit.providers import BackendV2, BackendV1
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
@@ -50,6 +43,14 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
+from ..models import (
+    BackendProperties,
+    BackendConfiguration,
+    PulseDefaults,
+    BackendStatus,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
+)
 from ..utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
@@ -575,8 +576,15 @@ class FakeBackendV2(BackendV2):
             service: A :class:`QiskitRuntimeService` instance
 
         Raises:
+            ValueError: if the provided service is a non-QiskitRuntimeService instance.
             Exception: If the real target doesn't exist or can't be accessed
         """
+        if not isinstance(service, QiskitRuntimeService):
+            raise ValueError(
+                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
+                " required to retrieve the real backend's current properties and settings."
+            )
+
         version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:

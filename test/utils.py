@@ -26,11 +26,6 @@ from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, P
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import (
-    BackendStatus,
-    BackendProperties,
-    BackendConfiguration,
-)
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit_ibm_runtime import (
@@ -45,6 +40,11 @@ from qiskit_ibm_runtime import (
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.models import (
+    BackendStatus,
+    BackendProperties,
+    BackendConfiguration,
+)
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
@@ -322,7 +322,7 @@ def get_mocked_backend(
     mock_service._api_client = mock_api_client
 
     configuration = (
-        FakeManila().configuration()
+        FakeManila().configuration()  # type: ignore[assignment]
         if configuration is None
         else BackendConfiguration.from_dict(configuration)
     )
@@ -467,17 +467,22 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
         raise ValueError(f"Invalid primitive type {type(primitive)}")
 
 
-def transpile_pubs(in_pubs, backend):
+def transpile_pubs(in_pubs, backend, program):
     """Return pubs with transformed circuits and observables."""
     t_pubs = []
     for pub in in_pubs:
         t_circ = transpile(pub[0], backend=backend)
-        if len(pub) > 2:
+        if program == "estimator":
             t_obs = remap_observables(pub[1], t_circ)
             t_pub = [t_circ, t_obs]
             for elem in pub[2:]:
                 t_pub.append(elem)
-            t_pubs.append(tuple(t_pub))
+        if program == "sampler":
+            if len(pub) == 2:
+                t_pub = [t_circ, pub[1]]
+            else:
+                t_pub = [t_circ]
+        t_pubs.append(tuple(t_pub))
     return t_pubs
 
 

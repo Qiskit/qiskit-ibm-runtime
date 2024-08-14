@@ -51,6 +51,76 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
+def _get_mode_service_backend(
+    mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None
+) -> tuple[
+    Union[Session, Batch, None],
+    Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
+    Union[BackendV1, BackendV2, None],
+]:
+    """
+    A utility function that returns mode, service, and backend for a given execution mode.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+    """
+
+    if isinstance(mode, (Session, Batch)):
+        return mode, mode.service, mode._backend
+    elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+        if get_cm_session():
+            warnings.warn(
+                (
+                    "Passing a backend as the mode currently runs the job in job mode even "
+                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                    "version 0.26.0, this behavior is deprecated and in a future "
+                    "release no sooner than than 3 months "
+                    "after the release date, the session/batch will take precendence and "
+                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                    "mode, pass in the session/batch or leave the mode parameter emtpy."
+                ),
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        return None, mode.service, mode
+    elif isinstance(mode, (BackendV1, BackendV2)):
+        return None, QiskitRuntimeLocalService(), mode
+    elif isinstance(mode, str):
+        if get_cm_session():
+            warnings.warn(
+                (
+                    "Passing a backend as the mode currently runs the job in job mode even "
+                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                    "version 0.26.0, this behavior is deprecated and in a future "
+                    "release no sooner than than 3 months "
+                    "after the release date, the session/batch will take precendence and "
+                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                    "mode, pass in the session/batch or leave the mode parameter emtpy."
+                ),
+                DeprecationWarning,
+                stacklevel=4,
+            )
+        service = (
+            QiskitRuntimeService()
+            if QiskitRuntimeService.global_service is None
+            else QiskitRuntimeService.global_service
+        )
+        return None, service, service.backend(mode)
+    elif mode is not None:  # type: ignore[unreachable]
+        raise ValueError("mode must be of type Backend, Session, Batch or None")
+    elif get_cm_session():
+        mode = get_cm_session()
+        service = mode.service  # type: ignore
+        backend = service.backend(name=mode.backend(), instance=mode._instance)  # type: ignore
+        return mode, service, backend  # type: ignore
+    else:
+        raise ValueError("A backend or session must be specified.")
+
+
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
@@ -78,39 +148,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode: Optional[Union[Session, Batch]] = None
-        self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
-        self._backend: Optional[BackendV1 | BackendV2] = None
-
+        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         self._set_options(options)
-
-        if isinstance(mode, (Session, Batch)):
-            self._mode = mode
-            self._service = self._mode.service
-            self._backend = self._mode._backend
-        elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
-            self._service = mode.service
-            self._backend = mode
-        elif isinstance(mode, (BackendV1, BackendV2)):
-            self._service = QiskitRuntimeLocalService()
-            self._backend = mode
-        elif isinstance(mode, str):
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(mode)
-        elif mode is not None:  # type: ignore[unreachable]
-            raise ValueError("mode must be of type Backend, Session, Batch or None")
-        elif get_cm_session():
-            self._mode = get_cm_session()
-            self._service = self._mode.service
-            self._backend = self._service.backend(  # type: ignore
-                name=self._mode.backend(), instance=self._mode._instance
-            )
-        else:
-            raise ValueError("A backend or session must be specified.")
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
@@ -163,7 +202,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
-        return self._service.run(
+        return self._service._run(
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=primitive_inputs,
@@ -400,7 +439,7 @@ class BasePrimitiveV1(ABC):
                 callback=combined.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
-        return self._service.run(  # type: ignore[call-arg]
+        return self._service._run(  # type: ignore[call-arg]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=primitive_inputs,

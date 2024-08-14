@@ -46,29 +46,38 @@ class Batch(Session):
 
     For example::
 
-        from qiskit.circuit.random import random_circuit
+        import numpy as np
+        from qiskit.circuit.library import IQP
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit_ibm_runtime import Batch, SamplerV2 as Sampler, QiskitRuntimeService
+        from qiskit.quantum_info import random_hermitian
+        from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler, Batch
 
+        n_qubits = 127
+ 
         service = QiskitRuntimeService()
-        backend = service.least_busy(operational=True, simulator=False)
+        backend = service.least_busy(operational=True, simulator=False, min_num_qubits=n_qubits)
+ 
+        rng = np.random.default_rng()
+        mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(30)]
+        circuits = [IQP(mat) for mat in mats]
+        for circuit in circuits:
+            circuit.measure_all()
+ 
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-
-        # generate fifty unique three-qubit random circuits
-        circuits = [pm.run(random_circuit(3, 2, measure=True)) for _ in range(50)]
-
-        # split up the list of circuits into partitions
+        isa_circuits = pm.run(circuits)
+ 
         max_circuits = 10
-        partitions = [circuits[i : i + max_circuits] for i in range(0, len(circuits), max_circuits)]
-
-        # run the circuits in batched mode
+        all_partitioned_circuits = []
+        for i in range(0, len(isa_circuits), max_circuits):
+            all_partitioned_circuits.append(isa_circuits[i : i + max_circuits])
+        jobs = []
+        start_idx = 0
+ 
         with Batch(backend=backend):
             sampler = Sampler()
-            for partition in partitions:
-                job = sampler.run(partition)
-                pub_result = job.result()[0]
-                print(f"Sampler job ID: {job.job_id()}")
-                print(f"Counts for the first PUB: {pub_result.data.cr.get_counts()}")
+            for partitioned_circuits in all_partitioned_circuits:
+                job = sampler.run(partitioned_circuits)
+                jobs.append(job)
 
     For more details, check the "`Run jobs in a batch
     <https://docs.quantum.ibm.com/run/run-jobs-batch>`_" tutorial.
@@ -83,11 +92,12 @@ class Batch(Session):
         """Batch constructor.
 
         Args:
-            service: Optional instance of the ``QiskitRuntimeService`` class.
+            service: (DEPRECATED) Optional instance of the ``QiskitRuntimeService`` class.
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Optional instance of ``Backend`` class or backend string name.
+            backend: Instance of ``Backend`` class or backend string name. Note that passing a
+                backend name is deprecated.
 
             max_time:
                 Maximum amount of time a runtime session can be open before being
@@ -99,6 +109,16 @@ class Batch(Session):
         Raises:
             ValueError: If an input value is invalid.
         """
+        if service:
+            issue_deprecation_msg(
+                msg="The service parameter is deprecated",
+                version="0.26.0",
+                remedy=(
+                    "The service can be extracted from the backend object so "
+                    "it is no longer necessary."
+                ),
+                period="3 months",
+            )
         if isinstance(backend, str):
             issue_deprecation_msg(
                 msg="Passing a backend as a string is deprecated",

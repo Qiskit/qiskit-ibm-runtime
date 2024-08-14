@@ -157,16 +157,16 @@ class TestPrimitivesV2(IBMTestCase):
             inst = primitive(backend=backend_name)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
-            mock_service_inst.run.assert_called_once()
-            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            mock_service_inst._run.assert_called_once()
+            runtime_options = mock_service_inst._run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], mock_backend)
 
             mock_service_inst.reset_mock()
             str_mode_inst = primitive(mode=backend_name)
             self.assertIsNone(str_mode_inst.mode)
             inst.run(**get_primitive_inputs(str_mode_inst))
-            mock_service_inst.run.assert_called_once()
-            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            mock_service_inst._run.assert_called_once()
+            runtime_options = mock_service_inst._run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], mock_backend)
 
     @data(EstimatorV2, SamplerV2)

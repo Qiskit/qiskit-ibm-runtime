@@ -74,7 +74,7 @@ class TestEstimatorV2(IBMTestCase):
     def test_run_program_inputs(self, abs_pubs):
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
-        t_pubs = transpile_pubs(abs_pubs, backend)
+        t_pubs = transpile_pubs(abs_pubs, backend, "estimator")
 
         inst = EstimatorV2(backend=backend)
         inst.run(t_pubs)
