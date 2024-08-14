@@ -53,26 +53,26 @@ class Batch(Session):
         from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler, Batch
 
         n_qubits = 127
- 
+
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False, min_num_qubits=n_qubits)
- 
+
         rng = np.random.default_rng()
         mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(30)]
         circuits = [IQP(mat) for mat in mats]
         for circuit in circuits:
             circuit.measure_all()
- 
+
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuits = pm.run(circuits)
- 
+
         max_circuits = 10
         all_partitioned_circuits = []
         for i in range(0, len(isa_circuits), max_circuits):
             all_partitioned_circuits.append(isa_circuits[i : i + max_circuits])
         jobs = []
         start_idx = 0
- 
+
         with Batch(backend=backend):
             sampler = Sampler()
             for partitioned_circuits in all_partitioned_circuits:
