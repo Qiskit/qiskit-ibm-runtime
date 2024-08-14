@@ -22,7 +22,6 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
 
@@ -253,9 +252,12 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         if pid == "sampler":
             backend = service.backend(backend_name)
             sampler = SamplerV2(backend=backend)
-            pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-            isa_qc = pm.run(bell())
-            job = sampler.run([isa_qc])
+            if job_tags:
+                sampler.options.environment.job_tags = job_tags
+            if circuits:
+                job = sampler.run([circuits])
+            else:
+                job = sampler.run([bell()])
         else:
             job = service._run(
                 program_id=pid,

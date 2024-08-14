@@ -12,7 +12,7 @@
 
 """Sampler result decoder."""
 
-from typing import Dict, Union
+from typing import Dict
 
 from qiskit.primitives import PrimitiveResult
 
@@ -23,7 +23,7 @@ class SamplerResultDecoder(ResultDecoder):
     """Class used to decode sampler results."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> Union[PrimitiveResult]:
+    def decode(cls, raw_result: str) -> PrimitiveResult:
         """Convert the result to SamplerResult."""
         decoded: Dict = super().decode(raw_result)
 
