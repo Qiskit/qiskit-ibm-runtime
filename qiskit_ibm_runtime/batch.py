@@ -46,29 +46,38 @@ class Batch(Session):
 
     For example::
 
-        from qiskit.circuit.random import random_circuit
+        import numpy as np
+        from qiskit.circuit.library import IQP
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit_ibm_runtime import Batch, SamplerV2 as Sampler, QiskitRuntimeService
+        from qiskit.quantum_info import random_hermitian
+        from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler, Batch
+
+        n_qubits = 127
 
         service = QiskitRuntimeService()
-        backend = service.least_busy(operational=True, simulator=False)
+        backend = service.least_busy(operational=True, simulator=False, min_num_qubits=n_qubits)
+
+        rng = np.random.default_rng()
+        mats = [np.real(random_hermitian(n_qubits, seed=rng)) for _ in range(30)]
+        circuits = [IQP(mat) for mat in mats]
+        for circuit in circuits:
+            circuit.measure_all()
+
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuits = pm.run(circuits)
 
-        # generate fifty unique three-qubit random circuits
-        circuits = [pm.run(random_circuit(3, 2, measure=True)) for _ in range(50)]
-
-        # split up the list of circuits into partitions
         max_circuits = 10
-        partitions = [circuits[i : i + max_circuits] for i in range(0, len(circuits), max_circuits)]
+        all_partitioned_circuits = []
+        for i in range(0, len(isa_circuits), max_circuits):
+            all_partitioned_circuits.append(isa_circuits[i : i + max_circuits])
+        jobs = []
+        start_idx = 0
 
-        # run the circuits in batched mode
         with Batch(backend=backend):
             sampler = Sampler()
-            for partition in partitions:
-                job = sampler.run(partition)
-                pub_result = job.result()[0]
-                print(f"Sampler job ID: {job.job_id()}")
-                print(f"Counts for the first PUB: {pub_result.data.cr.get_counts()}")
+            for partitioned_circuits in all_partitioned_circuits:
+                job = sampler.run(partitioned_circuits)
+                jobs.append(job)
 
     For more details, check the "`Run jobs in a batch
     <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" page.
