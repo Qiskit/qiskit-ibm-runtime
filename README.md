@@ -120,7 +120,7 @@ There are several different options you can specify when calling the primitives.
 
 ### Primitive versions
 
-Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. If you are using V1 primitives, refer to [Migrate to the V2 primitives](https://docs.quantum.ibm.com/api/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
+Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. If you are using V1 primitives, refer to [Migrate to the V2 primitives](https://docs.quantum.ibm.com/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
 
 ### Sampler
 
