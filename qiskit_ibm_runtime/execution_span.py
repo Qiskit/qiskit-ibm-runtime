@@ -57,7 +57,7 @@ class ExecutionSpan:
         return ExecutionSpan(self.start, self.stop, slices)
 
 
-class ExecutionSpanCollection(Sequence[ExecutionSpan]):
+class ExecutionSpanCollection:
     """A collection of timings for the PUB result."""
 
     def __init__(self, spans: Iterable[ExecutionSpan]):
@@ -82,12 +82,12 @@ class ExecutionSpanCollection(Sequence[ExecutionSpan]):
     @property
     def start(self) -> datetime:
         """The start time of the entire collection, in UTC."""
-        return min(span.start for span in self)
+        return min(span.start for span in self._spans)
 
     @property
     def stop(self) -> datetime:
         """The stop time of the entire collection, in UTC."""
-        return max(span.stop for span in self)
+        return max(span.stop for span in self._spans)
 
     def plot(self):
         """Show a timing diagram"""
