@@ -38,7 +38,6 @@ from qiskit.utils import optionals
 from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
 from ..ibm_backend import IBMBackend
-from ..utils import RuntimeEncoder
 from ..runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
@@ -218,13 +217,13 @@ class QiskitRuntimeLocalService:
             )
         else:
             primitive_inputs = {"pubs": inputs.pop("pubs")}
-            job =  self._run_backend_primitive_v2(
+            job = self._run_backend_primitive_v2(
                 backend=backend,
                 primitive=program_id,
                 options=inputs.get("options", {}),
                 inputs=primitive_inputs,
             )
-            self._save_job(job, inputs.get("options", {}).get('filename'))
+            self._save_job(job, inputs.get("options", {}).get("filename"))
             return job
 
     def _run_aer_primitive_v1(
@@ -349,19 +348,26 @@ class QiskitRuntimeLocalService:
             warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
 
         return primitive_inst.run(**inputs)
-    
+
     def job(self, job_id: str) -> PrimitiveJob:
-        """"""
-        return
-    
-    def jobs() -> List[PrimitiveJob]:
-        """"""
-        return
-    
+        """Return saved local job."""
+        file_path = f"{os.path.dirname(os.path.realpath(__file__))}/local_jobs"
+        with open(f"{file_path}/{job_id}.pkl", "rb") as file:
+            return pickle.load(file)
+
+    def jobs(self) -> List[PrimitiveJob]:
+        """Return all saved local jobs."""
+        all_jobs = []
+        file_path = f"{os.path.dirname(os.path.realpath(__file__))}/local_jobs"
+        for filename in os.listdir(file_path):
+            with open(f"{file_path}/{filename}", "rb") as file:
+                all_jobs.append(pickle.load(file))
+        return all_jobs
+
     @staticmethod
-    def _save_job(job: PrimitiveJob, filename):
+    def _save_job(job: PrimitiveJob, filename: str) -> None:
         """Pickle and save job locally in the local_jobs folder.
-        
+
         Args:
             job: PrimitiveJob.
             filename: file location to store job.
@@ -373,6 +379,5 @@ class QiskitRuntimeLocalService:
             os.makedirs(f"{file_path}", exist_ok=True)
             with open(f"{file_path}/{job.job_id()}.pkl", "wb") as file:
                 pickle.dump(job, file)
-        except Exception as ex: # pylint: disable=broad-except
-            logger.warning('Unable to save job %s. %s', job.job_id(), ex)
-        
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to save job %s. %s", job.job_id(), ex)
