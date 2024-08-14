@@ -27,7 +27,7 @@ from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 # TODO: remove
-image = "prim-custom-img-noise-learner-phase2:9e702bd778e41a6d14153facfc1bd4444468eba8"  # pylint: disable=invalid-name
+image = "prim-custom-img-noise-learner-phase2:011970f47ce3fcfb08a2920426c343d06417a17e"  # pylint: disable=invalid-name
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
@@ -143,25 +143,31 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         backend = self.backend
 
         options = EstimatorOptions()
+        options.resilience.zne_mitigation = True
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
         options.experimental = {"image": image}
 
+        pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
+
         with Session(service, backend) as session:
             learner = NoiseLearner(mode=session, options=options)
             learner_job = learner.run(self.circuits)
-            layer_noise_model = learner_job.result()
-            self.assertEqual(len(layer_noise_model), 2)
+            noise_model = learner_job.result()
+            self.assertEqual(len(noise_model), 3)
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.pec_mitigation = True
-            estimator.options.resilience.layer_noise_model = layer_noise_model
+            estimator.options.resilience.layer_noise_model = noise_model
 
-            pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
             
-            self.assertEqual(result.metadata["resilience"]["layer_noise_model"], layer_noise_model)
+            noise_model_metadata = result.metadata["resilience"]["layer_noise_model"]
+            for x, y in zip(noise_model, noise_model_metadata):
+                self.assertEqual(x.circuit, y.circuit)
+                self.assertEqual(x.qubits, y.qubits)
+                self.assertEqual(x.error.generators, y.error.generators)
+                self.assertEqual(x.error.rates.tolist(), y.error.rates.tolist())
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
