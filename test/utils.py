@@ -24,7 +24,6 @@ from ddt import data, unpack
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
 from qiskit.compiler import transpile
-from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
@@ -33,8 +32,6 @@ from qiskit_ibm_runtime import (
     Session,
     EstimatorV2,
     SamplerV2,
-    SamplerV1,
-    EstimatorV1,
     Batch,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManila
@@ -150,13 +147,13 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         job.cancel()
         status = job.status()
         assert (
-            status is JobStatus.CANCELLED or status == "CANCELLED"
+            status == "CANCELLED"
         ), "cancel() was successful for job {} but its " "status is {}.".format(
             job.job_id(), status
         )
         return True
     except RuntimeInvalidStateError:
-        if job.status() in JOB_FINAL_STATES:
+        if job.status() in ["DONE", "CANCELLED", "ERROR"]:
             logger.warning("Unable to cancel job because it's already done.")
             return False
         raise
@@ -164,8 +161,8 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
 
 def wait_for_status(job, status, poll_time=1, time_out=20):
     """Wait for job to reach a certain status."""
-    wait_time = 1 if status == JobStatus.QUEUED else poll_time
-    while job.status() not in JOB_FINAL_STATES + (status,) and time_out > 0:
+    wait_time = 1 if status == "QUEUED" else poll_time
+    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
@@ -454,15 +451,6 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
     elif isinstance(primitive, SamplerV2):
         circ.measure_all()
         return {"pubs": [(circ, param_val)] * num_sets}
-    elif isinstance(primitive, EstimatorV1):
-        return {
-            "circuits": [circ] * num_sets,
-            "observables": [obs] * num_sets,
-            "parameter_values": [param_val] * num_sets,
-        }
-    elif isinstance(primitive, SamplerV1):
-        circ.measure_all()
-        return {"circuits": [circ] * num_sets, "parameter_values": [param_val] * num_sets}
     else:
         raise ValueError(f"Invalid primitive type {type(primitive)}")
 
