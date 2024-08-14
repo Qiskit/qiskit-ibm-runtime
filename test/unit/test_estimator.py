@@ -86,6 +86,17 @@ class TestEstimatorV2(IBMTestCase):
                     inst.options.update(**bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
+    def test_invalid_estimator_precision_option(self):
+        """Test exception when precision is invalid."""
+
+        backend = get_mocked_backend()
+        backend.configuration().simulator = True
+
+        estimator = EstimatorV2(backend=backend)
+        with self.assertRaises(ValueError) as exc:
+            estimator.run(**get_primitive_inputs(estimator), precision=0)
+        self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
+
     def test_pec_simulator(self):
         """Test error is raised when using pec on simulator without coupling map."""
         backend = get_mocked_backend()
