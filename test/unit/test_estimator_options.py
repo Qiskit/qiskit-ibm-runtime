@@ -83,6 +83,10 @@ class TestEstimatorOptions(IBMTestCase):
             {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": []}}},
             "exponential requires at least 2 noise_factors",
         ),
+        (
+            {"resilience": {"zne_mitigation": True, "zne": {"amplifier": "not_accepted"}}},
+            "Input should be 'gate_folding', 'gate_folding_front', 'gate_folding_back' or 'pea'",
+        ),
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""
@@ -113,7 +117,11 @@ class TestEstimatorOptions(IBMTestCase):
                 "shots_per_randomization": 20,
             },
             "zne_mitigation": True,
-            "zne": {"noise_factors": [1.0, 3.0], "extrapolator": "linear"},
+            "zne": {
+                "noise_factors": [1.0, 3.0],
+                "extrapolator": "linear",
+                "amplifier": "gate_folding",
+            },
             "pec_mitigation": False,
         }
         twirling = {"enable_gates": True, "enable_measure": True, "strategy": "all"}
