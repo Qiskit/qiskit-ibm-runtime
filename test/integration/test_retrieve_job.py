@@ -16,7 +16,6 @@ import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_ibm_runtime import RuntimeJob, RuntimeJobV2
 
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
@@ -68,7 +67,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.result(), rjob.result())
+                self.assertEqual(job.status(), rjob.status())
                 found = True
                 break
         self.assertTrue(found, f"Job {job.job_id()} not returned.")
@@ -89,8 +88,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        circuits = [bell()] * 20
-        job = self._run_program(service, circuits=circuits)
+        job = self._run_program(service)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
         after_status = job.status()
@@ -98,7 +96,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.inputs["run_options"], rjob.inputs["run_options"])
+                self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
 
@@ -117,7 +115,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.result(), rjob.result())
+                self.assertEqual(job.status(), rjob.status())
                 found = True
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
@@ -203,15 +201,3 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         jobs = service.jobs(backend_name=backend)
         for job in jobs:
             self.assertEqual(backend, job.backend().name)
-
-    @run_integration_test
-    def test_retrieve_correct_job_version(self, service):
-        """Test retrieving the correct job version."""
-        job = self._run_program(service)
-        job.wait_for_final_state()
-        rjob = service.job(job.job_id())
-        job_v2 = self._run_program(service, program_id="samplerv2")
-        job_v2.wait_for_final_state()
-        rjob_v2 = service.job(job_v2.job_id())
-        self.assertIsInstance(rjob, RuntimeJob)
-        self.assertIsInstance(rjob_v2, RuntimeJobV2)

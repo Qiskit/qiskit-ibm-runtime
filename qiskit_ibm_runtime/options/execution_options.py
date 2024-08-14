@@ -32,18 +32,3 @@ class ExecutionOptionsV2:
     range supplied by ``backend.rep_delay_range``.
     Default is given by ``backend.default_rep_delay``.
     """
-
-
-@primitive_dataclass
-class ExecutionOptions:
-    """Execution options for V1 primitives.
-
-    Args:
-        shots: Number of repetitions of each circuit, for sampling. Default: 4000.
-
-        init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Default: ``True``.
-    """
-
-    shots: int = 4000
-    init_qubits: bool = True

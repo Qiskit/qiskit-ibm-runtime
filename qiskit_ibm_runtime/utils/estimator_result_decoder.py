@@ -12,10 +12,8 @@
 
 """Estimator result decoder."""
 
-from typing import Dict, Union
-import numpy as np
+from typing import Dict
 
-from qiskit.primitives import EstimatorResult
 from qiskit.primitives.containers import PrimitiveResult
 
 from .result_decoder import ResultDecoder
@@ -27,13 +25,8 @@ class EstimatorResultDecoder(ResultDecoder):
     @classmethod
     def decode(  # type: ignore # pylint: disable=arguments-differ
         cls, raw_result: str
-    ) -> Union[EstimatorResult, PrimitiveResult]:
+    ) -> PrimitiveResult:
         """Convert the result to EstimatorResult."""
         decoded: Dict = super().decode(raw_result)
-        if isinstance(decoded, PrimitiveResult):
-            return decoded
-        else:
-            return EstimatorResult(
-                values=np.asarray(decoded["values"]),
-                metadata=decoded["metadata"],
-            )
+
+        return decoded
