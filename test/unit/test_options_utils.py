@@ -16,9 +16,7 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 
-from qiskit_ibm_runtime import Options
 from qiskit_ibm_runtime.options.utils import (
-    merge_options,
     Unset,
     remove_dict_unset_values,
     remove_empty_dict,
@@ -27,42 +25,12 @@ from qiskit_ibm_runtime.options.utils import (
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, flat_dict_partially_equal, dict_paritally_equal
+from ..utils import dict_keys_equal, dict_paritally_equal
 
 
 @ddt
 class TestOptionsUtils(IBMTestCase):
     """Class for testing the options.utils."""
-
-    def test_merge_v1options(self):
-        """Test merging options."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
-            {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
-            {
-                "initial_layout": [1, 2],
-                "transpilation": {"layout_method": "trivial"},
-                "log_level": "INFO",
-            },
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = merge_options(asdict(options), new_ops)
-
-                # Make sure the values are equal.
-                self.assertTrue(
-                    flat_dict_partially_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(options)),
-                    f"options={options}, combined={combined}",
-                )
 
     def test_merge_estimator_options(self):
         """Test merging estimator options."""

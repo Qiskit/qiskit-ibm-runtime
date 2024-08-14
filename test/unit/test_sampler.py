@@ -17,38 +17,15 @@ from unittest.mock import MagicMock
 from ddt import data, ddt, named_data
 import numpy as np
 
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
-from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
+from qiskit_ibm_runtime import Session, SamplerV2, SamplerOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
 from .mock.fake_runtime_service import FakeRuntimeService
-
-
-class TestSampler(IBMTestCase):
-    """Class for testing the Sampler class."""
-
-    def test_unsupported_values_for_sampler_options(self):
-        """Test exception when options levels are not supported."""
-        options_bad = [
-            {"resilience_level": 2, "optimization_level": 3},
-            {"optimization_level": 4, "resilience_level": 1},
-        ]
-        backend = get_mocked_backend()
-        circuit = transpile(bell(), backend=backend)
-
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
-        ) as session:
-            for bad_opt in options_bad:
-                inst = Sampler(session=session)
-                with self.assertRaises(ValueError) as exc:
-                    _ = inst.run(circuit, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
 
 @ddt

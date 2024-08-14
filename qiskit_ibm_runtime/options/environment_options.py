@@ -27,7 +27,7 @@ LogLevelType = Literal[
 
 @primitive_dataclass
 class EnvironmentOptions:
-    """Options related to the execution environment. This applies to both V1 and V2 primitives.
+    """Options related to the execution environment.
 
     Args:
         log_level: logging level to set in the execution environment. The valid
