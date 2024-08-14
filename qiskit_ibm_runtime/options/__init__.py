@@ -62,8 +62,8 @@ Base primitive options
    SamplerOptions
 
 
-Suboptions for V2 primitives only
----------------------------------
+Suboptions
+----------
 
 .. autosummary::
    :toctree: ../stubs/
@@ -77,14 +77,6 @@ Suboptions for V2 primitives only
    TwirlingOptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
-
-
-Suboptions for both V1 and V2 primitives
-----------------------------------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
    EnvironmentOptions
    SimulatorOptions
 
