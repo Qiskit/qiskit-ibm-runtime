@@ -161,7 +161,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
-            
+
             noise_model_metadata = result.metadata["resilience"]["layer_noise_model"]
             for x, y in zip(noise_model, noise_model_metadata):
                 self.assertEqual(x.circuit, y.circuit)
