@@ -1,0 +1,3 @@
+``ResilienceOptionsV2`` has a new field ``layer_noise_model``. When this field is set, all the
+mitigation strategies that require noise data skip the noise learning stage, and instead gather
+the required information from ``layer_noise_model``.  
