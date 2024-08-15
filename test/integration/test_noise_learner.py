@@ -94,7 +94,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.layer_pair_depths = [0, 1]
 
         input_options = deepcopy(self.default_input_options)
-        input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
 
         with Session(service, backend) as session:
