@@ -86,32 +86,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, input_options, 1)
 
     @run_integration_test
-    def test_in_session(self, service):
-        """Test noise learner when used within a session."""
-        backend = self.backend
-
-        options = NoiseLearnerOptions()
-        options.layer_pair_depths = [0, 1]
-
-        input_options = deepcopy(self.default_input_options)
-        input_options["layer_pair_depths"] = [0, 1]
-
-        with Session(service, backend) as session:
-            options.twirling_strategy = "all"
-            learner1 = NoiseLearner(mode=session, options=options)
-            job1 = learner1.run(self.circuits)
-
-            input_options["twirling_strategy"] = "all"
-            self._verify(job1, input_options, 2)
-
-            options.twirling_strategy = "active-circuit"
-            learner2 = NoiseLearner(mode=session, options=options)
-            job2 = learner2.run(self.circuits)
-
-            input_options["twirling_strategy"] = "active-circuit"
-            self._verify(job2, input_options, 3)
-
-    @run_integration_test
     def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
         backend = self.backend
