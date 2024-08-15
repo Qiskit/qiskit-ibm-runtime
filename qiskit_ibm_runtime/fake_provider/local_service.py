@@ -243,8 +243,7 @@ class QiskitRuntimeLocalService:
 
     def job(self, job_id: str) -> PrimitiveJob:
         """Return saved local job."""
-        file_path = f"{os.path.dirname(os.path.realpath(__file__))}/local_jobs"
-        with open(f"{file_path}/{job_id}.pkl", "rb") as file:
+        with open(f"{self._saved_jobs_directory}/{job_id}.pkl", "rb") as file:
             return pickle.load(file)
 
     def jobs(self) -> List[PrimitiveJob]:

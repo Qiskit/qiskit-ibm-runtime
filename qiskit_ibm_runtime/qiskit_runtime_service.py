@@ -62,7 +62,7 @@ class QiskitRuntimeService:
             # pylint: disable=import-outside-toplevel
             from .fake_provider.local_service import QiskitRuntimeLocalService
 
-            return super().__new__(QiskitRuntimeLocalService)
+            return QiskitRuntimeLocalService()
         else:
             return super().__new__(cls)
 
