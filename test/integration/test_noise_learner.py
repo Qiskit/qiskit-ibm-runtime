@@ -143,7 +143,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         backend = self.backend
 
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
+        options.resilience.zne_mitigation = True  # pylint: disable=assigning-non-slot
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
         options.experimental = {"image": image}
