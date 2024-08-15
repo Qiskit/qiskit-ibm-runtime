@@ -68,8 +68,8 @@ class ResilienceOptionsV2:
             See :class:`LayerNoiseLearningOptions` for all options.
 
         layer_noise_model: A list of :class:`LayerError` objects.
-            If set, all the mitigation strategies that require noise data (e.g., PEC) skip the
-            noise learning stage, and instead gather the required information from
+            If set, all the mitigation strategies that require noise data (e.g., PEC and PEA)
+            skip the noise learning stage, and instead gather the required information from
             ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
             are treated as noiseless and their noise is not mitigated.
     """
