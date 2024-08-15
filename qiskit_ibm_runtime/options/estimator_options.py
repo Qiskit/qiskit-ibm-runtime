@@ -98,20 +98,7 @@ class EstimatorOptions(OptionsV2):
         twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
         experimental: Experimental options. These options are subject to change without notification, and
-            stability is not guaranteed. Currently, the available options are:
-
-            * Probabilistic Error Amplification (PEA). To enable PEA, set::
-
-                estimator_options.experimental = {"resilience": {"zne": {"amplifier": "pea"}}}
-
-              Since PEA is an amplification technique of ZNE, you will also need to enable ZNE by
-              setting ``resilience.zne_mitigation = True``.
-              Other documented ``resilience.zne`` options can be used in conjunction to set
-              extrapolators, amplification levels, etc. Experiments to learn a sparse Pauli noise
-              model will be performed for every uniquely identified entangling layer
-              (up to a specified cutoff) in the union of circuits across PUBs; see
-              :class:~.LayerNoiseLearningOptions` for options. Add full-width barriers to specify
-              layers unambiguously.
+            stability is not guaranteed.
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.

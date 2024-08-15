@@ -17,10 +17,10 @@ from unittest import SkipTest
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit.primitives import EstimatorResult, SamplerResult
+from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Estimator, Session, Sampler, Options, Batch, SamplerV2
+from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
@@ -43,38 +43,21 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        options = Options(resilience_level=0)
-
         with Session(service, backend=backend) as session:
-            estimator = Estimator(session=session, options=options)
-            result = estimator.run(
-                circuits=psi1, observables=[H1], parameter_values=[theta1], shots=100
-            ).result()
-            self.assertIsInstance(result, EstimatorResult)
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 100)
+            estimator = EstimatorV2(session=session)
+            result = estimator.run([(psi1, H1, [theta1])]).result()
+            self.assertIsInstance(result, PrimitiveResult)
 
-            sampler = Sampler(session=session, options=options)
-            result = sampler.run(circuits=pm.run(bell()), shots=200).result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 200)
+            sampler = SamplerV2(session=session)
+            result = sampler.run([pm.run(bell())]).result()
+            self.assertIsInstance(result, PrimitiveResult)
 
-            result = estimator.run(
-                circuits=pm.run([psi1]), observables=[H1], parameter_values=[theta1], shots=300
-            ).result()
-            self.assertIsInstance(result, EstimatorResult)
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 300)
+            result = estimator.run([(psi1, H1, [theta1])]).result()
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertEqual(result[0].metadata["shots"], 4096)
 
-            result = sampler.run(circuits=pm.run(bell()), shots=400).result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 400)
+            result = sampler.run([pm.run(bell())]).result()
+            self.assertIsInstance(result, PrimitiveResult)
             session.close()
 
     @run_integration_test
@@ -85,8 +68,8 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend(self.dependencies.device, self.dependencies.instance)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         with Session(service, backend=backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(pm.run(bell()), shots=400)
+            sampler = SamplerV2(session=session)
+            job = sampler.run([pm.run(bell())])
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
 
@@ -100,7 +83,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run(bell())
         with Session(service, backend=backend) as session:
-            sampler = Sampler(session=session)
+            sampler = SamplerV2(session=session)
             sampler.run(isa_circuit)
 
         new_session = Session.from_id(session_id=session._session_id, service=service)

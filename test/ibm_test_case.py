@@ -24,7 +24,7 @@ from typing import DefaultDict, Dict
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, SamplerV2, Options
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
 
 from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -260,18 +260,13 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            options = Options()
-            if log_level:
-                options.environment.log_level = log_level
-            if job_tags:
-                options.environment.job_tags = job_tags
-            if max_execution_time:
-                options.max_execution_time = max_execution_time
-            sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(pm.run(circuits) if circuits else pm.run(bell()), callback=callback)
-        elif pid == "samplerv2":
             sampler = SamplerV2(backend=backend)
-            job = sampler.run([pm.run(bell())])
+            if job_tags:
+                sampler.options.environment.job_tags = job_tags
+            if circuits:
+                job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
+            else:
+                job = sampler.run([pm.run(bell())])
         else:
             job = service._run(
                 program_id=pid,

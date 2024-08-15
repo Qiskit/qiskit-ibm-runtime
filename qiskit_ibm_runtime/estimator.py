@@ -13,27 +13,20 @@
 """Estimator primitive."""
 
 from __future__ import annotations
-import os
-from typing import Optional, Dict, Sequence, Any, Union, Iterable
+
+from typing import Optional, Dict, Union, Iterable
 import logging
 
-from qiskit.circuit import QuantumCircuit
 from qiskit.providers import BackendV1, BackendV2
-from qiskit.quantum_info.operators.base_operator import BaseOperator
-from qiskit.quantum_info.operators import SparsePauliOp
-from qiskit.primitives import BaseEstimator
+
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
-from .ibm_backend import IBMBackend
-from .options import Options
 from .options.estimator_options import EstimatorOptions
-from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
+from .base_primitive import BasePrimitiveV2
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
-from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .utils import validate_estimator_pubs
 
@@ -189,7 +182,12 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         Returns:
             Submitted job.
 
+        Raises:
+            ValueError: if precision value is not strictly greater than 0.
         """
+        if precision is not None:
+            if precision <= 0:
+                raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
         validate_estimator_pubs(coerced_pubs)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
@@ -225,197 +223,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "or Qiskit transpiler service. "
                 "See https://docs.quantum.ibm.com/guides/transpile for more information.",
             )
-
-    @classmethod
-    def _program_id(cls) -> str:
-        """Return the program ID."""
-        return "estimator"
-
-
-class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
-    """Class for interacting with Qiskit Runtime Estimator primitive service.
-
-    .. deprecated:: 0.23
-       The ``EstimatorV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
-       See the `V2 migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`_.
-       for more details.
-       The ``EstimatorV1`` support will be removed no earlier than July 15, 2024.
-
-    Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
-    observables.
-
-    The :meth:`run` can be used to submit circuits, observables, and parameters
-    to the Estimator primitive.
-
-    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitives. Jobs submitted within a session
-    are prioritized by the scheduler.
-
-    Example::
-
-        from qiskit.circuit.library import RealAmplitudes
-        from qiskit.quantum_info import SparsePauliOp
-
-        from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
-
-        service = QiskitRuntimeService(channel="ibm_cloud")
-
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        H2 = SparsePauliOp.from_list([("IZ", 1)])
-        H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
-
-        with Session(service=service, backend="ibmq_qasm_simulator") as session:
-            estimator = Estimator(session=session)
-
-            theta1 = [0, 1, 1, 2, 3, 5]
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            psi1_H1 = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-            print(psi1_H1.result())
-
-            # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            psi1_H23 = estimator.run(
-                circuits=[psi1, psi1],
-                observables=[H2, H3],
-                parameter_values=[theta1]*2
-            )
-            print(psi1_H23.result())
-    """
-
-    version = 1
-
-    def __init__(
-        self,
-        backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Session] = None,
-        options: Optional[Union[Dict, Options]] = None,
-    ):
-        """Initializes the Estimator primitive.
-
-        Args:
-            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
-
-            session: Session in which to call the primitive.
-
-                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
-                Otherwise if IBM Cloud channel is used, a default backend is selected.
-
-            options: Primitive options, see :class:`Options` for detailed description.
-                The ``backend`` keyword is still supported but is deprecated.
-        """
-        # `self._options` in this class is a Dict.
-        # The base class, however, uses a `_run_options` which is an instance of
-        # qiskit.providers.Options. We largely ignore this _run_options because we use
-        # a nested dictionary to categorize options.
-        BaseEstimator.__init__(self)
-        Estimator.__init__(self)
-        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
-
-    def run(  # pylint: disable=arguments-differ
-        self,
-        circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: Sequence[BaseOperator | str] | BaseOperator | str,
-        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: Observable objects.
-
-            parameter_values: Concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-
-        Returns:
-            Submitted job.
-            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
-        # To bypass base class merging of options.
-        user_kwargs = {"_user_kwargs": kwargs}
-        return super().run(
-            circuits=circuits,
-            observables=observables,
-            parameter_values=parameter_values,
-            **user_kwargs,
-        )
-
-    def _run(  # pylint: disable=arguments-differ
-        self,
-        circuits: tuple[QuantumCircuit, ...],
-        observables: tuple[SparsePauliOp, ...],
-        parameter_values: tuple[tuple[float, ...], ...],
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: A list of observable objects.
-
-            parameter_values: An optional list of concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-
-        Returns:
-            Submitted job
-        """
-        inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": [circ.parameters for circ in circuits],
-            "parameter_values": parameter_values,
-        }
-        return self._run_primitive(
-            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
-        )
-
-    def _validate_options(self, options: dict) -> None:
-        """Validate that primitive inputs (options) are valid
-        Raises:
-            ValueError: if resilience_level is out of the allowed range.
-            ValueError: if resilience_level==3, backend is simulator and no coupling map
-        """
-        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
-            return
-
-        if self._service._channel_strategy == "q-ctrl":
-            qctrl_validate(options)
-            return
-
-        if not options.get("resilience_level") in list(
-            range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
-        ):
-            raise ValueError(
-                f"resilience_level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
-            )
-
-        if (
-            options.get("resilience_level") == 3
-            and self._backend
-            and self._backend.configuration().simulator
-        ):
-            if not options.get("simulator").get("coupling_map"):
-                raise ValueError(
-                    "When the backend is a simulator and resilience_level == 3,"
-                    "a coupling map is required."
-                )
-        Options.validate_options(options)
 
     @classmethod
     def _program_id(cls) -> str:
