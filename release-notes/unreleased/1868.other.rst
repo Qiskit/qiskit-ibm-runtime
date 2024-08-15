@@ -1,1 +1,0 @@
-The ``service`` parameter is now required in ``Session.from_id()``.
