@@ -24,12 +24,13 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Sequence
+from typing import Any, Iterator, List, Sequence, Optional
 from numpy.typing import NDArray
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
+from qiskit.transpiler import CouplingMap
 
 from ..utils.deprecation import issue_deprecation_msg
 
@@ -216,6 +217,13 @@ class NoiseLearnerResult:
     def metadata(self) -> dict[str, Any]:
         """The metadata of this noise learner result."""
         return self._metadata
+
+    def draw(self, coupling_map: CouplingMap = None):
+        """
+        A map view of the results.
+
+        coupling_map: The directed graph representing the coupling map for the device.
+        """
 
     def __getitem__(self, index: int) -> LayerError:
         return self.data[index]
