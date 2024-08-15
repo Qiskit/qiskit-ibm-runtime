@@ -26,9 +26,6 @@ from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
-# TODO: remove
-image = "prim-custom-img-noise-learner-phase2:011970f47ce3fcfb08a2920426c343d06417a17e"  # pylint: disable=invalid-name
-
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     """Integration tests for NoiseLearner."""
@@ -66,7 +63,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=backend, options=options)
-        learner.options.experimental = {"image": image}
 
         job = learner.run(self.circuits)
 
@@ -83,7 +79,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         learner = NoiseLearner(mode=backend, options=options)
 
         job = learner.run(self.circuits)
-        learner.options.experimental = {"image": image}
 
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 1
@@ -105,7 +100,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         with Session(service, backend) as session:
             options.twirling_strategy = "all"
             learner1 = NoiseLearner(mode=session, options=options)
-            learner1.options.experimental = {"image": image}
             job1 = learner1.run(self.circuits)
 
             input_options["twirling_strategy"] = "all"
@@ -113,7 +107,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
             options.twirling_strategy = "active-circuit"
             learner2 = NoiseLearner(mode=session, options=options)
-            learner2.options.experimental = {"image": image}
             job2 = learner2.run(self.circuits)
 
             input_options["twirling_strategy"] = "active-circuit"
@@ -127,7 +120,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=backend, options=options)
-        learner.options.experimental = {"image": image}
 
         job = learner.run(self.circuits)
 
@@ -146,7 +138,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.resilience.zne_mitigation = True  # pylint: disable=assigning-non-slot
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
-        options.experimental = {"image": image}
 
         pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
 
