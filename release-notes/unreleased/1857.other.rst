@@ -1,2 +1,0 @@
-The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please use the 
-V2 Primitives instead https://docs.quantum.ibm.com/migration-guides/v2-primitives. 
