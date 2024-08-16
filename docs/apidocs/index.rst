@@ -9,6 +9,7 @@ qiskit-ibm-runtime API reference
 
    runtime_service
    noise_learner
+   noise_learner_result
    options
    transpiler
    qiskit_ibm_runtime.transpiler.passes.scheduling
