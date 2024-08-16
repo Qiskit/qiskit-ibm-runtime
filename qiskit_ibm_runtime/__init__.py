@@ -185,7 +185,9 @@ Classes
    :toctree: ../stubs/
 
    QiskitRuntimeService
+   Estimator
    EstimatorV2
+   Sampler
    SamplerV2
    Session
    Batch
