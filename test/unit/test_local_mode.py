@@ -177,3 +177,27 @@ class TestLocalModeV2(IBMTestCase):
         session = Session(backend=backend)
         with self.assertRaisesRegex(ValueError, "Only sampler and estimator"):
             session.run(program_id="foo", inputs={})
+
+    @combine(backend=[FakeManilaV2()])
+    def test_retrieve_job(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(backend=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        rjob = self._service.job(job.job_id())
+        self.assertEqual(rjob.job_id(), job.job_id())
+
+    @combine(backend=[FakeManilaV2()])
+    def test_retrieve_jobs(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(backend=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        rjobs = self._service.jobs()
+        self.assertIn(job.job_id(), [rjob.job_id() for rjob in rjobs])
+
+    @combine(backend=[FakeManilaV2()])
+    def test_delete_job(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(backend=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        self._service.delete_job(job.job_id())
+        self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in self._service.jobs()])
