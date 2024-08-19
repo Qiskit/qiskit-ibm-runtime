@@ -48,12 +48,12 @@ class ExecutionSpan:
         """Return the duration"""
         return (self.stop - self.start).seconds
 
-    def contains_pub(self, pub_idx: int | Iterable[int]) -> bool:
+    def contains_pub(self, pub_idx: Union[int, Iterable[int]]) -> bool:
         """Returns if a pub is contained"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         return not pub_idx.isdisjoint(self.data_slices)
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpanT:
+    def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> ExecutionSpanT:
         """Returns an ExecutionSpan filtered by pub-"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
