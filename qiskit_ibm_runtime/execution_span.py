@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Union, Iterable, TypeVar
+from typing import Iterable, TypeVar, Union, overload
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -20,9 +20,10 @@ from dataclasses import dataclass
 # The format accepted by ``numpy.ndarray.__getitem__()``.
 SliceType = tuple[Union[slice, int, list[int]], ...]
 ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
+ExecutionSpanCollectionT = TypeVar("ExecutionSpanCollectionT", bound="ExecutionSpanCollection")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExecutionSpan:
     """Stores an execution time span for a subset of job data."""
 
@@ -69,8 +70,15 @@ class ExecutionSpanCollection:
     def __len__(self) -> int:
         return len(list(self._spans))
 
-    def __getitem__(self, index: int) -> ExecutionSpan:
-        return self._spans[index]
+    @overload
+    def __getitem__(self, idxs: int) -> ExecutionSpan:
+        return self._spans[idxs]
+
+    @overload
+    def __getitem__(self, idxs: Union[slice | list[int]]) -> ExecutionSpanCollectionT:
+        if isinstance(idxs, slice):
+            return ExecutionSpanCollection(self._spans[idxs])
+        return ExecutionSpanCollection([self._spans[idx] for idx in idxs])
 
     def __iter__(self):
         return iter(self._spans)
