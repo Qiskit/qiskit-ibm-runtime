@@ -102,6 +102,16 @@ class PauliLindbladError:
         """
         return self.generators.num_qubits
 
+    def n_body(self, n: int) -> PauliLindbladError:
+        r"""
+        The :class:`~.PauliLindbladError` obtained by removing all the dissipators in this error
+        that do not act on exactly ``n`` qubits.
+        """
+        if n < 0:
+            raise ValueError("``n`` must be ``0`` or larger.")
+        mask = np.sum(self.generators.paulis.x | self.generators.paulis.z, axis=1) == n
+        return PauliLindbladError(self.generators[mask], self.rates[mask])
+
     def _json(self) -> dict:
         """Return a dictionary containing all the information to re-initialize this object."""
         return {"generators": self.generators, "rates": self.rates}

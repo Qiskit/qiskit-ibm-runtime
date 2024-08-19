@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from typing import Iterable, List, Tuple
-from .falcon_info import edges as falcon_edges, coordinates as falcon_coordinates
+from .falcon_info import edges as falcon_edges, xs as falcon_xs, ys as falcon_ys
 
 
 class BackendVisualInfo:
@@ -23,18 +23,18 @@ class BackendVisualInfo:
     The information required to visualize the map view of a backend.
 
     Args:
-        x_coo: The list of ``x`` coordinates for the qubits in this backend.
-        y_coo: The list of ``y`` coordinates for the qubits in this backend.
+        xs: The list of ``x`` coordinates for the qubits in this backend.
+        ys: The list of ``y`` coordinates for the qubits in this backend.
         edges: The edges between connected qubits.
     """
 
-    def __init__(self, x_coo: List[int], y_coo: List[int], edges: List[Tuple[int, int]]) -> None:
+    def __init__(self, xs: List[int], ys: List[int], edges: List[Tuple[int, int]]) -> None:
         # Validation
-        if len(x_coo) != len(y_coo):
-            raise ValueError("``x_coo`` and ``y_coo`` must be of the same length.")
+        if len(xs) != len(ys):
+            raise ValueError("``xs`` and ``ys`` must be of the same length.")
 
-        self._x_coo = x_coo
-        self._y_coo = y_coo
+        self._xs = xs
+        self._ys = ys
         self._edges = edges
 
     @property
@@ -42,21 +42,21 @@ class BackendVisualInfo:
         """
         An iterable over ``x`` and ``y`` coordinates.
         """
-        return zip(self.x_coo, self.y_coo)
+        return zip(self.xs, self.ys)
 
     @property
-    def x_coo(self) -> List[int]:
+    def xs(self) -> List[int]:
         """
         The ``x`` coordinates of the qubits in this backend.
         """
-        return self._x_coo
+        return self._xs
 
     @property
-    def y_coo(self) -> List[int]:
+    def ys(self) -> List[int]:
         """
         The ``y`` coordinates of the qubits in this backend.
         """
-        return self._y_coo
+        return self._ys
 
     @property
     def edges(self) -> List[Tuple[int, int]]:
@@ -67,4 +67,4 @@ class BackendVisualInfo:
 
 
 r"""The visual information required to visualize a Falcon QPU."""
-FalconVisualInfo = BackendVisualInfo(falcon_edges, falcon_coordinates, "Falcon")
+FalconVisualInfo = BackendVisualInfo(falcon_xs, falcon_ys, falcon_edges)
