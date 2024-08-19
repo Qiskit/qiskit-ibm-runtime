@@ -14,31 +14,57 @@
 
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import Iterable, List, Tuple
 from .falcon_info import edges as falcon_edges, coordinates as falcon_coordinates
 
 
 class BackendVisualInfo:
-    def __init__(
-        self, edges: List[Tuple[int, int]], coordinates: Tuple[List[int], List[int]], cpu_type: str
-    ) -> None:
+    r"""
+    The information required to visualize the map view of a backend.
+
+    Args:
+        x_coo: The list of ``x`` coordinates for the qubits in this backend.
+        y_coo: The list of ``y`` coordinates for the qubits in this backend.
+        edges: The edges between connected qubits.
+    """
+
+    def __init__(self, x_coo: List[int], y_coo: List[int], edges: List[Tuple[int, int]]) -> None:
+        # Validation
+        if len(x_coo) != len(y_coo):
+            raise ValueError("``x_coo`` and ``y_coo`` must be of the same length.")
+
+        self._x_coo = x_coo
+        self._y_coo = y_coo
         self._edges = edges
-        self._coordinates = coordinates
-        self._cpu_type: cpu_type
-
-        # TODO: add validation
 
     @property
-    def coordinates(self):
-        return self._coordinates
+    def coordinates(self) -> Iterable[List[int], List[int]]:
+        """
+        An iterable over ``x`` and ``y`` coordinates.
+        """
+        return zip(self.x_coo, self.y_coo)
 
     @property
-    def cpu_type(self):
-        return self._cpu_type
+    def x_coo(self) -> List[int]:
+        """
+        The ``x`` coordinates of the qubits in this backend.
+        """
+        return self._x_coo
 
     @property
-    def edges(self):
+    def y_coo(self) -> List[int]:
+        """
+        The ``y`` coordinates of the qubits in this backend.
+        """
+        return self._y_coo
+
+    @property
+    def edges(self) -> List[Tuple[int, int]]:
+        """
+        The edges representing the qubit-qubit connections in this backend.
+        """
         return self._edges
 
 
+r"""The visual information required to visualize a Falcon QPU."""
 FalconVisualInfo = BackendVisualInfo(falcon_edges, falcon_coordinates, "Falcon")
