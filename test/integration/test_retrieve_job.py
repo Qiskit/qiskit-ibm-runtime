@@ -67,7 +67,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.status(), rjob.status())
+                self.assertIn(job.status(), ["QUEUED", JobStatus.QUEUED])
+                self.assertIn(rjob.status(), ["QUEUED", JobStatus.QUEUED])
                 found = True
                 break
         self.assertTrue(found, f"Job {job.job_id()} not returned.")
@@ -115,7 +116,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.status(), rjob.status())
+                self.assertIn(job.status(), ["DONE", JobStatus.DONE])
+                self.assertIn(rjob.status(), ["DONE", JobStatus.DONE])
                 found = True
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
