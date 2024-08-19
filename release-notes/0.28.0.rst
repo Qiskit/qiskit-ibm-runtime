@@ -12,6 +12,6 @@ New Features
 Other Notes
 -----------
 
-- The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please use the
-  `migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`__ and use theV2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
+- The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please see the
+  `migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`__ and use the V2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
 - The ``service`` parameter is now required in ``Session.from_id()``. (`1868 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1868>`__)
