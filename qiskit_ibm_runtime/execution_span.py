@@ -12,12 +12,12 @@
 
 """Execution span classes."""
 
-from typing import Union, Iterable, Sequence, TypeVar
+from typing import Union, Iterable, TypeVar
 from datetime import datetime
 from dataclasses import dataclass
 
 
-"""The format accepted by ``numpy.ndarray.__getitem__()``."""
+# The format accepted by ``numpy.ndarray.__getitem__()``.
 SliceType = tuple[Union[slice, int, list[int]], ...]
 ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
 
@@ -45,13 +45,16 @@ class ExecutionSpan:
 
     @property
     def duration(self) -> float:
+        """Return the duration"""
         return (self.stop - self.start).seconds
 
-    def contains_pub(self, pub_idx: int | Iterable[int]):
+    def contains_pub(self, pub_idx: int | Iterable[int]) -> bool:
+        """Returns if a pub is contained"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         return not pub_idx.isdisjoint(self.data_slices)
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpanT:
+        """Returns an ExecutionSpan filtered by pub-"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
         return ExecutionSpan(self.start, self.stop, slices)
@@ -63,21 +66,14 @@ class ExecutionSpanCollection:
     def __init__(self, spans: Iterable[ExecutionSpan]):
         self._spans = spans
 
-    def __len__(self):
-        # Not sure if we have to reimplement
-        pass
+    def __len__(self) -> int:
+        return len(list(self._spans))
 
-    def __getitem__(self, index):
-        # Not sure if we have to reimplement
-        pass
-
-    def __repr__(self):
-        # Not sure if we have to reimplement
-        pass
+    def __getitem__(self, index: int) -> ExecutionSpan:
+        return self._spans[index]
 
     def __iter__(self):
-        # Not sure if we have to reimplement
-        pass
+        return iter(self._spans)
 
     @property
     def start(self) -> datetime:
