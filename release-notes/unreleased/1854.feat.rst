@@ -1,5 +1,5 @@
 The methods ``job()``, ``jobs()``, and ``delete_jobs()`` have been added to 
 :class:`QiskitRuntimeLocalService`. Jobs run in local mode will now be 
-automatically saved into a local directory. This direcotry defaults to 
+automatically saved into a local directory. This directory defaults to 
 ``qiskit_ibm_runtime/fake_provider/local_jobs`` but can be customized with the 
 ``QISKIT_LOCAL_JOBS_DIRECTORY`` environment variable. 

@@ -110,22 +110,22 @@ def convert_to_target(
         if name in qiskit_control_flow_mapping:
             if not include_control_flow:
                 # Remove name if this is control flow and dynamic circuits feature is disabled.
-                # logger.info(
-                #     "Control flow %s is found but the dynamic circuits are disabled for this backend. "
-                #     "This instruction is excluded from the backend Target.",
-                #     name,
-                # )
+                logger.info(
+                    "Control flow %s is found but the dynamic circuits are disabled for this backend. "
+                    "This instruction is excluded from the backend Target.",
+                    name,
+                )
                 unsupported_instructions.append(name)
             continue
         if name in qiskit_inst_mapping:
             qiskit_gate = qiskit_inst_mapping[name]
             if (not include_fractional_gates) and is_fractional_gate(qiskit_gate):
                 # Remove name if this is fractional gate and fractional gate feature is disabled.
-                # logger.info(
-                #     "Gate %s is found but the fractional gates are disabled for this backend. "
-                #     "This gate is excluded from the backend Target.",
-                #     name,
-                # )
+                logger.info(
+                    "Gate %s is found but the fractional gates are disabled for this backend. "
+                    "This gate is excluded from the backend Target.",
+                    name,
+                )
                 unsupported_instructions.append(name)
                 continue
             inst_name_map[name] = qiskit_gate
@@ -277,13 +277,13 @@ def convert_to_target(
                     or prop_name_map[name] is None
                     or qubits not in prop_name_map[name]
                 ):
-                    # logger.info(
-                    #     "Gate calibration for instruction %s on qubits %s is found "
-                    #     "in the PulseDefaults payload. However, this entry is not defined in "
-                    #     "the gate mapping of Target. This calibration is ignored.",
-                    #     name,
-                    #     qubits,
-                    # )
+                    logger.info(
+                        "Gate calibration for instruction %s on qubits %s is found "
+                        "in the PulseDefaults payload. However, this entry is not defined in "
+                        "the gate mapping of Target. This calibration is ignored.",
+                        name,
+                        qubits,
+                    )
                     continue
 
                 if (name, qubits) in faulty_ops:
