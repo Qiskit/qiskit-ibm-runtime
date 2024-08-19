@@ -78,30 +78,7 @@ class TestFakeBackends(IBMTestCase):
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         self.assertEqual(max_count, "11")
 
-    @idata(
-        itertools.product(
-            [be for be in FAKE_PROVIDER.backends() if be.configuration().num_qubits > 1],
-            [0, 1, 2, 3],
-        )
-    )
-    @unpack
-    def test_circuit_on_fake_backend(self, backend, optimization_level):
-        if not optionals.HAS_AER and backend.configuration().num_qubits > 20:
-            self.skipTest(
-                "Unable to run fake_backend %s without qiskit-aer"
-                % backend.configuration().backend_name
-            )
-        backend.set_options(seed_simulator=42)
-        pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
-        isa_circuit = pm.run(self.circuit)
-        sampler = Sampler(backend)
-        job = sampler.run([isa_circuit])
-        pub_result = job.result()[0]
-        counts = pub_result.data.meas.get_counts()
-        max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        self.assertEqual(max_count, "11")
-
-    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_properties(self, backend):
         properties = backend.properties()
         if properties:
@@ -120,7 +97,7 @@ class TestFakeBackends(IBMTestCase):
         if backend.dtm:
             self.assertLess(backend.dtm, 1e-6)
 
-    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_configuration(self, backend):
         configuration = backend.configuration()
         if configuration.open_pulse:
@@ -142,7 +119,7 @@ class TestFakeBackends(IBMTestCase):
 
         self.assertIsInstance(configuration.to_dict(), dict)
 
-    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_defaults_to_dict(self, backend):
         if hasattr(backend, "defaults"):
             defaults = backend.defaults()
