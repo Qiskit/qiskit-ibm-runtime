@@ -256,7 +256,11 @@ class QiskitRuntimeLocalService:
 
     def delete_job(self, job_id: str) -> None:
         """Delete a local job."""
-        os.remove(f"{self._saved_jobs_directory}/{job_id}.pkl")
+        try:
+            os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
+            os.remove(f"{self._saved_jobs_directory}/{job_id}.pkl")
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to delete job %s. %s", job_id, ex)
 
     def _save_job(self, job: PrimitiveJob) -> None:
         """Pickle and save job locally in the specified directory.
