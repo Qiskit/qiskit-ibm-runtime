@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
-import warnings
 
 from qiskit.providers.backend import BackendV1, BackendV2
 
@@ -104,7 +103,7 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://docs.quantum.ibm.com/run/max-execution-time>`_.
+                <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
 
         Raises:
             ValueError: If an input value is invalid.
@@ -351,18 +350,13 @@ class Session:
         return self._service
 
     @classmethod
-    def from_id(
-        cls,
-        session_id: str,
-        service: Optional[QiskitRuntimeService] = None,
-    ) -> "Session":
+    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
         """Construct a Session object with a given session_id
 
         Args:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-                If ``None``, ``QiskitRuntimeService()`` is used to initialize your default saved account.
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist.
@@ -371,16 +365,6 @@ class Session:
             A new Session with the given ``session_id``
 
         """
-        if not service:
-            warnings.warn(
-                (
-                    "The `service` parameter will be required in a future release no sooner than "
-                    "3 months after the release of qiskit-ibm-runtime 0.23.0 ."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            service = QiskitRuntimeService()
 
         response = service._api_client.session_details(session_id)
         backend = response.get("backend_name")

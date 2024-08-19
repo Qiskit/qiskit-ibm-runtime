@@ -49,29 +49,6 @@ V2 Estimator options, respectively.
    default values are subject to change. Refer to this current module's documentation
    for the latest defaults.
 
-
-V1 Primitives
-=============
-
-The :class:`Options` class encapsulates all the options you can specify
-when invoking a V1 primitive. It includes frequently used options,
-such as ``optimization_level`` and ``resilience_level`` as well as
-sub-categories, such as ``transpilation`` and ``execution``.
-You can use auto-complete to easily find the options inside each
-sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options()
-   options.transpilation.initial_layout = [0, 1, 2, 3]  # This an be done using auto-complete
-
-You can also pass dictionaries to each sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options(transpilation={"initial_layout": [0, 1, 2, 3]})
-
-
 Classes
 =======
 
@@ -83,11 +60,10 @@ Base primitive options
 
    EstimatorOptions
    SamplerOptions
-   Options
 
 
-Suboptions for V2 primitives only
----------------------------------
+Suboptions
+----------
 
 .. autosummary::
    :toctree: ../stubs/
@@ -101,38 +77,16 @@ Suboptions for V2 primitives only
    TwirlingOptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
-
-
-Suboptions for both V1 and V2 primitives
-----------------------------------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
    EnvironmentOptions
    SimulatorOptions
-
-
-Suboptions for V1 primitives only
----------------------------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   TranspilationOptions
-   ExecutionOptions
-   ResilienceOptions
 
 """
 
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
 from .execution_options import ExecutionOptionsV2
 from .noise_learner_options import NoiseLearnerOptions
-from .options import Options, OptionsV2
+from .options import OptionsV2
 from .simulator_options import SimulatorOptions
-from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptions
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .estimator_options import EstimatorOptions

@@ -684,7 +684,7 @@ class IBMBackend(Backend):
             msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
             remedy="More details can be found in the primitives migration "
-            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
             period="6 months",
         )
         validate_job_tags(job_tags)
@@ -845,7 +845,7 @@ class IBMBackend(Backend):
             msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
             remedy="More details can be found in the primitives migration guide "
-            "https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
             period="6 months",
         )
         if not self._configuration.simulator:
@@ -864,7 +864,7 @@ class IBMBackend(Backend):
             msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
             remedy="More details can be found in the primitives migration "
-            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
             period="6 months",
         )
         return self._session
@@ -875,7 +875,7 @@ class IBMBackend(Backend):
             msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
             remedy="More details can be found in the primitives migration "
-            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
             period="6 months",
         )
         if self._session:
@@ -893,7 +893,7 @@ class IBMBackend(Backend):
             msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
             remedy="More details can be found in the primitives migration "
-            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
             period="6 months",
         )
         if self._session:
