@@ -82,7 +82,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         except:
             raise SkipTest("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-        isa_circuit = pm.run(bell())
+        isa_circuit = pm.run([bell()])
         with Session(service, backend=backend) as session:
             sampler = SamplerV2(session=session)
             sampler.run(isa_circuit)
