@@ -109,7 +109,7 @@ class PauliLindbladError:
         """
         if n < 0:
             raise ValueError("``n`` must be ``0`` or larger.")
-        mask = np.sum(self.generators.paulis.x | self.generators.paulis.z, axis=1) == n
+        mask = np.sum(self.generators.x | self.generators.z, axis=1) == n
         return PauliLindbladError(self.generators[mask], self.rates[mask])
 
     def _json(self) -> dict:

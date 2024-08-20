@@ -14,4 +14,4 @@
 Functions and classes for visualizing qiskit-ibm-runtime's objects.
 """
 
-from .visualize_noise_learner_results import draw_noise_learner_results
+from .draw_layer_error_map import draw_layer_error_map
