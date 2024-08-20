@@ -183,6 +183,7 @@ class TestLocalModeV2(IBMTestCase):
         """Test V2 Sampler on a local backend."""
         inst = SamplerV2(backend=backend)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
         rjob = self._service.job(job.job_id())
         self.assertEqual(rjob.job_id(), job.job_id())
         self._service.delete_job(job.job_id())
@@ -192,6 +193,7 @@ class TestLocalModeV2(IBMTestCase):
         """Test V2 Sampler on a local backend."""
         inst = SamplerV2(backend=backend)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
         rjobs = self._service.jobs()
         self.assertIn(job.job_id(), [rjob.job_id() for rjob in rjobs])
         self._service.delete_job(job.job_id())
@@ -201,5 +203,6 @@ class TestLocalModeV2(IBMTestCase):
         """Test V2 Sampler on a local backend."""
         inst = SamplerV2(backend=backend)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
         self._service.delete_job(job.job_id())
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in self._service.jobs()])
