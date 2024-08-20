@@ -15,10 +15,10 @@
 from typing import Iterable, TypeVar, Union, overload
 from datetime import datetime
 from dataclasses import dataclass
+from numpy.typing import NDArray
 
 
-# The format accepted by ``numpy.ndarray.__getitem__()``.
-SliceType = tuple[Union[slice, int, list[int]], ...]
+SliceType = NDArray
 ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
 ExecutionSpanCollectionT = TypeVar("ExecutionSpanCollectionT", bound="ExecutionSpanCollection")
 
