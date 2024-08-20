@@ -72,7 +72,7 @@ class ExecutionSpanCollection:
         ...
 
     @overload
-    def __getitem__(self, idxs: Union[slice | List[int]]) -> "ExecutionSpanCollection":
+    def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanCollection":
         ...
         
     def __getitem__(self, idxs):
