@@ -185,6 +185,7 @@ class TestLocalModeV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         rjob = self._service.job(job.job_id())
         self.assertEqual(rjob.job_id(), job.job_id())
+        self._service.delete_job(job.job_id())
 
     @combine(backend=[FakeManilaV2()])
     def test_retrieve_jobs(self, backend):
@@ -193,6 +194,7 @@ class TestLocalModeV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         rjobs = self._service.jobs()
         self.assertIn(job.job_id(), [rjob.job_id() for rjob in rjobs])
+        self._service.delete_job(job.job_id())
 
     @combine(backend=[FakeManilaV2()])
     def test_delete_job(self, backend):
