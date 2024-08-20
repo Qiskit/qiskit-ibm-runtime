@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Iterable, TypeVar, Union, overload, Tuple, Dict, List
+from typing import Iterable, Union, overload, Tuple, Dict, List
 from datetime import datetime
 from dataclasses import dataclass
 
