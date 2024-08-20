@@ -17,7 +17,6 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import plotly.graph_objects as go
-import plotly.colors as pc
 from plotly.express.colors import sample_colorscale
 
 from ..utils.noise_learner_result import LayerError
@@ -50,6 +49,26 @@ def _pie_slice(angle_st, angle_end, x, y, radius):
     path += f"L{x},{y} Z"
 
     return path
+
+
+def _get_rgb_color(discreet_colorscale, rate, default):
+    r"""
+    Maps a continuous rate to an RGB color based on a discreet colorscale that contains
+    exactly ``1000`` hues.
+
+    Args:
+        discreet_colorscale: A discreet colorscale.
+        rate: A rate.
+        default: A default color returned when ``rate`` is ``0``.
+    """
+    if len(discreet_colorscale) != 1000:
+        raise ValueError("Invalid ``discreet_colorscale.``")
+
+    if rate >= 1:
+        return discreet_colorscale[-1]
+    if rate == 0:
+        return default
+    return discreet_colorscale[int(np.round(rate, 3) * 1000)]
 
 
 def draw_layer_error_map(
@@ -98,8 +117,8 @@ def draw_layer_error_map(
     # A set of unique edges ``(i, j)``, with ``i < j``.
     edges = set([tuple(sorted(edge)) for edge in list(backend.coupling_map)])
 
-    # The largest value on the scale, used to normalize the rates
-    scale_high = 0
+    # The highest rate, used to normalize all other rates before choosing their colors.
+    high_scale = 0
 
     # Initialize a dictionary of one-qubit errors
     error_1q = layer_error.error.n_body(1)
@@ -107,7 +126,7 @@ def draw_layer_error_map(
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit = np.where(pauli.x | pauli.z)[0][0]
         rates_1q[qubit][str(pauli[qubit])] = rate
-        scale_high = max(scale_high, sum(rates_1q[qubit].values()))
+        high_scale = max(high_scale, rate)
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.n_body(2)
@@ -115,7 +134,49 @@ def draw_layer_error_map(
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
         qubits = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
         rates_2q[qubits][str(pauli[[qubits[0], qubits[1]]])] = rate
-        scale_high = max(scale_high, sum(rates_2q[qubits].values()))
+        high_scale = max(high_scale, rate)
+
+    # A discreet colorscale that contains 1000 hues.
+    discreet_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
+
+    # Plot the edges
+    for q1, q2 in edges:
+        x0 = xs[q1]
+        x1 = xs[q2]
+        y0 = ys[q1]
+        y1 = ys[q2]
+        dx = 0 if x0 == x1 else 1.2 * radius
+        dy = 0 if y0 == y1 else -1.2 * radius
+
+        if vals := rates_2q[(q1, q2)].values():
+            # Add gradient (currently not supported for go.Scatter)
+            min_val = min(vals)
+            max_val = min(max(vals), 1)
+            all_vals = [min_val + (max_val - min_val) / 16 * i for i in range(16)]
+            color = [
+                _get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
+            ]
+            hoverinfo_2q = ""
+            for pauli, rate in rates_2q[(q1, q2)].items():
+                hoverinfo_2q += f"<br>{pauli}: {rate}"
+            hoverinfo_2q = hoverinfo_2q
+        else:
+            color = color_no_data
+            hoverinfo_2q = "No data"
+
+        # Add a trace for the edge
+        edge = go.Scatter(
+            x=[x0 + dx + (x1 - 2 * dx - x0) / 16 * i for i in range(16)],
+            y=[y0 + dy + (y1 - 2 * dy - y0) / 16 * i for i in range(16)],
+            hovertemplate=hoverinfo_2q,
+            mode="markers",
+            marker=dict(
+                color=color,
+            ),
+            showlegend=False,
+            name="",
+        )
+        fig.add_trace(edge)
 
     # Plot the pie charts showing X, Y, and Z for each qubit
     shapes = []
@@ -124,9 +185,7 @@ def draw_layer_error_map(
         hoverinfo = ""
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
-            fillcolor = (
-                sample_colorscale(colorscale, rate / scale_high)[0] if rate else color_no_data
-            )
+            fillcolor = _get_rgb_color(discreet_colorscale, rate / high_scale, color_no_data)
             shapes += [
                 dict(
                     type="path",
@@ -150,7 +209,7 @@ def draw_layer_error_map(
         y=ys,
         mode="markers",
         marker=dict(
-            color=list({qubit: sum(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
+            color=list({qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
             colorscale=colorscale,
             showscale=True,
         ),
@@ -183,42 +242,6 @@ def draw_layer_error_map(
     fig.add_annotation(x=x_legend + 0.2, y=y_legend, text="<b>Z</b>", showarrow=False, yshift=10)
     fig.add_annotation(x=x_legend - 0.2, y=y_legend, text="<b>X</b>", showarrow=False, yshift=10)
     fig.add_annotation(x=x_legend, y=y_legend - 0.45, text="<b>Y</b>", showarrow=False, yshift=10)
-
-    # Plot the edges
-    for q1, q2 in edges:
-        x0 = xs[q1]
-        x1 = xs[q2]
-        y0 = ys[q1]
-        y1 = ys[q2]
-
-        # Set the color and the overinfo based on the sum of the rates for the given edge
-        rate = sum(rates_2q[(q1, q2)].values())
-
-        if rate:
-            color = sample_colorscale(colorscale, rate / scale_high)[0]
-            hoverinfo_2q = ""
-            for pauli, rate in rates_2q[(q1, q2)].items():
-                hoverinfo_2q += f"<br>{pauli}: {rate}"
-            hoverinfo_2q = hoverinfo_2q
-        else:
-            color = color_no_data
-            hoverinfo_2q = "No data"
-
-        # Add a trace for the edge
-        fig.add_trace(
-            go.Scatter(
-                x=[x0, (x0 + x1) / 2, x1],
-                y=[y0, (y0 + y1) / 2, y1],
-                hovertemplate=hoverinfo_2q,
-                mode="lines",
-                line=dict(
-                    width=4,
-                    color=color,
-                ),
-                showlegend=False,
-                name="",
-            )
-        )
 
     # Set x and y range
     fig.update_xaxes(
