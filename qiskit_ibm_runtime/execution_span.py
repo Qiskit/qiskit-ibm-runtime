@@ -68,13 +68,11 @@ class ExecutionSpanCollection:
         return len(list(self._spans))
 
     @overload
-    def __getitem__(self, idxs: int) -> ExecutionSpan:
-        ...
+    def __getitem__(self, idxs: int) -> ExecutionSpan: ...
 
     @overload
-    def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanCollection":
-        ...
-        
+    def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanCollection": ...
+
     def __getitem__(self, idxs):
         if isinstance(idxs, int):
             return self._spans[idxs]
