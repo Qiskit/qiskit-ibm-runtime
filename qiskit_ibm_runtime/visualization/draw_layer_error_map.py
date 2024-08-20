@@ -58,6 +58,7 @@ def draw_layer_error_map(
     coordinates: Optional[List[Tuple[int, int]]] = None,
     *,
     colorscale: str = "Bluered",
+    color_no_data: str = "white",
     height: int = 500,
     plot_bgcolor: str = "lightgray",
     radius: float = 0.25,
@@ -73,6 +74,7 @@ def draw_layer_error_map(
             qubit in the given backend on a 2D grid.
         kwargs: Plotting options. Includes:
             * colorscale: The colorscale used to show the rates of ``layer_error``.
+            * color_no_data: The color used for qubits and edges for which no data is available.
             * height: The height of the returned figure.
             * plot_bgcolor: The background color.
             * radius: The radius of the pie charts representing the qubits.
@@ -91,6 +93,8 @@ def draw_layer_error_map(
     ys = [-row for row, _ in coordinates]
     xs = [col for _, col in coordinates]
 
+    if backend.coupling_map is None:
+        raise ValueError("Given backend has no coupling map.")
     # A set of unique edges ``(i, j)``, with ``i < j``.
     edges = set([tuple(sorted(edge)) for edge in list(backend.coupling_map)])
 
@@ -120,7 +124,9 @@ def draw_layer_error_map(
         hoverinfo = ""
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
-            fillcolor = sample_colorscale(colorscale, rate / scale_high)[0] if rate else "white"
+            fillcolor = (
+                sample_colorscale(colorscale, rate / scale_high)[0] if rate else color_no_data
+            )
             shapes += [
                 dict(
                     type="path",
@@ -195,7 +201,7 @@ def draw_layer_error_map(
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
             hoverinfo_2q = hoverinfo_2q
         else:
-            color = "white"
+            color = color_no_data
             hoverinfo_2q = "No data"
 
         # Add a trace for the edge
