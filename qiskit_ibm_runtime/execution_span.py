@@ -18,8 +18,6 @@ from dataclasses import dataclass
 
 
 SliceType = Tuple[int, int]
-ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
-ExecutionSpanCollectionT = TypeVar("ExecutionSpanCollectionT", bound="ExecutionSpanCollection")
 
 
 @dataclass(frozen=True)
@@ -53,7 +51,7 @@ class ExecutionSpan:
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         return not pub_idx.isdisjoint(self.data_slices)
 
-    def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> ExecutionSpanT:
+    def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpan":
         """Returns an ExecutionSpan filtered by pub-"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
@@ -74,7 +72,7 @@ class ExecutionSpanCollection:
         ...
 
     @overload
-    def __getitem__(self, idxs: Union[slice | List[int]]) -> ExecutionSpanCollectionT:
+    def __getitem__(self, idxs: Union[slice | List[int]]) -> "ExecutionSpanCollection":
         ...
         
     def __getitem__(self, idxs):
