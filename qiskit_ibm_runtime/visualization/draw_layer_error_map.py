@@ -77,9 +77,9 @@ def draw_layer_error_map(
     coordinates: Optional[List[Tuple[int, int]]] = None,
     *,
     colorscale: str = "Bluered",
-    color_no_data: str = "white",
+    color_no_data: str = "lightgray",
     height: int = 500,
-    plot_bgcolor: str = "lightgray",
+    plot_bgcolor: str = "white",
     radius: float = 0.25,
     width: int = 800,
 ) -> go.Figure:
