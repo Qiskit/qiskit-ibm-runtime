@@ -12,13 +12,12 @@
 
 """Execution span classes."""
 
-from typing import Iterable, TypeVar, Union, overload
+from typing import Iterable, TypeVar, Union, overload, Tuple
 from datetime import datetime
 from dataclasses import dataclass
-from numpy.typing import NDArray
 
 
-SliceType = NDArray
+SliceType = Tuple[int, int]
 ExecutionSpanT = TypeVar("ExecutionSpanT", bound="ExecutionSpan")
 ExecutionSpanCollectionT = TypeVar("ExecutionSpanCollectionT", bound="ExecutionSpanCollection")
 
