@@ -12,11 +12,12 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, Union, Optional
+from typing import List, Literal, Union
 from dataclasses import asdict
 
 from pydantic import model_validator, Field
 
+from ..utils.noise_learner_result import LayerError
 from .utils import Unset, UnsetType, Dict, primitive_dataclass
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .zne_options import ZneOptions
@@ -65,6 +66,12 @@ class ResilienceOptionsV2:
 
         layer_noise_learning: Layer noise learning options.
             See :class:`LayerNoiseLearningOptions` for all options.
+
+        layer_noise_model: A list of :class:`LayerError` objects.
+            If set, all the mitigation strategies that require noise data (e.g., PEC and PEA)
+            skip the noise learning stage, and instead gather the required information from
+            ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
+            are treated as noiseless and their noise is not mitigated.
     """
 
     measure_mitigation: Union[UnsetType, bool] = Unset
@@ -78,6 +85,7 @@ class ResilienceOptionsV2:
     layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
         default_factory=LayerNoiseLearningOptions
     )
+    layer_noise_model: Union[UnsetType, List[LayerError]] = Unset
 
     @model_validator(mode="after")
     def _validate_options(self) -> "ResilienceOptionsV2":
@@ -95,45 +103,5 @@ class ResilienceOptionsV2:
                 "pec_mitigation and zne_mitigation`options cannot be "
                 "simultaneously enabled. Set one of them to False."
             )
-
-        return self
-
-
-@primitive_dataclass
-class ResilienceOptions:
-    """Resilience options for V1 primitives.
-
-    Args:
-        noise_factors: An list of real valued noise factors that determine by what amount the
-            circuits' noise is amplified.
-            Only applicable for ``resilience_level=2``.
-            Default: ``None``, and (1, 3, 5) if resilience level is 2.
-
-        noise_amplifier: A noise amplification strategy. Currently only
-        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
-            Default: "LocalFoldingAmplifier".
-
-        extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
-            ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
-            Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
-            noise factors than the default.
-            Only applicable for ``resilience_level=2``.
-            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
-    """
-
-    noise_amplifier: Optional[NoiseAmplifierType] = None
-    noise_factors: Optional[Sequence[float]] = None
-    extrapolator: Optional[ExtrapolatorType] = None
-
-    @model_validator(mode="after")
-    def _validate_options(self) -> "ResilienceOptions":
-        """Validate the model."""
-        required_factors = {
-            "QuarticExtrapolator": 5,
-            "CubicExtrapolator": 4,
-        }
-        req_len = required_factors.get(self.extrapolator, None)
-        if req_len and len(self.noise_factors) < req_len:
-            raise ValueError(f"{self.extrapolator} requires at least {req_len} noise_factors.")
 
         return self

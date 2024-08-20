@@ -31,7 +31,7 @@ Bug Fixes
    a past date.
 
 -  The ``noise_factors`` and ``extrapolator`` options in
-   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.ResilienceOptions>`__
+   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.27/qiskit_ibm_runtime.options.ResilienceOptions>`__
    will now default to ``None`` unless ``resilience_level`` is set to 2.
    Only options relevant to the resilience level will be set, so when
    using ``resilience_level`` 2, ``noise_factors`` will still default to
