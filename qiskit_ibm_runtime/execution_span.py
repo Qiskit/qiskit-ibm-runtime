@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Iterable, TypeVar, Union, overload, Tuple
+from typing import Iterable, TypeVar, Union, overload, Tuple, Dict
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -32,7 +32,7 @@ class ExecutionSpan:
     stop: datetime
     """The stop time of the span, in UTC."""
 
-    data_slices: dict[int, SliceType]
+    data_slices: Dict[int, SliceType]
     r"""Which data have dependence on this execution span.
 
     Data from the primitives are array-based, with every field in a 
