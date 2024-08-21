@@ -73,7 +73,9 @@ class ExecutionSpanCollection:
     @overload
     def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanCollection": ...
 
-    def __getitem__(self, idxs: Union[int, slice, List[int]]):
+    def __getitem__(
+        self, idxs: Union[int, slice, List[int]]
+    ) -> Union[ExecutionSpan, "ExecutionSpanCollection"]:
         if isinstance(idxs, int):
             return self._spans[idxs]
         if isinstance(idxs, slice):
