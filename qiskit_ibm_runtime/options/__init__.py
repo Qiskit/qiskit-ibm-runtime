@@ -68,6 +68,7 @@ Suboptions
 .. autosummary::
    :toctree: ../stubs/
 
+   NoiseLearnerOptions
    DynamicalDecouplingOptions
    ResilienceOptionsV2
    LayerNoiseLearningOptions
