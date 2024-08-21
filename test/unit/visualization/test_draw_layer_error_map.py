@@ -12,8 +12,6 @@
 
 """Tests for the noise learner."""
 
-import json
-import os
 from ddt import ddt, data
 import plotly.graph_objects as go
 
