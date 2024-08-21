@@ -15,10 +15,10 @@
 Utility functions for visualizing qiskit-ibm-runtime's objects.
 """
 
-from typing import List, Tuple
+from typing import List
 
 
-def get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
+def get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
     r"""
     Returns a list of coordinates in the form ``(row, column)`` for drawing a QPU map with
     ``num_qubit`` on a 2D grid.

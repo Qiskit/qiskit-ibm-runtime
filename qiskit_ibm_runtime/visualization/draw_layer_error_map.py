@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import plotly.graph_objects as go
@@ -24,7 +24,7 @@ from ..utils.noise_learner_result import LayerError
 from .utils import get_qubits_coordinates
 
 
-def _pie_slice(angle_st, angle_end, x, y, radius):
+def _pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: float) -> str:
     r"""
     Returns the path used to draw a slice of a pie chart.
 
@@ -32,8 +32,8 @@ def _pie_slice(angle_st, angle_end, x, y, radius):
     location than `go.Pie` objects.
 
     Args:
-        angle_st: The angle where the slice begins.
-        angle_end: The angle where the slice ends.
+        angle_st: The angle (in degrees) where the slice begins.
+        angle_end: The angle (in degrees) where the slice ends.
         x: The `x` coordinate of the centre of the pie.
         y: The `y` coordinate of the centre of the pie.
         radius: the radius of the pie.
@@ -51,7 +51,7 @@ def _pie_slice(angle_st, angle_end, x, y, radius):
     return path
 
 
-def _get_rgb_color(discreet_colorscale, rate, default):
+def _get_rgb_color(discreet_colorscale: List[str], rate: float, default: str) -> str:
     r"""
     Maps a continuous rate to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
@@ -74,7 +74,7 @@ def _get_rgb_color(discreet_colorscale, rate, default):
 def draw_layer_error_map(
     layer_error: LayerError,
     backend: BackendV2,
-    coordinates: Optional[List[Tuple[int, int]]] = None,
+    coordinates: Optional[List[List[int]]] = None,
     *,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
@@ -121,7 +121,7 @@ def draw_layer_error_map(
 
     # Initialize a dictionary of one-qubit errors
     error_1q = layer_error.error.n_body(1)
-    rates_1q = {qubit: {} for qubit in layer_error.qubits}
+    rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in layer_error.qubits}
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit = np.where(pauli.x | pauli.z)[0][0]
         rates_1q[qubit][str(pauli[qubit])] = rate
@@ -129,7 +129,7 @@ def draw_layer_error_map(
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.n_body(2)
-    rates_2q = {qubits: {} for qubits in edges}
+    rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {qubits: {} for qubits in edges}
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
         qubits = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
         rates_2q[qubits][str(pauli[[qubits[0], qubits[1]]])] = rate
@@ -159,7 +159,7 @@ def draw_layer_error_map(
             for pauli, rate in rates_2q[(q1, q2)].items():
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
         else:
-            color = color_no_data
+            color = [color_no_data for v in all_vals]
             hoverinfo_2q = "No data"
 
         # Add a trace for the edge
@@ -218,7 +218,7 @@ def draw_layer_error_map(
     # Add a "legend" pie to show how pies work
     x_legend = max(xs) + 1
     y_legend = max(ys)
-    for pauli, angle, color in [
+    for pauli, angle, slice_color in [
         ("Z", -30, "lightgreen"),
         ("X", 90, "dodgerblue"),
         ("Y", 210, "khaki"),
@@ -227,7 +227,7 @@ def draw_layer_error_map(
             {
                 "type": "path",
                 "path": _pie_slice(angle, angle + 120, x_legend, y_legend, 0.5),
-                "fillcolor": color,
+                "fillcolor": slice_color,
                 "line_color": "black",
                 "line_width": 1,
             },
