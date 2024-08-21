@@ -71,6 +71,7 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
+from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanCollection
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -317,6 +318,12 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, PrimitiveResult):
             out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
+        if isinstance(obj, ExecutionSpan):
+            out_val = {"start": obj.start, "stop": obj.stop, "data_slices": obj.data_slices}
+            return {"__type__": "ExecutionSpan", "__value__": out_val}
+        if isinstance(obj, ExecutionSpanCollection):
+            out_val = {"spans": obj._spans}
+            return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -425,6 +432,14 @@ class RuntimeDecoder(json.JSONDecoder):
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
                 return PrimitiveResult(**obj_val)
+            if obj_type == "ExecutionSpan":
+                new_slices = {}
+                for task_id, task_slice in obj_val["data_slices"].items():
+                    new_slices[int(task_id)] = tuple(task_slice)
+                obj_val["data_slices"] = new_slices
+                return ExecutionSpan(**obj_val)
+            if obj_type == "ExecutionSpanCollection":
+                return ExecutionSpanCollection(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
