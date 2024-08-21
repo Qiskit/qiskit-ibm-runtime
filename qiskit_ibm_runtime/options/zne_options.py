@@ -36,7 +36,7 @@ ExtrapolatorType = Literal[
 class ZneOptions:
     """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.
 
-    ..note::
+    .. note::
 
         Any V2 estimator is guaranteed to return data fields called ``evs`` and ``stds`` that
         report the desired expectation value estimates and errors, respectively.
