@@ -88,8 +88,8 @@ class TestDrawLayerErrorMap(IBMTestCase):
 
         file = self.assets_path + f"draw_layer_error_map_{backend_name}.json"
         if self.regenerate_assets:
-            with open(file, "w") as f:
+            with open(file, "w", encoding="utf-8") as f:
                 json.dump(fig.to_json(), f)
 
-        with open(file, "r") as f:
+        with open(file, "r", encoding="utf-8") as f:
             self.assertEqual(fig.to_json(), json.load(f))
