@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Iterable, Union, overload, Tuple, Dict, List, Iterator
+from typing import Iterable, Union, overload, Tuple, Dict, List, Iterator, Sequence
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -61,7 +61,7 @@ class ExecutionSpan:
 class ExecutionSpanCollection:
     """A collection of timings for the PUB result."""
 
-    def __init__(self, spans: Iterable[ExecutionSpan]):
+    def __init__(self, spans: Sequence[ExecutionSpan]):
         self._spans = spans
 
     def __len__(self) -> int:
