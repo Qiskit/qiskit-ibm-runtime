@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Iterable, Union, overload, Tuple, Dict, List
+from typing import Iterable, Union, overload, Tuple, Dict, List, Iterator
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -80,7 +80,7 @@ class ExecutionSpanCollection:
             return ExecutionSpanCollection(self._spans[idxs])
         return ExecutionSpanCollection([self._spans[idx] for idx in idxs])
 
-    def __iter__(self) -> Iterable[ExecutionSpan]:
+    def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
 
     @property
@@ -93,6 +93,6 @@ class ExecutionSpanCollection:
         """The stop time of the entire collection, in UTC."""
         return max(span.stop for span in self._spans)
 
-    def plot(self):
+    def plot(self) -> None:
         """Show a timing diagram"""
         pass
