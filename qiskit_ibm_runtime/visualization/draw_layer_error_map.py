@@ -18,10 +18,10 @@ from typing import List, Optional, Tuple
 import numpy as np
 import plotly.graph_objects as go
 from plotly.express.colors import sample_colorscale
+from qiskit.providers.backend import BackendV2
 
 from ..utils.noise_learner_result import LayerError
 from .utils import get_qubits_coordinates
-from qiskit.providers.backend import BackendV2
 
 
 def _pie_slice(angle_st, angle_end, x, y, radius):
@@ -91,13 +91,12 @@ def draw_layer_error_map(
         backend: The backend on top of which the layer error is drawn.
         coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
             qubit in the given backend on a 2D grid.
-        kwargs: Plotting options. Includes:
-            * colorscale: The colorscale used to show the rates of ``layer_error``.
-            * color_no_data: The color used for qubits and edges for which no data is available.
-            * height: The height of the returned figure.
-            * plot_bgcolor: The background color.
-            * radius: The radius of the pie charts representing the qubits.
-            * width: The width of the returned figure.
+        colorscale: The colorscale used to show the rates of ``layer_error``.
+        color_no_data: The color used for qubits and edges for which no data is available.
+        height: The height of the returned figure.
+        plot_bgcolor: The background color.
+        radius: The radius of the pie charts representing the qubits.
+        width: The width of the returned figure.
 
     """
     fig = go.Figure(layout=go.Layout(width=width, height=height))
@@ -159,7 +158,6 @@ def draw_layer_error_map(
             hoverinfo_2q = ""
             for pauli, rate in rates_2q[(q1, q2)].items():
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
-            hoverinfo_2q = hoverinfo_2q
         else:
             color = color_no_data
             hoverinfo_2q = "No data"
@@ -170,9 +168,7 @@ def draw_layer_error_map(
             y=[y0 + dy + (y1 - 2 * dy - y0) / 16 * i for i in range(16)],
             hovertemplate=hoverinfo_2q,
             mode="markers",
-            marker=dict(
-                color=color,
-            ),
+            marker={"color": color},
             showlegend=False,
             name="",
         )
@@ -187,13 +183,13 @@ def draw_layer_error_map(
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
             fillcolor = _get_rgb_color(discreet_colorscale, rate / high_scale, color_no_data)
             shapes += [
-                dict(
-                    type="path",
-                    path=_pie_slice(angle, angle + 120, x, y, radius),
-                    fillcolor=fillcolor,
-                    line_color="black",
-                    line_width=1,
-                ),
+                {
+                    "type": "path",
+                    "path": _pie_slice(angle, angle + 120, x, y, radius),
+                    "fillcolor": fillcolor,
+                    "line_color": "black",
+                    "line_width": 1,
+                },
             ]
 
             if rate:
@@ -208,11 +204,11 @@ def draw_layer_error_map(
         x=xs,
         y=ys,
         mode="markers",
-        marker=dict(
-            color=list({qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
-            colorscale=colorscale,
-            showscale=True,
-        ),
+        marker={
+            "color": list({qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
+            "colorscale": colorscale,
+            "showscale": True,
+        },
         hovertemplate=hoverinfo_1q,
         showlegend=False,
         name="",
@@ -228,13 +224,13 @@ def draw_layer_error_map(
         ("Y", 210, "khaki"),
     ]:
         shapes += [
-            dict(
-                type="path",
-                path=_pie_slice(angle, angle + 120, x_legend, y_legend, 0.5),
-                fillcolor=color,
-                line_color="black",
-                line_width=1,
-            ),
+            {
+                "type": "path",
+                "path": _pie_slice(angle, angle + 120, x_legend, y_legend, 0.5),
+                "fillcolor": color,
+                "line_color": "black",
+                "line_width": 1,
+            },
         ]
     fig.update_layout(shapes=shapes)
 
