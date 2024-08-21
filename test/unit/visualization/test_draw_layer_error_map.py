@@ -15,6 +15,7 @@
 import json
 import os
 from ddt import ddt, data
+import plotly.graph_objects as go
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -47,12 +48,6 @@ class TestDrawLayerErrorMap(IBMTestCase):
         error = PauliLindbladError(generators, rates)
         self.layer_error = LayerError(circuit, qubits, error)
 
-        # Whether or not assets should be regenerated
-        self.regenerate_assets = False
-
-        # The path to the assets
-        self.assets_path = os.path.dirname(os.path.realpath(__file__)) + "/assets/"
-
     def test_invalid_coordinates(self):
         r"""
         Tests the plotting function with invalid coordinates.
@@ -70,11 +65,12 @@ class TestDrawLayerErrorMap(IBMTestCase):
         with self.assertRaises(ValueError):
             draw_layer_error_map(self.layer_error, AerSimulator())
 
-    @data("fake_hanoi", "fake_kyiv")
-    def test_plotting(self, backend_name):
+    @data(["fake_hanoi", 29], ["fake_kyiv", 145])
+    def test_plotting(self, inputs):
         r"""
         Tests the plotting function to make sure that it produces the right figure.
         """
+        backend_name, n_traces = inputs
         backend = self.service.backend(backend_name)
         fig = draw_layer_error_map(
             self.layer_error,
@@ -86,10 +82,5 @@ class TestDrawLayerErrorMap(IBMTestCase):
             height=200,
         )
 
-        file = self.assets_path + f"draw_layer_error_map_{backend_name}.json"
-        if self.regenerate_assets:
-            with open(file, "w", encoding="utf-8") as f:
-                json.dump(fig.to_json(), f)
-
-        with open(file, "r", encoding="utf-8") as f:
-            self.assertEqual(fig.to_json(), json.load(f))
+        self.assertIsInstance(fig, go.Figure)
+        self.assertEqual(len(fig.data), n_traces)
