@@ -83,7 +83,7 @@ class ZneOptions:
             * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
               factor requires amplifying only a subset of the gates, then these gates are selected
               from the back of the topologically ordered DAG circuit.
-            * `"pea"` uses a technique called probabalistic error amplification (`PEA
+            * `"pea"` uses a technique called Probabilistic Error Amplification (`PEA
               <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify
               noise.
 

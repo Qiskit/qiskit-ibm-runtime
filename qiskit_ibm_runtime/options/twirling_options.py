@@ -60,7 +60,6 @@ class TwirlingOptions:
       ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
     """
 
-
     shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
     r"""The number of shots to run for each random sample.
 
