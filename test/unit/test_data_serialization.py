@@ -42,6 +42,7 @@ from qiskit.primitives.containers import (
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
+from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanCollection
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -411,7 +412,21 @@ class TestContainerSerialization(IBMTestCase):
             PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
             PubResult(DataBin()),
         ]
-        result = PrimitiveResult(pub_results, {"1": 2})
+
+        metadata = {
+            "execution": {
+                "execution_spans": ExecutionSpanCollection(
+                    [
+                        ExecutionSpan(
+                            datetime(2022, 1, 1), datetime(2023, 1, 1), {1: (4, 9), 0: (5, 7)}
+                        ),
+                        ExecutionSpan(datetime(2024, 8, 20), datetime(2024, 8, 21), {0: (2, 3)}),
+                    ]
+                )
+            }
+        }
+
+        result = PrimitiveResult(pub_results, metadata)
         primitive_results.append(result)
         return primitive_results
 
