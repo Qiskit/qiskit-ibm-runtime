@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import plotly.graph_objects as go
-from plotly.express.colors import sample_colorscale
+from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
 from ..utils.noise_learner_result import LayerError
@@ -159,7 +159,7 @@ def draw_layer_error_map(
             for pauli, rate in rates_2q[(q1, q2)].items():
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
         else:
-            color = [color_no_data for v in all_vals]
+            color = color_no_data  # type: ignore
             hoverinfo_2q = "No data"
 
         # Add a trace for the edge
