@@ -114,7 +114,7 @@ def draw_layer_error_map(
     if backend.coupling_map is None:
         raise ValueError("Given backend has no coupling map.")
     # A set of unique edges ``(i, j)``, with ``i < j``.
-    edges = set([tuple(sorted(edge)) for edge in list(backend.coupling_map)])
+    edges = set(tuple(sorted(edge)) for edge in list(backend.coupling_map))
 
     # The highest rate, used to normalize all other rates before choosing their colors.
     high_scale = 0
