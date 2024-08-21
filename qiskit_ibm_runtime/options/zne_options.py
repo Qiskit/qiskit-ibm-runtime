@@ -62,7 +62,7 @@ class ZneOptions:
            ``ensemble_stds_noise_factors`` assumes only shot noise and no drift.
 
         Technical note: for single observables with multiple basis terms it might turn out that
-        multiple extrapolation methods are used in _the same_ expectation value, for example, ``XX``
+        multiple extrapolation methods are used in *the same* expectation value, for example, ``XX``
         gets linearly extrapolated but ``XY`` gets exponentially extrapolated in the observable
         ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (2) is
         evaluated from heterogeneous fits by selecting the best fit for every individual distinct
