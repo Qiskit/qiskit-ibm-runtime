@@ -461,7 +461,7 @@ class IBMBackend(Backend):
         `Qiskit/ibm-quantum-schemas/backend_configuration
         <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
 
-        More details about backend configuration properties can be found `here
+        More details about backend configuration properties can be found here `QasmBackendConfiguration
         <https://docs.quantum.ibm.com/api/qiskit/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
