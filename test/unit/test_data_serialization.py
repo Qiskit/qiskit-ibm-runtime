@@ -43,7 +43,7 @@ from qiskit.primitives.containers import (
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
-from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanCollection
+from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanSet
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -427,7 +427,7 @@ class TestContainerSerialization(IBMTestCase):
 
         metadata = {
             "execution": {
-                "execution_spans": ExecutionSpanCollection(
+                "execution_spans": ExecutionSpanSet(
                     [
                         ExecutionSpan(
                             datetime(2022, 1, 1), datetime(2023, 1, 1), {1: (4, 9), 0: (5, 7)}

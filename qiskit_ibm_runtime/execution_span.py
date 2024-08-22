@@ -52,13 +52,13 @@ class ExecutionSpan:
         return not pub_idx.isdisjoint(self.data_slices)
 
     def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpan":
-        """Returns an ExecutionSpan filtered by pub-"""
+        """Returns an ExecutionSpan filtered by pub"""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
         return ExecutionSpan(self.start, self.stop, slices)
 
 
-class ExecutionSpanCollection:
+class ExecutionSpanSet:
     """A collection of timings for the PUB result."""
 
     def __init__(self, spans: Sequence[ExecutionSpan]):
@@ -71,16 +71,16 @@ class ExecutionSpanCollection:
     def __getitem__(self, idxs: int) -> ExecutionSpan: ...
 
     @overload
-    def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanCollection": ...
+    def __getitem__(self, idxs: Union[slice, List[int]]) -> "ExecutionSpanSet": ...
 
     def __getitem__(
         self, idxs: Union[int, slice, List[int]]
-    ) -> Union[ExecutionSpan, "ExecutionSpanCollection"]:
+    ) -> Union[ExecutionSpan, "ExecutionSpanSet"]:
         if isinstance(idxs, int):
             return self._spans[idxs]
         if isinstance(idxs, slice):
-            return ExecutionSpanCollection(self._spans[idxs])
-        return ExecutionSpanCollection([self._spans[idx] for idx in idxs])
+            return ExecutionSpanSet(self._spans[idxs])
+        return ExecutionSpanSet([self._spans[idx] for idx in idxs])
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)

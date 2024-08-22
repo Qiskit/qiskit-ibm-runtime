@@ -71,7 +71,7 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanCollection
+from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanSet
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -321,7 +321,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ExecutionSpan):
             out_val = {"start": obj.start, "stop": obj.stop, "data_slices": obj.data_slices}
             return {"__type__": "ExecutionSpan", "__value__": out_val}
-        if isinstance(obj, ExecutionSpanCollection):
+        if isinstance(obj, ExecutionSpanSet):
             out_val = {"spans": obj._spans}
             return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
@@ -439,7 +439,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 obj_val["data_slices"] = new_slices
                 return ExecutionSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
-                return ExecutionSpanCollection(**obj_val)
+                return ExecutionSpanSet(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
