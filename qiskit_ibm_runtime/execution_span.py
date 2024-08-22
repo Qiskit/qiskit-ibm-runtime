@@ -108,7 +108,7 @@ class ExecutionSpanSet:
 
     def to_list_of_tuples(self) -> List:
         """Return span set in the form of a list of tuples"""
-        return [span.to_tuple() for span in self._spans]
+        return [span.to_tuple() for span in self]
 
     @classmethod
     def from_list_of_tuples(cls, list_of_tuples: Sequence[Tuple]) -> "ExecutionSpanSet":
@@ -125,8 +125,12 @@ class ExecutionSpanSet:
     @property
     def stop(self) -> datetime:
         """The stop time of the entire collection, in UTC."""
-        return max(span.stop for span in self._spans)
+        return max(span.stop for span in self)
+
+    def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpanSet":
+        """Returns an ExecutionSpanSet filtered by pub"""
+        return ExecutionSpanSet([span.filter_by_pub(pub_idx) for span in self])
 
     def plot(self) -> None:
         """Show a timing diagram"""
-        pass
+        raise NotImplementedError
