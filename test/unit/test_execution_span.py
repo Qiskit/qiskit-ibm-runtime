@@ -14,48 +14,122 @@
 
 
 from datetime import datetime
+import ddt
 
 from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanSet
-
 
 from ..ibm_test_case import IBMTestCase
 
 
+@ddt.ddt
 class TestExecutionSpan(IBMTestCase):
-    """Class for testing the ExecutionSpan class."""
+    """Class for testing the ExecutionSpan and ExecutionSpanSet classes."""
 
-    def test_to_tuple_from_tuple(self):
-        """Test the methods to_tuple and from_tuple"""
-        start = datetime(2022, 1, 1)
-        stop = datetime(2023, 1, 1)
-        data_slices = {1: (4, 9), 0: (5, 7)}
+    def setUp(self) -> None:
+        super().setUp()
+        self.start1 = datetime(2023, 8, 22, 18, 45, 3)
+        self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
+        self.slices1 = {1: (4, 9), 0: (5, 7)}
+        self.span1 = ExecutionSpan(self.start1, self.stop1, self.slices1)
 
-        tuple_expected = (start, stop, data_slices)
-        span_expected = ExecutionSpan(start, stop, data_slices)
+        self.start2 = datetime(2023, 8, 22, 18, 45, 9)
+        self.stop2 = datetime(2023, 8, 22, 18, 45, 11, 500000)
+        self.slices2 = {0: (2, 3), 2: (6, 8)}
+        self.span2 = ExecutionSpan(self.start2, self.stop2, self.slices2)
 
-        span_created = ExecutionSpan.from_tuple(tuple_expected)
-        self.assertEqual(span_expected, span_created)
+        self.span_set = ExecutionSpanSet([self.span1, self.span2])
 
-        tuple_created = span_created.to_tuple()
-        self.assertEqual(tuple_expected, tuple_created)
+    def test_duration(self):
+        """Test the duration property"""
+        duration1 = self.span1.duration
+        duration2 = self.span2.duration
+        duration_set = self.span_set.duration
 
+        self.assertEqual(duration1, 7)
+        self.assertEqual(duration2, 2.5)
+        self.assertEqual(duration_set, 8.5)
 
-class TestExecutionSpanSet(IBMTestCase):
-    """Class for testing the ExecutionSpanSet class."""
+    @ddt.data(
+        (0, True, True),
+        ([0, 1], True, True),
+        ([0, 1, 2], True, True),
+        ([1, 2], True, True),
+        ([1], True, False),
+        (2, False, True),
+        ([0, 2], True, True),
+    )
+    @ddt.unpack
+    def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
+        """The the contains_pub method"""
+        self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
+        self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
+
+    def test_filter_by_pub(self):
+        """The the filter_by_pub method"""
+        self.assertEqual(self.span1.filter_by_pub([]), ExecutionSpan(self.start1, self.stop1, {}))
+        self.assertEqual(self.span2.filter_by_pub([]), ExecutionSpan(self.start2, self.stop2, {}))
+        self.assertEqual(
+            self.span_set.filter_by_pub([]),
+            ExecutionSpanSet(
+                [
+                    ExecutionSpan(self.start1, self.stop1, {}),
+                    ExecutionSpan(self.start2, self.stop2, {}),
+                ]
+            ),
+        )
+
+        self.assertEqual(
+            self.span1.filter_by_pub([2, 0]),
+            ExecutionSpan(self.start1, self.stop1, {0: self.slices1[0]}),
+        )
+        self.assertEqual(self.span2.filter_by_pub([2, 0]), self.span2)
+        self.assertEqual(
+            self.span_set.filter_by_pub([2, 0]),
+            ExecutionSpanSet(
+                [ExecutionSpan(self.start1, self.stop1, {0: self.slices1[0]}), self.span2]
+            ),
+        )
+
+        self.assertEqual(
+            self.span1.filter_by_pub(1),
+            ExecutionSpan(self.start1, self.stop1, {1: self.slices1[1]}),
+        )
+        self.assertEqual(self.span2.filter_by_pub(1), ExecutionSpan(self.start2, self.stop2, {}))
+        self.assertEqual(
+            self.span_set.filter_by_pub(1),
+            ExecutionSpanSet(
+                [
+                    ExecutionSpan(self.start1, self.stop1, {1: self.slices1[1]}),
+                    ExecutionSpan(self.start2, self.stop2, {}),
+                ]
+            ),
+        )
+
+    def test_to_from(self):
+        """Test the methods to_tuple, from_tuple, to_list_of_tuples, from_list_of_tuples"""
+        tuple1 = (self.start1, self.stop1, self.slices1)
+        tuple2 = (self.start2, self.stop2, self.slices2)
+        tuple_list = [tuple1, tuple2]
+
+        self.assertEqual(self.span1.to_tuple(), tuple1)
+        self.assertEqual(self.span2.to_tuple(), tuple2)
+        self.assertEqual(self.span_set.to_list_of_tuples(), tuple_list)
+
+        self.assertEqual(ExecutionSpan.from_tuple(tuple1), self.span1)
+        self.assertEqual(ExecutionSpan.from_tuple(tuple2), self.span2)
+        self.assertEqual(ExecutionSpanSet.from_list_of_tuples(tuple_list), self.span_set)
 
     def test_str(self):
-        """Test the __str__ method"""
-        start1 = datetime(2022, 1, 1)
-        stop1 = datetime(2023, 1, 1)
-        slices1 = {1: (4, 9), 0: (5, 7)}
-        start2 = datetime(2024, 8, 20)
-        stop2 = datetime(2024, 8, 21)
-        slices2 = {0: (2, 3)}
-
-        str_expected = str([(start1, stop1, slices1), (start2, stop2, slices2)])
-
-        exec_spans = ExecutionSpanSet.from_list_of_tuples(
-            [(start1, stop1, slices1), (start2, stop2, slices2)]
+        """Test the ___str__ method"""
+        self.assertEqual(str(self.span1), str((self.start1, self.stop1, self.slices1)))
+        self.assertEqual(str(self.span2), str((self.start2, self.stop2, self.slices2)))
+        self.assertEqual(
+            str(self.span_set),
+            str([(self.start1, self.stop1, self.slices1), (self.start2, self.stop2, self.slices2)]),
         )
-        str_created = str(exec_spans)
-        self.assertEqual(str_expected, str_created)
+
+    def test_sequence_methods(self):
+        self.assertEqual(len(self.span_set), 2)
+        self.assertEqual(self.span_set[0], self.span1)
+        self.assertEqual(self.span_set[1], self.span2)
+        self.assertEqual(self.span_set[1, 0], ExecutionSpanSet([self.span2, self.span1]))
