@@ -17,7 +17,7 @@ Transpiler passes (:mod:`qiskit_ibm_runtime.transpiler.passes`)
 
 .. currentmodule:: qiskit_ibm_runtime.transpiler.passes
 
-A collection of transpiler passes for IBM backends. Refer to
+A collection of transpiler passes. Refer to
 https://docs.quantum.ibm.com/guides/transpile to learn more about
 transpilation and passes.
 
@@ -25,6 +25,7 @@ transpilation and passes.
    :toctree: ../stubs/
 
    ConvertIdToDelay
+   ToClifford
 
 See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """

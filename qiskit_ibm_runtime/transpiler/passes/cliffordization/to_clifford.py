@@ -11,10 +11,10 @@
 # that they have been altered from the originals.
 
 """
-Pass to convert the :class:`qiskit.circuit.gate.Gate`\s of a circuit to a Clifford gate.
+Pass to convert the :class:`qiskit.circuit.gate.Gate`s of a circuit to a Clifford gate.
 """
 
-from typing import Any, Callable, List, Optional, Tuple, Type
+from typing import Callable, List, Optional, Tuple, Type
 from copy import deepcopy
 import numpy as np
 
@@ -43,12 +43,12 @@ def _is_clifford(instruction: Instruction) -> bool:
 
 class ToClifford(TransformationPass):
     """
-    Convert the :class:`qiskit.circuit.gate.Gate`\s of a circuit to a Clifford gate.
+    Convert the :class:`qiskit.circuit.gate.Gate`s of a circuit to a Clifford gate.
 
     This pass is optimized to run efficiently on ISA circuits, which contain only Clifford gates
-    from a restricted set or :class:`qiskit.circuit.library.RZGate`\s by arbitrary angles.
-    If applied to ISA circuits, this pass skips all the Clifford gates, while it rounds the angle
-    of every :class:`qiskit.circuit.library.RZGate` to the closest multiple of :math:`\pi/2`.
+    from a restricted set or :class:`qiskit.circuit.library.RZGate`s by arbitrary angles.
+    If applied to ISA circuits, it skips all the Clifford gates, while it rounds the angle
+    of every :class:`qiskit.circuit.library.RZGate` to the closest multiple of `pi/2` .
 
     .. code-block:: python
 
@@ -111,8 +111,8 @@ class ToClifford(TransformationPass):
         clifford_qc = pm.run(qc)
 
     Args:
-        rules: A list of tuples of the form ``(type, callable)``, where ``type`` is gate type and
-            ``callable`` is a function that specifies how non-Clifford gates of the given type
+        rules: A list of tuples of the form ``(type, fn)``, where ``type`` is gate type and
+            ``fn`` is a function that specifies how non-Clifford gates of the given type
             should be replaced. If this list contains Clifford types (e.g., ``HGate``), these
             are simply ignored.
     Raises:
@@ -125,14 +125,14 @@ class ToClifford(TransformationPass):
         super().__init__()
 
         self._rules = rules or []
-        self._types_with_custom_rules = tuple([rule[0] for rule in self.rules])
+        self._types_with_custom_rules = tuple(rule[0] for rule in self.rules)
         self._types_with_default_rules = deepcopy(ISA_SUPPORTED_GATES)
 
         # If user specified a custom rule for RZGate, remove RZGate from default rules.
         if RZGate in self._types_with_custom_rules:
             self._types_with_default_rules = tuple(
                 t for t in self._types_with_default_rules if t != RZGate
-            )
+            )  # type: ignore
 
     @property
     def rules(self) -> List[Tuple[Type[Gate], Callable]]:
@@ -162,8 +162,8 @@ class ToClifford(TransformationPass):
                     ):
                         # If there is a rule for the given gate, apply it
                         idx = self._types_with_custom_rules.index(node.op.__class__)
-                        callable = self.rules[idx][1]
-                        new_op = callable(node.op)
+                        fn = self.rules[idx][1]
+                        new_op = fn(node.op)
 
                         # verify that the new gate is indeed Clifford
                         if _is_clifford(new_op):
