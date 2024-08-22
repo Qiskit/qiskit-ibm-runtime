@@ -100,8 +100,10 @@ class ExecutionSpanSet:
     def __str__(self) -> str:
         return str(self.to_list_of_tuples())
 
-    def __eq__(self, other: "ExecutionSpanSet") -> bool:
+    def __eq__(self, other: object) -> bool:
         # TODO: consider changing to a dataclass
+        if not isinstance(other, ExecutionSpanSet):
+            return NotImplemented
         return self._spans == other._spans
 
     def to_list_of_tuples(self) -> List:
@@ -109,7 +111,7 @@ class ExecutionSpanSet:
         return [span.to_tuple() for span in self._spans]
 
     @classmethod
-    def from_list_of_tuple(cls, list_of_tuples) -> "ExecutionSpanSet":
+    def from_list_of_tuple(cls, list_of_tuples: Sequence[Tuple]) -> "ExecutionSpanSet":
         """ "Construct span set from a list of tuples"""
         return ExecutionSpanSet(
             [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
