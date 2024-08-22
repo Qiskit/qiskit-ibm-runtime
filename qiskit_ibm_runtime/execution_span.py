@@ -57,6 +57,16 @@ class ExecutionSpan:
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
         return ExecutionSpan(self.start, self.stop, slices)
 
+    def to_tuple(self) -> Tuple:
+        return (self.start, self.stop, self.data_slices)
+
+    @classmethod
+    def from_tuple(cls, span_tuple: Tuple) -> "ExecutionSpan":
+        return ExecutionSpan(*list(span_tuple))
+
+    def __str__(self) -> str:
+        return str(self.to_tuple())
+
 
 class ExecutionSpanSet:
     """A collection of timings for the PUB result."""
@@ -84,6 +94,22 @@ class ExecutionSpanSet:
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
+
+    def to_list_of_tuples(self) -> List:
+        return [span.to_tuple() for span in self._spans]
+
+    def __str__(self) -> str:
+        return str(self.to_list_of_tuples())
+
+    @classmethod
+    def from_list_of_tuple(cls, list_of_tuples) -> "ExecutionSpanSet":
+        return ExecutionSpanSet(
+            [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
+        )
+
+    def __eq__(self, other: "ExecutionSpanSet") -> bool:
+        # TODO: consider changing to a dataclass
+        return self._spans == other._spans
 
     @property
     def start(self) -> datetime:

@@ -14,12 +14,16 @@
 from typing import List, Sequence, Optional, Any
 import warnings
 import keyword
+from math import prod
+
 from qiskit import QuantumCircuit
 from qiskit.transpiler import Target
+from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.execution_span import ExecutionSpanSet
 
 
 def validate_classical_registers(pubs: List[SamplerPub]) -> None:
@@ -126,3 +130,31 @@ def validate_job_tags(job_tags: Optional[List[str]]) -> None:
         not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise IBMInputValueError("job_tags needs to be a list of strings.")
+
+
+def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
+    if (
+        "execution" not in result.metadata
+        or not isinstance(result.metadata["execution"], dict)
+        or "execution_spans" not in result.metadata["execution"]
+        or not isinstance(result.metadata["execution"]["execution_spans"], ExecutionSpanSet)
+    ):
+        return False
+
+    slice_ends = [0] * len(result)
+    for exspan in result.metadata["execution"]["execution_spans"]:
+        for task_id, task_slice in exspan.data_slices.items():
+            if task_slice[0] != slice_ends[task_id]:
+                return False
+            slice_ends[task_id] = task_slice[1]
+
+    for pub_length, res in zip(slice_ends, result):
+        if len(res.data.shape) == 0:
+            expected_length = 1
+        else:
+            expected_length = prod(res.data.shape)
+        expected_length *= res.metadata.get("num_randomizations", 1)
+        if pub_length != expected_length:
+            return False
+
+    return True
