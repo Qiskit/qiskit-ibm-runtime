@@ -44,7 +44,7 @@ class ExecutionSpan:
     @property
     def duration(self) -> float:
         """Return the duration"""
-        return (self.stop - self.start).seconds
+        return (self.stop - self.start).total_seconds()
 
     def contains_pub(self, pub_idx: Union[int, Iterable[int]]) -> bool:
         """Returns if a pub is contained"""
