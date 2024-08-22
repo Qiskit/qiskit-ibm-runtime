@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Pass to convert the :class:`qiskit.circuit.gate.Gate`s of a circuit to a Clifford gate.
+Pass to convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
 """
 
 from typing import Callable, List, Optional, Tuple, Type
@@ -43,12 +43,12 @@ def _is_clifford(instruction: Instruction) -> bool:
 
 class ToClifford(TransformationPass):
     """
-    Convert the :class:`qiskit.circuit.gate.Gate`s of a circuit to a Clifford gate.
+    Convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
 
     This pass is optimized to run efficiently on ISA circuits, which contain only Clifford gates
-    from a restricted set or :class:`qiskit.circuit.library.RZGate`s by arbitrary angles.
+    from a restricted set or :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles.
     If applied to ISA circuits, it skips all the Clifford gates, while it rounds the angle
-    of every :class:`qiskit.circuit.library.RZGate` to the closest multiple of `pi/2` .
+    of every :class:`qiskit.circuit.library.RZGate` to the closest multiple of `pi/2`.
 
     .. code-block:: python
 
