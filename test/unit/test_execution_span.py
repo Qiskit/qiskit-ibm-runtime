@@ -129,6 +129,7 @@ class TestExecutionSpan(IBMTestCase):
         )
 
     def test_sequence_methods(self):
+        """Test __len__ and __get_item__"""
         self.assertEqual(len(self.span_set), 2)
         self.assertEqual(self.span_set[0], self.span1)
         self.assertEqual(self.span_set[1], self.span2)
