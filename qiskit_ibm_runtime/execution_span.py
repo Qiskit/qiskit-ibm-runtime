@@ -127,6 +127,11 @@ class ExecutionSpanSet:
         """The stop time of the entire collection, in UTC."""
         return max(span.stop for span in self)
 
+    @property
+    def duration(self) -> float:
+        """Return the duration"""
+        return (self.stop - self.start).total_seconds()
+
     def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpanSet":
         """Returns an ExecutionSpanSet filtered by pub"""
         return ExecutionSpanSet([span.filter_by_pub(pub_idx) for span in self])
