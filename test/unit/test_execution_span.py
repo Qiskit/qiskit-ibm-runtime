@@ -54,7 +54,7 @@ class TestExecutionSpanSet(IBMTestCase):
 
         str_expected = str([(start1, stop1, slices1), (start2, stop2, slices2)])
 
-        exec_spans = ExecutionSpanSet.from_list_of_tuple(
+        exec_spans = ExecutionSpanSet.from_list_of_tuples(
             [(start1, stop1, slices1), (start2, stop2, slices2)]
         )
         str_created = str(exec_spans)

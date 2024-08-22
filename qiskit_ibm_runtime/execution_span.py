@@ -111,7 +111,7 @@ class ExecutionSpanSet:
         return [span.to_tuple() for span in self._spans]
 
     @classmethod
-    def from_list_of_tuple(cls, list_of_tuples: Sequence[Tuple]) -> "ExecutionSpanSet":
+    def from_list_of_tuples(cls, list_of_tuples: Sequence[Tuple]) -> "ExecutionSpanSet":
         """ "Construct span set from a list of tuples"""
         return ExecutionSpanSet(
             [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
