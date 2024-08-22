@@ -18,7 +18,6 @@ import subprocess
 import tempfile
 import warnings
 from datetime import datetime
-from copy import deepcopy
 
 import numpy as np
 from ddt import data, ddt
