@@ -133,6 +133,14 @@ def validate_job_tags(job_tags: Optional[List[str]]) -> None:
 
 
 def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
+    """Validate execution span section in result metadata.
+
+    Args:
+        result: A primitive result to be validated
+
+    Returns True if validation succeeds
+    """
+
     if (
         "execution" not in result.metadata
         or not isinstance(result.metadata["execution"], dict)

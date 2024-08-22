@@ -58,10 +58,12 @@ class ExecutionSpan:
         return ExecutionSpan(self.start, self.stop, slices)
 
     def to_tuple(self) -> Tuple:
+        """Return span in the form of a tuple"""
         return (self.start, self.stop, self.data_slices)
 
     @classmethod
     def from_tuple(cls, span_tuple: Tuple) -> "ExecutionSpan":
+        """Construct a span from a tuple"""
         return ExecutionSpan(*list(span_tuple))
 
     def __str__(self) -> str:
@@ -95,21 +97,23 @@ class ExecutionSpanSet:
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
 
-    def to_list_of_tuples(self) -> List:
-        return [span.to_tuple() for span in self._spans]
-
     def __str__(self) -> str:
         return str(self.to_list_of_tuples())
-
-    @classmethod
-    def from_list_of_tuple(cls, list_of_tuples) -> "ExecutionSpanSet":
-        return ExecutionSpanSet(
-            [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
-        )
 
     def __eq__(self, other: "ExecutionSpanSet") -> bool:
         # TODO: consider changing to a dataclass
         return self._spans == other._spans
+
+    def to_list_of_tuples(self) -> List:
+        """Return span set in the form of a list of tuples"""
+        return [span.to_tuple() for span in self._spans]
+
+    @classmethod
+    def from_list_of_tuple(cls, list_of_tuples) -> "ExecutionSpanSet":
+        """ "Construct span set from a list of tuples"""
+        return ExecutionSpanSet(
+            [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
+        )
 
     @property
     def start(self) -> datetime:

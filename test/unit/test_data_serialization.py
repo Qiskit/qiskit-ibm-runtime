@@ -334,15 +334,10 @@ class TestContainerSerialization(IBMTestCase):
 
         metadata1 = deepcopy(primitive_result1.metadata)
         metadata2 = deepcopy(primitive_result2.metadata)
-        exec_span_set1 = metadata1["execution"].pop("execution_spans")
-        exec_span_set2 = metadata2["execution"].pop("execution_spans")
+        # exec_span_set1 = metadata1["execution"].pop("execution_spans")
+        # exec_span_set2 = metadata2["execution"].pop("execution_spans")
         self.assertEqual(metadata1, metadata2)
-
-        self.assertEqual(len(exec_span_set1), len(exec_span_set2))
-        for exspan1, exspan2 in zip(exec_span_set1, exec_span_set2):
-            self.assertEqual(exspan1.start, exspan2.start)
-            self.assertEqual(exspan1.stop, exspan2.stop)
-            self.assertDictEqual(exspan1.data_slices, exspan2.data_slices)
+        # self.assertEqual(exec_span_set1, exec_span_set1)
 
     # Data generation methods
 

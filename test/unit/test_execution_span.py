@@ -25,6 +25,7 @@ class TestExecutionSpan(IBMTestCase):
     """Class for testing the ExecutionSpan class."""
 
     def test_to_tuple_from_tuple(self):
+        """Test the methods to_tuple and from_tuple"""
         start = datetime(2022, 1, 1)
         stop = datetime(2023, 1, 1)
         data_slices = {1: (4, 9), 0: (5, 7)}
@@ -43,6 +44,7 @@ class TestExecutionSpanSet(IBMTestCase):
     """Class for testing the ExecutionSpanSet class."""
 
     def test_str(self):
+        """Test the __str__ method"""
         start1 = datetime(2022, 1, 1)
         stop1 = datetime(2023, 1, 1)
         slices1 = {1: (4, 9), 0: (5, 7)}
