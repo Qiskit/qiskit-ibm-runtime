@@ -13,3 +13,4 @@
 """Passes to layout circuits to IBM backend's instruction sets."""
 
 from .convert_id_to_delay import ConvertIdToDelay
+from .to_nearest_clifford import ToNearestClifford
