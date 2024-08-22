@@ -10,6 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Passes to layout circuits to IBM backend's instruction sets."""
+"""Passes to transform a circuit into a Clifford circuit."""
 
-from .convert_id_to_delay import ConvertIdToDelay
+from .to_clifford import ToClifford

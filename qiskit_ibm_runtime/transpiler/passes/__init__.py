@@ -35,3 +35,5 @@ from .basis import ConvertIdToDelay
 from .scheduling import ASAPScheduleAnalysis
 from .scheduling import PadDynamicalDecoupling
 from .scheduling import PadDelay
+
+from .cliffordization import ToClifford

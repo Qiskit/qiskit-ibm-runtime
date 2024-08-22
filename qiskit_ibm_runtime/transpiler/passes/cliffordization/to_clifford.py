@@ -59,7 +59,7 @@ class ToClifford(TransformationPass):
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
         from qiskit_ibm_runtime.fake_provider import FakeKyiv
-        from qiskit_ibm_runtime.transpiler.passes.basis import ToClifford
+        from qiskit_ibm_runtime.transpiler.passes import ToClifford
 
         # An ISA circuit ending with a Z rotation by pi/3
         qc = QuantumCircuit(2)
@@ -88,7 +88,7 @@ class ToClifford(TransformationPass):
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
         from qiskit_ibm_runtime.fake_provider import FakeKyiv
-        from qiskit_ibm_runtime.transpiler.passes.basis import ToClifford
+        from qiskit_ibm_runtime.transpiler.passes import ToClifford
 
         # An non-ISA circuit ending with a Z rotation by pi/3
         qc = QuantumCircuit(2)
