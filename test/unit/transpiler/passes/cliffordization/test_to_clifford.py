@@ -15,7 +15,6 @@
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import RXGate, RYGate, RZGate, HGate
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes import ToClifford

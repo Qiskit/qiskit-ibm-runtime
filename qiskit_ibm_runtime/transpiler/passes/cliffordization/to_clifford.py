@@ -16,7 +16,7 @@ Pass to convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Cliff
 
 import numpy as np
 
-from qiskit.circuit import Barrier, Instruction, Measure, Reset
+from qiskit.circuit import Barrier, Instruction, Measure
 from qiskit.circuit.library import CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info import Clifford
@@ -24,7 +24,10 @@ from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
 ISA_SUPPORTED_GATES = (CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate)
-"""The set of gates that can be found in an ISA circuit, handled fastly by the :class:`~.ToClifford` pass."""
+"""
+The set of gates that can be found in an ISA circuit, handled fastly by the :class:`~.ToClifford`
+pass.
+"""
 
 SUPPORTED_INSTRUCTIONS = (Barrier, Measure)
 """An additional set of instructions handled fastly by the :class:`~.ToClifford` pass."""
@@ -79,9 +82,6 @@ class ToClifford(TransformationPass):
         ValueError: If the given circuit contains unsupported operations, such as non-Clifford
             gates that are not Pauli-Z rotations.
     """
-
-    def __init__(self):
-        super().__init__()
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         for node in dag.op_nodes():
