@@ -78,6 +78,8 @@ def draw_layer_error_map(
     *,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
+    edges_n_segs: int = 16,
+    edges_width: float = 4,
     height: int = 500,
     plot_bgcolor: str = "white",
     radius: float = 0.25,
@@ -93,6 +95,8 @@ def draw_layer_error_map(
             qubit in the given backend on a 2D grid.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
+        edges_n_segs: The number of equal-sized segments that edges are made of.
+        edges_width: The line width of the edges in pixels.
         height: The height of the returned figure.
         plot_bgcolor: The background color.
         radius: The radius of the pie charts representing the qubits.
@@ -144,35 +148,52 @@ def draw_layer_error_map(
         x1 = xs[q2]
         y0 = ys[q1]
         y1 = ys[q2]
-        dx = 0 if x0 == x1 else 1.2 * radius
-        dy = 0 if y0 == y1 else -1.2 * radius
 
         if vals := rates_2q[(q1, q2)].values():
-            # Add gradient (currently not supported for go.Scatter)
+            # Add gradient. Gradients are currently not supported for go.Scatter lines, so we break
+            # the line into segments and draw `edges_n_segs` segments of increasing colors.
             min_val = min(vals)
             max_val = min(max(vals), 1)
-            all_vals = [min_val + (max_val - min_val) / 16 * i for i in range(16)]
+            all_vals = [
+                min_val + (max_val - min_val) / edges_n_segs * i for i in range(edges_n_segs)
+            ]
             color = [
                 _get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
             ]
             hoverinfo_2q = ""
             for pauli, rate in rates_2q[(q1, q2)].items():
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
-        else:
-            color = color_no_data  # type: ignore
-            hoverinfo_2q = "No data"
 
-        # Add a trace for the edge
-        edge = go.Scatter(
-            x=[x0 + dx + (x1 - 2 * dx - x0) / 16 * i for i in range(16)],
-            y=[y0 + dy + (y1 - 2 * dy - y0) / 16 * i for i in range(16)],
-            hovertemplate=hoverinfo_2q,
-            mode="markers",
-            marker={"color": color},
-            showlegend=False,
-            name="",
-        )
-        fig.add_trace(edge)
+            for i in range(edges_n_segs):
+                # Add a trace for the edge
+                edge = go.Scatter(
+                    x=[x0 + (x1 - x0) / edges_n_segs * i, x0 + (x1 - x0) / edges_n_segs * (i + 1)],
+                    y=[y0 + (y1 - y0) / edges_n_segs * i, y0 + (y1 - y0) / edges_n_segs * (i + 1)],
+                    hovertemplate=hoverinfo_2q,
+                    mode="lines",
+                    line={
+                        "color": color[i],
+                        "width": edges_width,
+                    },
+                    showlegend=False,
+                    name="",
+                )
+                fig.add_trace(edge)
+        else:
+            # Add a line for the edge
+            edge = go.Scatter(
+                x=[x0, x1],
+                y=[y0, y1],
+                hovertemplate="No data",
+                mode="lines",
+                line={
+                    "color": color_no_data,
+                    "width": edges_width,
+                },
+                showlegend=False,
+                name="",
+            )
+            fig.add_trace(edge)
 
     # Plot the pie charts showing X, Y, and Z for each qubit
     shapes = []

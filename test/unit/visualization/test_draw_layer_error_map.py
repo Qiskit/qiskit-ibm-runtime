@@ -63,7 +63,7 @@ class TestDrawLayerErrorMap(IBMTestCase):
         with self.assertRaises(ValueError):
             draw_layer_error_map(self.layer_error, AerSimulator())
 
-    @data(["fake_hanoi", 29], ["fake_kyiv", 145])
+    @data(["fake_hanoi", 44], ["fake_kyiv", 160])
     def test_plotting(self, inputs):
         r"""
         Tests the plotting function to make sure that it produces the right figure.
