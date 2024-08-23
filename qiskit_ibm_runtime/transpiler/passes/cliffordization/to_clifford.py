@@ -48,7 +48,8 @@ class ToClifford(TransformationPass):
     This pass is optimized to run efficiently on ISA circuits, which contain only Clifford gates
     from a restricted set or :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To do
     so, it rounds the angle of every :class:`qiskit.circuit.library.RZGate` to the closest multiple
-    of `pi/2`. It skips every Clifford gate, and it errors for every other gate.
+    of `pi/2`. It skips every Clifford gate, measurement, and barrier, and it errors for every
+    non-ISA non-Clifford gate.
 
     .. code-block:: python
 
