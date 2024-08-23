@@ -28,9 +28,11 @@ class TestToClifford(IBMTestCase):
 
     def test_clifford_isa_circuit(self):
         """Test the pass on a Clifford circuit with ISA gates."""
-        qc = QuantumCircuit(2)
+        qc = QuantumCircuit(2, 2)
         qc.id(0)
         qc.sx(0)
+        qc.barrier()
+        qc.measure(0, 1)
         qc.rz(0, 0)
         qc.rz(np.pi / 2, 0)
         qc.rz(np.pi, 0)
@@ -69,129 +71,28 @@ class TestToClifford(IBMTestCase):
 
         self.assertEqual(expected, transformed)
 
-    def test_non_clifford_isa_circuit(self):
-        """Test the pass on a non-Clifford circuit with ISA gates."""
+    def test_error_non_clifford_isa_circuit(self):
+        """Test that the pass errors when run on a non-Clifford circuit with ISA gates."""
         qc = QuantumCircuit(2)
         qc.id(0)
         qc.sx(0)
-        qc.rz(np.pi / 2 - 0.1, 0)
+        qc.rx(np.pi / 2 - 0.1, 0)
         qc.cx(0, 1)
         qc.cz(0, 1)
         qc.ecr(0, 1)
-
-        pm = PassManager([ToClifford()])
-        transformed = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.id(0)
-        expected.sx(0)
-        expected.rz(np.pi / 2, 0)
-        expected.cx(0, 1)
-        expected.cz(0, 1)
-        expected.ecr(0, 1)
-
-        self.assertEqual(expected, transformed)
-
-    def test_non_clifford_non_isa_circuit(self):
-        """Test the pass on a non-Clifford circuit with ISA and non-ISA gates."""
-        qc = QuantumCircuit(2)
-        qc.id(0)
-        qc.sx(0)
-        qc.rz(np.pi / 2 - 0.1, 0)
-        qc.rx(np.pi / 2 - 0.1, 1)
-        qc.ry(np.pi / 2 - 0.1, 0)
-        qc.cx(0, 1)
-        qc.cz(0, 1)
-        qc.ecr(0, 1)
-
-        rules = [
-            (RYGate, lambda x: HGate()),
-            (RXGate, lambda x: RXGate(3 * np.pi / 2)),
-        ]
-
-        pm = PassManager([ToClifford(rules)])
-        transformed = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.id(0)
-        expected.sx(0)
-        expected.rz(np.pi / 2, 0)
-        expected.rx(3 * np.pi / 2, 1)
-        expected.h(0)
-        expected.cx(0, 1)
-        expected.cz(0, 1)
-        expected.ecr(0, 1)
-
-        self.assertEqual(expected, transformed)
-
-    def test_overrides_default_rule_for_rz(self):
-        """Test that rules allow specifying different replacement rules for RZ."""
-        qc = QuantumCircuit(2)
-        qc.id(0)
-        qc.sx(0)
-        qc.rz(np.pi / 2 - 0.1, 0)
-        qc.cx(0, 1)
-        qc.cz(0, 1)
-        qc.ecr(0, 1)
-
-        rules = [
-            (RZGate, lambda x: HGate()),
-        ]
-
-        pm = PassManager([ToClifford(rules)])
-        transformed = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.id(0)
-        expected.sx(0)
-        expected.h(0)
-        expected.cx(0, 1)
-        expected.cz(0, 1)
-        expected.ecr(0, 1)
-
-        self.assertEqual(expected, transformed)
-
-    def test_rules_for_clifford_are_ignored(self):
-        """Test that rules for Clifford gates are ignored."""
-        qc = QuantumCircuit(2)
-        qc.h(0)
-
-        rules = [
-            (HGate, lambda x: RZGate(0)),
-        ]
-
-        pm = PassManager([ToClifford(rules)])
-        transformed = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.h(0)
-
-        self.assertEqual(expected, transformed)
-
-    def test_missing_rule(self):
-        """Test that an error is raised when rules are missing."""
-        qc = QuantumCircuit(2)
-        qc.id(0)
-        qc.sx(0)
-        qc.rz(np.pi / 2 - 0.1, 0)
-        qc.rx(np.pi / 2 - 0.1, 1)
 
         pm = PassManager([ToClifford()])
         with self.assertRaises(ValueError):
             pm.run(qc)
 
-    def test_invalid_rule(self):
-        """Test that an error is raised when rules lead to non-Clifford circuits."""
+    def test_error_reset(self):
+        """Test that the pass errors when run on circuits with resets."""
         qc = QuantumCircuit(2)
-        qc.id(0)
-        qc.sx(0)
-        qc.rz(np.pi / 2 - 0.1, 0)
+        qc.x(1)
+        qc.barrier(0)
+        qc.reset(1)
         qc.rx(np.pi / 2 - 0.1, 1)
 
-        rules = [
-            (RXGate, lambda x: RXGate(3 * np.pi / 8)),
-        ]
-
-        pm = PassManager([ToClifford(rules)])
+        pm = PassManager([ToClifford()])
         with self.assertRaises(ValueError):
             pm.run(qc)
