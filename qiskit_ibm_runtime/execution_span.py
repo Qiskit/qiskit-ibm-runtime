@@ -59,7 +59,18 @@ class ExecutionSpan:
         return not pub_idx.isdisjoint(self.data_slices)
 
     def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpan":
-        """Returns an ExecutionSpan filtered by pub"""
+        """Return a new span whose slices are filtered to the provided indices.
+        
+        For example, if this span contains slice information for pubs with indices 1,3,4 and `[1,4]` is provided,
+        then the span returned by this method will contain slice information for only those two indices, but
+        be identical otherwise.
+        
+        Args:
+            pub_idx: One or more pub indices from the original primitive call.
+            
+        Returns:
+            A new filtered span.
+        """
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
         return ExecutionSpan(self.start, self.stop, slices)
