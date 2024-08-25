@@ -144,7 +144,7 @@ class ExecutionSpanSet:
 
     @property
     def duration(self) -> float:
-        """Return the duration"""
+        """The total duration of this collection, in seconds."""
         return (self.stop - self.start).total_seconds()
 
     def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpanSet":
