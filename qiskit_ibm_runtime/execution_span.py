@@ -17,7 +17,7 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-SliceType = Tuple[int, int]
+SliceType = slice
 
 
 @dataclass(frozen=True)
@@ -31,15 +31,7 @@ class ExecutionSpan:
     """The stop time of the span, in UTC."""
 
     data_slices: Dict[int, SliceType]
-    r"""Which data have dependence on this execution span.
-
-    Data from the primitives are array-based, with every field in a 
-    :class:`~PubResult`\s :class:`~.DataBin` sharing the same base shape.
-    Therefore, the format of this field is a mapping from pub indexes to 
-    the same format accepted by 
-    NumPy slicing, where each value indicates which slice of each field in the
-    data bin depend on raw data collected during this execution span.
-    """
+    r"""Which data have dependence on this execution span."""
 
     @property
     def duration(self) -> float:
@@ -48,10 +40,10 @@ class ExecutionSpan:
 
     def contains_pub(self, pub_idx: Union[int, Iterable[int]]) -> bool:
         """Returns whether the pub with the given index has data with dependence on this span.
-        
+
         Args:
             pub_idx: One or more pub indices from the original primitive call.
-        
+
         Returns:
             Whether there is dependence on this span.
         """
@@ -60,14 +52,14 @@ class ExecutionSpan:
 
     def filter_by_pub(self, pub_idx: Union[int, Iterable[int]]) -> "ExecutionSpan":
         """Return a new span whose slices are filtered to the provided indices.
-        
-        For example, if this span contains slice information for pubs with indices 1,3,4 and `[1,4]` is provided,
-        then the span returned by this method will contain slice information for only those two indices, but
-        be identical otherwise.
-        
+
+        For example, if this span contains slice information for pubs with indices 1, 3, 4 and
+        `[1,4]` is provided, then the span returned by this method will contain slice information
+        for only those two indices, but be identical otherwise.
+
         Args:
             pub_idx: One or more pub indices from the original primitive call.
-            
+
         Returns:
             A new filtered span.
         """
