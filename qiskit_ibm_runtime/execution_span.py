@@ -43,7 +43,7 @@ class ExecutionSpan:
 
     @property
     def duration(self) -> float:
-        """Return the duration"""
+        """The duration of this span, in seconds."""
         return (self.stop - self.start).total_seconds()
 
     def contains_pub(self, pub_idx: Union[int, Iterable[int]]) -> bool:
