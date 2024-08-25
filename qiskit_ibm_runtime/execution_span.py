@@ -83,11 +83,11 @@ class ExecutionSpan:
 class ExecutionSpanSet:
     """A collection of timings for the PUB result."""
 
-    def __init__(self, spans: Sequence[ExecutionSpan]):
+    def __init__(self, spans: Iterable[ExecutionSpan]):
         self._spans = spans
 
     def __len__(self) -> int:
-        return len(self._spans)
+        return len(list(self._spans))
 
     @overload
     def __getitem__(self, idxs: int) -> ExecutionSpan: ...
@@ -98,11 +98,12 @@ class ExecutionSpanSet:
     def __getitem__(
         self, idxs: Union[int, slice, List[int]]
     ) -> Union[ExecutionSpan, "ExecutionSpanSet"]:
+        span_list = list(self._spans)
         if isinstance(idxs, int):
-            return self._spans[idxs]
+            return span_list[idxs]
         if isinstance(idxs, slice):
-            return ExecutionSpanSet(self._spans[idxs])
-        return ExecutionSpanSet([self._spans[idx] for idx in idxs])
+            return ExecutionSpanSet(span_list[idxs])
+        return ExecutionSpanSet(span_list[idx] for idx in idxs)
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
