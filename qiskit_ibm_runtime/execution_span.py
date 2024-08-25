@@ -17,9 +17,6 @@ from datetime import datetime
 from dataclasses import dataclass
 
 
-SliceType = slice
-
-
 @dataclass(frozen=True)
 class ExecutionSpan:
     """Stores an execution time span for a subset of job data."""
@@ -30,7 +27,7 @@ class ExecutionSpan:
     stop: datetime
     """The stop time of the span, in UTC."""
 
-    data_slices: Dict[int, SliceType]
+    data_slices: Dict[int, slice]
     r"""Which data have dependence on this execution span."""
 
     @property
