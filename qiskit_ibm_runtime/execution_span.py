@@ -73,8 +73,8 @@ class ExecutionSpan:
         """Construct a span from a tuple"""
         return ExecutionSpan(*list(span_tuple))
 
-    def __str__(self) -> str:
-        return str(self.to_tuple())
+    def __repr__(self) -> str:
+        return f"ExecutionSpan({self.to_tuple()})"
 
 
 class ExecutionSpanSet:
@@ -105,8 +105,8 @@ class ExecutionSpanSet:
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
 
-    def __str__(self) -> str:
-        return str(self.to_list_of_tuples())
+    def __repr__(self) -> str:
+        return f"ExecutionSpanSet({repr(self.to_list_of_tuples())})"
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, ExecutionSpanSet) and self._spans == other._spans
