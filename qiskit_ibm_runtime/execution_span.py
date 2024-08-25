@@ -47,7 +47,14 @@ class ExecutionSpan:
         return (self.stop - self.start).total_seconds()
 
     def contains_pub(self, pub_idx: Union[int, Iterable[int]]) -> bool:
-        """Returns if a pub is contained"""
+        """Returns whether the pub with the given index has data with dependence on this span.
+        
+        Args:
+            pub_idx: One or more pub indices from the original primitive call.
+        
+        Returns:
+            Whether there is dependence on this span.
+        """
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         return not pub_idx.isdisjoint(self.data_slices)
 
