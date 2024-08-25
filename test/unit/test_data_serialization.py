@@ -419,9 +419,13 @@ class TestContainerSerialization(IBMTestCase):
                 "execution_spans": ExecutionSpanSet(
                     [
                         ExecutionSpan(
-                            datetime(2022, 1, 1), datetime(2023, 1, 1), {1: slice(4, 9), 0: slice(5, 7)}
+                            datetime(2022, 1, 1),
+                            datetime(2023, 1, 1),
+                            {1: slice(4, 9), 0: slice(5, 7)},
                         ),
-                        ExecutionSpan(datetime(2024, 8, 20), datetime(2024, 8, 21), {0: slice(2, 3)}),
+                        ExecutionSpan(
+                            datetime(2024, 8, 20), datetime(2024, 8, 21), {0: slice(2, 3)}
+                        ),
                     ]
                 )
             }
