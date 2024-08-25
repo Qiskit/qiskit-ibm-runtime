@@ -119,10 +119,7 @@ class ExecutionSpanSet:
         return str(self.to_list_of_tuples())
 
     def __eq__(self, other: object) -> bool:
-        # TODO: consider changing to a dataclass
-        if not isinstance(other, ExecutionSpanSet):
-            return NotImplemented
-        return self._spans == other._spans
+        return isinstance(other, ExecutionSpanSet) and self._spans == other._spans
 
     def to_list_of_tuples(self) -> List:
         """Return span set in the form of a list of tuples"""
