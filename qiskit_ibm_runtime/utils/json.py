@@ -319,7 +319,14 @@ class RuntimeEncoder(json.JSONEncoder):
             out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
         if isinstance(obj, ExecutionSpan):
-            out_val = {"start": obj.start, "stop": obj.stop, "data_slices": obj.data_slices}
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (data_slice.start, data_slice.stop)
+                    for idx, data_slice in obj.data_slices.items()
+                },
+            }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
         if isinstance(obj, ExecutionSpanSet):
             out_val = {"spans": obj._spans}
@@ -435,7 +442,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "ExecutionSpan":
                 new_slices = {}
                 for task_id, task_slice in obj_val["data_slices"].items():
-                    new_slices[int(task_id)] = tuple(task_slice)
+                    new_slices[int(task_id)] = slice(task_slice[0], task_slice[1])
                 obj_val["data_slices"] = new_slices
                 return ExecutionSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
