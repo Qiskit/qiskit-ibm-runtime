@@ -29,12 +29,12 @@ class TestExecutionSpan(IBMTestCase):
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
-        self.slices1 = {1: (4, 9), 0: (5, 7)}
+        self.slices1 = {1: slice(4, 9), 0: slice(5, 7)}
         self.span1 = ExecutionSpan(self.start1, self.stop1, self.slices1)
 
         self.start2 = datetime(2023, 8, 22, 18, 45, 9)
         self.stop2 = datetime(2023, 8, 22, 18, 45, 11, 500000)
-        self.slices2 = {0: (2, 3), 2: (6, 8)}
+        self.slices2 = {0: slice(2, 3), 2: slice(6, 8)}
         self.span2 = ExecutionSpan(self.start2, self.stop2, self.slices2)
 
         self.span_set = ExecutionSpanSet([self.span1, self.span2])
