@@ -105,29 +105,6 @@ class TestExecutionSpan(IBMTestCase):
             ),
         )
 
-    def test_to_from(self):
-        """Test the methods to_tuple, from_tuple, to_list_of_tuples, from_list_of_tuples"""
-        tuple1 = (self.start1, self.stop1, self.slices1)
-        tuple2 = (self.start2, self.stop2, self.slices2)
-        tuple_list = [tuple1, tuple2]
-
-        self.assertEqual(self.span1.to_tuple(), tuple1)
-        self.assertEqual(self.span2.to_tuple(), tuple2)
-        self.assertEqual(self.span_set.to_list_of_tuples(), tuple_list)
-
-        self.assertEqual(ExecutionSpan.from_tuple(tuple1), self.span1)
-        self.assertEqual(ExecutionSpan.from_tuple(tuple2), self.span2)
-        self.assertEqual(ExecutionSpanSet.from_list_of_tuples(tuple_list), self.span_set)
-
-    def test_str(self):
-        """Test the ___str__ method"""
-        self.assertEqual(str(self.span1), str((self.start1, self.stop1, self.slices1)))
-        self.assertEqual(str(self.span2), str((self.start2, self.stop2, self.slices2)))
-        self.assertEqual(
-            str(self.span_set),
-            str([(self.start1, self.stop1, self.slices1), (self.start2, self.stop2, self.slices2)]),
-        )
-
     def test_sequence_methods(self):
         """Test __len__ and __get_item__"""
         self.assertEqual(len(self.span_set), 2)

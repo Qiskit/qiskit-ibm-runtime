@@ -12,7 +12,7 @@
 
 """Execution span classes."""
 
-from typing import Iterable, Union, overload, Tuple, Dict, List, Iterator, Sequence
+from typing import Iterable, Union, overload, Dict, List, Iterator
 from datetime import datetime
 from dataclasses import dataclass
 
@@ -64,24 +64,12 @@ class ExecutionSpan:
         slices = {idx: sl for idx, sl in self.data_slices.items() if idx in pub_idx}
         return ExecutionSpan(self.start, self.stop, slices)
 
-    def to_tuple(self) -> Tuple:
-        """Return span in the form of a tuple"""
-        return (self.start, self.stop, self.data_slices)
-
-    @classmethod
-    def from_tuple(cls, span_tuple: Tuple) -> "ExecutionSpan":
-        """Construct a span from a tuple"""
-        return ExecutionSpan(*list(span_tuple))
-
-    def __repr__(self) -> str:
-        return f"ExecutionSpan({self.to_tuple()})"
-
 
 class ExecutionSpanSet:
     """A collection of timings for the PUB result."""
 
     def __init__(self, spans: Iterable[ExecutionSpan]):
-        self._spans = spans
+        self._spans = list(spans)
 
     def __len__(self) -> int:
         return len(list(self._spans))
@@ -100,27 +88,16 @@ class ExecutionSpanSet:
             return span_list[idxs]
         if isinstance(idxs, slice):
             return ExecutionSpanSet(span_list[idxs])
-        return ExecutionSpanSet(span_list[idx] for idx in idxs)
+        return ExecutionSpanSet([span_list[idx] for idx in idxs])
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
 
     def __repr__(self) -> str:
-        return f"ExecutionSpanSet({repr(self.to_list_of_tuples())})"
+        return f"ExecutionSpanSet({repr(self._spans)})"
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, ExecutionSpanSet) and self._spans == other._spans
-
-    def to_list_of_tuples(self) -> List:
-        """Return span set in the form of a list of tuples"""
-        return [span.to_tuple() for span in self]
-
-    @classmethod
-    def from_list_of_tuples(cls, list_of_tuples: Sequence[Tuple]) -> "ExecutionSpanSet":
-        """ "Construct span set from a list of tuples"""
-        return ExecutionSpanSet(
-            [ExecutionSpan.from_tuple(span_tuple) for span_tuple in list_of_tuples]
-        )
 
     @property
     def start(self) -> datetime:
@@ -141,3 +118,6 @@ class ExecutionSpanSet:
         """Returns an ExecutionSpanSet filtered by pub"""
         return ExecutionSpanSet([span.filter_by_pub(pub_idx) for span in self])
 
+    def plot(self) -> None:
+        """Show a timing diagram"""
+        raise NotImplementedError
