@@ -310,6 +310,7 @@ class BaseFakeRuntimeClient:
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
+        private: Optional[int] = False,  # pylint: disable=unused-argument
         channel_strategy: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
