@@ -40,6 +40,7 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_aer.noise import NoiseModel
+from qiskit_ibm_runtime.utils.noise_model import NoiseModel as RuntimeNoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
 
@@ -142,7 +143,7 @@ class TestDataSerialization(IBMTestCase):
                 category=DeprecationWarning,
             )
             decoded = json.loads(encoded, cls=RuntimeDecoder)
-        self.assertIsInstance(decoded, NoiseModel)
+        self.assertIsInstance(decoded, RuntimeNoiseModel)
         self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
         self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
 

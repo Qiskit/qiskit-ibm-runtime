@@ -39,6 +39,7 @@ except ImportError:
 
 try:
     import qiskit_aer
+    from qiskit_ibm_runtime.utils.noise_model import NoiseModel
 
     HAS_AER = True
 except ImportError:
@@ -429,7 +430,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return obj_val
             if obj_type == "NoiseModel":
                 if HAS_AER:
-                    return qiskit_aer.noise.NoiseModel.from_dict(obj_val)
+                    return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
         return obj
