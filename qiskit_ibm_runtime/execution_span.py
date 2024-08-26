@@ -141,6 +141,3 @@ class ExecutionSpanSet:
         """Returns an ExecutionSpanSet filtered by pub"""
         return ExecutionSpanSet([span.filter_by_pub(pub_idx) for span in self])
 
-    def plot(self) -> None:
-        """Show a timing diagram"""
-        raise NotImplementedError
