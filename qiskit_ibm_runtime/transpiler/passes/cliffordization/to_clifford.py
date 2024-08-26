@@ -46,7 +46,7 @@ def _is_clifford(instruction: Instruction) -> bool:
 
 class ToClifford(TransformationPass):
     """
-    Convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
+    Convert the gates of a circuit to Clifford gates.
 
     This pass is optimized to run efficiently on ISA circuits, which contain only Clifford gates
     from a restricted set or :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To do

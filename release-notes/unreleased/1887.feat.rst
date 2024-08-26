@@ -1,0 +1,1 @@
+Added ``ToClifford`` transpilation pass to convert the gates of a circuit to Clifford gates.
