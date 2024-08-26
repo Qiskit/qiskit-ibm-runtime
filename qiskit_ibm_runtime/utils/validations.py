@@ -157,10 +157,7 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
             slice_ends[task_id] = task_slice.stop
 
     for pub_length, res in zip(slice_ends, result):
-        if len(res.data.shape) == 0:
-            expected_length = 1
-        else:
-            expected_length = prod(res.data.shape)
+        expected_length = prod(res.data.shape)
         expected_length *= res.metadata.get("num_randomizations", 1)
         if pub_length != expected_length:
             return False
