@@ -442,7 +442,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "ExecutionSpan":
                 new_slices = {}
                 for task_id, task_slice in obj_val["data_slices"].items():
-                    new_slices[int(task_id)] = slice(task_slice[0], task_slice[1])
+                    new_slices[int(task_id)] = slice(*task_slice)
                 obj_val["data_slices"] = new_slices
                 return ExecutionSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
