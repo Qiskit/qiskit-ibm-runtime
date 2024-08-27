@@ -13,7 +13,7 @@
 """A debugger."""
 
 from __future__ import annotations
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence, Type, Union
 
 from qiskit_aer.noise import NoiseModel
 from qiskit_aer.primitives import EstimatorV2 as AerEstimator
@@ -33,17 +33,19 @@ def _get_result(
     mode: Union[str, PrimitiveResult],
     noise_model: NoiseModel,
     result: Optional[PrimitiveResult] = None,
+    default_precision: Optional[float] = 0,
     seed_simulator: Optional[int] = None,
-    default_precision: float = 0.05,
 ):
-    """A convenience function used to retrieve the results for a given debugger mode."""
+    r"""A convenience function used to retrieve the results for a given debugger mode."""
+    backend_options = {"method": "stabilizer", "seed_simulator": seed_simulator}
+    options = {"backend_options": backend_options, "default_precision": default_precision}
+
     if mode == "ideal_sim":
-        options = {"method": "stabilizer", "seed_simulator": seed_simulator}
-        estimator = AerEstimator(options={"backend_options": options, "default_precision": default_precision})
+        estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
     elif mode == "noisy_sim" and noise_model is not None:
-        options = {"method": "stabilizer", "seed_simulator": seed_simulator, "noise_model": noise_model}
-        estimator = AerEstimator(options={"backend_options": options, "default_precision": default_precision})
+        options["backend_options"]["noise_model"] = noise_model
+        estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
     elif mode == "exp" and result is not None:
         return result
@@ -77,7 +79,7 @@ class Debugger:
 
         if validate_clifford:
             for pub in pubs:
-                cliff_circ =  PassManager([ToClifford()]).run(pub.circuit)
+                cliff_circ = PassManager([ToClifford()]).run(pub.circuit)
                 if pub.circuit != cliff_circ:
                     raise ValueError(
                         "Given ``pubs`` contain a non-Clifford circuit. To fix, consider using the "
@@ -105,8 +107,8 @@ class Debugger:
         mode1: str = "noisy_sim",
         mode2: str = "ideal_sim",
         result: Optional[PrimitiveResult] = None,
-        fom: Optional[FOM] = Ratio(),
-        default_precision: float = 0.05,
+        fom: Type[FOM] = Ratio,
+        default_precision: float = 0,
         seed_simulator: Optional[int] = None,
     ):
         r"""
@@ -160,6 +162,8 @@ class Debugger:
                 otherwise.
             fom: The figure of merit to compare ``mode1`` and ``mode2`` by. Defaults to computing
                 the ratio.
+            default_precision: The default precision used to run the ideal and noisy simulations.
+            seed_simulator: A seed for the simulator.
         """
         for mode in [mode1, mode2]:
             if mode not in ["ideal_sim", "noisy_sim", "exp"]:
@@ -168,8 +172,12 @@ class Debugger:
                 )
         self._validate_pubs(coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
-        res1 = _get_result(coerced_pubs, mode1, self.noise_model, result, seed_simulator, default_precision)
-        res2 = _get_result(coerced_pubs, mode2, self.noise_model, result, seed_simulator, default_precision)
+        res1 = _get_result(
+            coerced_pubs, mode1, self.noise_model, result, default_precision, seed_simulator
+        )
+        res2 = _get_result(
+            coerced_pubs, mode2, self.noise_model, result, default_precision, seed_simulator
+        )
         return fom(res1, res2)
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:

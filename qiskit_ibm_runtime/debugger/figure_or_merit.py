@@ -21,21 +21,13 @@ from qiskit.primitives.containers import PrimitiveResult
 
 
 class FOM(ABC):
-    r"""Base class for the figures of merit used when comparing results through the debugger.
+    r"""Base class for the figures of merit used when comparing results through the debugger."""
 
-    Args:
-        name: The name of this figure of merit.
-    """
-
-    def __init__(self, name: str) -> None:
-        self._name = name
-
-    @property
-    def name(self):
-        r"""
-        The name of this figure of merit.
-        """
-        return self._name
+    def __new__(cls, result1: PrimitiveResult, result2: PrimitiveResult):
+        # Instead of returning an instance of FOM, return the result of the `__call__` method.
+        # This allows doing, e.g., `Ratio(x, y)` instead of having to do `Ratio()(x, y)`.
+        instance = super().__new__(cls)
+        return instance.__call__(result1, result2)
 
     @abstractmethod
     def call(self, result1: PrimitiveResult, result2: PrimitiveResult) -> Any:
@@ -48,17 +40,14 @@ class FOM(ABC):
         return self.call(result1, result2)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.name}({self.name})"
+        return f"{self.__class__}({self.name})"
 
 
 class Ratio(FOM):
     r"""A :class:`.~FOM` that computes the ratio ``result1/result2`` between two primitive results.
 
-        It returns ``0`` when it encounters a ``0`` in the denominator.
+    It returns ``0`` when it encounters a ``0`` in the denominator.
     """
-
-    def __init__(self) -> None:
-        super().__init__(name="ratio")
 
     def call(self, result1: PrimitiveResult, result2: PrimitiveResult):
         ret = []
@@ -68,8 +57,8 @@ class Ratio(FOM):
                     r1.data.evs,
                     r2.data.evs,
                     out=np.zeros_like(r1.data.evs, dtype=float),
-                    where=r2.data.evs != 0,
-                )
+                    where=np.array(r2.data.evs) != 0,
+                ).tolist()
             )
 
         return ret
