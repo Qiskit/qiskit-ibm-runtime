@@ -30,11 +30,11 @@ from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circu
 
 def _get_result(
     coerced_pubs: Sequence[EstimatorPub],
-    mode: Union[str, PrimitiveResult],
+    mode: str,
     noise_model: NoiseModel,
-    result: Optional[PrimitiveResult] = None,
-    default_precision: Optional[float] = 0,
-    seed_simulator: Optional[int] = None,
+    result: Union[PrimitiveResult, None],
+    default_precision: float,
+    seed_simulator: Union[int, None],
 ):
     r"""A convenience function used to retrieve the results for a given debugger mode."""
     backend_options = {"method": "stabilizer", "seed_simulator": seed_simulator}
@@ -43,7 +43,7 @@ def _get_result(
     if mode == "ideal_sim":
         estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
-    elif mode == "noisy_sim" and noise_model is not None:
+    elif mode == "noisy_sim":
         options["backend_options"]["noise_model"] = noise_model
         estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
