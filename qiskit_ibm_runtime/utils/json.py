@@ -71,6 +71,7 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
+from qiskit_ibm_runtime.utils.noise_model import from_dict
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -429,7 +430,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return obj_val
             if obj_type == "NoiseModel":
                 if HAS_AER:
-                    return qiskit_aer.noise.NoiseModel.from_dict(obj_val)
+                    return from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
         return obj

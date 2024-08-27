@@ -1,0 +1,2 @@
+Ported the ``Noise_model.from_dict()`` method from ``qiskit-aer`` because it was removed 
+in ``0.15.0``. 
