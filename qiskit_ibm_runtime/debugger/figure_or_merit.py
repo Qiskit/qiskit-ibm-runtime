@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import Any, List
+
 import numpy as np
-from typing import Any
 
 from qiskit.primitives.containers import PrimitiveResult
 
@@ -49,7 +50,7 @@ class Ratio(FOM):
     It returns ``0`` when it encounters a ``0`` in the denominator.
     """
 
-    def call(self, result1: PrimitiveResult, result2: PrimitiveResult):
+    def call(self, result1: PrimitiveResult, result2: PrimitiveResult) -> List[List[float]]:
         ret = []
         for r1, r2 in zip(result1, result2):
             ret.append(
