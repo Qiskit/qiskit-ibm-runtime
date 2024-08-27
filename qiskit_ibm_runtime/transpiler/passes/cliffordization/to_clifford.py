@@ -14,8 +14,8 @@
 Pass to convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
 """
 
-import numpy as np
 from random import choices
+import numpy as np
 
 from qiskit.circuit import Barrier, Instruction, Measure
 from qiskit.circuit.library import CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate
