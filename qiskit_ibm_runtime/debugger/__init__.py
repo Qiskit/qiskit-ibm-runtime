@@ -13,5 +13,5 @@
 """
 """
 
-from .plugins import Plugin
+from .figure_or_merit import FOM, Ratio
 from .debugger import Debugger
