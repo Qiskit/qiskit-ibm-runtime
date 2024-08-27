@@ -14,6 +14,7 @@
 Pass to convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
 """
 
+from random import choices
 import numpy as np
 
 from qiskit.circuit import Barrier, Instruction, Measure
@@ -46,19 +47,19 @@ def _is_clifford(instruction: Instruction) -> bool:
 
 class ToClifford(TransformationPass):
     """
-    Convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
+    Convert the gates of a circuit to Clifford gates.
 
     This pass is optimized to run efficiently on ISA circuits, which contain only Clifford gates
     from a restricted set or :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To do
     so, it rounds the angle of every :class:`qiskit.circuit.library.RZGate` to the closest multiple
-    of `pi/2`. It skips every Clifford gate, measurement, and barrier, and it errors for every
-    non-ISA non-Clifford gate.
+    of `pi/2` (or to a random multiple of `pi/2` if the angle is unspecified). It skips every
+    Clifford gate, measurement, and barrier, and it errors for every non-ISA non-Clifford gate.
 
     .. code-block:: python
 
         import numpy as np
 
-        from qiskit import QuantumCircuit
+        from qiskit.circuit import QuantumCircuit, Parameter
         from qiskit.transpiler import PassManager
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -73,8 +74,9 @@ class ToClifford(TransformationPass):
         qc.barrier()
         qc.cx(0, 1)
         qc.rz(np.pi/3, 0)  # non-Clifford Z rotation
+        qc.rz(Parameter("th"), 0)  # Z rotation with unspecified angle
 
-        # Turn into a Clifford circuit that ends with a Z rotation by pi/2
+        # Turn into a Clifford circuit
         pm = PassManager([ToClifford()])
         clifford_qc = pm.run(qc)
 
@@ -86,12 +88,15 @@ class ToClifford(TransformationPass):
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         for node in dag.op_nodes():
             if isinstance(node.op, ISA_SUPPORTED_GATES + SUPPORTED_INSTRUCTIONS):
-                # Fast handling of ISA gates. It rounds the angle of `RZ`s to the nearest
-                # multiple of pi/2, while skipping every other supported gates and instructions.
+                # Fast handling of ISA gates. It rounds the angle of `RZ`s to a multiple of pi/2,
+                # while skipping every other supported gates and instructions.
                 if isinstance(node.op, RZGate):
-                    angle = node.op.params[0]
-                    rem = angle % (np.pi / 2)
-                    new_angle = angle - rem if rem < np.pi / 4 else angle + np.pi / 2 - rem
+                    if isinstance(angle := node.op.params[0], float):
+                        rem = angle % (np.pi / 2)
+                        new_angle = angle - rem if rem < np.pi / 4 else angle + np.pi / 2 - rem
+                    else:
+                        # special handling of parametric gates
+                        new_angle = choices([0, np.pi / 2, np.pi, 3 * np.pi / 2])[0]
                     dag.substitute_node(node, RZGate(new_angle), inplace=True)
             else:
                 # Handle non-ISA gates, which may be either Clifford or non-Clifford.
