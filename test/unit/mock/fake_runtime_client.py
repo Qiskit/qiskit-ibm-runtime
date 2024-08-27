@@ -157,6 +157,9 @@ class BaseFakeRuntimeJob:
             },
             "program": {"id": self._program_id},
             "image": self._image,
+            "params": {
+                "version": 2,
+            },
         }
 
     def result(self):
