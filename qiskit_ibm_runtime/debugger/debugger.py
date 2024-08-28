@@ -30,27 +30,27 @@ from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circu
 
 def _get_result(
     coerced_pubs: Sequence[EstimatorPub],
-    mode: str,
+    result: Union[str, PrimitiveResult],
     noise_model: NoiseModel,
-    result: Union[PrimitiveResult, None],
     default_precision: float,
     seed_simulator: Union[int, None],
 ):
     r"""A convenience function used to retrieve the results for a given debugger mode."""
+
+    if isinstance(result, PrimitiveResult):
+        return result
+
     backend_options = {"method": "stabilizer", "seed_simulator": seed_simulator}
     options = {"backend_options": backend_options, "default_precision": default_precision}
 
-    if mode == "ideal_sim":
+    if result == "ideal_sim":
         estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
-    elif mode == "noisy_sim":
+    if result == "noisy_sim":
         options["backend_options"]["noise_model"] = noise_model
         estimator = AerEstimator(options=options)
         return estimator.run(coerced_pubs).result()
-    elif mode == "exp" and result is not None:
-        return result
-    else:
-        raise ValueError("Cannot retrieve the results.")
+    raise ValueError("Cannot retrieve the results.")
 
 
 class Debugger:
@@ -104,9 +104,8 @@ class Debugger:
     def compare(
         self,
         pubs: Sequence[EstimatorPubLike],
-        mode1: str = "noisy_sim",
-        mode2: str = "ideal_sim",
-        result: Optional[PrimitiveResult] = None,
+        result1: Union[str, PrimitiveResult] = "noisy_sim",
+        result2: Union[str, PrimitiveResult] = "ideal_sim",
         fom: Type[FOM] = Ratio,
         default_precision: float = 0,
         seed_simulator: Optional[int] = None,
@@ -121,22 +120,22 @@ class Debugger:
 
         Here are a few notable examples that illustrate how this function can be useful:
 
-            * With default values of ``mode1`` (``"noisy_sim"``), ``mode2`` (``"ideal_sim"``), and
-            ``fom`` (:class:`.Ratio()`), it classically simulates the Cliffordized estimation task
+            * With default values of ``result1`` (``"noisy_sim"``), ``result2`` (``"ideal_sim"``),
+              and ``fom`` (:class:`~.Ratio`), it classically simulates the estimation task
               both in the presence and in the absence of noise, and it returns the signal-to-noise
               ratio between noisy and ideal results, a quantity that can help predicting the
               performance of error mitigation.
 
-            * Setting ``mode1`` to ``"noisy_sim"`` and ``mode2`` to ``"exp"``, it compares the
-              experimental results with the results of a noisy simulation. This can help understand
-              if a given noise model is a good approximation of the noise processes that affect the
-              backend in use.
+            * Setting ``result1`` to ``"noisy_sim"`` and providing experimental results for
+              ``result2``, it compares the experimental results with the results of a noisy simulation.
+              This can help understand if a given noise model is a good approximation of the noise
+              processes that affect the backend in use.
 
-            * Setting ``result1`` to ``"ideal_sim"`` and ``mode2`` to ``"exp"``, it compares
-              experimental results with the results of an ideal simulation. This can help
-              understand how well a backend can perform a certain computational task, or (if error
-              mitigation was used to obtain the experimental results) the performance of different
-              mitigation strategies.
+            * Setting ``result1`` to ``"ideal_sim"`` and providing experimental results for
+              ``result2``, it compares the experimental results with the results of an ideal simulation.
+              This can help understand how well a backend can perform a certain estimation task, or
+              (if error mitigation was used to obtain the experimental results) the performance of
+              different mitigation strategies.
 
         .. note::
             To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
@@ -151,34 +150,28 @@ class Debugger:
             input was previously obtained by running the given ``pubs`` on a backend.
 
         Args:
-            pubs: The PUBs specifying the target estimation task.
-            mode1: The debugging mode of the first set of results to use in the comparison. Allowed
-                values are ``ideal_sim`` for the results of an ideal simulation, ``noisy_sim`` for
-                those of a noisy simulation, or ``exp`` to use the give ``results``.
-            mode2: The debugging mode of the second set of results to use in the comparison.
-                Allowed values are ``ideal_sim``, ``noisy_sim``, or ``exp``.
-            result: The experimental result obtained by running the given ``pubs`` on an actual
-                experiment. Required if ``mode1`` or ``mode2`` is ``"experiment"``, ignored
-                otherwise.
+            pubs: The PUBs specifying the estimation task of interest.
+            result1: The first set of :class:`.~PrimitiveResult`\\s to use in the comparison, or
+                alternatively a string (allowed values are ``ideal_sim`` and ``noisy_sim``). If
+                a string is passed, the results are produced internally by running a classical
+                simulation.
+            result2: The second set of :class:`.~PrimitiveResult`\\s to use in the comparison, or
+                alternatively a string (allowed values are ``ideal_sim`` and ``noisy_sim``). If
+                a string is passed, the results are produced internally by running a classical
+                simulation.
             fom: The figure of merit to compare ``mode1`` and ``mode2`` by. Defaults to computing
                 the ratio.
             default_precision: The default precision used to run the ideal and noisy simulations.
             seed_simulator: A seed for the simulator.
         """
-        for mode in [mode1, mode2]:
-            if mode not in ["ideal_sim", "noisy_sim", "exp"]:
-                raise ValueError(
-                    f"Invalid debugging mode {mode}, must be 'ideal_sim', 'noisy_sim', " "or 'exp'."
-                )
+        for result in [result1, result2]:
+            if isinstance(result, str) and result not in ["ideal_sim", "noisy_sim", "exp"]:
+                raise ValueError(f"Invalid result '{result}', must be 'ideal_sim' or 'noisy_sim'.")
         self._validate_pubs(coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
-        res1 = _get_result(
-            coerced_pubs, mode1, self.noise_model, result, default_precision, seed_simulator
-        )
-        res2 = _get_result(
-            coerced_pubs, mode2, self.noise_model, result, default_precision, seed_simulator
-        )
-        return fom(res1, res2)
+        r1 = _get_result(coerced_pubs, result1, self.noise_model, default_precision, seed_simulator)
+        r2 = _get_result(coerced_pubs, result2, self.noise_model, default_precision, seed_simulator)
+        return fom(r1, r2)
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""

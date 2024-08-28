@@ -32,7 +32,8 @@ from ...ibm_test_case import IBMTestCase
 
 class Prod(FOM):
     r"""
-    A custom FOM used to test the compare method of the debugger.
+    A custom FOM that takes the product of the results.
+    It is used to test the ``compare`` method of the debugger.
     """
 
     def call(self, result1: PrimitiveResult, result2: PrimitiveResult):
@@ -77,7 +78,10 @@ class TestDebugger(IBMTestCase):
         default_precision: Optional[float] = 0,
     ):
         r"""
-        Does not validate pubs.
+        Returns the results of an ideal simulation of the estimation task specified by the
+        given ``pubs``.
+
+        Note: it does not validate pubs.
         """
         options = {"method": "stabilizer", "seed_simulator": seed_simulator or self.seed}
         estimator = AerEstimator(
@@ -96,7 +100,10 @@ class TestDebugger(IBMTestCase):
         default_precision: Optional[float] = 0,
     ):
         r"""
-        Does not validate pubs.
+        Returns the results of an ideal simulation of the estimation task specified by the
+        given ``pubs``.
+
+        Note: it does not validate pubs.
         """
         options = {
             "method": "stabilizer",
@@ -113,7 +120,7 @@ class TestDebugger(IBMTestCase):
 
     def test_compare_ideal_vs_noisy(self):
         r"""
-        Test the compare method with standard inputs.
+        Test the ``compare`` method with standard inputs.
         """
         debugger = Debugger(self.backend)
         ratio = debugger.compare(self.pubs, seed_simulator=self.seed)
@@ -126,24 +133,24 @@ class TestDebugger(IBMTestCase):
 
     def test_compare_ideal_vs_exp(self):
         r"""
-        Test the compare method when exp results are passed.
+        Test the ``compare`` method when exp results are passed.
         """
         result = self.get_result_noisy_sim(self.pubs, self.noise_model)
 
         debugger = Debugger(self.backend)
-        ratio = debugger.compare(self.pubs, "exp", "ideal_sim", result)
+        ratio = debugger.compare(self.pubs, result, "ideal_sim")
 
         expected = Ratio(result, self.get_result_ideal_sim(self.pubs))
         self.assertListEqual(ratio, expected)
 
     def test_compare_noisy_vs_exp(self):
         r"""
-        Test the compare method when exp results are passed and compared to noisy results.
+        Test the ``compare`` method when exp results are passed and compared to noisy results.
         """
         result = self.get_result_noisy_sim(self.pubs, self.noise_model)
 
         debugger = Debugger(self.backend)
-        ratio = debugger.compare(self.pubs, "exp", "noisy_sim", result, seed_simulator=self.seed)
+        ratio = debugger.compare(self.pubs, result, "noisy_sim", seed_simulator=self.seed)
 
         expected = Ratio(result, self.get_result_noisy_sim(self.pubs, self.noise_model))
         self.assertListEqual(ratio, expected)
@@ -155,11 +162,14 @@ class TestDebugger(IBMTestCase):
         debugger = Debugger(self.backend)
 
         with self.assertRaises(ValueError):
-            debugger.compare(self.pubs, "expp", "ideal_sim")
+            debugger.compare(self.pubs, "ideal_sim_oops", "noisy_sim")
+
+        with self.assertRaises(ValueError):
+            debugger.compare(self.pubs, "ideal_sim", "noisy_sim_oops")
 
     def test_custom_fom(self):
         r"""
-        Test the compare method when a custom FOM is given.
+        Test the ``compare`` method when a custom FOM is given.
         """
         debugger = Debugger(self.backend)
         prod = debugger.compare(self.pubs, seed_simulator=self.seed, fom=Prod)
