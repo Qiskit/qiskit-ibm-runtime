@@ -103,18 +103,31 @@ class ZneOptions:
         extrapolated_noise_factors: Noise factors to evaluate the fit extrapolation models at.
             If unset, this will default to ``[0, *noise_factors]``. This
             option does not affect execution or model fitting in any way, it only determines the
-            points at which the ``extrapolator``s are evaluated to be returned in the data fields
-            called ``evs_extrapolated`` and ``stds_extrapolated``.
+            points at which the ``extrapolator``\\s are evaluated to be returned in the data
+            fields called ``evs_extrapolated`` and ``stds_extrapolated``.
 
         extrapolator: Extrapolator(s) to try (in order) for extrapolating to zero noise.
-            One or more of:
+            The available options are:
 
-            * "linear"
-            * "exponential"
-            * "double_exponential"
-            * "polynomial_degree_(1 <= k <= 7)"
+                * "exponential", a model based on an exponential decay function defined as
+                  :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A` is the `amplitude`
+                  and :math:`\tau` the `decay`.
+                * "double_exponential", which uses a sum of two exponential as in Ref. 1.
+                * "polynomial_degree_(1 <= k <= 7)", which performs a polynomial fit with up to
+                  seven parameters using ``numpy.polyval``.
+                * "linear", which is equivalent to "polynomial_degree_1".
+
+            If more than one extrapolator is specified, the ``evs`` and ``stds`` reported in the
+            result's data refer to the first one, while the extrapolated values
+            (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to the order of
+            the extrapolators provided.
 
             Default: ("exponential", "linear").
+
+    References:
+        1. Z. Cai, *Multi-exponential error extrapolation and combining error mitigation techniques
+           for NISQ applications*,
+           `npj Quantum Inf 7, 80 (2021) <https://www.nature.com/articles/s41534-021-00404-3>`_
     """
 
     amplifier: Union[
