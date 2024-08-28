@@ -109,9 +109,9 @@ class ZneOptions:
         extrapolator: Extrapolator(s) to try (in order) for extrapolating to zero noise.
             The available options are:
 
-                * "exponential", a model based on an exponential decay function defined as
-                  :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A` is the `amplitude`
-                  and :math:`\tau` the `decay`.
+                * "exponential", which fits the data using an exponential decaying function defined
+                  as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)` is the
+                  value at zero noise (:math:`x=0`) and :math:`\tau>0` is a positive rate.
                 * "double_exponential", which uses a sum of two exponential as in Ref. 1.
                 * "polynomial_degree_(1 <= k <= 7)", which performs a polynomial fit with up to
                   seven parameters using ``numpy.polyval``.
@@ -122,7 +122,7 @@ class ZneOptions:
             (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to the order of
             the extrapolators provided.
 
-            Default: ("exponential", "linear").
+            Default: ``("exponential", "linear")``.
 
     References:
         1. Z. Cai, *Multi-exponential error extrapolation and combining error mitigation techniques
