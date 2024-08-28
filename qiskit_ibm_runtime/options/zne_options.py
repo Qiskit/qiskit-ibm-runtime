@@ -36,7 +36,7 @@ ExtrapolatorType = Literal[
 class ZneOptions:
     """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.
 
-    ..note::
+    .. note::
 
         Any V2 estimator is guaranteed to return data fields called ``evs`` and ``stds`` that
         report the desired expectation value estimates and errors, respectively.
@@ -62,7 +62,7 @@ class ZneOptions:
            ``ensemble_stds_noise_factors`` assumes only shot noise and no drift.
 
         Technical note: for single observables with multiple basis terms it might turn out that
-        multiple extrapolation methods are used in _the same_ expectation value, for example, ``XX``
+        multiple extrapolation methods are used in *the same* expectation value, for example, ``XX``
         gets linearly extrapolated but ``XY`` gets exponentially extrapolated in the observable
         ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (2) is
         evaluated from heterogeneous fits by selecting the best fit for every individual distinct
@@ -83,7 +83,7 @@ class ZneOptions:
             * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
               factor requires amplifying only a subset of the gates, then these gates are selected
               from the back of the topologically ordered DAG circuit.
-            * `"pea"` uses a technique called probabalistic error amplification (`PEA
+            * `"pea"` uses a technique called Probabilistic Error Amplification (`PEA
               <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify
               noise.
 
