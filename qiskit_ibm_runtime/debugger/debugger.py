@@ -184,7 +184,19 @@ class Debugger:
             The Clifford PUBs.
         """
         self._validate_pubs(coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs], False)
-        return [PassManager([ToClifford()]).run(pub.circuit) for pub in coerced_pubs]
+
+        ret = []
+        for pub in coerced_pubs:
+            new_pub = EstimatorPub(
+                PassManager([ToClifford()]).run(pub.circuit),
+                pub.observables,
+                pub.parameter_values,
+                pub.precision,
+                False,
+            )
+            ret.append(new_pub)
+            
+        return ret
 
     def __repr__(self) -> str:
         return f'Debugger(backend="{self.backend.name}")'
