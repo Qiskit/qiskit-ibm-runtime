@@ -80,7 +80,7 @@ class ExecutionSpanSet:
         self._spans = list(spans)
 
     def __len__(self) -> int:
-        return len(list(self._spans))
+        return len(self._spans)
 
     @overload
     def __getitem__(self, idxs: int) -> ExecutionSpan: ...
