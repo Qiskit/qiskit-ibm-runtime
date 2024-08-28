@@ -113,8 +113,8 @@ class ZneOptions:
                   as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)` is the
                   value at zero noise (:math:`x=0`) and :math:`\tau>0` is a positive rate.
                 * "double_exponential", which uses a sum of two exponential as in Ref. 1.
-                * "polynomial_degree_(1 <= k <= 7)", which performs a polynomial fit with up to
-                  seven parameters using ``numpy.polyval``.
+                * "polynomial_degree_(1 <= k <= 7)", which uses a polynomial function defined as
+                  :math:`f(x; c_0, c_1, \ldots, c_k) = \sum_{i=0, k} c_i x^i`.
                 * "linear", which is equivalent to "polynomial_degree_1".
 
             If more than one extrapolator is specified, the ``evs`` and ``stds`` reported in the
