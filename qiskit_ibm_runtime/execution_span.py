@@ -91,12 +91,11 @@ class ExecutionSpanSet:
     def __getitem__(
         self, idxs: Union[int, slice, List[int]]
     ) -> Union[ExecutionSpan, "ExecutionSpanSet"]:
-        span_list = list(self._spans)
         if isinstance(idxs, int):
-            return span_list[idxs]
+            return self._spans[idxs]
         if isinstance(idxs, slice):
-            return ExecutionSpanSet(span_list[idxs])
-        return ExecutionSpanSet([span_list[idx] for idx in idxs])
+            return ExecutionSpanSet(self._spans[idxs])
+        return ExecutionSpanSet([self._spams[idx] for idx in idxs])
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
