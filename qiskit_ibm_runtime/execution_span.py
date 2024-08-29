@@ -81,12 +81,12 @@ class ExecutionSpan:
 
 class ExecutionSpanSet:
     """A collection of timings for pub results.
-    
-    This class is a list-like containing :class:`~.ExecutionSpan`\\s, where each execution span 
-    represents a time window of data collection and points to the data that was collected 
+
+    This class is a list-like containing :class:`~.ExecutionSpan`\\s, where each execution span
+    represents a time window of data collection and points to the data that was collected
     during that window.
-    
-    Because these windows sometimes contain pieces of concurrent classical processing, It is possible for 
+
+    Because these windows sometimes contain pieces of concurrent classical processing, It is possible for
     them to overlap.
     """
 
