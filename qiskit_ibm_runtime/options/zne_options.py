@@ -97,8 +97,8 @@ class ZneOptions:
               your circuits is amplified by probabilistically injecting single-qubit noise
               proportional to the corresponding learned noise model.
 
-        noise_factors: Noise factors to use for noise amplification. Default: (1, 1.5, 2) for PEA,
-            and (1, 3, 5) otherwise.
+        noise_factors: Noise factors to use for noise amplification. Default: ``(1, 1.5, 2)`` for
+            PEA, and ``(1, 3, 5)`` otherwise.
 
         extrapolated_noise_factors: Noise factors to evaluate the fit extrapolation models at.
             If unset, this will default to ``[0, *noise_factors]``. This
