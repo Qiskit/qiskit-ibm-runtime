@@ -141,6 +141,8 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
     Returns True if validation succeeds
     """
 
+    print(result)
+
     if (
         "execution" not in result.metadata
         or not isinstance(result.metadata["execution"], dict)
@@ -148,12 +150,9 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         or not isinstance(result.metadata["execution"]["execution_spans"], ExecutionSpanSet)
     ):
         return False
-
-    slice_ends = [0] * len(result)
-    spans = result.metadata["execution"]["execution_spans"]._spans
-    spans = sorted(spans, key=lambda exspan: exspan.start)
-
-    for exspan in spans:
+    
+    slice_ends = [0] * len(result)    
+    for exspan in result.metadata["execution"]["execution_spans"]:
         for task_id, task_slice in exspan.data_slices.items():
             if task_slice.start != slice_ends[task_id]:
                 return False
