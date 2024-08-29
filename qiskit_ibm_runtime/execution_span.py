@@ -109,7 +109,7 @@ class ExecutionSpanSet:
             return self._spans[idxs]
         if isinstance(idxs, slice):
             return ExecutionSpanSet(self._spans[idxs])
-        return ExecutionSpanSet([self._spams[idx] for idx in idxs])
+        return ExecutionSpanSet([self._spans[idx] for idx in idxs])
 
     def __iter__(self) -> Iterator[ExecutionSpan]:
         return iter(self._spans)
