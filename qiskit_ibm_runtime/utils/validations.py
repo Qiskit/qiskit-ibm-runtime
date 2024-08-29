@@ -150,8 +150,11 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         return False
 
     slice_ends = [0] * len(result)
-    spans = result.metadata["execution"]["execution_spans"]
-    for exspan in spans:
+    spans = result.metadata["execution"]["execution_spans"]._spans
+    spans = sorted(spans, key=lambda exspan: exspan.start)
+    exec_spans = ExecutionSpanSet(spans)
+
+    for exspan in exec_spans:
         for task_id, task_slice in exspan.data_slices.items():
             if task_slice.start != slice_ends[task_id]:
                 return False
