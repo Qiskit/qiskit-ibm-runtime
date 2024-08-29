@@ -28,7 +28,21 @@ class ExecutionSpan:
     """The stop time of the span, in UTC."""
 
     data_slices: Dict[int, slice]
-    r"""Which data have dependence on this execution span."""
+    r"""Which data have dependence on this execution span.
+    
+    This is a mapping from pub indices to data slices, where:
+    
+    * A pub index is its 0-indexed position inside of the primitive run call. 
+    * A data slice references one or more shots from data, indicated that the corresponding 
+      pub result data was measured within the time window reported by this execution span.
+      
+      In the case of a shaped pub, i.e. a pub where the circuit is parametric and multiple 
+      parameter sets are specified in some array, a data slice references the *flattened* pub
+      result data, where flattening is done in row-major order and the shot axis is last. So for 
+      instance, if 32 shots are drawn from a pub with shape ``(3,)``, then there are ``96`` 
+      total shots ordered as 32-32-32, and ``slice(20, 40)`` would reference shots 20 through 
+      39 inclusive.
+    """
 
     @property
     def duration(self) -> float:
