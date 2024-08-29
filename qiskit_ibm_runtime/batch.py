@@ -88,6 +88,7 @@ class Batch(Session):
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
+        new_session: Optional[bool] = True,
     ):
         """Batch constructor.
 
@@ -105,6 +106,10 @@ class Batch(Session):
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+
+            new_session:
+                Creates a new session. This defaults to true and should only be false when using
+                ``from_id()`` where a new session should not be created.
 
         Raises:
             ValueError: If an input value is invalid.
@@ -127,7 +132,9 @@ class Batch(Session):
                 period="3 months",
             )
 
-        super().__init__(service=service, backend=backend, max_time=max_time)
+        super().__init__(
+            service=service, backend=backend, max_time=max_time, new_session=new_session
+        )
 
     def _create_session(self) -> Optional[str]:
         """Create a session."""
