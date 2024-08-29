@@ -141,8 +141,6 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
     Returns True if validation succeeds
     """
 
-    print(result)
-
     if (
         "execution" not in result.metadata
         or not isinstance(result.metadata["execution"], dict)
