@@ -150,15 +150,20 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         return False
 
     slice_ends = [0] * len(result)
-    for exspan in result.metadata["execution"]["execution_spans"]:
+    spans = result.metadata["execution"]["execution_spans"]
+    for exspan in spans:
         for task_id, task_slice in exspan.data_slices.items():
             if task_slice.start != slice_ends[task_id]:
                 return False
             slice_ends[task_id] = task_slice.stop
 
     for pub_length, res in zip(slice_ends, result):
-        expected_length = prod(res.data.shape)
-        expected_length *= res.metadata.get("num_randomizations", 1)
+        res_vals = list(res.data.values())
+        if len(res_vals) > 0:
+            shots = res_vals[0].num_shots
+        else:
+            shots = res.metadata["num_randomizations"] * res.metadata["shots_per_randomization"]
+        expected_length = prod(res.data.shape) * shots
         if pub_length != expected_length:
             return False
 
