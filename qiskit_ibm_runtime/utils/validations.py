@@ -163,8 +163,10 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         res_vals = list(res.data.values())
         if len(res_vals) > 0:
             shots = res_vals[0].num_shots
-        else:
+        elif "num_randomization" in res.metadata:
             shots = res.metadata["num_randomizations"] * res.metadata["shots_per_randomization"]
+        else:
+            shots = 0
         expected_length = prod(res.data.shape) * shots
         if pub_length != expected_length:
             return False
