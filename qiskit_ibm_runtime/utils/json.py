@@ -39,6 +39,7 @@ except ImportError:
 
 try:
     import qiskit_aer
+    from qiskit_ibm_runtime.utils.noise_model import from_dict
 
     HAS_AER = True
 except ImportError:
@@ -70,8 +71,9 @@ from qiskit.primitives.containers import (
     SamplerPubResult,
     PrimitiveResult,
 )
-from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.utils.noise_model import from_dict
+from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
+    ExtrapolatorType,
+)
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
