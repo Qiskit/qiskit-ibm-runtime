@@ -33,6 +33,9 @@ class ExecutionSpan(abc.ABC):
     A pub is said to have dependence on an execution span if the corresponding execution includes
     data that forms any part of the pub's results.
 
+    Execution spans are equality checkable, and they implement a comparison operator based on
+    the tuple ``(start, stop)``, so can be sorted.
+
     Args:
         start: The start time of the span, in UTC.
         stop: The stop time of the span, in UTC.
@@ -43,8 +46,11 @@ class ExecutionSpan(abc.ABC):
         self._stop = stop
 
     @abc.abstractmethod
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         pass
+
+    def __lt__(self, other: ExecutionSpan) -> bool:
+        return (self.start, self.stop) < (other.start, other.stop)
 
     def __repr__(self):
         attrs = [
@@ -258,3 +264,18 @@ class ExecutionSpans:
             pub_idx: One or more pub indices to filter.
         """
         return ExecutionSpans(span.filter_by_pub(pub_idx) for span in self)
+
+    def sort(self, inplace: bool = True) -> "ExecutionSpans":
+        """Return the same execution spans, sorted.
+
+        Sorting is done by the :attr:`~.ExecutionSpan.start` timestamp of each execution span.
+
+        Args:
+            inplace: Whether to sort this instance in place, or return a copy.
+
+        Returns:
+            This instance if ``inplace``, a new instance otherwise, sorted.
+        """
+        obj = self if inplace else ExecutionSpans(self)
+        obj._spans.sort()
+        return obj

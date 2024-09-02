@@ -13,7 +13,7 @@
 """Tests SliceSpan and ExecutionSpans classes."""
 
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import ddt
 
 import numpy as np
@@ -52,6 +52,17 @@ class TestSliceSpan(IBMTestCase):
         self.assertEqual(self.span1, SliceSpan(self.start1, self.stop1, self.slices1))
         self.assertNotEqual(self.span1, self.span2)
         self.assertNotEqual(self.span1, "aoeu")
+
+    def test_comparison(self):
+        """Test the comparison method."""
+        self.assertLess(self.span1, self.span2)
+
+        dt = timedelta(seconds=1)
+        span1_plus = SliceSpan(self.start1, self.stop1 + dt, self.slices1)
+        self.assertLess(self.span1, span1_plus)
+
+        span1_minus = SliceSpan(self.start1, self.stop1 - dt, self.slices1)
+        self.assertGreater(self.span1, span1_minus)
 
     def test_duration(self):
         """Test the duration property"""
@@ -170,3 +181,17 @@ class TestExecutionSpans(IBMTestCase):
         self.assertEqual(self.spans[0], self.span1)
         self.assertEqual(self.spans[1], self.span2)
         self.assertEqual(self.spans[1, 0], ExecutionSpans([self.span2, self.span1]))
+
+    def test_sort(self):
+        """Test the sort method."""
+        spans = ExecutionSpans([self.span2, self.span1])
+        self.assertLess(spans[1], spans[0])
+        inplace_sort = spans.sort()
+        self.assertIs(inplace_sort, spans)
+        self.assertLess(spans[0], spans[1])
+
+        spans = ExecutionSpans([self.span2, self.span1])
+        new_sort = spans.sort(inplace=False)
+        self.assertIsNot(inplace_sort, spans)
+        self.assertLess(spans[1], spans[0])
+        self.assertLess(new_sort[0], new_sort[1])
