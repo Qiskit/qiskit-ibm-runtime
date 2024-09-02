@@ -10,44 +10,77 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests ExecutionSpan and ExecutionSpanSet classes."""
+"""Tests SliceSpan and ExecutionSpans classes."""
 
 
 from datetime import datetime
 import ddt
 
-from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanSet
+import numpy as np
+import numpy.testing as npt
+from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
 from ..ibm_test_case import IBMTestCase
 
 
 @ddt.ddt
-class TestExecutionSpan(IBMTestCase):
-    """Class for testing the ExecutionSpan and ExecutionSpanSet classes."""
+class TestSliceSpan(IBMTestCase):
+    """Class for testing SliceSpan."""
 
     def setUp(self) -> None:
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
-        self.slices1 = {1: slice(4, 9), 0: slice(5, 7)}
-        self.span1 = ExecutionSpan(self.start1, self.stop1, self.slices1)
+        self.slices1 = {1: ((100,), slice(4, 9)), 0: ((5, 2), slice(5, 7))}
+        self.span1 = SliceSpan(self.start1, self.stop1, self.slices1)
 
         self.start2 = datetime(2023, 8, 22, 18, 45, 9)
         self.stop2 = datetime(2023, 8, 22, 18, 45, 11, 500000)
-        self.slices2 = {0: slice(2, 3), 2: slice(6, 8)}
-        self.span2 = ExecutionSpan(self.start2, self.stop2, self.slices2)
+        self.slices2 = {0: ((100,), slice(2, 3)), 2: ((32, 3), slice(6, 8))}
+        self.span2 = SliceSpan(self.start2, self.stop2, self.slices2)
 
-        self.span_set = ExecutionSpanSet([self.span1, self.span2])
+    def test_limits(self):
+        """Test the start and stop properties"""
+        self.assertEqual(self.span1.start, self.start1)
+        self.assertEqual(self.span1.stop, self.stop1)
+        self.assertEqual(self.span2.start, self.start2)
+        self.assertEqual(self.span2.stop, self.stop2)
+
+    def test_equality(self):
+        """Test the equality method."""
+        self.assertEqual(self.span1, self.span1)
+        self.assertEqual(self.span1, SliceSpan(self.start1, self.stop1, self.slices1))
+        self.assertNotEqual(self.span1, self.span2)
+        self.assertNotEqual(self.span1, "aoeu")
 
     def test_duration(self):
         """Test the duration property"""
-        duration1 = self.span1.duration
-        duration2 = self.span2.duration
-        duration_set = self.span_set.duration
+        self.assertEqual(self.span1.duration, 7)
+        self.assertEqual(self.span2.duration, 2.5)
 
-        self.assertEqual(duration1, 7)
-        self.assertEqual(duration2, 2.5)
-        self.assertEqual(duration_set, 8.5)
+    def test_repr(self):
+        """Test the repr method"""
+        expect = "start='2023-08-22 18:45:03', stop='2023-08-22 18:45:10', size=7"
+        self.assertEqual(repr(self.span1), f"SliceSpan(<{expect}>)")
+
+    def test_size(self):
+        """Test the size property"""
+        self.assertEqual(self.span1.size, 5 + 2)
+        self.assertEqual(self.span2.size, 1 + 2)
+
+    def test_pub_idxs(self):
+        """Test the pub_idxs property"""
+        self.assertEqual(self.span1.pub_idxs, [0, 1])
+        self.assertEqual(self.span2.pub_idxs, [0, 2])
+
+    def test_mask(self):
+        """Test the mask() method"""
+        mask1 = np.zeros((100,), dtype=bool)
+        mask1[4:9] = True
+        npt.assert_array_equal(self.span1.mask(1), mask1)
+
+        mask2 = [[0, 0], [0, 0], [0, 1], [1, 0], [0, 0]]
+        npt.assert_array_equal(self.span1.mask(0), np.array(mask2, dtype=bool))
 
     @ddt.data(
         (0, True, True),
@@ -66,48 +99,74 @@ class TestExecutionSpan(IBMTestCase):
 
     def test_filter_by_pub(self):
         """The the filter_by_pub method"""
-        self.assertEqual(self.span1.filter_by_pub([]), ExecutionSpan(self.start1, self.stop1, {}))
-        self.assertEqual(self.span2.filter_by_pub([]), ExecutionSpan(self.start2, self.stop2, {}))
+        self.assertEqual(self.span1.filter_by_pub([]), SliceSpan(self.start1, self.stop1, {}))
+        self.assertEqual(self.span2.filter_by_pub([]), SliceSpan(self.start2, self.stop2, {}))
+
         self.assertEqual(
-            self.span_set.filter_by_pub([]),
-            ExecutionSpanSet(
+            self.span1.filter_by_pub([2, 0]),
+            SliceSpan(self.start1, self.stop1, {0: self.slices1[0]}),
+        )
+        self.assertEqual(self.span2.filter_by_pub([2, 0]), self.span2)
+
+        self.assertEqual(
+            self.span1.filter_by_pub(1),
+            SliceSpan(self.start1, self.stop1, {1: self.slices1[1]}),
+        )
+        self.assertEqual(self.span2.filter_by_pub(1), SliceSpan(self.start2, self.stop2, {}))
+
+
+@ddt.ddt
+class TestExecutionSpans(IBMTestCase):
+    """Class for testing ExecutionSpans."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.start1 = datetime(2023, 8, 22, 18, 45, 3)
+        self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
+        self.slices1 = {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))}
+        self.span1 = SliceSpan(self.start1, self.stop1, self.slices1)
+
+        self.start2 = datetime(2023, 8, 22, 18, 45, 9)
+        self.stop2 = datetime(2023, 8, 22, 18, 45, 11, 500000)
+        self.slices2 = {0: ((100,), slice(2, 3)), 2: ((32, 3), slice(6, 8))}
+        self.span2 = SliceSpan(self.start2, self.stop2, self.slices2)
+
+        self.spans = ExecutionSpans([self.span1, self.span2])
+
+    def test_duration(self):
+        """Test the duration property"""
+        self.assertEqual(self.spans.duration, 8.5)
+
+    def test_filter_by_pub(self):
+        """The the filter_by_pub method"""
+        self.assertEqual(
+            self.spans.filter_by_pub([]),
+            ExecutionSpans(
                 [
-                    ExecutionSpan(self.start1, self.stop1, {}),
-                    ExecutionSpan(self.start2, self.stop2, {}),
+                    SliceSpan(self.start1, self.stop1, {}),
+                    SliceSpan(self.start2, self.stop2, {}),
                 ]
             ),
         )
 
         self.assertEqual(
-            self.span1.filter_by_pub([2, 0]),
-            ExecutionSpan(self.start1, self.stop1, {0: self.slices1[0]}),
-        )
-        self.assertEqual(self.span2.filter_by_pub([2, 0]), self.span2)
-        self.assertEqual(
-            self.span_set.filter_by_pub([2, 0]),
-            ExecutionSpanSet(
-                [ExecutionSpan(self.start1, self.stop1, {0: self.slices1[0]}), self.span2]
-            ),
+            self.spans.filter_by_pub([2, 0]),
+            ExecutionSpans([SliceSpan(self.start1, self.stop1, {0: self.slices1[0]}), self.span2]),
         )
 
         self.assertEqual(
-            self.span1.filter_by_pub(1),
-            ExecutionSpan(self.start1, self.stop1, {1: self.slices1[1]}),
-        )
-        self.assertEqual(self.span2.filter_by_pub(1), ExecutionSpan(self.start2, self.stop2, {}))
-        self.assertEqual(
-            self.span_set.filter_by_pub(1),
-            ExecutionSpanSet(
+            self.spans.filter_by_pub(1),
+            ExecutionSpans(
                 [
-                    ExecutionSpan(self.start1, self.stop1, {1: self.slices1[1]}),
-                    ExecutionSpan(self.start2, self.stop2, {}),
+                    SliceSpan(self.start1, self.stop1, {1: self.slices1[1]}),
+                    SliceSpan(self.start2, self.stop2, {}),
                 ]
             ),
         )
 
     def test_sequence_methods(self):
         """Test __len__ and __get_item__"""
-        self.assertEqual(len(self.span_set), 2)
-        self.assertEqual(self.span_set[0], self.span1)
-        self.assertEqual(self.span_set[1], self.span2)
-        self.assertEqual(self.span_set[1, 0], ExecutionSpanSet([self.span2, self.span1]))
+        self.assertEqual(len(self.spans), 2)
+        self.assertEqual(self.spans[0], self.span1)
+        self.assertEqual(self.spans[1], self.span2)
+        self.assertEqual(self.spans[1, 0], ExecutionSpans([self.span2, self.span1]))
