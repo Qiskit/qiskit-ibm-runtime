@@ -71,9 +71,11 @@ from qiskit.primitives.containers import (
     SamplerPubResult,
     PrimitiveResult,
 )
+
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
 )
+from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -320,6 +322,19 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, PrimitiveResult):
             out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
+        if isinstance(obj, SliceSpan):
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (shape, data_slice.start, data_slice.stop)
+                    for idx, (shape, data_slice) in obj._data_slices.items()
+                },
+            }
+            return {"__type__": "ExecutionSpan", "__value__": out_val}
+        if isinstance(obj, ExecutionSpans):
+            out_val = {"spans": list(obj)}
+            return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -428,6 +443,15 @@ class RuntimeDecoder(json.JSONDecoder):
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
                 return PrimitiveResult(**obj_val)
+            if obj_type == "ExecutionSpan":
+                new_slices = {
+                    int(idx): (tuple(shape), slice(*sl_args))
+                    for idx, (shape, *sl_args) in obj_val["data_slices"].items()
+                }
+                obj_val["data_slices"] = new_slices
+                return SliceSpan(**obj_val)
+            if obj_type == "ExecutionSpanCollection":
+                return ExecutionSpans(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
