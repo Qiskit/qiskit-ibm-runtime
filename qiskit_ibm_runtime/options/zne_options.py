@@ -170,6 +170,7 @@ class ZneOptions:
             "linear": 2,
             "exponential": 2,
             "double_exponential": 4,
+            "fallback": 1,
         }
         for idx in range(1, 8):
             required_factors[f"polynomial_degree_{idx}"] = idx + 1
