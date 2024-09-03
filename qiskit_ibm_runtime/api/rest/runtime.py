@@ -76,7 +76,7 @@ class Runtime(RestAdapterBase):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
-        private: Optional[bool] = None,
+        private: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
