@@ -36,6 +36,7 @@ class RuntimeOptions:
     job_tags: Optional[List[str]] = None
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
+    private: Optional[bool] = False
 
     def __init__(
         self,
@@ -46,6 +47,7 @@ class RuntimeOptions:
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         session_time: Optional[int] = None,
+        private: Optional[bool] = False,
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -68,6 +70,7 @@ class RuntimeOptions:
                 this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
                 clock time.
             session_time: Length of session in seconds.
+            private: Boolean of whether or not the job is marked as private.
         """
         self.backend = backend
         self.image = image
@@ -76,6 +79,7 @@ class RuntimeOptions:
         self.job_tags = job_tags
         self.max_execution_time = max_execution_time
         self.session_time = session_time
+        self.private = private
 
     def validate(self, channel: str) -> None:
         """Validate options.

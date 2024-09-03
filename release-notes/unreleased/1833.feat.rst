@@ -1,0 +1,1 @@
+We added new classes, :class:`.ExecutionSpan` and :class:`.ExecutionSpanSet`. These classes are used in the primitive result metadata, to convey information about start and stop times of batch jobs.
