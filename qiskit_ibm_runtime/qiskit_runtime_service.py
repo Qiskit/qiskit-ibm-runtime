@@ -1170,6 +1170,7 @@ class QiskitRuntimeService:
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
                 creation_date=raw_data.get("created", None),
+                image=raw_data.get("runtime"),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
             )

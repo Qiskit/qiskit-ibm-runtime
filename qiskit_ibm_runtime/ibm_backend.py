@@ -334,9 +334,9 @@ class IBMBackend(Backend):
         Returns:
             Target
         """
-        self._get_properties(datetime=python_datetime.now())
+        self._get_properties()
         self._get_defaults()
-        self._convert_to_target(refresh=True)
+        self._convert_to_target()
         return self._target
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
