@@ -150,14 +150,17 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         return False
 
     slice_ends = [0] * len(result)
+    shapes = [(0,)] * len(result)
     for exspan in result.metadata["execution"]["execution_spans"]:
         # temporarily disable mypy for the next line, until we fix it
-        for task_id, task_slice in exspan.data_slices.items():  # type: ignore
+        for task_id, task_data in exspan._data_slices.items():  # type: ignore
+            task_shape, task_slice = task_data
             if task_slice.start != slice_ends[task_id]:
                 return False
             slice_ends[task_id] = task_slice.stop
+            shapes[task_id] = task_shape
 
-    for pub_length, res in zip(slice_ends, result):
+    for pub_length, tshape, res in zip(slice_ends, shapes, result):
         res_vals = list(res.data.values())
         if len(res_vals) > 0:
             shots = res_vals[0].num_shots
@@ -167,6 +170,9 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
             shots = 0
         expected_length = prod(res.data.shape) * shots
         if pub_length != expected_length:
+            return False
+
+        if tshape != res.data.shape + (shots,):
             return False
 
     return True
