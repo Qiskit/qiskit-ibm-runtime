@@ -17,15 +17,15 @@ from __future__ import annotations
 import abc
 from datetime import datetime
 import math
-from typing import overload, Iterable, Iterator
+from typing import overload, Iterable, Iterator, Tuple
 
 import numpy as np
 import numpy.typing as npt
 
 
-# Looks like a bug in mypy makes it not recognize `tuple` as an alias,
-# even in Python 3.9, so we disable mypy for the line
-ShapeType = tuple[int, ...]  # type: ignore
+# Python 3.8 does not recognize tuple[<something],
+# in spite of `from __future__ import annotations`
+ShapeType = Tuple[int, ...]
 """A shape tuple representing some nd-array shape."""
 
 
