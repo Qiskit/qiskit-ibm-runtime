@@ -45,8 +45,11 @@ class EnvironmentOptions:
         job_tags: Tags to be assigned to the job. The tags can subsequently be used
             as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
             function call. Default: ``None``.
+
+        private: Boolean value for marking jobs as private.
     """
 
     log_level: LogLevelType = "WARNING"
     callback: Optional[Callable] = None
     job_tags: Optional[List] = None
+    private: Optional[bool] = False
