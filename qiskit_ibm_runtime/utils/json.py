@@ -71,7 +71,7 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
-from qiskit_ibm_runtime.execution_span import ExecutionSpan, ExecutionSpanSet
+from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 from qiskit_ibm_runtime.utils.noise_model import from_dict
 
 _TERRA_VERSION = tuple(
@@ -319,18 +319,18 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, PrimitiveResult):
             out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
-        if isinstance(obj, ExecutionSpan):
+        if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
                 "stop": obj.stop,
                 "data_slices": {
-                    idx: (data_slice.start, data_slice.stop)
-                    for idx, data_slice in obj.data_slices.items()
+                    idx: (shape, data_slice.start, data_slice.stop)
+                    for idx, (shape, data_slice) in obj._data_slices.items()
                 },
             }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
-        if isinstance(obj, ExecutionSpanSet):
-            out_val = {"spans": obj._spans}
+        if isinstance(obj, ExecutionSpans):
+            out_val = {"spans": list(obj)}
             return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
@@ -441,13 +441,14 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "PrimitiveResult":
                 return PrimitiveResult(**obj_val)
             if obj_type == "ExecutionSpan":
-                new_slices = {}
-                for task_id, task_slice in obj_val["data_slices"].items():
-                    new_slices[int(task_id)] = slice(*task_slice)
+                new_slices = {
+                    int(idx): (tuple(shape), slice(*sl_args))
+                    for idx, (shape, *sl_args) in obj_val["data_slices"].items()
+                }
                 obj_val["data_slices"] = new_slices
-                return ExecutionSpan(**obj_val)
+                return SliceSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
-                return ExecutionSpanSet(**obj_val)
+                return ExecutionSpans(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

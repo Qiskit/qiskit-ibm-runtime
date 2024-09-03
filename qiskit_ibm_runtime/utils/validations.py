@@ -23,7 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.execution_span import ExecutionSpanSet
+from qiskit_ibm_runtime.execution_span import ExecutionSpans
 
 
 def validate_classical_registers(pubs: List[SamplerPub]) -> None:
@@ -145,7 +145,7 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
         "execution" not in result.metadata
         or not isinstance(result.metadata["execution"], dict)
         or "execution_spans" not in result.metadata["execution"]
-        or not isinstance(result.metadata["execution"]["execution_spans"], ExecutionSpanSet)
+        or not isinstance(result.metadata["execution"]["execution_spans"], ExecutionSpans)
     ):
         return False
 
