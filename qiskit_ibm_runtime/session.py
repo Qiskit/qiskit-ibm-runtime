@@ -87,7 +87,7 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
-        new_session: Optional[bool] = True,
+        _new_session: Optional[bool] = True,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -105,11 +105,6 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
-
-            new_session:
-                Creates a new session. This defaults to true and should only be false when using
-                ``from_id()`` where a new session should not be created.
-
         Raises:
             ValueError: If an input value is invalid.
         """
@@ -165,7 +160,7 @@ class Session:
 
         if isinstance(self._backend, IBMBackend):
             self._instance = self._backend._instance
-            if not self._backend.configuration().simulator and new_session:
+            if not self._backend.configuration().simulator and _new_session:
                 self._session_id = self._create_session()
 
     def _create_session(self) -> Optional[str]:
@@ -381,7 +376,7 @@ class Session:
                 f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
-        session = cls(service, backend, new_session=False)
+        session = cls(service, backend, _new_session=False)
         if state == "closed":
             session._active = False
         session._session_id = session_id
