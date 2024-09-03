@@ -172,6 +172,16 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         logger.info("Submitting job using options %s", primitive_options)
 
+        if not isinstance(self._service, QiskitRuntimeLocalService):
+            if primitive_options.get("options", {}).get("simulator", {}).get("noise_model"):
+                issue_deprecation_msg(
+                    msg="The noise_model option is deprecated",
+                    version="0.29.0",
+                    remedy="Use the local testing mode instead.",
+                    period="3 months",
+                    stacklevel=3,
+                )
+
         # Batch or Session
         if self._mode:
             return self._mode.run(
