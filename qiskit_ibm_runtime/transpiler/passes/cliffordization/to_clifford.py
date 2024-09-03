@@ -103,5 +103,5 @@ class ToClifford(TransformationPass):
                 if not _is_clifford(node.op):
                     raise ValueError(f"Operation ``{node.op.name}`` not supported.")
                 dag.substitute_node(node, node.op, inplace=True)
-                    
+
         return dag
