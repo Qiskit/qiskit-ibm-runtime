@@ -42,6 +42,7 @@ from qiskit.primitives.containers import (
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
+from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -329,6 +330,7 @@ class TestContainerSerialization(IBMTestCase):
         self.assertEqual(len(primitive_result1), len(primitive_result2))
         for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
             self.assert_pub_results_equal(pub_result1, pub_result2)
+
         self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
 
     # Data generation methods
@@ -411,7 +413,25 @@ class TestContainerSerialization(IBMTestCase):
             PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
             PubResult(DataBin()),
         ]
-        result = PrimitiveResult(pub_results, {"1": 2})
+
+        metadata = {
+            "execution": {
+                "execution_spans": ExecutionSpans(
+                    [
+                        SliceSpan(
+                            datetime(2022, 1, 1),
+                            datetime(2023, 1, 1),
+                            {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+                        ),
+                        SliceSpan(
+                            datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
+                        ),
+                    ]
+                )
+            }
+        }
+
+        result = PrimitiveResult(pub_results, metadata)
         primitive_results.append(result)
         return primitive_results
 
