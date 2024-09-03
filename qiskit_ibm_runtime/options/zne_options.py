@@ -29,6 +29,7 @@ ExtrapolatorType = Literal[
     "polynomial_degree_5",
     "polynomial_degree_6",
     "polynomial_degree_7",
+    "fallback",
 ]
 
 
@@ -116,6 +117,8 @@ class ZneOptions:
                 * ``"polynomial_degree_(1 <= k <= 7)"``, which uses a polynomial function defined as
                   :math:`f(x; c_0, c_1, \\ldots, c_k) = \\sum_{i=0, k} c_i x^i`.
                 * ``"linear"``, which is equivalent to ``"polynomial_degree_1"``.
+                * ``"fallback"``, which simply returns the raw data corresponding to the lowest noise
+                  factor (typically ``1``) without performing any sort of extrapolation.
 
             If more than one extrapolator is specified, the ``evs`` and ``stds`` reported in the
             result's data refer to the first one, while the extrapolated values
@@ -167,6 +170,7 @@ class ZneOptions:
             "linear": 2,
             "exponential": 2,
             "double_exponential": 4,
+            "fallback": 1,
         }
         for idx in range(1, 8):
             required_factors[f"polynomial_degree_{idx}"] = idx + 1
