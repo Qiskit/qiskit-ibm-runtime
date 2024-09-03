@@ -51,3 +51,5 @@ class EnvironmentOptions:
         
         Default: ``None``.
     """
+    private: Optional[bool] = False
+    r"""Boolean value for marking jobs as private."""

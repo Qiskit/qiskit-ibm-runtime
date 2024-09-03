@@ -16,9 +16,8 @@ import random
 import time
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.jobstatus import JobStatus
 
-from qiskit_ibm_runtime import RuntimeJob
+from qiskit_ibm_runtime import RuntimeJobV2
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
@@ -48,11 +47,10 @@ class TestRuntimeJob(IBMTestCase):
         params = {"param1": "foo"}
         job = run_program(service=service, inputs=params)
         self.assertTrue(job.job_id())
-        self.assertIsInstance(job, RuntimeJob)
-        self.assertIsInstance(job.status(), JobStatus)
+        self.assertIsInstance(job, RuntimeJobV2)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-            self.assertEqual(job.status(), JobStatus.DONE)
+            self.assertEqual(job.status(), "DONE")
             self.assertTrue(job.result())
 
     @run_quantum_and_cloud_fake
@@ -123,12 +121,11 @@ class TestRuntimeJob(IBMTestCase):
         image = "name:tag"
         job = run_program(service=service, inputs=params, image=image)
         self.assertTrue(job.job_id())
-        self.assertIsInstance(job, RuntimeJob)
-        self.assertIsInstance(job.status(), JobStatus)
+        self.assertIsInstance(job, RuntimeJobV2)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             self.assertTrue(job.result())
-        self.assertEqual(job.status(), JobStatus.DONE)
+        self.assertEqual(job.status(), "DONE")
         self.assertEqual(job.image, image)
 
     @run_quantum_and_cloud_fake
@@ -145,7 +142,7 @@ class TestRuntimeJob(IBMTestCase):
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id())
-            self.assertEqual(JobStatus.ERROR, job.status())
+            self.assertEqual("ERROR", job.status())
             self.assertEqual(
                 API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
                 job.error_message(),
@@ -160,7 +157,7 @@ class TestRuntimeJob(IBMTestCase):
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id())
-            self.assertEqual(JobStatus.ERROR, job.status())
+            self.assertEqual("ERROR", job.status())
             self.assertEqual(
                 API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
                     job.job_id(), job_result_raw
@@ -176,9 +173,9 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service, job_classes=CancelableRuntimeJob)
         time.sleep(1)
         job.cancel()
-        self.assertEqual(job.status(), JobStatus.CANCELLED)
+        self.assertEqual(job.status(), "CANCELLED")
         rjob = service.job(job.job_id())
-        self.assertEqual(rjob.status(), JobStatus.CANCELLED)
+        self.assertEqual(rjob.status(), "CANCELLED")
         with self.assertRaises(RuntimeInvalidStateError) as exc:
             rjob.result()
         self.assertIn("Job was cancelled", str(exc.exception))
@@ -212,7 +209,7 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-        self.assertEqual(JobStatus.DONE, job.status())
+        self.assertEqual("DONE", job.status())
 
     @run_quantum_and_cloud_fake
     def test_delete_job(self, service):
