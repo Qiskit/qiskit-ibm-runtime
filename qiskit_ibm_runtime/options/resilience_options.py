@@ -12,12 +12,12 @@
 
 """Resilience options."""
 
-from typing import List, Literal, Union
+from typing import Literal, Sequence, Union
 from dataclasses import asdict
 
 from pydantic import model_validator, Field
 
-from ..utils.noise_learner_result import LayerError
+from ..utils.noise_learner_result import LayerError, NoiseLearnerResult
 from .utils import Unset, UnsetType, Dict, primitive_dataclass
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .zne_options import ZneOptions
@@ -67,9 +67,9 @@ class ResilienceOptionsV2:
         layer_noise_learning: Layer noise learning options.
             See :class:`LayerNoiseLearningOptions` for all options.
 
-        layer_noise_model: A list of :class:`LayerError` objects.
-            If set, all the mitigation strategies that require noise data (e.g., PEC and PEA)
-            skip the noise learning stage, and instead gather the required information from
+        layer_noise_model: A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
+            objects. If set, all the mitigation strategies that require noise data (e.g., PEC and
+            PEA) skip the noise learning stage, and instead gather the required information from
             ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
             are treated as noiseless and their noise is not mitigated.
     """
@@ -85,7 +85,7 @@ class ResilienceOptionsV2:
     layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
         default_factory=LayerNoiseLearningOptions
     )
-    layer_noise_model: Union[UnsetType, List[LayerError]] = Unset
+    layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError]] = Unset
 
     @model_validator(mode="after")
     def _validate_options(self) -> "ResilienceOptionsV2":

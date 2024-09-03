@@ -14,12 +14,16 @@
 from typing import List, Sequence, Optional, Any
 import warnings
 import keyword
+from math import prod
+
 from qiskit import QuantumCircuit
 from qiskit.transpiler import Target
+from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.execution_span import ExecutionSpans
 
 
 def validate_classical_registers(pubs: List[SamplerPub]) -> None:
@@ -126,3 +130,49 @@ def validate_job_tags(job_tags: Optional[List[str]]) -> None:
         not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise IBMInputValueError("job_tags needs to be a list of strings.")
+
+
+def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
+    """Validate execution span section in result metadata.
+
+    Args:
+        result: A primitive result to be validated
+
+    Returns True if validation succeeds
+    """
+
+    if (
+        "execution" not in result.metadata
+        or not isinstance(result.metadata["execution"], dict)
+        or "execution_spans" not in result.metadata["execution"]
+        or not isinstance(result.metadata["execution"]["execution_spans"], ExecutionSpans)
+    ):
+        return False
+
+    slice_ends = [0] * len(result)
+    shapes = [(0,)] * len(result)
+    for exspan in result.metadata["execution"]["execution_spans"]:
+        # temporarily disable mypy for the next line, until we fix it
+        for task_id, task_data in exspan._data_slices.items():  # type: ignore
+            task_shape, task_slice = task_data
+            if task_slice.start != slice_ends[task_id]:
+                return False
+            slice_ends[task_id] = task_slice.stop
+            shapes[task_id] = task_shape
+
+    for pub_length, tshape, res in zip(slice_ends, shapes, result):
+        res_vals = list(res.data.values())
+        if len(res_vals) > 0:
+            shots = res_vals[0].num_shots
+        elif "num_randomization" in res.metadata:
+            shots = res.metadata["num_randomizations"] * res.metadata["shots_per_randomization"]
+        else:
+            shots = 0
+        expected_length = prod(res.data.shape) * shots
+        if pub_length != expected_length:
+            return False
+
+        if tshape != res.data.shape + (shots,):
+            return False
+
+    return True
