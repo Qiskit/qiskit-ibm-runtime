@@ -151,7 +151,8 @@ def validate_exec_spans_in_result(result: PrimitiveResult) -> bool:
 
     slice_ends = [0] * len(result)
     for exspan in result.metadata["execution"]["execution_spans"]:
-        for task_id, task_slice in exspan.data_slices.items():
+        # temporarily disable mypy for the next line, until we fix it
+        for task_id, task_slice in exspan.data_slices.items():  # type: ignore
             if task_slice.start != slice_ends[task_id]:
                 return False
             slice_ends[task_id] = task_slice.stop

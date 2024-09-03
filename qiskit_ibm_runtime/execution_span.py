@@ -23,7 +23,9 @@ import numpy as np
 import numpy.typing as npt
 
 
-ShapeType = tuple[int, ...]
+# Looks like a bug in mypy makes it not recognize `tuple` as an alias,
+# even in Python 3.9, so we disable mypy for the line
+ShapeType = tuple[int, ...]  # type: ignore
 """A shape tuple representing some nd-array shape."""
 
 
@@ -46,13 +48,13 @@ class ExecutionSpan(abc.ABC):
         self._stop = stop
 
     @abc.abstractmethod
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         pass
 
     def __lt__(self, other: ExecutionSpan) -> bool:
         return (self.start, self.stop) < (other.start, other.stop)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         attrs = [
             f"start='{self.start:%Y-%m-%d %H:%M:%S}'",
             f"stop='{self.stop:%Y-%m-%d %H:%M:%S}'",
@@ -156,7 +158,7 @@ class SliceSpan(ExecutionSpan):
         super().__init__(start, stop)
         self._data_slices = data_slices
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, SliceSpan) and (
             self.start == other.start
             and self.stop == other.stop
