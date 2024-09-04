@@ -14,16 +14,13 @@
 from typing import List, Sequence, Optional, Any
 import warnings
 import keyword
-from math import prod
 
 from qiskit import QuantumCircuit
 from qiskit.transpiler import Target
-from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.execution_span import ExecutionSpans
 
 
 def validate_classical_registers(pubs: List[SamplerPub]) -> None:
