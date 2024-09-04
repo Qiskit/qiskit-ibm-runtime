@@ -82,6 +82,8 @@ class Session:
             print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
+    _create_new_session = True
+
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
@@ -104,7 +106,6 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
-
         Raises:
             ValueError: If an input value is invalid.
         """
@@ -165,7 +166,7 @@ class Session:
 
     def _create_session(self) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService):
+        if isinstance(self._service, QiskitRuntimeService) and Session._create_new_session:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
@@ -367,7 +368,7 @@ class Session:
         """
 
         response = service._api_client.session_details(session_id)
-        backend = response.get("backend_name")
+        backend = service.backend(response.get("backend_name"))
         mode = response.get("mode")
         state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
@@ -376,7 +377,9 @@ class Session:
                 f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
+        cls._create_new_session = False
         session = cls(service, backend)
+        cls._create_new_session = True
         if state == "closed":
             session._active = False
         session._session_id = session_id
