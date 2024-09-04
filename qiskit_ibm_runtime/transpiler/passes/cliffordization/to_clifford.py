@@ -31,7 +31,7 @@ pass.
 """
 
 SUPPORTED_INSTRUCTIONS = (Barrier, Measure)
-"""An additional set of instructions handled fastly by the :class:`~.ToClifford` pass."""
+"""An additional set of instructions handled fast by the :class:`~.ToClifford` pass."""
 
 
 def _is_clifford(instruction: Instruction) -> bool:
