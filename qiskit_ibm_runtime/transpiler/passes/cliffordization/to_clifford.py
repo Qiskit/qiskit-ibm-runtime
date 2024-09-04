@@ -61,7 +61,6 @@ class ToClifford(TransformationPass):
 
         from qiskit.circuit import QuantumCircuit, Parameter
         from qiskit.transpiler import PassManager
-        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
         from qiskit_ibm_runtime.transpiler.passes import ToClifford
 
