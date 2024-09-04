@@ -1,2 +1,0 @@
-Fixed an issue where ``Session.from_id()`` would create 
-a new empty session. 

@@ -1,3 +1,0 @@
-Added a new ``private`` option under :class:`EnvironmentOptions`. When this option
-is set to ``True``, the job will be returned without params and results can only
-be retrieved once. 
