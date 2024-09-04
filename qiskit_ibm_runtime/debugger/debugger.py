@@ -195,7 +195,7 @@ class Debugger:
                 False,
             )
             ret.append(new_pub)
-            
+
         return ret
 
     def __repr__(self) -> str:

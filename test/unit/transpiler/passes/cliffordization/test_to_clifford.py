@@ -45,7 +45,7 @@ class TestToClifford(IBMTestCase):
 
         self.assertEqual(qc, transformed)
 
-    def test_clifford_non_isa_circuit(self):
+    def test_error_clifford_non_isa_circuit(self):
         """Test the pass on a Clifford circuit with ISA and non-ISA gates."""
         qc = QuantumCircuit(2)
         qc.id(0)
@@ -57,18 +57,8 @@ class TestToClifford(IBMTestCase):
         qc.ecr(0, 1)
 
         pm = PassManager([ToClifford()])
-        transformed = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.id(0)
-        expected.sx(0)
-        expected.s(1)
-        expected.h(1)
-        expected.cx(0, 1)
-        expected.cz(0, 1)
-        expected.ecr(0, 1)
-
-        self.assertEqual(expected, transformed)
+        with self.assertRaises(ValueError):
+            pm.run(qc)
 
     def test_error_non_clifford_isa_circuit(self):
         """Test that the pass errors when run on a non-Clifford circuit with ISA gates."""
