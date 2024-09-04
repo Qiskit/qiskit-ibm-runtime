@@ -892,6 +892,7 @@ class QiskitRuntimeService:
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
+                private=qrt_options.private,
                 channel_strategy=(
                     None if self._channel_strategy == "default" else self._channel_strategy
                 ),
@@ -910,33 +911,18 @@ class QiskitRuntimeService:
         if response["backend"] and response["backend"] != qrt_options.get_backend_name():
             backend = self.backend(name=response["backend"], instance=hgp_name)
 
-        if version == 2:
-            job = RuntimeJobV2(
-                backend=backend,
-                api_client=self._api_client,
-                client_params=self._client_params,
-                job_id=response["id"],
-                program_id=program_id,
-                user_callback=callback,
-                result_decoder=result_decoder,
-                image=qrt_options.image,
-                service=self,
-                version=version,
-            )
-        else:
-            job = RuntimeJob(
-                backend=backend,
-                api_client=self._api_client,
-                client_params=self._client_params,
-                job_id=response["id"],
-                program_id=program_id,
-                user_callback=callback,
-                result_decoder=result_decoder,
-                image=qrt_options.image,
-                service=self,
-                version=version,
-            )
-        return job
+        return RuntimeJobV2(
+            backend=backend,
+            api_client=self._api_client,
+            client_params=self._client_params,
+            job_id=response["id"],
+            program_id=program_id,
+            user_callback=callback,
+            result_decoder=result_decoder,
+            image=qrt_options.image,
+            service=self,
+            version=version,
+        )
 
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
