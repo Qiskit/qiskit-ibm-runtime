@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Pass to convert the :class:`qiskit.circuit.gate.Gate`\\s of a circuit to a Clifford gate.
+Pass to convert the gates of a circuit to Clifford gates.
 """
 
 from random import choices
