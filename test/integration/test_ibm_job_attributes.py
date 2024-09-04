@@ -160,3 +160,18 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test cost estimation is returned correctly."""
         self.assertTrue(self.sim_job.usage_estimation)
         self.assertIn("quantum_seconds", self.sim_job.usage_estimation)
+
+    def test_private_option(self):
+        """Test private option."""
+        try:
+            backend = self.service.backend("test_eagle")
+        except:
+            raise SkipTest("test_eagle not available in this environment")
+
+        sampler = Sampler(mode=backend)
+        sampler.options.environment.private = True
+        bell_circuit = transpile(bell(), backend)
+        job = sampler.run([bell_circuit])
+        self.assertFalse(job.inputs)
+        self.assertTrue(job.result())
+        self.assertFalse(job.result())  # private job results can only be retrieved once
