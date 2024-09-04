@@ -100,8 +100,8 @@ class ToClifford(TransformationPass):
                     dag.substitute_node(node, RZGate(new_angle), inplace=True)
             else:
                 # Handle non-ISA gates, which may be either Clifford or non-Clifford.
+                # Skip them if they are Clifford, raise error otherwise.
                 if not _is_clifford(node.op):
                     raise ValueError(f"Operation ``{node.op.name}`` not supported.")
-                dag.substitute_node(node, node.op, inplace=True)
 
         return dag
