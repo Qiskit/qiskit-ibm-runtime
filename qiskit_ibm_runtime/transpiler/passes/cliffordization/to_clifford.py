@@ -26,7 +26,7 @@ from qiskit.transpiler.basepasses import TransformationPass
 
 ISA_SUPPORTED_GATES = (CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate)
 """
-The set of gates that can be found in an ISA circuit, handled fastly by the :class:`~.ToClifford`
+The set of gates that can be found in an ISA circuit, handled fast by the :class:`~.ToClifford`
 pass.
 """
 
