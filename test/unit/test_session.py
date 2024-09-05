@@ -151,6 +151,8 @@ class TestSession(IBMTestCase):
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
         session.run(program_id="foo", inputs={})
+        session._create_session = MagicMock()
+        self.assertTrue(session._create_session.assert_not_called)
         self.assertEqual(session.session_id, session_id)
 
     def test_correct_execution_mode(self):

@@ -1,2 +1,0 @@
-The simulator option ``noise_model`` is now deprecated for jobs running on real devices. 
-``noise_model`` will still be an acceptable option when using the local testing mode.
