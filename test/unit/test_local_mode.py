@@ -162,4 +162,4 @@ class TestLocalModeV2(IBMTestCase):
         """Test calling non-primitive in local mode."""
         session = Session(backend=backend)
         with self.assertRaisesRegex(ValueError, "Only sampler and estimator"):
-            session.run(program_id="foo", inputs={})
+            session._run(program_id="foo", inputs={})

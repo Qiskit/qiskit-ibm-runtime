@@ -47,7 +47,7 @@ class TestSamplerV2(IBMTestCase):
         t_pubs = transpile_pubs(in_pubs, backend, "sampler")
         inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
@@ -123,7 +123,7 @@ class TestSamplerV2(IBMTestCase):
             with self.subTest(options=options):
                 inst = SamplerV2(mode=session, options=options)
                 inst.run((self.circuit,))
-                inputs = session.run.call_args.kwargs["inputs"]["options"]
+                inputs = session._run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",

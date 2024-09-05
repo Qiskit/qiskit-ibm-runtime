@@ -48,11 +48,11 @@ class TestBatch(IBMTestCase):
         session = Batch(service=MagicMock(), backend="ibm_gotham")
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
-            session.run(program_id="program_id", inputs={})
+            session._run(program_id="program_id", inputs={})
 
     def test_context_manager(self):
         """Test session as a context manager."""
         with Batch(service=MagicMock(), backend="ibm_gotham") as session:
-            session.run(program_id="foo", inputs={})
+            session._run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)

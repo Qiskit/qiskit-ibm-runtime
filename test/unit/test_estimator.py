@@ -52,7 +52,7 @@ class TestEstimatorV2(IBMTestCase):
 
         inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
@@ -134,7 +134,7 @@ class TestEstimatorV2(IBMTestCase):
             with self.subTest(options=options):
                 inst = EstimatorV2(mode=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
-                options = backend.service.run.call_args.kwargs["inputs"]["options"]
+                options = backend.service._run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
                     dict_paritally_equal(options, expected),
                     f"{options} and {expected} not partially equal.",

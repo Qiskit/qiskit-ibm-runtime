@@ -149,5 +149,5 @@ class TestSamplerOptions(IBMTestCase):
         backend = get_mocked_backend()
         sampler = Sampler(mode=backend, options=opt_dict)
         _ = sampler.run(**get_primitive_inputs(sampler))
-        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        options = backend.service._run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, opt_dict)
