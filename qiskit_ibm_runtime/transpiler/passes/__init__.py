@@ -25,7 +25,7 @@ transpilation and passes.
    :toctree: ../stubs/
 
    ConvertIdToDelay
-   ToClifford
+   ConvertISAToClifford
 
 See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """
@@ -37,4 +37,4 @@ from .scheduling import ASAPScheduleAnalysis
 from .scheduling import PadDynamicalDecoupling
 from .scheduling import PadDelay
 
-from .cliffordization import ToClifford
+from .cliffordization import ConvertISAToClifford

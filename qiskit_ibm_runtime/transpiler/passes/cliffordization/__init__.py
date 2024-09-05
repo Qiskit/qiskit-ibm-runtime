@@ -12,4 +12,4 @@
 
 """Passes to transform a circuit into a Clifford circuit."""
 
-from .to_clifford import ToClifford
+from .to_clifford import ConvertISAToClifford
