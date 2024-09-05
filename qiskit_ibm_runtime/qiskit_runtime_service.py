@@ -26,7 +26,6 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
-from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -746,7 +745,7 @@ class QiskitRuntimeService:
 
     def backend(
         self,
-        name: str = None,
+        name: str,
         instance: Optional[str] = None,
         use_fractional_gates: bool = False,
     ) -> Backend:
@@ -774,33 +773,18 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        # pylint: disable=arguments-differ, line-too-long
-        if not name:
-            warnings.warn(
-                (
-                    "The `name` parameter will be required in a future release no sooner than "
-                    "3 months after the release of qiskit-ibm-runtime 0.24.0 ."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
+                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
-    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
-    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
-        """Return a single backend matching the specified filtering."""
-        return self.backend(name, **kwargs)
-
-    def run(
+    def _run(
         self,
         program_id: str,
         inputs: Dict,
@@ -839,13 +823,7 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        issue_deprecation_msg(
-            msg="service.run is deprecated",
-            version="0.24.0",
-            remedy="service.run will instead be converted into a private method "
-            "since it should not be called directly.",
-            period="3 months",
-        )
+
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -923,10 +901,6 @@ class QiskitRuntimeService:
             service=self,
             version=version,
         )
-
-    def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
-        """Private run method"""
-        return self.run(*args, **kwargs)
 
     def check_pending_jobs(self) -> None:
         """Check the number of pending jobs and wait for the oldest pending job if

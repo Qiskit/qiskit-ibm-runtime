@@ -174,7 +174,7 @@ class Session:
         return None
 
     @_active_session
-    def run(
+    def _run(
         self,
         program_id: str,
         inputs: Dict,
@@ -194,15 +194,6 @@ class Session:
         Returns:
             Submitted job.
         """
-        issue_deprecation_msg(
-            msg="session.run is deprecated",
-            version="0.24.0",
-            remedy="session.run will instead be converted into a private method "
-            "since it should not be called directly.",
-            period="3 months",
-            stacklevel=3,
-        )
-
         options = options or {}
 
         if "instance" not in options:
@@ -211,7 +202,7 @@ class Session:
         options["backend"] = self._backend
 
         if isinstance(self._service, QiskitRuntimeService):
-            job = self._service.run(
+            job = self._service._run(
                 program_id=program_id,  # type: ignore[arg-type]
                 options=options,
                 inputs=inputs,
@@ -231,11 +222,6 @@ class Session:
             )
 
         return job
-
-    @_active_session
-    def _run(self, *args: Any, **kwargs: Any) -> RuntimeJob:
-        """Private run method"""
-        return self.run(*args, **kwargs)
 
     def cancel(self) -> None:
         """Cancel all pending jobs in a session."""

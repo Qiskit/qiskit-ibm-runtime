@@ -99,25 +99,25 @@ class TestSampler(IBMIntegrationTestCase):
             bell, _, target = self._cases[1]
 
             with self.subTest("single"):
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 job = sampler.run([bell])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single with param"):
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 job = sampler.run([(bell, ())])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single array"):
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 job = sampler.run([(bell, [()])])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("multiple"):
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 job = sampler.run([(bell, [(), (), ()])])
                 result = job.result()
                 self._verify_result_type(
@@ -129,7 +129,7 @@ class TestSampler(IBMIntegrationTestCase):
         """Test Sampler.run() with multiple circuits."""
         backend = service.backend(self.backend)
         bell, _, target = self._cases[1]
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([bell, bell, bell]).result()
         self._verify_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
@@ -141,7 +141,7 @@ class TestSampler(IBMIntegrationTestCase):
         pqc2, param2, target2 = self._cases[5]
         pqc3, param3, target3 = self._cases[6]
 
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([(pqc1, param1), (pqc2, param2), (pqc3, param3)]).result()
         self._verify_result_type(
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
@@ -157,7 +157,7 @@ class TestSampler(IBMIntegrationTestCase):
         qc2.x(0)
         qc2.measure_all()
 
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([qc, qc2]).result()
         self._verify_result_type(result, num_pubs=2)
         for i in range(2):
@@ -179,7 +179,7 @@ class TestSampler(IBMIntegrationTestCase):
         qc3.x([0, 1])
         qc3.measure_all()
 
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         self._verify_result_type(result, num_pubs=4)
         for i in range(4):
@@ -189,7 +189,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_run_single_circuit(self, service):
         """Test for single circuit case."""
         with Session(service, self.backend) as session:
-            sampler = Sampler(session=session, options=self._options)
+            sampler = Sampler(mode=session, options=self._options)
 
             with self.subTest("No parameter"):
                 circuit, _, target = self._cases[1]
@@ -260,7 +260,7 @@ class TestSampler(IBMIntegrationTestCase):
         qc.measure(1, 1)
         qc.measure(2, 0)
 
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([(qc, [0, 0]), (qc, [np.pi / 2, 0])]).result()
         self.assertEqual(len(result), 2)
 
@@ -277,7 +277,7 @@ class TestSampler(IBMIntegrationTestCase):
             n = 5
             qc = QuantumCircuit(n, n - 1)
             qc.measure(range(n - 1), range(n - 1))
-            sampler = Sampler(session=session, options=self._options)
+            sampler = Sampler(mode=session, options=self._options)
             with self.subTest("one circuit"):
                 result = sampler.run([qc]).result()
                 self.assertEqual(len(result), 1)
@@ -299,7 +299,7 @@ class TestSampler(IBMIntegrationTestCase):
             k = 5
             params_array = np.random.rand(k, qc.num_parameters)
             params_list = params_array.tolist()
-            sampler = Sampler(session=session, options=self._options)
+            sampler = Sampler(mode=session, options=self._options)
             target = sampler.run([(qc, params_list)]).result()
 
             with self.subTest("ndarray"):
@@ -323,14 +323,14 @@ class TestSampler(IBMIntegrationTestCase):
             shots = 100
 
             with self.subTest("init option"):
-                sampler = Sampler(session=session, options={"default_shots": shots})
+                sampler = Sampler(mode=session, options={"default_shots": shots})
                 result = sampler.run([bell]).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("update option"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 sampler.options.default_shots = shots
                 result = sampler.run([bell]).result()
                 self.assertEqual(len(result), 1)
@@ -338,28 +338,28 @@ class TestSampler(IBMIntegrationTestCase):
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("run arg"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 result = sampler.run(pubs=[bell], shots=shots).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("run arg"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 result = sampler.run(pubs=[bell], shots=shots).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("pub-like"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 result = sampler.run([(bell, None, shots)]).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("pub"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 result = sampler.run([SamplerPub(bell, shots=shots)]).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
@@ -389,7 +389,7 @@ class TestSampler(IBMIntegrationTestCase):
         qc = QuantumCircuit(n)
         qc.h(range(n))
         qc.measure_all()
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([qc]).result()
         self.assertEqual(len(result), 1)
         self.assertLessEqual(result[0].data.meas.num_shots, self._shots)
@@ -400,7 +400,7 @@ class TestSampler(IBMIntegrationTestCase):
         """test primitive job's status"""
         backend = service.backend(self.backend)
         bell, _, _ = self._cases[1]
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         job = sampler.run([bell])
         _ = job.result()
         self.assertEqual(job.status(), "DONE")
@@ -416,7 +416,7 @@ class TestSampler(IBMIntegrationTestCase):
                 circuit.append(gate, [0])
                 circuit.measure_all()
 
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 result = sampler.run([circuit]).result()
                 self.assertEqual(len(result), 1)
                 self._assert_allclose(result[0].data.meas, np.array({0: self._shots}))
@@ -428,7 +428,7 @@ class TestSampler(IBMIntegrationTestCase):
                 circuit.append(gate, [0])
                 circuit.measure_all()
 
-                sampler = Sampler(session=session, options=self._options)
+                sampler = Sampler(mode=session, options=self._options)
                 result = sampler.run([circuit]).result()
                 self.assertEqual(len(result), 1)
                 self._assert_allclose(result[0].data.meas, np.array({1: self._shots}))
@@ -438,7 +438,7 @@ class TestSampler(IBMIntegrationTestCase):
         """Test for metatdata."""
         qc, _, _ = self._cases[1]
         backend = service.backend(self.backend)
-        sampler = Sampler(backend=backend, options=self._options)
+        sampler = Sampler(mode=backend, options=self._options)
         result = sampler.run([qc]).result()
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
@@ -509,7 +509,7 @@ class TestSampler(IBMIntegrationTestCase):
 
             for title, qc, target in cases:
                 with self.subTest(title):
-                    sampler = Sampler(session=session, options=self._options)
+                    sampler = Sampler(mode=session, options=self._options)
                     result = sampler.run([qc]).result()
                     self.assertEqual(len(result), 1)
                     data = result[0].data
@@ -522,7 +522,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_samplerv2_options(self, service):
         """Test SamplerV2 options."""
         backend = service.backend(self.backend)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(mode=backend)
         sampler.options.default_shots = 4096
         sampler.options.execution.init_qubits = True
         sampler.options.execution.rep_delay = 0.00025
@@ -538,7 +538,7 @@ class TestSampler(IBMIntegrationTestCase):
         """Test SamplerV2 DD options."""
         real_device_name = get_real_device(service)
         real_device = service.backend(real_device_name)
-        sampler = Sampler(backend=real_device)
+        sampler = Sampler(mode=real_device)
         sampler.options.dynamical_decoupling.enable = True
         sampler.options.dynamical_decoupling.sequence_type = "XX"
         sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"

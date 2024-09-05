@@ -45,7 +45,7 @@ class TestSamplerV2(IBMTestCase):
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
         t_pubs = transpile_pubs(in_pubs, backend, "sampler")
-        inst = SamplerV2(backend=backend)
+        inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
@@ -72,7 +72,7 @@ class TestSamplerV2(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            inst = SamplerV2(session=session)
+            inst = SamplerV2(mode=session)
             with self.assertRaises(ValueError) as exc:
                 inst.options.update(**opt)
             self.assertIn(list(opt.keys())[0], str(exc.exception))
@@ -88,7 +88,7 @@ class TestSamplerV2(IBMTestCase):
 
         in_pubs = [(dynamic_circuit,)]
         backend = get_mocked_backend()
-        inst = SamplerV2(backend=backend)
+        inst = SamplerV2(mode=backend)
         inst.options.dynamical_decoupling.enable = True
         with self.assertRaisesRegex(
             IBMInputValueError,
@@ -121,7 +121,7 @@ class TestSamplerV2(IBMTestCase):
         ]
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = SamplerV2(session=session, options=options)
+                inst = SamplerV2(mode=session, options=options)
                 inst.run((self.circuit,))
                 inputs = session.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
@@ -135,7 +135,7 @@ class TestSamplerV2(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            inst = SamplerV2(session=session)
+            inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))
             with self.assertRaisesRegex(ValueError, "Classical register .* is of size 0"):
                 inst.run([(circ,)])
@@ -227,7 +227,7 @@ class TestSamplerV2(IBMTestCase):
         """Test exception when circuits contain gates that are not basis gates"""
         # pylint: disable=invalid-name,not-context-manager
         backend = FakeSherbrooke()
-        sampler = SamplerV2(backend=backend)
+        sampler = SamplerV2(mode=backend)
 
         circ = QuantumCircuit(1, 1)
         circ.x(0)

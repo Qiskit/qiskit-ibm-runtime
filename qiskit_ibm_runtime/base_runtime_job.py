@@ -375,20 +375,6 @@ class BaseRuntimeJob(ABC):
         return self._program_id
 
     @property
-    def program_id(self) -> str:
-        """Program ID.
-
-        Returns:
-            ID of the program this job is for.
-        """
-        issue_deprecation_msg(
-            msg="The Job.program_id property is deprecated",
-            version="0.24.0",
-            remedy="Use Job.primitive_id instead.",
-        )
-        return self._program_id
-
-    @property
     def creation_date(self) -> Optional[datetime]:
         """Job creation date in local time.
 
