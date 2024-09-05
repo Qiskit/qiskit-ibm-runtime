@@ -60,8 +60,7 @@ class ConvertISAToClifford(TransformationPass):
         clifford_qc = pm.run(qc)
 
     Raises:
-        ValueError: If the given circuit contains unsupported operations, such as non-Clifford
-            gates that are not Pauli-Z rotations.
+        ValueError: If the given circuit contains unsupported operations, such as non-ISA gates.
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
