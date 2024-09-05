@@ -16,7 +16,6 @@ from copy import deepcopy
 from unittest import SkipTest
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob, Session, EstimatorV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
@@ -135,7 +134,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
-        self.assertEqual(job.status(), JobStatus.DONE, job.error_message())
+        self.assertEqual(job.status(), "DONE", job.error_message())
 
         result = job.result()
         self.assertEqual(len(result), n_results)
