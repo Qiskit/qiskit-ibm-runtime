@@ -32,7 +32,7 @@ class ConvertISAToClifford(TransformationPass):
 
     ISA circuits only contain Clifford gates from a restricted set or
     :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To convert them to Clifford
-    circuits, thsi pass rounds the angle of every :class:`qiskit.circuit.library.RZGate` to the
+    circuits, this pass rounds the angle of every :class:`qiskit.circuit.library.RZGate` to the
     closest multiple of `pi/2` (or to a random multiple of `pi/2` if the angle is unspecified),
     while it skips every Clifford gate, measurement, and barrier.
 
