@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Pass to convert the gates of a circuit to Clifford gates.
+Pass to convert the gates of an ISA circuit to Clifford gates.
 """
 
 from random import choices
