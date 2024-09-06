@@ -41,7 +41,11 @@ from qiskit.primitives.containers import (
 )
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
+from qiskit_ibm_runtime.utils.noise_learner_result import (
+    PauliLindbladError,
+    LayerError,
+    NoiseLearnerResult,
+)
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
 from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
@@ -454,7 +458,7 @@ class TestContainerSerialization(IBMTestCase):
         result = PrimitiveResult(pub_results, metadata)
         primitive_results.append(result)
         return primitive_results
-    
+
     def make_test_noise_learner_results(self):
         """Generates test data for NoiseLearnerResult test"""
         noise_learner_results = []
