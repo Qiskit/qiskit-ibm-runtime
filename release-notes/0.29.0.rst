@@ -1,0 +1,27 @@
+0.29.0 (2024-09-04)
+===================
+
+Deprecation Notes
+-----------------
+
+- The simulator option ``noise_model`` is now deprecated for jobs running on real devices. 
+  ``noise_model`` will still be an acceptable option when using the local testing mode. (`1892 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1892>`__)
+
+
+New Features
+------------
+
+- We added new classes, :class:`.ExecutionSpan` and :class:`.ExecutionSpanSet`. These classes are used in the primitive result metadata, to convey information about start and stop times of batch jobs. (`1833 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1833>`__)
+- Added a new ``private`` option under :class:`EnvironmentOptions`. (`1888 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1888>`__)
+- Added ``fallback`` option to ZNE extrapolators. (`1902 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1902>`__)
+
+
+Bug Fixes
+---------
+
+- Ported the ``Noise_model.from_dict()`` method from ``qiskit-aer`` because it was removed 
+  in ``0.15.0``. (`1890 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1890>`__)
+- Revert a previous change to ``backend.target`` where the target was no longer being 
+  cached. (`1891 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1891>`__)
+- Fixed an issue where ``Session.from_id()`` would create 
+  a new empty session. (`1896 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1896>`__)
