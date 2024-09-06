@@ -24,7 +24,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers import BackendV2 as Backend
 
 from qiskit_ibm_runtime.debugger.figure_or_merit import FOM, Ratio
-from qiskit_ibm_runtime.transpiler.passes.cliffordization import ToClifford
+from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
 from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
 
@@ -35,7 +35,7 @@ def _get_result(
     default_precision: float,
     seed_simulator: Union[int, None],
 ):
-    r"""A convenience function used to retrieve the results for a given debugger mode."""
+    r"""Retrieves the results for a given debugger mode."""
 
     if isinstance(result, PrimitiveResult):
         return result
@@ -53,6 +53,25 @@ def _get_result(
     raise ValueError("Cannot retrieve the results.")
 
 
+def _validate_pubs(backend: Backend, pubs: Sequence[EstimatorPub], validate_clifford=True):
+    r"""Validates a list PUBs by running the :meth:`.~validate_estimator_pubs` and
+    :meth:`.~validate_isa_circuits` methods, and optionally, by checking if the PUBs
+    are Clifford.
+    """
+    validate_estimator_pubs(pubs)
+    validate_isa_circuits([pub.circuit for pub in pubs], backend.target)
+
+    if validate_clifford:
+        for pub in pubs:
+            cliff_circ = PassManager([ConvertISAToClifford()]).run(pub.circuit)
+            if pub.circuit != cliff_circ:
+                raise ValueError(
+                    "Given ``pubs`` contain a non-Clifford circuit. To fix, consider using the "
+                    "``ConvertISAToClifford`` pass to map your circuits to the nearest Clifford"
+                    " circuits, then try again."
+                )
+
+
 class Debugger:
     r"""A class that users of the Estimator primitive can use to understand the expected
     performance of their queries.
@@ -68,24 +87,6 @@ class Debugger:
         self._noise_model = noise_model or NoiseModel.from_backend(
             backend, thermal_relaxation=False
         )
-
-    def _validate_pubs(self, pubs: Sequence[EstimatorPub], validate_clifford=True):
-        r"""Validates a list PUBs by running the :meth:`.~validate_estimator_pubs` and
-        :meth:`.~validate_isa_circuits` methods, and optionally, by checking if the PUBs
-        are Clifford.
-        """
-        validate_estimator_pubs(pubs)
-        validate_isa_circuits([pub.circuit for pub in pubs], self.backend.target)
-
-        if validate_clifford:
-            for pub in pubs:
-                cliff_circ = PassManager([ToClifford()]).run(pub.circuit)
-                if pub.circuit != cliff_circ:
-                    raise ValueError(
-                        "Given ``pubs`` contain a non-Clifford circuit. To fix, consider using the "
-                        "``ToClifford`` pass to map your circuits to the nearest Clifford circuits, "
-                        "then try again."
-                    )
 
     @property
     def backend(self) -> Backend:
@@ -142,7 +143,7 @@ class Debugger:
             so that it can be simulated efficiently regardless of its size. For estimation tasks
             that involve non-Clifford circuits, the recommended workflow consists of mapping
             the non-Clifford circuits to the nearest Clifford circuits using the
-            :class:`.~ToClifford` transpiler pass, or equivalently, to use the debugger's
+            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the debugger's
             :meth:`to_clifford` convenience method.
 
         .. note::
@@ -159,15 +160,15 @@ class Debugger:
                 alternatively a string (allowed values are ``ideal_sim`` and ``noisy_sim``). If
                 a string is passed, the results are produced internally by running a classical
                 simulation.
-            fom: The figure of merit to compare ``mode1`` and ``mode2`` by. Defaults to computing
-                the ratio.
+            fom: The figure of merit use to compare ``result1`` and ``result2``. Defaults to
+                computing the ratio.
             default_precision: The default precision used to run the ideal and noisy simulations.
             seed_simulator: A seed for the simulator.
         """
         for result in [result1, result2]:
             if isinstance(result, str) and result not in ["ideal_sim", "noisy_sim", "exp"]:
                 raise ValueError(f"Invalid result '{result}', must be 'ideal_sim' or 'noisy_sim'.")
-        self._validate_pubs(coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
+        _validate_pubs(self.backend, coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
         r1 = _get_result(coerced_pubs, result1, self.noise_model, default_precision, seed_simulator)
         r2 = _get_result(coerced_pubs, result2, self.noise_model, default_precision, seed_simulator)
@@ -176,19 +177,20 @@ class Debugger:
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""
         A convenience method that returns the cliffordized version of the given ``pubs``, obtained
-        by run the :class:`.~ToClifford` transpiler pass on the PUBs' circuits.
+        by run the :class:`.~ConvertISAToClifford` transpiler pass on the PUBs' circuits.
 
         Args:
             pubs: The PUBs to turn into Clifford PUBs.
         Returns:
             The Clifford PUBs.
         """
-        self._validate_pubs(coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs], False)
+        coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
+        _validate_pubs(self.backend, coerced_pubs, False)
 
         ret = []
         for pub in coerced_pubs:
             new_pub = EstimatorPub(
-                PassManager([ToClifford()]).run(pub.circuit),
+                PassManager([ConvertISAToClifford()]).run(pub.circuit),
                 pub.observables,
                 pub.parameter_values,
                 pub.precision,
