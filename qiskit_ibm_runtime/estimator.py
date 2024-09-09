@@ -87,7 +87,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         isa_psi = pm.run(psi)
         isa_observables = hamiltonian.apply_layout(isa_psi.layout)
 
-        estimator = Estimator(backend=backend)
+        estimator = Estimator(mode=backend)
 
         # calculate [ <psi(theta1)|hamiltonian|psi(theta)> ]
         job = estimator.run([(isa_psi, isa_observables, [theta])])
