@@ -77,6 +77,8 @@ from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungroupe
 )
 from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
+from .noise_learner_result import NoiseLearnerResult
+
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
@@ -322,6 +324,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, PrimitiveResult):
             out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
+        if isinstance(obj, NoiseLearnerResult):
+            out_val = {"data": obj.data, "metadata": obj.metadata}
+            return {"__type__": "NoiseLearnerResult", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -443,6 +448,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
                 return PrimitiveResult(**obj_val)
+            if obj_type == "NoiseLearnerResult":
+                return NoiseLearnerResult(**obj_val)
             if obj_type == "ExecutionSpan":
                 new_slices = {
                     int(idx): (tuple(shape), slice(*sl_args))
