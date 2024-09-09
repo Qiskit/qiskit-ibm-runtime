@@ -157,7 +157,7 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def get_runtime_api_base_url(url: str, instance: str, private_endpoint: bool = False) -> str:
+def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
