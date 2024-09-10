@@ -83,6 +83,8 @@ class Batch(Session):
     <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" page.
     """
 
+    _create_new_session = True
+
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
@@ -131,7 +133,7 @@ class Batch(Session):
 
     def _create_session(self) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService):
+        if isinstance(self._service, QiskitRuntimeService) and Batch._create_new_session:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "batch"
             )

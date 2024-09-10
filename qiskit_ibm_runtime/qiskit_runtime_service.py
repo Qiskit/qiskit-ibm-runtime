@@ -78,6 +78,7 @@ class QiskitRuntimeService:
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
         private_endpoint: Optional[bool] = None,
+        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -117,6 +118,7 @@ class QiskitRuntimeService:
             verify: Whether to verify the server's TLS certificate.
             channel_strategy: Error mitigation strategy.
             private_endpoint: Connect to private API URL.
+            url_resolver: Function used to resolve the runtime url.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -149,11 +151,13 @@ class QiskitRuntimeService:
             proxies=self._account.proxies,
             verify=self._account.verify,
             private_endpoint=self._account.private_endpoint,
+            url_resolver=url_resolver,
         )
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._backend_allowed_list: List[str] = []
+        self._url_resolver = url_resolver
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
@@ -359,6 +363,7 @@ class QiskitRuntimeService:
                 ),
                 proxies=self._account.proxies,
                 verify=self._account.verify,
+                url_resolver=self._url_resolver,
             )
 
             # Build the hgp.
@@ -892,6 +897,7 @@ class QiskitRuntimeService:
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
+                private=qrt_options.private,
                 channel_strategy=(
                     None if self._channel_strategy == "default" else self._channel_strategy
                 ),
@@ -910,33 +916,18 @@ class QiskitRuntimeService:
         if response["backend"] and response["backend"] != qrt_options.get_backend_name():
             backend = self.backend(name=response["backend"], instance=hgp_name)
 
-        if version == 2:
-            job = RuntimeJobV2(
-                backend=backend,
-                api_client=self._api_client,
-                client_params=self._client_params,
-                job_id=response["id"],
-                program_id=program_id,
-                user_callback=callback,
-                result_decoder=result_decoder,
-                image=qrt_options.image,
-                service=self,
-                version=version,
-            )
-        else:
-            job = RuntimeJob(
-                backend=backend,
-                api_client=self._api_client,
-                client_params=self._client_params,
-                job_id=response["id"],
-                program_id=program_id,
-                user_callback=callback,
-                result_decoder=result_decoder,
-                image=qrt_options.image,
-                service=self,
-                version=version,
-            )
-        return job
+        return RuntimeJobV2(
+            backend=backend,
+            api_client=self._api_client,
+            client_params=self._client_params,
+            job_id=response["id"],
+            program_id=program_id,
+            user_callback=callback,
+            result_decoder=result_decoder,
+            image=qrt_options.image,
+            service=self,
+            version=version,
+        )
 
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
@@ -1170,6 +1161,7 @@ class QiskitRuntimeService:
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
                 creation_date=raw_data.get("created", None),
+                image=raw_data.get("runtime"),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
             )
