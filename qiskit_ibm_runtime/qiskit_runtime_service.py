@@ -77,6 +77,7 @@ class QiskitRuntimeService:
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
         private_endpoint: Optional[bool] = None,
+        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -116,6 +117,7 @@ class QiskitRuntimeService:
             verify: Whether to verify the server's TLS certificate.
             channel_strategy: Error mitigation strategy.
             private_endpoint: Connect to private API URL.
+            url_resolver: Function used to resolve the runtime url.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -148,11 +150,13 @@ class QiskitRuntimeService:
             proxies=self._account.proxies,
             verify=self._account.verify,
             private_endpoint=self._account.private_endpoint,
+            url_resolver=url_resolver,
         )
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._backend_allowed_list: List[str] = []
+        self._url_resolver = url_resolver
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
@@ -358,6 +362,7 @@ class QiskitRuntimeService:
                 ),
                 proxies=self._account.proxies,
                 verify=self._account.verify,
+                url_resolver=self._url_resolver,
             )
 
             # Build the hgp.
