@@ -215,7 +215,7 @@ class NoiseLearnerResult:
                 pubs should be placed in their metadata fields. Keys are expected to be strings.
         """
         self._data = list(data)
-        self._metadata = metadata.copy() or {}
+        self._metadata = {} if metadata is None else metadata.copy()
 
     @property
     def data(self) -> List[LayerError]:
