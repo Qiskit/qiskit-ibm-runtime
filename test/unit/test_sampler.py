@@ -247,6 +247,7 @@ class TestSamplerV2(IBMTestCase):
         """Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected"""
+        # pylint: disable=invalid-name,not-context-manager
 
         circ = QuantumCircuit(5, 1)
         circ.x(0)
