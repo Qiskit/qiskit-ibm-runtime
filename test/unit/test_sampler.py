@@ -21,7 +21,7 @@ from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Session, SamplerV2, SamplerOptions, IBMInputValueError
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke, FakeCusco
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
@@ -241,3 +241,21 @@ class TestSamplerV2(IBMTestCase):
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             sampler.run(pubs=[(circ)])
+
+    @data(FakeSherbrooke(), FakeCusco())
+    def test_isa_inside_condition_block(self, backend):
+        """Test no exception for 2q gates involving qubits that are not connected in
+        the coupling map, inside control operation blocks; and yes exception for
+        qubit pairs that are not connected"""
+
+        circ = QuantumCircuit(5, 1)
+        circ.x(0)
+        circ.measure(0, 0)
+        with circ.if_test((0, 1)):
+            circ.ecr(1, 2)
+
+        if backend.name == "fake_sherbrooke":
+            SamplerV2(backend).run(pubs=[(circ)])
+        else:
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend).run(pubs=[(circ)])
