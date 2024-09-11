@@ -20,7 +20,7 @@ Execution Spans (:mod:`qiskit_ibm_runtime.execution_span`)
 Overview
 ========
 
-An :class:`~.ExecutionSpans` class instance is an iterable of :class:`~.ExecutionSpan`\s, where 
+An :class:`~.ExecutionSpans` class instance is an iterable of :class:`~.ExecutionSpan`\\s, where 
 each iterand gives timing information about a chunk of data. Execution spans are returned as part 
 of the metadata of a primitive job result.
 
