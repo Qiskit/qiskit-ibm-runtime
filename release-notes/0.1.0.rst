@@ -111,7 +111,7 @@ Upgrade Notes
 
 -  ``qiskit_ibm_runtime.IBMRuntimeService.run()`` method now accepts
    runtime execution options as
-   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
+   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__
    class in addition to already supported Dict. backend_name, image and
    log_level are the currently available options.
 
