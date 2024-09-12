@@ -5,7 +5,7 @@ Upgrade Notes
 -------------
 
 -  Added a validation check to
-   `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler#run>`__. It raises an error if
+   `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.20/qiskit_ibm_runtime.Sampler#run>`__. It raises an error if
    there is no classical bit.
 
 -  `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ is updated to return
@@ -29,5 +29,5 @@ Deprecation Notes
    methods instead.
 
 -  The ``backend_name`` attribute in
-   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
+   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__
    is deprecated and replaced by ``backend``.
