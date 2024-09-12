@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import numpy as np
 import plotly.graph_objects as go
@@ -51,7 +51,7 @@ def _pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: fl
     return path
 
 
-def _get_rgb_color(discreet_colorscale: List[str], rate: float, default: str) -> str:
+def _get_rgb_color(discreet_colorscale: list[str], rate: float, default: str) -> str:
     r"""
     Maps a continuous rate to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
@@ -74,7 +74,7 @@ def _get_rgb_color(discreet_colorscale: List[str], rate: float, default: str) ->
 def draw_layer_error_map(
     layer_error: LayerError,
     backend: BackendV2,
-    coordinates: Optional[List[List[int]]] = None,
+    coordinates: Optional[list[list[int]]] = None,
     *,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
