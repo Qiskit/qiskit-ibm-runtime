@@ -12,10 +12,17 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
+from ddt import ddt, data
+
+import plotly.graph_objects as go
+
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
+from qiskit_aer import AerSimulator
 
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
+from qiskit_ibm_runtime.utils.visualization_utils import get_qubits_coordinates
 
 from ..ibm_test_case import IBMTestCase
 
@@ -76,11 +83,15 @@ class TestPauliLindbladError(IBMTestCase):
         self.assertEqual(error.n_body(2).rates.tolist(), error2.rates.tolist())
 
 
+@ddt
 class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
     def setUp(self):
         super().setUp()
+
+        # A local service
+        self.service = QiskitRuntimeLocalService()
 
         # A set of circuits
         c1 = QuantumCircuit(2)
@@ -101,6 +112,13 @@ class TestLayerError(IBMTestCase):
         error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
         self.errors = [error1, error2]
+
+        # Another set of errors used in the visualization tests
+        circuit = QuantumCircuit(4)
+        qubits = [0, 1, 2, 3]
+        generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+        rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+        self.layer_error_viz = LayerError(circuit, qubits, PauliLindbladError(generators, rates))
 
     def test_valid_inputs(self):
         """Test LayerError with valid inputs."""
@@ -133,3 +151,39 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.qubits, layer_error2.qubits)
             self.assertEqual(layer_error1.generators, layer_error2.generators)
             self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
+            
+    def test_invalid_coordinates(self):
+        r"""
+        Tests the `draw_map` function with invalid coordinates.
+        """
+        backend = self.service.backend("fake_kyiv")
+        coordinates = get_qubits_coordinates(backend.num_qubits)[:10]
+
+        with self.assertRaises(ValueError):
+            self.layer_error_viz.draw_map(backend, coordinates)
+
+    def test_no_coupling_map(self):
+        r"""
+        Tests the `draw_map` function with invalid coordinates.
+        """
+        with self.assertRaises(ValueError):
+            self.layer_error_viz.draw_map(AerSimulator())
+
+    @data(["fake_hanoi", 44], ["fake_kyiv", 160])
+    def test_plotting(self, inputs):
+        r"""
+        Tests the `draw_map` function to make sure that it produces the right figure.
+        """
+        backend_name, n_traces = inputs
+        backend = self.service.backend(backend_name)
+        fig = self.layer_error_viz.draw_map(
+            backend,
+            color_no_data="blue",
+            colorscale="reds",
+            radius=0.2,
+            width=500,
+            height=200,
+        )
+
+        self.assertIsInstance(fig, go.Figure)
+        self.assertEqual(len(fig.data), n_traces)
