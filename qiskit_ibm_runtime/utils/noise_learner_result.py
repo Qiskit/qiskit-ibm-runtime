@@ -199,7 +199,7 @@ class LayerError:
         The number of qubits in this :class:`~.LayerError`.
         """
         return len(self.qubits)
-    
+
     def draw_map(
         self,
         backend: BackendV2,
@@ -289,7 +289,8 @@ class LayerError:
                     min_val + (max_val - min_val) / edges_n_segs * i for i in range(edges_n_segs)
                 ]
                 color = [
-                    get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
+                    get_rgb_color(discreet_colorscale, v / high_scale, color_no_data)
+                    for v in all_vals
                 ]
                 hoverinfo_2q = ""
                 for pauli, rate in rates_2q[(q1, q2)].items():
@@ -298,8 +299,14 @@ class LayerError:
                 for i in range(edges_n_segs):
                     # Add a trace for the edge
                     edge = go.Scatter(
-                        x=[x0 + (x1 - x0) / edges_n_segs * i, x0 + (x1 - x0) / edges_n_segs * (i + 1)],
-                        y=[y0 + (y1 - y0) / edges_n_segs * i, y0 + (y1 - y0) / edges_n_segs * (i + 1)],
+                        x=[
+                            x0 + (x1 - x0) / edges_n_segs * i,
+                            x0 + (x1 - x0) / edges_n_segs * (i + 1),
+                        ],
+                        y=[
+                            y0 + (y1 - y0) / edges_n_segs * i,
+                            y0 + (y1 - y0) / edges_n_segs * (i + 1),
+                        ],
                         hovertemplate=hoverinfo_2q,
                         mode="lines",
                         line={
@@ -357,7 +364,9 @@ class LayerError:
             y=ys,
             mode="markers",
             marker={
-                "color": list({qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
+                "color": list(
+                    {qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()
+                ),
                 "colorscale": colorscale,
                 "showscale": True,
             },
@@ -387,9 +396,15 @@ class LayerError:
         fig.update_layout(shapes=shapes)
 
         # Add the annotations on top of the legend pie
-        fig.add_annotation(x=x_legend + 0.2, y=y_legend, text="<b>Z</b>", showarrow=False, yshift=10)
-        fig.add_annotation(x=x_legend - 0.2, y=y_legend, text="<b>X</b>", showarrow=False, yshift=10)
-        fig.add_annotation(x=x_legend, y=y_legend - 0.45, text="<b>Y</b>", showarrow=False, yshift=10)
+        fig.add_annotation(
+            x=x_legend + 0.2, y=y_legend, text="<b>Z</b>", showarrow=False, yshift=10
+        )
+        fig.add_annotation(
+            x=x_legend - 0.2, y=y_legend, text="<b>X</b>", showarrow=False, yshift=10
+        )
+        fig.add_annotation(
+            x=x_legend, y=y_legend - 0.45, text="<b>Y</b>", showarrow=False, yshift=10
+        )
 
         # Set x and y range
         fig.update_xaxes(
@@ -410,7 +425,6 @@ class LayerError:
         fig.update_layout(plot_bgcolor=plot_bgcolor)
 
         return fig
-
 
     def _json(self) -> dict:
         """Return a dictionary containing all the information to re-initialize this object."""

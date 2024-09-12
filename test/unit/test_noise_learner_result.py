@@ -151,7 +151,7 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.qubits, layer_error2.qubits)
             self.assertEqual(layer_error1.generators, layer_error2.generators)
             self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
-            
+
     def test_invalid_coordinates(self):
         r"""
         Tests the `draw_map` function with invalid coordinates.
