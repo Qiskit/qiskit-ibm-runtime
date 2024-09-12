@@ -1,0 +1,1 @@
+Deprecate util function `get_runtime_api_base_url`: use `default_runtime_url_resolver` instead.
