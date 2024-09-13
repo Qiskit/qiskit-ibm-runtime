@@ -14,3 +14,5 @@
 """
 Functions for visualizing qiskit-ibm-runtime's objects.
 """
+
+from .draw_layer_error_map import draw_layer_error_map
