@@ -36,7 +36,7 @@ from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
 from ..utils.deprecation import issue_deprecation_msg
-from .visualization_utils import get_qubits_coordinates, get_rgb_color, pie_slice
+from ..visualization.utils import get_qubits_coordinates, get_rgb_color, pie_slice
 
 
 class PauliLindbladError:
