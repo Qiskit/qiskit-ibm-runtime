@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import overload, Iterable, Iterator
 
+from ..utils import PlotlyFigure
 from .execution_span import ExecutionSpan
 
 
@@ -113,3 +114,22 @@ class ExecutionSpans:
         obj = self if inplace else ExecutionSpans(self)
         obj._spans.sort()
         return obj
+
+    def draw(self, normalize_y: bool = False) -> PlotlyFigure:
+        """Draw these execution spans on a plot.
+
+        .. note::
+            To draw multiple sets of execution spans at once, for examule, coming from multiple
+            jobs, consider calling :func:`~.draw_execution_spans` directly.
+
+        Args:
+            normalize_y: Whether to display the y-axis units as a percentage of work
+                complete, rather than cummulative shots completed.
+
+        Returns:
+            A plotly figure.
+        """
+        # pylint: disable=import-outside-toplevel
+        from ..visualization import draw_execution_spans
+
+        return draw_execution_spans(self, normalize_y=normalize_y)

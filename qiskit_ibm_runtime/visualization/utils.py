@@ -15,8 +15,34 @@
 Utility functions for visualizing qiskit-ibm-runtime's objects.
 """
 
-from typing import List
+from __future__ import annotations
+
+import importlib
+from types import ModuleType
+
 import numpy as np
+
+
+def plotly_module(submodule: str = ".") -> ModuleType:
+    """Import and return a plotly module.
+
+    Args:
+        submodule: The plotly submodule to import, relative or absolute.
+
+    Returns:
+        The submodule.
+
+    Raises:
+        ModuleNotFoundError: If it can't be imported.
+    """
+    try:
+        return importlib.import_module(submodule, "plotly")
+    except (ModuleNotFoundError, ImportError) as ex:
+        raise ModuleNotFoundError(
+            "The plotly Python package is required for visualization. "
+            "Install all qiskit-ibm-runtime visualization dependencies with "
+            "pip install 'qiskit-ibm-runtime[visualization]'."
+        ) from ex
 
 
 def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: float) -> str:
@@ -47,7 +73,7 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
 
 
 def get_rgb_color(
-    discreet_colorscale: List[str], val: float, default: str, color_out_of_scale: str
+    discreet_colorscale: list[str], val: float, default: str, color_out_of_scale: str
 ) -> str:
     r"""
     Maps a float to an RGB color based on a discreet colorscale that contains
