@@ -28,12 +28,12 @@ from typing import Any, Dict, Iterator, Optional, Sequence, Tuple
 from numpy.typing import NDArray
 import numpy as np
 
+from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
-from qiskit.providers.backend import BackendV2
 
 from ..utils.deprecation import issue_deprecation_msg
 from ..visualization.utils import get_qubits_coordinates, get_rgb_color, pie_slice
