@@ -450,7 +450,7 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
     return path
 
 
-def get_rgb_color(discreet_colorscale: list[str], val: float, default: str) -> str:
+def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> str:
     r"""
     Maps a float to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
