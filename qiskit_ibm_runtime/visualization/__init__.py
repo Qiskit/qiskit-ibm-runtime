@@ -12,7 +12,21 @@
 # pylint: disable=too-many-return-statements
 
 """
-Functions for visualizing qiskit-ibm-runtime's objects.
+==========================================================
+Visualization (:mod:`qiskit_ibm_runtime.visualization`)
+==========================================================
+
+.. currentmodule:: qiskit_ibm_runtime.visualization
+
+A suite of functions for visualizing qiskit-ibm-runtime's objects.
+
+Functions
+=========
+
+.. autosummary::
+    :toctree: ../stubs/
+
+    draw_layer_error_map
 """
 
 from .draw_layer_error_map import draw_layer_error_map
