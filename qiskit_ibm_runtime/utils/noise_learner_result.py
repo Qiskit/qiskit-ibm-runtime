@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, Optional, Sequence, Tuple
+from typing import Any, Iterator, Optional, Sequence
 from numpy.typing import NDArray
 import numpy as np
 
@@ -33,7 +33,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
 import plotly.graph_objects as go
-from plotly.colors import sample_colorscale
 
 from ..utils.deprecation import issue_deprecation_msg
 
@@ -229,6 +228,7 @@ class LayerError:
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
         """
+        # pylint: disable=import-outside-toplevel
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
