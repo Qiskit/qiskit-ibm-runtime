@@ -69,8 +69,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device_name = get_real_device(service)
-        real_device = service.backend(real_device_name)
-        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
         _ = self._run_program(service, circuits=[(bell(),)] * 10, backend=real_device_name)
         job = self._run_program(service, circuits=[(bell(),)] * 2, backend=real_device_name)
         wait_for_status(job, "QUEUED")
