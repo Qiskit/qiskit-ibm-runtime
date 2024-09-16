@@ -183,6 +183,8 @@ class QiskitRuntimeLocalService:
                 "Passing a backend name is not supported in local testing mode. "
                 "Please pass a backend instance."
             )
+        if "resilience_level" in inputs:
+            warnings.warn("The resilience_level option has no effect in local testing mode.")
 
         inputs = copy.deepcopy(inputs)
 

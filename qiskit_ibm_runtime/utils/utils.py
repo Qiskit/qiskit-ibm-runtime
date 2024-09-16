@@ -48,7 +48,7 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
-def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
     """
     A section of is_isa_circuit, separated to allow recursive calls
     within blocks of conditional operations.
@@ -57,7 +57,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
         operation = instruction.operation
 
         name = operation.name
-        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
+        qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
         if (
             not target.instruction_supported(name, qargs)
             and name != "barrier"
@@ -69,7 +69,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                sub_string = _is_isa_circuit_helper(sub_circ, target)
+                sub_string = _is_isa_circuit_helper(sub_circ, target, qubit_map)
                 if sub_string:
                     return sub_string
 
@@ -93,7 +93,8 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
             f"but the target system requires {target.num_qubits} qubits."
         )
 
-    return _is_isa_circuit_helper(circuit, target)
+    qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}
+    return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
