@@ -40,10 +40,6 @@ class DebuggerResult:
         other = _coerce_result(other)
         return DebuggerResult(self.vals + other.vals)
 
-    def __div__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return DebuggerResult(self.vals / other.vals)
-
     def __mul__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
         return DebuggerResult(self.vals * other.vals)
@@ -55,13 +51,13 @@ class DebuggerResult:
         other = _coerce_result(other)
         return DebuggerResult(self.vals - other.vals)
 
+    def __truediv__(self, other: DebuggerResultLike) -> "DebuggerResult":
+        other = _coerce_result(other)
+        return DebuggerResult(self.vals / other.vals)
+
     def __radd__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
         return self + other
-
-    def __rdiv__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return self / other
 
     def __rmul__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
@@ -70,6 +66,10 @@ class DebuggerResult:
     def __rsub__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
         return self - other
+
+    def __rtruediv__(self, other: DebuggerResultLike) -> "DebuggerResult":
+        other = _coerce_result(other)
+        return self / other
 
     def __repr__(self) -> str:
         return f"DebuggerResult(vals={repr(self.vals)})"
