@@ -71,8 +71,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         real_device_name = get_real_device(service)
         real_device = service.backend(real_device_name)
         pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
-        _ = self._run_program(service, circuits=[pm.run(bell()) * 10], backend=real_device_name)
-        job = self._run_program(service, circuits=[pm.run(bell()) * 2], backend=real_device_name)
+        _ = self._run_program(service, circuits=[(bell(),)] * 10, backend=real_device_name)
+        job = self._run_program(service, circuits=[(bell(),)] * 2, backend=real_device_name)
         wait_for_status(job, "QUEUED")
         if not cancel_job_safe(job, self.log):
             return
