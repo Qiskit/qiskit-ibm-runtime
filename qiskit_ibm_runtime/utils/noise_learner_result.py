@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Sequence
+from typing import Any, Iterator, List, Optional, Sequence
 from numpy.typing import NDArray
 import numpy as np
 
@@ -115,20 +115,28 @@ class LayerError:
     Args:
         circuit: A circuit whose noise has been learnt.
         qubits: The labels of the qubits in the ``circuit``.
-        error: The Pauli Lindblad error channel affecting the ``circuit``.
+        error: The Pauli Lindblad error channel affecting the ``circuit``, or ``None`` if the error
+            channel is unknown.
 
     Raises:
         ValueError: If ``circuit``, ``qubits``, and ``error`` have mismatching number of qubits.
     """
 
     def __init__(
-        self, circuit: QuantumCircuit, qubits: Sequence[int], error: PauliLindbladError
+        self,
+        circuit: QuantumCircuit,
+        qubits: Sequence[int],
+        error: Optional[PauliLindbladError] = None,
     ) -> None:
         self._circuit = circuit
         self._qubits = list(qubits)
         self._error = error
 
-        if len({self.circuit.num_qubits, len(self.qubits), self.error.num_qubits}) != 1:
+        set_num_qubits = {self.circuit.num_qubits, len(self.qubits)}
+        if self.error is not None:
+            set_num_qubits.add(self.error.num_qubits)
+
+        if len(set_num_qubits) != 1:
             raise ValueError("Mistmatching numbers of qubits.")
 
     @property

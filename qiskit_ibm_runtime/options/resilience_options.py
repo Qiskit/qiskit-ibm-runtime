@@ -100,8 +100,13 @@ class ResilienceOptionsV2:
         # Validate not ZNE+PEC
         if self.pec_mitigation is True and self.zne_mitigation is True:
             raise ValueError(
-                "pec_mitigation and zne_mitigation`options cannot be "
+                "'pec_mitigation' and 'zne_mitigation' options cannot be "
                 "simultaneously enabled. Set one of them to False."
+            )
+        
+        if self.layer_noise_model and None in [lnm.error for lnm in self.layer_noise_model]:
+            raise ValueError(
+                "'layer_noise_model' cannot contain 'LayerError' objects with ``error`` set to ``None``."
             )
 
         return self
