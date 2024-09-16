@@ -73,6 +73,46 @@ jobs:
         with:
           name: html_docs
           path: docs/_build/html
+  unit-tests:
+    if: github.repository_owner == 'Qiskit'
+    # only kick-off test cases when basic code quality checks succeed
+    needs: [ "code-quality" , "documentation" ]
+    name: Run unit tests - python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
+        os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
+        exclude:
+          - os: "macos-latest"
+            python-version: 3.8
+          - os: "macos-latest"
+            python-version: 3.9
+    env:
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -r requirements-dev.txt -e .
+      - name: Run unit tests
+        run: make unit-test-coverage
+      - name: Report coverage to coveralls.io
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
+          parallel: true
+          file: coverage.lcov
   integration-tests:
     if: github.event_name == 'push'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
