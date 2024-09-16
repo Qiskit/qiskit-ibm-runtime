@@ -228,7 +228,7 @@ class LayerError:
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
         """
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
