@@ -288,6 +288,20 @@ class Session:
 
         return None
 
+    def usage(self) -> Optional[float]:
+        """Return session usage in seconds.
+
+        Session usage is the time from when the first job starts until the session goes inactive,
+        is closed, or when its last job completes, whichever happens last.
+
+        Batch usage is the amount of time all jobs spend on the QPU.
+        """
+        if self._session_id and isinstance(self._service, QiskitRuntimeService):
+            response = self._service._api_client.session_details(self._session_id)
+            if response:
+                return response.get("elapsed_time")
+        return None
+
     def details(self) -> Optional[Dict[str, Any]]:
         """Return session details.
 
