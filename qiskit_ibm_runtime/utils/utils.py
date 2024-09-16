@@ -31,6 +31,7 @@ from ibm_platform_services import ResourceControllerV2  # pylint: disable=import
 from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
+from .deprecation import deprecate_function
 
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
@@ -47,7 +48,7 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
-def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
     """
     A section of is_isa_circuit, separated to allow recursive calls
     within blocks of conditional operations.
@@ -56,7 +57,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
         operation = instruction.operation
 
         name = operation.name
-        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
+        qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
         if (
             not target.instruction_supported(name, qargs)
             and name != "barrier"
@@ -68,7 +69,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                sub_string = _is_isa_circuit_helper(sub_circ, target)
+                sub_string = _is_isa_circuit_helper(sub_circ, target, qubit_map)
                 if sub_string:
                     return sub_string
 
@@ -92,7 +93,8 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
             f"but the target system requires {target.num_qubits} qubits."
         )
 
-    return _is_isa_circuit_helper(circuit, target)
+    qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}
+    return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
@@ -157,7 +159,20 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def get_runtime_api_base_url(url: str, instance: str, private_endpoint: bool = False) -> str:
+@deprecate_function(
+    "get_runtime_api_base_url()",
+    "0.30.0",
+    "Please use default_runtime_url_resolver() instead.",
+    stacklevel=1,
+)
+def get_runtime_api_base_url(
+    url: str, instance: str, private_endpoint: Optional[bool] = False
+) -> str:
+    """Computes the Runtime API base URL based on the provided input parameters."""
+    return default_runtime_url_resolver(url, instance, private_endpoint=private_endpoint)
+
+
+def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:

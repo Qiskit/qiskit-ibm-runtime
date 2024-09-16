@@ -26,7 +26,7 @@ from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 
 import qiskit.quantum_info as qi
-from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit.quantum_info import SparsePauliOp, Pauli, PauliList
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
@@ -41,7 +41,13 @@ from qiskit.primitives.containers import (
 )
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm_runtime.utils.noise_learner_result import (
+    PauliLindbladError,
+    LayerError,
+    NoiseLearnerResult,
+)
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
+from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -329,7 +335,27 @@ class TestContainerSerialization(IBMTestCase):
         self.assertEqual(len(primitive_result1), len(primitive_result2))
         for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
             self.assert_pub_results_equal(pub_result1, pub_result2)
+
         self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
+
+    def assert_pauli_lindblad_error_equal(self, error1, error2):
+        """Tests that two PauliLindbladError objects are equal"""
+        self.assertEqual(error1.generators, error2.generators)
+        self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
+
+    def assert_layer_errors_equal(self, layer_error1, layer_error2):
+        """Tests that two LayerError objects are equal"""
+        self.assertEqual(layer_error1.circuit, layer_error2.circuit)
+        self.assertEqual(layer_error1.qubits, layer_error2.qubits)
+        self.assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
+
+    def assert_noise_learner_results_equal(self, result1, result2):
+        """Tests that two NoiseLearnerResult objects are equal"""
+        self.assertEqual(len(result1), len(result2))
+        for layer_error1, layer_error2 in zip(result1, result2):
+            self.assert_layer_errors_equal(layer_error1, layer_error2)
+
+        self.assertEqual(result1.metadata, result2.metadata)
 
     # Data generation methods
 
@@ -411,9 +437,40 @@ class TestContainerSerialization(IBMTestCase):
             PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
             PubResult(DataBin()),
         ]
-        result = PrimitiveResult(pub_results, {"1": 2})
+
+        metadata = {
+            "execution": {
+                "execution_spans": ExecutionSpans(
+                    [
+                        SliceSpan(
+                            datetime(2022, 1, 1),
+                            datetime(2023, 1, 1),
+                            {1: ((100,), slice(4, 9)), 0: ((2, 5), slice(5, 7))},
+                        ),
+                        SliceSpan(
+                            datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
+                        ),
+                    ]
+                )
+            }
+        }
+
+        result = PrimitiveResult(pub_results, metadata)
         primitive_results.append(result)
         return primitive_results
+
+    def make_test_noise_learner_results(self):
+        """Generates test data for NoiseLearnerResult test"""
+        noise_learner_results = []
+        circuit = QuantumCircuit(2)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+        error = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+        layer_error = LayerError(circuit, [3, 5], error)
+
+        noise_learner_result = NoiseLearnerResult([layer_error])
+        noise_learner_results.append(noise_learner_result)
+        return noise_learner_results
 
     # Tests
     @data(
@@ -538,6 +595,15 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
             self.assertIsInstance(decoded, PrimitiveResult)
             self.assert_primitive_results_equal(primitive_result, decoded)
+
+    def test_noise_learner_result(self):
+        """Test encoding and decoding NoiseLearnerResult"""
+        for noise_learner_result in self.make_test_noise_learner_results():
+            payload = {"noise_learner_result": noise_learner_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
+            self.assertIsInstance(decoded, NoiseLearnerResult)
+            self.assert_noise_learner_results_equal(noise_learner_result, decoded)
 
     def test_unknown_settings(self):
         """Test settings not on whitelisted path."""
