@@ -120,7 +120,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(len(noise_model), 3)
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.layer_noise_model = noise_model
+            estimator.options.resilience.layer_noise_model = noise_model.data
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
