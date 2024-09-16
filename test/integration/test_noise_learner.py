@@ -111,7 +111,15 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
 
-        pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
+        circuit = QuantumCircuit(3)
+        circuit.ecr(0, 1)
+        circuit.ecr(1, 2)
+        circuit.ecr(1, 2)
+        circuit.ecr(0, 1)
+        circuit.ecr(0, 1)
+        circuit.ecr(0, 1)
+
+        pubs = [(circuit, "Z" * circuit.num_qubits)]
 
         with Session(service, backend) as session:
             learner = NoiseLearner(mode=session, options=options)
