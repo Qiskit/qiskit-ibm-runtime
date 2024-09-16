@@ -13,7 +13,6 @@
 """Tests for the debugger's figures of merit."""
 
 from ddt import ddt
-import numpy as np
 
 from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
 from qiskit_ibm_runtime.debugger import Ratio
