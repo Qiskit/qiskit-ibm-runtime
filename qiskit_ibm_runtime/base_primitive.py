@@ -109,7 +109,17 @@ def _get_mode_service_backend(
     elif get_cm_session():
         mode = get_cm_session()
         service = mode.service  # type: ignore
-        backend = service.backend(name=mode.backend(), instance=mode._instance)  # type: ignore
+        try:
+            backend = service.backend(
+                name=mode.backend(),  # type: ignore
+                instance=mode._instance,  # type: ignore
+                use_fractional_gates=mode._backend.options.use_fractional_gates,  # type: ignore
+            )
+        except (AttributeError, TypeError):
+            backend = service.backend(
+                name=mode.backend(),  # type: ignore
+                instance=mode._instance,  # type: ignore
+            )
         return mode, service, backend  # type: ignore
     else:
         raise ValueError("A backend or session must be specified.")
