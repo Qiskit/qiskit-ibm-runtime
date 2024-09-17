@@ -1,0 +1,1 @@
+Added logic to encode and decode ``NoiseLearnerResult``.

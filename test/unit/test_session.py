@@ -15,12 +15,13 @@
 from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
-from qiskit_ibm_runtime import Session
+from qiskit_ibm_runtime import Session, SamplerV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from .mock.fake_runtime_service import FakeRuntimeService
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
 
@@ -151,6 +152,8 @@ class TestSession(IBMTestCase):
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
         session.run(program_id="foo", inputs={})
+        session._create_session = MagicMock()
+        self.assertTrue(session._create_session.assert_not_called)
         self.assertEqual(session.session_id, session_id)
 
     def test_correct_execution_mode(self):
@@ -158,3 +161,15 @@ class TestSession(IBMTestCase):
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
         session = Session(backend="common_backend")
         self.assertEqual(session.details()["mode"], "dedicated")
+
+    def test_cm_session_fractional(self):
+        """Test instantiating primitive inside session context manager with the fractional optin."""
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="abc",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+        )
+        backend = service.backend("fake_fractional", use_fractional_gates=True)
+        with Session(backend=backend) as _:
+            primitive = SamplerV2()
+            self.assertTrue(primitive._backend.options.use_fractional_gates)

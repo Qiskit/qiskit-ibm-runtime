@@ -1,0 +1,14 @@
+Add `url_resolver` optional input to :class:`.QiskitRuntimeService`
+constructor to enable custom generation of the Qiskit Runtime API URL
+based on the provided `url`, `instance` and `private_endpoint`. If
+not specified, the default resolver will be used.
+
+.. code:: python
+  # Define a custom resolver. In this case returns the concatenation of the provided `url` and the `instance`
+  def custom_url_resolver(url, instance, *args, **kwargs):
+    return f"{url}/{instance}"
+
+  service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main", url="https://baseurl.org" url_resolver=custom_url_resolver)
+  # resulting resolved url will be: `https://baseurl.org/ibm-q/open/main`
+
+Add util function `default_runtime_url_resolver`.

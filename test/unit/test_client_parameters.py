@@ -57,31 +57,52 @@ class TestClientParameters(IBMTestCase):
                 "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
+                None,
                 "https://us-east.quantum-computing.cloud.ibm.com",
             ),
             (
                 "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
+                None,
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
                 "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                None,
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
             ),
             (
                 "ibm_quantum",
                 "h/g/p",
                 "https://auth.quantum-computing.ibm.com/api",
+                None,
                 "https://auth.quantum-computing.ibm.com/api",
+            ),
+            (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                lambda a, b, c: f"{a}:{b}:{c}",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud:"
+                + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
+            ),
+            (
+                "ibm_quantum",
+                "h/g/p",
+                "https://auth.quantum-computing.ibm.com/api",
+                lambda a, b, c: f"{a}:{b}:{c}",
+                "https://auth.quantum-computing.ibm.com/api:h/g/p:False",
             ),
         ]
         for spec in test_specs:
-            channel, instance, url, expected = spec
+            channel, instance, url, url_resolver, expected = spec
             with self.subTest(instance=instance, url=url):
-                params = self._get_client_params(channel=channel, instance=instance, url=url)
+                params = self._get_client_params(
+                    channel=channel, instance=instance, url=url, url_resolver=url_resolver
+                )
                 self.assertEqual(params.get_runtime_api_base_url(), expected)
 
     def test_proxies_param_with_ntlm(self) -> None:
@@ -153,6 +174,7 @@ class TestClientParameters(IBMTestCase):
         instance=None,
         proxies=None,
         verify=None,
+        url_resolver=None,
     ):
         """Return a custom ClientParameters."""
         if verify is None:
@@ -164,4 +186,5 @@ class TestClientParameters(IBMTestCase):
             instance=instance,
             proxies=proxies,
             verify=verify,
+            url_resolver=url_resolver,
         )

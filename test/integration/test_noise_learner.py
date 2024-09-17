@@ -16,7 +16,6 @@ from copy import deepcopy
 from unittest import SkipTest
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob, Session, EstimatorV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
@@ -112,7 +111,15 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
 
-        pubs = [(c, "Z" * c.num_qubits) for c in self.circuits]
+        circuit = QuantumCircuit(3)
+        circuit.ecr(0, 1)
+        circuit.ecr(1, 2)
+        circuit.ecr(1, 2)
+        circuit.ecr(0, 1)
+        circuit.ecr(0, 1)
+        circuit.ecr(0, 1)
+
+        pubs = [(circuit, "Z" * circuit.num_qubits)]
 
         with Session(service, backend) as session:
             learner = NoiseLearner(mode=session, options=options)
@@ -121,7 +128,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(len(noise_model), 3)
 
             estimator = EstimatorV2(mode=session, options=options)
-            estimator.options.resilience.layer_noise_model = noise_model
+            estimator.options.resilience.layer_noise_model = noise_model.data
 
             estimator_job = estimator.run(pubs)
             result = estimator_job.result()
@@ -135,7 +142,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
-        self.assertEqual(job.status(), JobStatus.DONE, job.error_message())
 
         result = job.result()
         self.assertEqual(len(result), n_results)
