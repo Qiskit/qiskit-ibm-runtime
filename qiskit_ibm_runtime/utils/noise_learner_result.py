@@ -104,14 +104,23 @@ class PauliLindbladError:
         """
         return self.generators.num_qubits
 
-    def n_body(self, n: int) -> PauliLindbladError:
+    def restrict_num_bodies(self, num_qubits: int) -> PauliLindbladError:
         r"""
-        The :class:`~.PauliLindbladError` obtained by removing all the dissipators in this error
-        that do not act on exactly ``n`` qubits.
+        The :class:`~.PauliLindbladError` containing only those terms acting on exactly
+        ``num_qubits`` qubits.
+
+        Args:
+            num_qubits: The number of qubits that the returned error acts on.
+        
+        Returns:
+            The error containing only those terms acting on exactly ``num_qubits`` qubits.
+
+        Raises:
+            ValueError: If ``num_qubits`` is smaller than ``0``.
         """
-        if n < 0:
-            raise ValueError("``n`` must be ``0`` or larger.")
-        mask = np.sum(self.generators.x | self.generators.z, axis=1) == n
+        if num_qubits < 0:
+            raise ValueError("``num_qubits`` must be ``0`` or larger.")
+        mask = np.sum(self.generators.x | self.generators.z, axis=1) == num_qubits
         return PauliLindbladError(self.generators[mask], self.rates[mask])
 
     def _json(self) -> dict:
@@ -205,10 +214,10 @@ class LayerError:
         *,
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
-        edges_n_segs: int = 16,
-        edges_width: float = 4,
+        num_edge_segments: int = 16,
+        edge_width: float = 4,
         height: int = 500,
-        plot_bgcolor: str = "white",
+        background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
     ) -> go.Figure:
@@ -221,10 +230,10 @@ class LayerError:
                 qubit in the given backend on a 2D grid.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
-            edges_n_segs: The number of equal-sized segments that edges are made of.
-            edges_width: The line width of the edges in pixels.
+            num_edge_segments: The number of equal-sized segments that edges are made of.
+            edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
-            plot_bgcolor: The background color.
+            background_color: The background color.
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
         """
@@ -237,10 +246,10 @@ class LayerError:
             coordinates,
             colorscale=colorscale,
             color_no_data=color_no_data,
-            edges_n_segs=edges_n_segs,
-            edges_width=edges_width,
+            num_edge_segments=num_edge_segments,
+            edge_width=edge_width,
             height=height,
-            plot_bgcolor=plot_bgcolor,
+            background_color=background_color,
             radius=radius,
             width=width,
         )
