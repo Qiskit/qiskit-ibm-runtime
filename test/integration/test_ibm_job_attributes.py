@@ -163,6 +163,8 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_private_option(self):
         """Test private option."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud channel does not support private jobs")
         try:
             backend = self.service.backend("test_eagle")
         except:

@@ -135,11 +135,23 @@ class BaseRuntimeJob(ABC):
             return
         self._ws_client.disconnect(WebsocketClientCloseCode.CANCEL)
 
+    def usage(self) -> float:
+        """Return job usage in seconds."""
+        try:
+            metrics = self._api_client.job_metadata(self.job_id())
+            return metrics.get("usage", {}).get("quantum_seconds")
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
+
     def metrics(self) -> Dict[str, Any]:
         """Return job metrics.
 
         Returns:
-            Job metrics, which includes timestamp information.
+            A dictionary with job metrics including but not limited to the following:
+
+            * ``timestamps``: Timestamps of when the job was created, started running, and finished.
+            * ``usage``: Details regarding job usage, the measurement of the amount of
+                time the QPU is locked for your workload.
 
         Raises:
             IBMRuntimeError: If a network error occurred.
