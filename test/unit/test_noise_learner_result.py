@@ -64,8 +64,8 @@ class TestPauliLindbladError(IBMTestCase):
             self.assertEqual(error1.generators, error2.generators)
             self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
-    def test_n_body(self):
-        """Tests the ``n_body`` method."""
+    def test_restrict_num_bodies(self):
+        """Tests the ``restrict_num_bodies`` method."""
         generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
         rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
         error = PauliLindbladError(generators, rates)
@@ -73,14 +73,14 @@ class TestPauliLindbladError(IBMTestCase):
         generators1 = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII"])
         rates1 = [0.01, 0.01, 0.01, 0.005, 0.02]
         error1 = PauliLindbladError(generators1, rates1)
-        self.assertEqual(error.n_body(1).generators, error1.generators)
-        self.assertEqual(error.n_body(1).rates.tolist(), error1.rates.tolist())
+        self.assertEqual(error.restrict_num_bodies(1).generators, error1.generators)
+        self.assertEqual(error.restrict_num_bodies(1).rates.tolist(), error1.rates.tolist())
 
         generators2 = PauliList(["XXII", "ZZII"])
         rates2 = [0.01, 0.01]
         error2 = PauliLindbladError(generators2, rates2)
-        self.assertEqual(error.n_body(2).generators, error2.generators)
-        self.assertEqual(error.n_body(2).rates.tolist(), error2.rates.tolist())
+        self.assertEqual(error.restrict_num_bodies(2).generators, error2.generators)
+        self.assertEqual(error.restrict_num_bodies(2).rates.tolist(), error2.rates.tolist())
 
 
 @ddt
