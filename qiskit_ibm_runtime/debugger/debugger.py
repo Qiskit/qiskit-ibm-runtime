@@ -108,7 +108,6 @@ class Debugger:
 
         backend_options = {
             "method": "stabilizer",
-            "noise_model": self.noise_model,
             "seed_simulator": seed_simulator,
         }
         if not ideal_sim:

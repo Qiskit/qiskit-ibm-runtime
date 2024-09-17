@@ -13,7 +13,7 @@
 """ A class to store debugger results.
 """
 
-from typing import Union
+from typing import Callable, Union
 from numpy.typing import NDArray
 
 from qiskit.primitives.containers import PubResult, DataBin
@@ -27,6 +27,9 @@ class DebuggerResult:
 
     It allows performing mathematical operations with other objects of type
     :class:`.~DebuggerResultLike`, such as ``+``, ``-``, ``*``, ``/``, and ``**``.
+
+    Args:
+        vals: The values in this :class:`.~DebuggerResult`.
     """
 
     def __init__(self, vals: NDArray) -> None:
@@ -34,6 +37,7 @@ class DebuggerResult:
 
     @property
     def vals(self) -> NDArray:
+        r"""The values in this :class:`.~DebuggerResult`."""
         return self._vals
 
     def __add__(self, other: DebuggerResultLike) -> "DebuggerResult":
@@ -57,19 +61,19 @@ class DebuggerResult:
 
     def __radd__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
-        return self + other
+        return other + self
 
     def __rmul__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
-        return self * other
+        return other * self
 
     def __rsub__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
-        return self - other
+        return other - self
 
     def __rtruediv__(self, other: DebuggerResultLike) -> "DebuggerResult":
         other = _coerce_result(other)
-        return self / other
+        return other / self
 
     def __repr__(self) -> str:
         return f"DebuggerResult(vals={repr(self.vals)})"
