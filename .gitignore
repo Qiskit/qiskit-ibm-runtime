@@ -113,3 +113,6 @@ Qconfig.py
 
 # Generated release notes file
 docs/release_notes.rst
+
+# Locally run jobs 
+qiskit_ibm_runtime/fake_provider/local_jobs
