@@ -480,8 +480,3 @@ def _get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
         ]
 
     return None
-
-    raise ValueError(
-        f"Unknown coordinates for ``{num_qubits}``-qubit devices. Input ``coordinates`` must be "
-        "provided."
-    )
