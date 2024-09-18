@@ -28,7 +28,6 @@ from .utils import get_rgb_color, pie_slice
 def draw_layer_error_map(
     layer_error: LayerError,
     embedding: Union[Embedding, BackendV2],
-    coordinates: Optional[list[tuple[int]]] = None,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
     num_edge_segments: int = 16,
@@ -39,15 +38,13 @@ def draw_layer_error_map(
     width: int = 800,
 ) -> go.Figure:
     r"""
-    Draws a map view of a :class:`~.LayerError`.
+    Draw a map view of a :class:`~.LayerError`.
 
     Args:
         layer_error: The :class:`~.LayerError` to draw.
         embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
             to draw the layer error on a 2D grid, or a backend to generate an :class:`~.Embedding`
             for.
-        coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
-            qubit in the given backend on a 2D grid.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
         num_edge_segments: The number of equal-sized segments that edges are made of.

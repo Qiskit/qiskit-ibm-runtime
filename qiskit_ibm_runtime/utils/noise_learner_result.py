@@ -221,7 +221,7 @@ class LayerError:
         width: int = 800,
     ) -> go.Figure:
         r"""
-        Draws a map view of a this layer error.
+        Draw a map view of a this layer error.
 
         Args:
             backend: The backend on top of which the layer error is drawn.
