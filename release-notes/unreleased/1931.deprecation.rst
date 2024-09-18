@@ -1,6 +1,12 @@
 The ``channel_strategy`` parameter has been deprecated.
-The Q-CTRL Performance Management strategy will be removed on October 18th. 
+The Q-CTRL Performance Management strategy will be removed on October 18th, 2024. 
 To continue using Q-CTRL in your workflow, please explore the following options:
 
-- Qiskit Functions Catalog: https://quantum.ibm.com/functions
-- Fire Opal: https://q-ctrl.com/fire-opal
+- If your organization has an existing IBM Quantum Premium Plan instance: migrate to 
+the Q-CTRL Performance Management Function, found in the 
+`Qiskit Functions Catalog <https://quantum.ibm.com/functions>`__.
+
+- To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
+the same performance management product accessible directly through Q-CTRL. 
+You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-authenticate-with-ibm-credentials>`__
+to Fire Opal.
