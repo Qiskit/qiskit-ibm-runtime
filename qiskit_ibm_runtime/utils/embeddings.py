@@ -37,7 +37,7 @@ class Embedding:
         coupling_map: Union[List[tuple[int, int]], CouplingMap],
     ) -> None:
         num_qubits = len(coordinates)
-        if any([q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map]):
+        if any(q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map):
             raise ValueError("Invalid coupling map.")
 
         self._coordinates = coordinates
@@ -46,7 +46,7 @@ class Embedding:
         )
 
     @classmethod
-    def from_backend(csl, backend: BackendV2) -> "Embedding":
+    def from_backend(cls, backend: BackendV2) -> "Embedding":
         r"""Generates an :class:`~.Embedding` object from a backend.
 
         Args:
@@ -64,7 +64,7 @@ class Embedding:
         if not (coordinates := _get_qubits_coordinates(backend.num_qubits)):
             raise ValueError(f"Coordinates for backend '{backend.name}' are unknown.")
 
-        return csl(coordinates, coupling_map)
+        return cls(coordinates, coupling_map)
 
     @property
     def coordinates(self) -> list[tuple[int, int]]:
