@@ -224,10 +224,8 @@ class LayerError:
         Draw a map view of a this layer error.
 
         Args:
-            backend: The backend on top of which the layer error is drawn.
             embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
-                to draw the layer error on a 2D grid, or a backend to generate an :class:`~.Embedding`
-                for.
+                to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
             num_edge_segments: The number of equal-sized segments that edges are made of.

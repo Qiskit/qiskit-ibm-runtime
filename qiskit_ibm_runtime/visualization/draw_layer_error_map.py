@@ -43,8 +43,7 @@ def draw_layer_error_map(
     Args:
         layer_error: The :class:`~.LayerError` to draw.
         embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
-            to draw the layer error on a 2D grid, or a backend to generate an :class:`~.Embedding`
-            for.
+            to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
         num_edge_segments: The number of equal-sized segments that edges are made of.
