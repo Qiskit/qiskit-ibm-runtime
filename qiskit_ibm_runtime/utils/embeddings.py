@@ -15,7 +15,7 @@
 Helper class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
-from typing import List, Union
+from typing import List, Tuple, Union
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -33,8 +33,8 @@ class Embedding:
 
     def __init__(
         self,
-        coordinates: list[tuple[int, int]],
-        coupling_map: Union[List[tuple[int, int]], CouplingMap],
+        coordinates: List[Tuple[int, int]],
+        coupling_map: Union[List[Tuple[int, int]], CouplingMap],
     ) -> None:
         num_qubits = len(coordinates)
         if any(q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map):
@@ -67,7 +67,7 @@ class Embedding:
         return cls(coordinates, coupling_map)
 
     @property
-    def coordinates(self) -> list[tuple[int, int]]:
+    def coordinates(self) -> List[Tuple[int, int]]:
         r"""
         The coordinates in this embedding.
         """
@@ -81,7 +81,7 @@ class Embedding:
         return self._coupling_map
 
 
-def _get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
+def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
     r"""
     Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
 
