@@ -131,8 +131,8 @@ class QiskitRuntimeService:
         if channel_strategy:
             warnings.warn(
                 (
-                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is deprecated. "
-                    "The Q-CTRL Performance Management strategy will be removed on October 18th. "
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy will be removed on October 18th. "
                     "To continue using Q-CTRL in your workflow, use one of the following options: "
                     "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
                     "Fire Opal: https://q-ctrl.com/fire-opal"
@@ -720,8 +720,8 @@ class QiskitRuntimeService:
         if channel_strategy:
             warnings.warn(
                 (
-                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is deprecated. "
-                    "The Q-CTRL Performance Management strategy will be removed on October 18th. "
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy will be removed on October 18th. "
                     "To continue using Q-CTRL in your workflow, use one of the following options: "
                     "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
                     "Fire Opal: https://q-ctrl.com/fire-opal"
