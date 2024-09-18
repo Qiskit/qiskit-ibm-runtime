@@ -243,14 +243,14 @@ class LayerError:
         return draw_layer_error_map(
             self,
             embedding,
-            colorscale=colorscale,
-            color_no_data=color_no_data,
-            num_edge_segments=num_edge_segments,
-            edge_width=edge_width,
-            height=height,
-            background_color=background_color,
-            radius=radius,
-            width=width,
+            colorscale,
+            color_no_data,
+            num_edge_segments,
+            edge_width,
+            height,
+            background_color,
+            radius,
+            width,
         )
 
     def _json(self) -> dict:

@@ -12,7 +12,7 @@
 # pylint: disable=too-many-return-statements
 
 """
-Utility functions for visualizing qiskit-ibm-runtime's objects.
+Helper class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
 from typing import List, Union
@@ -51,6 +51,13 @@ class Embedding:
 
         Args:
             backend: A backend to generate the :class:`~.Embedding` object from.
+
+        Returns:
+            The embedding for the given backend.
+
+        Raises:
+            ValueError: If the given backend has coupling map set to ``None``.
+            ValueError: If the coordinates for the given backend are unknown.
         """
         if not (coupling_map := backend.coupling_map):
             raise ValueError(f"Coupling map for backend '{backend.name}' is unknown.")
