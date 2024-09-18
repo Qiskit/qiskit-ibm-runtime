@@ -21,8 +21,8 @@ from qiskit.quantum_info import PauliList
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from qiskit_ibm_runtime.utils.embeddings import Embedding
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
-from qiskit_ibm_runtime.visualization.utils import get_qubits_coordinates
 
 from ..ibm_test_case import IBMTestCase
 
@@ -151,16 +151,6 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.qubits, layer_error2.qubits)
             self.assertEqual(layer_error1.generators, layer_error2.generators)
             self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
-
-    def test_invalid_coordinates(self):
-        r"""
-        Tests the `draw_map` function with invalid coordinates.
-        """
-        backend = self.service.backend("fake_kyiv")
-        coordinates = get_qubits_coordinates(backend.num_qubits)[:10]
-
-        with self.assertRaises(ValueError):
-            self.layer_error_viz.draw_map(backend, coordinates)
 
     def test_no_coupling_map(self):
         r"""

@@ -13,21 +13,22 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
+from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
-from .utils import get_qubits_coordinates, get_rgb_color, pie_slice
+from .utils import get_rgb_color, pie_slice
 
 
 def draw_layer_error_map(
     layer_error: LayerError,
-    backend: BackendV2,
-    coordinates: Optional[list[list[int]]] = None,
+    embedding: Union[Embedding, BackendV2],
+    coordinates: Optional[list[tuple[int]]] = None,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
     num_edge_segments: int = 16,
@@ -42,7 +43,9 @@ def draw_layer_error_map(
 
     Args:
         layer_error: The :class:`~.LayerError` to draw.
-        backend: The backend on top of which the layer error is drawn.
+        embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
+            to draw the layer error on a 2D grid, or a backend to generate an :class:`~.Embedding`
+            for.
         coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
             qubit in the given backend on a 2D grid.
         colorscale: The colorscale used to show the rates of ``layer_error``.
@@ -60,20 +63,19 @@ def draw_layer_error_map(
     """
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
-    if not coordinates:
-        coordinates = get_qubits_coordinates(backend.num_qubits)
-    if len(coordinates) != backend.num_qubits:
-        raise ValueError("Given coordinates are incompatible with the specified backend.")
+    if isinstance(embedding, BackendV2):
+        embedding = Embedding.from_backend(embedding)
+    coordinates = embedding.coordinates
+    coupling_map = embedding.coupling_map
+
     # The coordinates come in the format ``(row, column)`` and place qubit ``0`` in the bottom row.
     # We turn them into ``(x, y)`` coordinates for convenience, multiplying the ``ys`` by ``-1`` so
     # that the map matches the map displayed on the ibmq website.
     ys = [-row for row, _ in coordinates]
     xs = [col for _, col in coordinates]
 
-    if backend.coupling_map is None:
-        raise ValueError("Given backend has no coupling map.")
     # A set of unique edges ``(i, j)``, with ``i < j``.
-    edges = set(tuple(sorted(edge)) for edge in list(backend.coupling_map))
+    edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
 
     # The highest rate, used to normalize all other rates before choosing their colors.
     high_scale = 0
@@ -110,7 +112,8 @@ def draw_layer_error_map(
             min_val = min(vals)
             max_val = min(max(vals), 1)
             all_vals = [
-                min_val + (max_val - min_val) / num_edge_segments * i for i in range(num_edge_segments)
+                min_val + (max_val - min_val) / num_edge_segments * i
+                for i in range(num_edge_segments)
             ]
             color = [
                 get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
@@ -237,6 +240,6 @@ def draw_layer_error_map(
 
     # Ensure that the circle is non-deformed
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    fig.update_layout(background_color=background_color)
+    fig.update_layout(plot_bgcolor=background_color)
 
     return fig

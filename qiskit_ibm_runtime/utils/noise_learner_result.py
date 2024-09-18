@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence
+from typing import Any, Iterator, Sequence, Union
 from numpy.typing import NDArray
 import numpy as np
 
@@ -34,6 +34,7 @@ from qiskit.quantum_info import PauliList
 
 import plotly.graph_objects as go
 
+from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 
@@ -111,7 +112,7 @@ class PauliLindbladError:
 
         Args:
             num_qubits: The number of qubits that the returned error acts on.
-        
+
         Returns:
             The error containing only those terms acting on exactly ``num_qubits`` qubits.
 
@@ -209,9 +210,7 @@ class LayerError:
 
     def draw_map(
         self,
-        backend: BackendV2,
-        coordinates: Optional[list[tuple[int, int]]] = None,
-        *,
+        embedding: Union[Embedding, BackendV2],
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
         num_edge_segments: int = 16,
@@ -226,8 +225,9 @@ class LayerError:
 
         Args:
             backend: The backend on top of which the layer error is drawn.
-            coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
-                qubit in the given backend on a 2D grid.
+            embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
+                to draw the layer error on a 2D grid, or a backend to generate an :class:`~.Embedding`
+                for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
             num_edge_segments: The number of equal-sized segments that edges are made of.
@@ -242,8 +242,7 @@ class LayerError:
 
         return draw_layer_error_map(
             self,
-            backend,
-            coordinates,
+            embedding,
             colorscale=colorscale,
             color_no_data=color_no_data,
             num_edge_segments=num_edge_segments,
