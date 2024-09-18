@@ -21,7 +21,6 @@ from qiskit.quantum_info import PauliList
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.utils.embeddings import Embedding
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 
 from ..ibm_test_case import IBMTestCase
