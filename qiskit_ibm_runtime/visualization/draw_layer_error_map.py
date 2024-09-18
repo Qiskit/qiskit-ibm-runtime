@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go

@@ -46,7 +46,7 @@ class Embedding:
         )
 
     @classmethod
-    def from_backend(self, backend: BackendV2) -> "Embedding":
+    def from_backend(csl, backend: BackendV2) -> "Embedding":
         r"""Generates an :class:`~.Embedding` object from a backend.
 
         Args:
@@ -64,7 +64,7 @@ class Embedding:
         if not (coordinates := _get_qubits_coordinates(backend.num_qubits)):
             raise ValueError(f"Coordinates for backend '{backend.name}' are unknown.")
 
-        return Embedding(coordinates, coupling_map)
+        return csl(coordinates, coupling_map)
 
     @property
     def coordinates(self) -> list[tuple[int, int]]:

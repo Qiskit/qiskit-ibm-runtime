@@ -12,8 +12,6 @@
 
 """Tests for the ``Embedding`` class."""
 
-import plotly.graph_objects as go
-
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
