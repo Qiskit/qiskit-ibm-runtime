@@ -35,7 +35,7 @@ class TestEmbedding(IBMTestCase):
         r"""Test the constructor from backend."""
         e = Embedding.from_backend(self.vigo)
 
-        coo = [[1, 0], [0, 1], [1, 1], [1, 2], [2, 1]]
+        coo = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
         self.assertEqual(e.coordinates, coo)
         self.assertEqual(e.coupling_map, self.vigo.coupling_map)
 
