@@ -210,7 +210,7 @@ class LayerError:
     def draw_map(
         self,
         backend: BackendV2,
-        coordinates: Optional[list[list[int]]] = None,
+        coordinates: Optional[list[tuple[int, int]]] = None,
         *,
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
