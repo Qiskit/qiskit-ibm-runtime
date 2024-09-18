@@ -1,0 +1,6 @@
+The ``channel_strategy`` parameter has been deprecated.
+The Q-CTRL Performance Management strategy will be removed on October 18th. 
+To continue using Q-CTRL in your workflow, please explore the following options:
+
+- Qiskit Functions Catalog: https://quantum.ibm.com/functions
+- Fire Opal: https://q-ctrl.com/fire-opal
