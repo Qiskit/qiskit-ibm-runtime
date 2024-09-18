@@ -23,12 +23,12 @@ from qiskit.transpiler import CouplingMap
 
 class Embedding:
     r"""
-    A class to represent a set of qubits as vertices of a 2D grid.
+    A class to represent an embedding or arrangement of a set of qubits in a two-dimensional plane.
 
     Args:
         coordinates: A list of coordinates in the form ``(row, column)`` that specify the qubits'
-            location on the 2D grid.
-        coupling_map: A coupling map specifying how the qubits in the grid are connected.
+            location on the 2D plane.
+        coupling_map: A coupling map specifying how the qubits in the embedding are connected.
     """
 
     def __init__(
@@ -62,21 +62,21 @@ class Embedding:
     @property
     def coordinates(self) -> list[tuple[int, int]]:
         r"""
-        The coordinates in this :class:`~.Embedding`.
+        The coordinates in this embedding.
         """
         return self._coordinates
 
     @property
     def coupling_map(self) -> CouplingMap:
         r"""
-        The coupling map in this :class:`~.Embedding`.
+        The coupling map in this embedding.
         """
         return self._coupling_map
 
 
 def _get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
     r"""
-    Return a list of coordinates for drawing a QPU map on a 2D grid.
+    Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
 
     The coordinates are in the form ``(row, column)``.
 
