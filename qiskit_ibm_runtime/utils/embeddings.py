@@ -12,7 +12,7 @@
 # pylint: disable=too-many-return-statements
 
 """
-Helper class to represent an embedding of a set of qubits in a two-dimensional plane.
+Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
 from typing import List, Tuple, Union
@@ -87,6 +87,8 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
 
     The coordinates are in the form ``(row, column)``.
 
+    If the coordinates are unknown, it returns an empty list.
+
     Args:
         num_qubits: The number of qubits to return the coordinates from.
     """
@@ -95,6 +97,25 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
 
     if num_qubits == 7:
         return [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]
+
+    if num_qubits == 15:
+        return [
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (0, 3),
+            (0, 4),
+            (0, 5),
+            (0, 6),
+            (1, 7),
+            (1, 6),
+            (1, 5),
+            (1, 4),
+            (1, 3),
+            (1, 2),
+            (1, 1),
+            (1, 0),
+        ]
 
     if num_qubits == 20:
         return [
@@ -118,25 +139,6 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
             (3, 2),
             (3, 3),
             (3, 4),
-        ]
-
-    if num_qubits == 15:
-        return [
-            (0, 0),
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (0, 5),
-            (0, 6),
-            (1, 7),
-            (1, 6),
-            (1, 5),
-            (1, 4),
-            (1, 3),
-            (1, 2),
-            (1, 1),
-            (1, 0),
         ]
 
     if num_qubits == 16:

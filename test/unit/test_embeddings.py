@@ -30,6 +30,7 @@ class TestEmbedding(IBMTestCase):
         self.aer = AerSimulator()
         self.kyiv = service.backend("fake_kyiv")
         self.vigo = service.backend("fake_vigo")
+        self.armonk = service.backend("fake_armonk")
 
     def test_from_backend(self):
         r"""Test the constructor from backend."""
@@ -44,8 +45,14 @@ class TestEmbedding(IBMTestCase):
         e_vigo = Embedding.from_backend(self.vigo)
         e_kyiv = Embedding.from_backend(self.kyiv)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e0:
             Embedding.from_backend(self.aer)
+        self.assertEqual(str(e0.exception), "Coupling map for backend 'aer_simulator' is unknown.")
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e1:
             Embedding(e_vigo.coordinates, e_kyiv.coupling_map)
+        self.assertEqual(str(e1.exception), "Invalid coupling map.")
+
+        with self.assertRaises(ValueError) as e2:
+            Embedding.from_backend(self.armonk)
+        self.assertEqual(str(e2.exception), "Coordinates for backend 'fake_armonk' are unknown.")
