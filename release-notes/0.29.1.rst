@@ -1,0 +1,7 @@
+0.29.1 (2024-09-17)
+===================
+
+New Features
+------------
+
+- Added logic to encode and decode ``NoiseLearnerResult``. (`1908 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1908>`__)
