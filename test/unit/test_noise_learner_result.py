@@ -22,7 +22,6 @@ from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
-from qiskit_ibm_runtime.visualization.utils import get_qubits_coordinates
 
 from ..ibm_test_case import IBMTestCase
 
