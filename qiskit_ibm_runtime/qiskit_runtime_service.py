@@ -116,7 +116,7 @@ class QiskitRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             private_endpoint: Connect to private API URL.
             url_resolver: Function used to resolve the runtime url.
 
@@ -127,6 +127,20 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024. "
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._account = self._discover_account(
             token=token,
@@ -698,11 +712,25 @@ class QiskitRuntimeService:
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
         """
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024."
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         AccountManager.save(
             token=token,
