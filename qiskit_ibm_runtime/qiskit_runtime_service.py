@@ -488,7 +488,7 @@ class QiskitRuntimeService:
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -517,6 +517,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -781,7 +783,7 @@ class QiskitRuntimeService:
         self,
         name: str = None,
         instance: Optional[str] = None,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -800,6 +802,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
         Returns:
             Backend: A backend matching the filtering.
