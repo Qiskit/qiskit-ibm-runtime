@@ -23,7 +23,8 @@ class EstimatorPubResult(PubResult):
         """Plot the zero noise extrapolation data contained in this estimator pub result.
 
         Args:
-            tol: The tolerance. If ``stds_extrapolated`` is greater than this value for a expectation value and extrapolator, the fit is omitted from the plot.
+            tol: The tolerance. If ``stds_extrapolated`` is greater than this value for a expectation value
+            and extrapolator, the fit is omitted from the plot.
 
         Returns:
             A plotly figure.
