@@ -1,0 +1,4 @@
+The ``use_fractional_gates`` flag for ``QiskitRuntimeService.backend()`` and
+``QiskitRuntimeService.backends()`` can now be ``None``. When set to ``None``,
+no instruction filtering is done, and the returned backend target may contain
+both fractional gates and control flow operations. 
