@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence
+from typing import Any, Iterator, Sequence, Union
 from numpy.typing import NDArray
 import numpy as np
 
@@ -34,6 +34,7 @@ from qiskit.quantum_info import PauliList
 
 import plotly.graph_objects as go
 
+from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 
@@ -104,14 +105,23 @@ class PauliLindbladError:
         """
         return self.generators.num_qubits
 
-    def n_body(self, n: int) -> PauliLindbladError:
+    def restrict_num_bodies(self, num_qubits: int) -> PauliLindbladError:
         r"""
-        The :class:`~.PauliLindbladError` obtained by removing all the dissipators in this error
-        that do not act on exactly ``n`` qubits.
+        The :class:`~.PauliLindbladError` containing only those terms acting on exactly
+        ``num_qubits`` qubits.
+
+        Args:
+            num_qubits: The number of qubits that the returned error acts on.
+
+        Returns:
+            The error containing only those terms acting on exactly ``num_qubits`` qubits.
+
+        Raises:
+            ValueError: If ``num_qubits`` is smaller than ``0``.
         """
-        if n < 0:
-            raise ValueError("``n`` must be ``0`` or larger.")
-        mask = np.sum(self.generators.x | self.generators.z, axis=1) == n
+        if num_qubits < 0:
+            raise ValueError("``num_qubits`` must be ``0`` or larger.")
+        mask = np.sum(self.generators.x | self.generators.z, axis=1) == num_qubits
         return PauliLindbladError(self.generators[mask], self.rates[mask])
 
     def _json(self) -> dict:
@@ -200,31 +210,28 @@ class LayerError:
 
     def draw_map(
         self,
-        backend: BackendV2,
-        coordinates: Optional[list[list[int]]] = None,
-        *,
+        embedding: Union[Embedding, BackendV2],
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
-        edges_n_segs: int = 16,
-        edges_width: float = 4,
+        num_edge_segments: int = 16,
+        edge_width: float = 4,
         height: int = 500,
-        plot_bgcolor: str = "white",
+        background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
     ) -> go.Figure:
         r"""
-        Draws a map view of a this layer error.
+        Draw a map view of a this layer error.
 
         Args:
-            backend: The backend on top of which the layer error is drawn.
-            coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
-                qubit in the given backend on a 2D grid.
+            embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
+                to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
-            edges_n_segs: The number of equal-sized segments that edges are made of.
-            edges_width: The line width of the edges in pixels.
+            num_edge_segments: The number of equal-sized segments that edges are made of.
+            edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
-            plot_bgcolor: The background color.
+            background_color: The background color.
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
         """
@@ -233,16 +240,15 @@ class LayerError:
 
         return draw_layer_error_map(
             self,
-            backend,
-            coordinates,
-            colorscale=colorscale,
-            color_no_data=color_no_data,
-            edges_n_segs=edges_n_segs,
-            edges_width=edges_width,
-            height=height,
-            plot_bgcolor=plot_bgcolor,
-            radius=radius,
-            width=width,
+            embedding,
+            colorscale,
+            color_no_data,
+            num_edge_segments,
+            edge_width,
+            height,
+            background_color,
+            radius,
+            width,
         )
 
     def _json(self) -> dict:

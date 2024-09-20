@@ -13,45 +13,43 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
+from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
-from .utils import get_qubits_coordinates, get_rgb_color, pie_slice
+from .utils import get_rgb_color, pie_slice
 
 
 def draw_layer_error_map(
     layer_error: LayerError,
-    backend: BackendV2,
-    coordinates: Optional[list[list[int]]] = None,
-    *,
+    embedding: Union[Embedding, BackendV2],
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
-    edges_n_segs: int = 16,
-    edges_width: float = 4,
+    num_edge_segments: int = 16,
+    edge_width: float = 4,
     height: int = 500,
-    plot_bgcolor: str = "white",
+    background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
 ) -> go.Figure:
     r"""
-    Draws a map view of a :class:`~.LayerError`.
+    Draw a map view of a :class:`~.LayerError`.
 
     Args:
         layer_error: The :class:`~.LayerError` to draw.
-        backend: The backend on top of which the layer error is drawn.
-        coordinates: A list of coordinates in the form ``(row, column)`` that allow drawing each
-            qubit in the given backend on a 2D grid.
+        embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
+            to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
-        edges_n_segs: The number of equal-sized segments that edges are made of.
-        edges_width: The line width of the edges in pixels.
+        num_edge_segments: The number of equal-sized segments that edges are made of.
+        edge_width: The line width of the edges in pixels.
         height: The height of the returned figure.
-        plot_bgcolor: The background color.
+        background_color: The background color.
         radius: The radius of the pie charts representing the qubits.
         width: The width of the returned figure.
 
@@ -61,26 +59,25 @@ def draw_layer_error_map(
     """
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
-    if not coordinates:
-        coordinates = get_qubits_coordinates(backend.num_qubits)
-    if len(coordinates) != backend.num_qubits:
-        raise ValueError("Given coordinates are incompatible with the specified backend.")
+    if isinstance(embedding, BackendV2):
+        embedding = Embedding.from_backend(embedding)
+    coordinates = embedding.coordinates
+    coupling_map = embedding.coupling_map
+
     # The coordinates come in the format ``(row, column)`` and place qubit ``0`` in the bottom row.
     # We turn them into ``(x, y)`` coordinates for convenience, multiplying the ``ys`` by ``-1`` so
     # that the map matches the map displayed on the ibmq website.
     ys = [-row for row, _ in coordinates]
     xs = [col for _, col in coordinates]
 
-    if backend.coupling_map is None:
-        raise ValueError("Given backend has no coupling map.")
     # A set of unique edges ``(i, j)``, with ``i < j``.
-    edges = set(tuple(sorted(edge)) for edge in list(backend.coupling_map))
+    edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
 
     # The highest rate, used to normalize all other rates before choosing their colors.
     high_scale = 0
 
     # Initialize a dictionary of one-qubit errors
-    error_1q = layer_error.error.n_body(1)
+    error_1q = layer_error.error.restrict_num_bodies(1)
     rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in layer_error.qubits}
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit = np.where(pauli.x | pauli.z)[0][0]
@@ -88,7 +85,7 @@ def draw_layer_error_map(
         high_scale = max(high_scale, rate)
 
     # Initialize a dictionary of two-qubit errors
-    error_2q = layer_error.error.n_body(2)
+    error_2q = layer_error.error.restrict_num_bodies(2)
     rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {qubits: {} for qubits in edges}
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
         qubits = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
@@ -107,11 +104,12 @@ def draw_layer_error_map(
 
         if vals := rates_2q[(q1, q2)].values():
             # Add gradient. Gradients are currently not supported for go.Scatter lines, so we break
-            # the line into segments and draw `edges_n_segs` segments of increasing colors.
+            # the line into segments and draw `num_edge_segments` segments of increasing colors.
             min_val = min(vals)
             max_val = min(max(vals), 1)
             all_vals = [
-                min_val + (max_val - min_val) / edges_n_segs * i for i in range(edges_n_segs)
+                min_val + (max_val - min_val) / num_edge_segments * i
+                for i in range(num_edge_segments)
             ]
             color = [
                 get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
@@ -120,22 +118,22 @@ def draw_layer_error_map(
             for pauli, rate in rates_2q[(q1, q2)].items():
                 hoverinfo_2q += f"<br>{pauli}: {rate}"
 
-            for i in range(edges_n_segs):
+            for i in range(num_edge_segments):
                 # Add a trace for the edge
                 edge = go.Scatter(
                     x=[
-                        x0 + (x1 - x0) / edges_n_segs * i,
-                        x0 + (x1 - x0) / edges_n_segs * (i + 1),
+                        x0 + (x1 - x0) / num_edge_segments * i,
+                        x0 + (x1 - x0) / num_edge_segments * (i + 1),
                     ],
                     y=[
-                        y0 + (y1 - y0) / edges_n_segs * i,
-                        y0 + (y1 - y0) / edges_n_segs * (i + 1),
+                        y0 + (y1 - y0) / num_edge_segments * i,
+                        y0 + (y1 - y0) / num_edge_segments * (i + 1),
                     ],
                     hovertemplate=hoverinfo_2q,
                     mode="lines",
                     line={
                         "color": color[i],
-                        "width": edges_width,
+                        "width": edge_width,
                     },
                     showlegend=False,
                     name="",
@@ -150,7 +148,7 @@ def draw_layer_error_map(
                 mode="lines",
                 line={
                     "color": color_no_data,
-                    "width": edges_width,
+                    "width": edge_width,
                 },
                 showlegend=False,
                 name="",
@@ -238,6 +236,6 @@ def draw_layer_error_map(
 
     # Ensure that the circle is non-deformed
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
-    fig.update_layout(plot_bgcolor=plot_bgcolor)
+    fig.update_layout(plot_bgcolor=background_color)
 
     return fig

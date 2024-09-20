@@ -19,6 +19,7 @@ from typing import List
 import numpy as np
 
 
+<<<<<<< HEAD
 def get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
     r"""
     Return a list of coordinates for drawing a QPU map on a 2D grid.
@@ -423,6 +424,8 @@ def get_qubits_coordinates(num_qubits: int) -> List[List[int]]:
     )
 
 
+=======
+>>>>>>> main
 def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: float) -> str:
     r"""
     Return a path that can be used to draw a slice of a pie chart with plotly.
