@@ -32,8 +32,6 @@ from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
-import plotly.graph_objects as go
-
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
@@ -219,7 +217,7 @@ class LayerError:
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> "plotly.graph_objects.Figure":
         r"""
         Draw a map view of a this layer error.
 
@@ -236,6 +234,7 @@ class LayerError:
             width: The width of the returned figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
+
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(

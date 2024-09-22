@@ -16,8 +16,6 @@ from __future__ import annotations
 from typing import Dict, Tuple, Union
 
 import numpy as np
-import plotly.graph_objects as go
-from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
 from ..utils.embeddings import Embedding
@@ -36,7 +34,7 @@ def draw_layer_error_map(
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
-) -> go.Figure:
+) -> "plotly.graph_objects.Figure":
     r"""
     Draw a map view of a :class:`~.LayerError`.
 
@@ -57,6 +55,11 @@ def draw_layer_error_map(
         ValueError: If the given coordinates are incompatible with the specified backend.
         ValueError: If ``backend`` has no coupling map.
     """
+    # pylint: disable=import-outside-toplevel
+
+    import plotly.graph_objects as go
+    from plotly.colors import sample_colorscale
+
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
     if isinstance(embedding, BackendV2):
