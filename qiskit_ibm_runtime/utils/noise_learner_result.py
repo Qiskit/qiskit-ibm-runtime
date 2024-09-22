@@ -217,7 +217,7 @@ class LayerError:
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> "plotly.graph_objects.Figure":
+    ) -> "plotly.graph_objects.Figure":  # type: ignore
         r"""
         Draw a map view of a this layer error.
 

@@ -34,7 +34,7 @@ def draw_layer_error_map(
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
-) -> "plotly.graph_objects.Figure":
+) -> "plotly.graph_objects.Figure":  # type: ignore
     r"""
     Draw a map view of a :class:`~.LayerError`.
 
@@ -57,8 +57,11 @@ def draw_layer_error_map(
     """
     # pylint: disable=import-outside-toplevel
 
-    import plotly.graph_objects as go
-    from plotly.colors import sample_colorscale
+    try:
+        import plotly.graph_objects as go
+        from plotly.colors import sample_colorscale
+    except ModuleNotFoundError as msg:
+            raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
