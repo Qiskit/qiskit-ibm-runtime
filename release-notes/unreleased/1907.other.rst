@@ -1,9 +1,0 @@
-Deprecations from the ``0.24.0`` release have been removed. The following changes have beend made.
-
-    - The arguments backend and session for Sampler and Estimator have been removed and replaced with "mode"
-    - The primitive ``Session`` property has been replaced with ``mode``
-    - Specifying options without the full dictionary structure is no longer supported 
-    - ``Job.program_id()`` has been replaced with ``Job.primitive_id()``
-    - ``Service.run()`` and ``Session.run()`` have been replaced with a private method, ``_run()``
-    - In ``Service.backend()``, "name" is now a required parameter 
-    - ``Service.get_backend()`` has been removed and replaced with ``backend()``

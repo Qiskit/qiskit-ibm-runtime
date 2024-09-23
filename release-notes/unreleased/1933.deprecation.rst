@@ -1,2 +1,0 @@
-In a future release, ``RuntimeJob.status()`` will be returned as a string instead of 
-an instance of ``JobStatus``.
