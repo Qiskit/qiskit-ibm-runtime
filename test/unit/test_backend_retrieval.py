@@ -316,3 +316,14 @@ class TestGetBackend(IBMTestCase):
         self.assertIn("rx", backend_with_fg.target)
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
+
+    def test_get_backend_with_no_instr_filtering(self):
+        """Test getting backend with no instruction filtering."""
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+        )
+        test_backend = service.backends("fake_fractional", use_fractional_gates=None)[0]
+        for instr in ["rx", "rzx", "if_else", "while_loop"]:
+            self.assertIn(instr, test_backend.target)

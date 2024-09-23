@@ -24,13 +24,17 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, List, Sequence
+from typing import Any, Iterator, Sequence, Union
 from numpy.typing import NDArray
 import numpy as np
 
+from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
+import plotly.graph_objects as go
+
+from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 
@@ -101,6 +105,25 @@ class PauliLindbladError:
         """
         return self.generators.num_qubits
 
+    def restrict_num_bodies(self, num_qubits: int) -> PauliLindbladError:
+        r"""
+        The :class:`~.PauliLindbladError` containing only those terms acting on exactly
+        ``num_qubits`` qubits.
+
+        Args:
+            num_qubits: The number of qubits that the returned error acts on.
+
+        Returns:
+            The error containing only those terms acting on exactly ``num_qubits`` qubits.
+
+        Raises:
+            ValueError: If ``num_qubits`` is smaller than ``0``.
+        """
+        if num_qubits < 0:
+            raise ValueError("``num_qubits`` must be ``0`` or larger.")
+        mask = np.sum(self.generators.x | self.generators.z, axis=1) == num_qubits
+        return PauliLindbladError(self.generators[mask], self.rates[mask])
+
     def _json(self) -> dict:
         """Return a dictionary containing all the information to re-initialize this object."""
         return {"generators": self.generators, "rates": self.rates}
@@ -139,7 +162,7 @@ class LayerError:
         return self._circuit
 
     @property
-    def qubits(self) -> List[int]:
+    def qubits(self) -> list[int]:
         r"""
         The qubits in this :class:`.~LayerError`.
         """
@@ -185,6 +208,49 @@ class LayerError:
         """
         return len(self.qubits)
 
+    def draw_map(
+        self,
+        embedding: Union[Embedding, BackendV2],
+        colorscale: str = "Bluered",
+        color_no_data: str = "lightgray",
+        num_edge_segments: int = 16,
+        edge_width: float = 4,
+        height: int = 500,
+        background_color: str = "white",
+        radius: float = 0.25,
+        width: int = 800,
+    ) -> go.Figure:
+        r"""
+        Draw a map view of a this layer error.
+
+        Args:
+            embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
+                to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
+            colorscale: The colorscale used to show the rates of this layer error.
+            color_no_data: The color used for qubits and edges for which no data is available.
+            num_edge_segments: The number of equal-sized segments that edges are made of.
+            edge_width: The line width of the edges in pixels.
+            height: The height of the returned figure.
+            background_color: The background color.
+            radius: The radius of the pie charts representing the qubits.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from ..visualization import draw_layer_error_map
+
+        return draw_layer_error_map(
+            self,
+            embedding,
+            colorscale,
+            color_no_data,
+            num_edge_segments,
+            edge_width,
+            height,
+            background_color,
+            radius,
+            width,
+        )
+
     def _json(self) -> dict:
         """Return a dictionary containing all the information to re-initialize this object."""
         return {"circuit": self.circuit, "qubits": self.qubits, "error": self.error}
@@ -208,7 +274,7 @@ class NoiseLearnerResult:
         self._metadata = {} if metadata is None else metadata.copy()
 
     @property
-    def data(self) -> List[LayerError]:
+    def data(self) -> list[LayerError]:
         """The data of this noise learner result."""
         return self._data
 
