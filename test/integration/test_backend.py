@@ -236,7 +236,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.backend
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(mode=backend)
         isa_circuit = transpile(bell(), backend)
         inputs = sampler.run([isa_circuit], shots=1).inputs
         self.assertEqual(inputs["pubs"][0][2], 1)
@@ -250,7 +250,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend.status = mock.MagicMock(return_value=paused_status)
         isa_circuit = transpile(bell(), backend)
         with self.assertWarns(Warning):
-            sampler = Sampler(backend=backend)
+            sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
     def test_backend_wrong_instance(self):
@@ -287,7 +287,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
         with self.assertRaises(IBMInputValueError) as err:
-            sampler = Sampler(backend=self.backend)
+            sampler = Sampler(mode=self.backend)
             job = sampler.run([circuit])
             job.cancel()
         self.assertIn(

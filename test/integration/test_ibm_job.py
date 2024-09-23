@@ -37,7 +37,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         super().setUp()
         self.sim_backend = self.service.backend(self.dependencies.device)
         self.bell = bell()
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
 
         pass_mgr = generate_preset_pass_manager(backend=self.sim_backend, optimization_level=1)
         self.isa_circuit = pass_mgr.run(self.bell)
@@ -54,7 +54,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             quantum_circuit.cx(quantum_register[i], quantum_register[i + 1])
         quantum_circuit.measure(quantum_register, classical_register)
         num_jobs = 4
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         job_array = [
             sampler.run([transpile(quantum_circuit, backend=self.sim_backend)] * 20, shots=2048)
             for _ in range(num_jobs)
@@ -162,7 +162,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
         for job in backend_jobs:
             self.assertTrue(
-                job.status() in [JobStatus.DONE, JobStatus.CANCELLED, JobStatus.ERROR],
+                job.status() in ["DONE", "CANCELLED", "ERROR"],
                 "Job {} has status {} when it should be DONE, CANCELLED, or ERROR".format(
                     job.job_id(), job.status()
                 ),
@@ -233,7 +233,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         job = sampler.run([self.isa_circuit])
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
@@ -276,7 +276,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             raise SkipTest("Cloud account does not have real backend.")
         self.service._account.instance = None  # set instance to none to avoid filtering
         backend = most_busy_backend(TestIBMJob.service)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)

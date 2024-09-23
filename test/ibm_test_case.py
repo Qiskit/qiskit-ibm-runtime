@@ -260,7 +260,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            sampler = SamplerV2(backend=backend)
+            sampler = SamplerV2(mode=backend)
             if job_tags:
                 sampler.options.environment.job_tags = job_tags
             if circuits:

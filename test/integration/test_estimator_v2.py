@@ -51,7 +51,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta3 = [1, 2, 3, 4, 5, 6]
 
         with Session(service, self.dependencies.device) as session:
-            estimator = EstimatorV2(session=session)
+            estimator = EstimatorV2(mode=session)
             estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
 
             job = estimator.run([(psi1, H1, [theta1])])
@@ -73,7 +73,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(backend=self._backend)
+        estimator = EstimatorV2(mode=backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
@@ -111,7 +111,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(backend=self._backend)
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.resilience_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
