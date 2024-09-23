@@ -16,6 +16,7 @@ from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
 from concurrent import futures
 import logging
 import time
+import warnings
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
@@ -34,7 +35,7 @@ from .exceptions import (
 )
 from .utils.result_decoder import ResultDecoder
 from .utils.queueinfo import QueueInfo
-from .utils.deprecation import deprecate_function
+from .utils.deprecation import deprecate_function, issue_deprecation_msg
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -190,6 +191,15 @@ class RuntimeJob(Job, BaseRuntimeJob):
         Returns:
             Status of this job.
         """
+        warnings.warn(
+            (
+                "In a future release of qiskit-ibm-runtime no sooner than 3 months "
+                "after the release date of 0.30.0, RuntimeJob.status() will be returned as a string "
+                "instead of an instance of `JobStatus`."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._set_status_and_error_message()
         return self._status
 

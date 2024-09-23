@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Sequence, Union
+from typing import Any, Iterator, Sequence, Union, TYPE_CHECKING
 from numpy.typing import NDArray
 import numpy as np
 
@@ -32,10 +32,11 @@ from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
-import plotly.graph_objects as go
-
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 class PauliLindbladError:
@@ -236,6 +237,7 @@ class LayerError:
             width: The width of the returned figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
+
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(

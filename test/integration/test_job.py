@@ -144,7 +144,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_program_id(self, service):
         """Test job program ID."""
         job = self._run_program(service)
-        self.assertEqual(self.program_ids[service.channel], job.program_id)
+        self.assertEqual(self.program_ids[service.channel], job.primitive_id)
 
     @run_integration_test
     def test_wait_for_final_state(self, service):
