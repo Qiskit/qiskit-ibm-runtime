@@ -116,7 +116,7 @@ class QiskitRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             private_endpoint: Connect to private API URL.
             url_resolver: Function used to resolve the runtime url.
 
@@ -127,6 +127,20 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024. "
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._account = self._discover_account(
             token=token,
@@ -474,7 +488,7 @@ class QiskitRuntimeService:
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -503,6 +517,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -698,11 +714,25 @@ class QiskitRuntimeService:
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
         """
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024."
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         AccountManager.save(
             token=token,
@@ -753,7 +783,7 @@ class QiskitRuntimeService:
         self,
         name: str = None,
         instance: Optional[str] = None,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -772,6 +802,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
         Returns:
             Backend: A backend matching the filtering.
