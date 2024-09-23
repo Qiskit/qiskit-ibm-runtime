@@ -36,7 +36,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         super().setUp()
         self.sim_backend = self.service.backend("ibmq_qasm_simulator")
         self.bell = bell()
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         self.sim_job = sampler.run([self.bell])
         self.last_month = datetime.now() - timedelta(days=30)
 
@@ -50,7 +50,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             quantum_circuit.cx(quantum_register[i], quantum_register[i + 1])
         quantum_circuit.measure(quantum_register, classical_register)
         num_jobs = 4
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         job_array = [
             sampler.run(transpile([quantum_circuit] * 20), shots=2048) for _ in range(num_jobs)
         ]
@@ -229,7 +229,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         job = sampler.run([self.bell])
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
@@ -272,7 +272,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             raise SkipTest("Cloud account does not have real backend.")
         self.service._account.instance = None  # set instance to none to avoid filtering
         backend = most_busy_backend(TestIBMJob.service)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)

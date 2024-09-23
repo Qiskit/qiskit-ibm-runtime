@@ -188,7 +188,7 @@ class NoiseLearner:
 
         # Batch or Session
         if self._mode:
-            return self._mode.run(
+            return self._mode._run(
                 program_id=self._program_id(),
                 inputs=inputs,
                 options=runtime_options,
@@ -202,7 +202,7 @@ class NoiseLearner:
                 runtime_options["instance"] = self._backend._instance
 
         if isinstance(self._service, QiskitRuntimeService):
-            return self._service.run(
+            return self._service._run(
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
@@ -210,7 +210,7 @@ class NoiseLearner:
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
-        return self._service.run(  # type: ignore[attr-defined]
+        return self._service._run(  # type: ignore[attr-defined]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=inputs,
