@@ -180,7 +180,7 @@ class LayerError:
     @property
     def error(self) -> Union[PauliLindbladError, None]:
         r"""
-        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is unknown.
+        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either unknown or explicitly disabled.
         """
         return self._error
 
