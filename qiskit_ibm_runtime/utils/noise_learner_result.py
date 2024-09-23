@@ -178,9 +178,9 @@ class LayerError:
         return self._qubits
 
     @property
-    def error(self) -> PauliLindbladError:
+    def error(self) -> Union[PauliLindbladError,None]:
         r"""
-        The error channel in this :class:`.~LayerError`.
+        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is unknown.
         """
         return self._error
 
