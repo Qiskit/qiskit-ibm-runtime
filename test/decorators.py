@@ -119,7 +119,6 @@ def integration_test_setup(
 
             channel, token, url, instance, device, channel_strategy = _get_integration_test_config()
             if not all([channel, token, url]):
-                print(f"Channel: {channel}, Token: {token}, url: {url}")
                 raise Exception("Configuration Issue")  # pylint: disable=broad-exception-raised
 
             if channel not in _supported_channel:
