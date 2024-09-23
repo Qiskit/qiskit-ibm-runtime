@@ -1,1 +1,0 @@
-Fix a bug that we cannot run primitives in the session context with fractional gates.
