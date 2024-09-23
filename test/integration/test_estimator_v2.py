@@ -73,7 +73,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(mode=backend)
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1

@@ -112,7 +112,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_sample_run_multiple_circuits(self):
         """Test Sampler.run() with multiple circuits."""
         _, _, target = self._cases[1]
-        sampler = Sampler(backend=self._backend, options=self._options)
+        sampler = Sampler(mode=self._backend, options=self._options)
         result = sampler.run([self._isa_bell, self._isa_bell, self._isa_bell]).result()
         self._verify_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
@@ -295,7 +295,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("run arg"):
-                sampler = Sampler(session=session)
+                sampler = Sampler(mode=session)
                 result = sampler.run(pubs=[self._isa_bell], shots=shots).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
