@@ -147,7 +147,7 @@ pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
 isa_circuit = pm.run(bell)
 
 # 3. Execute using the Sampler primitive
-sampler = Sampler(backend=backend)
+sampler = Sampler(mode=backend)
 sampler.options.default_shots = 1024  # Options can be set using auto-complete.
 job = sampler.run([isa_circuit])
 print(f"Job ID is {job.job_id()}")
@@ -296,8 +296,8 @@ backend1 = service.backend("ibmq_manila")
 # Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
 backend2 = service.backend("ibmq_manila", instance="hub2/group2/project2")
 
-sampler1 = Sampler(backend=backend1)    # this will use hub1/group1/project1
-sampler2 = Sampler(backend=backend2)    # this will use hub2/group2/project2
+sampler1 = Sampler(mode=backend1)    # this will use hub1/group1/project1
+sampler2 = Sampler(mode=backend2)    # this will use hub2/group2/project2
 ```
 
 If you do not specify an instance, then the code will select one in the following order:

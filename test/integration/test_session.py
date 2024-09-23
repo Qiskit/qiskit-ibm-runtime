@@ -45,11 +45,11 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(service, backend=backend) as session:
-            estimator = EstimatorV2(session=session)
+            estimator = EstimatorV2(mode=session)
             result = estimator.run([(psi1, H1, [theta1])]).result()
             self.assertIsInstance(result, PrimitiveResult)
 
-            sampler = SamplerV2(session=session)
+            sampler = SamplerV2(mode=session)
             result = sampler.run([pm.run(bell())]).result()
             self.assertIsInstance(result, PrimitiveResult)
 
@@ -69,7 +69,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend("ibmq_qasm_simulator", instance=instance)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         with Session(service, backend=backend) as session:
-            sampler = SamplerV2(session=session)
+            sampler = SamplerV2(mode=session)
             job = sampler.run([pm.run(bell())])
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
@@ -84,7 +84,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
         with Session(service, backend=backend) as session:
-            sampler = SamplerV2(session=session)
+            sampler = SamplerV2(mode=session)
             sampler.run(isa_circuit)
 
         new_session = Session.from_id(session_id=session._session_id, service=service)
