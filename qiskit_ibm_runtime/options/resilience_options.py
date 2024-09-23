@@ -100,7 +100,7 @@ class ResilienceOptionsV2:
         # Validate not ZNE+PEC
         if self.pec_mitigation is True and self.zne_mitigation is True:
             raise ValueError(
-                "'pec_mitigation' and 'zne_mitigation' options cannot be "
+                "pec_mitigation and zne_mitigation options cannot be "
                 "simultaneously enabled. Set one of them to False."
             )
 
