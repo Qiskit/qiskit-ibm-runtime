@@ -13,16 +13,17 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
-import plotly.graph_objects as go
-from plotly.colors import sample_colorscale
 from qiskit.providers.backend import BackendV2
 
 from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
 from .utils import get_rgb_color, pie_slice
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 def draw_layer_error_map(
@@ -56,7 +57,16 @@ def draw_layer_error_map(
     Raises:
         ValueError: If the given coordinates are incompatible with the specified backend.
         ValueError: If ``backend`` has no coupling map.
+        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
+    # pylint: disable=import-outside-toplevel
+
+    try:
+        import plotly.graph_objects as go
+        from plotly.colors import sample_colorscale
+    except ModuleNotFoundError as msg:
+        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
     if isinstance(embedding, BackendV2):
