@@ -95,7 +95,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         found = False
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
-                self.assertEqual(job.program_id, rjob.primitive_id)
+                self.assertEqual(job.primitive_id, rjob.primitive_id)
                 self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
