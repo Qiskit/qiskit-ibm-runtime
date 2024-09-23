@@ -116,7 +116,8 @@ class TestLayerError(IBMTestCase):
         # A set of errors
         error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
-        self.errors = [error1, error2]
+        error3 = None
+        self.errors = [error1, error2, error3]
 
         # Another set of errors used in the visualization tests
         circuit = QuantumCircuit(4)
