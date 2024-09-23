@@ -103,7 +103,7 @@ class ResilienceOptionsV2:
                 "'pec_mitigation' and 'zne_mitigation' options cannot be "
                 "simultaneously enabled. Set one of them to False."
             )
-        
+
         if self.layer_noise_model and None in [lnm.error for lnm in self.layer_noise_model]:
             raise ValueError(
                 "'layer_noise_model' cannot contain 'LayerError' objects with ``error`` set to ``None``."
