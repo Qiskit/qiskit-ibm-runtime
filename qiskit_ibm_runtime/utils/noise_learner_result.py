@@ -140,7 +140,7 @@ class LayerError:
         circuit: A circuit whose noise has been learnt.
         qubits: The labels of the qubits in the ``circuit``.
         error: The Pauli Lindblad error channel affecting the ``circuit``, or ``None`` if the error
-            channel is unknown.
+            channel is either unknown or explicitly disabled.
 
     Raises:
         ValueError: If ``circuit``, ``qubits``, and ``error`` have mismatching number of qubits.
@@ -180,7 +180,8 @@ class LayerError:
     @property
     def error(self) -> Union[PauliLindbladError, None]:
         r"""
-        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either unknown or explicitly disabled.
+        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
+        unknown or explicitly disabled.
         """
         return self._error
 
