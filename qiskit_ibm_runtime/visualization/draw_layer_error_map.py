@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
@@ -21,6 +21,9 @@ from qiskit.providers.backend import BackendV2
 from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
 from .utils import get_rgb_color, pie_slice
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 def draw_layer_error_map(
@@ -34,7 +37,7 @@ def draw_layer_error_map(
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
-) -> "plotly.graph_objects.Figure":  # type: ignore
+) -> go.Figure:
     r"""
     Draw a map view of a :class:`~.LayerError`.
 

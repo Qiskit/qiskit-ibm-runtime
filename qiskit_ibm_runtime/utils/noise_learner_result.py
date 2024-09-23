@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Sequence, Union
+from typing import Any, Iterator, Sequence, Union, TYPE_CHECKING
 from numpy.typing import NDArray
 import numpy as np
 
@@ -34,6 +34,9 @@ from qiskit.quantum_info import PauliList
 
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 class PauliLindbladError:
@@ -217,7 +220,7 @@ class LayerError:
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> "plotly.graph_objects.Figure":  # type: ignore
+    ) -> go.Figure:
         r"""
         Draw a map view of a this layer error.
 
