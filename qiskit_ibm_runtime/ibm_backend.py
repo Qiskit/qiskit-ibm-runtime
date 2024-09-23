@@ -258,14 +258,21 @@ class IBMBackend(Backend):
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
+            if self.options.use_fractional_gates is None:
+                include_control_flow = True
+                include_fractional_gates = True
+            else:
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
+                include_control_flow = not self.options.use_fractional_gates
+                include_fractional_gates = self.options.use_fractional_gates
+
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
-                # In IBM backend architecture as of today
-                # these features can be only exclusively supported.
-                include_control_flow=not self.options.use_fractional_gates,
-                include_fractional_gates=self.options.use_fractional_gates,
+                include_control_flow=include_control_flow,
+                include_fractional_gates=include_fractional_gates,
             )
 
     @classmethod

@@ -26,7 +26,6 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
-from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -116,7 +115,7 @@ class QiskitRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             private_endpoint: Connect to private API URL.
             url_resolver: Function used to resolve the runtime url.
 
@@ -127,6 +126,20 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024. "
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._account = self._discover_account(
             token=token,
@@ -474,7 +487,7 @@ class QiskitRuntimeService:
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -503,6 +516,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -698,11 +713,25 @@ class QiskitRuntimeService:
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
-            channel_strategy: Error mitigation strategy.
+            channel_strategy: (DEPRECATED) Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
         """
+
+        if channel_strategy:
+            warnings.warn(
+                (
+                    "As of qiskit-ibm-runtime version 0.30.0, the channel_strategy parameter is "
+                    "deprecated. Q-CTRL Performance Management strategy currently offered "
+                    "on the Qiskit Runtime Service will be removed on 18 October, 2024."
+                    "To continue using Q-CTRL in your workflow, use one of the following options: "
+                    "Qiskit Functions Catalog: https://quantum.ibm.com/functions, or "
+                    "Fire Opal: https://q-ctrl.com/fire-opal"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         AccountManager.save(
             token=token,
@@ -751,9 +780,9 @@ class QiskitRuntimeService:
 
     def backend(
         self,
-        name: str = None,
+        name: str,
         instance: Optional[str] = None,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -772,6 +801,8 @@ class QiskitRuntimeService:
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backend targets.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -779,33 +810,18 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        # pylint: disable=arguments-differ, line-too-long
-        if not name:
-            warnings.warn(
-                (
-                    "The `name` parameter will be required in a future release no sooner than "
-                    "3 months after the release of qiskit-ibm-runtime 0.24.0 ."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
+                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
-    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
-    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
-        """Return a single backend matching the specified filtering."""
-        return self.backend(name, **kwargs)
-
-    def run(
+    def _run(
         self,
         program_id: str,
         inputs: Dict,
@@ -844,13 +860,7 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        issue_deprecation_msg(
-            msg="service.run is deprecated",
-            version="0.24.0",
-            remedy="service.run will instead be converted into a private method "
-            "since it should not be called directly.",
-            period="3 months",
-        )
+
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -928,10 +938,6 @@ class QiskitRuntimeService:
             service=self,
             version=version,
         )
-
-    def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
-        """Private run method"""
-        return self.run(*args, **kwargs)
 
     def check_pending_jobs(self) -> None:
         """Check the number of pending jobs and wait for the oldest pending job if

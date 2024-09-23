@@ -12,12 +12,24 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
+from unittest import skipIf
+from ddt import ddt, data
+
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
+from qiskit_aer import AerSimulator
 
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 
 from ..ibm_test_case import IBMTestCase
+
+try:
+    import plotly.graph_objects as go
+
+    PLOTLY_INSTALLED = True
+except ImportError:
+    PLOTLY_INSTALLED = False
 
 
 class TestPauliLindbladError(IBMTestCase):
@@ -57,12 +69,34 @@ class TestPauliLindbladError(IBMTestCase):
             self.assertEqual(error1.generators, error2.generators)
             self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
+    def test_restrict_num_bodies(self):
+        """Tests the ``restrict_num_bodies`` method."""
+        generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+        rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+        error = PauliLindbladError(generators, rates)
 
+        generators1 = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII"])
+        rates1 = [0.01, 0.01, 0.01, 0.005, 0.02]
+        error1 = PauliLindbladError(generators1, rates1)
+        self.assertEqual(error.restrict_num_bodies(1).generators, error1.generators)
+        self.assertEqual(error.restrict_num_bodies(1).rates.tolist(), error1.rates.tolist())
+
+        generators2 = PauliList(["XXII", "ZZII"])
+        rates2 = [0.01, 0.01]
+        error2 = PauliLindbladError(generators2, rates2)
+        self.assertEqual(error.restrict_num_bodies(2).generators, error2.generators)
+        self.assertEqual(error.restrict_num_bodies(2).rates.tolist(), error2.rates.tolist())
+
+
+@ddt
 class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
     def setUp(self):
         super().setUp()
+
+        # A local service
+        self.service = QiskitRuntimeLocalService()
 
         # A set of circuits
         c1 = QuantumCircuit(2)
@@ -83,6 +117,13 @@ class TestLayerError(IBMTestCase):
         error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
         self.errors = [error1, error2]
+
+        # Another set of errors used in the visualization tests
+        circuit = QuantumCircuit(4)
+        qubits = [0, 1, 2, 3]
+        generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+        rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+        self.layer_error_viz = LayerError(circuit, qubits, PauliLindbladError(generators, rates))
 
     def test_valid_inputs(self):
         """Test LayerError with valid inputs."""
@@ -115,3 +156,31 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.qubits, layer_error2.qubits)
             self.assertEqual(layer_error1.generators, layer_error2.generators)
             self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
+
+    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    def test_no_coupling_map(self):
+        r"""
+        Tests the `draw_map` function with invalid coordinates.
+        """
+        with self.assertRaises(ValueError):
+            self.layer_error_viz.draw_map(AerSimulator())
+
+    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    @data(["fake_hanoi", 44], ["fake_kyiv", 160])
+    def test_plotting(self, inputs):
+        r"""
+        Tests the `draw_map` function to make sure that it produces the right figure.
+        """
+        backend_name, n_traces = inputs
+        backend = self.service.backend(backend_name)
+        fig = self.layer_error_viz.draw_map(
+            backend,
+            color_no_data="blue",
+            colorscale="reds",
+            radius=0.2,
+            width=500,
+            height=200,
+        )
+
+        self.assertIsInstance(fig, go.Figure)
+        self.assertEqual(len(fig.data), n_traces)

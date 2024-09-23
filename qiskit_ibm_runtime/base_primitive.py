@@ -19,19 +19,17 @@ import logging
 from dataclasses import asdict, replace
 import warnings
 
-from pydantic import ValidationError
-
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from .options.options import BaseOptions, OptionsV2
-from .options.utils import merge_options, merge_options_v2
+from .options.utils import merge_options_v2
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg, deprecate_function
+from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -109,7 +107,17 @@ def _get_mode_service_backend(
     elif get_cm_session():
         mode = get_cm_session()
         service = mode.service  # type: ignore
-        backend = service.backend(name=mode.backend(), instance=mode._instance)  # type: ignore
+        try:
+            backend = service.backend(
+                name=mode.backend(),  # type: ignore
+                instance=mode._instance,  # type: ignore
+                use_fractional_gates=mode._backend.options.use_fractional_gates,  # type: ignore
+            )
+        except (AttributeError, TypeError):
+            backend = service.backend(
+                name=mode.backend(),  # type: ignore
+                instance=mode._instance,  # type: ignore
+            )
         return mode, service, backend  # type: ignore
     else:
         raise ValueError("A backend or session must be specified.")
@@ -184,7 +192,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         # Batch or Session
         if self._mode:
-            return self._mode.run(
+            return self._mode._run(
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
@@ -198,7 +206,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 runtime_options["instance"] = self._backend._instance
 
         if isinstance(self._service, QiskitRuntimeService):
-            return self._service.run(
+            return self._service._run(
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
@@ -211,16 +219,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             options=runtime_options,
             inputs=primitive_inputs,
         )
-
-    @property
-    def session(self) -> Optional[Session]:
-        """Return session used by this primitive.
-
-        Returns:
-            Session used by this primitive, or ``None`` if session is not used.
-        """
-        deprecate_function("session", "0.24.0", "Please use the 'mode' property instead.")
-        return self._mode
 
     @property
     def mode(self) -> Optional[Session | Batch]:
@@ -242,17 +240,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            try:
-                self._options = self._options_class(**merge_options_v2(default_options, options))
-            except ValidationError:
-                self._options = self._options_class(**merge_options(default_options, options))
-                issue_deprecation_msg(
-                    "Specifying options without the full dictionary structure is deprecated",
-                    "0.24.0",
-                    "Instead, pass in a fully structured dictionary. For example, use "
-                    "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
-                    4,
-                )
+            self._options = self._options_class(**merge_options_v2(default_options, options))
 
         elif isinstance(options, self._options_class):
             self._options = replace(options)

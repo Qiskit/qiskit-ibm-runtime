@@ -1,0 +1,3 @@
+Added new methods ``Session.usage()``, ``Batch.usage()``, and ``Job.usage()`` that
+all return information regarding job and session usage.
+Please find more information here https://docs.quantum.ibm.com/guides/execution-modes#sessions-versus-batch-usage.

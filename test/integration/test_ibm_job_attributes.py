@@ -51,7 +51,7 @@ class TestIBMJobAttributes(IBMTestCase):
         cls.service = dependencies.service
         cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
         cls.bell = transpile(bell(), cls.sim_backend)
-        sampler = Sampler(backend=cls.sim_backend)
+        sampler = Sampler(mode=cls.sim_backend)
         cls.sim_job = sampler.run([cls.bell])
         cls.last_week = datetime.now() - timedelta(days=7)
 
@@ -78,7 +78,7 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test retrieving creation date, while ensuring it is in local time."""
         # datetime, before running the job, in local time.
         start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         job = sampler.run([self.bell])
         job.result()
         # datetime, after the job is done running, in local time.
@@ -100,7 +100,7 @@ class TestIBMJobAttributes(IBMTestCase):
             uuid.uuid4().hex[0:16],
             uuid.uuid4().hex[0:16],
         ]
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         sampler.options.environment.job_tags = job_tags
         job = sampler.run([self.bell])
 
@@ -125,7 +125,7 @@ class TestIBMJobAttributes(IBMTestCase):
     def test_job_tags_replace(self):
         """Test updating job tags by replacing a job's existing tags."""
         initial_job_tags = [uuid.uuid4().hex[:16]]
-        sampler = Sampler(backend=self.sim_backend)
+        sampler = Sampler(mode=self.sim_backend)
         sampler.options.environment.job_tags = initial_job_tags
         job = sampler.run([self.bell])
 
@@ -147,7 +147,7 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test using job tags with an and operator."""
 
         with self.assertRaises(ValidationError):
-            sampler = Sampler(backend=self.sim_backend)
+            sampler = Sampler(mode=self.sim_backend)
             sampler.options.environment.job_tags = "foo"
 
         self.assertRaises(
@@ -163,6 +163,8 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_private_option(self):
         """Test private option."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud channel does not support private jobs")
         try:
             backend = self.service.backend("test_eagle")
         except:
