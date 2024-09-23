@@ -152,16 +152,16 @@ class LayerError:
         qubits: Sequence[int],
         error: Optional[PauliLindbladError] = None,
     ) -> None:
+
         self._circuit = circuit
         self._qubits = list(qubits)
         self._error = error
 
-        set_num_qubits = {self.circuit.num_qubits, len(self.qubits)}
-        if self.error is not None:
-            set_num_qubits.add(self.error.num_qubits)
-
-        if len(set_num_qubits) != 1:
-            raise ValueError("Mistmatching numbers of qubits.")
+        err = ValueError("Mistmatching numbers of qubits.")
+        if len(self.qubits) != self.circuit.num_qubits:
+            raise err
+        if self.error is not None and len(self.qubits) != self.error.num_qubits:
+            raise err
 
     @property
     def circuit(self) -> QuantumCircuit:
