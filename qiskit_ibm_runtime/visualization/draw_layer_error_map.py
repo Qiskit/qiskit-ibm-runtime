@@ -54,7 +54,7 @@ def draw_layer_error_map(
     Raises:
         ValueError: If the given coordinates are incompatible with the specified backend.
         ValueError: If ``backend`` has no coupling map.
-        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported. 
+        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
     # pylint: disable=import-outside-toplevel
 
