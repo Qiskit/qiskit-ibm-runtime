@@ -122,7 +122,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             backend_name=self.sim_backend.name, limit=3, pending=False
         )
         for job in completed_job_list:
-            self.assertTrue(job.status() in [JobStatus.DONE, JobStatus.CANCELLED, JobStatus.ERROR])
+            self.assertTrue(job.status() in ["DONE", "CANCELLED", "ERROR"])
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
