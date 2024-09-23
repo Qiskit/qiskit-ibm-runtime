@@ -104,11 +104,4 @@ class ResilienceOptionsV2:
                 "simultaneously enabled. Set one of them to False."
             )
 
-        if not isinstance(self.layer_noise_model, UnsetType) and None in [
-            lnm.error for lnm in self.layer_noise_model  # pylint: disable=not-an-iterable
-        ]:
-            raise ValueError(
-                "'layer_noise_model' cannot contain 'LayerError' objects with ``error`` set to ``None``."
-            )
-
         return self
