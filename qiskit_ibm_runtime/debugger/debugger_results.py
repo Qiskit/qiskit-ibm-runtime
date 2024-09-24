@@ -13,13 +13,20 @@
 """ A class to store debugger results.
 """
 
-from typing import Callable, Union
-from numpy.typing import NDArray
+from __future__ import annotations
+
+from typing import Union
+from numpy.typing import ArrayLike
+import numpy as np
 
 from qiskit.primitives.containers import PubResult, DataBin
 
 # Type alias
 DebuggerResultLike = Union["DebuggerResult", PubResult, DataBin]
+ScalarLike = Union[int, float]
+
+
+SUPPORTED_OPERATIONS = ["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"]
 
 
 class DebuggerResult:
@@ -32,64 +39,73 @@ class DebuggerResult:
         vals: The values in this :class:`.~DebuggerResult`.
     """
 
-    def __init__(self, vals: NDArray) -> None:
-        self._vals = vals
+    def __init__(self, vals: ArrayLike) -> None:
+        self._vals = np.array(vals, dtype=float)
 
     @property
-    def vals(self) -> NDArray:
+    def vals(self) -> np.ndarray:
         r"""The values in this :class:`.~DebuggerResult`."""
         return self._vals
 
-    def __add__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return DebuggerResult(self.vals + other.vals)
-
-    def __mul__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return DebuggerResult(self.vals * other.vals)
-
-    def __pow__(self, p: float) -> "DebuggerResult":
+    def __pow__(self, p: ScalarLike) -> DebuggerResult:
         return DebuggerResult(self._vals**p)
 
-    def __sub__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return DebuggerResult(self.vals - other.vals)
+    # def __add__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__add__")
 
-    def __truediv__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return DebuggerResult(self.vals / other.vals)
+    # def __mul__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__mul__")
 
-    def __radd__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return other + self
+    # def __sub__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__sub__")
 
-    def __rmul__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return other * self
+    # def __truediv__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__truediv__")
 
-    def __rsub__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return other - self
+    # def __radd__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__radd__")
 
-    def __rtruediv__(self, other: DebuggerResultLike) -> "DebuggerResult":
-        other = _coerce_result(other)
-        return other / self
+    # def __rmul__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__rmul__")
+
+    # def __rsub__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__rsub__")
+
+    # def __rtruediv__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
+    #     return self._coerced_operation(other, "__rtruediv__")
 
     def __repr__(self) -> str:
         return f"DebuggerResult(vals={repr(self.vals)})"
 
 
-def _coerce_result(result: DebuggerResultLike) -> DebuggerResult:
-    r"""
-    A helper method to coerce turn a ``DebuggerResultLike`` object into a ``DebuggerResult`` one.
-    """
-    if isinstance(result, PubResult):
-        result = DebuggerResult(result.data.evs)
-    elif isinstance(result, DataBin):
-        result = DebuggerResult(result.evs)
+# Initialize
+for op_name in SUPPORTED_OPERATIONS:
 
-    if isinstance(result, DebuggerResult):
-        return result
-    raise ValueError(
-        f"Object of type '{result.__class__}' cannot be coerced into a ``DebuggerResult`` object."
+    def _coerced_operation(
+        this: DebuggerResult, other: Union[ScalarLike, DebuggerResult], op_name: str = op_name
+    ) -> DebuggerResult:
+        r"""Coerces ``other`` to a compatible format and applies ``__op_name__`` to ``self`` and ``other``."""
+        if not isinstance(other, ScalarLike):
+            if isinstance(other, DebuggerResult):
+                other = other.vals
+            elif isinstance(other, PubResult):
+                other = other.data.evs
+            elif isinstance(other, DataBin):
+                try:
+                    other = other.evs
+                except AttributeError:
+                    raise ValueError(
+                        f"Cannot apply operator {'__{op_name}__'} between 'DebuggerResult' and"
+                        "'DataBin' that has no attribute ``evs``."
+                    )
+            else:
+                raise ValueError(
+                    f"Cannot apply operator {'__{op_name}__'} to objects of type 'DebuggerResult' and '{other.__class__}'."
+                )
+        return DebuggerResult(getattr(this.vals, f"__{op_name}__")(other))
+
+    setattr(
+        DebuggerResult,
+        f"__{op_name}__",
+        _coerced_operation,
     )
