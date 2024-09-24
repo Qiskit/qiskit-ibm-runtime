@@ -13,4 +13,3 @@
 """Mock yorktown backend"""
 
 from .fake_yorktown import FakeYorktownV2
-from .fake_yorktown import FakeYorktown

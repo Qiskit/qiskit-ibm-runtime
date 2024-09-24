@@ -27,7 +27,7 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.options.utils import Unset
 
@@ -484,7 +484,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):
         """Test faulty qubits is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits):
@@ -513,7 +513,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits_many(self, primitive):
         """Test faulty qubits is raised if one circuit uses it."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
 
         circ1 = QuantumCircuit(1, 1)
@@ -545,7 +545,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_edge(self, primitive):
         """Test faulty edge is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
@@ -574,7 +574,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_faulty_qubit_not_used(self, primitive):
         """Test faulty qubit is not raise if not used."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
         for i in range(2):
             circ.x(i)
@@ -602,7 +602,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_faulty_edge_not_used(self, primitive):
         """Test faulty edge is not raised if not used."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
 
         circ = QuantumCircuit(2, 2)

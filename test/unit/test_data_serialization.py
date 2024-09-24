@@ -46,7 +46,7 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     LayerError,
     NoiseLearnerResult,
 )
-from qiskit_ibm_runtime.fake_provider import FakeNairobi
+from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
 from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -138,7 +138,7 @@ class TestDataSerialization(IBMTestCase):
 
     def test_coder_noise_model(self):
         """Test encoding and decoding a noise model."""
-        noise_model = NoiseModel.from_backend(FakeNairobi())
+        noise_model = NoiseModel.from_backend(FakeNairobiV2())
         self.assertIsInstance(noise_model, NoiseModel)
         encoded = json.dumps(noise_model, cls=RuntimeEncoder)
         self.assertIsInstance(encoded, str)

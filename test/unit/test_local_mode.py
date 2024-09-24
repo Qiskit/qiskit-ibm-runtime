@@ -24,7 +24,7 @@ from qiskit.primitives import (
 )
 from qiskit.primitives.containers.data_bin import DataBin
 
-from qiskit_ibm_runtime.fake_provider import FakeManila, FakeManilaV2
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import (
     Session,
     Batch,
@@ -43,7 +43,7 @@ from ..utils import (
 class TestLocalModeV2(IBMTestCase):
     """Class for testing local mode for V2 primitives."""
 
-    @combine(backend=[FakeManila(), FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
+    @combine(backend=[FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_sampler(self, backend, num_sets):
         """Test V2 Sampler on a local backend."""
         inst = SamplerV2(mode=backend)
@@ -56,7 +56,7 @@ class TestLocalModeV2(IBMTestCase):
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
 
-    @combine(backend=[FakeManila(), FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
+    @combine(backend=[FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_estimator(self, backend, num_sets):
         """Test V2 Estimator on a local backend."""
         inst = EstimatorV2(mode=backend)
@@ -69,7 +69,7 @@ class TestLocalModeV2(IBMTestCase):
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
+    @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_sampler_with_accepted_options(self, backend):
         """Test V2 sampler with accepted options."""
         options = {"default_shots": 10, "simulator": {"seed_simulator": 42}}
@@ -79,7 +79,7 @@ class TestLocalModeV2(IBMTestCase):
         self.assertEqual(pub_result.data.meas.num_shots, 10)
         self.assertDictEqual(pub_result.data.meas.get_counts(), {"00011": 3, "00000": 7})
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
+    @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_estimator_with_accepted_options(self, backend):
         """Test V2 estimator with accepted options."""
         options = {"default_precision": 0.03125, "simulator": {"seed_simulator": 42}}
@@ -89,7 +89,7 @@ class TestLocalModeV2(IBMTestCase):
         self.assertIn(("target_precision", 0.03125), pub_result.metadata.items())
         self.assertEqual(pub_result.data.evs[0], 0.056640625)
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
+    @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_estimator_with_default_shots_option(self, backend):
         """Test V2 estimator with default shots converted to precision."""
         options = {"default_shots": 100}
@@ -98,9 +98,7 @@ class TestLocalModeV2(IBMTestCase):
         pub_result = job.result()[0]
         self.assertIn(("target_precision", 0.1), pub_result.metadata.items())
 
-    @combine(
-        primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
-    )
+    @combine(primitive=[SamplerV2, EstimatorV2], backend=[FakeManilaV2(), AerSimulator()])
     def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
         """Test V2 primitive with not accepted options."""
         options = {
@@ -115,7 +113,7 @@ class TestLocalModeV2(IBMTestCase):
             warning_messages = "".join([str(warn.message) for warn in warns])
             self.assertIn("dynamical_decoupling", warning_messages)
 
-    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session(self, session_cls, backend):
         """Testing running v2 sampler inside session."""
         with session_cls(backend=backend) as session:
@@ -129,7 +127,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
 
-    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session_no_params(self, session_cls, backend):
         """Testing running v2 sampler inside session."""
         with session_cls(backend=backend):
@@ -143,7 +141,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
 
-    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_estimator_v2_session(self, session_cls, backend):
         """Testing running v2 estimator inside session."""
         with session_cls(backend=backend) as session:
@@ -157,7 +155,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator())
+    @data(FakeManilaV2(), AerSimulator())
     def test_non_primitive(self, backend):
         """Test calling non-primitive in local mode."""
         session = Session(backend=backend)
