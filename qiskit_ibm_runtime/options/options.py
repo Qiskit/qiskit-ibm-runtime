@@ -18,14 +18,13 @@ from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
 
 from qiskit.transpiler import CouplingMap
-from pydantic import Field, ValidationError
+from pydantic import Field
 
 from .utils import (
     Dict,
     UnsetType,
     Unset,
     remove_dict_unset_values,
-    merge_options,
     merge_options_v2,
     primitive_dataclass,
     remove_empty_dict,
@@ -33,7 +32,6 @@ from .utils import (
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
 from ..runtime_options import RuntimeOptions
-from ..utils.deprecation import issue_deprecation_msg
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
@@ -151,19 +149,8 @@ class OptionsV2(BaseOptions):
                 if not key.startswith("_"):
                     setattr(self, key, val)
 
-        try:
-            merged = merge_options_v2(self, kwargs)
-            _set_attr(merged)
-        except ValidationError:
-            merged = merge_options(self, kwargs)
-            _set_attr(merged)
-            issue_deprecation_msg(
-                "Specifying options without the full dictionary structure is deprecated",
-                "0.24.0",
-                "Instead, pass in a fully structured dictionary. For example, use "
-                "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
-                2,
-            )
+        merged = merge_options_v2(self, kwargs)
+        _set_attr(merged)
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

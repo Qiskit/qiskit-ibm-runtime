@@ -1,0 +1,70 @@
+0.30.0 (2024-09-23)
+===================
+
+Deprecation Notes
+-----------------
+
+- The utilityy function ``get_runtime_api_base_url`` has been deprecated. Use ``default_runtime_url_resolver`` instead. (`1914 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1914>`__)
+- The ``channel_strategy`` parameter has been deprecated.
+  The Q-CTRL Performance Management strategy will be removed on October 18th, 2024. 
+  To continue using Q-CTRL in your workflow, please explore the following options:
+
+    * If your organization has an existing IBM Quantum Premium Plan instance: migrate to 
+      the Q-CTRL Performance Management Function, found in the 
+      `Qiskit Functions Catalog <https://quantum.ibm.com/functions>`__.
+
+    * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
+      the same performance management product accessible directly through Q-CTRL. 
+      You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-authenticate-with-ibm-credentials>`__
+      to Fire Opal. (`1931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1931>`__)
+
+- In a future release, ``RuntimeJob.status()`` will be returned as a string instead of 
+  an instance of ``JobStatus``. (`1933 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1933>`__)
+
+
+New Features
+------------
+
+- Added new methods ``Session.usage()``, ``Batch.usage()``, and ``Job.usage()`` that
+  all return information regarding job and session usage.
+  Please find more information `here <https://docs.quantum.ibm.com/guides/execution-modes#sessions-versus-batch-usage>`__. (`1827 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1827>`__)
+- Added ``ConvertISAToClifford`` transpilation pass to convert the gates of a circuit to Clifford gates. (`1887 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1887>`__)
+- Added ``url_resolver`` optional input to :class:`.QiskitRuntimeService`
+  constructor to enable custom generation of the Qiskit Runtime API URL
+  based on the provided ``url``, ``instance`` and ``private_endpoint``. If
+  not specified, the default resolver will be used.
+
+  .. code-block:: python
+
+      # Define a custom resolver. In this case returns the concatenation of the provided `url` and the `instance`
+      def custom_url_resolver(url, instance, *args, **kwargs):
+        return f"{url}/{instance}"
+
+      service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main", url="https://baseurl.org" url_resolver=custom_url_resolver)
+      # resulting resolved url will be: `https://baseurl.org/ibm-q/open/main`
+
+- Added utility function ``default_runtime_url_resolver``. (`1914 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1914>`__)
+- The ``use_fractional_gates`` flag for ``QiskitRuntimeService.backend()`` and
+  ``QiskitRuntimeService.backends()`` can now be ``None``. When set to ``None``,
+  no instruction filtering is done, and the returned backend target may contain
+  both fractional gates and control flow operations. (`1938 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1938>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed a bug where primitives could not be run in the session context with fractional gates. (`1922 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1922>`__)
+
+
+Other Notes
+-----------
+
+- Deprecations from the ``0.24.0`` release have been removed. The following changes have beend made.
+
+  - The arguments backend and session for Sampler and Estimator have been removed and replaced with "mode"
+  - The primitive ``Session`` property has been replaced with ``mode``
+  - Specifying options without the full dictionary structure is no longer supported 
+  - ``Job.program_id()`` has been replaced with ``Job.primitive_id()``
+  - ``Service.run()`` and ``Session.run()`` have been replaced with a private method, ``_run()``
+  - In ``Service.backend()``, "name" is now a required parameter 
+  - ``Service.get_backend()`` has been removed and replaced with ``backend()`` (`1907 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1907>`__)

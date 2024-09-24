@@ -15,3 +15,4 @@ qiskit-ibm-runtime API reference
    qiskit_ibm_runtime.transpiler.passes.scheduling
    fake_provider
    execution_span
+   visualization
