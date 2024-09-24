@@ -251,7 +251,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         }
         if pid == "sampler":
             backend = service.backend(backend_name)
-            sampler = SamplerV2(backend=backend)
+            sampler = SamplerV2(mode=backend)
             if job_tags:
                 sampler.options.environment.job_tags = job_tags
             if circuits:

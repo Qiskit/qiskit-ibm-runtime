@@ -79,12 +79,12 @@ Upgrade Notes
    `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ with
    the parameter ``session_id``.
 
--  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
    supports a new parameter, ``job_tags``. These tags can be used when
    filtering jobs with
    `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__.
 
--  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
    supports a new parameter, ``max_execution_time``, which can be used
    to override the default program maximum execution time. It should be
    less than or equal to the program maximum execution time.

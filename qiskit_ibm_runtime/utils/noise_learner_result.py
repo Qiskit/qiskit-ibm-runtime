@@ -24,7 +24,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Sequence, Union
+from typing import Any, Iterator, Optional, Sequence, Union, TYPE_CHECKING
 from numpy.typing import NDArray
 import numpy as np
 
@@ -32,10 +32,11 @@ from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 
-import plotly.graph_objects as go
-
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 class PauliLindbladError:
@@ -138,21 +139,29 @@ class LayerError:
     Args:
         circuit: A circuit whose noise has been learnt.
         qubits: The labels of the qubits in the ``circuit``.
-        error: The Pauli Lindblad error channel affecting the ``circuit``.
+        error: The Pauli Lindblad error channel affecting the ``circuit``, or ``None`` if the error
+            channel is either unknown or explicitly disabled.
 
     Raises:
         ValueError: If ``circuit``, ``qubits``, and ``error`` have mismatching number of qubits.
     """
 
     def __init__(
-        self, circuit: QuantumCircuit, qubits: Sequence[int], error: PauliLindbladError
+        self,
+        circuit: QuantumCircuit,
+        qubits: Sequence[int],
+        error: Optional[PauliLindbladError] = None,
     ) -> None:
+
         self._circuit = circuit
         self._qubits = list(qubits)
         self._error = error
 
-        if len({self.circuit.num_qubits, len(self.qubits), self.error.num_qubits}) != 1:
-            raise ValueError("Mistmatching numbers of qubits.")
+        err = ValueError("Mistmatching numbers of qubits.")
+        if len(self.qubits) != self.circuit.num_qubits:
+            raise err
+        if self.error is not None and len(self.qubits) != self.error.num_qubits:
+            raise err
 
     @property
     def circuit(self) -> QuantumCircuit:
@@ -169,9 +178,10 @@ class LayerError:
         return self._qubits
 
     @property
-    def error(self) -> PauliLindbladError:
+    def error(self) -> Union[PauliLindbladError, None]:
         r"""
-        The error channel in this :class:`.~LayerError`.
+        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
+        unknown or explicitly disabled.
         """
         return self._error
 
@@ -236,6 +246,7 @@ class LayerError:
             width: The width of the returned figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
+
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
