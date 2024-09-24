@@ -93,7 +93,6 @@ Fake providers provide access to a list of fake backends.
     :toctree: ../stubs/
 
     FakeProviderForBackendV2
-    FakeProvider
 
 Fake Backends
 =============
