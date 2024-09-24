@@ -29,7 +29,7 @@ Deprecation Notes
    the ``auth`` parameter has been removed. Additionally, the
    ``instance``, ``job_tags``, and ``max_execution_time`` paramters have
    been removed from
-   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__.
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__.
    They can be passed in through
    `RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__ instead.
 

@@ -56,7 +56,7 @@ class TestEstimatorOptions(IBMTestCase):
         ({"noise_factors": [1, 3, 5]}, "Unexpected keyword argument"),
         (
             {"resilience": {"zne_mitigation": True, "pec_mitigation": True}},
-            "pec_mitigation and zne_mitigation`options cannot be simultaneously enabled",
+            "'pec_mitigation' and 'zne_mitigation' options cannot be simultaneously enabled",
         ),
         (
             {"simulator": {"noise_model": "foo"}},
