@@ -80,11 +80,29 @@ class Debugger:
     def simulate(
         self,
         pubs: Sequence[EstimatorPubLike],
-        ideal_sim: bool = True,
-        seed_simulator: Optional[int] = None,
+        ideal_sim: bool = False,
     ) -> list[DebuggerResult]:
         r"""
-        Perform a simulation of the estimator task specified by the given ``pubs``.
+        Calculates the expectation values for the estimator task specified by the given ``pubs``.
+
+        This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
+        classically. It returns a list of ``DebuggerResult`` objects, each one corresponding to a
+        different PUB. Users can subsequently compare debugger results with other debugger results
+        or with primitive results to draw figures of merit.
+
+        .. code::python
+
+            # Initialize a debugger
+            debugger = Debugger(backend)
+
+            # Calculate the expectation values in the absence of noise
+            r_ideal = debugger.simulate(cliff_pubs, ideal_sim=True)
+
+            # Calculate the expectation values in the presence of noise
+            r_noisy = debugger.simulate(cliff_pubs, ideal_sim=False)
+
+            # Calculate the ratio between the two
+            signal_to_noise_ratio = r_noisy[0]/r_ideal[1]
 
         .. note::
             To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
@@ -93,10 +111,6 @@ class Debugger:
             the non-Clifford circuits to the nearest Clifford circuits using the
             :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the debugger's
             :meth:`to_clifford` convenience method.
-
-        .. note::
-            This function assumes, but does not check, that any experimental result provided as an
-            input was previously obtained by running the given ``pubs`` on a backend.
 
         Args:
             pubs: The PUBs specifying the estimation task of interest.
@@ -108,11 +122,8 @@ class Debugger:
 
         backend_options = {
             "method": "stabilizer",
-            "seed_simulator": seed_simulator,
+            "noise_model": None if ideal_sim else self.noise_model,
         }
-        if not ideal_sim:
-            backend_options["noise_model"] = self.noise_model
-
         estimator = AerEstimator(options={"backend_options": backend_options})
         return [DebuggerResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
 
