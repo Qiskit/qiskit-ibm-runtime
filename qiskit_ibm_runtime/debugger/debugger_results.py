@@ -108,3 +108,45 @@ class DebuggerResult:
 
     def __repr__(self) -> str:
         return f"DebuggerResult(vals={repr(self.vals)})"
+
+
+######
+# Alternative implementation where the dunder methods are added to DebuggerResult dynamically at import time.
+# Pros:
+#     - Adding a new dunder method is as easy as increasing the list of supported operations.
+# Cons:
+#     - May be harder to read and understand.
+
+# SUPPORTED_OPERATIONS = ["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"]
+
+# # Initialize
+# for op_name in SUPPORTED_OPERATIONS:
+
+#     def _coerced_operation(
+#         this: DebuggerResult, other: Union[ScalarLike, DebuggerResult], op_name: str = op_name
+#     ) -> DebuggerResult:
+#         r"""Coerces ``other`` to a compatible format and applies ``__op_name__`` to ``self`` and ``other``."""
+#         if not isinstance(other, ScalarLike):
+#             if isinstance(other, DebuggerResult):
+#                 other = other.vals
+#             elif isinstance(other, PubResult):
+#                 other = other.data.evs
+#             elif isinstance(other, DataBin):
+#                 try:
+#                     other = other.evs
+#                 except AttributeError:
+#                     raise ValueError(
+#                         f"Cannot apply operator {'__{op_name}__'} between 'DebuggerResult' and"
+#                         "'DataBin' that has no attribute ``evs``."
+#                     )
+#             else:
+#                 raise ValueError(
+#                     f"Cannot apply operator {'__{op_name}__'} to objects of type 'DebuggerResult' and '{other.__class__}'."
+#                 )
+#         return DebuggerResult(getattr(this.vals, f"__{op_name}__")(other))
+
+#     setattr(
+#         DebuggerResult,
+#         f"__{op_name}__",
+#         _coerced_operation,
+#     )

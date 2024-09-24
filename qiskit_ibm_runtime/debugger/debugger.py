@@ -80,7 +80,9 @@ class Debugger:
     def simulate(
         self,
         pubs: Sequence[EstimatorPubLike],
-        ideal_sim: bool = False,
+        with_noise: bool = True,
+        seed_simulator: Optional[int] = None,
+        default_precision: float = 0,
     ) -> list[DebuggerResult]:
         r"""
         Calculates the expectation values for the estimator task specified by the given ``pubs``.
@@ -96,10 +98,10 @@ class Debugger:
             debugger = Debugger(backend)
 
             # Calculate the expectation values in the absence of noise
-            r_ideal = debugger.simulate(cliff_pubs, ideal_sim=True)
+            r_ideal = debugger.simulate(cliff_pubs, with_noise=True)
 
             # Calculate the expectation values in the presence of noise
-            r_noisy = debugger.simulate(cliff_pubs, ideal_sim=False)
+            r_noisy = debugger.simulate(cliff_pubs, with_noise=False)
 
             # Calculate the ratio between the two
             signal_to_noise_ratio = r_noisy[0]/r_ideal[1]
@@ -114,17 +116,21 @@ class Debugger:
 
         Args:
             pubs: The PUBs specifying the estimation task of interest.
-            ideal_sim: Whether to perform an ideal, noiseless simulation (``True``) or a noisy
-                simulation (``False``).
+            with_noise: Whether to perform an ideal, noiseless simulation (``False``) or a noisy
+                simulation (``True``).
             seed_simulator: A seed for the simulator.
+            default_precision: The default precision used to run the ideal and noisy simulations.
         """
         _validate_pubs(self.backend, coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
         backend_options = {
             "method": "stabilizer",
-            "noise_model": None if ideal_sim else self.noise_model,
+            "noise_model": self.noise_model if with_noise else None,
+            "seed_simulator": seed_simulator,
         }
-        estimator = AerEstimator(options={"backend_options": backend_options})
+        estimator = AerEstimator(
+            options={"backend_options": backend_options, "default_precision": default_precision}
+        )
         return [DebuggerResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
