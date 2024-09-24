@@ -16,7 +16,7 @@ Upgrade Notes
    `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    is initialized. Instead, the configuration is only loaded and cached
    during
-   `get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   `get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
    and
    `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__.
 
