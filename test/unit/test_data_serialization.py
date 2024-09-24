@@ -340,8 +340,9 @@ class TestContainerSerialization(IBMTestCase):
 
     def assert_pauli_lindblad_error_equal(self, error1, error2):
         """Tests that two PauliLindbladError objects are equal"""
-        self.assertEqual(error1.generators, error2.generators)
-        self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
+        if error1 or error2:
+            self.assertEqual(error1.generators, error2.generators)
+            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
     def assert_layer_errors_equal(self, layer_error1, layer_error2):
         """Tests that two LayerError objects are equal"""
@@ -459,13 +460,13 @@ class TestContainerSerialization(IBMTestCase):
         primitive_results.append(result)
         return primitive_results
 
-    def make_test_noise_learner_results(self):
+    def make_test_noise_learner_results(self, unknown_err=False):
         """Generates test data for NoiseLearnerResult test"""
         noise_learner_results = []
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.measure_all()
-        error = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+        error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         layer_error = LayerError(circuit, [3, 5], error)
 
         noise_learner_result = NoiseLearnerResult([layer_error])
@@ -596,9 +597,10 @@ class TestContainerSerialization(IBMTestCase):
             self.assertIsInstance(decoded, PrimitiveResult)
             self.assert_primitive_results_equal(primitive_result, decoded)
 
-    def test_noise_learner_result(self):
+    @data(True, False)
+    def test_noise_learner_result(self, unknown_err):
         """Test encoding and decoding NoiseLearnerResult"""
-        for noise_learner_result in self.make_test_noise_learner_results():
+        for noise_learner_result in self.make_test_noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
