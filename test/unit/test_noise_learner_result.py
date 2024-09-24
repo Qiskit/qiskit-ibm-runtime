@@ -12,9 +12,8 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
+from unittest import skipIf
 from ddt import ddt, data
-
-import plotly.graph_objects as go
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -24,6 +23,13 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 
 from ..ibm_test_case import IBMTestCase
+
+try:
+    import plotly.graph_objects as go
+
+    PLOTLY_INSTALLED = True
+except ImportError:
+    PLOTLY_INSTALLED = False
 
 
 class TestPauliLindbladError(IBMTestCase):
@@ -110,7 +116,8 @@ class TestLayerError(IBMTestCase):
         # A set of errors
         error1 = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         error2 = PauliLindbladError(PauliList(["XXX", "ZZZ", "YIY"]), [0.3, 0.4, 0.5])
-        self.errors = [error1, error2]
+        error3 = None
+        self.errors = [error1, error2, error3]
 
         # Another set of errors used in the visualization tests
         circuit = QuantumCircuit(4)
@@ -151,6 +158,7 @@ class TestLayerError(IBMTestCase):
             self.assertEqual(layer_error1.generators, layer_error2.generators)
             self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
 
+    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_no_coupling_map(self):
         r"""
         Tests the `draw_map` function with invalid coordinates.
@@ -158,6 +166,7 @@ class TestLayerError(IBMTestCase):
         with self.assertRaises(ValueError):
             self.layer_error_viz.draw_map(AerSimulator())
 
+    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     @data(["fake_hanoi", 44], ["fake_kyiv", 160])
     def test_plotting(self, inputs):
         r"""

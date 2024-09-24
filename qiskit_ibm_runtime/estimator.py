@@ -26,7 +26,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from .runtime_job_v2 import RuntimeJobV2
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .utils import validate_estimator_pubs
 
@@ -87,7 +87,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         isa_psi = pm.run(psi)
         isa_observables = hamiltonian.apply_layout(isa_psi.layout)
 
-        estimator = Estimator(backend=backend)
+        estimator = Estimator(mode=backend)
 
         # calculate [ <psi(theta1)|hamiltonian|psi(theta)> ]
         job = estimator.run([(isa_psi, isa_observables, [theta])])
@@ -102,8 +102,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
     def __init__(
         self,
         mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
-        session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.
@@ -119,17 +117,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
                 for more information about the ``Execution modes``.
 
-            backend: (DEPRECATED) Backend to run the primitive. This can be a backend name
-                or an :class:`IBMBackend` instance. If a name is specified, the default account
-                (e.g. ``QiskitRuntimeService()``) is used.
-
-            session: (DEPRECATED) Session in which to call the primitive.
-
-                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
-                Otherwise if IBM Cloud channel is used, a default backend is selected.
-
             options: Estimator options, see :class:`EstimatorOptions` for detailed description.
 
         Raises:
@@ -137,34 +124,14 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
-        if backend:
-            deprecate_arguments(
-                "backend",
-                "0.24.0",
-                "Please use the 'mode' parameter instead.",
-            )
-        if session:
-            deprecate_arguments(
-                "session",
-                "0.24.0",
-                "Please use the 'mode' parameter instead.",
-            )
-        if isinstance(mode, str) or isinstance(backend, str):
-            issue_deprecation_msg(
-                "The backend name as execution mode input has been deprecated.",
-                "0.24.0",
-                "A backend object should be provided instead. Get the backend directly from"
-                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
-                3,
-            )
+        if isinstance(mode, str):
             issue_deprecation_msg(
                 msg="Passing a backend as a string is deprecated",
                 version="0.26.0",
                 remedy="Use the actual backend object instead.",
                 period="3 months",
             )
-        if mode is None:
-            mode = session if backend and session else backend if backend else session
+
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(
