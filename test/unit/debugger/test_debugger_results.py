@@ -88,7 +88,7 @@ class TestDebuggerResult(IBMTestCase):
         result = self.results[0]
         databin = DataBin(wrong_kwarg=result.vals)
 
-        with self.assertRaisesRegex(ValueError, f"Cannot apply operator {'__{op_name}__'}"):
+        with self.assertRaisesRegex(ValueError, f"Cannot apply operator '__{op_name}__'"):
             getattr(result, f"__{op_name}__")(databin)
 
     @combine(

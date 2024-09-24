@@ -26,9 +26,6 @@ DebuggerResultLike = Union["DebuggerResult", PubResult, DataBin]
 ScalarLike = Union[int, float]
 
 
-SUPPORTED_OPERATIONS = ["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"]
-
-
 class DebuggerResult:
     r"""A class to store the results of the ``Debugger``.
 
@@ -47,44 +44,10 @@ class DebuggerResult:
         r"""The values in this :class:`.~DebuggerResult`."""
         return self._vals
 
-    def __pow__(self, p: ScalarLike) -> DebuggerResult:
-        return DebuggerResult(self._vals**p)
-
-    # def __add__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__add__")
-
-    # def __mul__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__mul__")
-
-    # def __sub__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__sub__")
-
-    # def __truediv__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__truediv__")
-
-    # def __radd__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__radd__")
-
-    # def __rmul__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__rmul__")
-
-    # def __rsub__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__rsub__")
-
-    # def __rtruediv__(self, other: Union[DebuggerResultLike, ScalarLike]) -> DebuggerResult:
-    #     return self._coerced_operation(other, "__rtruediv__")
-
-    def __repr__(self) -> str:
-        return f"DebuggerResult(vals={repr(self.vals)})"
-
-
-# Initialize
-for op_name in SUPPORTED_OPERATIONS:
-
     def _coerced_operation(
-        this: DebuggerResult, other: Union[ScalarLike, DebuggerResult], op_name: str = op_name
+        self, other: Union[ScalarLike, DebuggerResult], op_name: str
     ) -> DebuggerResult:
-        r"""Coerces ``other`` to a compatible format and applies ``__op_name__`` to ``self`` and ``other``."""
+        r"""Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``."""
         if not isinstance(other, ScalarLike):
             if isinstance(other, DebuggerResult):
                 other = other.vals
@@ -95,17 +58,41 @@ for op_name in SUPPORTED_OPERATIONS:
                     other = other.evs
                 except AttributeError:
                     raise ValueError(
-                        f"Cannot apply operator {'__{op_name}__'} between 'DebuggerResult' and"
+                        f"Cannot apply operator '{op_name}' between 'DebuggerResult' and"
                         "'DataBin' that has no attribute ``evs``."
                     )
             else:
                 raise ValueError(
-                    f"Cannot apply operator {'__{op_name}__'} to objects of type 'DebuggerResult' and '{other.__class__}'."
+                    f"Cannot apply operator '{op_name}' to objects of type 'DebuggerResult' and '{other.__class__}'."
                 )
-        return DebuggerResult(getattr(this.vals, f"__{op_name}__")(other))
+        return DebuggerResult(getattr(self.vals, f"{op_name}")(other))
 
-    setattr(
-        DebuggerResult,
-        f"__{op_name}__",
-        _coerced_operation,
-    )
+    def __add__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__add__")
+
+    def __mul__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__mul__")
+
+    def __sub__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__sub__")
+
+    def __truediv__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__truediv__")
+
+    def __radd__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__radd__")
+
+    def __rmul__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__rmul__")
+
+    def __rsub__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__rsub__")
+
+    def __rtruediv__(self, other: Union[ScalarLike, DebuggerResult]) -> DebuggerResult:
+        return self._coerced_operation(other, "__rtruediv__")
+
+    def __pow__(self, p: ScalarLike) -> DebuggerResult:
+        return DebuggerResult(self._vals**p)
+
+    def __repr__(self) -> str:
+        return f"DebuggerResult(vals={repr(self.vals)})"
