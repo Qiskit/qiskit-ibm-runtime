@@ -13,7 +13,6 @@
 """Tests for Debugger class."""
 
 import numpy as np
-import ddt
 
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
@@ -22,13 +21,9 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_aer.noise import NoiseModel
-
 from qiskit_ibm_runtime.debugger import Debugger
-from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ...ibm_test_case import IBMTestCase
-from ...utils import combine
 
 
 class TestDebugger(IBMTestCase):
@@ -103,3 +98,39 @@ class TestDebugger(IBMTestCase):
         )
         self.assertListEqual(list(r3[0].vals.shape), [2])
         self.assertListEqual(list(r3[1].vals.shape), [3])
+
+    def test_non_clifford_error(self):
+        r"""Tests that ``simulate`` errors when pubs are not Clifford."""
+        qc = QuantumCircuit(3)
+        qc.rz(0.02, 0)
+        pubs = [(qc, "ZZZ")]
+
+        with self.assertRaisesRegex(ValueError, "non-Clifford circuit"):
+            Debugger(self.backend).simulate(pubs)
+
+    def test_to_clifford(self):
+        r"""Tests the ``to_clifford`` method."""
+        qc = QuantumCircuit(2, 2)
+        qc.id(0)
+        qc.sx(0)
+        qc.barrier()
+        qc.measure(0, 1)
+        qc.rz(0, 0)
+        qc.rz(np.pi / 2 - 0.1, 0)
+        qc.rz(np.pi, 0)
+        qc.rz(3 * np.pi / 2 + 0.1, 1)
+        qc.cx(0, 1)
+        transformed = Debugger(self.backend).to_clifford([(qc, "ZZ")])[0]
+
+        expected = QuantumCircuit(2, 2)
+        expected.id(0)
+        expected.sx(0)
+        expected.barrier()
+        expected.measure(0, 1)
+        expected.rz(0, 0)
+        expected.rz(np.pi / 2, 0)
+        expected.rz(np.pi, 0)
+        expected.rz(3 * np.pi / 2, 1)
+        expected.cx(0, 1)
+
+        self.assertEqual(transformed.circuit, expected)

@@ -13,7 +13,7 @@
 """A debugger."""
 
 from __future__ import annotations
-from typing import Optional, Sequence
+from typing import Optional, Sequence, List
 
 from qiskit_aer.noise import NoiseModel
 from qiskit_aer.primitives.estimator_v2 import EstimatorV2 as AerEstimator
@@ -28,10 +28,18 @@ from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToCli
 from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
 
-def _validate_pubs(backend: Backend, pubs: Sequence[EstimatorPub], validate_clifford=True):
+def _validate_pubs(
+    backend: Backend, pubs: List[EstimatorPub], validate_clifford: bool = True
+) -> None:
     r"""Validates a list PUBs by running the :meth:`.~validate_estimator_pubs` and
     :meth:`.~validate_isa_circuits` methods, and optionally, by checking if the PUBs
     are Clifford.
+
+    Args:
+        backend: A backend.
+        pubs: A set of PUBs.
+        validate_clifford: Whether or not to validate that the PUB's circuit do not contain
+            non-Clifford gates.
     """
     validate_estimator_pubs(pubs)
     validate_isa_circuits([pub.circuit for pub in pubs], backend.target)
@@ -98,10 +106,10 @@ class Debugger:
             debugger = Debugger(backend)
 
             # Calculate the expectation values in the absence of noise
-            r_ideal = debugger.simulate(cliff_pubs, with_noise=True)
+            r_ideal = debugger.simulate(pubs, with_noise=True)
 
             # Calculate the expectation values in the presence of noise
-            r_noisy = debugger.simulate(cliff_pubs, with_noise=False)
+            r_noisy = debugger.simulate(pubs, with_noise=False)
 
             # Calculate the ratio between the two
             signal_to_noise_ratio = r_noisy[0]/r_ideal[1]

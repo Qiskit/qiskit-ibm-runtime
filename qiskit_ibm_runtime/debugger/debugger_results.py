@@ -36,13 +36,13 @@ class DebuggerResult:
 
         from qiskit_ibm_runtime.debugger import DebuggerResult
 
-        res0 = DebuggerResult([[1, 2], [3, 4]])
+        res = DebuggerResult([[1, 2], [3, 4]])
 
-        res1 = res0 + 2
-        assert (res1.vals == [[3, 4], [5, 6]]).all()
+        # this returns DebuggerResult([[3, 4], [5, 6]])
+        res + 2
 
-        res2 = res0 * res1
-        assert (res2.vals == [[3, 8], [15, 24]]).all()
+        # this returns DebuggerResult([[3, 8], [15, 24]])
+        res * (res + 2)
 
     Args:
         vals: The values in this :class:`.~DebuggerResult`.
@@ -60,7 +60,7 @@ class DebuggerResult:
         self, other: Union[ScalarLike, DebuggerResultLike], op_name: str
     ) -> DebuggerResult:
         r"""Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``."""
-        if not isinstance(other, ScalarLike):
+        if not isinstance(other, ScalarLike):  # type: ignore[misc,arg-type]
             if isinstance(other, DebuggerResult):
                 other = other.vals
             elif isinstance(other, PubResult):

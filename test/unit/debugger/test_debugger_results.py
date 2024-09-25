@@ -12,7 +12,6 @@
 
 """Tests for DebuggerResult class."""
 
-import numpy as np
 import ddt
 
 from qiskit.primitives.containers import PubResult, DataBin
