@@ -59,7 +59,9 @@ class DebuggerResult:
     def _coerced_operation(
         self, other: Union[ScalarLike, DebuggerResultLike], op_name: str
     ) -> DebuggerResult:
-        r"""Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``."""
+        r"""
+        Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``.
+        """
         if not isinstance(other, ScalarLike):  # type: ignore[misc,arg-type]
             if isinstance(other, DebuggerResult):
                 other = other.vals
@@ -75,7 +77,8 @@ class DebuggerResult:
                     )
             else:
                 raise ValueError(
-                    f"Cannot apply operator '{op_name}' to objects of type 'DebuggerResult' and '{other.__class__}'."
+                    f"Cannot apply operator '{op_name}' to objects of type 'DebuggerResult' and "
+                    f"'{other.__class__}'."
                 )
         return DebuggerResult(getattr(self.vals, f"{op_name}")(other))
 
@@ -111,7 +114,8 @@ class DebuggerResult:
 
 
 ######
-# Alternative implementation where the dunder methods are added to DebuggerResult dynamically at import time.
+# Alternative implementation where the dunder methods are added to DebuggerResult dynamically at 
+# import time.
 # Pros:
 #     - Adding a new dunder method is as easy as increasing the list of supported operations.
 # Cons:
@@ -125,7 +129,10 @@ class DebuggerResult:
 #     def _coerced_operation(
 #         this: DebuggerResult, other: Union[ScalarLike, DebuggerResult], op_name: str = op_name
 #     ) -> DebuggerResult:
-#         r"""Coerces ``other`` to a compatible format and applies ``__op_name__`` to ``self`` and ``other``."""
+#         r"""
+#            Coerces ``other`` to a compatible format and applies ``__op_name__`` to ``self`` and
+#            ``other``.
+#         """
 #         if not isinstance(other, ScalarLike):
 #             if isinstance(other, DebuggerResult):
 #                 other = other.vals
@@ -141,7 +148,8 @@ class DebuggerResult:
 #                     )
 #             else:
 #                 raise ValueError(
-#                     f"Cannot apply operator {'__{op_name}__'} to objects of type 'DebuggerResult' and '{other.__class__}'."
+#                     f"Cannot apply operator {'__{op_name}__'} to objects of type "
+#                     f"'DebuggerResult' and '{other.__class__}'."
 #                 )
 #         return DebuggerResult(getattr(this.vals, f"__{op_name}__")(other))
 
