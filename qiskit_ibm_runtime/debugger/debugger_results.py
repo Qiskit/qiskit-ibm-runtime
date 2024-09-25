@@ -114,7 +114,7 @@ class DebuggerResult:
 
 
 ######
-# Alternative implementation where the dunder methods are added to DebuggerResult dynamically at 
+# Alternative implementation where the dunder methods are added to DebuggerResult dynamically at
 # import time.
 # Pros:
 #     - Adding a new dunder method is as easy as increasing the list of supported operations.
