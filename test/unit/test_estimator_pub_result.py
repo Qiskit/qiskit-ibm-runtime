@@ -13,6 +13,7 @@
 """Tests for the classes used to instantiate estimator pub results."""
 
 from unittest import skipIf
+import numpy as np
 
 from qiskit.primitives import DataBin
 
@@ -27,13 +28,54 @@ try:
 except ImportError:
     PLOTLY_INSTALLED = False
 
+
 class TestEstimatorPubResult(IBMTestCase):
     """Class for testing the EstimatorPubResult class."""
 
     def setUp(self):
         super().setUp()
 
+        nfs = np.zeros((2, 2))
+        extrapolated = np.zeros((2, 2, 3))
+        data = DataBin(
+            shape=(2,),
+            evs_noise_factors=nfs,
+            stds_noise_factors=nfs,
+            evs_extrapolated=extrapolated,
+            stds_extrapolated=extrapolated,
+        )
+
+        metadata = {
+            "resilience": {
+                "zne": {
+                    "extrapolators": ["linear"],
+                    "extrapolated_noise_factors": [0, 2, 3],
+                    "noise_factors": [2, 3],
+                }
+            }
+        }
+
+        self.pub_result = EstimatorPubResult(data, metadata)
+
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
-    def test_plot_zne_no_data(self):
+    def test_plot_zne(self):
+        """Test that plots are generated with both modes."""
+        fig = self.pub_result.plot_zne()
+        self.assertIsInstance(fig, go.Figure)
+
+        fig = self.pub_result.plot_zne(subplots=True)
+        self.assertIsInstance(fig, go.Figure)
+
+    @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+    def test_plot_zne_raises(self):
+        """Test the raises."""
         with self.assertRaises(ValueError):
             EstimatorPubResult(DataBin()).plot_zne()
+
+        with self.assertRaises(ValueError):
+            EstimatorPubResult(DataBin(), {"resilience": {"measure_mitigation": ""}}).plot_zne()
+
+        with self.assertRaises(ValueError):
+            EstimatorPubResult(DataBin(), {"resilience": {"zne": {"noise_factors": [1]}}}).plot_zne(
+                names=["test"]
+            )

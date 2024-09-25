@@ -10,12 +10,21 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""
+========================================================================================
+EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`)
+========================================================================================
+
+.. autosummary::
+   :toctree: ../stubs/
+"""
+
 from __future__ import annotations
 
 from typing import Sequence
 import plotly.graph_objects as go
 
-from qiskit.primitives.containers import ObservablesArrayLike, PubResult
+from qiskit.primitives.containers import PubResult
 
 
 class EstimatorPubResult(PubResult):
@@ -27,32 +36,48 @@ class EstimatorPubResult(PubResult):
         names: Sequence[str] | None = None,
         n_stds: int = 1,
         mag_tol: float = 10,
-        std_tol: float = 2e-1,
+        std_tol: float = 0.2,
         height: int = 500,
         width: int = 1000,
-        n_cols: int = 5,
+        n_cols: int = 4,
+        colorscale: str = "Spectral",
         subplots: bool = False,
     ) -> go.Figure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
 
         Args:
-            indices: The indices of the expectation values to include in the plot. If ``None``, includes all
-                values. See :class:`~.ZneOptions` for information on the indexing scheme.
-            names: The names to assign to the expectation values. If ``None``, the names correspond to the
-                indices.
+            indices: The indices of the expectation values to include in the plot. If ``None``, includes
+                all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            names: The names to assign to the expectation values. If ``None``, the names correspond to
+                the indices.
             n_stds: The number of standard deviations to include around each fit.
-            mag_tol: The tolerance.
-            std_tol: The tolerance. If ``stds_extrapolated`` is greater than this value for an expectation value
-                and extrapolator, the fit is omitted from the plot.
+            mag_tol: The tolerance. If ``evs_extrapolated`` has a greater magnitude than this value, the
+                expectation value is omitted from the plot.
+            std_tol: The tolerance. If ``stds_extrapolated`` is greater than this value for an
+                expectation value and extrapolator, the fit is omitted from the plot.
             height: The height of the plot in pixels.
             width: The width of the plot in pixels.
             n_cols: The maximum number of columns in the figure.
-            subplots: If ``True``, each expectation value is placed in its own subplot. Otherwise, plot all estimates
-                that use the same extrapolator on one plot.
-            Returns:
-                A plotly figure.
+            colorscale: The colorscale to use.
+            subplots: If ``True``, each expectation value is placed in its own subplot. Otherwise, plot
+                all estimates that use the same extrapolator on one plot.
+
+        Returns:
+            A plotly figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import plot_zne
 
-        return plot_zne(self, indices, names, n_stds, mag_tol, std_tol, height, width, n_cols, subplots)
+        return plot_zne(
+            self,
+            indices,
+            names,
+            n_stds,
+            mag_tol,
+            std_tol,
+            height,
+            width,
+            n_cols,
+            colorscale,
+            subplots,
+        )
