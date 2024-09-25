@@ -34,7 +34,7 @@ def plot_zne(
     height: int = 500,
     width: int = 1000,
     n_cols: int = 4,
-    colorscale: str = "Sunset",
+    colorscale: str = "Aggrnyl",
     subplots: bool = False,
 ) -> go.Figure:
     """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
@@ -107,7 +107,6 @@ def plot_zne(
                     noise_factors,
                     evs,
                     result.data.stds_noise_factors[idx],
-                    legend_group=i,
                     color="black",
                 ),
                 col=col,
