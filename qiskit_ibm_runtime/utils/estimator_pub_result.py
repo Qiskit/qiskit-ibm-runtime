@@ -40,7 +40,7 @@ class EstimatorPubResult(PubResult):
         height: int = 500,
         width: int = 1000,
         n_cols: int = 4,
-        colorscale: str = "Spectral",
+        colorscale: str = "Sunset",
         subplots: bool = False,
     ) -> go.Figure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
