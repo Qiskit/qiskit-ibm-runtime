@@ -102,7 +102,7 @@ class _Row:
     down_links: Sequence[int] = ()
 
 
-def _heavy_hex_coords(rows: Sequence[_Row], row_major: bool = True) -> list[tuple[int, int]]:
+def _heavy_hex_coords(rows: Sequence[_Row], row_major: bool = True) -> List[Tuple[int, int]]:
     """Generate heavy hex coordinates for the given rows.
 
     Args:
