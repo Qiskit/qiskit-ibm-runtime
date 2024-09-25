@@ -62,7 +62,7 @@ class DebuggerResult:
         r"""
         Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``.
         """
-        if not isinstance(other, ScalarLike):  # type: ignore[misc,arg-type]
+        if not isinstance(other, (int, float)):
             if isinstance(other, DebuggerResult):
                 other = other.vals
             elif isinstance(other, PubResult):
