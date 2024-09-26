@@ -75,8 +75,8 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         if name == "rzz" and (
             instruction.params[0] < 0.0 or instruction.params[0] > 1.001 * np.pi / 2
         ):
-            return f"The instruction {name} on qubits {qargs} is supported only for angles in the "
-            "range [0, pi/2], but an angle of {instruction.params[0]} has been provided."
+            return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
+            range [0, pi/2], but an angle of {instruction.params[0]} has been provided."
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
