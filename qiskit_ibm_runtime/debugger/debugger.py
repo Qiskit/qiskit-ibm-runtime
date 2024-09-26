@@ -14,9 +14,7 @@
 
 from __future__ import annotations
 from typing import Optional, Sequence, List
-
-from qiskit_aer.noise import NoiseModel
-from qiskit_aer.primitives.estimator_v2 import EstimatorV2 as AerEstimator
+import numpy as np
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.primitives.containers import EstimatorPubLike
@@ -28,36 +26,50 @@ from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToCli
 from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
 
+try:
+    from qiskit_aer.noise import NoiseModel
+    from qiskit_aer.primitives.estimator_v2 import EstimatorV2 as AerEstimator
+
+    HAS_QISKIT_AER = True
+except ImportError:
+    HAS_QISKIT_AER = False
+
+
 def _validate_pubs(
     backend: Backend, pubs: List[EstimatorPub], validate_clifford: bool = True
 ) -> None:
-    r"""Validates a list PUBs by running the :meth:`.~validate_estimator_pubs` and
-    :meth:`.~validate_isa_circuits` methods, and optionally, by checking if the PUBs
-    are Clifford.
+    r"""Validate a list of PUBs for use inside the debugger.
+
+    This funtion runs the :meth:`.~validate_estimator_pubs` and :meth:`.~validate_isa_circuits`
+    checks. Optionally, it also validates that every PUB's circuit is a Clifford circuit.
 
     Args:
         backend: A backend.
         pubs: A set of PUBs.
         validate_clifford: Whether or not to validate that the PUB's circuit do not contain
             non-Clifford gates.
+
+    Raises:
+        ValueError: If the PUBs contain non-Clifford circuits.
     """
     validate_estimator_pubs(pubs)
     validate_isa_circuits([pub.circuit for pub in pubs], backend.target)
 
     if validate_clifford:
         for pub in pubs:
-            cliff_circ = PassManager([ConvertISAToClifford()]).run(pub.circuit)
-            if pub.circuit != cliff_circ:
-                raise ValueError(
-                    "Given ``pubs`` contain a non-Clifford circuit. To fix, consider using the "
-                    "``ConvertISAToClifford`` pass to map your circuits to the nearest Clifford"
-                    " circuits, then try again."
-                )
+            for instr in pub.circuit:
+                op = instr.operation
+                # ISA circuits contain only one type of non-Clifford gate, namely RZ
+                if op.name == "rz" and op.params[0] not in [0, np.pi / 2, np.pi, 3 * np.pi / 2]:
+                    raise ValueError(
+                        "Given ``pubs`` contain non-Clifford circuits. To fix, consider using the "
+                        ":meth:`Debugger.to_clifford` method to map the PUBs' circuits to Clifford"
+                        " circuits, then try again."
+                    )
 
 
 class Debugger:
-    r"""A class that users of the Estimator primitive can use to understand the expected
-    performance of their queries.
+    r"""A class to help understanding the expected performance of Estimator jobs.
 
     Args:
         backend: A backend.
@@ -66,17 +78,18 @@ class Debugger:
     """
 
     def __init__(self, backend: Backend, noise_model: Optional[NoiseModel] = None) -> None:
-        self._backend = backend
-        self._noise_model = noise_model or NoiseModel.from_backend(
-            backend, thermal_relaxation=False
-        )
+        if not HAS_QISKIT_AER:
+            raise ValueError(
+                "Cannot initialize object of type 'Debugger' since 'qiskit-aer' is not installed. "
+                "Install 'qiskit-aer' and try again."
+            )
 
-    @property
-    def backend(self) -> Backend:
-        r"""
-        The backend used by this debugger.
-        """
-        return self._backend
+        self._backend = backend
+        self._noise_model = (
+            noise_model
+            if noise_model is not None
+            else NoiseModel.from_backend(backend, thermal_relaxation=False)
+        )
 
     @property
     def noise_model(self) -> NoiseModel:
@@ -84,6 +97,12 @@ class Debugger:
         The noise model used by this debugger for the noisy simulations.
         """
         return self._noise_model
+
+    def backend(self) -> Backend:
+        r"""
+        The backend used by this debugger.
+        """
+        return self._backend
 
     def simulate(
         self,
@@ -105,14 +124,21 @@ class Debugger:
             # Initialize a debugger
             debugger = Debugger(backend)
 
+            # Map arbitrary PUBs to Clifford PUBs
+            cliff_pubs = debugger.to_clifford(pubs)
+
             # Calculate the expectation values in the absence of noise
-            r_ideal = debugger.simulate(pubs, with_noise=False)
+            r_ideal = debugger.simulate(cliff_pubs, with_noise=False)
 
             # Calculate the expectation values in the presence of noise
-            r_noisy = debugger.simulate(pubs, with_noise=True)
+            r_noisy = debugger.simulate(cliff_pubs, with_noise=True)
 
-            # Calculate the ratio between the two
-            signal_to_noise_ratio = r_noisy[0]/r_ideal[0]
+            # Run the Clifford PUBs on a QPU
+            r_qpu = estimator.run(cliff_pubs)
+
+            # Calculate useful figures of merit using mathematical operators
+            signal_to_noise_ratio = r_noisy[0] / r_ideal[0]
+            rel_diff = abs(r_ideal[0] - r_qpu.data[0]) / r_ideal[0]
 
         .. note::
             To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
@@ -129,7 +155,7 @@ class Debugger:
             seed_simulator: A seed for the simulator.
             default_precision: The default precision used to run the ideal and noisy simulations.
         """
-        _validate_pubs(self.backend, coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
+        _validate_pubs(self.backend(), coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
         backend_options = {
             "method": "stabilizer",
@@ -143,17 +169,20 @@ class Debugger:
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""
-        A convenience method that returns the cliffordized version of the given ``pubs``, obtained
-        by run the :class:`.~ConvertISAToClifford` transpiler pass on the PUBs' circuits.
+        Return the cliffordized version of the given ``pubs``.
+
+        This convenience method runs the :class:`.~ConvertISAToClifford` transpiler pass on the
+        PUBs' circuits.
 
         Args:
             pubs: The PUBs to turn into Clifford PUBs.
+
         Returns:
             The Clifford PUBs.
         """
         coerced_pubs = []
         for pub in pubs:
-            _validate_pubs(self.backend, [coerced_pub := EstimatorPub.coerce(pub)], False)
+            _validate_pubs(self.backend(), [coerced_pub := EstimatorPub.coerce(pub)], False)
             coerced_pubs.append(
                 EstimatorPub(
                     PassManager([ConvertISAToClifford()]).run(coerced_pub.circuit),
@@ -167,4 +196,4 @@ class Debugger:
         return coerced_pubs
 
     def __repr__(self) -> str:
-        return f'Debugger(backend="{self.backend.name}")'
+        return f'Debugger(backend="{self.backend().name}")'

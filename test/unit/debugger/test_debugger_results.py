@@ -104,6 +104,14 @@ class TestDebuggerResult(IBMTestCase):
 
         self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
 
+    def test_abs(self):
+        r"""Test the ``abs`` operator."""
+        result = DebuggerResult([-1, 0, 1])
+        new_result = abs(result)
+        new_vals = abs(result.vals)
+
+        self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+
     @ddt.data(2, 4.5)
     def test_pow(self, p):
         r"""Test the ``pow`` operator."""
