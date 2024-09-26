@@ -106,10 +106,10 @@ class Debugger:
             debugger = Debugger(backend)
 
             # Calculate the expectation values in the absence of noise
-            r_ideal = debugger.simulate(pubs, with_noise=True)
+            r_ideal = debugger.simulate(pubs, with_noise=False)
 
             # Calculate the expectation values in the presence of noise
-            r_noisy = debugger.simulate(pubs, with_noise=False)
+            r_noisy = debugger.simulate(pubs, with_noise=True)
 
             # Calculate the ratio between the two
             signal_to_noise_ratio = r_noisy[0]/r_ideal[1]
