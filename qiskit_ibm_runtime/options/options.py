@@ -115,31 +115,32 @@ class BaseOptions:
 
 @primitive_dataclass
 class OptionsV2(BaseOptions):
-    """Base primitive options, used by v2 primitives."""
+    """Base primitive options, used by v2 primitives.
+
+    Args:
+        max_execution_time: Maximum execution time in seconds, which is based
+            on system execution time (not wall clock time). System execution time is
+            the amount of time that the system is dedicated to processing your job.
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+            for more information.
+        environment: Options related to the execution environment. See
+            :class:`EnvironmentOptions` for all available options.
+        simulator: Simulator options. See
+            :class:`SimulatorOptions` for all available options.
+    """
 
     _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
 
     # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset
-    r"""Maximum execution time in seconds, which is based
-        on system execution time (not wall clock time). System execution time is
-        the amount of time that the system is dedicated to processing your job.
-        If a job exceeds this time limit, it is forcibly cancelled.
-        Simulator jobs continue to use wall clock time.
 
-        Refer to the
-        `Max execution time documentation
-        <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
-        for more information.
-    """
     environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
-    r"""Options related to the execution environment. See
-        :class:`EnvironmentOptions` for all available options.
-    """
+
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
-    r"""Simulator options. See
-        :class:`SimulatorOptions` for all available options.
-    """
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""

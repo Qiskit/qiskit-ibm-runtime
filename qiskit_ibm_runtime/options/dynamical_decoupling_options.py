@@ -23,10 +23,13 @@ class DynamicalDecouplingOptions:
 
     enable: Union[UnsetType, bool] = Unset
     r"""Whether to enable DD as specified by the other options in this class.
+
         Default: False.
     """
     sequence_type: Union[UnsetType, Literal["XX", "XpXm", "XY4"]] = Unset
-    r"""Which dynamical decoupling sequence to use. Default: "XX".
+    r"""Which dynamical decoupling sequence to use. 
+    
+        Default: "XX".
 
         * ``"XX"``: use the sequence ``tau/2 - (+X) - tau - (+X) - tau/2``
         * ``"XpXm"``: use the sequence ``tau/2 - (+X) - tau - (-X) - tau/2``
@@ -36,7 +39,9 @@ class DynamicalDecouplingOptions:
     extra_slack_distribution: Union[UnsetType, Literal["middle", "edges"]] = Unset
     r"""Where to put extra timing delays due to rounding issues.
         Rounding issues arise because the discrete time step ``dt`` of the system cannot
-        be divided. This option takes following values. Default: "middle".
+        be divided. This option takes following values. 
+
+        Default: "middle".
 
         * ``"middle"``: Put the extra slack to the interval at the middle of the sequence.
         * ``"edges"``: Divide the extra slack as evenly as possible into intervals at
@@ -44,5 +49,7 @@ class DynamicalDecouplingOptions:
     """
     scheduling_method: Union[UnsetType, Literal["alap", "asap"]] = Unset
     r"""Whether to schedule gates as soon as ("asap") or
-        as late as ("alap") possible. Default: "alap".
+        as late as ("alap") possible. 
+
+        Default: "alap".
     """

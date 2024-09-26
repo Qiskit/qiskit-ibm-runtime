@@ -36,15 +36,7 @@ ExtrapolatorType = Literal[
 
 @primitive_dataclass
 class ResilienceOptionsV2:
-    """Resilience options for V2 Estimator.
-
-    Args:
-        layer_noise_model: A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
-            objects. If set, all the mitigation strategies that require noise data (e.g., PEC and
-            PEA) skip the noise learning stage, and instead gather the required information from
-            ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
-            are treated as noiseless and their noise is not mitigated.
-    """
+    """Resilience options for V2 Estimator."""
 
     measure_mitigation: Union[UnsetType, bool] = Unset
     r"""Whether to enable measurement error mitigation method.
