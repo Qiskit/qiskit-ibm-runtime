@@ -22,6 +22,7 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
+import numpy as np
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
@@ -66,6 +67,16 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
             return (
                 f"The instruction {name} on qubits {qargs} is not supported by the target system."
             )
+
+        # rzz gate is calibrated only for the range [0, pi/2].
+        # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+        # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+        # accurate).
+        if name == "rzz" and (
+            instruction.params[0] < 0.0 or instruction.params[0] > 1.001 * np.pi / 2
+        ):
+            return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
+            range [0, pi/2], but an angle of {instruction.params[0]} has been provided."
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
