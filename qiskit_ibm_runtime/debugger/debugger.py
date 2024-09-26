@@ -112,7 +112,7 @@ class Debugger:
             r_noisy = debugger.simulate(pubs, with_noise=True)
 
             # Calculate the ratio between the two
-            signal_to_noise_ratio = r_noisy[0]/r_ideal[1]
+            signal_to_noise_ratio = r_noisy[0]/r_ideal[0]
 
         .. note::
             To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
