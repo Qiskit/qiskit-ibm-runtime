@@ -123,12 +123,15 @@ class OptionsV2(BaseOptions):
             the amount of time that the system is dedicated to processing your job.
             If a job exceeds this time limit, it is forcibly cancelled.
             Simulator jobs continue to use wall clock time.
+
             Refer to the
             `Max execution time documentation
             <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
             for more information.
+
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
+
         simulator: Simulator options. See
             :class:`SimulatorOptions` for all available options.
     """
@@ -137,9 +140,7 @@ class OptionsV2(BaseOptions):
 
     # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset
-
     environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
-
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:
