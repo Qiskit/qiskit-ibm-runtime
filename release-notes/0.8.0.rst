@@ -13,7 +13,7 @@ New Features
 
 -  You can now specify a pair of result decoders for the
    ``result_decoder`` parameter of
-   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
    method. If a pair is specified, the first one is used to decode
    interim results and the second the final results.
 
