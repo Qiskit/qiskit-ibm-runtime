@@ -260,3 +260,17 @@ class TestSamplerV2(IBMTestCase):
         else:
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[(circ)])
+
+    @data(-1, 1, 2)
+    def test_rzz_angle_validation(self, angle):
+        """Test exception when rzz gate is used with an angle outside the range [0, pi/2]"""
+        backend = FakeFractionalBackend()
+
+        circ = QuantumCircuit(2)
+        circ.rzz(angle, 0, 1)
+
+        if angle == 1:
+            SamplerV2(backend).run(pubs=[(circ)])
+        else:
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend).run(pubs=[(circ)])
