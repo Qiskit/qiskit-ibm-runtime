@@ -151,21 +151,20 @@ class Debugger:
         Returns:
             The Clifford PUBs.
         """
-        coerced_pubs = [EstimatorPub.coerce(pub) for pub in pubs]
-        _validate_pubs(self.backend, coerced_pubs, False)
-
-        ret = []
-        for pub in coerced_pubs:
-            new_pub = EstimatorPub(
-                PassManager([ConvertISAToClifford()]).run(pub.circuit),
-                pub.observables,
-                pub.parameter_values,
-                pub.precision,
-                False,
+        coerced_pubs = []
+        for pub in pubs:
+            _validate_pubs(self.backend, [coerced_pub := EstimatorPub.coerce(pub)], False)
+            coerced_pubs.append(
+                EstimatorPub(
+                    PassManager([ConvertISAToClifford()]).run(coerced_pub.circuit),
+                    coerced_pub.observables,
+                    coerced_pub.parameter_values,
+                    coerced_pub.precision,
+                    False,
+                )
             )
-            ret.append(new_pub)
 
-        return ret
+        return coerced_pubs
 
     def __repr__(self) -> str:
         return f'Debugger(backend="{self.backend.name}")'
