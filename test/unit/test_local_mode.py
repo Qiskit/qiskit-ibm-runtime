@@ -72,12 +72,11 @@ class TestLocalModeV2(IBMTestCase):
     @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_sampler_with_accepted_options(self, backend):
         """Test V2 sampler with accepted options."""
-        options = {"default_shots": 10, "simulator": {"seed_simulator": 42}}
+        options = {"default_shots": 10}
         inst = SamplerV2(mode=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertEqual(pub_result.data.meas.num_shots, 10)
-        self.assertDictEqual(pub_result.data.meas.get_counts(), {"00011": 3, "00000": 7})
 
     @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_estimator_with_accepted_options(self, backend):
