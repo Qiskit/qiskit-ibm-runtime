@@ -16,7 +16,7 @@ Utility class to represent an embedding of a set of qubits in a two-dimensional 
 """
 
 from dataclasses import dataclass
-from typing import List, Tuple, Union, Sequence
+from typing import Iterable, List, Tuple, Union, Sequence
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -86,27 +86,14 @@ class Embedding:
         return self._coupling_map
 
 
-@dataclass(frozen=True)
-class _Row:
-    r"""
-    A class representing a dense row of the standard heavy hex planar embedding.
-
-    Args:
-        num_qubits: The number of qubits in the dense row.
-        x_offset: The integer x-offset of the row.
-        down_links: The positions of dense row, wrt the first qubit, at which to place qubits below.
-    """
-
-    num_qubits: int
-    x_offset: int = 0
-    down_links: Sequence[int] = ()
-
-
-def _heavy_hex_coords(rows: Sequence[_Row], row_major: bool = True) -> List[Tuple[int, int]]:
+def _heavy_hex_coords(
+    rows: Sequence[Iterable[int]], row_major: bool = True
+) -> List[Tuple[int, int]]:
     """Generate heavy hex coordinates for the given rows.
 
     Args:
-        rows: The dense rows specifications.
+        rows: A sequence of iterables of integer, where every integer represents the column index
+            of a qubit in the given row.
         row_major: Whether qubits should be labelled in row-major order (by ``x`` first and, in
             case of a tie, by ``y``) or in colum-major order.
 
@@ -117,15 +104,9 @@ def _heavy_hex_coords(rows: Sequence[_Row], row_major: bool = True) -> List[Tupl
 
     # Add coordinates in row-major order
     row_idx = 0
-    for row in rows:
-        if row.num_qubits:
-            for col_idx in range(row.num_qubits):
-                coordinates += [(row_idx, col_idx + row.x_offset)]
-            row_idx += 1
-        if row.down_links:
-            for col_idx in row.down_links:
-                coordinates += [(row_idx, col_idx + row.x_offset)]
-            row_idx += 1
+    for row_idx, row in enumerate(rows):
+        for col_idx in row:
+            coordinates += [(row_idx, col_idx)]
 
     # Sort if colum-major order is required
     if not row_major:
@@ -155,7 +136,7 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
         return [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
 
     if num_qubits == 7:
-        rows = [_Row(3, 0, (1,)), _Row(3, 0)]
+        rows = [r := range(3), [1], r]
         return _heavy_hex_coords(rows)
 
     if num_qubits == 15:
@@ -178,49 +159,44 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
         ]
 
     if num_qubits == 16:
-        rows = [_Row(0, 0, (3,)), _Row(7, 0, (1, 5)), _Row(5, 1, (2,))]
+        rows = [
+            [
+                3,
+            ],
+            range(7),
+            [1, 5],
+            range(1, 6),
+            [3],
+        ]
         return _heavy_hex_coords(rows, False)
 
     if num_qubits == 20:
-        rows = [row := _Row(5, 0), row, row, row]
+        rows = [r := range(5), r, r, r]
         return _heavy_hex_coords(rows)
 
     if num_qubits == 27:
-        rows = [_Row(0, 0, [3, 7]), _Row(10, 0, [1, 5, 9]), _Row(10, 1, [2, 6])]
+        rows = [[3, 7], range(10), [1, 5, 9], range(1, 11), [3, 7]]
         return _heavy_hex_coords(rows, False)
 
     if num_qubits == 28:
-        rows = [
-            _Row(5, 2, (0, 4)),
-            _Row(9, 0, (0, 4, 8)),
-            _Row(9, 0),
-        ]
+        rows = [range(2, 7), [2, 6], range(9), [0, 4, 8], range(9)]
         return _heavy_hex_coords(rows=rows)
 
     if num_qubits == 53:
-        rows = [
-            _Row(5, 2, (0, 4)),
-            r1 := _Row(9, 0, (0, 4, 8)),
-            r2 := _Row(9, 0, (2, 6)),
-            r1,
-            r2,
-        ]
+        r1 = [range(9), [0, 4, 8]]
+        r2 = [range(9), [2, 6]]
+        rows = [range(2, 7), [2, 6]] + r1 + r2 + r1 + r2
         return _heavy_hex_coords(rows, True)
 
     if num_qubits == 65:
-        rows = [
-            _Row(10, 0, (0, 4, 8)),
-            r := _Row(11, 0, (2, 6, 10)),
-            _Row(11, 0, (0, 4, 8)),
-            r,
-            _Row(10, 1),
-        ]
+        r = [range(11), [2, 6, 10]]
+        rows = [range(10), [0, 4, 8]] + r + [range(11), [0, 4, 8]] + r + [range(1, 11)]
         return _heavy_hex_coords(rows, True)
 
     if num_qubits == 127:
-        r1 = _Row(15, 0, (2, 6, 10, 14))
-        r2 = _Row(15, 0, (0, 4, 8, 12))
-        rows = [_Row(14, 0, (0, 4, 8, 12)), r1, r2, r1, r2, r1, _Row(14, 1)]
+        r1 = [range(15), [2, 6, 10, 14]]
+        r2 = [range(15), [0, 4, 8, 12]]
+        rows = [range(14), [0, 4, 8, 12]] + r1 + r2 + r1 + r2 + r1 + [range(1, 15)]
         return _heavy_hex_coords(rows, True)
 
     raise ValueError(f"Coordinates for {num_qubits}-qubit CPU are unknown.")
