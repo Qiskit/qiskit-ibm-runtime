@@ -40,7 +40,7 @@ class ResilienceOptionsV2:
 
     measure_mitigation: Union[UnsetType, bool] = Unset
     r"""Whether to enable measurement error mitigation method.
-        If you enable measurement mitigation, you can fine tune its noise learning
+        If you enable measurement mitigation, you can fine-tune its noise learning
         by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
         for all measurement mitigation noise learning options.
 
