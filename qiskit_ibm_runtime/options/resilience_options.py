@@ -83,7 +83,7 @@ class ResilienceOptionsV2:
     layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError]] = Unset
     r"""A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
         objects. If set, all the mitigation strategies that require noise data (e.g., PEC and
-        PEA) skip the noise learning stage, and instead gather the required information from
+        PEA) skip the noise-learning stage, and instead gather the required information from
         ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
         are treated as noiseless and their noise is not mitigated.
     """
