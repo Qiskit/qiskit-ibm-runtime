@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Union
+from typing import Iterable, Union
 from numpy.typing import ArrayLike
 import numpy as np
 
@@ -125,7 +125,7 @@ class NeatResult:
     def __init__(self, pub_results: Iterable[NeatPubResult]) -> None:
         self._pub_results = list(pub_results)
 
-    def __getitem__(self, index) -> NeatPubResult:
+    def __getitem__(self, index: int) -> NeatPubResult:
         return self._pub_results[index]
 
     def __len__(self) -> int:
@@ -134,5 +134,5 @@ class NeatResult:
     def __repr__(self) -> str:
         return f"NeatResult({self._pub_results})"
 
-    def __iter__(self) -> Iterable[NeatResult]:
+    def __iter__(self) -> Iterable[NeatPubResult]:
         return iter(self._pub_results)
