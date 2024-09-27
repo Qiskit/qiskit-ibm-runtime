@@ -103,7 +103,7 @@ class EstimatorOptions(OptionsV2):
         :class:`DynamicalDecouplingOptions` for all available options.
     """
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
-    r"""Advanced resilience options to fine tune the resilience strategy.
+    r"""Advanced resilience options to fine-tune the resilience strategy.
         See :class:`ResilienceOptionsV2` for all available options.
     """
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
