@@ -10,27 +10,27 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for DebuggerResult class."""
+"""Tests for NeatPubResult class."""
 
 import ddt
 
 from qiskit.primitives.containers import PubResult, DataBin
 
-from qiskit_ibm_runtime.debugger import DebuggerResult
+from qiskit_ibm_runtime.debugger import NeatPubResult
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import combine
 
 
 @ddt.ddt
-class TestDebuggerResult(IBMTestCase):
-    """Class for testing the DebuggerResult class."""
+class TestNeatPubResult(IBMTestCase):
+    """Class for testing the NeatPubResult class."""
 
     def setUp(self) -> None:
         super().setUp()
 
-        result1 = DebuggerResult([1, 2, 3])
-        result2 = DebuggerResult([[1, 2], [3, 4]])
+        result1 = NeatPubResult([1, 2, 3])
+        result2 = NeatPubResult([[1, 2], [3, 4]])
         self.results = [result1, result2]
 
         databin1 = DataBin(evs=[4, 5, 6])
@@ -45,7 +45,7 @@ class TestDebuggerResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_scalarlike(self, scalar, idx, op_name):
-        r"""Test operations between ``DebuggerResult`` and ``ScalarLike`` objects."""
+        r"""Test operations between ``NeatPubResult`` and ``ScalarLike`` objects."""
         result = self.results[idx]
 
         new_result = getattr(result, f"__{op_name}__")(scalar)
@@ -58,7 +58,7 @@ class TestDebuggerResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_debugger_result(self, idx, op_name):
-        r"""Test operations between two ``DebuggerResult`` objects."""
+        r"""Test operations between two ``NeatPubResult`` objects."""
         result1 = self.results[idx]
         result2 = 2 * result1
 
@@ -72,7 +72,7 @@ class TestDebuggerResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_databins(self, idx, op_name):
-        r"""Test operations between ``DebuggerResult`` and ``DataBin`` objects."""
+        r"""Test operations between ``NeatPubResult`` and ``DataBin`` objects."""
         result = self.results[idx]
         databin = self.databins[idx]
 
@@ -83,7 +83,7 @@ class TestDebuggerResult(IBMTestCase):
 
     @combine(op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"])
     def test_error_for_operations_with_databins(self, op_name):
-        r"""Test the errors for operations between ``DebuggerResult`` and ``DataBin``."""
+        r"""Test the errors for operations between ``NeatPubResult`` and ``DataBin``."""
         result = self.results[0]
         databin = DataBin(wrong_kwarg=result.vals)
 
@@ -95,7 +95,7 @@ class TestDebuggerResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_pub_results(self, idx, op_name):
-        r"""Test operations between ``DebuggerResult`` and ``PubResult`` objects."""
+        r"""Test operations between ``NeatPubResult`` and ``PubResult`` objects."""
         result = self.results[idx]
         pub_result = self.pub_results[idx]
 
@@ -106,7 +106,7 @@ class TestDebuggerResult(IBMTestCase):
 
     def test_abs(self):
         r"""Test the ``abs`` operator."""
-        result = DebuggerResult([-1, 0, 1])
+        result = NeatPubResult([-1, 0, 1])
         new_result = abs(result)
         new_vals = abs(result.vals)
 

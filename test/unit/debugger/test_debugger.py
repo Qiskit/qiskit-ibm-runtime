@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Debugger class."""
+"""Tests for NEAT class."""
 
 import numpy as np
 
@@ -21,13 +21,13 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.debugger import Debugger
+from qiskit_ibm_runtime.debugger import NEAT
 
 from ...ibm_test_case import IBMTestCase
 
 
-class TestDebugger(IBMTestCase):
-    """Class for testing the Debugger class."""
+class TestNEAT(IBMTestCase):
+    """Class for testing the NEAT class."""
 
     def setUp(self):
         super().setUp()
@@ -61,7 +61,7 @@ class TestDebugger(IBMTestCase):
 
     def test_simulate_ideal(self):
         r"""Test the ``simulate`` method with ``with_noise=False``."""
-        debugger = Debugger(self.backend)
+        debugger = NEAT(self.backend)
 
         r1 = debugger.simulate([(self.c1, self.obs1_xx)], with_noise=False)
         self.assertEqual(r1[0].vals, 1)
@@ -81,7 +81,7 @@ class TestDebugger(IBMTestCase):
 
     def test_simulate_noisy(self):
         r"""Test the ``simulate`` method with ``with_noise=True``."""
-        debugger = Debugger(self.backend, self.noise_model)
+        debugger = NEAT(self.backend, self.noise_model)
 
         r1 = debugger.simulate([(self.c1, self.obs1_xx)], with_noise=True)
         self.assertListEqual(list(r1[0].vals.shape), [])
@@ -106,7 +106,7 @@ class TestDebugger(IBMTestCase):
         pubs = [(qc, "ZZZ")]
 
         with self.assertRaisesRegex(ValueError, "non-Clifford circuit"):
-            Debugger(self.backend).simulate(pubs)
+            NEAT(self.backend).simulate(pubs)
 
     def test_to_clifford(self):
         r"""Tests the ``to_clifford`` method."""
@@ -120,7 +120,7 @@ class TestDebugger(IBMTestCase):
         qc.rz(np.pi, 0)
         qc.rz(3 * np.pi / 2 + 0.1, 1)
         qc.cx(0, 1)
-        transformed = Debugger(self.backend).to_clifford([(qc, "ZZ")])[0]
+        transformed = NEAT(self.backend).to_clifford([(qc, "ZZ")])[0]
 
         expected = QuantumCircuit(2, 2)
         expected.id(0)

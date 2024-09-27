@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""A debugger."""
+"""A class to help understanding the expected performance of estimator jobs."""
 
 from __future__ import annotations
 from typing import Optional, Sequence, List
@@ -21,7 +21,7 @@ from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers import BackendV2 as Backend
 
-from qiskit_ibm_runtime.debugger.debugger_results import DebuggerResult
+from qiskit_ibm_runtime.debugger.neat_results import NeatPubResult
 from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
 from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
@@ -63,13 +63,44 @@ def _validate_pubs(
                 if op.name == "rz" and op.params[0] not in [0, np.pi / 2, np.pi, 3 * np.pi / 2]:
                     raise ValueError(
                         "Given ``pubs`` contain non-Clifford circuits. To fix, consider using the "
-                        ":meth:`Debugger.to_clifford` method to map the PUBs' circuits to Clifford"
+                        ":meth:`NEAT.to_clifford` method to map the PUBs' circuits to Clifford"
                         " circuits, then try again."
                     )
 
 
-class Debugger:
-    r"""A class to help understanding the expected performance of Estimator jobs.
+class NEAT:
+    r"""A class to help understanding the expected performance of estimator jobs.
+
+    The "Noisy Estimator Analyzer Tool" (or NEAT) is a convenience tool that users of the
+    :class`~.Estimator`: primitive can employ to analyze and predict the performance of
+    their query. Its simulate method uses ``qiskit-aer`` to simulate the estimation task
+    classically efficiently, either in ideal conditions or in the presence of noise. Its
+    results can be seamelessly compared with other NEAT results or with primitive results to
+    draw custom figures of merit.
+
+    .. code::python
+
+        # Initialize a NEAT object
+        ne_analyzer = NEAT(backend)
+
+        # Map arbitrary PUBs to Clifford PUBs
+        cliff_pubs = ne_analyzer.to_clifford(pubs)
+
+        # Calculate the expectation values in the absence of noise
+        r_ideal = ne_analyzer.simulate(cliff_pubs, with_noise=False)
+
+        # Calculate the expectation values in the presence of noise
+        r_noisy = ne_analyzer.simulate(cliff_pubs, with_noise=True)
+
+        # Run the Clifford PUBs on a QPU
+        r_qpu = estimator.run(cliff_pubs)
+
+        # Calculate useful figures of merit using mathematical operators, for
+        # example the signal to noise ratio between noisy and ideal results ...
+        signal_to_noise_ratio = r_noisy[0] / r_ideal[0]
+
+        # ... or the relative difference between experimental and ideal results
+        rel_diff = abs(r_ideal[0] - r_qpu.data[0]) / r_ideal[0]
 
     Args:
         backend: A backend.
@@ -80,7 +111,7 @@ class Debugger:
     def __init__(self, backend: Backend, noise_model: Optional[NoiseModel] = None) -> None:
         if not HAS_QISKIT_AER:
             raise ValueError(
-                "Cannot initialize object of type 'Debugger' since 'qiskit-aer' is not installed. "
+                "Cannot initialize object of type 'NEAT' since 'qiskit-aer' is not installed. "
                 "Install 'qiskit-aer' and try again."
             )
 
@@ -94,13 +125,13 @@ class Debugger:
     @property
     def noise_model(self) -> NoiseModel:
         r"""
-        The noise model used by this debugger for the noisy simulations.
+        The noise model used by this analyzer tool for the noisy simulations.
         """
         return self._noise_model
 
     def backend(self) -> Backend:
         r"""
-        The backend used by this debugger.
+        The backend used by this analyzer tool.
         """
         return self._backend
 
@@ -110,28 +141,28 @@ class Debugger:
         with_noise: bool = True,
         seed_simulator: Optional[int] = None,
         default_precision: float = 0,
-    ) -> list[DebuggerResult]:
+    ) -> list[NeatPubResult]:
         r"""
         Calculates the expectation values for the estimator task specified by the given ``pubs``.
 
         This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
-        classically. It returns a list of ``DebuggerResult`` objects, each one corresponding to a
-        different PUB. Users can subsequently compare debugger results with other debugger results
+        classically. It returns a list of ``NeatPubResult`` objects, each one corresponding to a
+        different PUB. Users can subsequently compare NEAT results with other NEAT results
         or with primitive results to draw figures of merit.
 
         .. code::python
 
-            # Initialize a debugger
-            debugger = Debugger(backend)
+            # Initialize a NEAT object
+            neat = NEAT(backend)
 
             # Map arbitrary PUBs to Clifford PUBs
-            cliff_pubs = debugger.to_clifford(pubs)
+            cliff_pubs = neat.to_clifford(pubs)
 
             # Calculate the expectation values in the absence of noise
-            r_ideal = debugger.simulate(cliff_pubs, with_noise=False)
+            r_ideal = neat.simulate(cliff_pubs, with_noise=False)
 
             # Calculate the expectation values in the presence of noise
-            r_noisy = debugger.simulate(cliff_pubs, with_noise=True)
+            r_noisy = neat.simulate(cliff_pubs, with_noise=True)
 
             # Run the Clifford PUBs on a QPU
             r_qpu = estimator.run(cliff_pubs)
@@ -145,7 +176,7 @@ class Debugger:
             so that it can be simulated efficiently regardless of its size. For estimation tasks
             that involve non-Clifford circuits, the recommended workflow consists of mapping
             the non-Clifford circuits to the nearest Clifford circuits using the
-            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the debugger's
+            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the NEAT's
             :meth:`to_clifford` convenience method.
 
         Args:
@@ -165,7 +196,7 @@ class Debugger:
         estimator = AerEstimator(
             options={"backend_options": backend_options, "default_precision": default_precision}
         )
-        return [DebuggerResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
+        return [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""
@@ -196,4 +227,4 @@ class Debugger:
         return coerced_pubs
 
     def __repr__(self) -> str:
-        return f'Debugger(backend="{self.backend().name}")'
+        return f'NEAT(backend="{self.backend().name}")'

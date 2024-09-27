@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-""" A class to store debugger results.
-"""
+""" A class to store NEAT results."""
 
 from __future__ import annotations
 
@@ -22,30 +21,30 @@ import numpy as np
 from qiskit.primitives.containers import PubResult, DataBin
 
 # Type aliases
-DebuggerResultLike = Union["DebuggerResult", PubResult, DataBin]
+NeatPubResultLike = Union["NeatPubResult", PubResult, DataBin]
 ScalarLike = Union[int, float]
 
 
-class DebuggerResult:
-    r"""A class to store the results of the ``Debugger``.
+class NeatPubResult:
+    r"""A class to store the results of the Noisy Estimator Analyzer Tool (NEAT).
 
     It allows performing mathematical operations (``+``, ``-``, ``*``, ``/``, ``abs``, and ``**``)
-    with other objects of type :class:`.~DebuggerResultLike` and with scalars.
+    with other objects of type :class:`.~NeatPubResultLike` and with scalars.
 
     .. code::python
 
-        from qiskit_ibm_runtime.debugger import DebuggerResult
+        from qiskit_ibm_runtime.debugger import NeatPubResult
 
-        res = DebuggerResult([[1, 2], [3, 4]])
+        res = NeatPubResult([[1, 2], [3, 4]])
 
-        # this returns DebuggerResult([[3, 4], [5, 6]])
+        # this returns NeatPubResult([[3, 4], [5, 6]])
         res + 2
 
-        # this returns DebuggerResult([[3, 8], [15, 24]])
+        # this returns NeatPubResult([[3, 8], [15, 24]])
         res * (res + 2)
 
     Args:
-        vals: The values in this :class:`.~DebuggerResult`.
+        vals: The values in this :class:`.~NeatPubResult`.
     """
 
     def __init__(self, vals: ArrayLike) -> None:
@@ -53,17 +52,17 @@ class DebuggerResult:
 
     @property
     def vals(self) -> np.ndarray:
-        r"""The values in this :class:`.~DebuggerResult`."""
+        r"""The values in this :class:`.~NeatPubResult`."""
         return self._vals
 
     def _coerced_operation(
-        self, other: Union[ScalarLike, DebuggerResultLike], op_name: str
-    ) -> DebuggerResult:
+        self, other: Union[ScalarLike, NeatPubResultLike], op_name: str
+    ) -> NeatPubResult:
         r"""
         Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``.
         """
         if not isinstance(other, (int, float)):
-            if isinstance(other, DebuggerResult):
+            if isinstance(other, NeatPubResult):
                 other = other.vals
             elif isinstance(other, PubResult):
                 other = other.data.evs
@@ -72,45 +71,45 @@ class DebuggerResult:
                     other = other.evs
                 except AttributeError:
                     raise ValueError(
-                        f"Cannot apply operator '{op_name}' between 'DebuggerResult' and"
+                        f"Cannot apply operator '{op_name}' between 'NeatPubResult' and"
                         "'DataBin' that has no attribute ``evs``."
                     )
             else:
                 raise ValueError(
-                    f"Cannot apply operator '{op_name}' to objects of type 'DebuggerResult' and "
+                    f"Cannot apply operator '{op_name}' to objects of type 'NeatPubResult' and "
                     f"'{other.__class__}'."
                 )
-        return DebuggerResult(getattr(self.vals, f"{op_name}")(other))
+        return NeatPubResult(getattr(self.vals, f"{op_name}")(other))
 
-    def __abs__(self) -> DebuggerResult:
-        return DebuggerResult(np.abs(self.vals))
+    def __abs__(self) -> NeatPubResult:
+        return NeatPubResult(np.abs(self.vals))
 
-    def __add__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __add__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__add__")
 
-    def __mul__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __mul__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__mul__")
 
-    def __sub__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __sub__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__sub__")
 
-    def __truediv__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __truediv__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__truediv__")
 
-    def __radd__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __radd__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__radd__")
 
-    def __rmul__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __rmul__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__rmul__")
 
-    def __rsub__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __rsub__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__rsub__")
 
-    def __rtruediv__(self, other: Union[ScalarLike, DebuggerResultLike]) -> DebuggerResult:
+    def __rtruediv__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
         return self._coerced_operation(other, "__rtruediv__")
 
-    def __pow__(self, p: ScalarLike) -> DebuggerResult:
-        return DebuggerResult(self._vals**p)
+    def __pow__(self, p: ScalarLike) -> NeatPubResult:
+        return NeatPubResult(self._vals**p)
 
     def __repr__(self) -> str:
-        return f"DebuggerResult(vals={repr(self.vals)})"
+        return f"NeatPubResult(vals={repr(self.vals)})"

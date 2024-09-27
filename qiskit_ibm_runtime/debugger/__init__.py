@@ -13,5 +13,5 @@
 """ Functions and classes for debugging estimator jobs.
 """
 
-from .debugger import Debugger
-from .debugger_results import DebuggerResult
+from .neat import NEAT
+from .neat_results import NeatPubResult
