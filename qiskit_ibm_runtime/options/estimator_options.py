@@ -40,7 +40,7 @@ class EstimatorOptions(OptionsV2):
     default_precision: Union[UnsetType, float] = Unset
     r"""The default precision to use for any PUB or ``run()``
         call that does not specify one.
-        Each estimator pub can specify its own precision. If the ``run()`` method
+        Each Estimator PUB can specify its own precision. If the ``run()`` method
         is given a precision, then that value is used for all PUBs in the ``run()``
         call that do not specify their own. 
         
