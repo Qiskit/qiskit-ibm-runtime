@@ -66,8 +66,8 @@ class Embedding:
             coordinates = _get_qubits_coordinates(backend.num_qubits)
         except ValueError as err:
             raise ValueError(
-                f"Failed to fetch coordinates for backend '{backend.name}' with error: {err}"
-            )
+                f"Failed to fetch coordinates for backend '{backend.name}'."
+            ) from err
 
         return cls(coordinates, coupling_map)
 
