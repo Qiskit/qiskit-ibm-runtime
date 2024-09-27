@@ -53,7 +53,7 @@ class ResilienceOptionsV2:
         See :class:`MeasureNoiseLearningOptions` for all options.
     """
     zne_mitigation: Union[UnsetType, bool] = Unset
-    r"""Whether to turn on Zero Noise Extrapolation error mitigation method.
+    r"""Whether to turn on Zero-Noise Extrapolation error mitigation method.
         If you enable ZNE, you can fine tune its options by using :attr:`~zne`.
         See :class:`ZneOptions` for additional ZNE related options.
 
