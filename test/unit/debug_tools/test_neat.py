@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for NEAT class."""
+"""Tests for Neat class."""
 
 import numpy as np
 
@@ -21,13 +21,13 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.debugger import NEAT
+from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
 
 from ...ibm_test_case import IBMTestCase
 
 
-class TestNEAT(IBMTestCase):
-    """Class for testing the NEAT class."""
+class TestNeat(IBMTestCase):
+    """Class for testing the Neat class."""
 
     def setUp(self):
         super().setUp()
@@ -61,41 +61,43 @@ class TestNEAT(IBMTestCase):
 
     def test_simulate_ideal(self):
         r"""Test the ``simulate`` method with ``with_noise=False``."""
-        debugger = NEAT(self.backend)
+        analyzer = Neat(self.backend)
 
-        r1 = debugger.simulate([(self.c1, self.obs1_xx)], with_noise=False)
+        r1 = analyzer.simulate([(self.c1, self.obs1_xx)], with_noise=False)
+        self.assertIsInstance(r1, NeatResult)
         self.assertEqual(r1[0].vals, 1)
 
-        r2 = debugger.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=False)
+        r2 = analyzer.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=False)
+        self.assertIsInstance(r2, NeatResult)
         self.assertListEqual(r2[0].vals.tolist(), [1, 0])
 
-        r3 = debugger.simulate(
-            [
-                (self.c1, [self.obs1_xx, self.obs1_zi]),
-                (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
-            ],
-            with_noise=False,
-        )
+        pubs3 = [
+            (self.c1, [self.obs1_xx, self.obs1_zi]),
+            (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
+        ]
+        r3 = analyzer.simulate(pubs3, with_noise=False)
+        self.assertIsInstance(r3, NeatResult)
         self.assertListEqual(r3[0].vals.tolist(), [1, 0])
         self.assertListEqual(r3[1].vals.tolist(), [1, 0, 1])
 
     def test_simulate_noisy(self):
         r"""Test the ``simulate`` method with ``with_noise=True``."""
-        debugger = NEAT(self.backend, self.noise_model)
+        analyzer = Neat(self.backend, self.noise_model)
 
-        r1 = debugger.simulate([(self.c1, self.obs1_xx)], with_noise=True)
+        r1 = analyzer.simulate([(self.c1, self.obs1_xx)], with_noise=True)
+        self.assertIsInstance(r1, NeatResult)
         self.assertListEqual(list(r1[0].vals.shape), [])
 
-        r2 = debugger.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=True)
+        r2 = analyzer.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=True)
+        self.assertIsInstance(r2, NeatResult)
         self.assertListEqual(list(r2[0].vals.shape), [2])
 
-        r3 = debugger.simulate(
-            [
-                (self.c1, [self.obs1_xx, self.obs1_zi]),
-                (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
-            ],
-            with_noise=False,
-        )
+        pubs3 = [
+            (self.c1, [self.obs1_xx, self.obs1_zi]),
+            (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
+        ]
+        r3 = analyzer.simulate(pubs3, with_noise=True)
+        self.assertIsInstance(r3, NeatResult)
         self.assertListEqual(list(r3[0].vals.shape), [2])
         self.assertListEqual(list(r3[1].vals.shape), [3])
 
@@ -106,7 +108,7 @@ class TestNEAT(IBMTestCase):
         pubs = [(qc, "ZZZ")]
 
         with self.assertRaisesRegex(ValueError, "non-Clifford circuit"):
-            NEAT(self.backend).simulate(pubs)
+            Neat(self.backend).simulate(pubs)
 
     def test_to_clifford(self):
         r"""Tests the ``to_clifford`` method."""
@@ -120,7 +122,7 @@ class TestNEAT(IBMTestCase):
         qc.rz(np.pi, 0)
         qc.rz(3 * np.pi / 2 + 0.1, 1)
         qc.cx(0, 1)
-        transformed = NEAT(self.backend).to_clifford([(qc, "ZZ")])[0]
+        transformed = Neat(self.backend).to_clifford([(qc, "ZZ")])[0]
 
         expected = QuantumCircuit(2, 2)
         expected.id(0)

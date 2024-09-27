@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-""" Functions and classes for debugging estimator jobs.
-"""
+"""Functions and classes for debugging and analyzing qiskit-ibm-runtime jobs."""
 
-from .neat import NEAT
-from .neat_results import NeatPubResult
+from .neat import Neat
+from .neat_results import NeatPubResult, NeatResult

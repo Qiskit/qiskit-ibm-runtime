@@ -21,7 +21,7 @@ from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.providers import BackendV2 as Backend
 
-from qiskit_ibm_runtime.debugger.neat_results import NeatPubResult
+from qiskit_ibm_runtime.debug_tools.neat_results import NeatPubResult, NeatResult
 from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
 from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
@@ -38,7 +38,7 @@ except ImportError:
 def _validate_pubs(
     backend: Backend, pubs: List[EstimatorPub], validate_clifford: bool = True
 ) -> None:
-    r"""Validate a list of PUBs for use inside the debugger.
+    r"""Validate a list of PUBs for use inside the neat class.
 
     This funtion runs the :meth:`.~validate_estimator_pubs` and :meth:`.~validate_isa_circuits`
     checks. Optionally, it also validates that every PUB's circuit is a Clifford circuit.
@@ -63,44 +63,51 @@ def _validate_pubs(
                 if op.name == "rz" and op.params[0] not in [0, np.pi / 2, np.pi, 3 * np.pi / 2]:
                     raise ValueError(
                         "Given ``pubs`` contain non-Clifford circuits. To fix, consider using the "
-                        ":meth:`NEAT.to_clifford` method to map the PUBs' circuits to Clifford"
+                        "``.to_clifford`` method of ``Neat`` to map the PUBs' circuits to Clifford"
                         " circuits, then try again."
                     )
 
 
-class NEAT:
+class Neat:
     r"""A class to help understanding the expected performance of estimator jobs.
 
-    The "Noisy Estimator Analyzer Tool" (or NEAT) is a convenience tool that users of the
-    :class`~.Estimator`: primitive can employ to analyze and predict the performance of
-    their query. Its simulate method uses ``qiskit-aer`` to simulate the estimation task
-    classically efficiently, either in ideal conditions or in the presence of noise. Its
-    results can be seamelessly compared with other NEAT results or with primitive results to
-    draw custom figures of merit.
+    The "Noisy Estimator Analyzer Tool" (or "NEAT") is a convenience tool that users of the
+    :class:`~.Estimator` primitive can employ to analyze and predict the performance of
+    their queries. Its simulate method uses ``qiskit-aer`` to simulate the estimation task
+    classically efficiently, either in ideal conditions or in the presence of noise. The
+    simulations' results can be seamelessly compared with other simulation results or with
+    primitive results to draw custom figures of merit.
 
     .. code::python
 
-        # Initialize a NEAT object
-        ne_analyzer = NEAT(backend)
+        # Initialize a Neat object
+        analyzer = Neat(backend)
 
         # Map arbitrary PUBs to Clifford PUBs
-        cliff_pubs = ne_analyzer.to_clifford(pubs)
+        cliff_pubs = analyzer.to_clifford(pubs)
 
         # Calculate the expectation values in the absence of noise
-        r_ideal = ne_analyzer.simulate(cliff_pubs, with_noise=False)
+        r_ideal = analyzer.simulate(cliff_pubs, with_noise=False)
 
         # Calculate the expectation values in the presence of noise
-        r_noisy = ne_analyzer.simulate(cliff_pubs, with_noise=True)
+        r_noisy = analyzer.simulate(cliff_pubs, with_noise=True)
+
+        # Calculate the expectation values for a different noise model
+        analyzer.noise_model = another_noise_model
+        another_r_noisy = analyzer.simulate(cliff_pubs, with_noise=True)
 
         # Run the Clifford PUBs on a QPU
         r_qpu = estimator.run(cliff_pubs)
 
         # Calculate useful figures of merit using mathematical operators, for
-        # example the signal to noise ratio between noisy and ideal results ...
+        # example the signal to noise ratio between noisy and ideal results, ...
         signal_to_noise_ratio = r_noisy[0] / r_ideal[0]
 
-        # ... or the relative difference between experimental and ideal results
+        # ... the relative difference between experimental and ideal results, ...
         rel_diff = abs(r_ideal[0] - r_qpu.data[0]) / r_ideal[0]
+
+        # ... or the absolute difference between results obtained with different noise models
+        abs_diff = abs(r_noisy[0] - another_r_noisy[0])
 
     Args:
         backend: A backend.
@@ -111,7 +118,7 @@ class NEAT:
     def __init__(self, backend: Backend, noise_model: Optional[NoiseModel] = None) -> None:
         if not HAS_QISKIT_AER:
             raise ValueError(
-                "Cannot initialize object of type 'NEAT' since 'qiskit-aer' is not installed. "
+                "Cannot initialize object of type 'Neat' since 'qiskit-aer' is not installed. "
                 "Install 'qiskit-aer' and try again."
             )
 
@@ -129,6 +136,15 @@ class NEAT:
         """
         return self._noise_model
 
+    @noise_model.setter
+    def noise_model(self, value: NoiseModel) -> NoiseModel:
+        """Sets a new noise model.
+
+        Args:
+            value: A new noise model.
+        """
+        self._noise_model = value
+
     def backend(self) -> Backend:
         r"""
         The backend used by this analyzer tool.
@@ -141,42 +157,19 @@ class NEAT:
         with_noise: bool = True,
         seed_simulator: Optional[int] = None,
         default_precision: float = 0,
-    ) -> list[NeatPubResult]:
+    ) -> NeatResult:
         r"""
         Calculates the expectation values for the estimator task specified by the given ``pubs``.
 
         This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
-        classically. It returns a list of ``NeatPubResult`` objects, each one corresponding to a
-        different PUB. Users can subsequently compare NEAT results with other NEAT results
-        or with primitive results to draw figures of merit.
-
-        .. code::python
-
-            # Initialize a NEAT object
-            neat = NEAT(backend)
-
-            # Map arbitrary PUBs to Clifford PUBs
-            cliff_pubs = neat.to_clifford(pubs)
-
-            # Calculate the expectation values in the absence of noise
-            r_ideal = neat.simulate(cliff_pubs, with_noise=False)
-
-            # Calculate the expectation values in the presence of noise
-            r_noisy = neat.simulate(cliff_pubs, with_noise=True)
-
-            # Run the Clifford PUBs on a QPU
-            r_qpu = estimator.run(cliff_pubs)
-
-            # Calculate useful figures of merit using mathematical operators
-            signal_to_noise_ratio = r_noisy[0] / r_ideal[0]
-            rel_diff = abs(r_ideal[0] - r_qpu.data[0]) / r_ideal[0]
+        classically.
 
         .. note::
             To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
             so that it can be simulated efficiently regardless of its size. For estimation tasks
             that involve non-Clifford circuits, the recommended workflow consists of mapping
             the non-Clifford circuits to the nearest Clifford circuits using the
-            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the NEAT's
+            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the Neat's
             :meth:`to_clifford` convenience method.
 
         Args:
@@ -185,6 +178,9 @@ class NEAT:
                 simulation (``True``).
             seed_simulator: A seed for the simulator.
             default_precision: The default precision used to run the ideal and noisy simulations.
+
+        Returns:
+            The results of the simulation.
         """
         _validate_pubs(self.backend(), coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
 
@@ -196,7 +192,9 @@ class NEAT:
         estimator = AerEstimator(
             options={"backend_options": backend_options, "default_precision": default_precision}
         )
-        return [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
+
+        pub_results = [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
+        return NeatResult(pub_results)
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""
@@ -227,4 +225,4 @@ class NEAT:
         return coerced_pubs
 
     def __repr__(self) -> str:
-        return f'NEAT(backend="{self.backend().name}")'
+        return f'Neat(backend="{self.backend().name}")'

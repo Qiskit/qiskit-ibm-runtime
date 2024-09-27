@@ -10,13 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for NeatPubResult class."""
+"""Tests for result classes for Neat objects."""
 
 import ddt
 
 from qiskit.primitives.containers import PubResult, DataBin
 
-from qiskit_ibm_runtime.debugger import NeatPubResult
+from qiskit_ibm_runtime.debug_tools import NeatPubResult, NeatResult
 
 from ...ibm_test_case import IBMTestCase
 from ...utils import combine
@@ -120,3 +120,31 @@ class TestNeatPubResult(IBMTestCase):
         new_vals = result.vals**p
 
         self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
+
+
+@ddt.ddt
+class TestNeatResult(IBMTestCase):
+    """Class for testing the NeatResult class."""
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        pub_result1 = NeatPubResult([1, 2, 3])
+        pub_result2 = NeatPubResult([[1, 2], [3, 4]])
+        self.pub_results = [pub_result1, pub_result2]
+
+    def test_getitem(self):
+        r"""Test the ``__getitem__`` method of NeatResult."""
+        r = NeatResult(self.pub_results)
+
+        self.assertListEqual(r[0].vals.tolist(), self.pub_results[0].vals.tolist())
+        self.assertListEqual(r[1].vals.tolist(), self.pub_results[1].vals.tolist())
+
+    def test_len(self):
+        r"""Test the ``__len__`` method of NeatResult."""
+        self.assertEqual(len(NeatResult(self.pub_results)), 2)
+
+    def test_iter(self):
+        r"""Test the ``__iter__`` method of NeatResult."""
+        for i, j in zip(NeatResult(self.pub_results), self.pub_results):
+            self.assertListEqual(i.vals.tolist(), j.vals.tolist())

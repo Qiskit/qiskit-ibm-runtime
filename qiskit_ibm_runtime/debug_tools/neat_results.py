@@ -10,11 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-""" A class to store NEAT results."""
+""" A class to store Neat results."""
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Iterable, List, Union
 from numpy.typing import ArrayLike
 import numpy as np
 
@@ -26,14 +26,14 @@ ScalarLike = Union[int, float]
 
 
 class NeatPubResult:
-    r"""A class to store the results of the Noisy Estimator Analyzer Tool (NEAT).
+    r"""A class to store the PUB results of :class:`.~Neat`.
 
     It allows performing mathematical operations (``+``, ``-``, ``*``, ``/``, ``abs``, and ``**``)
     with other objects of type :class:`.~NeatPubResultLike` and with scalars.
 
     .. code::python
 
-        from qiskit_ibm_runtime.debugger import NeatPubResult
+        from qiskit_ibm_runtime.debug_tools import NeatPubResult
 
         res = NeatPubResult([[1, 2], [3, 4]])
 
@@ -52,7 +52,7 @@ class NeatPubResult:
 
     @property
     def vals(self) -> np.ndarray:
-        r"""The values in this :class:`.~NeatPubResult`."""
+        r"""The values in this result."""
         return self._vals
 
     def _coerced_operation(
@@ -71,8 +71,8 @@ class NeatPubResult:
                     other = other.evs
                 except AttributeError:
                     raise ValueError(
-                        f"Cannot apply operator '{op_name}' between 'NeatPubResult' and"
-                        "'DataBin' that has no attribute ``evs``."
+                        f"Cannot apply operator '{op_name}' between 'NeatPubResult' and 'DataBin'"
+                        " that has no attribute ``evs``."
                     )
             else:
                 raise ValueError(
@@ -113,3 +113,26 @@ class NeatPubResult:
 
     def __repr__(self) -> str:
         return f"NeatPubResult(vals={repr(self.vals)})"
+
+
+class NeatResult:
+    """A container for multiple :class:`~.NeatPubResult` objects.
+
+    Args:
+        pub_results: An iterable of :class:`~.NeatPubResult` objects.
+    """
+
+    def __init__(self, pub_results: Iterable[NeatPubResult]) -> None:
+        self._pub_results = list(pub_results)
+
+    def __getitem__(self, index) -> NeatPubResult:
+        return self._pub_results[index]
+
+    def __len__(self) -> int:
+        return len(self._pub_results)
+
+    def __repr__(self) -> str:
+        return f"NeatResult({self._pub_results})"
+
+    def __iter__(self) -> Iterable[NeatResult]:
+        return iter(self._pub_results)
