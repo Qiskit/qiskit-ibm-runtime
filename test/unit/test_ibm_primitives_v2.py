@@ -494,11 +494,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
-
-        inst = primitive(mode=session)
+        inst = primitive(mode=ibm_backend)
 
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
@@ -526,11 +522,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pubs = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
@@ -555,11 +548,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -583,19 +573,14 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
-
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
             transpiled.measure_active(inplace=True)
             pub = (transpiled,)
 
-        with patch.object(Session, "_run") as mock_run:
+        with patch.object(inst, "_run") as mock_run:
             inst.run([pub])
         mock_run.assert_called_once()
 
@@ -616,7 +601,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
+        session = Session(service=service, backend=fake_backend)
 
         inst = primitive(mode=session)
         if isinstance(inst, IBMBaseEstimator):
