@@ -58,7 +58,7 @@ class EstimatorOptions(OptionsV2):
         value set to create a single measurement with basis rotations that is inserted into
         hardware executions.
 
-        If twirling is enabled, the value of this option will be divided over circuit,
+        If twirling is enabled, the value of this option will be divided over circuit
         randomizations, with a smaller number of shots per randomization. See the
         :attr:`~twirling` options.
 
