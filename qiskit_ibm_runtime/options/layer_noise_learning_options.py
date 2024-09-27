@@ -40,7 +40,7 @@ class LayerNoiseLearningOptions:
         A ``None`` value indicates that there is no limit.
         If there are more unique layers present, then some layers will not be learned or
         mitigated. The learned layers are prioritized based on the number of times they
-        occur in a set of run estimator PUBs, and for equally occurring layers are
+        occur in a set of run Estimator PUBs, and for equally occurring layers are
         further sorted by the number of two-qubit gates in the layer. 
         
         Default: 4.
