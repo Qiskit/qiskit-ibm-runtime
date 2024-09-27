@@ -60,7 +60,7 @@ class ResilienceOptionsV2:
         Default: False.
     """
     zne: Union[ZneOptions, Dict] = Field(default_factory=ZneOptions)
-    r"""Additional zero noise extrapolation mitigation options.
+    r"""Additional zero-noise extrapolation mitigation options.
         See :class:`ZneOptions` for all options.
     """
     pec_mitigation: Union[UnsetType, bool] = Unset
