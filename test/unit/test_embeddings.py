@@ -53,7 +53,7 @@ class TestEmbedding(IBMTestCase):
         with self.assertRaisesRegex(ValueError, "Invalid coupling map."):
             Embedding(e_vigo.coordinates, e_kyiv.coupling_map)
 
-        with self.assertRaisesRegex(ValueError, "Coordinates for 1-qubit CPU are unknown."):
+        with self.assertRaisesRegex(ValueError, "Failed to fetch coordinates for backend"):
             Embedding.from_backend(self.armonk)
 
 
