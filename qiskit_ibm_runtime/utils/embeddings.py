@@ -133,7 +133,7 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
         return [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
 
     if num_qubits == 7:
-        rows = [r := range(3), [1], r]
+        rows = [range(3), [1], range(3)]
         return _heavy_hex_coords(rows)
 
     if num_qubits == 15:
@@ -156,19 +156,11 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
         ]
 
     if num_qubits == 16:
-        rows = [
-            [
-                3,
-            ],
-            range(7),
-            [1, 5],
-            range(1, 6),
-            [3],
-        ]
+        rows = [[3], range(7), [1, 5], range(1, 6), [3]]
         return _heavy_hex_coords(rows, False)
 
     if num_qubits == 20:
-        rows = [r := range(5), r, r, r]
+        rows = [range(5)] * 4
         return _heavy_hex_coords(rows)
 
     if num_qubits == 27:
