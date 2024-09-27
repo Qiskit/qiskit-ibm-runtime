@@ -15,7 +15,6 @@
 Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
-from dataclasses import dataclass
 from typing import Iterable, List, Tuple, Union, Sequence
 
 from qiskit.providers.backend import BackendV2
@@ -90,8 +89,8 @@ def _heavy_hex_coords(
     """Generate heavy hex coordinates for the given rows.
 
     Args:
-        rows: A sequence of iterables of integer, where every integer represents the column index
-            of a qubit in the given row.
+        rows: A sequence of rows, sorted from top to bottom. Rows are specified as an iterable of
+            integers, where every integer represents a column index.
         row_major: Whether qubits should be labelled in row-major order (by ``x`` first and, in
             case of a tie, by ``y``) or in colum-major order.
 
