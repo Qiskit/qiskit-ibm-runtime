@@ -100,11 +100,11 @@ class Neat:
         r_qpu = estimator.run(cliff_pubs)
 
         # Calculate useful figures of merit using mathematical operators, for
-        # example the signal to noise ratio between noisy and ideal results, ...
-        signal_to_noise_ratio = r_noisy[0] / r_ideal[0]
+        # example the relative difference between experimental and noisy results, ...
+        rel_diff = abs(r_noisy[0] - r_qpu[0]) / r_noisy[0]
 
-        # ... the relative difference between experimental and ideal results, ...
-        rel_diff = abs(r_ideal[0] - r_qpu.data[0]) / r_ideal[0]
+        # ... the signal-to-noise ratio between experimental and ideal results, ...
+        ratio = r_qpu[0] / r_ideal[0]
 
         # ... or the absolute difference between results obtained with different noise models
         abs_diff = abs(r_noisy[0] - another_r_noisy[0])
