@@ -99,8 +99,8 @@ class Neat:
         # Run the Clifford PUBs on a QPU
         r_qpu = estimator.run(cliff_pubs)
 
-        # Calculate useful figures of merit using mathematical operators, for
-        # example the relative difference between experimental and noisy results, ...
+        # Calculate useful figures of merit using mathematical operators, for example the relative
+        # difference between experimental and noisy results, ...
         rel_diff = abs(r_noisy[0] - r_qpu[0]) / r_noisy[0]
 
         # ... the signal-to-noise ratio between experimental and ideal results, ...
