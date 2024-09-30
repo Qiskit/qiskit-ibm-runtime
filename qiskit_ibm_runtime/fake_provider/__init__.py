@@ -93,7 +93,6 @@ Fake providers provide access to a list of fake backends.
     :toctree: ../stubs/
 
     FakeProviderForBackendV2
-    FakeProvider
 
 Fake Backends
 =============
@@ -168,63 +167,10 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeVigoV2
     FakeWashingtonV2
     FakeYorktownV2
-
-Fake V1 Backends
-----------------
-
-Fake V1 backends are fake backends with IBM Quantum systems snapshots implemented with
-:mod:`~qiskit.providers.backend.BackendV1` interface.
-
-.. autosummary::
-    :toctree: ../stubs/
-
-    FakeAlmaden
-    FakeArmonk
-    FakeAthens
-    FakeBelem
-    FakeBoeblingen
-    FakeBogota
-    FakeBrooklyn
-    FakeBurlington
-    FakeCairo
-    FakeCambridge
-    FakeCasablanca
-    FakeEssex
-    FakeGuadalupe
-    FakeHanoi
-    FakeJakarta
-    FakeJohannesburg
-    FakeKolkata
-    FakeLagos
-    FakeLima
-    FakeLondon
-    FakeManhattan
-    FakeManila
-    FakeMelbourne
-    FakeMontreal
-    FakeMumbai
-    FakeNairobi
-    FakeOurense
-    FakeParis
-    FakePoughkeepsie
-    FakeQuito
-    FakeRochester
-    FakeRome
-    FakeRueschlikon
-    FakeSantiago
-    FakeSingapore
-    FakeSydney
-    FakeTenerife
-    FakeTokyo
-    FakeToronto
-    FakeValencia
-    FakeVigo
-    FakeWashington
-    FakeYorktown
 """
 
 # Fake providers
-from .fake_provider import FakeProviderFactory, FakeProviderForBackendV2, FakeProvider
+from .fake_provider import FakeProviderForBackendV2
 
 # Standard fake backends with IBM Quantum systems snapshots
 from .backends import *

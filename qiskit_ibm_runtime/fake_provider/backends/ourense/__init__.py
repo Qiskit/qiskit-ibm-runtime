@@ -13,4 +13,3 @@
 """Mock ourense backend"""
 
 from .fake_ourense import FakeOurenseV2
-from .fake_ourense import FakeOurense

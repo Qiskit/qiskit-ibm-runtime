@@ -15,20 +15,10 @@ Fake Lagos device (7 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeLagosV2(fake_backend.FakeBackendV2):
-    """A fake 7 qubit backend."""
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_lagos.json"  # type: ignore
-    props_filename = "props_lagos.json"  # type: ignore
-    defs_filename = "defs_lagos.json"  # type: ignore
-    backend_name = "fake_lagos"  # type: ignore
-
-
-class FakeLagos(fake_pulse_backend.FakePulseBackend):
     """A fake 7 qubit backend."""
 
     dirname = os.path.dirname(__file__)  # type: ignore

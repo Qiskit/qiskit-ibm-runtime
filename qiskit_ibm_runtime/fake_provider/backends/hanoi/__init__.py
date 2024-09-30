@@ -13,4 +13,3 @@
 """Mock hanoi backend"""
 
 from .fake_hanoi import FakeHanoiV2
-from .fake_hanoi import FakeHanoi

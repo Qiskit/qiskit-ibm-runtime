@@ -14,7 +14,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
@@ -69,7 +69,7 @@ class TestSession(IBMTestCase):
 
     def test_max_time(self):
         """Test max time."""
-        model_backend = FakeManila()
+        model_backend = FakeManilaV2()
         backend = IBMBackend(
             configuration=model_backend.configuration(),
             service=MagicMock(),

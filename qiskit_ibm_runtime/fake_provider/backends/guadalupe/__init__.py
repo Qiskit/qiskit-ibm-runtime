@@ -13,4 +13,3 @@
 """Mock guadalupe backend"""
 
 from .fake_guadalupe import FakeGuadalupeV2
-from .fake_guadalupe import FakeGuadalupe
