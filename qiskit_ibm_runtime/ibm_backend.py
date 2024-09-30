@@ -357,6 +357,12 @@ class IBMBackend(Backend):
         self._convert_to_target(refresh=True)
         return self._target
 
+    def refresh(self) -> None:
+        """Refresh the current backend target"""
+        self._get_properties(datetime=python_datetime.now())
+        self._get_defaults()
+        self._convert_to_target(refresh=True)
+
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
     ) -> Optional[BackendProperties]:
