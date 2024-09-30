@@ -123,7 +123,7 @@ class Neat:
             )
 
         self._backend = backend
-        self._noise_model = (
+        self.noise_model = (
             noise_model
             if noise_model is not None
             else NoiseModel.from_backend(backend, thermal_relaxation=False)
