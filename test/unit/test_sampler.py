@@ -261,6 +261,29 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[(circ)])
 
+    @data(FakeSherbrooke(), FakeCusco())
+    def test_isa_inside_condition_block_body_in_separate_circuit(self, backend):
+        """Test no exception for 2q gates involving qubits that are not connected in
+        the coupling map, inside control operation blocks; and yes exception for
+        qubit pairs that are not connected.
+        For the case where the control operation body is defined not in a
+        context, as in `test_isa_inside_condition_block`, but in a separate circuit."""
+        # pylint: disable=invalid-name,not-context-manager
+
+        body = QuantumCircuit(QuantumRegister(2, "inner"))
+        body.ecr(0, 1)
+
+        circ = QuantumCircuit(5, 1)
+        circ.x(0)
+        circ.measure(0, 0)
+        circ.if_test((circ.clbits[0], True), body, [1, 2], [])
+
+        if backend.name == "fake_sherbrooke":
+            SamplerV2(backend).run(pubs=[(circ)])
+        else:
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend).run(pubs=[(circ)])
+
     @data(-1, 1, 2)
     def test_rzz_angle_validation(self, angle):
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]"""
