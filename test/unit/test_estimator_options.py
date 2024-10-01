@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.options import EstimatorOptions
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -98,7 +98,7 @@ class TestEstimatorOptions(IBMTestCase):
         """Test converting to program inputs from estimator options."""
         # pylint: disable=unexpected-keyword-arg
 
-        noise_model = NoiseModel.from_backend(FakeManila())
+        noise_model = NoiseModel.from_backend(FakeManilaV2())
         optimization_level = 0
         resilience_level = 2
         simulator = {

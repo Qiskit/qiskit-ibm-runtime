@@ -13,4 +13,3 @@
 """Mock nairobi backend"""
 
 from .fake_nairobi import FakeNairobiV2
-from .fake_nairobi import FakeNairobi

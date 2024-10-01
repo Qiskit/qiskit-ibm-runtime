@@ -80,7 +80,11 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                sub_string = _is_isa_circuit_helper(sub_circ, target, qubit_map)
+                inner_map = {
+                    inner: qubit_map[outer]
+                    for outer, inner in zip(instruction.qubits, sub_circ.qubits)
+                }
+                sub_string = _is_isa_circuit_helper(sub_circ, target, inner_map)
                 if sub_string:
                     return sub_string
 

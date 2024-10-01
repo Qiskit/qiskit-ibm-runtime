@@ -32,7 +32,6 @@ from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 from qiskit_ibm_runtime.fake_provider import (
     FakeProviderForBackendV2,
-    FakeProvider,
     FakeMumbaiV2,
     FakeSherbrooke,
     FakePrague,
@@ -41,7 +40,6 @@ from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
 from ..decorators import production_only
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
-FAKE_PROVIDER = FakeProvider()
 
 
 @ddt
