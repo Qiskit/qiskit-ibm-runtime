@@ -25,7 +25,7 @@ from typing import List, Iterable, Union
 
 from qiskit import circuit, QuantumCircuit
 
-from qiskit.providers import BackendV2, BackendV1
+from qiskit.providers import BackendV2
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
@@ -51,7 +51,6 @@ from ..models import (
     QasmBackendConfiguration,
     PulseBackendConfiguration,
 )
-from ..utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -642,134 +641,3 @@ class FakeBackendV2(BackendV2):
                 logger.info("There are no available new updates for %s.", self.backend_name)
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))
-
-
-class FakeBackend(BackendV1):
-    """This is a dummy backend just for testing purposes."""
-
-    def __init__(self, configuration, time_alive=10):  # type: ignore
-        """FakeBackend initializer.
-
-        Args:
-            configuration (BackendConfiguration): backend configuration
-            time_alive (int): time to wait before returning result
-        """
-        issue_deprecation_msg(
-            "V1 fake backends are deprecated",
-            "0.24",
-            "Please use V2 fake backends instead.",
-            stacklevel=3,
-        )
-        super().__init__(configuration)
-        self.time_alive = time_alive
-        self._credentials = _Credentials()
-        self.sim = None
-
-    def _setup_sim(self) -> None:
-        if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
-            from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
-
-            self.sim = AerSimulator()
-            if self.properties():
-                noise_model = NoiseModel.from_backend(self)
-                self.sim.set_options(noise_model=noise_model)
-                # Update fake backend default options too to avoid overwriting
-                # it when run() is called
-                self.set_options(noise_model=noise_model)
-        else:
-            self.sim = BasicSimulator()
-
-    def properties(self) -> BackendProperties:
-        """Return backend properties"""
-        coupling_map = self.configuration().coupling_map
-        if coupling_map is None:
-            return None
-        unique_qubits = list(set().union(*coupling_map))
-
-        properties = {
-            "backend_name": self.name(),
-            "backend_version": self.configuration().backend_version,
-            "last_update_date": "2000-01-01 00:00:00Z",
-            "qubits": [
-                [
-                    {"date": "2000-01-01 00:00:00Z", "name": "T1", "unit": "\u00b5s", "value": 0.0},
-                    {"date": "2000-01-01 00:00:00Z", "name": "T2", "unit": "\u00b5s", "value": 0.0},
-                    {
-                        "date": "2000-01-01 00:00:00Z",
-                        "name": "frequency",
-                        "unit": "GHz",
-                        "value": 0.0,
-                    },
-                    {
-                        "date": "2000-01-01 00:00:00Z",
-                        "name": "readout_error",
-                        "unit": "",
-                        "value": 0.0,
-                    },
-                    {"date": "2000-01-01 00:00:00Z", "name": "operational", "unit": "", "value": 1},
-                ]
-                for _ in range(len(unique_qubits))
-            ],
-            "gates": [
-                {
-                    "gate": "cx",
-                    "name": "CX" + str(pair[0]) + "_" + str(pair[1]),
-                    "parameters": [
-                        {
-                            "date": "2000-01-01 00:00:00Z",
-                            "name": "gate_error",
-                            "unit": "",
-                            "value": 0.0,
-                        }
-                    ],
-                    "qubits": [pair[0], pair[1]],
-                }
-                for pair in coupling_map
-            ],
-            "general": [],
-        }
-
-        return BackendProperties.from_dict(properties)
-
-    @classmethod
-    def _default_options(cls) -> Options:
-        if _optionals.HAS_AER:
-            from qiskit_aer import QasmSimulator  # pylint: disable=import-outside-toplevel
-
-            return QasmSimulator._default_options()
-        else:
-            return BasicSimulator._default_options()
-
-    def run(self, run_input, **kwargs):  # type: ignore
-        """Main job in simulator"""
-        circuits = run_input
-        pulse_job = None
-        if isinstance(circuits, (pulse.Schedule, pulse.ScheduleBlock)):
-            pulse_job = True
-        elif isinstance(circuits, circuit.QuantumCircuit):
-            pulse_job = False
-        elif isinstance(circuits, list):
-            if circuits:
-                if all(isinstance(x, (pulse.Schedule, pulse.ScheduleBlock)) for x in circuits):
-                    pulse_job = True
-                elif all(isinstance(x, circuit.QuantumCircuit) for x in circuits):
-                    pulse_job = False
-        if pulse_job is None:
-            raise QiskitError(
-                "Invalid input object %s, must be either a "
-                "QuantumCircuit, Schedule, or a list of either" % circuits
-            )
-        if pulse_job:  # pulse job
-            raise QiskitError("Pulse simulation is currently not supported for V1 fake backends.")
-
-        if self.sim is None:
-            self._setup_sim()
-        if not _optionals.HAS_AER:
-            warnings.warn(
-                "Aer not found, using qiskit.BasicSimulator and no noise.", RuntimeWarning
-            )
-        self.sim._options = self._options
-        job = self.sim.run(circuits, **kwargs)
-
-        return job

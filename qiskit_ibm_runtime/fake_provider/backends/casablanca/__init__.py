@@ -13,4 +13,3 @@
 """Mock casablanca backend"""
 
 from .fake_casablanca import FakeCasablancaV2
-from .fake_casablanca import FakeCasablanca

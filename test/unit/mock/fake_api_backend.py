@@ -15,7 +15,7 @@ from typing import Optional
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
 
-from qiskit_ibm_runtime.fake_provider import backends, FakeLima
+from qiskit_ibm_runtime.fake_provider import backends, FakeLimaV2
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
 
@@ -65,7 +65,7 @@ class FakeApiBackend:
                 self.defaults = model_backend.defaults().to_dict()
                 self.status = model_backend.status().to_dict()
         else:
-            model_backend = FakeLima()
+            model_backend = FakeLimaV2()
             # FakeApiBackend can modify arbitrary configuration field.
             # Modified configuration may not match with the
             # model description for Lima device in the properties and defaults.

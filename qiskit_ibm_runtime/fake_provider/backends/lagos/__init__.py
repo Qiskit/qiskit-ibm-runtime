@@ -13,4 +13,3 @@
 """Mock lagos backend"""
 
 from .fake_lagos import FakeLagosV2
-from .fake_lagos import FakeLagos

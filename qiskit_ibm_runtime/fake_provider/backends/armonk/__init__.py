@@ -13,4 +13,3 @@
 """Mock armonk backend"""
 
 from .fake_armonk import FakeArmonkV2
-from .fake_armonk import FakeArmonk

@@ -18,7 +18,7 @@ from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth, FakeProviderForBackendV2
+from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
 from ...ibm_test_case import IBMTestCase
 
 
@@ -40,7 +40,7 @@ class FakeBackendsTest(IBMTestCase):
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_backends_get_kwargs(self):
         """Fake backends honor kwargs passed."""
-        backend = FakeAthens()
+        backend = FakeAthensV2()
 
         qc = QuantumCircuit(2)  # pylint: disable=invalid-name
         qc.x(range(0, 2))

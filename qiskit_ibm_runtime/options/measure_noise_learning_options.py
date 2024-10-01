@@ -25,16 +25,20 @@ class MeasureNoiseLearningOptions:
         These options are only used when the resilience level or options specify a
         technique that requires measurement noise learning.
 
-    Args:
-        num_randomizations: The number of random circuits to draw for the measurement
-            learning experiment. Default: 32.
-
-        shots_per_randomization: The number of shots to use for the learning experiment
-            per random circuit. If "auto", the value will be chosen automatically
-            based on the input PUBs. Default: "auto".
     """
 
     num_randomizations: Union[UnsetType, int] = Unset
+    r"""The number of random circuits to draw for the measurement
+        learning experiment. 
+        
+        Default: 32.
+    """
     shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
+    r"""The number of shots to use for the learning experiment
+        per random circuit. If "auto", the value will be chosen automatically
+        based on the input PUBs. 
+        
+        Default: "auto".
+    """
 
     _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)

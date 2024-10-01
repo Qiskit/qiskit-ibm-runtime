@@ -16,7 +16,7 @@ import uuid
 from ddt import ddt, named_data
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit_ibm_runtime.fake_provider import FakeLima
+from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_api_backend import FakeApiBackendSpecs
@@ -186,7 +186,7 @@ class TestBackendFilters(IBMTestCase):
         """Get the backend specs to pass to the fake client."""
         config = {}
         status = {}
-        status_keys = FakeLima().status().to_dict()
+        status_keys = FakeLimaV2().status().to_dict()
         status_keys.pop("backend_name")  # name is in both config and status
         status_keys = list(status_keys.keys())
         for key, val in kwargs.items():

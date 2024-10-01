@@ -13,4 +13,3 @@
 """Mock kolkata backend"""
 
 from .fake_kolkata import FakeKolkataV2
-from .fake_kolkata import FakeKolkata
