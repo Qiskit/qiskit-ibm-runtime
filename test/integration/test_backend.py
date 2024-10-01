@@ -124,10 +124,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Test refreshing the backend target."""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            old_target = backend.target_history(datetime=datetime.now() - timedelta(60))
-            self.assertIsNotNone(old_target)
+            old_target = backend.target
             backend.refresh()
-            self.assertNotEqual(old_target, backend.target)
+            new_target = backend.target
+            self.assertNotEqual(old_target, new_target)
 
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
