@@ -13,8 +13,7 @@
 """A class to help understand the expected performance of estimator jobs."""
 
 from __future__ import annotations
-from typing import Optional, Sequence, List
-import numpy as np
+from typing import Optional, Sequence
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.primitives.containers import EstimatorPubLike
@@ -53,14 +52,14 @@ class Neat:
         cliff_pubs = analyzer.to_clifford(pubs)
 
         # Calculate the expectation values in the absence of noise
-        r_ideal = analyzer.simulate(cliff_pubs, with_noise=False)
+        r_ideal = analyzer.ideal_sim(cliff_pubs)
 
         # Calculate the expectation values in the presence of noise
-        r_noisy = analyzer.simulate(cliff_pubs, with_noise=True)
+        r_noisy = analyzer.noisy_sim(cliff_pubs)
 
         # Calculate the expectation values for a different noise model
         analyzer.noise_model = another_noise_model
-        another_r_noisy = analyzer.simulate(cliff_pubs, with_noise=True)
+        another_r_noisy = analyzer.noisy_sim(cliff_pubs)
 
         # Run the Clifford PUBs on a QPU
         r_qpu = estimator.run(cliff_pubs)
@@ -117,29 +116,16 @@ class Neat:
         """
         return self._backend
 
-    def simulate(
+    def _simulate(
         self,
         pubs: Sequence[EstimatorPubLike],
-        with_noise: bool = True,
-        cliffordize: bool = False,
-        seed_simulator: Optional[int] = None,
+        with_noise: bool,
+        cliffordize: bool,
+        seed_simulator: Optional[int],
         precision: float = 0,
     ) -> NeatResult:
         r"""
-        Calculates the expectation values for the estimator task specified by the given ``pubs``.
-
-        This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
-        classically.
-
-        .. note::
-            To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
-            so that it can be simulated efficiently regardless of its size. For estimation tasks
-            that involve non-Clifford circuits, the recommended workflow consists of mapping
-            the non-Clifford circuits to the nearest Clifford circuits using the
-            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the Neat's
-            :meth:`to_clifford` convenience method. Alternatively, setting ``cliffordize`` to
-            ``True`` ensures that the :meth:`to_clifford` method is applied automatically to the
-            given ``pubs`` prior to the simulation.
+        Perform a noisy or noiseless simulation of the estimator task specified by ``pubs``.
 
         Args:
             pubs: The PUBs specifying the estimation task of interest.
@@ -170,6 +156,78 @@ class Neat:
 
         pub_results = [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
         return NeatResult(pub_results)
+
+    def ideal_sim(
+        self,
+        pubs: Sequence[EstimatorPubLike],
+        cliffordize: bool = False,
+        seed_simulator: Optional[int] = None,
+        precision: float = 0,
+    ) -> NeatResult:
+        r"""
+        Perform an ideal, noiseless simulation of the estimator task specified by ``pubs``.
+
+        This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
+        classically.
+
+        .. note::
+            To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
+            so that it can be simulated efficiently regardless of its size. For estimation tasks
+            that involve non-Clifford circuits, the recommended workflow consists of mapping
+            the non-Clifford circuits to the nearest Clifford circuits using the
+            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the Neat's
+            :meth:`to_clifford` convenience method. Alternatively, setting ``cliffordize`` to
+            ``True`` ensures that the :meth:`to_clifford` method is applied automatically to the
+            given ``pubs`` prior to the simulation.
+
+        Args:
+            pubs: The PUBs specifying the estimation task of interest.
+            cliffordize: Whether or not to automatically apply the
+                :class:`.~ConvertISAToClifford` transpiler pass to the given ``pubs`` before
+                performing the simulations.
+            seed_simulator: A seed for the simulator.
+            precision: The default precision used to run the ideal and noisy simulations.
+
+        Returns:
+            The results of the simulation.
+        """
+        return self._simulate(pubs, False, cliffordize, seed_simulator, precision)
+
+    def noisy_sim(
+        self,
+        pubs: Sequence[EstimatorPubLike],
+        cliffordize: bool = False,
+        seed_simulator: Optional[int] = None,
+        precision: float = 0,
+    ) -> NeatResult:
+        r"""
+        Perform a noisy simulation of the estimator task specified by ``pubs``.
+
+        This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
+        classically.
+
+        .. note::
+            To ensure scalability, every circuit in ``pubs`` is required to be a Clifford circuit,
+            so that it can be simulated efficiently regardless of its size. For estimation tasks
+            that involve non-Clifford circuits, the recommended workflow consists of mapping
+            the non-Clifford circuits to the nearest Clifford circuits using the
+            :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the Neat's
+            :meth:`to_clifford` convenience method. Alternatively, setting ``cliffordize`` to
+            ``True`` ensures that the :meth:`to_clifford` method is applied automatically to the
+            given ``pubs`` prior to the simulation.
+
+        Args:
+            pubs: The PUBs specifying the estimation task of interest.
+            cliffordize: Whether or not to automatically apply the
+                :class:`.~ConvertISAToClifford` transpiler pass to the given ``pubs`` before
+                performing the simulations.
+            seed_simulator: A seed for the simulator.
+            precision: The default precision used to run the ideal and noisy simulations.
+
+        Returns:
+            The results of the simulation.
+        """
+        return self._simulate(pubs, True, cliffordize, seed_simulator, precision)
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
         r"""

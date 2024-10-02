@@ -60,15 +60,15 @@ class TestNeat(IBMTestCase):
         self.obs2_zzz = SparsePauliOp(["ZZZ"]).apply_layout(self.c2.layout)
         self.obs2_ziz = SparsePauliOp(["ZIZ"]).apply_layout(self.c2.layout)
 
-    def test_simulate_ideal(self):
-        r"""Test the ``simulate`` method with ``with_noise=False``."""
+    def test_ideal_sim(self):
+        r"""Test the ``ideal_sim`` method."""
         analyzer = Neat(self.backend)
 
-        r1 = analyzer.simulate([(self.c1, self.obs1_xx)], with_noise=False)
+        r1 = analyzer.ideal_sim([(self.c1, self.obs1_xx)])
         self.assertIsInstance(r1, NeatResult)
         self.assertEqual(r1[0].vals, 1)
 
-        r2 = analyzer.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=False)
+        r2 = analyzer.ideal_sim([(self.c1, [self.obs1_xx, self.obs1_zi])])
         self.assertIsInstance(r2, NeatResult)
         self.assertListEqual(r2[0].vals.tolist(), [1, 0])
 
@@ -76,20 +76,20 @@ class TestNeat(IBMTestCase):
             (self.c1, [self.obs1_xx, self.obs1_zi]),
             (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
         ]
-        r3 = analyzer.simulate(pubs3, with_noise=False)
+        r3 = analyzer.ideal_sim(pubs3)
         self.assertIsInstance(r3, NeatResult)
         self.assertListEqual(r3[0].vals.tolist(), [1, 0])
         self.assertListEqual(r3[1].vals.tolist(), [1, 0, 1])
 
-    def test_simulate_noisy(self):
-        r"""Test the ``simulate`` method with ``with_noise=True``."""
+    def test_noisy_sim(self):
+        r"""Test the ``noisy_sim`` method."""
         analyzer = Neat(self.backend, self.noise_model)
 
-        r1 = analyzer.simulate([(self.c1, self.obs1_xx)], with_noise=True)
+        r1 = analyzer.noisy_sim([(self.c1, self.obs1_xx)])
         self.assertIsInstance(r1, NeatResult)
         self.assertListEqual(list(r1[0].vals.shape), [])
 
-        r2 = analyzer.simulate([(self.c1, [self.obs1_xx, self.obs1_zi])], with_noise=True)
+        r2 = analyzer.noisy_sim([(self.c1, [self.obs1_xx, self.obs1_zi])])
         self.assertIsInstance(r2, NeatResult)
         self.assertListEqual(list(r2[0].vals.shape), [2])
 
@@ -97,25 +97,32 @@ class TestNeat(IBMTestCase):
             (self.c1, [self.obs1_xx, self.obs1_zi]),
             (self.c2, [self.obs2_xxx, self.obs2_zzz, self.obs2_ziz]),
         ]
-        r3 = analyzer.simulate(pubs3, with_noise=True)
+        r3 = analyzer.noisy_sim(pubs3)
         self.assertIsInstance(r3, NeatResult)
         self.assertListEqual(list(r3[0].vals.shape), [2])
         self.assertListEqual(list(r3[1].vals.shape), [3])
 
     def test_non_clifford_error(self):
         r"""
-        Tests that ``simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``.
+        Tests that ``_simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``.
         """
         qc = QuantumCircuit(3)
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
 
-        with self.assertRaisesRegex(QiskitError, "invalid parameters  for \"stabilizer\" method."):
-            Neat(self.backend).simulate(pubs)
+        with self.assertRaisesRegex(QiskitError, 'invalid parameters  for "stabilizer" method.'):
+            Neat(self.backend).ideal_sim(pubs)
 
-        res = Neat(self.backend).simulate(pubs, cliffordize=True)
-        self.assertIsInstance(res, NeatResult)
-        self.assertEqual(res[0].vals, 1)
+        with self.assertRaisesRegex(QiskitError, 'invalid parameters  for "stabilizer" method.'):
+            Neat(self.backend).noisy_sim(pubs)
+
+        r1 = Neat(self.backend).ideal_sim(pubs, cliffordize=True)
+        self.assertIsInstance(r1, NeatResult)
+        self.assertEqual(r1[0].vals, 1)
+
+        r2 = Neat(self.backend).noisy_sim(pubs, cliffordize=True)
+        self.assertIsInstance(r2, NeatResult)
+        self.assertEqual(r2[0].vals, 1)
 
     def test_to_clifford(self):
         r"""Tests the ``to_clifford`` method."""
