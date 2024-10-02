@@ -23,6 +23,9 @@ import numpy as np
 
 from ..utils.estimator_pub_result import EstimatorPubResult
 
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
+
 
 def plot_zne(
     result: EstimatorPubResult,
