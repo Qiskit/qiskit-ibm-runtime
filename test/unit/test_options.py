@@ -23,7 +23,7 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import RuntimeOptions
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
-from qiskit_ibm_runtime.fake_provider import FakeManila, FakeNairobiV2
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine
@@ -78,7 +78,7 @@ class TestOptionsV2(IBMTestCase):
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @combine(
-        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManila(), FakeNairobiV2()]
+        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManilaV2(), FakeNairobiV2()]
     )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
