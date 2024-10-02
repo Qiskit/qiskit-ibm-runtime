@@ -18,6 +18,7 @@ from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit import QuantumCircuit
+from qiskit.exceptions import QiskitError
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -102,13 +103,19 @@ class TestNeat(IBMTestCase):
         self.assertListEqual(list(r3[1].vals.shape), [3])
 
     def test_non_clifford_error(self):
-        r"""Tests that ``simulate`` errors when pubs are not Clifford."""
+        r"""
+        Tests that ``simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``.
+        """
         qc = QuantumCircuit(3)
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
 
-        with self.assertRaisesRegex(ValueError, "non-Clifford circuit"):
+        with self.assertRaisesRegex(QiskitError, "invalid parameters  for \"stabilizer\" method."):
             Neat(self.backend).simulate(pubs)
+
+        res = Neat(self.backend).simulate(pubs, cliffordize=True)
+        self.assertIsInstance(res, NeatResult)
+        self.assertEqual(res[0].vals, 1)
 
     def test_to_clifford(self):
         r"""Tests the ``to_clifford`` method."""

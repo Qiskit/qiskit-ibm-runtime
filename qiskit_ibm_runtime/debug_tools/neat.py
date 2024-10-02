@@ -23,7 +23,6 @@ from qiskit.providers import BackendV2 as Backend
 
 from qiskit_ibm_runtime.debug_tools.neat_results import NeatPubResult, NeatResult
 from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
-from qiskit_ibm_runtime.utils import validate_estimator_pubs, validate_isa_circuits
 
 
 try:
@@ -33,39 +32,6 @@ try:
     HAS_QISKIT_AER = True
 except ImportError:
     HAS_QISKIT_AER = False
-
-
-def _validate_pubs(
-    backend: Backend, pubs: List[EstimatorPub], validate_clifford: bool = True
-) -> None:
-    r"""Validate a list of PUBs for use inside the neat class.
-
-    This funtion runs the :meth:`.~validate_estimator_pubs` and :meth:`.~validate_isa_circuits`
-    checks. Optionally, it also validates that every PUB's circuit is a Clifford circuit.
-
-    Args:
-        backend: A backend.
-        pubs: A set of PUBs.
-        validate_clifford: Whether or not to validate that the PUB's circuit do not contain
-            non-Clifford gates.
-
-    Raises:
-        ValueError: If the PUBs contain non-Clifford circuits.
-    """
-    validate_estimator_pubs(pubs)
-    validate_isa_circuits([pub.circuit for pub in pubs], backend.target)
-
-    if validate_clifford:
-        for pub in pubs:
-            for instr in pub.circuit:
-                op = instr.operation
-                # ISA circuits contain only one type of non-Clifford gate, namely RZ
-                if op.name == "rz" and op.params[0] not in [0, np.pi / 2, np.pi, 3 * np.pi / 2]:
-                    raise ValueError(
-                        "Given ``pubs`` contain non-Clifford circuits. To fix, consider using the "
-                        "``.to_clifford`` method of ``Neat`` to map the PUBs' circuits to Clifford"
-                        " circuits, then try again."
-                    )
 
 
 class Neat:
@@ -191,7 +157,7 @@ class Neat:
         if cliffordize:
             coerced_pubs = self.to_clifford(pubs)
         else:
-            _validate_pubs(self.backend(), coerced_pubs := [EstimatorPub.coerce(p) for p in pubs])
+            coerced_pubs = [EstimatorPub.coerce(p) for p in pubs]
 
         backend_options = {
             "method": "stabilizer",
@@ -199,7 +165,7 @@ class Neat:
             "seed_simulator": seed_simulator,
         }
         estimator = AerEstimator(
-            options={"backend_options": backend_options, "precision": precision}
+            options={"backend_options": backend_options, "default_precision": precision}
         )
 
         pub_results = [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
@@ -220,7 +186,7 @@ class Neat:
         """
         coerced_pubs = []
         for pub in pubs:
-            _validate_pubs(self.backend(), [coerced_pub := EstimatorPub.coerce(pub)], False)
+            coerced_pub = EstimatorPub.coerce(pub)
             coerced_pubs.append(
                 EstimatorPub(
                     PassManager([ConvertISAToClifford()]).run(coerced_pub.circuit),
