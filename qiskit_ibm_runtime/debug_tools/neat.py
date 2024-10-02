@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""A class to help understanding the expected performance of estimator jobs."""
+"""A class to help understand the expected performance of estimator jobs."""
 
 from __future__ import annotations
 from typing import Optional, Sequence, List
@@ -69,14 +69,14 @@ def _validate_pubs(
 
 
 class Neat:
-    r"""A class to help understanding the expected performance of estimator jobs.
+    r"""A class to help understand the expected performance of estimator jobs.
 
     The "Noisy Estimator Analyzer Tool" (or "NEAT") is a convenience tool that users of the
     :class:`~.Estimator` primitive can employ to analyze and predict the performance of
     their queries. Its simulate method uses ``qiskit-aer`` to simulate the estimation task
     classically efficiently, either in ideal conditions or in the presence of noise. The
-    simulations' results can be seamelessly compared with other simulation results or with
-    primitive results to draw custom figures of merit.
+    simulations' results can be compared with other simulation results or with primitive results
+    results to draw custom figures of merit.
 
     .. code::python
 
@@ -155,8 +155,9 @@ class Neat:
         self,
         pubs: Sequence[EstimatorPubLike],
         with_noise: bool = True,
+        cliffordize: bool = False,
         seed_simulator: Optional[int] = None,
-        default_precision: float = 0,
+        precision: float = 0,
     ) -> NeatResult:
         r"""
         Calculates the expectation values for the estimator task specified by the given ``pubs``.
@@ -170,19 +171,27 @@ class Neat:
             that involve non-Clifford circuits, the recommended workflow consists of mapping
             the non-Clifford circuits to the nearest Clifford circuits using the
             :class:`.~ConvertISAToClifford` transpiler pass, or equivalently, to use the Neat's
-            :meth:`to_clifford` convenience method.
+            :meth:`to_clifford` convenience method. Alternatively, setting ``cliffordize`` to
+            ``True`` ensures that the :meth:`to_clifford` method is applied automatically to the
+            given ``pubs`` prior to the simulation.
 
         Args:
             pubs: The PUBs specifying the estimation task of interest.
             with_noise: Whether to perform an ideal, noiseless simulation (``False``) or a noisy
                 simulation (``True``).
+            cliffordize: Whether or not to automatically apply the
+                :class:`.~ConvertISAToClifford` transpiler pass to the given ``pubs`` before
+                performing the simulations.
             seed_simulator: A seed for the simulator.
-            default_precision: The default precision used to run the ideal and noisy simulations.
+            precision: The default precision used to run the ideal and noisy simulations.
 
         Returns:
             The results of the simulation.
         """
-        _validate_pubs(self.backend(), coerced_pubs := [EstimatorPub.coerce(pub) for pub in pubs])
+        if cliffordize:
+            coerced_pubs = self.to_clifford(pubs)
+        else:
+            _validate_pubs(self.backend(), coerced_pubs := [EstimatorPub.coerce(p) for p in pubs])
 
         backend_options = {
             "method": "stabilizer",
@@ -190,7 +199,7 @@ class Neat:
             "seed_simulator": seed_simulator,
         }
         estimator = AerEstimator(
-            options={"backend_options": backend_options, "default_precision": default_precision}
+            options={"backend_options": backend_options, "precision": precision}
         )
 
         pub_results = [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
