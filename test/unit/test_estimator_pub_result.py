@@ -63,7 +63,7 @@ class TestEstimatorPubResult(IBMTestCase):
         fig = self.pub_result.plot_zne()
         self.assertIsInstance(fig, go.Figure)
 
-        fig = self.pub_result.plot_zne(subplots=True)
+        fig = self.pub_result.plot_zne_extrapolators()
         self.assertIsInstance(fig, go.Figure)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")

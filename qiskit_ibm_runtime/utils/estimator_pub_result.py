@@ -41,9 +41,10 @@ class EstimatorPubResult(PubResult):
         width: int = 1000,
         n_cols: int = 4,
         colorscale: str = "Aggrnyl",
-        subplots: bool = False,
     ) -> go.Figure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
+
+        This method generates a subfigure for each expectation value.
 
         Args:
             indices: The indices of the expectation values to include in the plot. If ``None``, includes
@@ -59,8 +60,6 @@ class EstimatorPubResult(PubResult):
             width: The width of the plot in pixels.
             n_cols: The maximum number of columns in the figure.
             colorscale: The colorscale to use.
-            subplots: If ``True``, each expectation value is placed in its own subplot. Otherwise, plot
-                all estimates that use the same extrapolator on one plot.
 
         Returns:
             A plotly figure.
@@ -70,14 +69,60 @@ class EstimatorPubResult(PubResult):
 
         return plot_zne(
             self,
-            indices,
-            names,
-            n_stds,
-            max_mag,
-            max_std,
-            height,
-            width,
-            n_cols,
-            colorscale,
-            subplots,
+            indices=indices,
+            names=names,
+            n_stds=n_stds,
+            max_mag=max_mag,
+            max_std=max_std,
+            height=height,
+            width=width,
+            n_cols=n_cols,
+            colorscale=colorscale,
+        )
+
+    def plot_zne_extrapolators(
+        self,
+        indices: Sequence[tuple[int, ...]] | None = None,
+        names: Sequence[str] | None = None,
+        n_stds: int = 1,
+        max_mag: float = 10,
+        max_std: float = 0.2,
+        height: int = 500,
+        width: int = 1000,
+        colorscale: str = "Aggrnyl",
+    ) -> go.Figure:
+        """Plot the zero noise extrapolation data contained in this estimator pub result.
+
+        This method generates a subfigure for each extrapolator.
+
+        Args:
+            indices: The indices of the expectation values to include in the plot. If ``None``, includes
+                all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+            names: The names to assign to the expectation values. If ``None``, the names correspond to
+                the indices.
+            n_stds: The number of standard deviations to include around each fit.
+            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
+                a greater magnitude than this value, the expectation value is omitted from the plot.
+            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
+                this value for an expectation value and extrapolator, the fit is omitted from the plot.
+            height: The height of the plot in pixels.
+            width: The width of the plot in pixels.
+            colorscale: The colorscale to use.
+
+        Returns:
+            A plotly figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from ..visualization import plot_zne_extrapolators
+
+        return plot_zne_extrapolators(
+            self,
+            indices=indices,
+            names=names,
+            n_stds=n_stds,
+            max_mag=max_mag,
+            max_std=max_std,
+            height=height,
+            width=width,
+            colorscale=colorscale,
         )

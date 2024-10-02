@@ -28,7 +28,8 @@ Functions
 
     draw_layer_error_map
     plot_zne
+    plot_zne_extrapolators
 """
 
 from .draw_layer_error_map import draw_layer_error_map
-from .plot_zne import plot_zne
+from .plot_zne import plot_zne, plot_zne_extrapolators

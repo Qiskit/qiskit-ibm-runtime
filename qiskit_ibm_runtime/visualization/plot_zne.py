@@ -18,12 +18,10 @@ from itertools import product
 from typing import Sequence, TYPE_CHECKING
 from plotly.colors import sample_colorscale
 from plotly.subplots import make_subplots
+import plotly.graph_objs as go
 import numpy as np
 
 from ..utils.estimator_pub_result import EstimatorPubResult
-
-if TYPE_CHECKING:
-    import plotly.graph_objs as go
 
 
 def plot_zne(
@@ -37,9 +35,10 @@ def plot_zne(
     width: int = 1000,
     n_cols: int = 4,
     colorscale: str = "Aggrnyl",
-    subplots: bool = False,
 ) -> go.Figure:
     """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
+
+    This function generates a subfigure for each estimated expectation value.
 
     Args:
         result: An :class:`~.EstimatorPubResult`.
@@ -56,8 +55,6 @@ def plot_zne(
         width: The width of the plot in pixels.
         n_cols: The maximum number of columns in the figure.
         colorscale: The colorscale to use.
-        subplots: If ``True``, each expectation value is placed in its own subplot. Otherwise, plot all
-            estimates that use the same extrapolator on one plot.
 
     Returns:
         A plotly figure.
@@ -66,11 +63,7 @@ def plot_zne(
         ValueError: If ``result`` does not contain zero noise extrapolation data.
         ValueError: If the length of ``names`` is not equal to the length of ``indices``.
     """
-    if not (resilience := result.metadata.get("resilience")):
-        raise ValueError("Result does not contain resilience metadata.")
-
-    if not (zne_metadata := resilience.get("zne")):
-        raise ValueError("Result does not contain ZNE data.")
+    zne_metadata = _validate_metadata(result.metadata)
 
     if indices is None:
         indices = [idx for idx in product(*(range(s) for s in result.data.shape)) if idx]
@@ -78,104 +71,56 @@ def plot_zne(
     if names is None:
         names = [f"evs_{o if len(o) != 1 else o[0]}" for o in indices]
 
-    if len(indices) != len(names):
-        raise ValueError(
-            f"Length of names {len(names)} is not equal to the length of indices {len(indices)}."
-        )
+    _validate_names(indices, names)
 
     noise_factors = zne_metadata["noise_factors"]
     e_noise_factors = zne_metadata["extrapolated_noise_factors"]
     extrapolators = zne_metadata["extrapolators"]
 
-    if subplots:
-        colors = sample_colorscale(colorscale, np.linspace(0, 1, len(extrapolators)))
-        div, mod = divmod(len(indices), n_cols)
-        fig = make_subplots(
-            cols=n_cols if div else mod,
-            rows=div + bool(mod),
-            shared_xaxes=True,
-            subplot_titles=names,
+    colors = sample_colorscale(colorscale, np.linspace(0, 1, len(extrapolators)))
+    div, mod = divmod(len(indices), n_cols)
+    fig = make_subplots(
+        cols=n_cols if div else mod, rows=div + bool(mod), shared_xaxes=True, subplot_titles=names
+    )
+
+    models = set()
+    for i, idx in enumerate(indices):
+        div, mod = divmod(i, n_cols)
+        col = mod + 1
+        row = div + 1
+        evs = result.data.evs_noise_factors[idx]
+        fig.add_trace(
+            _scatter_trace(
+                noise_factors,
+                evs,
+                result.data.stds_noise_factors[idx],
+                name=names[i],
+                color="black",
+            ),
+            col=col,
+            row=row,
         )
-        models = set()
-        for i, idx in enumerate(indices):
-            div, mod = divmod(i, n_cols)
-            col = mod + 1
-            row = div + 1
-            evs = result.data.evs_noise_factors[idx]
-            fig.add_trace(
-                _scatter_trace(
-                    noise_factors,
+        fig.update_yaxes(col=col, row=row, range=[np.min(evs) - max_std, np.max(evs) + max_std])
+        for idx_m, model in enumerate(extrapolators):
+            evs = result.data.evs_extrapolated[idx][idx_m]
+            stds = result.data.stds_extrapolated[idx][idx_m]
+            if any(stds > max_std) or any(abs(evs) > max_mag):
+                continue
+            fig.add_traces(
+                _line_fill_trace(
+                    e_noise_factors,
                     evs,
-                    result.data.stds_noise_factors[idx],
-                    name=names[i],
-                    color="black",
+                    stds,
+                    n_stds,
+                    model,
+                    idx_m,
+                    colors[idx_m],
+                    model not in models,
                 ),
-                col=col,
-                row=row,
+                cols=col,
+                rows=row,
             )
-
-            fig.update_yaxes(col=col, row=row, range=[np.min(evs) - max_std, np.max(evs) + max_std])
-
-            for idx_m, model in enumerate(extrapolators):
-                evs = result.data.evs_extrapolated[idx][idx_m]
-                stds = result.data.stds_extrapolated[idx][idx_m]
-                if any(stds > max_std) or any(abs(evs) > max_mag):
-                    continue
-
-                fig.add_traces(
-                    _line_trace(
-                        e_noise_factors,
-                        evs,
-                        stds,
-                        n_stds,
-                        model,
-                        idx_m,
-                        colors[idx_m],
-                        model not in models,
-                    ),
-                    cols=col,
-                    rows=row,
-                )
-                models.add(model)
-
-    else:
-        colors = sample_colorscale(colorscale, np.linspace(0, 1, len(indices)))
-        fig = make_subplots(cols=len(extrapolators), subplot_titles=extrapolators)
-        for i, idx in enumerate(indices):
-            show_legend = True
-            color = colors[i]
-            for idx_m in range(len(extrapolators)):
-                evs = result.data.evs_extrapolated[idx][idx_m]
-                stds = result.data.stds_extrapolated[idx][idx_m]
-                if any(stds > max_std) or any(abs(evs) > max_mag):
-                    continue
-
-                fig.add_traces(
-                    [
-                        _scatter_trace(
-                            noise_factors,
-                            result.data.evs_noise_factors[idx],
-                            result.data.stds_noise_factors[idx],
-                            names[i],
-                            i,
-                            color,
-                            show_legend,
-                        ),
-                        *_line_trace(
-                            e_noise_factors, evs, stds, n_stds, legend_group=i, color=color
-                        ),
-                    ],
-                    rows=1,
-                    cols=idx_m + 1,
-                )
-                show_legend = False
-
-        fig.update_yaxes(
-            range=[
-                np.min(result.data.evs_noise_factors) - max_std,
-                np.max(result.data.evs_noise_factors) + max_std,
-            ],
-        )
+            models.add(model)
 
     fig.update_layout(
         height=height,
@@ -203,7 +148,124 @@ def plot_zne(
     return fig
 
 
-def _line_trace(
+def plot_zne_extrapolators(
+    result: EstimatorPubResult,
+    indices: Sequence[tuple[int, ...]] | None = None,
+    names: Sequence[str] | None = None,
+    n_stds: int = 1,
+    max_mag: float = 10,
+    max_std: float = 0.2,
+    height: int = 500,
+    width: int = 1000,
+    colorscale: str = "Aggrnyl",
+) -> go.Figure:
+    """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
+
+    This function generates a subfigure for each extrapolator.
+
+    Args:
+        result: An :class:`~.EstimatorPubResult`.
+        indices: The indices of the expectation values to include in the plot. If ``None``, includes all
+            values. See :class:`~.ZneOptions` for information on the indexing scheme.
+        names: The names to assign to the expectation values. If ``None``, the names correspond to the
+            indices.
+        n_stds: The number of standard deviations to include around each fit.
+        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
+            greater magnitude than this value, the expectation value is omitted from the plot.
+        max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
+            this value for an expectation value and extrapolator, the fit is omitted from the plot.
+        height: The height of the plot in pixels.
+        width: The width of the plot in pixels.
+        colorscale: The colorscale to use.
+
+    Returns:
+        A plotly figure.
+
+    Raises:
+        ValueError: If ``result`` does not contain zero noise extrapolation data.
+        ValueError: If the length of ``names`` is not equal to the length of ``indices``.
+    """
+    zne_metadata = _validate_metadata(result.metadata)
+
+    if indices is None:
+        indices = [idx for idx in product(*(range(s) for s in result.data.shape)) if idx]
+
+    if names is None:
+        names = [f"evs_{o if len(o) != 1 else o[0]}" for o in indices]
+
+    _validate_names(indices, names)
+
+    noise_factors = zne_metadata["noise_factors"]
+    e_noise_factors = zne_metadata["extrapolated_noise_factors"]
+    extrapolators = zne_metadata["extrapolators"]
+
+    colors = sample_colorscale(colorscale, np.linspace(0, 1, len(indices)))
+    fig = make_subplots(cols=len(extrapolators), subplot_titles=extrapolators)
+    for i, idx in enumerate(indices):
+        show_legend = True
+        color = colors[i]
+        for idx_m, extrapolator in enumerate(extrapolators):
+            evs = result.data.evs_extrapolated[idx][idx_m]
+            stds = result.data.stds_extrapolated[idx][idx_m]
+            if any(stds > max_std) or any(abs(evs) > max_mag):
+                continue
+            fig.add_traces(
+                [
+                    _scatter_trace(
+                        noise_factors,
+                        result.data.evs_noise_factors[idx],
+                        result.data.stds_noise_factors[idx],
+                        names[i],
+                        i,
+                        color,
+                        show_legend,
+                    ),
+                    *_line_fill_trace(
+                        e_noise_factors,
+                        evs,
+                        stds,
+                        n_stds,
+                        name=extrapolator,
+                        legend_group=i,
+                        color=color,
+                    ),
+                ],
+                rows=1,
+                cols=idx_m + 1,
+            )
+            show_legend = False
+
+    fig.update_layout(
+        height=height,
+        width=width,
+        plot_bgcolor="white",
+        hoverlabel_align="right",
+    )
+
+    fig.update_xaxes(
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    fig.update_yaxes(
+        range=[
+            np.min(result.data.evs_noise_factors) - max_std,
+            np.max(result.data.evs_noise_factors) + max_std,
+        ],
+        mirror=True,
+        ticks="outside",
+        showline=True,
+        linecolor="black",
+        gridcolor="lightgrey",
+    )
+
+    return fig
+
+
+def _line_fill_trace(
     x_values: np.array,
     y_values: np.array,
     stds: np.array,
@@ -293,3 +355,33 @@ def _scatter_trace(
         legendgroup=legend_group,
         showlegend=show_legend,
     )
+
+
+def _validate_names(indices, names):
+    """Validate that the indices and names provided are compatible.
+
+    Raises:
+        ValueError: If the indices and names are different lengths.
+    """
+    if len(indices) != len(names):
+        raise ValueError(
+            f"Length of names {len(names)} is not equal to the length of indices {len(indices)}."
+        )
+
+
+def _validate_metadata(metadata: dict) -> dict:
+    """Validate that the metadata contains ZNE metadata and return it.
+
+    Raises:
+        ValueError: If metadata does not contain ZNE metadata.
+
+    Returns:
+        The ZNE metadata.
+    """
+    if not (resilience := metadata.get("resilience")):
+        raise ValueError("Result does not contain resilience metadata.")
+
+    if not (zne_metadata := resilience.get("zne")):
+        raise ValueError("Result does not contain ZNE data.")
+
+    return zne_metadata
