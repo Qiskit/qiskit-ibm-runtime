@@ -20,6 +20,7 @@ from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke, FakeFractionalBackend
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendConfiguration,
@@ -50,10 +51,10 @@ class TestBackend(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         sampler = SamplerV2(ibm_backend)
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             sampler.run([transpiled])
 
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        self.assertIn(f"{faulty_qubit}", str(err.exception))
 
     def test_raise_faulty_qubits_many(self):
         """Test faulty qubits is raised if one circuit uses it."""
@@ -89,11 +90,11 @@ class TestBackend(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         sampler = SamplerV2(ibm_backend)
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             sampler.run([transpiled])
 
         self.assertIn("cx", str(err.exception))
-        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+        self.assertIn(f"{tuple(edge_qubits)}", str(err.exception))
 
     @staticmethod
     def test_faulty_qubit_not_used():

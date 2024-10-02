@@ -502,9 +502,9 @@ class TestPrimitivesV2(IBMTestCase):
             transpiled.measure_all()
             pub = (transpiled,)
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             inst.run(pubs=[pub])
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        self.assertIn(f"{faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits_many(self, primitive):
@@ -531,9 +531,9 @@ class TestPrimitivesV2(IBMTestCase):
                 circ.measure_all()
             pubs = [(transpiled[0],), (transpiled[1],)]
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             inst.run(pubs=pubs)
-        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+        self.assertIn(f"{faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_edge(self, primitive):
@@ -556,10 +556,10 @@ class TestPrimitivesV2(IBMTestCase):
             transpiled.measure_all()
             pub = (transpiled,)
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             inst.run(pubs=[pub])
         self.assertIn("cx", str(err.exception))
-        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+        self.assertIn(f"{tuple(edge_qubits)}", str(err.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_faulty_qubit_not_used(self, primitive):
