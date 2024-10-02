@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -52,7 +52,7 @@ class TestSamplerOptions(IBMTestCase):
         """Test converting to program inputs from sampler options."""
         # pylint: disable=unexpected-keyword-arg
 
-        noise_model = NoiseModel.from_backend(FakeManila())
+        noise_model = NoiseModel.from_backend(FakeManilaV2())
         simulator = {
             "noise_model": noise_model,
             "seed_simulator": 42,

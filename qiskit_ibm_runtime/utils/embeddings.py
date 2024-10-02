@@ -15,7 +15,7 @@
 Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
-from typing import List, Tuple, Union
+from typing import Iterable, List, Tuple, Union, Sequence
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -61,8 +61,10 @@ class Embedding:
         """
         if not (coupling_map := backend.coupling_map):
             raise ValueError(f"Coupling map for backend '{backend.name}' is unknown.")
-        if not (coordinates := _get_qubits_coordinates(backend.num_qubits)):
-            raise ValueError(f"Coordinates for backend '{backend.name}' are unknown.")
+        try:
+            coordinates = _get_qubits_coordinates(backend.num_qubits)
+        except ValueError as err:
+            raise ValueError(f"Failed to fetch coordinates for backend '{backend.name}'.") from err
 
         return cls(coordinates, coupling_map)
 
@@ -81,6 +83,35 @@ class Embedding:
         return self._coupling_map
 
 
+def _heavy_hex_coords(
+    rows: Sequence[Iterable[int]], row_major: bool = True
+) -> List[Tuple[int, int]]:
+    """Generate heavy hex coordinates for the given rows.
+
+    Args:
+        rows: A sequence of rows, sorted from top to bottom. Rows are specified as an iterable of
+            integers, where every integer represents a column index.
+        row_major: Whether qubits should be labelled in row-major order (by ``x`` first and, in
+            case of a tie, by ``y``) or in colum-major order.
+
+    Returns:
+        A list of qubit coordinates, where list position corresponds with qubit index.
+    """
+    coordinates = []
+
+    # Add coordinates in row-major order
+    row_idx = 0
+    for row_idx, row in enumerate(rows):
+        for col_idx in row:
+            coordinates += [(row_idx, col_idx)]
+
+    # Sort if colum-major order is required
+    if not row_major:
+        coordinates = sorted(coordinates, key=lambda p: (p[1], p[0]))
+
+    return coordinates
+
+
 def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
     r"""
     Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
@@ -91,12 +122,19 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
 
     Args:
         num_qubits: The number of qubits to return the coordinates from.
+
+    Returns:
+        A list of coordinates for drawing a set of qubits on a two-dimensional plane.
+
+    Raises:
+        ValueError: If the coordinates for a backend with ``num_qubit`` qubits are unknown.
     """
     if num_qubits == 5:
         return [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
 
     if num_qubits == 7:
-        return [(0, 0), (0, 1), (0, 2), (1, 1), (2, 0), (2, 1), (2, 2)]
+        rows = [range(3), [1], range(3)]
+        return _heavy_hex_coords(rows)
 
     if num_qubits == 15:
         return [
@@ -117,368 +155,37 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
             (1, 0),
         ]
 
-    if num_qubits == 20:
-        return [
-            (0, 0),
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (1, 0),
-            (1, 1),
-            (1, 2),
-            (1, 3),
-            (1, 4),
-            (2, 0),
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (3, 0),
-            (3, 1),
-            (3, 2),
-            (3, 3),
-            (3, 4),
-        ]
-
     if num_qubits == 16:
-        return [
-            (1, 0),
-            (1, 1),
-            (2, 1),
-            (3, 1),
-            (1, 2),
-            (3, 2),
-            (0, 3),
-            (1, 3),
-            (3, 3),
-            (4, 3),
-            (1, 4),
-            (3, 4),
-            (1, 5),
-            (2, 5),
-            (3, 5),
-            (1, 6),
-        ]
+        rows = [[3], range(7), [1, 5], range(1, 6), [3]]
+        return _heavy_hex_coords(rows, False)
+
+    if num_qubits == 20:
+        rows = [range(5)] * 4
+        return _heavy_hex_coords(rows)
 
     if num_qubits == 27:
-        return [
-            (1, 0),
-            (1, 1),
-            (2, 1),
-            (3, 1),
-            (1, 2),
-            (3, 2),
-            (0, 3),
-            (1, 3),
-            (3, 3),
-            (4, 3),
-            (1, 4),
-            (3, 4),
-            (1, 5),
-            (2, 5),
-            (3, 5),
-            (1, 6),
-            (3, 6),
-            (0, 7),
-            (1, 7),
-            (3, 7),
-            (4, 7),
-            (1, 8),
-            (3, 8),
-            (1, 9),
-            (2, 9),
-            (3, 9),
-            (3, 10),
-        ]
+        rows = [[3, 7], range(10), [1, 5, 9], range(1, 11), [3, 7]]
+        return _heavy_hex_coords(rows, False)
 
     if num_qubits == 28:
-        return [
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (0, 5),
-            (0, 6),
-            (1, 2),
-            (1, 6),
-            (2, 0),
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (2, 5),
-            (2, 6),
-            (2, 7),
-            (2, 8),
-            (3, 0),
-            (3, 4),
-            (3, 8),
-            (4, 0),
-            (4, 1),
-            (4, 2),
-            (4, 3),
-            (4, 4),
-            (4, 5),
-            (4, 6),
-            (4, 7),
-            (4, 8),
-        ]
+        rows = [range(2, 7), [2, 6], range(9), [0, 4, 8], range(9)]
+        return _heavy_hex_coords(rows=rows)
 
     if num_qubits == 53:
-        return [
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (0, 5),
-            (0, 6),
-            (1, 2),
-            (1, 6),
-            (2, 0),
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (2, 5),
-            (2, 6),
-            (2, 7),
-            (2, 8),
-            (3, 0),
-            (3, 4),
-            (3, 8),
-            (4, 0),
-            (4, 1),
-            (4, 2),
-            (4, 3),
-            (4, 4),
-            (4, 5),
-            (4, 6),
-            (4, 7),
-            (4, 8),
-            (5, 2),
-            (5, 6),
-            (6, 0),
-            (6, 1),
-            (6, 2),
-            (6, 3),
-            (6, 4),
-            (6, 5),
-            (6, 6),
-            (6, 7),
-            (6, 8),
-            (7, 0),
-            (7, 4),
-            (7, 8),
-            (8, 0),
-            (8, 1),
-            (8, 2),
-            (8, 3),
-            (8, 4),
-            (8, 5),
-            (8, 6),
-            (8, 7),
-            (8, 8),
-            (9, 2),
-            (9, 6),
-        ]
+        r1 = [range(9), [0, 4, 8]]
+        r2 = [range(9), [2, 6]]
+        rows = [range(2, 7), [2, 6]] + r1 + r2 + r1 + r2
+        return _heavy_hex_coords(rows, True)
 
     if num_qubits == 65:
-        return [
-            (0, 0),
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (0, 5),
-            (0, 6),
-            (0, 7),
-            (0, 8),
-            (0, 9),
-            (1, 0),
-            (1, 4),
-            (1, 8),
-            (2, 0),
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (2, 5),
-            (2, 6),
-            (2, 7),
-            (2, 8),
-            (2, 9),
-            (2, 10),
-            (3, 2),
-            (3, 6),
-            (3, 10),
-            (4, 0),
-            (4, 1),
-            (4, 2),
-            (4, 3),
-            (4, 4),
-            (4, 5),
-            (4, 6),
-            (4, 7),
-            (4, 8),
-            (4, 9),
-            (4, 10),
-            (5, 0),
-            (5, 4),
-            (5, 8),
-            (6, 0),
-            (6, 1),
-            (6, 2),
-            (6, 3),
-            (6, 4),
-            (6, 5),
-            (6, 6),
-            (6, 7),
-            (6, 8),
-            (6, 9),
-            (6, 10),
-            (7, 2),
-            (7, 6),
-            (7, 10),
-            (8, 1),
-            (8, 2),
-            (8, 3),
-            (8, 4),
-            (8, 5),
-            (8, 6),
-            (8, 7),
-            (8, 8),
-            (8, 9),
-            (8, 10),
-        ]
+        r = [range(11), [2, 6, 10]]
+        rows = [range(10), [0, 4, 8]] + r + [range(11), [0, 4, 8]] + r + [range(1, 11)]
+        return _heavy_hex_coords(rows, True)
 
     if num_qubits == 127:
-        return [
-            (0, 0),
-            (0, 1),
-            (0, 2),
-            (0, 3),
-            (0, 4),
-            (0, 5),
-            (0, 6),
-            (0, 7),
-            (0, 8),
-            (0, 9),
-            (0, 10),
-            (0, 11),
-            (0, 12),
-            (0, 13),
-            (1, 0),
-            (1, 4),
-            (1, 8),
-            (1, 12),
-            (2, 0),
-            (2, 1),
-            (2, 2),
-            (2, 3),
-            (2, 4),
-            (2, 5),
-            (2, 6),
-            (2, 7),
-            (2, 8),
-            (2, 9),
-            (2, 10),
-            (2, 11),
-            (2, 12),
-            (2, 13),
-            (2, 14),
-            (3, 2),
-            (3, 6),
-            (3, 10),
-            (3, 14),
-            (4, 0),
-            (4, 1),
-            (4, 2),
-            (4, 3),
-            (4, 4),
-            (4, 5),
-            (4, 6),
-            (4, 7),
-            (4, 8),
-            (4, 9),
-            (4, 10),
-            (4, 11),
-            (4, 12),
-            (4, 13),
-            (4, 14),
-            (5, 0),
-            (5, 4),
-            (5, 8),
-            (5, 12),
-            (6, 0),
-            (6, 1),
-            (6, 2),
-            (6, 3),
-            (6, 4),
-            (6, 5),
-            (6, 6),
-            (6, 7),
-            (6, 8),
-            (6, 9),
-            (6, 10),
-            (6, 11),
-            (6, 12),
-            (6, 13),
-            (6, 14),
-            (7, 2),
-            (7, 6),
-            (7, 10),
-            (7, 14),
-            (8, 0),
-            (8, 1),
-            (8, 2),
-            (8, 3),
-            (8, 4),
-            (8, 5),
-            (8, 6),
-            (8, 7),
-            (8, 8),
-            (8, 9),
-            (8, 10),
-            (8, 11),
-            (8, 12),
-            (8, 13),
-            (8, 14),
-            (9, 0),
-            (9, 4),
-            (9, 8),
-            (9, 12),
-            (10, 0),
-            (10, 1),
-            (10, 2),
-            (10, 3),
-            (10, 4),
-            (10, 5),
-            (10, 6),
-            (10, 7),
-            (10, 8),
-            (10, 9),
-            (10, 10),
-            (10, 11),
-            (10, 12),
-            (10, 13),
-            (10, 14),
-            (11, 2),
-            (11, 6),
-            (11, 10),
-            (11, 14),
-            (12, 1),
-            (12, 2),
-            (12, 3),
-            (12, 4),
-            (12, 5),
-            (12, 6),
-            (12, 7),
-            (12, 8),
-            (12, 9),
-            (12, 10),
-            (12, 11),
-            (12, 12),
-            (12, 13),
-            (12, 14),
-        ]
+        r1 = [range(15), [2, 6, 10, 14]]
+        r2 = [range(15), [0, 4, 8, 12]]
+        rows = [range(14), [0, 4, 8, 12]] + r1 + r2 + r1 + r2 + r1 + [range(1, 15)]
+        return _heavy_hex_coords(rows, True)
 
-    return []
+    raise ValueError(f"Coordinates for {num_qubits}-qubit CPU are unknown.")

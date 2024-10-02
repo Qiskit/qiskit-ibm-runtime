@@ -17,52 +17,10 @@ Fake provider class that provides access to fake backends.
 """
 
 from typing import Any, List
-from qiskit.providers.provider import ProviderV1
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from .backends import *
 from .fake_backend import FakeBackendV2
-from ..utils.deprecation import issue_deprecation_msg, deprecate_function
-
-
-class FakeProviderFactory:
-    """Fake provider factory class."""
-
-    def __init__(self) -> None:
-        self.fake_provider = FakeProvider()
-
-    def load_account(self) -> None:
-        """Fake load_account method to mirror the IBMQ provider."""
-        pass
-
-    def enable_account(self, *args, **kwargs) -> None:  # type: ignore
-        """Fake enable_account method to mirror the IBMQ provider factory."""
-        pass
-
-    def disable_account(self) -> None:
-        """Fake disable_account method to mirror the IBMQ provider factory."""
-        pass
-
-    def save_account(self, *args, **kwargs) -> None:  # type: ignore
-        """Fake save_account method to mirror the IBMQ provider factory."""
-        pass
-
-    @staticmethod
-    def delete_account() -> None:
-        """Fake delete_account method to mirror the IBMQ provider factory."""
-        pass
-
-    def update_account(self, force: bool = False) -> None:
-        """Fake update_account method to mirror the IBMQ provider factory."""
-        pass
-
-    def providers(self) -> list:
-        """Fake providers method to mirror the IBMQ provider."""
-        return [self.fake_provider]
-
-    def get_provider(self, hub: str = None, group: str = None, projec: str = None):  # type: ignore
-        """Fake get_provider method to mirror the IBMQ provider."""
-        return self.fake_provider
 
 
 class FakeProviderForBackendV2:
@@ -85,11 +43,6 @@ class FakeProviderForBackendV2:
             backend = filtered_backends[0]
 
         return backend
-
-    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
-    def get_backend(self, name: str = None, **kwargs: Any) -> FakeBackendV2:
-        """Return a single backend matching the specified filtering."""
-        return self.backend(name, **kwargs)
 
     def backends(self, name: str = None, **kwargs: Any) -> List[FakeBackendV2]:
         """Return all backends accessible via this account."""
@@ -154,83 +107,6 @@ class FakeProviderForBackendV2:
             FakeVigoV2(),  # type: ignore
             FakeWashingtonV2(),  # type: ignore
             FakeYorktownV2(),  # type: ignore
-        ]
-
-        super().__init__()
-
-
-class FakeProvider(ProviderV1):
-    """Fake provider containing fake V1 backends.
-
-    Only filtering backends by name is implemented. This class contains all fake V1 backends
-    available in the :mod:`qiskit_ibm_runtime.fake_provider`.
-    """
-
-    def get_backend(self, name=None, **kwargs):  # type: ignore
-        backend = self._backends[0]
-        if name:
-            filtered_backends = [backend for backend in self._backends if backend.name() == name]
-            if not filtered_backends:
-                raise QiskitBackendNotFoundError()
-
-            backend = filtered_backends[0]
-
-        return backend
-
-    def backends(self, name=None, **kwargs):  # type: ignore
-        return self._backends
-
-    def __init__(self) -> None:
-        issue_deprecation_msg(
-            "V1 fake backends and FakeProvider() are deprecated",
-            "0.24",
-            "Please use FakeProviderForBackendV2() instead.",
-        )
-        self._backends = [
-            FakeAlmaden(),  # type: ignore
-            FakeArmonk(),  # type: ignore
-            FakeAthens(),  # type: ignore
-            FakeBelem(),  # type: ignore
-            FakeBoeblingen(),  # type: ignore
-            FakeBogota(),  # type: ignore
-            FakeBrooklyn(),  # type: ignore
-            FakeBurlington(),  # type: ignore
-            FakeCairo(),  # type: ignore
-            FakeCambridge(),  # type: ignore
-            FakeCambridgeAlternativeBasis(),  # type: ignore
-            FakeCasablanca(),  # type: ignore
-            FakeEssex(),  # type: ignore
-            FakeGuadalupe(),  # type: ignore
-            FakeHanoi(),  # type: ignore
-            FakeJakarta(),  # type: ignore
-            FakeJohannesburg(),  # type: ignore
-            FakeKolkata(),  # type: ignore
-            FakeLagos(),  # type: ignore
-            FakeLima(),  # type: ignore
-            FakeLondon(),  # type: ignore
-            FakeManila(),  # type: ignore
-            FakeManhattan(),  # type: ignore
-            FakeMelbourne(),  # type: ignore
-            FakeMontreal(),  # type: ignore
-            FakeMumbai(),  # type: ignore
-            FakeNairobi(),  # type: ignore
-            FakeOurense(),  # type: ignore
-            FakeParis(),  # type: ignore
-            FakePoughkeepsie(),  # type: ignore
-            FakeQuito(),  # type: ignore
-            FakeRochester(),  # type: ignore
-            FakeRome(),  # type: ignore
-            FakeRueschlikon(),  # type: ignore
-            FakeSantiago(),  # type: ignore
-            FakeSingapore(),  # type: ignore
-            FakeSydney(),  # type: ignore
-            FakeTenerife(),  # type: ignore
-            FakeTokyo(),  # type: ignore
-            FakeToronto(),  # type: ignore
-            FakeValencia(),  # type: ignore
-            FakeVigo(),  # type: ignore
-            FakeWashington(),  # type: ignore
-            FakeYorktown(),  # type: ignore
         ]
 
         super().__init__()

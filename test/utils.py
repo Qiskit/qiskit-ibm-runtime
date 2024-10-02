@@ -34,7 +34,7 @@ from qiskit_ibm_runtime import (
     SamplerV2,
     Batch,
 )
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
@@ -319,7 +319,7 @@ def get_mocked_backend(
     mock_service._api_client = mock_api_client
 
     configuration = (
-        FakeManila().configuration()  # type: ignore[assignment]
+        FakeManilaV2().configuration()  # type: ignore[assignment]
         if configuration is None
         else BackendConfiguration.from_dict(configuration)
     )
@@ -434,7 +434,7 @@ def get_transpiled_circuit(backend, num_qubits=2, measure=False):
 
 def get_primitive_inputs(primitive, backend=None, num_sets=1):
     """Return primitive specific inputs."""
-    backend = backend or FakeManila()
+    backend = backend or FakeManilaV2()
     theta = Parameter("θ")
     circ = QuantumCircuit(2)
     circ.h(0)
