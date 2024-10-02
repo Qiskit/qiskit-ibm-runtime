@@ -359,7 +359,7 @@ def _scatter_trace(
     )
 
 
-def _validate_names(indices: Sequence[tuple[int, ...]], names: Sequence[str]):
+def _validate_names(indices: Sequence[tuple[int, ...]], names: Sequence[str]) -> None:
     """Validate that the indices and names provided are compatible.
 
     Raises:
