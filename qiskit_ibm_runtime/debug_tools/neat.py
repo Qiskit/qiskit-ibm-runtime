@@ -135,7 +135,8 @@ class Neat:
                 :class:`.~ConvertISAToClifford` transpiler pass to the given ``pubs`` before
                 performing the simulations.
             seed_simulator: A seed for the simulator.
-            precision: The default precision used to run the ideal and noisy simulations.
+            precision: The target precision for the estimates of each expectation value in the
+                returned results.
 
         Returns:
             The results of the simulation.
