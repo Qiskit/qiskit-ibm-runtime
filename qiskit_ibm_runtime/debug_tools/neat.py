@@ -15,6 +15,7 @@
 from __future__ import annotations
 from typing import Optional, Sequence
 
+from qiskit.exceptions import QiskitError
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -155,7 +156,19 @@ class Neat:
             options={"backend_options": backend_options, "default_precision": precision}
         )
 
-        pub_results = [NeatPubResult(r.data.evs) for r in estimator.run(coerced_pubs).result()]
+        aer_job = estimator.run(coerced_pubs)
+        try:
+            aer_result = aer_job.result()
+        except QiskitError as err:
+            if "invalid parameters" in str(err):
+                raise ValueError(
+                    "Couldn't run the simulation, likely because the given PUBs contain one or "
+                    "more non-Clifford instructions. To fix, try setting ``cliffordize`` to "
+                    "``True``."
+                ) from err
+            raise err
+
+        pub_results = [NeatPubResult(r.data.evs) for r in aer_result]
         return NeatResult(pub_results)
 
     def ideal_sim(

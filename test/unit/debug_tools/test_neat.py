@@ -18,7 +18,6 @@ from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit import QuantumCircuit
-from qiskit.exceptions import QiskitError
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -110,10 +109,10 @@ class TestNeat(IBMTestCase):
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
 
-        with self.assertRaisesRegex(QiskitError, 'invalid parameters  for "stabilizer" method.'):
+        with self.assertRaisesRegex(ValueError, "Couldn't run"):
             Neat(self.backend).ideal_sim(pubs)
 
-        with self.assertRaisesRegex(QiskitError, 'invalid parameters  for "stabilizer" method.'):
+        with self.assertRaisesRegex(ValueError, "Couldn't run."):
             Neat(self.backend).noisy_sim(pubs)
 
         r1 = Neat(self.backend).ideal_sim(pubs, cliffordize=True)
