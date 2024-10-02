@@ -35,8 +35,8 @@ class EstimatorPubResult(PubResult):
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
         n_stds: int = 1,
-        mag_tol: float = 10,
-        std_tol: float = 0.2,
+        max_mag: float = 10,
+        max_std: float = 0.2,
         height: int = 500,
         width: int = 1000,
         n_cols: int = 4,
@@ -51,10 +51,10 @@ class EstimatorPubResult(PubResult):
             names: The names to assign to the expectation values. If ``None``, the names correspond to
                 the indices.
             n_stds: The number of standard deviations to include around each fit.
-            mag_tol: The tolerance. If ``evs_extrapolated`` has a greater magnitude than this value, the
-                expectation value is omitted from the plot.
-            std_tol: The tolerance. If ``stds_extrapolated`` is greater than this value for an
-                expectation value and extrapolator, the fit is omitted from the plot.
+            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
+                a greater magnitude than this value, the expectation value is omitted from the plot.
+            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
+                this value for an expectation value and extrapolator, the fit is omitted from the plot.
             height: The height of the plot in pixels.
             width: The width of the plot in pixels.
             n_cols: The maximum number of columns in the figure.
@@ -73,8 +73,8 @@ class EstimatorPubResult(PubResult):
             indices,
             names,
             n_stds,
-            mag_tol,
-            std_tol,
+            max_mag,
+            max_std,
             height,
             width,
             n_cols,

@@ -15,13 +15,15 @@
 from __future__ import annotations
 
 from itertools import product
-from typing import Sequence
+from typing import Sequence, TYPE_CHECKING
 from plotly.colors import sample_colorscale
 from plotly.subplots import make_subplots
 import numpy as np
-import plotly.graph_objects as go
 
 from ..utils.estimator_pub_result import EstimatorPubResult
+
+if TYPE_CHECKING:
+    import plotly.graph_objs as go
 
 
 def plot_zne(
@@ -29,8 +31,8 @@ def plot_zne(
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,
     n_stds: int = 1,
-    mag_tol: float = 10,
-    std_tol: float = 0.2,
+    max_mag: float = 10,
+    max_std: float = 0.2,
     height: int = 500,
     width: int = 1000,
     n_cols: int = 4,
@@ -46,10 +48,10 @@ def plot_zne(
         names: The names to assign to the expectation values. If ``None``, the names correspond to the
             indices.
         n_stds: The number of standard deviations to include around each fit.
-        mag_tol: The tolerance. If ``evs_extrapolated`` has a greater magnitude than this value, the
-            expectation value is omitted from the plot.
-        std_tol: The tolerance. If ``stds_extrapolated`` is greater than this value for an expectation
-            value and extrapolator, the fit is omitted from the plot.
+        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
+            greater magnitude than this value, the expectation value is omitted from the plot.
+        max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
+            this value for an expectation value and extrapolator, the fit is omitted from the plot.
         height: The height of the plot in pixels.
         width: The width of the plot in pixels.
         n_cols: The maximum number of columns in the figure.
@@ -64,12 +66,10 @@ def plot_zne(
         ValueError: If ``result`` does not contain zero noise extrapolation data.
         ValueError: If the length of ``names`` is not equal to the length of ``indices``.
     """
-    resilience = result.metadata.get("resilience")
-    if not resilience:
+    if not (resilience := result.metadata.get("resilience")):
         raise ValueError("Result does not contain resilience metadata.")
 
-    zne_metadata = resilience.get("zne")
-    if not zne_metadata:
+    if not (zne_metadata := resilience.get("zne")):
         raise ValueError("Result does not contain ZNE data.")
 
     if indices is None:
@@ -107,18 +107,19 @@ def plot_zne(
                     noise_factors,
                     evs,
                     result.data.stds_noise_factors[idx],
+                    name=names[i],
                     color="black",
                 ),
                 col=col,
                 row=row,
             )
 
-            fig.update_yaxes(col=col, row=row, range=[np.min(evs) - std_tol, np.max(evs) + std_tol])
+            fig.update_yaxes(col=col, row=row, range=[np.min(evs) - max_std, np.max(evs) + max_std])
 
             for idx_m, model in enumerate(extrapolators):
                 evs = result.data.evs_extrapolated[idx][idx_m]
                 stds = result.data.stds_extrapolated[idx][idx_m]
-                if any(stds > std_tol) or any(abs(evs) > mag_tol):
+                if any(stds > max_std) or any(abs(evs) > max_mag):
                     continue
 
                 fig.add_traces(
@@ -146,7 +147,7 @@ def plot_zne(
             for idx_m in range(len(extrapolators)):
                 evs = result.data.evs_extrapolated[idx][idx_m]
                 stds = result.data.stds_extrapolated[idx][idx_m]
-                if any(stds > std_tol) or any(abs(evs) > mag_tol):
+                if any(stds > max_std) or any(abs(evs) > max_mag):
                     continue
 
                 fig.add_traces(
@@ -171,8 +172,8 @@ def plot_zne(
 
         fig.update_yaxes(
             range=[
-                np.min(result.data.evs_noise_factors) - std_tol,
-                np.max(result.data.evs_noise_factors) + std_tol,
+                np.min(result.data.evs_noise_factors) - max_std,
+                np.max(result.data.evs_noise_factors) + max_std,
             ],
         )
 
@@ -180,6 +181,7 @@ def plot_zne(
         height=height,
         width=width,
         plot_bgcolor="white",
+        hoverlabel_align="right",
     )
 
     fig.update_xaxes(
@@ -230,9 +232,11 @@ def _line_trace(
         go.Scatter(
             x=x_values,
             y=y_values,
+            customdata=stds,
             name=name,
             mode="lines",
             line={"color": color},
+            hovertemplate="noise_factor: %{x}<br>ev_extrap: %{y:.4f}<br>std: %{customdata:.4f}<extra></extra>",
             legendgroup=legend_group,
             showlegend=show_legend,
         ),
@@ -283,6 +287,7 @@ def _scatter_trace(
         name=name,
         mode="markers",
         marker={"color": color},
+        hovertemplate="noise_factor: %{x} <br>ev: %{y:.4f}<br>std: %{error_y.array:.4f}<extra></extra>",
         legendgroup=legend_group,
         showlegend=show_legend,
     )
