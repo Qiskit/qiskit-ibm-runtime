@@ -22,8 +22,8 @@ import numpy as np
 
 from ..utils.estimator_pub_result import EstimatorPubResult
 
-if TYPE_CHECKING:
-    import plotly.graph_objs as go
+# TYPE_CHECKING:
+import plotly.graph_objs as go
 
 
 def plot_zne(
@@ -228,6 +228,8 @@ def _line_trace(
     Returns:
         A list of traces.
     """
+    hovertemplate = "extrapolator: " + name + "<br>noise_factor: %{x}<br>ev_extrap: %{y:.4f}"
+    hovertemplate += "<br>std: %{customdata:.4f}<extra></extra>"
     return [
         go.Scatter(
             x=x_values,
@@ -236,7 +238,7 @@ def _line_trace(
             name=name,
             mode="lines",
             line={"color": color},
-            hovertemplate="noise_factor: %{x}<br>ev_extrap: %{y:.4f}<br>std: %{customdata:.4f}<extra></extra>",
+            hovertemplate=hovertemplate,
             legendgroup=legend_group,
             showlegend=show_legend,
         ),
