@@ -18,7 +18,6 @@ from itertools import product
 from typing import Sequence, TYPE_CHECKING
 from plotly.colors import sample_colorscale
 from plotly.subplots import make_subplots
-import plotly.graph_objs as go
 import numpy as np
 
 from ..utils.estimator_pub_result import EstimatorPubResult
