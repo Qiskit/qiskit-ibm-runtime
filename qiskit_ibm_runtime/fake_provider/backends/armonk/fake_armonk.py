@@ -15,25 +15,10 @@ Fake Armonk device (5 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeArmonkV2(fake_backend.FakeBackendV2):
-    """A fake 1 qubit backend.
-
-    .. code-block:: text
-
-        0
-    """
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_armonk.json"  # type: ignore
-    props_filename = "props_armonk.json"  # type: ignore
-    defs_filename = "defs_armonk.json"  # type: ignore
-    backend_name = "fake_armonk"  # type: ignore
-
-
-class FakeArmonk(fake_pulse_backend.FakePulseBackend):
     """A fake 1 qubit backend.
 
     .. code-block:: text

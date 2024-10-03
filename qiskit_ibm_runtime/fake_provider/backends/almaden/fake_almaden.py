@@ -15,31 +15,11 @@ Fake Almaden device (20 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_qasm_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeAlmadenV2(fake_backend.FakeBackendV2):
     """A fake Almaden V2 backend.
-
-    .. code-block:: text
-
-        00 ↔ 01 ↔ 02 ↔ 03 ↔ 04
-              ↕         ↕
-        05 ↔ 06 ↔ 07 ↔ 08 ↔ 09
-         ↕         ↕         ↕
-        10 ↔ 11 ↔ 12 ↔ 13 ↔ 14
-              ↕         ↕
-        15 ↔ 16 ↔ 17 ↔ 18 ↔ 19
-    """
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_almaden.json"  # type: ignore
-    props_filename = "props_almaden.json"  # type: ignore
-    backend_name = "fake_almaden"  # type: ignore
-
-
-class FakeAlmaden(fake_qasm_backend.FakeQasmBackend):
-    """A fake Almaden backend.
 
     .. code-block:: text
 
