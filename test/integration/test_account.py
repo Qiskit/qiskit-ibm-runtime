@@ -26,7 +26,6 @@ from qiskit_ibm_runtime.utils.utils import (
     get_iam_api_url,
 )
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
-
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import IntegrationTestDependencies
 
