@@ -13,4 +13,3 @@
 """Mock montreal backend"""
 
 from .fake_montreal import FakeMontrealV2
-from .fake_montreal import FakeMontreal

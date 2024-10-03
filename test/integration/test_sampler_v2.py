@@ -30,7 +30,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from ..decorators import run_integration_test, production_only
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import get_real_device
@@ -42,7 +42,7 @@ class TestSampler(IBMIntegrationTestCase):
     def setUp(self):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.device)
-        self.fake_backend = FakeManila()
+        self.fake_backend = FakeManilaV2()
         self._shots = 10000
         self._options = {"default_shots": 10000}
         # TODO: Re-add seed_simulator and re-enable verification once it's supported

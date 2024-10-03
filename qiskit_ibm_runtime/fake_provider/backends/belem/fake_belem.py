@@ -15,20 +15,10 @@ Fake Belem device (5 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeBelemV2(fake_backend.FakeBackendV2):
-    """A fake 5 qubit backend."""
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_belem.json"  # type: ignore
-    props_filename = "props_belem.json"  # type: ignore
-    defs_filename = "defs_belem.json"  # type: ignore
-    backend_name = "fake_belem"  # type: ignore
-
-
-class FakeBelem(fake_pulse_backend.FakePulseBackend):
     """A fake 5 qubit backend."""
 
     dirname = os.path.dirname(__file__)  # type: ignore

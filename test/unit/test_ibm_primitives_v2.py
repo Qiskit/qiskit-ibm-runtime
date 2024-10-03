@@ -27,7 +27,7 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.options.utils import Unset
 
@@ -484,7 +484,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):
         """Test faulty qubits is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits):
@@ -494,11 +494,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
-
-        inst = primitive(mode=session)
+        inst = primitive(mode=ibm_backend)
 
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
@@ -513,7 +509,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits_many(self, primitive):
         """Test faulty qubits is raised if one circuit uses it."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
 
         circ1 = QuantumCircuit(1, 1)
@@ -526,11 +522,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pubs = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
@@ -545,7 +538,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_edge(self, primitive):
         """Test faulty edge is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
@@ -555,11 +548,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -574,7 +564,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_faulty_qubit_not_used(self, primitive):
         """Test faulty qubit is not raise if not used."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
         for i in range(2):
             circ.x(i)
@@ -583,26 +573,21 @@ class TestPrimitivesV2(IBMTestCase):
 
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
-
-        inst = primitive(mode=session)
+        inst = primitive(ibm_backend)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
             transpiled.measure_active(inplace=True)
             pub = (transpiled,)
 
-        with patch.object(Session, "_run") as mock_run:
+        with patch.object(inst, "_run") as mock_run:
             inst.run([pub])
         mock_run.assert_called_once()
 
     @data(EstimatorV2, SamplerV2)
     def test_faulty_edge_not_used(self, primitive):
         """Test faulty edge is not raised if not used."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
 
         circ = QuantumCircuit(2, 2)
@@ -616,7 +601,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name())
+        session = Session(service=service, backend=fake_backend)
 
         inst = primitive(mode=session)
         if isinstance(inst, IBMBaseEstimator):
