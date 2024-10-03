@@ -221,7 +221,9 @@ QISKIT_IBM_DEVICE=...                                           # The device to 
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
-upon.
+upon. 
+
+For example, in your github fork settings, add the environment you want to run tests on (ibm-quantum-production, ibm-quantum-staging, ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 
 ### Style guide
 
