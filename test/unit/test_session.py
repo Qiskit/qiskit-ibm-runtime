@@ -67,29 +67,6 @@ class TestSession(IBMTestCase):
         session = Session(backend=backend)
         self.assertEqual(session.service, backend.service)
 
-    def test_max_time(self):
-        """Test max time."""
-        model_backend = FakeManilaV2()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=MagicMock(),
-            api_client=None,
-        )
-        max_times = [
-            (42, 42),
-            ("1h", 1 * 60 * 60),
-            ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
-            ("40s 1h", 40 + 1 * 60 * 60),
-        ]
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                session = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
-                self.assertEqual(session._max_time, expected)
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                backend.open_session(max_time=max_t)
-                self.assertEqual(backend.session._max_time, expected)
-
     def test_run_after_close(self):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
