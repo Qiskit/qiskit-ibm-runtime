@@ -14,7 +14,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
