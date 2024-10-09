@@ -26,14 +26,15 @@ def generate_header(output_file: Path) -> None:
 Qiskit Runtime IBM Client release notes\n\
 =======================================\n\
 \n\
-.. towncrier release notes start\n"
+.. towncrier release notes start\n",
+        "utf-8",
     )
 
 
 def concat_release_notes(output_file: Path, release_notes_paths: list[Path]) -> None:
-    with output_file.open("a") as file:
+    with output_file.open("a", encoding="utf-8") as file:
         for release_note in release_notes_paths:
-            file.write(f"\n{release_note.read_text()}")
+            file.write(f"\n{release_note.read_text('utf-8')}")
 
 
 def main() -> None:
