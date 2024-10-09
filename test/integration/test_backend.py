@@ -119,6 +119,16 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target_history())
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
+    @production_only
+    def test_backend_target_refresh(self):
+        """Test refreshing the backend target."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            old_target = backend.target
+            backend.refresh()
+            new_target = backend.target
+            self.assertNotEqual(old_target, new_target)
+
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
         backend = self.backend
