@@ -105,7 +105,6 @@ class BaseFakeRuntimeJob:
         session_id=None,
         max_execution_time=None,
         start_session=None,
-        channel_strategy=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -131,7 +130,6 @@ class BaseFakeRuntimeJob:
         elif final_status == "COMPLETED":
             self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._final_status = final_status
-        self._channel_strategy = channel_strategy
 
     def _auto_progress(self):
         """Automatically update job status."""
@@ -292,10 +290,6 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
-    def is_qctrl_enabled(self):
-        """Return whether or not channel_strategy q-ctrl is enabled."""
-        return False
-
     def set_final_status(self, final_status):
         """Set job status to passed in final status instantly."""
         self._final_status = final_status
@@ -314,7 +308,6 @@ class BaseFakeRuntimeClient:
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
         private: Optional[int] = False,  # pylint: disable=unused-argument
-        channel_strategy: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -344,7 +337,6 @@ class BaseFakeRuntimeClient:
             job_tags=job_tags,
             max_execution_time=max_execution_time,
             start_session=start_session,
-            channel_strategy=channel_strategy,
             **self._job_kwargs,
         )
         self.session_time = session_time
@@ -442,7 +434,8 @@ class BaseFakeRuntimeClient:
 
     # pylint: disable=unused-argument
     def list_backends(
-        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
+        self,
+        hgp: Optional[str] = None,
     ) -> List[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(hgp)]

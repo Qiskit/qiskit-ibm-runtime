@@ -49,7 +49,6 @@ class QiskitRuntimeLocalService:
             An instance of QiskitRuntimeService.
 
         """
-        self._channel_strategy = None
 
     def backend(
         self, name: str = None, instance: str = None  # pylint: disable=unused-argument

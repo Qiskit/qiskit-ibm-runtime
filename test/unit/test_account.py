@@ -128,22 +128,6 @@ class TestAccount(IBMTestCase):
                     ).validate()
                 self.assertIn("Invalid `instance` value.", str(err.exception))
 
-    def test_invalid_channel_strategy(self):
-        """Test invalid values for channel_strategy"""
-        subtests = [
-            {"channel": "ibm_cloud", "channel_strategy": "test"},
-        ]
-        for params in subtests:
-            with self.subTest(params=params):
-                with self.assertRaises(InvalidAccountError) as err:
-                    Account.create_account(
-                        **params,
-                        token=self.dummy_token,
-                        url=self.dummy_ibm_cloud_url,
-                        instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
-                    ).validate()
-                self.assertIn("Invalid `channel_strategy` value.", str(err.exception))
-
     def test_invalid_proxy_config(self):
         """Test invalid values for proxy configuration."""
 
@@ -783,17 +767,6 @@ class TestEnableAccount(IBMTestCase):
         with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
             _ = FakeRuntimeService(channel=channel)
         self.assertIn("channel", str(err.exception))
-
-    def test_enable_account_bad_channel_strategy(self):
-        """Test initializing account by bad channel strategy."""
-        subtests = [
-            {"channel_strategy": "q-ctrl", "channel": "ibm_quantum"},
-            {"channel_strategy": "test"},
-        ]
-        for test in subtests:
-            with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
-                _ = FakeRuntimeService(**test)
-            self.assertIn("channel", str(err.exception))
 
     def test_enable_account_by_name_pref(self):
         """Test initializing account by name and preferences."""

@@ -42,7 +42,6 @@ class Account:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
-        channel_strategy: Optional[str] = None,
     ):
         """Account constructor.
 
@@ -53,7 +52,6 @@ class Account:
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
         """
         self.channel: str = None
         self.url: str = None
@@ -61,7 +59,6 @@ class Account:
         self.instance = instance
         self.proxies = proxies
         self.verify = verify
-        self.channel_strategy = channel_strategy
         self.private_endpoint: bool = False
 
     def to_saved_format(self) -> dict:
@@ -81,7 +78,6 @@ class Account:
         token = data.get("token")
         instance = data.get("instance")
         verify = data.get("verify", True)
-        channel_strategy = data.get("channel_strategy")
         private_endpoint = data.get("private_endpoint", False)
         return cls.create_account(
             channel=channel,
@@ -90,7 +86,6 @@ class Account:
             instance=instance,
             proxies=proxies,
             verify=verify,
-            channel_strategy=channel_strategy,
             private_endpoint=private_endpoint,
         )
 
@@ -103,7 +98,6 @@ class Account:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
-        channel_strategy: Optional[str] = None,
         private_endpoint: Optional[bool] = False,
     ) -> "Account":
         """Creates an account for a specific channel."""
@@ -114,7 +108,6 @@ class Account:
                 instance=instance,
                 proxies=proxies,
                 verify=verify,
-                channel_strategy=channel_strategy,
             )
         elif channel == "ibm_cloud":
             return CloudAccount(
@@ -123,7 +116,6 @@ class Account:
                 instance=instance,
                 proxies=proxies,
                 verify=verify,
-                channel_strategy=channel_strategy,
                 private_endpoint=private_endpoint,
             )
         else:
@@ -167,19 +159,7 @@ class Account:
         self._assert_valid_url(self.url)
         self._assert_valid_instance(self.instance)
         self._assert_valid_proxies(self.proxies)
-        self._assert_valid_channel_strategy(self.channel_strategy)
         return self
-
-    @staticmethod
-    def _assert_valid_channel_strategy(channel_strategy: str) -> None:
-        """Assert that the channel strategy is valid."""
-        # add more strategies as they are implemented
-        strategies = ["q-ctrl", "default"]
-        if channel_strategy and channel_strategy not in strategies:
-            raise InvalidAccountError(
-                f"Invalid `channel_strategy` value. Expected one of "
-                f"{strategies}, got '{channel_strategy}'."
-            )
 
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
@@ -229,7 +209,6 @@ class QuantumAccount(Account):
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
-        channel_strategy: Optional[str] = None,
     ):
         """Account constructor.
 
@@ -239,9 +218,8 @@ class QuantumAccount(Account):
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
         """
-        super().__init__(token, instance, proxies, verify, channel_strategy)
+        super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_QUANTUM_API_URL
         self.channel = "ibm_quantum"
         self.url = resolved_url
@@ -272,7 +250,6 @@ class CloudAccount(Account):
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
-        channel_strategy: Optional[str] = None,
         private_endpoint: Optional[bool] = False,
     ):
         """Account constructor.
@@ -283,10 +260,9 @@ class CloudAccount(Account):
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
             private_endpoint: Connect to private API URL.
         """
-        super().__init__(token, instance, proxies, verify, channel_strategy)
+        super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
