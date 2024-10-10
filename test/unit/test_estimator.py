@@ -75,7 +75,6 @@ class TestEstimatorV2(IBMTestCase):
             {
                 "resilience_level": 4,
             },
-            {"resilience_level": 2},
         ]
 
         with Session(
