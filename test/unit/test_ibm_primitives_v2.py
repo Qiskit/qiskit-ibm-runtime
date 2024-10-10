@@ -705,8 +705,6 @@ class TestPrimitivesV2(IBMTestCase):
         options_bad = [
             # Bad resilience levels
             ({"resilience_level": 0}, "resilience level"),
-            # Bad optimization level
-            ({"optimization_level": 0}, "optimization level"),
         ]
         session = get_mocked_session()
         session.service._channel_strategy = "q-ctrl"

@@ -72,8 +72,9 @@ class TestEstimatorV2(IBMTestCase):
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
-            {"resilience_level": 4, "optimization_level": 1},
-            {"optimization_level": 4, "resilience_level": 2},
+            {
+                "resilience_level": 4,
+            },
         ]
 
         with Session(
@@ -114,10 +115,6 @@ class TestEstimatorV2(IBMTestCase):
             (
                 EstimatorOptions(default_shots=1024),  # pylint: disable=unexpected-keyword-arg
                 {"default_shots": 1024},
-            ),
-            (
-                EstimatorOptions(optimization_level=1),  # pylint: disable=unexpected-keyword-arg
-                {"transpilation": {"optimization_level": 1}},
             ),
             (
                 {

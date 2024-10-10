@@ -182,15 +182,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "a coupling map is required."
             )
 
-        if options.get("optimization_level", None):
-            issue_deprecation_msg(
-                msg="The 'optimization_level' option is deprecated",
-                version="0.25.0",
-                remedy="Instead, you can perform circuit optimization using Qiskit transpiler "
-                "or Qiskit transpiler service. "
-                "See https://docs.quantum.ibm.com/guides/transpile for more information.",
-            )
-
     @classmethod
     def _program_id(cls) -> str:
         """Return the program ID."""
