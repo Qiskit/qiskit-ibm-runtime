@@ -1,0 +1,1 @@
+Added Noisy Estimator Analyzer Tool (or NEAT), a class to help understand the expected performance of estimator jobs. 
