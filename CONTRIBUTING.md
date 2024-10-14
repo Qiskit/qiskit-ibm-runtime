@@ -206,6 +206,7 @@ Sample configuration for IBM Quantum
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
 QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
+QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
 ```
 
 Sample configuration for IBM Cloud
@@ -213,6 +214,7 @@ Sample configuration for IBM Cloud
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
+QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
 
 
