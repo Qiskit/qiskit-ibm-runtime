@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for job functions using real runtime service."""
-
+import os
 import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
@@ -167,11 +167,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @quantum_only
     def test_jobs_filter_by_hgp(self, service):
         """Test retrieving jobs by hgp."""
-        default_hgp = list(service._hgps.keys())[0]
+        hgp = os.getenv("QISKIT_IBM_INSTANCE")
 
         job = self._run_program(service)
         job.wait_for_final_state()
-        rjobs = service.jobs(instance=default_hgp)
+        rjobs = service.jobs(instance=hgp)
 
         self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
 

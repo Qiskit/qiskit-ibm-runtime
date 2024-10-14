@@ -47,7 +47,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
-            backend="ibmq_qasm_simulator",
+            backend=self.dependencies.qpu,
             interim_results=int_res,
             callback=result_callback,
         )
@@ -80,7 +80,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
-            backend="ibmq_qasm_simulator",
+            backend=self.dependencies.qpu,
             interim_results=int_res,
             callback=result_callback,
         )
@@ -111,7 +111,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
-            backend="ibmq_qasm_simulator",
+            backend=self.dependencies.qpu,
             interim_results=int_res,
         )
         job.stream_results(result_callback)
@@ -133,7 +133,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         called_back_count = 0
         job = self._run_program(
             service,
-            backend="ibmq_qasm_simulator",
+            backend=self.dependencies.qpu,
             interim_results="foobar",
         )
         job.wait_for_final_state()
@@ -187,7 +187,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
             job = self._run_program(
                 service,
-                backend="ibmq_qasm_simulator",
+                backend=self.dependencies.qpu,
                 inputs=inputs,
                 interim_results="foo",
                 callback=result_callback,
@@ -213,7 +213,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with use_proxies(service, MockProxyServer.VALID_PROXIES):
             job = self._run_program(
                 service,
-                backend="ibmq_qasm_simulator",
+                backend=self.dependencies.qpu,
                 callback=result_callback,
             )
             job.wait_for_final_state()
