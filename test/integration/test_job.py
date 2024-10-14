@@ -147,7 +147,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        job = self._run_program(service, backend=self.dependencies.device)
+        job = self._run_program(service, backend=self.dependencies.qpu)
         job.wait_for_final_state()
         self.assertEqual("DONE", job.status())
 
@@ -165,7 +165,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
-        job = self._run_program(service, backend=self.dependencies.device)
+        job = self._run_program(service, backend=self.dependencies.qpu)
         status = job.status()
         while status not in ["DONE", "CANCELLED", "ERROR"]:
             status = job.status()

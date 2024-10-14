@@ -31,7 +31,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     def setUp(self) -> None:
         super().setUp()
 
-        self._backend = self.service.backend(self.dependencies.device)
+        self._backend = self.service.backend(self.dependencies.qpu)
 
         c1 = QuantumCircuit(2)
         c1.ecr(0, 1)

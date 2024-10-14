@@ -35,7 +35,7 @@ class TestIBMJob(IBMIntegrationTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self.sim_backend = self.service.backend(self.dependencies.device)
+        self.sim_backend = self.service.backend(self.dependencies.qpu)
         self.bell = bell()
         sampler = Sampler(mode=self.sim_backend)
 

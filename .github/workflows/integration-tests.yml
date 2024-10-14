@@ -33,7 +33,7 @@ jobs:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
       QISKIT_IBM_URL: ${{ secrets.QISKIT_IBM_URL }}
       QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
-      QISKIT_IBM_DEVICE: ${{ secrets.QISKIT_IBM_DEVICE }}
+      QISKIT_IBM_QPU: ${{ secrets.QISKIT_IBM_QPU }}
 
       LOG_LEVEL: DEBUG
       STREAM_LOG: True

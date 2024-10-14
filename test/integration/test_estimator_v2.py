@@ -31,7 +31,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self._backend = self.service.backend(self.dependencies.device)
+        self._backend = self.service.backend(self.dependencies.qpu)
 
     @run_integration_test
     def test_estimator_v2_session(self, service):
@@ -50,7 +50,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(service, self.dependencies.device) as session:
+        with Session(service, self.dependencies.qpu) as session:
             estimator = EstimatorV2(mode=session)
             estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
 
