@@ -352,7 +352,6 @@ class IBMBackend(Backend):
             include_control_flow = not self.options.use_fractional_gates
             include_fractional_gates = self.options.use_fractional_gates
 
-        # Do we want to cache the target here?
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
