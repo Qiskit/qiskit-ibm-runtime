@@ -206,6 +206,7 @@ Sample configuration for IBM Quantum
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
 QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
+QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
 ```
 
 Sample configuration for IBM Cloud
@@ -213,13 +214,16 @@ Sample configuration for IBM Cloud
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
+QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
 
 
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
-upon.
+upon. 
+
+For example, in your github fork settings, add the environment you want to run tests on (ibm-quantum-production, ibm-quantum-staging, ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 
 ### Style guide
 
