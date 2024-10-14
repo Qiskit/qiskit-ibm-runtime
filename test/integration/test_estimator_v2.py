@@ -52,7 +52,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         with Session(service, self.dependencies.qpu) as session:
             estimator = EstimatorV2(mode=session)
-            estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
