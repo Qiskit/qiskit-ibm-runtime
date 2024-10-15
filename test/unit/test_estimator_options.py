@@ -37,7 +37,6 @@ class TestEstimatorOptions(IBMTestCase):
     """Class for testing the EstimatorOptions class."""
 
     @data(
-        ({"optimization_level": 99}, "optimization_level must be <=1"),
         ({"resilience_level": -1}, "resilience_level must be >=0"),
         ({"default_precision": 0}, "default_precision must be >0"),
         (
@@ -99,7 +98,6 @@ class TestEstimatorOptions(IBMTestCase):
         # pylint: disable=unexpected-keyword-arg
 
         noise_model = NoiseModel.from_backend(FakeManilaV2())
-        optimization_level = 0
         resilience_level = 2
         simulator = {
             "noise_model": noise_model,
@@ -132,7 +130,6 @@ class TestEstimatorOptions(IBMTestCase):
             simulator=simulator,
             default_precision=0.5,
             default_shots=1000,
-            optimization_level=optimization_level,
             resilience_level=resilience_level,
             seed_estimator=42,
             dynamical_decoupling=dynamical_decoupling,
@@ -142,9 +139,6 @@ class TestEstimatorOptions(IBMTestCase):
             experimental={"foo": "bar", "execution": {"secret": 88}},
         )
 
-        transpilation = {
-            "optimization_level": optimization_level,
-        }
         execution.update(
             {
                 "secret": 88,
@@ -154,7 +148,6 @@ class TestEstimatorOptions(IBMTestCase):
             "default_precision": 0.5,
             "default_shots": 1000,
             "seed_estimator": 42,
-            "transpilation": transpilation,
             "twirling": twirling,
             "dynamical_decoupling": dynamical_decoupling,
             "execution": execution,
@@ -176,7 +169,7 @@ class TestEstimatorOptions(IBMTestCase):
         {},
         {"default_precision": 0.5},
         {"simulator": {"seed_simulator": 42}},
-        {"optimization_level": 1, "environment": {"log_level": "WARNING"}},
+        {"environment": {"log_level": "WARNING"}},
         {"execution": {"init_qubits": True}},
         {"twirling": {"enable_gates": True, "strategy": "active"}},
         {"environment": {"log_level": "ERROR"}},
@@ -196,11 +189,10 @@ class TestEstimatorOptions(IBMTestCase):
     @data(
         {"resilience_level": 2},
         {"max_execution_time": 200},
-        {"resilience_level": 2, "optimization_level": 1},
+        {"resilience_level": 2},
         {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {"resilience_level": 2, "default_shots": 2048},
         {
-            "optimization_level": 1,
             "environment": {"log_level": "INFO"},
         },
         {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 2, 3]}}},
@@ -233,15 +225,6 @@ class TestEstimatorOptions(IBMTestCase):
         options = backend.service._run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, opt_dict)
 
-    def test_zero_optimization_level(self):
-        """Test optimization_level=0."""
-        opt_dict = {"optimization_level": 0}
-        backend = get_mocked_backend()
-        estimator = Estimator(mode=backend, options=opt_dict)
-        _ = estimator.run(**get_primitive_inputs(estimator))
-        options = backend.service._run.call_args.kwargs["inputs"]["options"]
-        self.assertDictEqual(options, {"transpilation": {"optimization_level": 0}})
-
     def test_zero_resilience_level(self):
         """Test resilience_level=0"""
         opt_dict = {"resilience_level": 0}
@@ -251,10 +234,3 @@ class TestEstimatorOptions(IBMTestCase):
         options = backend.service._run.call_args.kwargs["inputs"]
         self.assertIn("resilience_level", options)
         self.assertEqual(options["resilience_level"], 0)
-
-    def test_optimization_level_deprecation(self):
-        """Test optimization level being deprecated."""
-        backend = get_mocked_backend()
-        estimator = Estimator(mode=backend, options={"optimization_level": 1})
-        with self.assertWarnsRegex(DeprecationWarning, r".*optimization_level.*"):
-            _ = estimator.run(**get_primitive_inputs(estimator))

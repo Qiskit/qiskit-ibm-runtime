@@ -52,16 +52,6 @@ def _raise_if_error_in_options_v2(options: Dict[str, Any]) -> None:
         arguments={},
     )
 
-    optimization_level = options.get("optimization_level", 1)
-    if isinstance(optimization_level, UnsetType):
-        optimization_level = 1
-    _check_argument(
-        optimization_level > 0,
-        description="Q-CTRL Primitives do not support optimization level 0. Please\
-        set optimization_level to 1 and re-try",
-        arguments={},
-    )
-
 
 def _warn_and_clean_options_v2(options: Dict[str, Any]) -> None:
     """
@@ -70,7 +60,6 @@ def _warn_and_clean_options_v2(options: Dict[str, Any]) -> None:
     # Issue a warning and override if any of these setting is not None
     # or a different value than the default below
     expected_options = {
-        "optimization_level": 1,
         "resilience_level": 1,
         "resilience": {
             "measure_mitigation": None,
