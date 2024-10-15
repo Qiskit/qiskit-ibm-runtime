@@ -278,8 +278,8 @@ class LayerError:
                 # Draw the layer error on embedding1
                 layer_error.draw_map(embedding1)
 
-                # Draw the layer error on embedding1
-                layer_error.draw_map(embedding1)
+                # Draw the layer error on embedding2
+                layer_error.draw_map(embedding2)
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
 
