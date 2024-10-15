@@ -45,6 +45,7 @@ class RuntimeClient(BaseBackendClient):
             **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
+        self._configuration_registry: Dict[str, Dict[str, Any]] = {}
 
     def program_run(
         self,
@@ -59,6 +60,7 @@ class RuntimeClient(BaseBackendClient):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
+        private: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Run the specified program.
@@ -75,6 +77,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
+            private: Marks job as private.
             channel_strategy: Error mitigation strategy.
 
         Returns:
@@ -95,6 +98,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time=max_execution_time,
             start_session=start_session,
             session_time=session_time,
+            private=private,
             channel_strategy=channel_strategy,
             **hgp_dict,
         )
@@ -301,7 +305,11 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             Backend configuration.
         """
-        return self._api.backend(backend_name).configuration()
+        if backend_name not in self._configuration_registry:
+            self._configuration_registry[backend_name] = self._api.backend(
+                backend_name
+            ).configuration()
+        return self._configuration_registry[backend_name].copy()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the IBM backend.
@@ -353,3 +361,11 @@ class RuntimeClient(BaseBackendClient):
             API Response.
         """
         return self._api.program_job(job_id).update_tags(tags)
+
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            API Response.
+        """
+        return self._api.usage()

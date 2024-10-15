@@ -1,0 +1,30 @@
+0.18.0
+======
+
+New Features
+------------
+
+-  Added a new parameter, dynamic_circuits to
+   `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__
+   to allow filtering of backends that support dynamic circuits.
+
+-  Added ``max_time`` parameter to ``IBMBackend.open_session()``.
+
+-  Added a method ``RuntimeJob.queue_info()`` to get the queue
+   information from the backend. This feature was transferred from
+   ``qiskit_ibm_provider``.
+
+Deprecation Notes
+-----------------
+
+-  `runtime() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.21/qiskit_ibm_runtime.QiskitRuntimeService#runtime>`__
+   has been deprecated.
+
+Bug Fixes
+---------
+
+-  Many methods in `RuntimeJob <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
+   require retrieving the job data from the API with ``job_get()``. This
+   API call will now exclude the ``params`` field by default because
+   they are only necessary in
+   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.

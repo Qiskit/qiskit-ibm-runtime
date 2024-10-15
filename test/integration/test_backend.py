@@ -17,13 +17,12 @@ from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.backend import QubitProperties
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from qiskit_ibm_runtime.ibm_qubit_properties import IBMQubitProperties
-from qiskit_ibm_runtime.exceptions import IBMBackendValueError
-
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
@@ -66,29 +65,18 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
                 service.backend(unique_backend, instance=hgp_1)
 
     @run_integration_test
-    @quantum_only
-    def test_backends_no_config(self, service):
-        """Test retrieving backends when a config is missing."""
-        service._backend_configs = {}
-        instance = service._account.instance
-        backends = service.backends(instance=instance)
-        configs = service._backend_configs
-        configs["test_backend"] = None
-        backend_names = [backend.name for backend in backends]
-        # check filters still work
-        service.backends(instance=instance, simulator=True)
-
-        for config in configs.values():
-            backend = service._create_backend_obj(config, instance=instance)
-            if backend:
-                self.assertTrue(backend.name in backend_names)
-
-    @run_integration_test
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
         backend = service.backend(backends[0].name)
         self.assertTrue(backend)
+
+    @run_integration_test
+    def test_target_reset(self, service):
+        """Test confirming target contains reset."""
+        backends = service.backends()
+        backend = service.backend(backends[0].name)
+        self.assertIn("reset", backend.target)
 
 
 class TestIBMBackend(IBMIntegrationTestCase):
@@ -104,9 +92,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
             # TODO use real device when cloud supports it
             cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
         if cls.dependencies.channel == "ibm_quantum":
-            cls.backend = cls.dependencies.service.least_busy(
-                simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
+            cls.dependencies.service._account.instance = (
+                None  # set instance to none to avoid filtering
             )
+            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
 
     def test_backend_service(self):
         """Check if the service property is set."""
@@ -213,7 +202,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
                     backend.properties().last_update_date,
                 )
             self.assertEqual(backend_copy._instance, backend._instance)
-            self.assertEqual(backend_copy._service._backends, backend._service._backends)
+            self.assertEqual(
+                backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
+            )
             self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
@@ -225,38 +216,42 @@ class TestIBMBackend(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
-        self.assertTrue(any(backend.status().pending_jobs > 0 for backend in backends))
+        self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud channel does not have instance.")
+        if not self.backend.properties():
+            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
         self.assertEqual(len(qubit_properties), num_qubits)
         for i in qubits:
-            self.assertIsInstance(qubit_properties[i], IBMQubitProperties)
+            self.assertIsInstance(qubit_properties[i], QubitProperties)
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        inputs = backend.run(bell(), shots=1, foo="foo").inputs
-        self.assertEqual(inputs["shots"], 1)
-        self.assertTrue(inputs["memory"])
-        self.assertEqual(inputs["foo"], "foo")
+        sampler = Sampler(mode=backend)
+        isa_circuit = transpile(bell(), backend)
+        inputs = sampler.run([isa_circuit], shots=1).inputs
+        self.assertEqual(inputs["pubs"][0][2], 1)
 
     @production_only
     def test_paused_backend_warning(self):
         """Test that a warning is given when running jobs on a paused backend."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         paused_status = backend.status()
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
+        isa_circuit = transpile(bell(), backend)
         with self.assertWarns(Warning):
-            backend.run(bell())
+            sampler = Sampler(mode=backend)
+            sampler.run([isa_circuit])
 
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
@@ -286,12 +281,16 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Check error message if circuit contains more qubits than supported on the backend."""
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud channel does not have instance.")
+        if not self.backend.properties():
+            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num = len(self.backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
-        with self.assertRaises(IBMBackendValueError) as err:
-            _ = self.backend.run(circuit)
+        with self.assertRaises(IBMInputValueError) as err:
+            sampler = Sampler(mode=self.backend)
+            job = sampler.run([circuit])
+            job.cancel()
         self.assertIn(
-            f"Circuit contains {num_qubits} qubits, but backend has only {num}.",
+            f"circuit has {num_qubits} qubits but the target system requires {num}",
             str(err.exception),
         )

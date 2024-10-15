@@ -27,7 +27,7 @@ from qiskit.circuit.bit import Bit
 from qiskit.dagcircuit import DAGCircuit, DAGNode
 from qiskit.transpiler.exceptions import TranspilerError
 
-from .utils import block_order_op_nodes
+from .utils import BlockOrderingCallableType, block_order_op_nodes
 
 
 class BaseDynamicCircuitAnalysis(TransformationPass):
@@ -49,14 +49,22 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
     """
 
     def __init__(
-        self, durations: qiskit.transpiler.instruction_durations.InstructionDurations
+        self,
+        durations: qiskit.transpiler.instruction_durations.InstructionDurations,
+        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
     ) -> None:
         """Scheduler for dynamic circuit backends.
 
         Args:
             durations: Durations of instructions to be used in scheduling.
+            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
+                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+                used.
         """
         self._durations = durations
+        self._block_ordering_callable = (
+            block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
+        )
 
         self._dag: Optional[DAGCircuit] = None
         self._block_dag: Optional[DAGCircuit] = None
@@ -102,7 +110,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._time_unit_converter.run(block)
         self._begin_new_circuit_block()
 
-        for node in block_order_op_nodes(block):
+        for node in self._block_ordering_callable(block):
             self._visit_node(node)
 
         # Final flush
@@ -214,7 +222,10 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
             # If node has calibration, this value should be the highest priority
             cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
             duration = dag.calibrations[node.op.name][cal_key].duration
-            node.op.duration = duration
+
+            op = node.op.to_mutable()
+            op.duration = duration
+            node.op = op
         else:
             # map to outer dag to get the appropriate durations
             duration = self._durations.get(node.op, indices, unit="dt")

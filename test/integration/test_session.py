@@ -12,15 +12,16 @@
 
 """Integration tests for Session."""
 
-import warnings
+from unittest import SkipTest
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit.primitives import EstimatorResult, SamplerResult
-from qiskit.result import Result
+from qiskit.primitives import PrimitiveResult
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
+from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
 from ..decorators import run_integration_test, quantum_only
@@ -33,48 +34,30 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_estimator_sampler(self, service):
         """Test calling both estimator and sampler."""
+        backend = service.backend(self.dependencies.qpu)
 
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+        psi1 = pm.run(RealAmplitudes(num_qubits=2, reps=2))
+
         # pylint: disable=invalid-name
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        options = Options(resilience_level=0)
+        with Session(service, backend=backend) as session:
+            estimator = EstimatorV2(mode=session)
+            result = estimator.run([(psi1, H1, [theta1])]).result()
+            self.assertIsInstance(result, PrimitiveResult)
 
-        with Session(service, backend="ibmq_qasm_simulator") as session:
-            estimator = Estimator(session=session, options=options)
-            result = estimator.run(
-                circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=100
-            ).result()
-            self.assertIsInstance(result, EstimatorResult)
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 100)
+            sampler = SamplerV2(mode=session)
+            result = sampler.run([pm.run(bell())]).result()
+            self.assertIsInstance(result, PrimitiveResult)
 
-            sampler = Sampler(session=session, options=options)
-            result = sampler.run(circuits=bell(), shots=200).result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 200)
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+            result = estimator.run([(psi1, H1, [theta1])]).result()
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertEqual(result[0].metadata["shots"], 4096)
 
-            result = estimator.run(
-                circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=300
-            ).result()
-            self.assertIsInstance(result, EstimatorResult)
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 300)
-
-            result = sampler.run(circuits=bell(), shots=400).result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 400)
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+            result = sampler.run([pm.run(bell())]).result()
+            self.assertIsInstance(result, PrimitiveResult)
             session.close()
 
     @run_integration_test
@@ -82,119 +65,40 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     def test_using_correct_instance(self, service):
         """Test the instance used when filtering backends is honored."""
         instance = self.dependencies.instance
-        backend = service.backend("ibmq_qasm_simulator", instance=instance)
+        backend = service.backend(self.dependencies.qpu, self.dependencies.instance)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         with Session(service, backend=backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(bell(), shots=400)
+            sampler = SamplerV2(mode=session)
+            job = sampler.run([pm.run(bell())])
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
 
     @run_integration_test
     def test_session_from_id(self, service):
         """Test creating a session from a given id"""
-        backend = service.backend("ibmq_qasm_simulator")
+        try:
+            backend = service.backend("fake_backend1")
+        except:
+            raise SkipTest("No proper backends available")
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run([bell()])
         with Session(service, backend=backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(bell(), shots=400)
-            session_id = job.session_id
-        new_session = Session.from_id(backend=backend, session_id=session_id)
-        sampler = Sampler(session=new_session)
-        job = sampler.run(bell(), shots=400)
-        self.assertEqual(session_id, job.session_id)
+            sampler = SamplerV2(mode=session)
+            sampler.run(isa_circuit)
 
+        new_session = Session.from_id(session_id=session._session_id, service=service)
+        self.assertEqual(session._session_id, new_session._session_id)
+        self.assertTrue(new_session._active)
+        new_session.close()
+        self.assertFalse(new_session._active)
 
-class TestBackendRunInSession(IBMIntegrationTestCase):
-    """Integration tests for Backend.run in Session."""
+        with self.assertRaises(IBMInputValueError):
+            Batch.from_id(session_id=session._session_id, service=service)
 
-    def test_session_id(self):
-        """Test that session_id is updated correctly and maintained throughout the session"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
-        backend.open_session()
-        self.assertEqual(backend.session.session_id, None)
-        self.assertTrue(backend.session.active)
-        job1 = backend.run(bell())
-        self.assertEqual(job1._session_id, None)
-
-    def test_backend_run_with_session(self):
-        """Test that 'shots' parameter is transferred correctly"""
-        shots = 1000
-        backend = self.service.backend("ibmq_qasm_simulator")
-        backend.open_session()
-        result = backend.run(circuits=bell(), shots=shots).result()
-        backend.cancel_session()
-        self.assertIsInstance(result, Result)
-        self.assertEqual(result.results[0].shots, shots)
-        self.assertAlmostEqual(
-            result.get_counts()["00"], result.get_counts()["11"], delta=shots / 10
-        )
-
-    def test_backend_and_primitive_in_session(self):
-        """Test using simulator does not start a session."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
-        with Session(backend=backend) as session:
-            sampler = Sampler(session=session)
-            job1 = sampler.run(circuits=bell())
-            with warnings.catch_warnings(record=True):
-                job2 = backend.run(circuits=bell())
-            self.assertIsNone(job1.session_id)
-            self.assertIsNone(job2.session_id)
-        with backend.open_session() as session:
-            with warnings.catch_warnings(record=True):
-                sampler = Sampler(backend=backend)
-            job1 = backend.run(bell())
-            job2 = sampler.run(circuits=bell())
-            self.assertIsNone(job2.session_id)
-
-    def test_session_cancel(self):
-        """Test closing a session"""
-        backend = self.service.backend("ibmq_qasm_simulator")
-        backend.open_session()
-        self.assertTrue(backend.session.active)
-        backend.cancel_session()
-        self.assertIsNone(backend.session)
-
-    def test_session_close(self):
-        """Test closing a session"""
-        backend = self.service.backend("ibmq_qasm_simulator")
-        backend.open_session()
-        self.assertTrue(backend.session.active)
-        backend.close_session()
-        self.assertIsNone(backend.session)
-
-    def test_run_after_cancel(self):
-        """Test running after session is cancelled."""
-        backend = self.service.backend("ibmq_qasm_simulator")
-        job1 = backend.run(circuits=bell())
-        self.assertIsNone(backend.session)
-        self.assertIsNone(job1._session_id)
-
-        backend.open_session()
-        job2 = backend.run(bell())
-        self.assertTrue(job2.result())
-        backend.cancel_session()
-
-        job3 = backend.run(circuits=bell())
-        self.assertIsNone(backend.session)
-        self.assertTrue(job3.result())
-        self.assertIsNone(job3._session_id)
-
-    def test_session_as_context_manager(self):
-        """Test session as a context manager"""
-        backend = self.service.backend("ibmq_qasm_simulator")
-
-        with backend.open_session() as session:
-            job1 = backend.run(bell())
-            session_id = session.session_id
-            self.assertTrue(job1.result())
-            self.assertIsNone(session_id)
-
-    def test_run_after_cancel_as_context_manager(self):
-        """Test run after cancel in context manager"""
-        backend = self.service.backend("ibmq_qasm_simulator")
-        with backend.open_session() as session:
-            _ = backend.run(bell())
-        self.assertEqual(backend.session, session)
-        backend.cancel_session()
-        job = backend.run(circuits=bell())
-        self.assertIsNone(backend.session)
-        self.assertIsNone(job._session_id)
+    @run_integration_test
+    def test_job_mode_warning(self, service):
+        """Test deprecation warning is raised when using job mode inside a session."""
+        backend = service.backend(self.dependencies.qpu)
+        with Session(service, backend=backend):
+            with self.assertWarns(DeprecationWarning):
+                _ = SamplerV2(mode=backend)

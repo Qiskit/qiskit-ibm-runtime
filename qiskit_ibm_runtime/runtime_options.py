@@ -12,42 +12,48 @@
 
 """Runtime options that control the execution environment."""
 
+from __future__ import annotations
+
 import re
 import logging
 from dataclasses import dataclass
 from typing import Optional, List
 
+from qiskit.providers.backend import Backend
+
 from .exceptions import IBMInputValueError
-from .utils.utils import validate_job_tags
+from .utils import validate_job_tags
 
 
 @dataclass(init=False)
 class RuntimeOptions:
     """Class for representing generic runtime execution options."""
 
-    backend: Optional[str] = None
+    backend: Optional[str | Backend] = None
     image: Optional[str] = None
     log_level: Optional[str] = None
     instance: Optional[str] = None
     job_tags: Optional[List[str]] = None
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
+    private: Optional[bool] = False
 
     def __init__(
         self,
-        backend: Optional[str] = None,
+        backend: Optional[str | Backend] = None,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         instance: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         session_time: Optional[int] = None,
+        private: Optional[bool] = False,
     ) -> None:
         """RuntimeOptions constructor.
 
         Args:
             backend: target backend to run on. This is required for ``ibm_quantum`` channel.
-            image: the runtime image used to execute the program, specified in
+            image: the runtime image used to execute the primitive, specified in
                 the form of ``image_name:tag``. Not all accounts are
                 authorized to select a different image.
             log_level: logging level to set in the execution environment. The valid
@@ -64,6 +70,7 @@ class RuntimeOptions:
                 this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
                 clock time.
             session_time: Length of session in seconds.
+            private: Boolean of whether or not the job is marked as private.
         """
         self.backend = backend
         self.image = image
@@ -72,6 +79,7 @@ class RuntimeOptions:
         self.job_tags = job_tags
         self.max_execution_time = max_execution_time
         self.session_time = session_time
+        self.private = private
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -104,3 +112,11 @@ class RuntimeOptions:
 
         if self.job_tags:
             validate_job_tags(self.job_tags)
+
+    def get_backend_name(self) -> str:
+        """Get backend name."""
+        if isinstance(self.backend, str):
+            return self.backend
+        if self.backend:
+            return self.backend.name if self.backend.version == 2 else self.backend.name()
+        return None

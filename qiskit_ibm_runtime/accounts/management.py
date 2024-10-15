@@ -16,7 +16,6 @@ import os
 from typing import Optional, Dict
 
 from ..proxies import ProxyConfiguration
-
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
 from .storage import save_config, read_config, delete_config
@@ -48,6 +47,7 @@ class AccountManager:
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
@@ -62,6 +62,7 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             channel_strategy=channel_strategy,
+            private_endpoint=private_endpoint,
         )
         return save_config(
             filename=filename,
@@ -216,7 +217,7 @@ class AccountManager:
         """Read account from environment variable."""
         token = os.getenv("QISKIT_IBM_TOKEN")
         url = os.getenv("QISKIT_IBM_URL")
-        if not (token and url):
+        if not token:
             return None
         return Account.create_account(
             token=token,

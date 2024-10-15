@@ -14,12 +14,16 @@
 
 from unittest.mock import MagicMock, patch
 
-from qiskit_ibm_runtime.fake_provider import FakeManila
-from qiskit_ibm_runtime import Session
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime import Session, SamplerV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+
 from .mock.fake_runtime_service import FakeRuntimeService
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
+from ..utils import get_mocked_backend
 
 
 class TestSession(IBMTestCase):
@@ -44,13 +48,16 @@ class TestSession(IBMTestCase):
         with self.assertRaises(ValueError):
             Session(service=service)
 
+        service.channel = "ibm_cloud"
+        with self.assertRaises(ValueError):
+            Session(service=service)
+
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
-        session = Session(service=MagicMock(), backend=backend)
-        self.assertEqual(session.backend(), "ibm_gotham")
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
+        session = Session(service=backend.service, backend=backend)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_using_ibm_backend_service(self):
         """Test using service from an IBMBackend instance."""
@@ -62,7 +69,7 @@ class TestSession(IBMTestCase):
 
     def test_max_time(self):
         """Test max time."""
-        model_backend = FakeManila()
+        model_backend = FakeManilaV2()
         backend = IBMBackend(
             configuration=model_backend.configuration(),
             service=MagicMock(),
@@ -87,16 +94,17 @@ class TestSession(IBMTestCase):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
         session.cancel()
-        with self.assertRaises(RuntimeError):
-            session.run(program_id="program_id", inputs={})
+        with self.assertRaises(IBMRuntimeError):
+            session._run(program_id="program_id", inputs={})
 
     def test_run(self):
         """Test the run method."""
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(backend_name)
         job = MagicMock()
         job.job_id.return_value = "12345"
-        service = MagicMock()
-        service.run.return_value = job
-        backend = "ibm_gotham"
+        service = backend.service
+        service._run.return_value = job
         inputs = {"name": "bruce wayne"}
         options = {"log_level": "INFO"}
         program_id = "batman_begins"
@@ -104,37 +112,25 @@ class TestSession(IBMTestCase):
         max_time = 42
         session = Session(service=service, backend=backend, max_time=max_time)
 
-        session.run(
+        session._run(
             program_id=program_id,
             inputs=inputs,
             options=options,
             result_decoder=decoder,
         )
-        _, kwargs = service.run.call_args
+        _, kwargs = service._run.call_args
         self.assertEqual(kwargs["program_id"], program_id)
         self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
         self.assertDictEqual(kwargs["inputs"], inputs)
         self.assertEqual(kwargs["result_decoder"], decoder)
-        self.assertEqual(session.backend(), backend)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_context_manager(self):
         """Test session as a context manager."""
         with Session(service=MagicMock(), backend="ibm_gotham") as session:
-            session.run(program_id="foo", inputs={})
+            session._run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)
-
-    def test_default_backend(self):
-        """Test default backend set."""
-        job = MagicMock()
-        job.backend().name = "ibm_gotham"
-        service = MagicMock()
-        service.run.return_value = job
-        service.channel = "ibm_cloud"
-
-        session = Session(service=service)
-        session.run(program_id="foo", inputs={})
-        self.assertEqual(session.backend(), "ibm_gotham")
 
     def test_global_service(self):
         """Test that global service is used in Session"""
@@ -152,8 +148,28 @@ class TestSession(IBMTestCase):
 
     def test_session_from_id(self):
         """Create session with given session_id"""
-        service = MagicMock()
+        service = FakeRuntimeService(channel="ibm_quantum", token="abc")
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
-        session.run(program_id="foo", inputs={})
+        session._run(program_id="foo", inputs={})
+        session._create_session = MagicMock()
+        self.assertTrue(session._create_session.assert_not_called)
         self.assertEqual(session.session_id, session_id)
+
+    def test_correct_execution_mode(self):
+        """Test that the execution mode is correctly set."""
+        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        session = Session(backend="common_backend")
+        self.assertEqual(session.details()["mode"], "dedicated")
+
+    def test_cm_session_fractional(self):
+        """Test instantiating primitive inside session context manager with the fractional optin."""
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="abc",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+        )
+        backend = service.backend("fake_fractional", use_fractional_gates=True)
+        with Session(backend=backend) as _:
+            primitive = SamplerV2()
+            self.assertTrue(primitive._backend.options.use_fractional_gates)

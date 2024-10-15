@@ -107,3 +107,9 @@ Qconfig.py
 .DS_Store
 
 /docs/stubs/
+
+# Pycharm
+.idea
+
+# Generated release notes file
+docs/release_notes.rst

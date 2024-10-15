@@ -1,0 +1,44 @@
+0.9.1
+=====
+
+Upgrade Notes
+-------------
+
+-  `qiskit_ibm_runtime.QiskitRuntimeService.jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+   now has a ``backend_name`` parameter that can be used to only return
+   jobs run with the specified backend.
+
+-  Allow the user to store account details in a file specified by the
+   user in the parameter. ``filename``. The default remains
+   ~/.qiskit/qiskit-ibm.json. Example of usage: Ex:
+
+   .. code:: python
+
+      QiskitRuntimeService.save_account(channel="ibm_quantum",
+                                        filename="~/my_account_file.json",
+                                        name = "my_account",
+                                        token="my_token")
+      service = QiskitRuntimeService(channel="ibm_quantum", 
+                                     filename="~/my_account_file.json", 
+                                     name = "my_account",)
+
+Deprecation Notes
+-----------------
+
+-  ``backend`` is no longer a supported option when using
+   `qiskit_ibm_runtime.Session.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.Session#run>`__.
+   Sessions do not support multiple cross backends. Additionally, an
+   exception will be raised if a backend passed in through options does
+   not match the original session backend in an active session.
+
+Bug Fixes
+---------
+
+-  ``ECRGate`` and ``CZGate`` mappings have been added to the ``Target``
+   constructor to fix a tranpile bug.
+
+Other Notes
+-----------
+
+-  Since error messages from a failing job may be long, we shortened
+   them so that they begin from the last ``Traceback`` in the message.

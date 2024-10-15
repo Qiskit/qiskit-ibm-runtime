@@ -99,7 +99,6 @@ class BaseFakeRuntimeJob:
         project,
         backend_name,
         final_status,
-        params,
         image,
         job_tags=None,
         log_level=None,
@@ -112,12 +111,12 @@ class BaseFakeRuntimeJob:
         self._job_id = job_id
         self._status = final_status or "QUEUED"
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._program_id = program_id
         self._hub = hub
         self._group = group
         self._project = project
         self._backend_name = backend_name
-        self._params = params
         self._image = image
         self._interim_results = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._job_tags = job_tags
@@ -151,10 +150,16 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "state": {"status": self._status, "reason": self._reason},
-            "params": self._params,
+            "state": {
+                "status": self._status,
+                "reason": self._reason,
+                "reasonCode": self._reason_code,
+            },
             "program": {"id": self._program_id},
             "image": self._image,
+            "params": {
+                "version": 2,
+            },
         }
 
     def result(self):
@@ -194,6 +199,7 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
 
         if self._status == "CANCELLED":
             self._reason = "RAN TOO LONG"
+            self._reason_code = 1305
             self._result = "Kaboom!"
 
 
@@ -264,13 +270,14 @@ class BaseFakeRuntimeClient:
     ):
         """Initialize a fake runtime client."""
         # pylint: disable=unused-argument
-        self._programs = {}
         self._jobs = {}
         self._job_classes = job_classes or []
         self._final_status = final_status
         self._job_kwargs = job_kwargs or {}
         self._channel = channel
         self.session_time = 0
+        self._sessions = set()
+        self._params = {}
 
         # Setup the available backends
         if not backend_specs:
@@ -285,22 +292,6 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
-    # pylint: disable=unused-argument
-    def create_session(
-        self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        channel: Optional[str] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Create a session."""
-        return {"id": uuid.uuid4().hex}
-
-    def close_session(self, session_id: str) -> None:
-        """Close a session."""
-        pass
-
     def is_qctrl_enabled(self):
         """Return whether or not channel_strategy q-ctrl is enabled."""
         return False
@@ -313,7 +304,7 @@ class BaseFakeRuntimeClient:
         self,
         program_id: str,
         backend_name: Optional[str],
-        params: Dict,
+        params: dict,
         image: str,
         hgp: Optional[str],
         log_level: Optional[str],
@@ -322,6 +313,7 @@ class BaseFakeRuntimeClient:
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
+        private: Optional[int] = False,  # pylint: disable=unused-argument
         channel_strategy: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
@@ -345,7 +337,6 @@ class BaseFakeRuntimeClient:
             group=group,
             project=project,
             backend_name=backend_name,
-            params=params,
             final_status=self._final_status,
             image=image,
             log_level=log_level,
@@ -357,7 +348,10 @@ class BaseFakeRuntimeClient:
             **self._job_kwargs,
         )
         self.session_time = session_time
+        self._params = params
         self._jobs[job_id] = job
+        if start_session:
+            self._sessions.add(job_id)
         return {"id": job_id, "backend": backend_name}
 
     def job_get(self, job_id: str, exclude_params: bool = True) -> Any:
@@ -455,7 +449,9 @@ class BaseFakeRuntimeClient:
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration a backend."""
-        return self._find_backend(backend_name).configuration
+        if ret := self._find_backend(backend_name).configuration:
+            return ret.copy()
+        return None
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of a backend."""
@@ -465,11 +461,39 @@ class BaseFakeRuntimeClient:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
-        return self._find_backend(backend_name).properties
+        if ret := self._find_backend(backend_name).properties:
+            return ret.copy()
+        return None
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of a backend."""
-        return self._find_backend(backend_name).defaults
+        if ret := self._find_backend(backend_name).defaults:
+            return ret.copy()
+        return None
+
+    # pylint: disable=unused-argument
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session."""
+        session_id = uuid.uuid4().hex
+        self._sessions.add(session_id)
+        return {"id": session_id}
+
+    def close_session(self, session_id: str) -> None:
+        """Close the session."""
+        if session_id not in self._sessions:
+            raise ValueError(f"Session {session_id} not found.")
+        self._sessions.remove(session_id)
+
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Return the details of the session."""
+        return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 
     def _find_backend(self, backend_name):
         for back in self._backends:

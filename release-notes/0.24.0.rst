@@ -1,0 +1,114 @@
+0.24.0 (2024-06-10)
+===================
+
+Deprecation Notes
+-----------------
+
+- ``name`` will now be a required parameter in 
+  `backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend>`__.
+  ``backend()`` will no longer return the first backend out of all backends if ``name`` is not provided. (`1147 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1147>`__)
+- After the removal of custom programs, the following methods are being deprecated and renamed.
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` is deprecated and will be replaced by a private method
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService._run`.
+
+  :meth:`qiskit_ibm_runtime.Session.run` is deprecated and will be replaced by a private method
+  :meth:`qiskit_ibm_runtime.Session._run`.
+
+  :meth:`qiskit_ibm_runtime.RuntimeJob.program_id` is deprecated and will be replaced by
+  :meth:`qiskit_ibm_runtime.RuntimeJob.primitive_id`. (`1238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1238>`__)
+- The ``backend`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has been deprecated. 
+  Please use ``mode`` instead.
+  The ``session`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
+  Please use ``mode`` instead. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
+- :meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.
+  The V1 fake backends, :class:`.FakeBackend`, along with :class:`.FakeProvider` are also
+  being deprecated in favor of the V2 fake backends and :class:`.FakeProviderForBackendV2`. (`1689 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1689>`__)
+- Specifying options without the full dictionary structure is deprecated. Instead, pass
+  in a fully structured dictionary. For example, use ``{'environment': {'log_level': 'INFO'}}``
+  instead of ``{'log_level': 'INFO'}``. (`1731 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1731>`__)
+
+
+New Features
+------------
+
+- Related to the execution modes, Sampler and Estimator now include a ``mode`` argument. The ``mode`` parameter
+  can be a Backend, Session, Batch, or None. As a result, the backend name has been deprecated, and will
+  no longer be supported as a valid execution mode. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
+- The `ZneOptions.amplifier` option was added, which can be one of these strings:
+
+  * ``"gate_folding"`` (default) uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are chosen
+    randomly.
+  * ``"gate_folding_front"`` uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are selected
+    from the front of the topologically ordered DAG circuit.
+  * ``"gate_folding_back"`` uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are selected
+    from the back of the topologically ordered DAG circuit. (`1679 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1679>`__)
+
+- When saving an account, there is a new parameter, ``private_endpoint`` that if set to ``True``, allows
+  users to connect to a private IBM Cloud API. This parameter can also be used when the service is initialized, for example: 
+  ``QiskitRuntimeService(private_endpoint = True)``. (`1699 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1699>`__)
+- New opt-in feature to support fractional gates is added to :class:`.IBMBackend`.
+  IBM backends currently support dynamic circuits and fractional gates exclusively and
+  the two features cannot be used in the same primitive job.
+  In addition, some error mitigation protocols you can use with the estimator primitive, 
+  such as PEC or PEA, may not support gate twirling with the fractional gates.
+  Since Qiskit Target model doesn't represent such constraint,
+  we adopted the opt-in approach, where your backend target includes only 
+  fractional gates (control flow instructions) when the backend is (not) opted.
+  This feature is controlled when you retrieve the target backend from the :class:`.QiskitRuntimeService`.
+
+  .. code-block:: python
+
+      from qiskit_ibm_runtime import QiskitRuntimeService
+
+      backend = QiskitRuntimeService(channel="ibm_quantum").backends(
+          "name_of_your_backend", 
+          use_fractional_gates=True,
+      )[0]
+
+  When the fractional feature is enabled, transpiled circuits may have
+  shorter depth compared with the conventional IBM basis gates, e.g. [sx, rz, ecr].
+
+  When you use control flow instructions, e.g. ``if_else``, in your circuit,
+  you must disable the fractional gate feature to get executable ISA circuits.
+  The choice of the instruction set is now responsibility of users.
+
+  Note that this pattern may be modified or removed without deprecation
+  when the IBM backends is updated in future development. (`1715 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1715>`__)
+- You can now use the experimental option in :class:`qiskit_ibm_runtime.options.EstimatorOptions` to enable Probabilistic Error Amplification (PEA) error mitigation method for your estimator jobs. (`1728 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1728>`__)
+- Qiskit version ``1.1`` is now supported and required. (`1700 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1700>`__)
+
+Upgrade Notes
+-------------
+
+- :meth:`.QiskitRuntimeService.backends` now always returns a
+  new :class:`IBMBackend` instance even when the same query is used.
+  The backend properties and defaults data are retrieved from the server
+  for every instance when they are accessed for the first time,
+  while the configuration data is cached internally in the service instance. (`1732 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1732>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed an issue where retrieving jobs with 
+  `job() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#job>`__
+  and `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+  would only return ``RuntimeJob`` instances, even if the job was run with a V2 primitive. Now, 
+  V2 primitive jobs will be returned correctly as ``RuntimeJobV2`` instances. (`1471 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1471>`__)
+- To avoid network disruptions during long job processes, websocket errors will no longer be raised. (`1518 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1518>`__)
+- Fixed the combination of ``insert_multiple_cycles`` and ``coupling_map`` options in
+  :class:`.PadDynamicalDecoupling`. This combination allows to select staggered 
+  dynamical decoupling with multiple sequence cycles in each delay that crosses 
+  the threshold set by ``sequence_min_length_ratios``. (`1630 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1630>`__)
+- Fixed a serialization issue where decoding job metadata resulted in an error. (`1682 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1682>`__)
+- Fixed measurement twirling docstring which incorrectly indicated it's enabled by default for Sampler. (`1722 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1722>`__)
+- Fixed nested experimental suboptions override non-experimental suboptions. (`1731 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1731>`__)
+- The backend utils method ``convert_to_target`` has been replaced with the 
+  `convert_to_target <https://docs.quantum.ibm.com/api/qiskit/qiskit.providers.convert_to_target>`__ method from Qiskit.
+  This fixes some issues related to target generation and calibration data. (`1600 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1600>`__)

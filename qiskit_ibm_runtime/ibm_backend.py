@@ -24,14 +24,6 @@ from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
-from qiskit.providers.models import (
-    BackendStatus,
-    BackendProperties,
-    PulseDefaults,
-    GateConfig,
-    QasmBackendConfiguration,
-    PulseBackendConfiguration,
-)
 from qiskit.pulse.channels import (
     AcquireChannel,
     ControlChannel,
@@ -40,28 +32,35 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
+from .models import (
+    BackendStatus,
+    BackendProperties,
+    PulseDefaults,
+    GateConfig,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
+)
+
 # temporary until we unite the 2 Session classes
 from .provider_session import (
     Session as ProviderSession,
 )
 
-from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
 from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
-from .utils.backend_converter import (
-    convert_to_target,
-)
+from .utils.backend_converter import convert_to_target
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
+from .utils.deprecation import issue_deprecation_msg
 from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
-from .utils import local_to_utc, are_circuits_dynamic
+from .utils import local_to_utc, are_circuits_dynamic, validate_job_tags
 
 from .utils.pubsub import Publisher
 
@@ -83,7 +82,7 @@ class IBMBackend(Backend):
 
     This class represents an IBM Quantum backend. Its attributes and methods provide
     information about the backend. For example, the :meth:`status()` method
-    returns a :class:`BackendStatus<qiskit.providers.models.BackendStatus>` instance.
+    returns a :class:`BackendStatus<~.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
     the backend is operational and also the number of jobs in the server queue for the backend,
     respectively::
@@ -108,7 +107,7 @@ class IBMBackend(Backend):
         * max_shots: maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
-        * dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
+        * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
           (ie via ``rep_delay``). Defaults to False.
         * rep_delay_range (List[float]): 2d list defining supported range of repetition
           delays for backend in μs. First entry is lower end of the range, second entry is
@@ -190,9 +189,9 @@ class IBMBackend(Backend):
         self._service = service
         self._api_client = api_client
         self._configuration = configuration
-        self._properties = None
-        self._defaults = None
-        self._target = None
+        self._properties: Any = None
+        self._defaults: Any = None
+        self._target: Any = None
         self._max_circuits = configuration.max_experiments
         self._session: ProviderSession = None
         if (
@@ -259,10 +258,21 @@ class IBMBackend(Backend):
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
+            if self.options.use_fractional_gates is None:
+                include_control_flow = True
+                include_fractional_gates = True
+            else:
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
+                include_control_flow = not self.options.use_fractional_gates
+                include_fractional_gates = self.options.use_fractional_gates
+
             self._target = convert_to_target(
-                configuration=self._configuration,
+                configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
+                include_control_flow=include_control_flow,
+                include_fractional_gates=include_fractional_gates,
             )
 
     @classmethod
@@ -279,6 +289,7 @@ class IBMBackend(Backend):
             rep_delay=None,
             init_qubits=True,
             use_measure_esp=None,
+            use_fractional_gates=False,
             # Simulator only
             noise_model=None,
             seed_simulator=None,
@@ -337,6 +348,7 @@ class IBMBackend(Backend):
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
+
         Returns:
             Target with properties found on `datetime`
         """
@@ -362,7 +374,7 @@ class IBMBackend(Backend):
             refresh: If ``True``, re-query the server for the backend properties.
                 Otherwise, return a cached version.
             datetime: By specifying `datetime`, this function returns an instance
-                of the :class:`BackendProperties<qiskit.providers.models.BackendProperties>`
+                of the :class:`BackendProperties<~.providers.models.BackendProperties>`
                 whose timestamp is closest to, but older than, the specified `datetime`.
                 Note that this is only supported using ``ibm_quantum`` runtime.
 
@@ -401,7 +413,7 @@ class IBMBackend(Backend):
         """Return the backend status.
 
         Note:
-            If the returned :class:`~qiskit.providers.models.BackendStatus`
+            If the returned :class:`~.providers.models.BackendStatus`
             instance has ``operational=True`` but ``status_msg="internal"``,
             then the backend is accepting jobs but not processing them.
 
@@ -455,6 +467,15 @@ class IBMBackend(Backend):
         The schema for backend configuration can be found in
         `Qiskit/ibm-quantum-schemas/backend_configuration
         <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
+
+        More details about backend configuration properties can be found here `QasmBackendConfiguration
+        <https://docs.quantum.ibm.com/api/qiskit/qiskit.providers.models.QasmBackendConfiguration>`_.
+
+        IBM backends may also include the following properties:
+            * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
+                circuits support.
+            * ``parallel_compilation``: a boolean of whether or not the backend can process multiple
+                jobs at once. Parts of the classical computation will be parallelized.
 
         Returns:
             The configuration for the backend.
@@ -612,18 +633,17 @@ class IBMBackend(Backend):
                 If specified, ``init_num_resets`` is ignored. Applicable only if ``dynamic=True``
                 is specified.
             init_num_resets: The number of qubit resets to insert before each circuit execution.
-
-            The following parameters are applicable only if ``dynamic=False`` is specified or
-            defaulted to.
-
             header: User input that will be attached to the job and will be
                 copied to the corresponding result header. Headers do not affect the run.
-                This replaces the old ``Qobj`` header.
+                This replaces the old ``Qobj`` header. This parameter is applicable only
+                if ``dynamic=False`` is specified or defaulted to.
             shots: Number of repetitions of each circuit, for sampling. Default: 4000
                 or ``max_shots`` from the backend configuration, whichever is smaller.
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             memory: If ``True``, per-shot measurement bitstrings are returned as well
                 (provided the backend supports it). For OpenPulse jobs, only
-                measurement level 2 supports this option.
+                measurement level 2 supports this option. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             meas_level: Level of the measurement output for pulse experiments. See
                 `OpenPulse specification <https://arxiv.org/pdf/1809.03452.pdf>`_ for details:
 
@@ -632,28 +652,36 @@ class IBMBackend(Backend):
                   measurement kernel to the measurement output signal)
                 * ``2`` (default), a discriminator is selected and the qubit state is stored (0 or 1)
 
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             meas_return: Level of measurement data for the backend to return. For ``meas_level`` 0 and 1:
 
                 * ``single`` returns information from every shot.
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
-            rep_delay: Delay between programs in seconds. Only supported on certain
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
+            rep_delay: Delay between primitives in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by
-                ``backend.configuration().default_rep_delay``.
+                ``backend.configuration().default_rep_delay``. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             init_qubits: Whether to reset the qubits to the ground state for each shot.
-                Default: ``True``.
+                Default: ``True``. This parameter is applicable only if ``dynamic=False`` is specified
+                or defaulted to.
             use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
                 which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
                 than standard measurement sequences. See
                 `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
                 Default: ``True`` if backend supports ESP readout, else ``False``. Backend support
                 for ESP readout is determined by the flag ``measure_esp_enabled`` in
-                ``backend.configuration()``.
-            noise_model: Noise model. (Simulators only)
-            seed_simulator: Random seed to control sampling. (Simulators only)
-            **run_config: Extra arguments used to configure the run.
+                ``backend.configuration()``. This parameter is applicable only if ``dynamic=False`` is
+                specified or defaulted to.
+            noise_model: Noise model (Simulators only). This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
+            seed_simulator: Random seed to control sampling (Simulators only). This parameter
+                is applicable only if ``dynamic=False`` is specified or defaulted to.
+            **run_config: Extra arguments used to configure the run. This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
 
         Returns:
             The job to be executed.
@@ -668,6 +696,13 @@ class IBMBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         validate_job_tags(job_tags)
         if not isinstance(circuits, List):
             circuits = [circuits]
@@ -822,6 +857,13 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration guide "
+            "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if not self._configuration.simulator:
             new_session = self._service._api_client.create_session(
                 self.name, self._instance, max_time, self._service.channel
@@ -834,10 +876,24 @@ class IBMBackend(Backend):
     @property
     def session(self) -> ProviderSession:
         """Return session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         return self._session
 
     def cancel_session(self) -> None:
         """Cancel session. All pending jobs will be cancelled."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
@@ -849,11 +905,22 @@ class IBMBackend(Backend):
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
                 self._api_client.close_session(self._session.session_id)
         self._session = None
+
+    def get_translation_stage_plugin(self) -> str:
+        """Return the default translation stage plugin name for IBM backends."""
+        return "ibm_dynamic_circuits"
 
 
 class IBMRetiredBackend(IBMBackend):

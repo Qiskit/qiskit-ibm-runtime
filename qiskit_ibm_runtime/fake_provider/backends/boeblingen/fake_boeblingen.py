@@ -15,32 +15,11 @@ Fake Boeblingen device (20 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeBoeblingenV2(fake_backend.FakeBackendV2):
     """A fake Boeblingen V2 backend.
-
-    .. code-block:: text
-
-        00 ↔ 01 ↔ 02 ↔ 03 ↔ 04
-              ↕         ↕
-        05 ↔ 06 ↔ 07 ↔ 08 ↔ 09
-         ↕         ↕         ↕
-        10 ↔ 11 ↔ 12 ↔ 13 ↔ 14
-              ↕         ↕
-        15 ↔ 16 ↔ 17 ↔ 18 ↔ 19
-    """
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_boeblingen.json"  # type: ignore
-    props_filename = "props_boeblingen.json"  # type: ignore
-    defs_filename = "defs_boeblingen.json"  # type: ignore
-    backend_name = "fake_boeblingen"  # type: ignore
-
-
-class FakeBoeblingen(fake_pulse_backend.FakePulseBackend):
-    """A fake Boeblingen backend.
 
     .. code-block:: text
 

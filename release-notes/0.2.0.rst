@@ -1,0 +1,20 @@
+0.2.0
+=====
+
+New Features
+------------
+
+-  ``qiskit_ibm_runtime.IBMEstimator`` and
+   ``qiskit_ibm_runtime.IBMSampler`` classes now allow you to easily
+   interact with the ``estimator`` and ``sampler`` primitive programs.
+   Refer to the examples in the respective class doc strings to learn
+   more about how to use them.
+
+Bug Fixes
+---------
+
+-  Fixed a bug where
+   `qiskit_ibm_runtime.RuntimeJob.wait_for_final_state() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
+   would result in a NoneType error if the job already completed and
+   `qiskit_ibm_runtime.RuntimeJob.status() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#status>`__
+   was called beforehand.

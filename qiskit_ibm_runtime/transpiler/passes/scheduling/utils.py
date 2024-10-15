@@ -13,7 +13,8 @@
 """Utility functions for scheduling passes."""
 
 import warnings
-from typing import List, Generator, Optional, Tuple, Union
+from typing import Callable, Generator, Optional, Tuple, Union
+from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
@@ -24,6 +25,9 @@ from qiskit.transpiler.instruction_durations import (
 from qiskit.transpiler.target import Target
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.providers import Backend, BackendV1
+
+
+BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
 
 
 def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
@@ -40,10 +44,11 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         """Does this node trigger the end of a block?"""
         return isinstance(node.op, ControlFlowOp)
 
+    @lru_cache(maxsize=8192)
     def _emit(
         node: DAGOpNode,
-        grouped_measure: List[DAGOpNode],
-        block_triggers: List[DAGOpNode],
+        grouped_measure: Tuple[DAGOpNode],
+        block_triggers: Tuple[DAGOpNode],
     ) -> bool:
         """Should we emit this node?"""
         for measure in grouped_measure:
@@ -95,7 +100,7 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         for node in to_push:
             node_descendants = dag.descendants(node)
             if any(
-                _emit(descendant, yield_measures, yield_block_triggers)
+                _emit(descendant, tuple(yield_measures), tuple(yield_block_triggers))
                 for descendant in node_descendants
                 if isinstance(descendant, DAGOpNode)
             ):
@@ -121,6 +126,8 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         # Add to the front of the list to be processed next
         to_push.extend(next_nodes)
         next_nodes = to_push
+
+    _emit.cache_clear()
 
 
 InstrKey = Union[
@@ -161,43 +168,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             DynamicInstructionDurations: The InstructionDurations constructed from backend.
         """
         if isinstance(backend, BackendV1):
-            # TODO Remove once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
-            # From here ---------------------------------------
-            def patch_from_backend(cls, backend: Backend):  # type: ignore
-                """
-                REMOVE me once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
-                """
-                instruction_durations = []
-                backend_properties = backend.properties()
-                if hasattr(backend_properties, "_gates"):
-                    for gate, insts in backend_properties._gates.items():
-                        for qubits, props in insts.items():
-                            if "gate_length" in props:
-                                gate_length = props["gate_length"][
-                                    0
-                                ]  # Throw away datetime at index 1
-                                instruction_durations.append((gate, qubits, gate_length, "s"))
-                    for (
-                        q,  # pylint: disable=invalid-name
-                        props,
-                    ) in backend.properties()._qubits.items():
-                        if "readout_length" in props:
-                            readout_length = props["readout_length"][
-                                0
-                            ]  # Throw away datetime at index 1
-                            instruction_durations.append(("measure", [q], readout_length, "s"))
-                try:
-                    dt = backend.configuration().dt
-                except AttributeError:
-                    dt = None
-
-                return cls(instruction_durations, dt=dt)
-
-            return patch_from_backend(DynamicCircuitInstructionDurations, backend)
-            # To here --------------------------------------- (remove comment ignore annotations too)
-            return super(  # type: ignore  # pylint: disable=unreachable
-                DynamicCircuitInstructionDurations, cls
-            ).from_backend(backend)
+            return super(DynamicCircuitInstructionDurations, cls).from_backend(backend)
 
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)

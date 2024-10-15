@@ -36,6 +36,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "cloud_instance": "/instance",
+        "usage": "/usage",
     }
 
     def program_job(self, job_id: str) -> "ProgramJob":
@@ -75,6 +76,7 @@ class Runtime(RestAdapterBase):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
+        private: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
@@ -93,6 +95,7 @@ class Runtime(RestAdapterBase):
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
+            private: Marks job as private.
             channel_strategy: Error mitigation strategy.
 
         Returns:
@@ -124,6 +127,8 @@ class Runtime(RestAdapterBase):
             payload["project"] = project
         if channel_strategy:
             payload["channel_strategy"] = channel_strategy
+        if private:
+            payload["private"] = True
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data, timeout=900).json()
 
@@ -171,6 +176,7 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("jobs")
         payload: Dict[str, Union[int, str, List[str]]] = {}
+        payload["exclude_params"] = False
         if limit:
             payload["limit"] = limit
         if skip:
@@ -238,3 +244,12 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("cloud_instance")
         return self.session.get(url).json().get("qctrl_enabled")
+
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            JSON response.
+        """
+        url = self.get_url("usage")
+        return self.session.get(url).json()

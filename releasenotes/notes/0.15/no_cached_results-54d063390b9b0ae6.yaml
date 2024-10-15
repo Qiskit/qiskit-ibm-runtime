@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Removed storing result in ``RuntimeJob._results``. Instead retrieve results every time the 
-    ``results()`` method is called.

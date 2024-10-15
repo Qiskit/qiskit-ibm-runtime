@@ -34,6 +34,7 @@ except ImportError:
     from qiskit.synthesis import OneQubitEulerDecomposer
 
 from .block_base_padder import BlockBasePadder
+from .utils import BlockOrderingCallableType
 
 
 class PadDynamicalDecoupling(BlockBasePadder):
@@ -127,6 +128,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
         schedule_idle_qubits: bool = False,
         dd_barrier: Optional[str] = None,
+        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
     ):
         """Dynamical decoupling initializer.
 
@@ -184,6 +186,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 for execution on large backends.
             dd_barrier: only apply DD to delays terminating with a barrier
                 whose label contains the specified string
+            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize the
+                number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be used.
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
@@ -191,7 +195,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
             TranspilerError: When the coupling map is not supported (i.e., if degree > 3)
         """
 
-        super().__init__(schedule_idle_qubits=schedule_idle_qubits)
+        super().__init__(
+            schedule_idle_qubits=schedule_idle_qubits,
+            block_ordering_callable=block_ordering_callable,
+        )
         self._durations = durations
 
         # Enforce list of DD sequences
@@ -415,6 +422,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
             )
             return
 
+        if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
+            # mark all qubits as dirty if skip_reset_qubits is False
+            self._dirty_qubits.update([qubit])
+
         if (
             not isinstance(prev_node, DAGInNode)
             and self._skip_reset_qubits
@@ -437,9 +448,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             seq_length = np.sum(seq_lengths)
             seq_ratio = self._sequence_min_length_ratios[sequence_idx]
             spacings = self._spacings[sequence_idx]
-            alt_spacings = (
-                np.asarray(self._alt_spacings[sequence_idx]) if self._coupling_map else None
-            )
+            alt_spacings = self._alt_spacings[sequence_idx] if self._coupling_map else None
 
             # Verify the delay duration exceeds the minimum time to insert
             if time_interval / seq_length <= seq_ratio:
@@ -463,8 +472,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 seq_lengths = seq_lengths * num_sequences
                 seq_length = np.sum(seq_lengths)
                 spacings = spacings * num_sequences
+                if alt_spacings is not None:
+                    alt_spacings = alt_spacings * num_sequences
 
             spacings = np.asarray(spacings) / num_sequences
+            if alt_spacings is not None:
+                alt_spacings = np.asarray(alt_spacings) / num_sequences
             slack = time_interval - seq_length
             sequence_gphase = self._sequence_phase
 
@@ -477,17 +490,17 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 theta, phi, lam, phase = OneQubitEulerDecomposer().angles_and_phase(u_inv)
                 if isinstance(next_node, DAGOpNode) and isinstance(next_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the successor (from left in circuit)
-                    theta_r, phi_r, lam_r = next_node.op.params
-                    next_node.op.params = Optimize1qGates.compose_u3(
-                        theta_r, phi_r, lam_r, theta, phi, lam
-                    )
+                    op = next_node.op
+                    theta_r, phi_r, lam_r = op.params
+                    op.params = Optimize1qGates.compose_u3(theta_r, phi_r, lam_r, theta, phi, lam)
+                    next_node.op = op
                     sequence_gphase += phase
                 elif isinstance(prev_node, DAGOpNode) and isinstance(prev_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the predecessor (from right in circuit)
-                    theta_l, phi_l, lam_l = prev_node.op.params
-                    prev_node.op.params = Optimize1qGates.compose_u3(
-                        theta, phi, lam, theta_l, phi_l, lam_l
-                    )
+                    op = prev_node.op
+                    theta_l, phi_l, lam_l = op.params
+                    op.params = Optimize1qGates.compose_u3(theta, phi, lam, theta_l, phi_l, lam_l)
+                    prev_node.op = op
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse

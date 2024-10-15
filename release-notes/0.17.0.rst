@@ -1,0 +1,35 @@
+0.17.0
+======
+
+New Features
+------------
+
+-  Added a new method
+   `properties() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#properties>`__ which
+   returns the backend properties of the job at the time the job was
+   run.
+
+-  `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ has a new
+   field, activated_at, which is the timestamp of when the session was
+   changed to active.
+
+Bug Fixes
+---------
+
+-  When a single backend is retrieved with the ``instance`` parameter,
+
+   .. code:: python
+
+      service.backend('ibm_torino', instance='ibm-q/open/main')
+      # raises error if torino is not in ibm-q/open/main but in a different instance
+      # the user has access to
+      service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")
+      service.backend('ibm_torino') # raises the same error
+
+   if the backend is not in the instance but in a different one the user
+   has access to, an error will be raised. The same error will now be
+   raised if an instance is passed in at initialization and then a
+   backend not in that instance is retrieved.
+
+-  Fixed an issue where retrieving the coupling_map of some backends
+   would result in a NameError.

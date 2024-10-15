@@ -12,36 +12,23 @@
 
 """Execution options."""
 
-from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Union
+
+from .utils import Unset, UnsetType, primitive_dataclass
 
 
-ExecutionSupportedOptions = Literal[
-    "shots",
-    "init_qubits",
-]
+@primitive_dataclass
+class ExecutionOptionsV2:
+    """Execution options for V2 primitives."""
 
-
-@dataclass
-class ExecutionOptions:
-    """Execution options.
-
-    Args:
-        shots: Number of repetitions of each circuit, for sampling. Default: 4000.
-
-        init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Default: ``True``.
+    init_qubits: Union[UnsetType, bool] = Unset
+    r"""Whether to reset the qubits to the ground state for each shot. Default is ``True``.
     """
 
-    shots: int = 4000
-    init_qubits: bool = True
-
-    @staticmethod
-    def validate_execution_options(execution_options: dict) -> None:
-        """Validate that execution options are legal.
-        Raises:
-            ValueError: if any execution option is not supported
-        """
-        for opt in execution_options:
-            if not opt in get_args(ExecutionSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for execution.")
+    rep_delay: Union[UnsetType, float] = Unset
+    r"""The repetition delay. This is the delay between a measurement and
+    the subsequent quantum circuit. This is only supported on backends that have
+    ``backend.dynamic_reprate_enabled=True``. It must be from the
+    range supplied by ``backend.rep_delay_range``.
+    Default is given by ``backend.default_rep_delay``.
+    """

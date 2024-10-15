@@ -1,0 +1,30 @@
+0.9.3
+=====
+
+Upgrade Notes
+-------------
+
+-  Added error messages in case the user defines unsupported values for
+   ‘optimization_level’ or for ‘resilience_level’. Added validation
+   checking for options given as input to ``resilience``. Previously,
+   this validation was done on the server side. By adding them on the
+   client side, response will be much faster upon failure. The
+   environment variable ``QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION`` is
+   used to control validation. If set, validation will be skipped.
+
+-  Backend configurations are no longer loaded when
+   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   is initialized. Instead, the configuration is only loaded and cached
+   during
+   `get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   and
+   `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__.
+
+Bug Fixes
+---------
+
+-  When creating an Option object and passing an input option to
+   ``resilience_options``, this option was included in
+   ``resilience_options``, but the other, default options were removed.
+   This was fixed, so now inputs are handled correctly, like other
+   option types.

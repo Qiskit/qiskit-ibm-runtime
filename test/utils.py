@@ -15,21 +15,33 @@
 import os
 import logging
 import time
+import itertools
 import unittest
 from unittest import mock
 from typing import Dict, Optional, Any
 from datetime import datetime
+from ddt import data, unpack
 
-from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.compiler import transpile, assemble
-from qiskit.qobj import QasmQobj
-from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
+from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import BackendStatus, BackendProperties
 from qiskit.providers.backend import Backend
+from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit_ibm_runtime import (
+    QiskitRuntimeService,
+    Session,
+    EstimatorV2,
+    SamplerV2,
+    Batch,
+)
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.models import (
+    BackendStatus,
+    BackendProperties,
+    BackendConfiguration,
+)
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
@@ -135,13 +147,13 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         job.cancel()
         status = job.status()
         assert (
-            status is JobStatus.CANCELLED
+            status == "CANCELLED"
         ), "cancel() was successful for job {} but its " "status is {}.".format(
             job.job_id(), status
         )
         return True
     except RuntimeInvalidStateError:
-        if job.status() in JOB_FINAL_STATES:
+        if job.status() in ["DONE", "CANCELLED", "ERROR"]:
             logger.warning("Unable to cancel job because it's already done.")
             return False
         raise
@@ -149,8 +161,8 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
 
 def wait_for_status(job, status, poll_time=1, time_out=20):
     """Wait for job to reach a certain status."""
-    wait_time = 1 if status == JobStatus.QUEUED else poll_time
-    while job.status() not in JOB_FINAL_STATES + (status,) and time_out > 0:
+    wait_time = 1 if status == "QUEUED" else poll_time
+    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
@@ -178,7 +190,7 @@ def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
-            if not dict_paritally_equal(dict1.get(key), val):
+            if not dict_paritally_equal(dict1.get(key, {}), val):
                 return False
         elif key not in dict1 or val != dict1[key]:
             return False
@@ -208,9 +220,21 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict) -> bool:
-    """Determine whether the dictionaries have the same keys."""
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+    """Recursively determine whether the dictionaries have the same keys.
+
+    Args:
+        dict1: First dictionary.
+        dict2: Second dictionary.
+        exclude_keys: A list of keys in dictionary 1 to be excluded.
+
+    Returns:
+        Whether the two dictionaries have the same keys.
+    """
+    exclude_keys = exclude_keys or []
     for key, val in dict1.items():
+        if key in exclude_keys:
+            continue
         if key not in dict2:
             return False
         if isinstance(val, dict):
@@ -224,6 +248,7 @@ def create_faulty_backend(
     model_backend: Backend,
     faulty_qubit: Optional[int] = None,
     faulty_edge: Optional[tuple] = None,
+    faulty_q1_property: Optional[int] = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -231,6 +256,7 @@ def create_faulty_backend(
         model_backend: Fake backend to model after.
         faulty_qubit: Faulty qubit.
         faulty_edge: Faulty edge, a tuple of (gate, qubits)
+        faulty_q1_property: Faulty Q1 property.
 
     Returns:
         An IBMBackend with faulty qubits/edges.
@@ -256,6 +282,11 @@ def create_faulty_backend(
                     }
                 )
 
+    if faulty_q1_property:
+        properties["qubits"][faulty_q1_property] = [
+            q for q in properties["qubits"][faulty_q1_property] if q["name"] != "T1"
+        ]
+
     out_backend = IBMBackend(
         configuration=model_backend.configuration(),
         service=mock.MagicMock(),
@@ -274,12 +305,57 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham") -> Any:
+def get_mocked_backend(
+    name: str = "ibm_gotham",
+    configuration: Optional[Dict] = None,
+    properties: Optional[Dict] = None,
+    defaults: Optional[Dict] = None,
+) -> IBMBackend:
     """Return a mock backend."""
-    mock_backend = mock.MagicMock(spec=IBMBackend)
+
+    mock_service = mock.MagicMock(spec=QiskitRuntimeService)
+    mock_service._channel_strategy = None
+    mock_api_client = mock.MagicMock()
+    mock_service._api_client = mock_api_client
+
+    configuration = (
+        FakeManilaV2().configuration()  # type: ignore[assignment]
+        if configuration is None
+        else BackendConfiguration.from_dict(configuration)
+    )
+
+    mock_api_client.backend_properties = lambda *args, **kwargs: properties
+    mock_api_client.backend_pulse_defaults = lambda *args, **kwargs: defaults
+    mock_backend = IBMBackend(
+        configuration=configuration, service=mock_service, api_client=mock_api_client
+    )
     mock_backend.name = name
     mock_backend._instance = None
+    mock_service.backend = lambda name, **kwargs: (
+        mock_backend if name == mock_backend.name else None
+    )
+
     return mock_backend
+
+
+def get_mocked_session(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked session object."""
+    session = mock.MagicMock(spec=Session)
+    session._instance = None
+    session._backend = backend or get_mocked_backend()
+    session._service = getattr(backend, "service", None) or mock.MagicMock(
+        spec=QiskitRuntimeService
+    )
+    return session
+
+
+def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked batch object."""
+    batch = mock.MagicMock(spec=Batch)
+    batch._instance = None
+    batch._backend = backend or get_mocked_backend()
+    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
+    return batch
 
 
 def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
@@ -292,62 +368,45 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
         Cancelled job.
     """
     circuit = transpile(bell(), backend=backend)
-    job = backend.run(circuit)
+    sampler = SamplerV2(backend)
+    job = sampler.run([circuit])
     cancel_job_safe(job, logger=logger)
     return job
 
 
-def submit_job_bad_shots(backend: IBMBackend) -> RuntimeJob:
-    """Submit a job that will fail due to too many shots.
+class Case(dict):
+    """<no description>"""
 
-    Args:
-        backend: Backend to submit the job to.
 
-    Returns:
-        Submitted job.
+def generate_cases(docstring, dsc=None, name=None, **kwargs):
+    """Combines kwargs in Cartesian product and creates Case with them"""
+    ret = []
+    keys = kwargs.keys()
+    vals = kwargs.values()
+    for values in itertools.product(*vals):
+        case = Case(zip(keys, values))
+        if docstring is not None:
+            setattr(case, "__doc__", docstring.format(**case))
+        if dsc is not None:
+            setattr(case, "__doc__", dsc.format(**case))
+        if name is not None:
+            setattr(case, "__name__", name.format(**case))
+        ret.append(case)
+    return ret
+
+
+def combine(**kwargs):
+    """Decorator to create combinations and tests
+    @combine(level=[0, 1, 2, 3],
+             circuit=[a, b, c, d],
+             dsc='Test circuit {circuit.__name__} with level {level}',
+             name='{circuit.__name__}_level{level}')
     """
-    qobj = bell_in_qobj(backend=backend)
-    # Modify the number of shots to be an invalid amount.
-    qobj.config.shots = backend.configuration().max_shots + 10000
-    job_to_fail = backend._submit_job(qobj)
-    return job_to_fail
 
+    def deco(func):
+        return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
 
-def submit_job_one_bad_instr(backend: IBMBackend) -> RuntimeJob:
-    """Submit a job that contains one good and one bad instruction.
-
-    Args:
-        backend: Backend to submit the job to.
-
-    Returns:
-        Submitted job.
-    """
-    qc_new = transpile(bell(), backend)
-    if backend.configuration().simulator:
-        # Specify method so it doesn't fail at method selection.
-        qobj = assemble([qc_new] * 2, backend=backend, method="statevector")
-    else:
-        qobj = assemble([qc_new] * 2, backend=backend)
-    qobj.experiments[1].instructions[1].name = "bad_instruction"
-    job = backend._submit_job(qobj)
-    return job
-
-
-def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
-    """Return a bell circuit in Qobj format.
-
-    Args:
-        backend: Backend to use for transpiling the circuit.
-        shots: Number of shots.
-
-    Returns:
-        A bell circuit in Qobj format.
-    """
-    return assemble(
-        transpile(bell(), backend=backend),
-        backend=backend,
-        shots=shots,
-    )
+    return deco
 
 
 def bell():
@@ -360,3 +419,87 @@ def bell():
     quantum_circuit.measure(quantum_register, classical_register)
 
     return quantum_circuit
+
+
+def get_transpiled_circuit(backend, num_qubits=2, measure=False):
+    """Return a transpiled circuit."""
+    circ = QuantumCircuit(num_qubits)
+    circ.h(0)
+    for idx in range(num_qubits - 2):
+        circ.cx(idx, idx + 1)
+    if measure:
+        circ.measure_all()
+    return transpile(circ, backend=backend)
+
+
+def get_primitive_inputs(primitive, backend=None, num_sets=1):
+    """Return primitive specific inputs."""
+    backend = backend or FakeManilaV2()
+    theta = Parameter("θ")
+    circ = QuantumCircuit(2)
+    circ.h(0)
+    circ.cx(0, 1)
+    circ.ry(theta, 0)
+
+    circ = transpile(circ, backend=backend)
+    obs = SparsePauliOp.from_list([("IZ", 1)])
+    obs = obs.apply_layout(circ.layout, num_qubits=circ.num_qubits)
+    param_val = [0.1]
+
+    if isinstance(primitive, EstimatorV2):
+        return {"pubs": [(circ, [obs], [param_val])] * num_sets}
+    elif isinstance(primitive, SamplerV2):
+        circ.measure_all()
+        return {"pubs": [(circ, param_val)] * num_sets}
+    else:
+        raise ValueError(f"Invalid primitive type {type(primitive)}")
+
+
+def transpile_pubs(in_pubs, backend, program):
+    """Return pubs with transformed circuits and observables."""
+    t_pubs = []
+    for pub in in_pubs:
+        t_circ = transpile(pub[0], backend=backend)
+        if program == "estimator":
+            t_obs = remap_observables(pub[1], t_circ)
+            t_pub = [t_circ, t_obs]
+            for elem in pub[2:]:
+                t_pub.append(elem)
+        if program == "sampler":
+            if len(pub) == 2:
+                t_pub = [t_circ, pub[1]]
+            else:
+                t_pub = [t_circ]
+        t_pubs.append(tuple(t_pub))
+    return t_pubs
+
+
+def remap_observables(observables, isa_circuit):
+    """Remap observables based on input cirucit."""
+
+    def _convert_paul_or_str(_obs):
+        if isinstance(_obs, str):
+            return _obs + "I" * (len(layout.input_qubit_mapping) - len(_obs))
+        return Pauli("X" * (len(layout.input_qubit_mapping)))
+
+    out_obs = []
+    layout = isa_circuit.layout
+    for obs in observables:
+        if isinstance(obs, (str, Pauli)):
+            out_obs.append(_convert_paul_or_str(obs))
+        elif isinstance(obs, SparsePauliOp):
+            out_obs.append(obs.apply_layout(layout, num_qubits=isa_circuit.num_qubits))
+        elif isinstance(obs, dict):
+            mapped = {_convert_paul_or_str(key): val for key, val in obs.items()}
+            out_obs.append(mapped)
+        else:
+            raise ValueError(f"Observable of type {type(obs)} is not supported.")
+
+    return out_obs
+
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
+    _instance = None

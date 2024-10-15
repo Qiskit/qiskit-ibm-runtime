@@ -17,7 +17,8 @@ import unittest
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth
+from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
 from ...ibm_test_case import IBMTestCase
 
 
@@ -39,16 +40,19 @@ class FakeBackendsTest(IBMTestCase):
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_backends_get_kwargs(self):
         """Fake backends honor kwargs passed."""
-        backend = FakeAthens()
+        backend = FakeAthensV2()
 
         qc = QuantumCircuit(2)  # pylint: disable=invalid-name
         qc.x(range(0, 2))
         qc.measure_all()
 
         trans_qc = transpile(qc, backend)
-        raw_counts = backend.run(trans_qc, shots=1000).result().get_counts()
+        sampler = SamplerV2(backend)
+        job = sampler.run([trans_qc])
+        pub_result = job.result()[0]
+        counts = pub_result.data.meas.get_counts()
 
-        self.assertEqual(sum(raw_counts.values()), 1000)
+        self.assertEqual(sum(counts.values()), 1024)
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_backend_v2_noise_model_always_present(self):
@@ -57,6 +61,16 @@ class FakeBackendsTest(IBMTestCase):
         qc = QuantumCircuit(1)  # pylint: disable=invalid-name
         qc.x(0)
         qc.measure_all()
-        res = backend.run(qc, shots=1000).result().get_counts()
+        sampler = SamplerV2(backend)
+        job = sampler.run([qc])
+        pub_result = job.result()[0]
+        counts = pub_result.data.meas.get_counts()
         # Assert noise was present and result wasn't ideal
-        self.assertNotEqual(res, {"1": 1000})
+        self.assertNotEqual(counts, {"1": 1000})
+
+    def test_retrieving_single_backend(self):
+        """Test retrieving a single backend."""
+        provider = FakeProviderForBackendV2()
+        backend_name = "fake_jakarta"
+        backend = provider.backend(backend_name)
+        self.assertEqual(backend.name, backend_name)

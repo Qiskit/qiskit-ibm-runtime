@@ -14,34 +14,45 @@
 """
 Base class for dummy backends.
 """
-
+import logging
 import warnings
 import collections
 import json
 import os
 import re
 
-from typing import List, Iterable
+from typing import List, Iterable, Union
 
-from qiskit import circuit
-from qiskit.providers.models import BackendProperties, BackendConfiguration, PulseDefaults
-from qiskit.providers import BackendV2, BackendV1
+from qiskit import circuit, QuantumCircuit
+
+from qiskit.providers import BackendV2
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
-from qiskit.providers.backend_compat import convert_to_target
 from qiskit.providers.fake_provider.utils.json_decoder import (
     decode_backend_configuration,
     decode_backend_properties,
     decode_pulse_defaults,
 )
 
-try:
-    from qiskit.providers.basicaer import QasmSimulatorPy as BasicSimulator
-except ImportError:
-    from qiskit.providers.basic_provider import BasicSimulator
+from qiskit.providers.basic_provider import BasicSimulator
+
+from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
+from .. import QiskitRuntimeService
+from ..utils.backend_encoder import BackendEncoder
+
+from ..models import (
+    BackendProperties,
+    BackendConfiguration,
+    PulseDefaults,
+    BackendStatus,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class _Credentials:
@@ -154,12 +165,102 @@ class FakeBackendV2(BackendV2):
             decode_pulse_defaults(defs_dict)
             self._defs_dict = defs_dict
 
+    def _supports_dynamic_circuits(self) -> bool:
+        supported_features = self._conf_dict.get("supported_features") or []
+        return "qasm3" in supported_features
+
     def _load_json(self, filename: str) -> dict:
         with open(  # pylint: disable=unspecified-encoding
             os.path.join(self.dirname, filename)
         ) as f_json:
             the_json = json.load(f_json)
         return the_json
+
+    def status(self) -> BackendStatus:
+        """Return the backend status.
+
+        Returns:
+            The status of the backend.
+
+        """
+
+        api_status = {
+            "backend_name": self.name,
+            "backend_version": "",
+            "status_msg": "active",
+            "operational": True,
+            "pending_jobs": 0,
+        }
+
+        return BackendStatus.from_dict(api_status)
+
+    def properties(self, refresh: bool = False) -> BackendProperties:
+        """Return the backend properties
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend properties
+            from the local file.
+
+        Returns:
+            The backend properties.
+        """
+        if refresh or (self._props_dict is None):
+            self._set_props_dict_from_json()
+        return BackendProperties.from_dict(self._props_dict)
+
+    def defaults(self, refresh: bool = False) -> PulseDefaults:
+        """Return the pulse defaults for the backend
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend defaults from the
+            local file.
+
+        Returns:
+            The backend pulse defaults or ``None`` if the backend does not support pulse.
+        """
+        if refresh or self._defs_dict is None:
+            self._set_defs_dict_from_json()
+        if self._defs_dict:
+            return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
+        return None
+
+    def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+        """Return the backend configuration."""
+        return BackendConfiguration.from_dict(self._conf_dict)
+
+    def check_faulty(self, circuit: QuantumCircuit) -> None:  # pylint: disable=redefined-outer-name
+        """Check if the input circuit uses faulty qubits or edges.
+
+        Args:
+            circuit: Circuit to check.
+
+        Raises:
+            ValueError: If an instruction operating on a faulty qubit or edge is found.
+        """
+        if not self.properties():
+            return
+
+        faulty_qubits = self.properties().faulty_qubits()
+        faulty_gates = self.properties().faulty_gates()
+        faulty_edges = [tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1]
+
+        for instr in circuit.data:
+            if instr.operation.name == "barrier":
+                continue
+            qubit_indices = tuple(circuit.find_bit(x).index for x in instr.qubits)
+
+            for circ_qubit in qubit_indices:
+                if circ_qubit in faulty_qubits:
+                    raise ValueError(
+                        f"Circuit {circuit.name} contains instruction "
+                        f"{instr} operating on a faulty qubit {circ_qubit}."
+                    )
+
+            if len(qubit_indices) == 2 and qubit_indices in faulty_edges:
+                raise ValueError(
+                    f"Circuit {circuit.name} contains instruction "
+                    f"{instr} operating on a faulty edge {qubit_indices}"
+                )
 
     @property
     def target(self) -> Target:
@@ -182,7 +283,13 @@ class FakeBackendV2(BackendV2):
                 defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
             self._target = convert_to_target(
-                conf, props, defaults, add_delay=True, filter_faulty=True
+                configuration=conf,
+                properties=props,
+                defaults=defaults,
+                # Fake backends use the simulator backend.
+                # This doesn't have the exclusive constraint.
+                include_control_flow=True,
+                include_fractional_gates=True,
             )
 
         return self._target
@@ -308,12 +415,12 @@ class FakeBackendV2(BackendV2):
 
         This method runs circuit jobs (an individual or a list of QuantumCircuit
         ) and pulse jobs (an individual or a list of Schedule or ScheduleBlock)
-        using BasicAer simulator/ BasicSimulator or Aer simulator and returns a
+        using BasicSimulator or Aer simulator and returns a
         :class:`~qiskit.providers.Job` object.
 
         If qiskit-aer is installed, jobs will be run using AerSimulator with
         noise model of the fake backend. Otherwise, jobs will be run using
-        BasicAer simulator/ BasicSimulator simulator without noise.
+        BasicSimulator without noise.
 
         Currently noisy simulation of a pulse job is not supported yet in
         FakeBackendV2.
@@ -357,7 +464,9 @@ class FakeBackendV2(BackendV2):
             raise QiskitError("Pulse simulation is currently not supported for V2 fake backends.")
         # circuit job
         if not _optionals.HAS_AER:
-            warnings.warn("Aer not found using BasicAer and no noise", RuntimeWarning)
+            warnings.warn(
+                "Aer not found, using qiskit.BasicSimulator and no noise.", RuntimeWarning
+            )
         if self.sim is None:
             self._setup_sim()
         self.sim._options = self._options
@@ -397,7 +506,7 @@ class FakeBackendV2(BackendV2):
             self._set_props_dict_from_json()
 
         properties = BackendProperties.from_dict(self._props_dict)
-        basis_gates = self.operation_names
+        basis_gates = self.configuration().basis_gates
         num_qubits = self.num_qubits
         dt = self.dt  # pylint: disable=invalid-name
 
@@ -450,125 +559,85 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
+    def refresh(self, service: QiskitRuntimeService) -> None:
+        """Update the data files from its real counterpart
 
-class FakeBackend(BackendV1):
-    """This is a dummy backend just for testing purposes."""
+        This method pulls the latest backend data files from their real counterpart and
+        overwrites the corresponding files in the local installation:
+        *  ../fake_provider/backends/{backend_name}/conf_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/defs_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/props_{backend_name}.json
 
-    def __init__(self, configuration, time_alive=10):  # type: ignore
-        """FakeBackend initializer.
+        The new data files will persist through sessions so the files will stay updated unless they
+         are manually reverted locally or when qiskit-ibm-runtime is upgraded/reinstalled.
 
         Args:
-            configuration (BackendConfiguration): backend configuration
-            time_alive (int): time to wait before returning result
+            service: A :class:`QiskitRuntimeService` instance
+
+        Raises:
+            ValueError: if the provided service is a non-QiskitRuntimeService instance.
+            Exception: If the real target doesn't exist or can't be accessed
         """
-        super().__init__(configuration)
-        self.time_alive = time_alive
-        self._credentials = _Credentials()
-        self.sim = None
-
-    def _setup_sim(self) -> None:
-        if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
-            from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
-
-            self.sim = AerSimulator()
-            if self.properties():
-                noise_model = NoiseModel.from_backend(self)
-                self.sim.set_options(noise_model=noise_model)
-                # Update fake backend default options too to avoid overwriting
-                # it when run() is called
-                self.set_options(noise_model=noise_model)
-        else:
-            self.sim = BasicSimulator()
-
-    def properties(self) -> BackendProperties:
-        """Return backend properties"""
-        coupling_map = self.configuration().coupling_map
-        if coupling_map is None:
-            return None
-        unique_qubits = list(set().union(*coupling_map))
-
-        properties = {
-            "backend_name": self.name(),
-            "backend_version": self.configuration().backend_version,
-            "last_update_date": "2000-01-01 00:00:00Z",
-            "qubits": [
-                [
-                    {"date": "2000-01-01 00:00:00Z", "name": "T1", "unit": "\u00b5s", "value": 0.0},
-                    {"date": "2000-01-01 00:00:00Z", "name": "T2", "unit": "\u00b5s", "value": 0.0},
-                    {
-                        "date": "2000-01-01 00:00:00Z",
-                        "name": "frequency",
-                        "unit": "GHz",
-                        "value": 0.0,
-                    },
-                    {
-                        "date": "2000-01-01 00:00:00Z",
-                        "name": "readout_error",
-                        "unit": "",
-                        "value": 0.0,
-                    },
-                    {"date": "2000-01-01 00:00:00Z", "name": "operational", "unit": "", "value": 1},
-                ]
-                for _ in range(len(unique_qubits))
-            ],
-            "gates": [
-                {
-                    "gate": "cx",
-                    "name": "CX" + str(pair[0]) + "_" + str(pair[1]),
-                    "parameters": [
-                        {
-                            "date": "2000-01-01 00:00:00Z",
-                            "name": "gate_error",
-                            "unit": "",
-                            "value": 0.0,
-                        }
-                    ],
-                    "qubits": [pair[0], pair[1]],
-                }
-                for pair in coupling_map
-            ],
-            "general": [],
-        }
-
-        return BackendProperties.from_dict(properties)
-
-    @classmethod
-    def _default_options(cls) -> Options:
-        if _optionals.HAS_AER:
-            from qiskit_aer import QasmSimulator  # pylint: disable=import-outside-toplevel
-
-            return QasmSimulator._default_options()
-        else:
-            return BasicSimulator._default_options()
-
-    def run(self, run_input, **kwargs):  # type: ignore
-        """Main job in simulator"""
-        circuits = run_input
-        pulse_job = None
-        if isinstance(circuits, (pulse.Schedule, pulse.ScheduleBlock)):
-            pulse_job = True
-        elif isinstance(circuits, circuit.QuantumCircuit):
-            pulse_job = False
-        elif isinstance(circuits, list):
-            if circuits:
-                if all(isinstance(x, (pulse.Schedule, pulse.ScheduleBlock)) for x in circuits):
-                    pulse_job = True
-                elif all(isinstance(x, circuit.QuantumCircuit) for x in circuits):
-                    pulse_job = False
-        if pulse_job is None:
-            raise QiskitError(
-                "Invalid input object %s, must be either a "
-                "QuantumCircuit, Schedule, or a list of either" % circuits
+        if not isinstance(service, QiskitRuntimeService):
+            raise ValueError(
+                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
+                " required to retrieve the real backend's current properties and settings."
             )
-        if pulse_job:  # pulse job
-            raise QiskitError("Pulse simulation is currently not supported for V1 fake backends.")
 
-        if self.sim is None:
-            self._setup_sim()
-        if not _optionals.HAS_AER:
-            warnings.warn("Aer not found using BasicAer and no noise", RuntimeWarning)
-        self.sim._options = self._options
-        job = self.sim.run(circuits, **kwargs)
+        version = self.backend_version
+        prod_name = self.backend_name.replace("fake", "ibm")
+        try:
+            backends = service.backends(prod_name)
+            real_backend = backends[0]
 
-        return job
+            real_props = real_backend.properties()
+            real_config = real_backend.configuration()
+            real_defs = real_backend.defaults()
+
+            updated_config = real_config.to_dict()
+            updated_config["backend_name"] = self.backend_name
+
+            if updated_config != self._conf_dict:
+
+                if real_config:
+                    config_path = os.path.join(self.dirname, self.conf_filename)
+                    with open(config_path, "w", encoding="utf-8") as fd:
+                        fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
+
+                if real_props:
+                    props_path = os.path.join(self.dirname, self.props_filename)
+                    with open(props_path, "w", encoding="utf-8") as fd:
+                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+
+                if real_defs:
+                    defs_path = os.path.join(self.dirname, self.defs_filename)
+                    with open(defs_path, "w", encoding="utf-8") as fd:
+                        fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+
+                if self._target is not None:
+                    self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
+                    self._set_props_dict_from_json()
+                    self._set_defs_dict_from_json()
+
+                    updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
+                    updated_properties = BackendProperties.from_dict(self._props_dict)
+                    updated_defaults = PulseDefaults.from_dict(self._defs_dict)
+
+                    self._target = convert_to_target(
+                        configuration=updated_configuration,
+                        properties=updated_properties,
+                        defaults=updated_defaults,
+                        include_control_flow=True,
+                        include_fractional_gates=True,
+                    )
+
+                logger.info(
+                    "The backend %s has been updated from version %s to %s version.",
+                    self.backend_name,
+                    version,
+                    real_props.backend_version,
+                )
+            else:
+                logger.info("There are no available new updates for %s.", self.backend_name)
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))

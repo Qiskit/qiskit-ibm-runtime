@@ -26,7 +26,7 @@ from ..api.auth import QuantumAuth, CloudAuth
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
-ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum"]]
+ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum", "local"]]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
@@ -62,6 +62,7 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.channel_strategy = channel_strategy
+        self.private_endpoint: bool = False
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -81,6 +82,7 @@ class Account:
         instance = data.get("instance")
         verify = data.get("verify", True)
         channel_strategy = data.get("channel_strategy")
+        private_endpoint = data.get("private_endpoint", False)
         return cls.create_account(
             channel=channel,
             url=url,
@@ -89,6 +91,7 @@ class Account:
             proxies=proxies,
             verify=verify,
             channel_strategy=channel_strategy,
+            private_endpoint=private_endpoint,
         )
 
     @classmethod
@@ -101,6 +104,7 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel == "ibm_quantum":
@@ -120,6 +124,7 @@ class Account:
                 proxies=proxies,
                 verify=verify,
                 channel_strategy=channel_strategy,
+                private_endpoint=private_endpoint,
             )
         else:
             raise InvalidAccountError(
@@ -268,6 +273,7 @@ class CloudAccount(Account):
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = False,
     ):
         """Account constructor.
 
@@ -278,11 +284,13 @@ class CloudAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
+            private_endpoint: Connect to private API URL.
         """
         super().__init__(token, instance, proxies, verify, channel_strategy)
         resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
+        self.private_endpoint = private_endpoint
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
@@ -324,5 +332,7 @@ class CloudAccount(Account):
         """Assert that the instance name is valid for the given account type."""
         if not (isinstance(instance, str) and len(instance) > 0):
             raise InvalidAccountError(
-                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'. "
+                "If using the ibm_quantum channel,",
+                "please specify the channel when saving your account with `channel = 'ibm_quantum'`.",
             )

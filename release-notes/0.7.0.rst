@@ -1,0 +1,49 @@
+0.7.0
+=====
+
+New Features
+------------
+
+-  ``qiskit_ibm_runtime.Options`` class now accepts arbitrary keyword
+   arguments. This allows users to specify new options to the primitive
+   programs without upgrading ``qiskit_ibm_runtime``. These arbitrary
+   keyword arguments, however, are not validated.
+
+-  The
+   `qiskit_ibm_runtime.options.EnvironmentOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.EnvironmentOptions>`__
+   class now accepts a ``callback`` parameter. This parameter can be
+   used to stream the interim and final results of the primitives.
+
+-  The ``qiskit_ibm_runtime.Options`` class now accepts
+   ``max_execution_time`` as a first level option and ``job_tags`` as an
+   option under ``environment``.
+   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__
+   has also been updated to include these two parameters.
+
+Upgrade Notes
+-------------
+
+-  This version of qiskit-ibm-runtime requires qiskit-terra version 0.22
+   or higher. The ``requirements.txt`` file has been updated
+   accordingly.
+
+Deprecation Notes
+-----------------
+
+-  Qiskit Runtime programs ``torch-train``, ``torch-infer``,
+   ``sample-expval``, ``sample-program``, and
+   ``quantum_kernal_alignment`` have been deprecated due to low usage.
+
+-  Passing ``instance`` parameter to the
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   has been deprecated. Instead, you can pass the ``instance`` parameter
+   inside the ``options`` parameter.
+
+-  Passing ``job_tags`` and ``max_execution_time`` as parameters to
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   has been deprecated. Please pass them inside ``options``.
+
+Bug Fixes
+---------
+
+-  Fixes the missing section on retrieving jobs in the how-to guide.

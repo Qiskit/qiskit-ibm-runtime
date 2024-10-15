@@ -1,0 +1,37 @@
+0.21.0
+======
+
+Upgrade Notes
+-------------
+
+-  Circuits that do not match the target hardware definition are no
+   longer supported by Qiskit Runtime primitives, unless
+   ``channel_strategy="q-ctrl"`` is used. See the transpilation
+   documentation (`transpile <https://docs.quantum.ibm.com/guides/transpile>`__) for instructions to
+   transform circuits and the primitive examples
+   (`run/primitives-examples <https://docs.quantum.ibm.com/guides/primitives-examples>`__) to see this
+   coupled with operator transformations.
+
+Deprecation Notes
+-----------------
+
+-  In a future release, ``backend`` will be a required parameter for
+   ``qiskit_ibm_runtime.Sampler``, and ``qiskit_ibm_runtime.Estimator``
+   if ``session`` is not specified, even when using the ``ibm_cloud``
+   channel.
+
+   It will also be a required parameter for
+   ``qiskit_ibm_runtime.Session`` and ``qiskit_ibm_runtime.Batch``.
+
+Bug Fixes
+---------
+
+-  Fixed an issue with the ``IBMBackend.target`` where it would
+   incorrectly exclude supported control flow operations (``IfElseOp``,
+   ``WhileLoop``, etc.) if a given backend supported them.
+
+-  Fixed a bug where retrieving a fake backend through
+   ``FakeProviderForBackendV2.backend()`` would result in a type error.
+
+-  Fixes the check for ISA circuits to allow pulse gates and circuits
+   that don’t have layout.

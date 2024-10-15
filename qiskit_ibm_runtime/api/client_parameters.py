@@ -12,10 +12,10 @@
 
 """Represent IBM Quantum account client parameters."""
 
-from typing import Dict, Optional, Any, Union
+from typing import Dict, Optional, Any, Union, Callable
 from ..proxies import ProxyConfiguration
 
-from ..utils import get_runtime_api_base_url
+from ..utils import default_runtime_url_resolver
 from ..api.auth import QuantumAuth, CloudAuth
 
 TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
@@ -33,6 +33,8 @@ class ClientParameters:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
+        private_endpoint: Optional[bool] = False,
+        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
     ) -> None:
         """ClientParameters constructor.
 
@@ -43,6 +45,8 @@ class ClientParameters:
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: If ``False``, ignores SSL certificates errors.
+            private_endpoint: Connect to private API URL.
+            url_resolver: Function used to resolve the runtime url.
         """
         self.token = token
         self.instance = instance
@@ -50,6 +54,10 @@ class ClientParameters:
         self.url = url
         self.proxies = proxies
         self.verify = verify
+        self.private_endpoint = private_endpoint
+        if not url_resolver:
+            url_resolver = default_runtime_url_resolver
+        self.url_resolver = url_resolver
 
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
@@ -60,7 +68,7 @@ class ClientParameters:
 
     def get_runtime_api_base_url(self) -> str:
         """Returns the Runtime API base url."""
-        return get_runtime_api_base_url(self.url, self.instance)
+        return self.url_resolver(self.url, self.instance, self.private_endpoint)
 
     def connection_parameters(self) -> Dict[str, Any]:
         """Construct connection related parameters.

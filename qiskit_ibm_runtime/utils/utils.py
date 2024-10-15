@@ -11,80 +11,119 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
+
+from __future__ import annotations
 import copy
 import keyword
 import logging
 import os
 import re
-import hashlib
-import warnings
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
+from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
+import numpy as np
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit.providers.backend import BackendV1, BackendV2
+from .deprecation import deprecate_function
 
 
-def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
+def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+    """Return true if the backend is a simulator.
+
+    Args:
+        backend: Backend to check.
+
+    Returns:
+        True if backend is a simulator.
+    """
+    if hasattr(backend, "configuration"):
+        return getattr(backend.configuration(), "simulator", False)
+    return getattr(backend, "simulator", False)
+
+
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
+    """
+    A section of is_isa_circuit, separated to allow recursive calls
+    within blocks of conditional operations.
+    """
+    for instruction in circuit.data:
+        operation = instruction.operation
+
+        name = operation.name
+        qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
+        if (
+            not target.instruction_supported(name, qargs)
+            and name != "barrier"
+            and not circuit.has_calibration_for(instruction)
+        ):
+            return (
+                f"The instruction {name} on qubits {qargs} is not supported by the target system."
+            )
+
+        # rzz gate is calibrated only for the range [0, pi/2].
+        # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+        # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+        # accurate).
+        if name == "rzz" and (
+            instruction.params[0] < 0.0 or instruction.params[0] > 1.001 * np.pi / 2
+        ):
+            return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
+            range [0, pi/2], but an angle of {instruction.params[0]} has been provided."
+
+        if isinstance(operation, ControlFlowOp):
+            for sub_circ in operation.blocks:
+                inner_map = {
+                    inner: qubit_map[outer]
+                    for outer, inner in zip(instruction.qubits, sub_circ.qubits)
+                }
+                sub_string = _is_isa_circuit_helper(sub_circ, target, inner_map)
+                if sub_string:
+                    return sub_string
+
+    return ""
+
+
+def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
     only uses instructions that exist in the target.
+
     Args:
         circuit: A single QuantumCircuit
-        target: A Qiskit Target
+        target: The backend target
+
     Returns:
-        Boolean True if the circuit is an ISA circuit
+        Message on why the circuit is not an ISA circuit, if applicable.
     """
-    if circuit.layout is None:
-        return False
-    for instruction in circuit.data:
-        name = instruction.operation.name
-        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
-        if not target.instruction_supported(name, qargs) and name != "barrier":
-            return False
-    return True
-
-
-def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
-    """Validate if all circuits are ISA circuits
-    Args:
-        circuits: A list of QuantumCircuits
-        target: A Qiskit Target
-    Raises:
-        NonISACircuitsError if some of the circuits are not ISA circuits
-    """
-    if not all(is_isa_circuit(circuit, target) for circuit in circuits):
-        warnings.warn(
-            "Circuits that do not match the target hardware definition will no longer be supported "
-            "after March 1, 2024. See the transpilation documentation "
-            "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
-            "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
-            "this coupled with operator transformations.",
-            DeprecationWarning,
-            stacklevel=6,
+    if circuit.num_qubits > target.num_qubits:
+        return (
+            f"The circuit has {circuit.num_qubits} qubits "
+            f"but the target system requires {target.num_qubits} qubits."
         )
 
+    qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}
+    return _is_isa_circuit_helper(circuit, target, qubit_map)
 
-def validate_job_tags(job_tags: Optional[List[str]]) -> None:
-    """Validates input job tags.
 
-    Args:
-        job_tags: Job tags to be validated.
-
-    Raises:
-        IBMInputValueError: If the job tags are invalid.
-    """
-    if job_tags and (
-        not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
-    ):
-        raise IBMInputValueError("job_tags needs to be a list of strings.")
+def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+    """Checks if the input circuits are dynamic."""
+    for circuit in circuits:
+        if isinstance(circuit, str):
+            return qasm_default  # currently do not verify QASM inputs
+        for inst in circuit:
+            if (
+                isinstance(inst.operation, ControlFlowOp)
+                or getattr(inst.operation, "condition", None) is not None
+            ):
+                return True
+    return False
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -135,12 +174,26 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def get_runtime_api_base_url(url: str, instance: str) -> str:
+@deprecate_function(
+    "get_runtime_api_base_url()",
+    "0.30.0",
+    "Please use default_runtime_url_resolver() instead.",
+    stacklevel=1,
+)
+def get_runtime_api_base_url(
+    url: str, instance: str, private_endpoint: Optional[bool] = False
+) -> str:
+    """Computes the Runtime API base URL based on the provided input parameters."""
+    return default_runtime_url_resolver(url, instance, private_endpoint=private_endpoint)
+
+
+def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
         url: The URL.
         instance: The instance.
+        private_endpoint: Connect to private API URL.
 
     Returns:
         Runtime API base URL
@@ -152,10 +205,16 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     # cloud: compute runtime API URL based on crn and URL
     if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
-        api_host = (
-            f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-            f".quantum-computing.{parsed_url.hostname}"
-        )
+        if private_endpoint:
+            api_host = (
+                f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
+        else:
+            api_host = (
+                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
 
     return api_host
 
@@ -297,13 +356,6 @@ def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, 
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
-
-
-def _hash(hash_str: str) -> str:
-    """Hashes and returns a digest.
-    blake2s is supposedly faster than SHAs.
-    """
-    return hashlib.blake2s(hash_str.encode()).hexdigest()
 
 
 class RefreshQueue(Queue):

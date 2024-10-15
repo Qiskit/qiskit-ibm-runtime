@@ -1,0 +1,42 @@
+0.23.0 (2024-04-15)
+===================
+
+Deprecation Notes
+-----------------
+
+- `backend.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#run>`__ has been deprecated. Please use the primitives instead. More details
+  can be found in the `migration guide <https://docs.quantum.ibm.com/migration-guides/qiskit-runtime>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
+- In a future release, the ``service`` parameter in `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ 
+  will be required. (`1311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1311>`__)
+
+New Features
+------------
+
+- Printing :class:`.Options` and :class:`.OptionsV2` will now be formatted as a table. (`1490 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1490>`__)
+- Add ``block_ordering_callable`` argument to 
+  :class:`.BlockBasePadder`, :class:`.PadDynamicalDecoupling`, :class:`.PadDelay`, and 
+  :class:`.BaseDynamicCircuitAnalysis`. This allows the user to construct blocks using an algorithm of their 
+  choosing. No assumptions or checks are made on the validity of the output that the ``block_ordering_callable`` produces. The motivation for this argument is
+  that for some families of circuits, the existing function ``block_order_op_nodes`` can be very slow. (`1531 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1531>`__)
+- The Sampler and Estimator V2 Primitives have been enhanced to incorporate custom validation procedures when
+  the channel_strategy property is set as "q-ctrl."
+  This customized validation logic effectively rectifies incorrect input options and safeguards users against
+  inadvertently disabling Q-CTRL's performance enhancements. (`1550 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1550>`__)
+- :class:`.SamplerV2` now supports twirling.
+  Twirling will only be applied to those measurement registers not involved within a conditional logic. (`1557 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1557>`__)
+- Session `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ 
+  now includes a new field, ``usage_time``. Usage is defined as the time a quantum system 
+  is committed to complete a job. (`1567 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1567>`__)
+
+
+Bug Fixes
+---------
+
+- :class:`.RuntimeJobV2` will no longer 
+  error when the API returns an unknown status. Instead, the status 
+  from the API will directly be returned. (`1476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1476>`__)
+- Fixed a bug where custom headers were not being sent in the ``/jobs`` request. (`1508 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1508>`__)
+- Fixed a bug with encoding/decoding ``ParameterExpression``. (`1521 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1521>`__)
+- Fixed an issue where the `in_final_state() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJobV2#in_final_state>`__ 
+  method in :class:`.RuntimeJobV2` would not
+  update the status when called. (`1547 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1547>`__)

@@ -12,17 +12,20 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, get_args
-from dataclasses import dataclass
+from typing import Literal, Sequence, Union
+from dataclasses import asdict
 
-ResilienceSupportedOptions = Literal[
-    "noise_amplifier",
-    "noise_factors",
-    "extrapolator",
-]
-NoiseAmplifierType = Literal[
-    "LocalFoldingAmplifier",
-]
+from pydantic import model_validator, Field
+
+from ..utils.noise_learner_result import LayerError, NoiseLearnerResult
+from .utils import Unset, UnsetType, Dict, primitive_dataclass
+from .measure_noise_learning_options import MeasureNoiseLearningOptions
+from .zne_options import ZneOptions
+from .pec_options import PecOptions
+from .layer_noise_learning_options import LayerNoiseLearningOptions
+
+
+NoiseAmplifierType = Literal["LocalFoldingAmplifier",]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
     "QuadraticExtrapolator",
@@ -31,61 +34,75 @@ ExtrapolatorType = Literal[
 ]
 
 
-@dataclass
-class ResilienceOptions:
-    """Resilience options.
+@primitive_dataclass
+class ResilienceOptionsV2:
+    """Resilience options for V2 Estimator."""
 
-    Args:
-        noise_factors: An list of real valued noise factors that determine by what amount the
-            circuits' noise is amplified.
-            Only applicable for ``resilience_level=2``.
-            Default: ``None``, and (1, 3, 5) if resilience level is 2.
+    measure_mitigation: Union[UnsetType, bool] = Unset
+    r"""Whether to enable measurement error mitigation method.
+        If you enable measurement mitigation, you can fine-tune its noise learning
+        by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
+        for all measurement mitigation noise learning options.
 
-        noise_amplifier (DEPRECATED): A noise amplification strategy. Currently only
-        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
-            Default: "LocalFoldingAmplifier".
+        Default: True.
+    """
+    measure_noise_learning: Union[MeasureNoiseLearningOptions, Dict] = Field(
+        default_factory=MeasureNoiseLearningOptions
+    )
+    r"""Additional measurement noise learning options.
+        See :class:`MeasureNoiseLearningOptions` for all options.
+    """
+    zne_mitigation: Union[UnsetType, bool] = Unset
+    r"""Whether to turn on Zero-Noise Extrapolation error mitigation method.
+        If you enable ZNE, you can fine-tune its options by using :attr:`~zne`.
+        See :class:`ZneOptions` for additional ZNE related options.
 
-        extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
-            ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
-            Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
-            noise factors than the default.
-            Only applicable for ``resilience_level=2``.
-            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
+        Default: False.
+    """
+    zne: Union[ZneOptions, Dict] = Field(default_factory=ZneOptions)
+    r"""Additional zero-noise extrapolation mitigation options.
+        See :class:`ZneOptions` for all options.
+    """
+    pec_mitigation: Union[UnsetType, bool] = Unset
+    r"""Whether to turn on Probabilistic Error Cancellation error mitigation method.
+        If you enable PEC, you can fine-tune its options by using :attr:`~pec`.
+        See :class:`PecOptions` for additional PEC-related options.
+
+        Default: False.
+    """
+    pec: Union[PecOptions, Dict] = Field(default_factory=PecOptions)
+    r"""Additional probabalistic error cancellation mitigation options.
+        See :class:`PecOptions` for all options.
+    """
+    layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
+        default_factory=LayerNoiseLearningOptions
+    )
+    r"""Layer noise learning options.
+        See :class:`LayerNoiseLearningOptions` for all options.
+    """
+    layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError]] = Unset
+    r"""A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
+        objects. If set, all the mitigation strategies that require noise data (e.g., PEC and
+        PEA) skip the noise-learning stage, and instead gather the required information from
+        ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
+        are treated as noiseless and their noise is not mitigated.
     """
 
-    noise_amplifier: NoiseAmplifierType = None
-    noise_factors: Sequence[float] = None
-    extrapolator: ExtrapolatorType = None
-
-    @staticmethod
-    def validate_resilience_options(resilience_options: dict) -> None:
-        """Validate that resilience options are legal.
-        Raises:
-            ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
-            ValueError: if extrapolator is not in ExtrapolatorType.
-            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
-            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
-        """
-        for opt in resilience_options:
-            if not opt in get_args(ResilienceSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for resilience.")
-        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
-        if noise_amplifier not in get_args(NoiseAmplifierType):
-            raise ValueError(
-                f"Unsupported value {noise_amplifier} for noise_amplifier. "
-                f"Supported values are {get_args(NoiseAmplifierType)}"
-            )
-        extrapolator = resilience_options.get("extrapolator")
-        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
-            raise ValueError(
-                f"Unsupported value {extrapolator} for extrapolator. "
-                f"Supported values are {get_args(ExtrapolatorType)}"
-            )
-        if (
-            extrapolator == "QuarticExtrapolator"
-            and len(resilience_options.get("noise_factors")) < 5
+    @model_validator(mode="after")
+    def _validate_options(self) -> "ResilienceOptionsV2":
+        """Validate the model."""
+        if not self.measure_mitigation and any(
+            value != Unset for value in asdict(self.measure_noise_learning).values()
         ):
-            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
-        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
-            raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
+            raise ValueError(
+                "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."
+            )
+
+        # Validate not ZNE+PEC
+        if self.pec_mitigation is True and self.zne_mitigation is True:
+            raise ValueError(
+                "'pec_mitigation' and 'zne_mitigation' options cannot be "
+                "simultaneously enabled. Set one of them to False."
+            )
+
+        return self

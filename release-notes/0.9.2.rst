@@ -1,0 +1,61 @@
+0.9.2
+=====
+
+New Features
+------------
+
+-  Added a new argument called ``session_time`` to the program_run
+   method and
+   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__.
+   Now values entered by the user for session ``max_time`` will be sent
+   to the server side as ``session_time``. This allows users to specify
+   different values for session ``max_time`` and ``max_execution_time``.
+
+-  Added the method
+   `target_history() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target_history>`__.
+   This method is similar to
+   `target() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target>`__. The
+   difference is that the new method enables the user to pass a datetime
+   parameter, to retrieve historical data from the backend.
+
+Upgrade Notes
+-------------
+
+-  Accept all options on given on level 1 and assign them to the
+   appropriate hierarchical option type. For example, if the user
+   provides ``options = {"shots": 10}`` as input to Sampler/Estimator,
+   this will be interpreted as
+   ``options = {"execution: {"shots": 10}}``.
+
+-  If a job is returned without a backend, retrieving the backend
+   through
+   `qiskit_ibm_runtime.RuntimeJob.backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#backend>`__
+   will re-retrieve data from the server and attempt to update the
+   backend. Additionally, ``job_id`` and ``backend``, which were
+   deprecated attributes of
+   `qiskit_ibm_runtime.RuntimeJob <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
+   have now been removed.
+
+-  Added a user warning when the user passes an option that is not
+   supported in Options.
+
+Bug Fixes
+---------
+
+-  Fixed a bug where the default values for ``optimization_level`` and
+   for ``resilience_level`` were not being set correctly.
+
+-  Fixed an issue where if no backend was selected,
+   ``optimization_level`` and ``resilience_level`` would default to
+   ``None``, causing the job to fail.
+
+-  If an instance is passed in to
+   `qiskit_ibm_runtime.QiskitRuntimeService.get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   and then the backend is used in a session, all jobs within the
+   session will be run from the original instance passed in.
+
+-  Removed additional decomposition of ``BlueprintCircuit``\ s in the
+   JSON encoder. This was introduced as a bugfix, but has since been
+   fixed. Still doing the decomposition led to possible problems if the
+   decomposed circuit was not in the correct basis set of the backend
+   anymore.

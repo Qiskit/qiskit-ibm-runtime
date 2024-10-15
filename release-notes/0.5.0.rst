@@ -1,0 +1,114 @@
+0.5.0
+=====
+
+Prelude
+-------
+
+This release leverages the API and Queue enhancements to become more
+runtime session aware. As a result when using the primitives (sampler
+and estimator), runtime jobs in the same session will skip to the front
+of the queue, thereby speeding up the runtime session, once it has
+started.
+
+New Features
+------------
+
+-  The ``service`` object which is an instance of
+   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   class can now be accessed from
+   `IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__ class using the
+   ``service`` property.
+
+   Ex:
+
+   .. code:: python
+
+      backend = service.get_backend("ibmq_qasm_simulator")
+      backend.service  # QiskitRuntimeService instance used to instantiate the backend
+
+Upgrade Notes
+-------------
+
+-  `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has two
+   new parameters, ``created_after`` and ``created_before``. These can
+   be used to filter jobs by creation date in local time.
+
+-  The parameters ``circuit_indices`` and ``observable_indices`` when
+   calling ``estimator`` are now deprecated and will be removed in a
+   future release. You can now pass either indices or objects using the
+   ``circuits`` and ``observables`` parameters.
+
+   Ex:
+
+   .. code:: python
+
+      with Estimator(
+        circuits=[qc1, qc2],
+        observables=[H1, H2, H3],
+        service=service,
+        options=options
+      ) as estimator:
+        # pass circuits and observables as indices
+        result = estimator(circuits=[0, 1], observables=[0, 1], parameter_values=[theta1, theta2])
+
+        # pass circuits and observables as objects
+        result = estimator(circuits=[qc1, qc2], observables=[H1, H3], parameter_values=[theta1, theta3])
+
+-  The parameters ``circuit_indices`` and ``observable_indices`` when
+   calling ``estimator`` are now deprecated and will be removed in a
+   future release. You can now pass either indices or objects using the
+   ``circuits`` and ``observables`` parameters.
+
+   Ex:
+
+   .. code:: python
+
+      with Sampler(
+        circuits=[qc1, qc2],
+        service=service,
+        options=options
+      ) as sampler:
+        # pass circuits as indices
+        result = sampler(circuits=[0, 1], parameter_values=[theta1, theta2])
+
+        # pass circuit as objects
+        result = sampler(circuits=[qc1, qc2], parameter_values=[theta2, theta3])
+
+-  The ``session_id``, which is the Job ID of the first job in a runtime
+   session can now be used as a filter in
+   `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ with
+   the parameter ``session_id``.
+
+-  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+   supports a new parameter, ``job_tags``. These tags can be used when
+   filtering jobs with
+   `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__.
+
+-  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+   supports a new parameter, ``max_execution_time``, which can be used
+   to override the default program maximum execution time. It should be
+   less than or equal to the program maximum execution time.
+
+-  `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has a
+   new parameter, ``descending``. This parameter defaults to ``True``,
+   where jobs will be returned in descending order based on creation
+   date.
+
+-  ``RuntimeJobTimeoutError`` is now raised when the ``timeout`` set in
+   `result() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#result>`__ or
+   `wait_for_final_state() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
+   expires.
+
+-  When initializing
+   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   and an invalid token is used, ``IBMNotAuthorizedError`` will be
+   raised instead of ``RequestsApiError``.
+
+-  ``IBMSampler`` class which was deprecated earlier is now removed. Use
+   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ class going forward.
+
+-  `qubit_properties() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#qubit_properties>`__
+   will now return a sub class of ``QubitProperties`` called
+   ``IBMQubitProperties`` and will expose anharmonicity in addition to
+   the t1, t2 and frequency already exposed by the ``QubitProperties``
+   class.

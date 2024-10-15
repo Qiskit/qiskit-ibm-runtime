@@ -37,6 +37,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    from qiskit import QuantumCircuit
    from qiskit import transpile
    from qiskit.visualization import plot_histogram
+   from qiskit_ibm_runtime import SamplerV2
    from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
    # Get a fake backend from the fake provider
@@ -55,8 +56,10 @@ Here is an example of using a fake backend for transpilation and simulation.
    transpiled_circuit.draw('mpl', style="iqp")
 
    # Run the transpiled circuit using the simulated fake backend
-   job = backend.run(transpiled_circuit)
-   counts = job.result().get_counts()
+   sampler = SamplerV2(backend)
+   job = sampler.run([transpiled_circuit])
+   pub_result = job.result()[0]
+   counts = pub_result.data.meas.get_counts()
    plot_histogram(counts)
 
 .. important::
@@ -75,7 +78,7 @@ Here is an example of using a fake backend for transpilation and simulation.
 
         # get a real backend from the runtime service
         service = QiskitRuntimeService()
-        backend = service.get_backend('ibmq_manila')
+        backend = service.backend('ibmq_manila')
 
         # generate a simulator that mimics the real quantum system with the latest calibration results
         backend_sim = AerSimulator.from_backend(backend)
@@ -90,7 +93,6 @@ Fake providers provide access to a list of fake backends.
     :toctree: ../stubs/
 
     FakeProviderForBackendV2
-    FakeProvider
 
 Fake Backends
 =============
@@ -105,6 +107,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
 .. autosummary::
     :toctree: ../stubs/
 
+    FakeAlgiers
     FakeAlmadenV2
     FakeArmonkV2
     FakeAthensV2
@@ -112,20 +115,26 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeBelemV2
     FakeBoeblingenV2
     FakeBogotaV2
+    FakeBrisbane
     FakeBrooklynV2
     FakeBurlingtonV2
     FakeCairoV2
     FakeCambridgeV2
     FakeCasablancaV2
+    FakeCusco
     FakeEssexV2
     FakeGeneva
     FakeGuadalupeV2
     FakeHanoiV2
     FakeJakartaV2
     FakeJohannesburgV2
+    FakeKawasaki
     FakeKolkataV2
+    FakeKyiv
+    FakeKyoto
     FakeLagosV2
     FakeLimaV2
+    FakeFractionalBackend
     FakeLondonV2
     FakeManhattanV2
     FakeManilaV2
@@ -133,12 +142,15 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeMontrealV2
     FakeMumbaiV2
     FakeNairobiV2
+    FakeOsaka
     FakeOslo
     FakeOurenseV2
     FakeParisV2
+    FakePeekskill
     FakePerth
     FakePrague
     FakePoughkeepsieV2
+    FakeQuebec
     FakeQuitoV2
     FakeRochesterV2
     FakeRomeV2
@@ -149,68 +161,16 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeSydneyV2
     .. FakeTenerifeV2 # no v2 version
     .. FakeTokyoV2 # no v2 version
+    FakeTorino
     FakeTorontoV2
     FakeValenciaV2
     FakeVigoV2
     FakeWashingtonV2
     FakeYorktownV2
-
-Fake V1 Backends
-----------------
-
-Fake V1 backends are fake backends with IBM Quantum systems snapshots implemented with
-:mod:`~qiskit.providers.backend.BackendV1` interface.
-
-.. autosummary::
-    :toctree: ../stubs/
-
-    FakeAlmaden
-    FakeArmonk
-    FakeAthens
-    FakeBelem
-    FakeBoeblingen
-    FakeBogota
-    FakeBrooklyn
-    FakeBurlington
-    FakeCairo
-    FakeCambridge
-    FakeCasablanca
-    FakeEssex
-    FakeGuadalupe
-    FakeHanoi
-    FakeJakarta
-    FakeJohannesburg
-    FakeKolkata
-    FakeLagos
-    FakeLima
-    FakeLondon
-    FakeManhattan
-    FakeManila
-    FakeMelbourne
-    FakeMontreal
-    FakeMumbai
-    FakeNairobi
-    FakeOurense
-    FakeParis
-    FakePoughkeepsie
-    FakeQuito
-    FakeRochester
-    FakeRome
-    FakeRueschlikon
-    FakeSantiago
-    FakeSingapore
-    FakeSydney
-    FakeTenerife
-    FakeTokyo
-    FakeToronto
-    FakeValencia
-    FakeVigo
-    FakeWashington
-    FakeYorktown
 """
 
 # Fake providers
-from .fake_provider import FakeProviderFactory, FakeProviderForBackendV2, FakeProvider
+from .fake_provider import FakeProviderForBackendV2
 
 # Standard fake backends with IBM Quantum systems snapshots
 from .backends import *

@@ -1,0 +1,42 @@
+0.8.0
+=====
+
+New Features
+------------
+
+-  Python 3.10 is now supported.
+
+-  Advanced resilience options can now be set under
+   ``options.resilience``. See
+   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.27/qiskit_ibm_runtime.options.ResilienceOptions>`__
+   for all available options.
+
+-  You can now specify a pair of result decoders for the
+   ``result_decoder`` parameter of
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   method. If a pair is specified, the first one is used to decode
+   interim results and the second the final results.
+
+Upgrade Notes
+-------------
+
+-  The default ``resilience_level`` option for has been changed from 0
+   to 1. In addition, the default ``optimization_level`` option has been
+   changed from 1 to 3.
+
+Deprecation Notes
+-----------------
+
+-  The transpilation options ``translation_method`` and
+   ``timing_constraints`` have been deprecated.
+
+Bug Fixes
+---------
+
+-  If a
+   `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+   instance is passed to the
+   `qiskit_ibm_runtime.Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
+   constructor, the service used to initialize the ``IBMBackend``
+   instance is used for the session instead of the default account
+   service.

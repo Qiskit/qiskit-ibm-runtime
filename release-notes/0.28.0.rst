@@ -1,0 +1,17 @@
+0.28.0 (2024-08-15)
+===================
+
+New Features
+------------
+
+- ``ResilienceOptionsV2`` has a new field ``layer_noise_model``. When this field is set, all the
+  mitigation strategies that require noise data skip the noise learning stage, and instead gather
+  the required information from ``layer_noise_model``. (`1858 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1858>`__)
+
+
+Other Notes
+-----------
+
+- The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please see the
+  `migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`__ and use the V2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
+- The ``service`` parameter is now required in ``Session.from_id()``. (`1868 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1868>`__)

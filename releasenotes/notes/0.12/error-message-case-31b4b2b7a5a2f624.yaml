@@ -1,4 +1,0 @@
----
-fixes:
-  - |
-    Job error messages will no longer be returned in all uppercase.

@@ -1,0 +1,62 @@
+0.20.0
+======
+
+New Features
+------------
+
+-  Add ``dd_barrier`` optional input to
+   `PadDynamicalDecoupling <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
+   constructor to identify portions of the circuit to apply dynamical
+   decoupling (dd) on selectively. If this string is contained in the
+   label of a barrier in the circuit, dd is applied on the delays ending
+   with it (on the same qubits); otherwise, it is not applied.
+
+-  Python 3.12 is now supported.
+
+-  Sessions will now be started with a new ``/sessions`` endpoint that
+   allows for different execution modes. Batch mode is now supported
+   through ``Batch``, and `Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
+   will work the same as way as before. Please see
+   `run/sessions <https://docs.quantum.ibm.com/guides/sessions>`__ for more information.
+
+   Note that ``Session`` and ``Batch`` created from
+   ``qiskit-ibm-runtime`` prior to this release will no longer be
+   supported after March 31, 2024. Please update your
+   ``qiskit-ibm-runtime`` version as soon as possible before this date.
+
+   Also note that using simulators with sessions is no longer supported.
+   Users can still start sessions with simulators without any issues but
+   a session will not actually be created. There will be no session ID.
+
+-  Sessions started with
+   `qiskit_ibm_runtime.IBMBackend.open_session() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#open_session>`__
+   will use the new ``/sessions`` endpoint.
+
+   The sessions functionality will not change but note that
+   ``backend.run()`` sessions prior to this release will no longer be
+   supported after March 31, 2024. Please update your
+   ``qiskit-ibm-runtime`` version as soon as possible before this date.
+
+Deprecation Notes
+-----------------
+
+-  Circuits that do not match the target hardware definition will no
+   longer be supported after March 1, 2024. See the transpilation
+   documentation (`transpile <https://docs.quantum.ibm.com/guides/transpile>`__) for instructions to
+   transform circuits and the primitive examples
+   (`run/primitives-examples <https://docs.quantum.ibm.com/guides/primitives-examples>`__) to see this
+   coupled with operator transformations.
+
+Bug Fixes
+---------
+
+-  Fix assignment of instruction durations when scheduling circuits with
+   control flow. Prior to this fix, the indices for instructions on
+   inner blocks were not mapped to the physical indices in the outer
+   dag.
+
+Other Notes
+-----------
+
+-  The ``InstructionDurations`` durations input is now also required for
+   the constructor of ``PadDelay``.

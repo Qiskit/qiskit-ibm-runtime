@@ -1,0 +1,48 @@
+0.12.1
+======
+
+New Features
+------------
+
+-  Users can use a new environment variable, ``USAGE_DATA_OPT_OUT`` to
+   opt out of user module usage tracking by setting this value to
+   ``True``. Additionally, only certain qiskit modules will be tracked
+   instead of all modules that begin with qiskit or qiskit\_.
+
+-  Users can now pass in a value of ``default`` to the
+   ``channel_strategy`` parameter in
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__.
+   Now, if an account is configured with a certain channel strategy, the
+   user can override it by passing in ``default``.
+
+-  The Sampler and Estimator primitives have been enhanced to
+   incorporate custom validation procedures when the channel_strategy
+   property within the :class:qiskit_ibm_runtime.QiskitRuntimeService is
+   configured as “q-ctrl.” This customized validation logic effectively
+   rectifies incorrect input options and safeguards users against
+   inadvertently disabling Q-CTRL’s performance enhancements.
+
+Bug Fixes
+---------
+
+-  Retrieving backend properties with
+   `properties() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#properties>`__ now
+   supports passing a ``datetime`` parameter to retrieve properties from
+   a past date.
+
+-  The ``noise_factors`` and ``extrapolator`` options in
+   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.27/qiskit_ibm_runtime.options.ResilienceOptions>`__
+   will now default to ``None`` unless ``resilience_level`` is set to 2.
+   Only options relevant to the resilience level will be set, so when
+   using ``resilience_level`` 2, ``noise_factors`` will still default to
+   ``(1, 3, 5)`` and ``extrapolator`` will default to
+   ``LinearExtrapolator``. Additionally, options with a value of
+   ``None`` will no longer be sent to the server.
+
+-  Job error messages will no longer be returned in all uppercase.
+
+-  The max_execution_time option is now based on system execution time
+   instead of wall clock time. System execution time is the amount of
+   time that the system is dedicated to processing your job. If a job
+   exceeds this time limit, it is forcibly cancelled. Simulator jobs
+   continue to use wall clock time.

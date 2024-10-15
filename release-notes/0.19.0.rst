@@ -1,0 +1,11 @@
+0.19.0
+======
+
+Upgrade Notes
+-------------
+
+-  qiskit-ibm-provider is pending deprecation, and therefore will no
+   longer be a dependency for qiskit-ibm-runtime.
+
+-  qiskit-ibm-runtime is now compatible with Qiskit versions >= 0.45,
+   including 1.0.0.

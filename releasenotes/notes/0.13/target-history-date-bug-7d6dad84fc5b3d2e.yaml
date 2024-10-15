@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixed a bug in :meth:`~qiskit_ibm_runtime.IBMBackend.target_history` where
-    the datetime parameter was not being used to retrieve backend properties from the 
-    specified date.
