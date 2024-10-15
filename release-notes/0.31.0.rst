@@ -1,0 +1,17 @@
+0.31.0 (2024-10-15)
+===================
+
+New Features
+------------
+
+- Added Noisy Estimator Analyzer Tool (NEAT), a class to help understand the expected performance of Estimator jobs. (`1950 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1950>`__)
+- Updated the ISA check to validate that the ``rzz`` angle is between ``[0, pi/2]``. (`1953 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1953>`__)
+
+Bug Fixes
+---------
+- Fixed an issue with ISA validation where a change related to connectivity inside control operations was not
+  applied correctly. (`1954 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1954>`__)
+
+Other Notes
+-----------
+- Fake V1 backends have been removed. (`1946 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1946>`__)
