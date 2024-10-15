@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Added Noisy Estimator Analyzer Tool (or NEAT), a class to help understand the expected performance of estimator jobs. (`1950 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1950>`__)
+- Added Noisy Estimator Analyzer Tool (NEAT), a class to help understand the expected performance of Estimator jobs. (`1950 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1950>`__)
 - Updated the ISA check to validate that the ``rzz`` angle is between ``[0, pi/2]``. (`1953 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1953>`__)
 
 Bug Fixes
