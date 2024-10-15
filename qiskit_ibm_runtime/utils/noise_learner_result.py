@@ -227,7 +227,7 @@ class LayerError:
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
-        high_scale: Optional[float] = None,
+        highest_rate: Optional[float] = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
@@ -240,11 +240,11 @@ class LayerError:
                 to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
-            color_out_of_scale: The color used for rates whose value is above ``high_scale``.
+            color_out_of_scale: The color used for rates whose value is above ``highest_rate``.
             num_edge_segments: The number of equal-sized segments that edges are made of.
             edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
-            high_scale: The highest rate, used to normalize all other rates before choosing their
+            highest_rate: The highest rate, used to normalize all other rates before choosing their
                 colors. If ``None``, it defaults to the highest value found in the ``layer_error``.
             background_color: The background color.
             radius: The radius of the pie charts representing the qubits.
@@ -263,7 +263,7 @@ class LayerError:
             num_edge_segments,
             edge_width,
             height,
-            high_scale,
+            highest_rate,
             background_color,
             radius,
             width,

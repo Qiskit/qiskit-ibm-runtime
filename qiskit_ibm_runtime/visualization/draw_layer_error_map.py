@@ -35,7 +35,7 @@ def draw_layer_error_map(
     num_edge_segments: int = 16,
     edge_width: float = 4,
     height: int = 500,
-    high_scale: Optional[float] = None,
+    highest_rate: Optional[float] = None,
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
@@ -49,11 +49,11 @@ def draw_layer_error_map(
             to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
-        color_out_of_scale: The color used for rates whose value is above ``high_scale``.
+        color_out_of_scale: The color used for rates whose value is above ``highest_rate``.
         num_edge_segments: The number of equal-sized segments that edges are made of.
         edge_width: The line width of the edges in pixels.
         height: The height of the returned figure.
-        high_scale: The highest rate, used to normalize all other rates before choosing their
+        highest_rate: The highest rate, used to normalize all other rates before choosing their
             colors. If ``None``, it defaults to the highest value found in the ``layer_error``.
         background_color: The background color.
         radius: The radius of the pie charts representing the qubits.
@@ -109,7 +109,7 @@ def draw_layer_error_map(
         rates_2q[edge][str(pauli[[err_idxs[0], err_idxs[1]]])] = rate
         max_rate = max(max_rate, rate)
 
-    high_scale = high_scale if high_scale else max_rate
+    highest_rate = highest_rate if highest_rate else max_rate
 
     # A discreet colorscale that contains 1000 hues.
     discreet_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
@@ -132,7 +132,7 @@ def draw_layer_error_map(
             ]
             color = [
                 get_rgb_color(
-                    discreet_colorscale, v / high_scale, color_no_data, color_out_of_scale
+                    discreet_colorscale, v / highest_rate, color_no_data, color_out_of_scale
                 )
                 for v in all_vals
             ]
@@ -185,7 +185,7 @@ def draw_layer_error_map(
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
             fillcolor = get_rgb_color(
-                discreet_colorscale, rate / high_scale, color_no_data, color_out_of_scale
+                discreet_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
             )
             shapes += [
                 {
@@ -208,7 +208,7 @@ def draw_layer_error_map(
     marker_colors = []
     for qubit in rates_1q:
         max_qubit_rate = max(rates_1q[qubit].values())
-        marker_colors.append(max_qubit_rate if max_qubit_rate <= high_scale else high_scale)
+        marker_colors.append(max_qubit_rate if max_qubit_rate <= highest_rate else highest_rate)
     nodes = go.Scatter(
         x=xs,
         y=ys,
