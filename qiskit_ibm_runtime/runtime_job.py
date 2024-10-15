@@ -369,7 +369,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
     ) -> None:
-        """Start streaming job results.
+        """(DEPRECATED) Start streaming job results.
 
         Args:
             callback: Callback function to be invoked for any interim results and final result.
@@ -398,7 +398,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
 
     @deprecate_function("interim_results()", "0.25", "", stacklevel=1)
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
-        """Return the interim results of the job.
+        """(DEPRECATED) Return the interim results of the job.
 
         Args:
             decoder: A :class:`ResultDecoder` subclass used to decode interim results.
