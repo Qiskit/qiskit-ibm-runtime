@@ -506,7 +506,7 @@ class FakeBackendV2(BackendV2):
             self._set_props_dict_from_json()
 
         properties = BackendProperties.from_dict(self._props_dict)
-        basis_gates = self.operation_names
+        basis_gates = self.configuration().basis_gates
         num_qubits = self.num_qubits
         dt = self.dt  # pylint: disable=invalid-name
 
