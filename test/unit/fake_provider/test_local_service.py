@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Test of generated fake backends."""
+import logging
 from ddt import data, ddt
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -24,6 +25,11 @@ from ...ibm_test_case import IBMTestCase
 @ddt
 class QiskitRuntimeLocalServiceTest(IBMTestCase):
     """Qiskit runtime local service test."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Initial class level setup."""
+        logging.basicConfig(level=logging.INFO)
 
     def test_backend(self):
         """Tests the ``backend`` method."""
