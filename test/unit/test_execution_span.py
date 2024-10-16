@@ -140,20 +140,32 @@ class TestDoubleSliceSpan(IBMTestCase):
         }
         self.span1 = DoubleSliceSpan(self.start1, self.stop1, self.slices1)
 
+        self.start2 = datetime(2024, 10, 16, 11, 9, 20)
+        self.stop2 = datetime(2024, 10, 16, 11, 9, 30)
+        self.slices2 = {
+            0: ((5, 100), slice(3, 5), slice(20, 40)),
+            1: ((1, 5, 3), slice(2, 5), slice(3)),
+        }
+        self.span2 = DoubleSliceSpan(self.start2, self.stop2, self.slices2)
+
     def test_limits(self):
         """Test the start and stop properties"""
         self.assertEqual(self.span1.start, self.start1)
         self.assertEqual(self.span1.stop, self.stop1)
+        self.assertEqual(self.span2.start, self.start2)
+        self.assertEqual(self.span2.stop, self.stop2)
 
     def test_equality(self):
         """Test the equality method."""
         self.assertEqual(self.span1, self.span1)
         self.assertEqual(self.span1, DoubleSliceSpan(self.start1, self.stop1, self.slices1))
         self.assertNotEqual(self.span1, "aoeu")
+        self.assertNotEqual(self.span1, self.span2)
 
     def test_duration(self):
         """Test the duration property"""
         self.assertEqual(self.span1.duration, 4)
+        self.assertEqual(self.span2.duration, 10)
 
     def test_repr(self):
         """Test the repr method"""
@@ -163,20 +175,41 @@ class TestDoubleSliceSpan(IBMTestCase):
     def test_size(self):
         """Test the size property"""
         self.assertEqual(self.span1.size, 1 * 5 + 3 * 3)
+        self.assertEqual(self.span2.size, 2 * 20 + 3 * 3)
 
     def test_pub_idxs(self):
         """Test the pub_idxs property"""
         self.assertEqual(self.span1.pub_idxs, [0, 2])
+        self.assertEqual(self.span2.pub_idxs, [0, 1])
 
     def test_mask(self):
         """Test the mask() method"""
-        mask2 = np.zeros((1, 100), dtype=bool)
-        mask2[0][4:9] = True
-        npt.assert_array_equal(self.span1.mask(2), mask2)
+        mask1 = np.zeros((1, 100), dtype=bool)
+        mask1[0][4:9] = True
+        npt.assert_array_equal(self.span1.mask(2), mask1)
+
+        mask2 = [[[0, 0, 0], [0, 0, 0], [1, 1, 1], [1, 1, 1], [1, 1, 1]]]
+        npt.assert_array_equal(self.span2.mask(1), mask2)
+
+    @ddt.data(
+        (0, True, True),
+        ([0, 1], True, True),
+        ([0, 1, 2], True, True),
+        ([1, 2], True, True),
+        ([1], False, True),
+        (2, True, False),
+        ([0, 2], True, True),
+    )
+    @ddt.unpack
+    def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
+        """The the contains_pub method"""
+        self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
+        self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
         """The the filter_by_pub method"""
         self.assertEqual(self.span1.filter_by_pub([]), DoubleSliceSpan(self.start1, self.stop1, {}))
+        self.assertEqual(self.span2.filter_by_pub([]), DoubleSliceSpan(self.start2, self.stop2, {}))
 
         self.assertEqual(
             self.span1.filter_by_pub([1, 0]),
