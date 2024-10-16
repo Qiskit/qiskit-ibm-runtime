@@ -42,7 +42,14 @@ class NoiseLearnerOptions(OptionsV2):
         one of these Paulis (for example, ``XI``, ``IX``, and ``XX``) with a single circuit, it is
         possible to measure all these ``16`` Paulis by implementing only ``9`` circuits.
         Parallelizing these measurement tasks in the optimal way allows then measuring the ``16``
-        Paulis for all of the layer's two-qubit subsystems with only ``9`` circuits.
+        Paulis for all of the layer's two-qubit subsystems with only ``9`` circuits. More details
+        in Ref. [1].
+
+    References:
+        1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
+           cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
+           Nature Physics volume 19, pages 1116–1121 (2023).
+           `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
     max_layers_to_learn: Union[UnsetType, int, None] = Unset
