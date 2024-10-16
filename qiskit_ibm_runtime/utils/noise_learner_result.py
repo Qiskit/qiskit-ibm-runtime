@@ -240,7 +240,7 @@ class LayerError:
                 to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
-            color_out_of_scale: The color used for rates whose value is above ``highest_rate``.
+            color_out_of_scale: The color used for rates with value greater than ``highest_rate``.
             num_edge_segments: The number of equal-sized segments that edges are made of.
             edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
