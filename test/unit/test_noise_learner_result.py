@@ -13,13 +13,13 @@
 """Tests for the classes used to instantiate noise learner results."""
 
 from unittest import skipIf
-from ddt import ddt, data
+from ddt import ddt
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from qiskit_ibm_runtime.fake_provider import FakeKyiv
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 
 from ..ibm_test_case import IBMTestCase
@@ -95,9 +95,6 @@ class TestLayerError(IBMTestCase):
     def setUp(self):
         super().setUp()
 
-        # A local service
-        self.service = QiskitRuntimeLocalService()
-
         # A set of circuits
         c1 = QuantumCircuit(2)
         c1.cx(0, 1)
@@ -121,7 +118,7 @@ class TestLayerError(IBMTestCase):
 
         # Another set of errors used in the visualization tests
         circuit = QuantumCircuit(4)
-        qubits = [0, 1, 2, 3]
+        qubits = [1, 2, 3, 4]
         generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
         rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
         self.layer_error_viz = LayerError(circuit, qubits, PauliLindbladError(generators, rates))
@@ -167,15 +164,12 @@ class TestLayerError(IBMTestCase):
             self.layer_error_viz.draw_map(AerSimulator())
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
-    @data(["fake_hanoi", 44], ["fake_kyiv", 160])
-    def test_plotting(self, inputs):
+    def test_plotting(self):
         r"""
         Tests the `draw_map` function to make sure that it produces the right figure.
         """
-        backend_name, n_traces = inputs
-        backend = self.service.backend(backend_name)
         fig = self.layer_error_viz.draw_map(
-            backend,
+            embedding=FakeKyiv(),
             color_no_data="blue",
             colorscale="reds",
             radius=0.2,
@@ -184,4 +178,4 @@ class TestLayerError(IBMTestCase):
         )
 
         self.assertIsInstance(fig, go.Figure)
-        self.assertEqual(len(fig.data), n_traces)
+        self.assertEqual(len(fig.data), 160)
