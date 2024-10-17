@@ -69,13 +69,14 @@ def run_quantum_and_cloud_fake(func):
 
 
 def _get_integration_test_config():
-    token, url, instance = (
+    token, url, instance, qpu, channel_strategy = (
         os.getenv("QISKIT_IBM_TOKEN"),
         os.getenv("QISKIT_IBM_URL"),
         os.getenv("QISKIT_IBM_INSTANCE"),
+        os.getenv("QISKIT_IBM_QPU"),
     )
     channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
-    return channel, token, url, instance
+    return channel, token, url, instance, qpu, channel_strategy
 
 
 def run_integration_test(func):
@@ -115,7 +116,7 @@ def integration_test_setup(
                 ["ibm_cloud", "ibm_quantum"] if supported_channel is None else supported_channel
             )
 
-            channel, token, url, instance = _get_integration_test_config()
+            channel, token, url, instance, qpu = _get_integration_test_config()
             if not all([channel, token, url]):
                 raise Exception("Configuration Issue")  # pylint: disable=broad-exception-raised
 
@@ -137,6 +138,7 @@ def integration_test_setup(
                 token=token,
                 url=url,
                 instance=instance,
+                qpu=qpu,
                 service=service,
             )
             kwargs["dependencies"] = dependencies
@@ -153,6 +155,7 @@ class IntegrationTestDependencies:
 
     service: QiskitRuntimeService
     instance: Optional[str]
+    qpu: str
     token: str
     channel: str
     url: str
@@ -189,13 +192,13 @@ def integration_test_setup_with_backend(
             if backend_name:
                 _backend = service.backend(name=backend_name)
             else:
+                _backend = service.backend(name=self.dependencies.qpu)
+
+            if not _backend:
                 _backend = service.least_busy(
                     min_num_qubits=min_num_qubits,
                     simulator=simulator,
                 )
-            if not _backend:
-                # pylint: disable=broad-exception-raised
-                raise Exception("Unable to find a suitable backend.")
 
             kwargs["backend"] = _backend
             func(self, *args, **kwargs)
