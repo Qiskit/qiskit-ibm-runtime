@@ -13,6 +13,7 @@
 """Integration tests for NoiseLearner."""
 
 from copy import deepcopy
+from unittest import SkipTest
 
 from qiskit.circuit import QuantumCircuit
 
@@ -80,6 +81,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
+        if self._backend.simulator:
+            raise SkipTest("Skip if simulator backend is used.")
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=self._backend, options=options)
