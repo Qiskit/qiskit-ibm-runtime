@@ -31,19 +31,19 @@ class NoiseLearnerOptions(OptionsV2):
 
         The total number of unique circuits implemented to learn the noise of a single layer
         depends solely on :attr:`~layer_pair_depths` and :attr:`~num_randomizations`. For example,
-        if``layer_pair_depths`` contains six depths and ``num_randomizations`` is set to ``32``,
-        the noise learner program executes a total of ``6 * 9`` unique circuits per layer, each
-        one with ``32`` Pauli-twirling randomizations (at :attr:`~shots_per_randomization` each).
+        if ``layer_pair_depths`` contains six depths and ``num_randomizations`` is set to ``32``,
+        the noise learning stage executes a total of ``6 * 9`` unique circuits per layer, each
+        one with ``32`` randomizations (at :attr:`~shots_per_randomization` each).
 
         The number ``9`` above is the number of unique circuits that need to be implemented to
-        learn the noise for all the two-qubit subsystem in the given layer. Indeed, learning the
-        noise for a single one of these subsystems requires measuring all the ``16`` two-qubit
-        Paulis on that subsystem. Taking advantage of commutation relations to measure more than
-        one of these Paulis (for example, ``XI``, ``IX``, and ``XX``) with a single circuit, it is
-        possible to measure all these ``16`` Paulis by implementing only ``9`` circuits.
-        Parallelizing these measurement tasks in the optimal way allows then measuring the ``16``
-        Paulis for all of the layer's two-qubit subsystems with only ``9`` circuits. More details
-        in Ref. [1].
+        learn the noise for all the two-qubit subsystem in the given layer by performing local
+        measurements. Indeed, learning the noise for a single one of these subsystems requires
+        measuring all the ``16`` two-qubit Paulis on that subsystem. Taking advantage of
+        commutation relations to measure more than one of these Paulis (for example, ``XI``,
+        ``IX``, and ``XX``) with a single circuit, it is possible to measure all these ``16``
+        Paulis by implementing only ``9`` circuits. Parallelizing these measurement tasks in the
+        optimal way allows then measuring the ``16`` Paulis for all of the layer's two-qubit
+        subsystems with only ``9`` circuits. More details in Ref. [1].
 
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
@@ -71,11 +71,13 @@ class NoiseLearnerOptions(OptionsV2):
 
     num_randomizations: Union[UnsetType, int] = Unset
     r"""The number of random circuits to use per learning circuit configuration.
-    
+
     A configuration is a measurement basis and depth setting. For example, if your experiment
-    has six depths, then setting this value to 32 will result in a total of ``32 * 9 * 6`` circuits
-    that need to be executed (see the note in the docstring for :class:`~.NoiseLearnerOptions` for
-    mode details), at :attr:`~shots_per_randomization` each. Default: 32.
+    has six depths, then setting this value to 32 will result in a total of ``32 * 9 * 6``
+    circuits that need to be executed (where ``9`` is the number of circuits that need to be
+    implemented to measure all the required observables, see the note in the docstring for
+    :class:`~.NoiseLearnerOptions` for mode details), at :attr:`~shots_per_randomization`
+    each.
     """
 
     layer_pair_depths: Union[UnsetType, List[int]] = Unset
