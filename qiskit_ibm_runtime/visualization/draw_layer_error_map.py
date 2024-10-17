@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Tuple, Union, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
@@ -31,9 +31,11 @@ def draw_layer_error_map(
     embedding: Union[Embedding, BackendV2],
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
+    color_out_of_scale: str = "lightgreen",
     num_edge_segments: int = 16,
     edge_width: float = 4,
     height: int = 500,
+    highest_rate: Optional[float] = None,
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
@@ -47,9 +49,12 @@ def draw_layer_error_map(
             to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
         colorscale: The colorscale used to show the rates of ``layer_error``.
         color_no_data: The color used for qubits and edges for which no data is available.
+        color_out_of_scale: The color used for rates with value greater than ``highest_rate``.
         num_edge_segments: The number of equal-sized segments that edges are made of.
         edge_width: The line width of the edges in pixels.
         height: The height of the returned figure.
+        highest_rate: The highest rate, used to normalize all other rates before choosing their
+            colors. If ``None``, it defaults to the highest value found in the ``layer_error``.
         background_color: The background color.
         radius: The radius of the pie charts representing the qubits.
         width: The width of the returned figure.
@@ -83,24 +88,28 @@ def draw_layer_error_map(
     # A set of unique edges ``(i, j)``, with ``i < j``.
     edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
 
-    # The highest rate, used to normalize all other rates before choosing their colors.
-    high_scale = 0
+    # The highest rate
+    max_rate = 0
 
     # Initialize a dictionary of one-qubit errors
+    qubits = layer_error.qubits
     error_1q = layer_error.error.restrict_num_bodies(1)
-    rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in layer_error.qubits}
+    rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in qubits}
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
-        qubit = np.where(pauli.x | pauli.z)[0][0]
-        rates_1q[qubit][str(pauli[qubit])] = rate
-        high_scale = max(high_scale, rate)
+        qubit_idx = np.where(pauli.x | pauli.z)[0][0]
+        rates_1q[qubits[qubit_idx]][str(pauli[qubit_idx])] = rate
+        max_rate = max(max_rate, rate)
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.restrict_num_bodies(2)
-    rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {qubits: {} for qubits in edges}
+    rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {edge: {} for edge in edges}
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
-        qubits = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
-        rates_2q[qubits][str(pauli[[qubits[0], qubits[1]]])] = rate
-        high_scale = max(high_scale, rate)
+        err_idxs = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
+        edge = (qubits[err_idxs[0]], qubits[err_idxs[1]])
+        rates_2q[edge][str(pauli[[err_idxs[0], err_idxs[1]]])] = rate
+        max_rate = max(max_rate, rate)
+
+    highest_rate = highest_rate if highest_rate else max_rate
 
     # A discreet colorscale that contains 1000 hues.
     discreet_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
@@ -122,7 +131,10 @@ def draw_layer_error_map(
                 for i in range(num_edge_segments)
             ]
             color = [
-                get_rgb_color(discreet_colorscale, v / high_scale, color_no_data) for v in all_vals
+                get_rgb_color(
+                    discreet_colorscale, v / highest_rate, color_no_data, color_out_of_scale
+                )
+                for v in all_vals
             ]
             hoverinfo_2q = ""
             for pauli, rate in rates_2q[(q1, q2)].items():
@@ -172,7 +184,9 @@ def draw_layer_error_map(
         hoverinfo = ""
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
-            fillcolor = get_rgb_color(discreet_colorscale, rate / high_scale, color_no_data)
+            fillcolor = get_rgb_color(
+                discreet_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
+            )
             shapes += [
                 {
                     "type": "path",
@@ -191,12 +205,16 @@ def draw_layer_error_map(
         fig.add_annotation(x=x + 0.3, y=y + 0.4, text=f"{qubit}", showarrow=False)
 
     # Add the hoverinfo for the pie charts
+    marker_colors = []
+    for qubit in rates_1q:
+        max_qubit_rate = max(rates_1q[qubit].values())
+        marker_colors.append(max_qubit_rate if max_qubit_rate <= highest_rate else highest_rate)
     nodes = go.Scatter(
         x=xs,
         y=ys,
         mode="markers",
         marker={
-            "color": list({qubit: max(rates_1q[qubit].values()) for qubit in rates_1q}.values()),
+            "color": marker_colors,
             "colorscale": colorscale,
             "showscale": True,
         },

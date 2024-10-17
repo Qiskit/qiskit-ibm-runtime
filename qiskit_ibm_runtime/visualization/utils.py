@@ -46,7 +46,9 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
     return path
 
 
-def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> str:
+def get_rgb_color(
+    discreet_colorscale: List[str], val: float, default: str, color_out_of_scale: str
+) -> str:
     r"""
     Maps a float to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
@@ -55,6 +57,7 @@ def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> s
         discreet_colorscale: A discreet colorscale.
         val: A value to map to a color.
         default: A default color returned when ``val`` is ``0``.
+        color_out_of_scale: The color that is returned when ``val`` is larger than ``1``.
 
     Raises:
         ValueError: If the colorscale contains more or less than ``1000`` hues.
@@ -62,7 +65,9 @@ def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> s
     if len(discreet_colorscale) != 1000:
         raise ValueError("Invalid ``discreet_colorscale.``")
 
-    if val >= 1:
+    if val > 1:
+        return color_out_of_scale
+    if val == 1:
         return discreet_colorscale[-1]
     if val == 0:
         return default
