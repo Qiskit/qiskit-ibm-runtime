@@ -10,7 +10,26 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Functions and classes for debugging and analyzing qiskit-ibm-runtime jobs."""
+"""
+=======================================================
+Debugging tools (:mod:`qiskit_ibm_runtime.debug_tools`)
+=======================================================
+
+.. currentmodule:: qiskit_ibm_runtime.debug_tools
+
+The tools for debugging and analyzing qiskit-ibm-runtime jobs.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   Neat
+   NeatResult
+   NeatPubResult
+
+"""
 
 from .neat import Neat
 from .neat_results import NeatPubResult, NeatResult
