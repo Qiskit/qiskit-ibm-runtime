@@ -39,7 +39,7 @@ class LayerNoiseLearningOptions:
         depends solely on :attr:`~layer_pair_depths` and :attr:`~num_randomizations`. For example,
         if ``layer_pair_depths`` contains six depths and ``num_randomizations`` is set to ``32``,
         the noise learning stage executes a total of ``6 * 9`` unique circuits per layer, each
-        one with ``32`` Pauli-twirling randomizations (at :attr:`~shots_per_randomization` each).
+        one with ``32`` randomizations (at :attr:`~shots_per_randomization` each).
 
         The number ``9`` above is the number of unique circuits that need to be implemented to
         learn the noise for all the two-qubit subsystem in the given layer. Indeed, learning the
