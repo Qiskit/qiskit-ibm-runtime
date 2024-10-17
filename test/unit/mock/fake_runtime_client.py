@@ -432,11 +432,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    # pylint: disable=unused-argument
-    def list_backends(
-        self,
-        hgp: Optional[str] = None,
-    ) -> List[str]:
+    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(hgp)]
 

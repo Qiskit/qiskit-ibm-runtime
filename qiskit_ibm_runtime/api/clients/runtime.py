@@ -277,10 +277,10 @@ class RuntimeClient(BaseBackendClient):
         Args:
             hgp: Filter by hub/group/project.
 
-
         Returns:
             IBM backends available for this service instance.
         """
+
         return self._api.backends(hgp=hgp)["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
