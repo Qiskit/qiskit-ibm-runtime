@@ -67,7 +67,7 @@ class DoubleSliceSpan(ExecutionSpan):
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
         shape, args_sl, shots_sl = self._data_slices[pub_idx]
-        mask = np.zeros((*shape[:-1], shape[-1]), dtype=np.bool_)
+        mask = np.zeros(shape, dtype=np.bool_)
         mask.reshape(np.prod(shape[:-1]), shape[-1])[(args_sl, shots_sl)] = True
         return mask
 
