@@ -122,7 +122,18 @@ class TestIBMJob(IBMIntegrationTestCase):
             backend_name=self.sim_backend.name, limit=3, pending=False
         )
         for job in completed_job_list:
-            self.assertTrue(job.status() in ["DONE", "CANCELLED", "ERROR"])
+            self.assertTrue(
+                job.status()
+                # Update when RuntimeJob is removed in favor of RuntimeJobV2
+                in [
+                    "DONE",
+                    "CANCELLED",
+                    "ERROR",
+                    JobStatus.DONE,
+                    JobStatus.CANCELLED,
+                    JobStatus.ERROR,
+                ]
+            )
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
@@ -162,7 +173,16 @@ class TestIBMJob(IBMIntegrationTestCase):
 
         for job in backend_jobs:
             self.assertTrue(
-                job.status() in ["DONE", "CANCELLED", "ERROR"],
+                job.status()
+                # Update when RuntimeJob is removed in favor of RuntimeJobV2
+                in [
+                    "DONE",
+                    "CANCELLED",
+                    "ERROR",
+                    JobStatus.DONE,
+                    JobStatus.CANCELLED,
+                    JobStatus.ERROR,
+                ],
                 "Job {} has status {} when it should be DONE, CANCELLED, or ERROR".format(
                     job.job_id(), job.status()
                 ),
