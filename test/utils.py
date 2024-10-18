@@ -314,7 +314,6 @@ def get_mocked_backend(
     """Return a mock backend."""
 
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
-    mock_service._channel_strategy = None
     mock_api_client = mock.MagicMock()
     mock_service._api_client = mock_api_client
 

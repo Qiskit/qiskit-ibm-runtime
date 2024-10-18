@@ -69,10 +69,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device_name = get_real_device(service)
-        real_device = service.backend(real_device_name)
-        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
-        _ = self._run_program(service, circuits=pm.run([bell()] * 10), backend=real_device_name)
-        job = self._run_program(service, circuits=pm.run([bell()] * 2), backend=real_device_name)
+        _ = self._run_program(service, circuits=[(bell(),)] * 10, backend=real_device_name)
+        job = self._run_program(service, circuits=[(bell(),)] * 2, backend=real_device_name)
         wait_for_status(job, "QUEUED")
         if not cancel_job_safe(job, self.log):
             return
@@ -149,7 +147,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.qpu)
         job.wait_for_final_state()
         self.assertEqual("DONE", job.status())
 
@@ -167,7 +165,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.qpu)
         status = job.status()
         while status not in ["DONE", "CANCELLED", "ERROR"]:
             status = job.status()
