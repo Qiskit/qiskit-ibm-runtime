@@ -29,4 +29,9 @@ Functions
     draw_layer_error_map
 """
 
-from .draw_layer_error_map import draw_layer_error_map
+from .draw_layer_error import (
+    draw_layer_error_map,
+    draw_layer_error_1q_bar_plot,
+    draw_layer_error_2q_bar_plot,
+    draw_layer_errors_swarm,
+)
