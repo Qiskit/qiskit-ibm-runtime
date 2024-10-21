@@ -491,6 +491,7 @@ class TestSampler(IBMIntegrationTestCase):
         sampler.options.dynamical_decoupling.sequence_type = "XX"
         sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
         sampler.options.dynamical_decoupling.scheduling_method = "asap"
+        sampler.options.dynamical_decoupling.skip_reset_qubits = True
 
         bell, _, _ = self._cases[1]
         bell = transpile(bell, real_device)

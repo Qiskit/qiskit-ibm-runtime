@@ -77,7 +77,6 @@ class Runtime(RestAdapterBase):
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,
-        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -96,7 +95,6 @@ class Runtime(RestAdapterBase):
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
-            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -125,8 +123,6 @@ class Runtime(RestAdapterBase):
             payload["hub"] = hub
             payload["group"] = group
             payload["project"] = project
-        if channel_strategy:
-            payload["channel_strategy"] = channel_strategy
         if private:
             payload["private"] = True
         data = json.dumps(payload, cls=RuntimeEncoder)
@@ -216,14 +212,12 @@ class Runtime(RestAdapterBase):
         self,
         hgp: Optional[str] = None,
         timeout: Optional[float] = None,
-        channel_strategy: Optional[str] = None,
     ) -> Dict[str, List[str]]:
         """Return a list of IBM backends.
 
         Args:
             hgp: The service instance to use, only for ``ibm_quantum`` channel, in h/g/p format.
             timeout: Number of seconds to wait for the request.
-            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -232,18 +226,7 @@ class Runtime(RestAdapterBase):
         params = {}
         if hgp:
             params["provider"] = hgp
-        if channel_strategy:
-            params["channel_strategy"] = channel_strategy
         return self.session.get(url, params=params, timeout=timeout).json()
-
-    def is_qctrl_enabled(self) -> bool:
-        """Return boolean of whether or not the instance has q-ctrl enabled.
-
-        Returns:
-            Boolean value.
-        """
-        url = self.get_url("cloud_instance")
-        return self.session.get(url).json().get("qctrl_enabled")
 
     def usage(self) -> Dict[str, Any]:
         """Return monthly open plan usage information.

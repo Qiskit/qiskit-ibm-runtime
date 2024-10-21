@@ -27,7 +27,6 @@ from .runtime_job_v2 import RuntimeJobV2
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
 from .utils.deprecation import issue_deprecation_msg
-from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .utils import validate_estimator_pubs
 
 # pylint: disable=unused-import,cyclic-import
@@ -119,8 +118,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
             options: Estimator options, see :class:`EstimatorOptions` for detailed description.
 
-        Raises:
-            NotImplementedError: If "q-ctrl" channel strategy is used.
         """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
@@ -166,10 +163,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
-
-        if self._service._channel_strategy == "q-ctrl":
-            qctrl_validate_v2(options)
-            return
 
         if (
             options.get("resilience", {}).get("pec_mitigation", False) is True
