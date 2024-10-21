@@ -307,11 +307,15 @@ def draw_layer_error_1q_bar_plot(
         raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
+    fig.update_layout(
+        xaxis_title="generators",
+        yaxis_title="rates",
+    )
 
     if grouping not in (allowed_groupings := ["qubit", "generator"]):
         raise ValueError(f"Grouping '{grouping}' not supported, use one of {allowed_groupings}.")
 
-    num_qubits = len(qubits) if qubits else len(layer_error.num_qubits)
+    num_qubits = len(qubits) if qubits else layer_error.num_qubits
     colors = [colors] * num_qubits if not colors else colors
     if len(colors) != num_qubits:
         raise ValueError(f"Expected {num_qubits} colors, found {len(colors)}.")
@@ -392,8 +396,12 @@ def draw_layer_error_2q_bar_plot(
         raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
+    fig.update_layout(
+        xaxis_title="generators",
+        yaxis_title="rates",
+    )
 
-    if grouping not in (allowed_groupings := ["edge", "error"]):
+    if grouping not in (allowed_groupings := ["edge", "generator"]):
         raise ValueError(f"Grouping '{grouping}' not supported, use one of {allowed_groupings}.")
 
     qubits = layer_error.qubits
@@ -443,7 +451,7 @@ def draw_layer_error_2q_bar_plot(
 
         fig.add_trace(
             go.Bar(
-                x=generators,
+                x=edge_generators,
                 y=rates,
                 name=f"edge: {edge}",
                 marker_color=colors[edge_idx],
@@ -456,9 +464,9 @@ def draw_layer_error_2q_bar_plot(
 
 def draw_layer_errors_swarm(
     layer_errors: list[LayerError],
-    colors: Optional[list[str]] = "purple",
+    colors: Optional[list[str]] = None,
     bin_size: Optional[Union[int, float]] = None,
-    opacities: Union[float, list[float]] = 0.2,
+    opacities: Union[float, list[float]] = 0.4,
     names: Optional[list[str]] = None,
     height: int = 500,
     width: int = 800,
@@ -490,11 +498,14 @@ def draw_layer_errors_swarm(
     """
     try:
         import plotly.graph_objects as go
-        from plotly.colors import sample_colorscale
     except ModuleNotFoundError as msg:
         raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
+    fig.update_layout(
+        xaxis_title="layers",
+        yaxis_title="rates",
+    )
 
     fig.update_xaxes(
         range=[-1, len(layer_errors)],
