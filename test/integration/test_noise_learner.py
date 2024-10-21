@@ -56,6 +56,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with default options."""
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=self._backend, options=options)
 
@@ -66,6 +68,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with non-default options."""
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
@@ -98,6 +102,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_learner_plus_estimator(self, service):  # pylint: disable=unused-argument
         """Test feeding noise learner data to estimator."""
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
 
         options = EstimatorOptions()
         options.resilience.zne_mitigation = True  # pylint: disable=assigning-non-slot
