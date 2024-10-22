@@ -321,11 +321,9 @@ def draw_layer_error_1q_bar_plot(
         raise ValueError(f"Expected {num_qubits} colors, found {len(colors)}.")
 
     one_body_err = layer_error.error.restrict_num_bodies(1)
+    qubits = qubits if qubits else layer_error.qubits
 
-    for i, qubit in enumerate(layer_error.qubits):
-        if qubits and qubit not in qubits:
-            continue
-
+    for i, qubit in enumerate(qubits):
         mask = one_body_err.generators.x[:, i] | one_body_err.generators.z[:, i]
         qubit_generators = np.array(
             ["".join([p for p in g if p != "I"]) for g in one_body_err.generators[mask].to_labels()]
@@ -333,6 +331,7 @@ def draw_layer_error_1q_bar_plot(
         rates = one_body_err.rates[mask]
 
         if generators:
+            # filter for generators
             mask_gen = [gen in generators for gen in qubit_generators]
             rates = rates[mask_gen]
             qubit_generators = qubit_generators[mask_gen]

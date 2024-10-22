@@ -165,6 +165,62 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
         self.assertEqual(layout["width"], 500)
         self.assertEqual(layout["height"], 200)
 
+    def test_filter_by_qubit(self):
+        r"""
+        Test with ``qubits`` not set to ``None``.
+        """
+        fig = draw_layer_error_1q_bar_plot(
+            self.layer_errors[2],
+            grouping="generator",
+            qubits=self.layer_errors[2].qubits[:2],
+            width=500,
+            height=200,
+        )
+        self.assertIsInstance(fig, go.Figure)
+
+        fig_d = fig.to_dict()
+        data = fig_d["data"]
+        layout = fig_d["layout"]
+
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0]["x"], ["X"])
+        self.assertEqual(data[1]["x"], ["X"])
+        self.assertEqual(set(d["type"] for d in data), {"bar"})
+
+        self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
+        self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
+        self.assertEqual(layout["width"], 500)
+        self.assertEqual(layout["height"], 200)
+
+    def test_filter_by_generator(self):
+        r"""
+        Test with ``generators`` not set to ``None``.
+        """
+        fig = draw_layer_error_1q_bar_plot(
+            self.layer_errors[2],
+            grouping="generator",
+            generators=["X"],
+            width=500,
+            height=200,
+        )
+        self.assertIsInstance(fig, go.Figure)
+
+        fig_d = fig.to_dict()
+        data = fig_d["data"]
+        layout = fig_d["layout"]
+
+        self.assertEqual(len(data), 4)
+        self.assertEqual(data[0]["x"], ["X"])
+        self.assertEqual(data[1]["x"], ["X"])
+        self.assertEqual(data[2]["x"], ["X"])
+        self.assertEqual(list(data[3]["x"]), [])
+        self.assertEqual(set(d["type"] for d in data), {"bar"})
+
+        self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
+        self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
+        self.assertEqual(layout["width"], 500)
+        self.assertEqual(layout["height"], 200)
+
     def test_errors(self):
         r"""
         Test errors.
