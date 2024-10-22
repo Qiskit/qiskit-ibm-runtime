@@ -47,7 +47,7 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     NoiseLearnerResult,
 )
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
-from qiskit_ibm_runtime.execution_span.execution_span import (
+from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     SliceSpan,
     ExecutionSpans,
