@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=import-outside-toplevel
+
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
@@ -64,8 +66,6 @@ def draw_layer_error_map(
         ValueError: If ``backend`` has no coupling map.
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
-    # pylint: disable=import-outside-toplevel
-
     try:
         import plotly.graph_objects as go
         from plotly.colors import sample_colorscale
@@ -277,7 +277,7 @@ def draw_layer_error_1q_bar_plot(
     grouping: str = "qubit",
     height: int = 500,
     width: int = 800,
-):
+) -> go.Figure:
     r"""
     Draw a bar plot containing all the one-body terms in this :class:`~.LayerError`.
 
@@ -316,7 +316,7 @@ def draw_layer_error_1q_bar_plot(
         raise ValueError(f"Grouping '{grouping}' not supported, use one of {allowed_groupings}.")
 
     num_qubits = len(qubits) if qubits else layer_error.num_qubits
-    colors = [colors] * num_qubits if not colors else colors
+    colors = colors if colors else [None] * num_qubits
     if len(colors) != num_qubits:
         raise ValueError(f"Expected {num_qubits} colors, found {len(colors)}.")
 
@@ -366,7 +366,7 @@ def draw_layer_error_2q_bar_plot(
     grouping: str = "edge",
     height: int = 500,
     width: int = 800,
-):
+) -> go.Figure:
     r"""
     Draw a bar plot containing all the two-body terms in this :class:`~.LayerError`.
 
@@ -407,25 +407,22 @@ def draw_layer_error_2q_bar_plot(
     qubits = layer_error.qubits
     two_body_err = layer_error.error.restrict_num_bodies(2)
 
-    edges = (
-        [sorted(edge) for edge in edges]
-        if edges
-        else sorted(
+    if edges:
+        edges = [sorted(edge) for edge in edges]  # type: ignore
+    else:
+        edges = sorted(
             set(
-                [
-                    tuple([qubits[idx] for idx, p in enumerate(gen) if str(p) != "I"])
-                    for gen in two_body_err.generators
-                ]
+                [qubits[idx] for idx, p in enumerate(g) if str(p) != "I"]  # type: ignore
+                for g in two_body_err.generators
             )
         )
-    )
 
-    colors = [colors] * len(edges) if not colors else colors
+    colors = colors if colors else [None] * len(edges)
     if len(colors) != len(edges):
         raise ValueError(f"Expected {len(edges)} colors, found {len(colors)}.")
 
     for edge_idx, edge in enumerate(edges):
-        if edges and edge not in edges:
+        if edge not in edges:
             continue
 
         mask = [
@@ -470,7 +467,7 @@ def draw_layer_errors_swarm(
     names: Optional[list[str]] = None,
     height: int = 500,
     width: int = 800,
-):
+) -> go.Figure:
     r"""
     Draw a swarm plot for the given list of layer errors.
 
@@ -514,13 +511,17 @@ def draw_layer_errors_swarm(
         zeroline=False,
     )
 
-    colors = [colors] * len(layer_errors) if not colors else colors
-    opacities = [opacities] * len(layer_errors) if isinstance(opacities, float) else opacities
-    names = [f"layer #{i}" for i in range(len(layer_errors))] if not names else names
+    colors = colors if colors else [None] * len(layer_errors)
+    if len(colors) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} colors, found {len(colors)}.")
 
-    for field, name in [(colors, "colors"), (opacities, "opacities"), (names, "names")]:
-        if len(field) != len(layer_errors):
-            raise ValueError(f"Expected {len(layer_errors)} {name}, found {len(field)}.")
+    opacities = [opacities] * len(layer_errors) if isinstance(opacities, float) else opacities
+    if len(opacities) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} opacities, found {len(opacities)}.")
+
+    names = [f"layer #{i}" for i in range(len(layer_errors))] if not names else names
+    if len(names) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} names, found {len(names)}.")
 
     for layer_error_idx, layer_error in enumerate(layer_errors):
         min_rate = min(rates := layer_error.error.rates)
@@ -528,7 +529,7 @@ def draw_layer_errors_swarm(
 
         bin_size = bin_size if bin_size else (max_rate - min_rate) / 10
         num_bins = int((max_rate - min_rate) // bin_size + 1)
-        bins = {i: [] for i in range(num_bins)}
+        bins: dict[int, list[float]] = {i: [] for i in range(num_bins)}
 
         for rate in rates:
             bins[int((rate - min_rate) // bin_size)] += [rate]
