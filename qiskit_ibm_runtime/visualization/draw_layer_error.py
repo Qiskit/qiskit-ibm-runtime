@@ -421,9 +421,6 @@ def draw_layer_error_2q_bar_plot(
         raise ValueError(f"Expected {len(edges)} colors, found {len(colors)}.")
 
     for edge_idx, edge in enumerate(edges):
-        if edge not in edges:
-            continue
-
         mask = [
             (str(g[qubits.index(edge[0])]) != "I" and str(g[qubits.index(edge[1])]) != "I")
             for g in two_body_err.generators
@@ -498,17 +495,14 @@ def draw_layer_errors_swarm(
         raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
-    fig.update_layout(
-        xaxis_title="layers",
-        yaxis_title="rates",
-    )
-
     fig.update_xaxes(
         range=[-1, len(layer_errors)],
         showticklabels=False,
         showgrid=False,
         zeroline=False,
+        title="layers",
     )
+    fig.update_yaxes(title="rates")
 
     colors = colors if colors else [None] * len(layer_errors)
     if len(colors) != len(layer_errors):
@@ -526,13 +520,16 @@ def draw_layer_errors_swarm(
         min_rate = min(rates := layer_error.error.rates)
         max_rate = max(rates)
 
+        # Create bins
         bin_size = bin_size if bin_size else (max_rate - min_rate) / 10
         num_bins = int((max_rate - min_rate) // bin_size + 1)
         bins: dict[int, list[float]] = {i: [] for i in range(num_bins)}
 
+        # Populate the bins
         for rate in rates:
             bins[int((rate - min_rate) // bin_size)] += [rate]
 
+        # Assign `x` and `y` coordinates based on the bins
         xs = []
         ys = []
         for b in bins.values():
@@ -545,10 +542,7 @@ def draw_layer_errors_swarm(
                 y=ys,
                 x=xs,
                 mode="markers",
-                marker={
-                    "color": colors[layer_error_idx],
-                    "opacity": opacities[layer_error_idx],
-                },
+                marker={"color": colors[layer_error_idx], "opacity": opacities[layer_error_idx]},
                 name=names[layer_error_idx],
             )
         )

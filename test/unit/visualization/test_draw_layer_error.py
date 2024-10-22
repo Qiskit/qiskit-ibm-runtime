@@ -296,3 +296,57 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
 
         with self.assertRaisesRegex(ValueError, "Expected 1 colors"):
             draw_layer_error_2q_bar_plot(self.layer_errors[0], colors=["blue", "red"])
+
+
+@skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
+class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
+    """Class for testing the ``draw_layer_errors_swarm`` function."""
+
+    def test_plotting(self):
+        r"""
+        Test that it produces the right image.
+        """
+        fig = draw_layer_errors_swarm(
+            self.layer_errors,
+            colors=["red", "blue", "green"],
+            names=["l1", "l2", "l3"],
+            width=500,
+            height=200,
+        )
+        self.assertIsInstance(fig, go.Figure)
+
+        fig_d = fig.to_dict()
+        data = fig_d["data"]
+        layout = fig_d["layout"]
+
+        self.assertEqual(len(data), 3)
+        self.assertEqual(data[0]["name"], "l1")
+        self.assertEqual(data[1]["name"], "l2")
+        self.assertEqual(data[2]["name"], "l3")
+
+        self.assertEqual(
+            layout["xaxis"],
+            {
+                "title": {"text": "layers"},
+                "range": [-1, 3],
+                "showticklabels": False,
+                "showgrid": False,
+                "zeroline": False,
+            },
+        )
+        self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
+        self.assertEqual(layout["width"], 500)
+        self.assertEqual(layout["height"], 200)
+
+    def test_errors(self):
+        r"""
+        Test errors.
+        """
+        with self.assertRaisesRegex(ValueError, "Expected 3 colors"):
+            draw_layer_errors_swarm(self.layer_errors, colors=["blue", "red"])
+
+        with self.assertRaisesRegex(ValueError, "Expected 3 names"):
+            draw_layer_errors_swarm(self.layer_errors, names=["names1", "names2"])
+
+        with self.assertRaisesRegex(ValueError, "Expected 3 opacities"):
+            draw_layer_errors_swarm(self.layer_errors, opacities=[0.1, 0.2])
