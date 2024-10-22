@@ -412,7 +412,7 @@ def draw_layer_error_2q_bar_plot(
     else:
         edges = sorted(
             set(
-                [qubits[idx] for idx, p in enumerate(g) if str(p) != "I"]  # type: ignore
+                tuple(qubits[idx] for idx, p in enumerate(g) if str(p) != "I")  # type: ignore
                 for g in two_body_err.generators
             )
         )
