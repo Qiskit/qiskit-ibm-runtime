@@ -75,7 +75,7 @@ from qiskit.primitives.containers import (
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
 )
-from qiskit_ibm_runtime.execution_span.execution_span import (
+from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     SliceSpan,
     ExecutionSpans,
