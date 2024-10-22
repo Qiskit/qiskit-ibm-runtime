@@ -483,7 +483,7 @@ class TestContainerSerialization(IBMTestCase):
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.measure_all()
-      error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+        error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         layer_error = LayerError(circuit, [3, 5], error)
 
         noise_learner_result = NoiseLearnerResult([layer_error])
