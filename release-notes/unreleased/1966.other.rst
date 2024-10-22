@@ -1,0 +1,11 @@
+The ``channel_strategy`` parameter in ``QiskitRuntimeService`` has been removed.
+To continue using Q-CTRL in your workflow, please explore the following options:
+
+    * If your organization has an existing IBM Quantum Premium Plan instance: migrate to 
+      the Q-CTRL Performance Management Function, found in the 
+      `Qiskit Functions Catalog <https://quantum.ibm.com/functions>`__.
+
+    * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
+      the same performance management product accessible directly through Q-CTRL. 
+      You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-authenticate-with-ibm-credentials>`__
+      to Fire Opal. 
