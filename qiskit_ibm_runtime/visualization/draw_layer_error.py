@@ -279,10 +279,10 @@ def draw_layer_error_1q_bar_plot(
     width: int = 800,
 ) -> go.Figure:
     r"""
-    Draw a bar plot containing all the one-body terms in this :class:`~.LayerError`.
+    Draw a bar plot containing all the one-body terms in the given layer error.
 
     Args:
-        layer_error: The :class:`~.LayerError` to draw.
+        layer_error: The layer error to draw.
         qubits: The qubits to include in the bar plot. If ``None``, all the qubits in the given
             ``layer_error`` are included.
         generators: The (one-qubit) generators to include in the bar plot, e.g. ``("X", "Z")``. If
