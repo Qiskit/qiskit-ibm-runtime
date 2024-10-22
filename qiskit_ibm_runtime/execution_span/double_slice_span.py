@@ -29,7 +29,9 @@ class DoubleSliceSpan(ExecutionSpan):
     This type of execution span references pub result data by assuming that it is a sliceable
     portion of the data where the shots are the outermost slice and the rest of the data is flattened.
     Therefore, for each pub dependent on this span, the constructor accepts two :class:`slice` objects,
-    along with the corresponding shape of the data to be sliced.
+    along with the corresponding shape of the data to be sliced; in contrast to
+    :class:`~.SliceSpan`, this class does not assume that _all_ shots for a particular set of parameter
+    values are contiguous in the array of data.
 
     Args:
         start: The start time of the span, in UTC.
