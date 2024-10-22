@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Iterable
 
+import math
 import numpy as np
 import numpy.typing as npt
 
@@ -63,7 +64,7 @@ class DoubleSliceSpan(ExecutionSpan):
     def size(self) -> int:
         size = 0
         for shape, args_sl, shots_sl in self._data_slices.values():
-            size += np.zeros((np.prod(shape[:-1]), shape[-1]))[(args_sl, shots_sl)].size
+            size += len(range(math.prod(shape[:-1]))[args_sl]) * len(range(shape[-1])[shots_sl])
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
