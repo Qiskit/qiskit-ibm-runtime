@@ -75,7 +75,11 @@ from qiskit.primitives.containers import (
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
 )
-from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
+from qiskit_ibm_runtime.execution_span.execution_span import (
+    DoubleSliceSpan,
+    SliceSpan,
+    ExecutionSpans,
+)
 
 from .noise_learner_result import NoiseLearnerResult
 
@@ -327,6 +331,16 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, NoiseLearnerResult):
             out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "NoiseLearnerResult", "__value__": out_val}
+        if isinstance(obj, DoubleSliceSpan):
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (shape, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
+                    for idx, (shape, arg_sl, shot_sl) in obj._data_slices.items()
+                },
+            }
+            return {"__type__": "DoubleSliceSpan", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -450,6 +464,12 @@ class RuntimeDecoder(json.JSONDecoder):
                 return PrimitiveResult(**obj_val)
             if obj_type == "NoiseLearnerResult":
                 return NoiseLearnerResult(**obj_val)
+            if obj_type == "DoubleSliceSpan":
+                obj_val["data_slices"] = {
+                    int(idx): (tuple(shape), slice(arg0, arg1), slice(shot0, shot1))
+                    for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
+                }
+                return DoubleSliceSpan(**obj_val)
             if obj_type == "ExecutionSpan":
                 new_slices = {
                     int(idx): (tuple(shape), slice(*sl_args))
