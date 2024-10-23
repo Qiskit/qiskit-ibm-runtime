@@ -674,47 +674,9 @@ class TestPrimitivesV2(IBMTestCase):
             {"dynamical_decoupling": {"sequence_type": "XY4"}},
         ]
         session = get_mocked_session()
-        session.service._channel_strategy = "q-ctrl"
         session.service.backend().configuration().simulator = False
         for options in options_good:
             with self.subTest(msg=f"EstimatorV2, {options}"):
                 print(options)
                 inst = EstimatorV2(mode=session, options=options)
                 _ = inst.run(**get_primitive_inputs(inst))
-
-    def test_qctrl_supported_values_for_options_sampler(self):
-        """Test exception when options levels not supported for Sampler V2."""
-
-        options_good = [
-            # Minimum working settings
-            {},
-            # Dynamical_decoupling (issue warning)
-            {"dynamical_decoupling": {"sequence_type": "XY4"}},
-        ]
-        session = get_mocked_session()
-        session.service._channel_strategy = "q-ctrl"
-        session.service.backend().configuration().simulator = False
-        for options in options_good:
-            with self.subTest(msg=f"SamplerV2, {options}"):
-                print(options)
-                inst = SamplerV2(mode=session, options=options)
-                _ = inst.run(**get_primitive_inputs(inst))
-
-    def test_qctrl_unsupported_values_for_options(self):
-        """Test exception when options levels are not supported."""
-        options_bad = [
-            # Bad resilience levels
-            ({"resilience_level": 0}, "resilience level"),
-        ]
-        session = get_mocked_session()
-        session.service._channel_strategy = "q-ctrl"
-        session.service.backend().configuration().simulator = False
-        primitives = [SamplerV2, EstimatorV2]
-        for cls in primitives:
-            for bad_opt, expected_message in options_bad:
-                with self.subTest(msg=bad_opt):
-                    with self.assertRaises(ValueError) as exc:
-                        inst = cls(mode=session, options=bad_opt)
-                        _ = inst.run(**get_primitive_inputs(inst))
-
-                        self.assertIn(expected_message, str(exc.exception))

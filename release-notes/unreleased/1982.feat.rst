@@ -1,0 +1,1 @@
+Added :class:`.DoubleSliceSpan`, an :class:`ExecutionSpan` for batching with two slices.

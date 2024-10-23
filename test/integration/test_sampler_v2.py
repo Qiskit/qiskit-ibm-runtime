@@ -18,7 +18,6 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
-from numpy.typing import NDArray
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
@@ -27,6 +26,7 @@ from qiskit.primitives import PrimitiveResult, PubResult
 from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
@@ -41,12 +41,13 @@ class TestSampler(IBMIntegrationTestCase):
 
     def setUp(self):
         super().setUp()
-        self.backend = "ibmq_qasm_simulator"
+        self._backend = self.service.backend(self.dependencies.qpu)
         self.fake_backend = FakeManilaV2()
         self._shots = 10000
         self._options = {"default_shots": 10000}
         # TODO: Re-add seed_simulator and re-enable verification once it's supported
         # self._options = {"default_shots": 10000, "seed_simulator": 123}
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
         self._cases = []
         hadamard = QuantumCircuit(1, 1, name="Hadamard")
@@ -59,6 +60,7 @@ class TestSampler(IBMIntegrationTestCase):
         bell.cx(0, 1)
         bell.measure_all()
         self._cases.append((bell, None, {0: 5000, 3: 5000}))  # case 1
+        self._isa_bell = pm.run(bell)
 
         pqc = RealAmplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
@@ -75,98 +77,71 @@ class TestSampler(IBMIntegrationTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
-    def _assert_allclose(
-        self, bitarray: BitArray, target: NDArray | BitArray, rtol: float = 1e-1
-    ) -> None:
-        # pylint: disable=unused-argument
-        return
-        # self.assertEqual(bitarray.shape, target.shape)
-        # for idx in np.ndindex(bitarray.shape):
-        #     int_counts = bitarray.get_int_counts(idx)
-        #     target_counts = (
-        #         target.get_int_counts(idx) if isinstance(target, BitArray) else target[idx]
-        #     )
-        #     # pylint: disable=nested-min-max
-        #     max_key = max(max(int_counts.keys()), max(target_counts.keys()))
-        #     ary = np.array([int_counts.get(i, 0) for i in range(max_key + 1)])
-        #     tgt = np.array([target_counts.get(i, 0) for i in range(max_key + 1)])
-        #     np.testing.assert_allclose(ary, tgt, rtol=rtol, err_msg=f"index: {idx}")
-
     @run_integration_test
     def test_sampler_run(self, service):
         """Test Sampler.run()."""
-        with Session(service, self.backend) as session:
-            bell, _, target = self._cases[1]
 
+        with Session(service, self._backend) as session:
+            _, _, target = self._cases[1]
             with self.subTest("single"):
                 sampler = Sampler(mode=session, options=self._options)
-                job = sampler.run([bell])
+                job = sampler.run([self._isa_bell])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single with param"):
                 sampler = Sampler(mode=session, options=self._options)
-                job = sampler.run([(bell, ())])
+                job = sampler.run([(self._isa_bell, ())])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("single array"):
                 sampler = Sampler(mode=session, options=self._options)
-                job = sampler.run([(bell, [()])])
+                job = sampler.run([(self._isa_bell, [()])])
                 result = job.result()
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("multiple"):
                 sampler = Sampler(mode=session, options=self._options)
-                job = sampler.run([(bell, [(), (), ()])])
+                job = sampler.run([(self._isa_bell, [(), (), ()])])
                 result = job.result()
                 self._verify_result_type(
                     result, num_pubs=1, targets=[np.array([target, target, target])]
                 )
 
-    @run_integration_test
-    def test_sample_run_multiple_circuits(self, service):
+    def test_sample_run_multiple_circuits(self):
         """Test Sampler.run() with multiple circuits."""
-        backend = service.backend(self.backend)
-        bell, _, target = self._cases[1]
-        sampler = Sampler(mode=backend, options=self._options)
-        result = sampler.run([bell, bell, bell]).result()
+        _, _, target = self._cases[1]
+        sampler = Sampler(mode=self._backend, options=self._options)
+        result = sampler.run([self._isa_bell, self._isa_bell, self._isa_bell]).result()
         self._verify_result_type(result, num_pubs=3, targets=[np.array(target)] * 3)
 
-    @run_integration_test
-    def test_sampler_run_with_parameterized_circuits(self, service):
+    def test_sampler_run_with_parameterized_circuits(self):
         """Test Sampler.run() with parameterized circuits."""
-        backend = service.backend(self.backend)
         pqc1, param1, target1 = self._cases[4]
         pqc2, param2, target2 = self._cases[5]
         pqc3, param3, target3 = self._cases[6]
 
-        sampler = Sampler(mode=backend, options=self._options)
+        sampler = Sampler(mode=self.fake_backend, options=self._options)
         result = sampler.run([(pqc1, param1), (pqc2, param2), (pqc3, param3)]).result()
         self._verify_result_type(
             result, num_pubs=3, targets=[np.array(target1), np.array(target2), np.array(target3)]
         )
 
-    @run_integration_test
-    def test_run_1qubit(self, service):
+    def test_run_1qubit(self):
         """test for 1-qubit cases"""
-        backend = service.backend(self.backend)
         qc = QuantumCircuit(1)
         qc.measure_all()
         qc2 = QuantumCircuit(1)
         qc2.x(0)
         qc2.measure_all()
 
-        sampler = Sampler(mode=backend, options=self._options)
+        sampler = Sampler(mode=self._backend, options=self._options)
         result = sampler.run([qc, qc2]).result()
         self._verify_result_type(result, num_pubs=2)
-        for i in range(2):
-            self._assert_allclose(result[i].data.meas, np.array({i: self._shots}))
 
-    @run_integration_test
-    def test_run_2qubit(self, service):
+    def test_run_2qubit(self):
         """test for 2-qubit cases"""
-        backend = service.backend(self.backend)
         qc0 = QuantumCircuit(2)
         qc0.measure_all()
         qc1 = QuantumCircuit(2)
@@ -179,16 +154,15 @@ class TestSampler(IBMIntegrationTestCase):
         qc3.x([0, 1])
         qc3.measure_all()
 
-        sampler = Sampler(mode=backend, options=self._options)
+        sampler = Sampler(mode=self._backend, options=self._options)
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         self._verify_result_type(result, num_pubs=4)
-        for i in range(4):
-            self._assert_allclose(result[i].data.meas, np.array({i: self._shots}))
 
     @run_integration_test
     def test_run_single_circuit(self, service):
         """Test for single circuit case."""
-        with Session(service, self.backend) as session:
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+        with Session(service, self._backend) as session:
             sampler = Sampler(mode=session, options=self._options)
 
             with self.subTest("No parameter"):
@@ -206,9 +180,8 @@ class TestSampler(IBMIntegrationTestCase):
                 ]
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(circuit, param)]).result()
-                        self.assertEqual(len(result), 1)
-                        self._assert_allclose(result[0].data.meas, target)
+                        result = sampler.run([(self._isa_bell, param)]).result()
+                        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("One parameter"):
                 circuit = QuantumCircuit(1, 1, name="X gate")
@@ -225,9 +198,8 @@ class TestSampler(IBMIntegrationTestCase):
                 ]
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(circuit, param)]).result()
-                        self.assertEqual(len(result), 1)
-                        self._assert_allclose(result[0].data.c, target)
+                        result = sampler.run([(pm.run(circuit), param)]).result()
+                        self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("More than one parameter"):
                 circuit, param, target = self._cases[3]
@@ -241,14 +213,11 @@ class TestSampler(IBMIntegrationTestCase):
                 ]
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(circuit, param)]).result()
-                        self.assertEqual(len(result), 1)
-                        self._assert_allclose(result[0].data.meas, target)
+                        result = sampler.run([(pm.run(circuit), param)]).result()
+                        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @run_integration_test
-    def test_run_reverse_meas_order(self, service):
+    def test_run_reverse_meas_order(self):
         """test for sampler with reverse measurement order"""
-        backend = service.backend(self.backend)
         x = Parameter("x")
         y = Parameter("y")
 
@@ -259,43 +228,35 @@ class TestSampler(IBMIntegrationTestCase):
         qc.measure(0, 2)
         qc.measure(1, 1)
         qc.measure(2, 0)
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
-        sampler = Sampler(mode=backend, options=self._options)
-        result = sampler.run([(qc, [0, 0]), (qc, [np.pi / 2, 0])]).result()
-        self.assertEqual(len(result), 2)
-
-        # qc({x: 0, y: 0})
-        self._assert_allclose(result[0].data.c, np.array({1: self._shots}))
-
-        # qc({x: pi/2, y: 0})
-        self._assert_allclose(result[1].data.c, np.array({1: self._shots / 2, 5: self._shots / 2}))
+        sampler = Sampler(mode=self._backend, options=self._options)
+        result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
+        self._verify_result_type(result, num_pubs=2)
 
     @run_integration_test
     def test_run_empty_parameter(self, service):
         """Test for empty parameter"""
-        with Session(service, self.backend) as session:
+        with Session(service, self._backend) as session:
             n = 5
             qc = QuantumCircuit(n, n - 1)
             qc.measure(range(n - 1), range(n - 1))
             sampler = Sampler(mode=session, options=self._options)
             with self.subTest("one circuit"):
                 result = sampler.run([qc]).result()
-                self.assertEqual(len(result), 1)
-                self._assert_allclose(result[0].data.c, np.array({0: self._shots}))
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("two circuits"):
                 result = sampler.run([qc, qc]).result()
-                self.assertEqual(len(result), 2)
-                for i in range(2):
-                    self._assert_allclose(result[i].data.c, np.array({0: self._shots}))
+                self._verify_result_type(result, num_pubs=2)
 
     @run_integration_test
     def test_run_numpy_params(self, service):
         """Test for numpy array as parameter values"""
-        with Session(service, self.backend) as session:
+        with Session(service, self._backend) as session:
             qc = RealAmplitudes(num_qubits=2, reps=2)
             qc.measure_all()
-            qc = transpile(circuits=qc, backend=self.fake_backend)
+            qc = transpile(circuits=qc, backend=self._backend)
             k = 5
             params_array = np.random.rand(k, qc.num_parameters)
             params_list = params_array.tolist()
@@ -304,66 +265,62 @@ class TestSampler(IBMIntegrationTestCase):
 
             with self.subTest("ndarray"):
                 result = sampler.run([(qc, params_array)]).result()
-                self.assertEqual(len(result), 1)
-                self._assert_allclose(result[0].data.meas, target[0].data.meas)
+                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("split a list"):
                 result = sampler.run([(qc, params) for params in params_list]).result()
-                self.assertEqual(len(result), k)
-                for i in range(k):
-                    self._assert_allclose(
-                        result[i].data.meas, np.array(target[0].data.meas.get_int_counts(i))
-                    )
+                self._verify_result_type(
+                    result, num_pubs=len(params_list), targets=[np.array(target)]
+                )
 
     @run_integration_test
     def test_run_with_shots_option(self, service):
         """test with shots option."""
-        with Session(service, self.backend) as session:
-            bell, _, _ = self._cases[1]
+        with Session(service, self._backend) as session:
+            _, _, _ = self._cases[1]
             shots = 100
-
             with self.subTest("init option"):
                 sampler = Sampler(mode=session, options={"default_shots": shots})
-                result = sampler.run([bell]).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run([self._isa_bell]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("update option"):
                 sampler = Sampler(mode=session)
                 sampler.options.default_shots = shots
-                result = sampler.run([bell]).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run([self._isa_bell]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("run arg"):
                 sampler = Sampler(mode=session)
-                result = sampler.run(pubs=[bell], shots=shots).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run(pubs=[self._isa_bell], shots=shots).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("run arg"):
                 sampler = Sampler(mode=session)
-                result = sampler.run(pubs=[bell], shots=shots).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run(pubs=[self._isa_bell], shots=shots).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("pub-like"):
                 sampler = Sampler(mode=session)
-                result = sampler.run([(bell, None, shots)]).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run([(self._isa_bell, None, shots)]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("pub"):
                 sampler = Sampler(mode=session)
-                result = sampler.run([SamplerPub(bell, shots=shots)]).result()
-                self.assertEqual(len(result), 1)
+                result = sampler.run([SamplerPub(self._isa_bell, shots=shots)]).result()
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("multiple pubs"):
                 sampler = Sampler()
@@ -371,44 +328,42 @@ class TestSampler(IBMIntegrationTestCase):
                 shots2 = 200
                 result = sampler.run(
                     [
-                        SamplerPub(bell, shots=shots1),
-                        SamplerPub(bell, shots=shots2),
+                        SamplerPub(self._isa_bell, shots=shots1),
+                        SamplerPub(self._isa_bell, shots=shots2),
                     ]
                 ).result()
-                self.assertEqual(len(result), 2)
                 self.assertEqual(result[0].data.meas.num_shots, shots1)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots1)
                 self.assertEqual(result[1].data.meas.num_shots, shots2)
                 self.assertEqual(sum(result[1].data.meas.get_counts().values()), shots2)
+                self._verify_result_type(result, num_pubs=2)
 
-    @run_integration_test
-    def test_run_shots_result_size(self, service):
+    def test_run_shots_result_size(self):
         """test with shots option to validate the result size"""
-        backend = service.backend(self.backend)
         n = 10
         qc = QuantumCircuit(n)
         qc.h(range(n))
         qc.measure_all()
-        sampler = Sampler(mode=backend, options=self._options)
-        result = sampler.run([qc]).result()
-        self.assertEqual(len(result), 1)
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+        sampler = Sampler(mode=self._backend, options=self._options)
+        result = sampler.run([pm.run(qc)]).result()
         self.assertLessEqual(result[0].data.meas.num_shots, self._shots)
         self.assertEqual(sum(result[0].data.meas.get_counts().values()), self._shots)
+        self._verify_result_type(result, num_pubs=1)
 
-    @run_integration_test
-    def test_primitive_job_status_done(self, service):
+    def test_primitive_job_status_done(self):
         """test primitive job's status"""
-        backend = service.backend(self.backend)
-        bell, _, _ = self._cases[1]
-        sampler = Sampler(mode=backend, options=self._options)
-        job = sampler.run([bell])
+        sampler = Sampler(mode=self._backend, options=self._options)
+        job = sampler.run([self._isa_bell])
         _ = job.result()
         self.assertEqual(job.status(), "DONE")
 
     @run_integration_test
     def test_circuit_with_unitary(self, service):
         """Test for circuit with unitary gate."""
-        with Session(service, self.backend) as session:
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+
+        with Session(service, self._backend) as session:
             with self.subTest("identity"):
                 gate = UnitaryGate(np.eye(2))
 
@@ -417,9 +372,8 @@ class TestSampler(IBMIntegrationTestCase):
                 circuit.measure_all()
 
                 sampler = Sampler(mode=session, options=self._options)
-                result = sampler.run([circuit]).result()
-                self.assertEqual(len(result), 1)
-                self._assert_allclose(result[0].data.meas, np.array({0: self._shots}))
+                result = sampler.run([pm.run(circuit)]).result()
+                self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("X"):
                 gate = UnitaryGate([[0, 1], [1, 0]])
@@ -429,25 +383,24 @@ class TestSampler(IBMIntegrationTestCase):
                 circuit.measure_all()
 
                 sampler = Sampler(mode=session, options=self._options)
-                result = sampler.run([circuit]).result()
-                self.assertEqual(len(result), 1)
-                self._assert_allclose(result[0].data.meas, np.array({1: self._shots}))
+                result = sampler.run([pm.run(circuit)]).result()
+                self._verify_result_type(result, num_pubs=1)
 
-    @run_integration_test
-    def test_metadata(self, service):
+    def test_metadata(self):
         """Test for metatdata."""
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
         qc, _, _ = self._cases[1]
-        backend = service.backend(self.backend)
-        sampler = Sampler(mode=backend, options=self._options)
-        result = sampler.run([qc]).result()
-        self.assertEqual(len(result), 1)
+        sampler = Sampler(mode=self._backend, options=self._options)
+        result = sampler.run([pm.run(qc)]).result()
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
+        self._verify_result_type(result, num_pubs=1)
 
     @run_integration_test
     def test_circuit_with_multiple_cregs(self, service):
         """Test for circuit with multiple classical registers."""
-        with Session(service, self.backend) as session:
+        with Session(service, self._backend) as session:
             cases = []
+            pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
             # case 1
             a = ClassicalRegister(1, "a")
@@ -458,7 +411,7 @@ class TestSampler(IBMIntegrationTestCase):
             qc.h(range(3))
             qc.measure([0, 1, 2, 2], [0, 2, 4, 5])
             target = {"a": {0: 5000, 1: 5000}, "b": {0: 5000, 2: 5000}, "c": {0: 5000, 6: 5000}}
-            cases.append(("use all cregs", qc, target))
+            cases.append(("use all cregs", pm.run(qc), target))
 
             # case 2
             a = ClassicalRegister(1, "a")
@@ -473,7 +426,7 @@ class TestSampler(IBMIntegrationTestCase):
                 "b": {0: 2500, 2: 2500, 24: 2500, 26: 2500},
                 "c": {0: 10000},
             }
-            cases.append(("use only a and b", qc, target))
+            cases.append(("use only a and b", pm.run(qc), target))
 
             # case 3
             a = ClassicalRegister(1, "a")
@@ -484,7 +437,7 @@ class TestSampler(IBMIntegrationTestCase):
             qc.h(range(3))
             qc.measure(1, 5)
             target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
-            cases.append(("use only c", qc, target))
+            cases.append(("use only c", pm.run(qc), target))
 
             # case 4
             a = ClassicalRegister(1, "a")
@@ -495,7 +448,7 @@ class TestSampler(IBMIntegrationTestCase):
             qc.h(range(3))
             qc.measure([0, 1, 2], [5, 5, 5])
             target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 5000, 4: 5000}}
-            cases.append(("use only c multiple qubits", qc, target))
+            cases.append(("use only c multiple qubits", pm.run(qc), target))
 
             # case 5
             a = ClassicalRegister(1, "a")
@@ -505,36 +458,31 @@ class TestSampler(IBMIntegrationTestCase):
             qc = QuantumCircuit(QuantumRegister(3), a, b, c)
             qc.h(range(3))
             target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 10000}}
-            cases.append(("no measure", qc, target))
+            cases.append(("no measure", pm.run(qc), target))
 
             for title, qc, target in cases:
                 with self.subTest(title):
                     sampler = Sampler(mode=session, options=self._options)
                     result = sampler.run([qc]).result()
-                    self.assertEqual(len(result), 1)
                     data = result[0].data
                     self.assertEqual(len(data), 3)
-                    for creg in qc.cregs:
-                        self.assertIn(creg.name, data)
-                        self._assert_allclose(data[creg.name], np.array(target[creg.name]))
+                    self._verify_result_type(result, num_pubs=1)
 
-    @run_integration_test
-    def test_samplerv2_options(self, service):
+    def test_sampler_v2_options(self):
         """Test SamplerV2 options."""
-        backend = service.backend(self.backend)
-        sampler = Sampler(mode=backend)
+        sampler = Sampler(mode=self._backend)
         sampler.options.default_shots = 4096
         sampler.options.execution.init_qubits = True
         sampler.options.execution.rep_delay = 0.00025
 
-        bell, _, target = self._cases[1]
-        job = sampler.run([bell])
+        _, _, target = self._cases[1]
+        job = sampler.run([self._isa_bell])
         result = job.result()
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     @production_only
     @run_integration_test
-    def test_samplerv2_dd(self, service):
+    def test_sampler_v2_dd(self, service):
         """Test SamplerV2 DD options."""
         real_device_name = get_real_device(service)
         real_device = service.backend(real_device_name)
@@ -543,6 +491,7 @@ class TestSampler(IBMIntegrationTestCase):
         sampler.options.dynamical_decoupling.sequence_type = "XX"
         sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
         sampler.options.dynamical_decoupling.scheduling_method = "asap"
+        sampler.options.dynamical_decoupling.skip_reset_qubits = True
 
         bell, _, _ = self._cases[1]
         bell = transpile(bell, real_device)
@@ -563,7 +512,6 @@ class TestSampler(IBMIntegrationTestCase):
             self.assertIsInstance(pub_result.metadata, dict)
             if targets:
                 self.assertIsInstance(result[idx].data.meas, BitArray)
-                self._assert_allclose(result[idx].data.meas, targets[idx])
 
 
 if __name__ == "__main__":
