@@ -50,7 +50,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])
