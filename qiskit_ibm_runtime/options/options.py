@@ -173,9 +173,6 @@ class OptionsV2(BaseOptions):
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
             sim_options["coupling_map"] = list(map(list, coupling_map.get_edges()))
-        output_options["transpilation"] = {
-            "optimization_level": options_copy.get("optimization_level", Unset),
-        }
 
         for fld in [
             "default_precision",
