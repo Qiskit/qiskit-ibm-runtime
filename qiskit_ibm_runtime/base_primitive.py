@@ -234,6 +234,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return options"""
         return self._options
 
+    def backend(self) -> BackendV1 | BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
     def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
         """Set options."""
         if options is None:
