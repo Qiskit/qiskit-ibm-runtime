@@ -283,7 +283,7 @@ class RuntimeClient(BaseBackendClient):
 
         return self._api.backends(hgp=hgp)["devices"]
 
-    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+    def backend_configuration(self, backend_name: str, refresh: bool = False) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
 
         Args:
@@ -292,7 +292,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             Backend configuration.
         """
-        if backend_name not in self._configuration_registry:
+        if backend_name not in self._configuration_registry or refresh:
             self._configuration_registry[backend_name] = self._api.backend(
                 backend_name
             ).configuration()
