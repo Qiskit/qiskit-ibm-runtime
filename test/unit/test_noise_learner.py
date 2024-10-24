@@ -125,3 +125,9 @@ class TestNoiseLearner(IBMTestCase):
         """Test exception when circuits is not ISA."""
         with self.assertRaisesRegex(ValueError, "not currently supported in local mode"):
             NoiseLearner(FakeSherbrooke())
+
+    def test_get_backend(self):
+        """Test getting the backend used."""
+        backend = get_mocked_backend()
+        inst = NoiseLearner(backend)
+        self.assertEqual(inst.backend().name, backend.name)

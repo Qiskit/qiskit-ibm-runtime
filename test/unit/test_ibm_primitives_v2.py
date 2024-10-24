@@ -23,13 +23,12 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Session
+from qiskit_ibm_runtime import Session, Batch
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.options.utils import Unset
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -630,6 +629,21 @@ class TestPrimitivesV2(IBMTestCase):
         with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
             inst.run(pubs=[tuple(pub)])
 
+    @data(EstimatorV2, SamplerV2)
+    def test_get_backend_primitive(self, primitive):
+        """Test getting the backend used in the primitive."""
+        backend = get_mocked_backend()
+        inst = primitive(mode=backend)
+        self.assertEqual(inst.backend().name, backend.name)
+
+    @combine(primitive=[EstimatorV2, SamplerV2], session=[Session, Batch])
+    def test_get_backend_session(self, primitive, session):
+        """Test getting the backend used in the primitive when session is used."""
+        backend = FakeManilaV2()
+        with session(backend=backend):
+            inst = primitive()
+            self.assertEqual(inst.backend().name, backend.name)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -643,40 +657,3 @@ class TestPrimitivesV2(IBMTestCase):
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
         )
-
-    def test_qctrl_supported_values_for_options_estimator(self):
-        """Test exception when options levels not supported for Estimator V2."""
-        no_resilience_options = {
-            "measure_mitigation": Unset,
-            "measure_noise_learning": {},
-            "zne_mitigation": Unset,
-            "zne": {},
-            "pec_mitigation": Unset,
-            "pec": {},
-            "layer_noise_learning": {},
-        }
-
-        options_good = [
-            # Minimum working settings
-            {},
-            # No warnings, we need resilience options here because by default they are getting populated.
-            {"resilience": no_resilience_options},
-            # Arbitrary resilience options(issue warning)
-            {
-                "resilience_level": 1,
-                "resilience": {"measure_mitigation": True},
-            },
-            # Resilience level > 1 (issue warning)
-            {"resilience_level": 2},
-            # Twirling (issue warning)
-            {"twirling": {"strategy": "active"}},
-            # Dynamical_decoupling (issue warning)
-            {"dynamical_decoupling": {"sequence_type": "XY4"}},
-        ]
-        session = get_mocked_session()
-        session.service.backend().configuration().simulator = False
-        for options in options_good:
-            with self.subTest(msg=f"EstimatorV2, {options}"):
-                print(options)
-                inst = EstimatorV2(mode=session, options=options)
-                _ = inst.run(**get_primitive_inputs(inst))

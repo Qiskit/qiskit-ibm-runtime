@@ -1,0 +1,2 @@
+:class:`.SamplerV2`, :class:`.EstimatorV2`, and :class:`.noise_learner.NoiseLearner` now each has
+a ``backend()`` method that returns the backend the class is configured with.
