@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import math
 import copy
 import logging
@@ -215,12 +216,44 @@ class QiskitRuntimeLocalService:
         """
         options_copy = copy.deepcopy(options)
 
+        # Create a dummy primitive to check which options it supports
+        if primitive == "sampler":
+            dummy_prim = BackendSamplerV2(backend=backend)
+        else:
+            dummy_prim = BackendEstimatorV2(backend=backend)
+        supported_options = {f.name for f in dataclasses.fields(dummy_prim)}
+
         prim_options = {}
-        if seed_simulator := options_copy.pop("simulator", {}).pop("seed_simulator", None):
+        sim_options = options_copy.get("simulator", {})
+        if seed_simulator := sim_options.pop("seed_simulator", None):
             prim_options["seed_simulator"] = seed_simulator
+        if "noise_model" in supported_options and (
+            noise_model := sim_options.pop("noise_model", None)
+        ):
+            prim_options["noise_model"] = noise_model
+        if not sim_options:
+            options_copy.pop("simulator", None)
         if primitive == "sampler":
             if default_shots := options_copy.pop("default_shots", None):
                 prim_options["default_shots"] = default_shots
+            if {"meas_type", "meas_return"} <= supported_options and (
+                meas_type := options_copy.get("execution", {}).pop("meas_type", None)
+            ):
+                if meas_type == "classified":
+                    prim_options["meas_level"] = 2
+                elif meas_type == "kerneled":
+                    prim_options["meas_level"] = 1
+                    prim_options["meas_return"] = "single"
+                elif meas_type == "avg_kerneled":
+                    prim_options["meas_level"] = 1
+                    prim_options["meas_return"] = "avg"
+                else:
+                    # Put unexepcted meas_type back so it is in the warning below
+                    options_copy["execution"]["meas_type"] = meas_type
+
+                if not options_copy["execution"]:
+                    del options_copy["execution"]
+
             primitive_inst = BackendSamplerV2(backend=backend, options=prim_options)
         else:
             if default_shots := options_copy.pop("default_shots", None):
