@@ -29,7 +29,6 @@ from .options import OptionsV2
 from .utils import primitive_dataclass, make_constraint_validator
 
 MAX_RESILIENCE_LEVEL: int = 2
-MAX_OPTIMIZATION_LEVEL: int = 1
 
 
 @primitive_dataclass
@@ -63,16 +62,6 @@ class EstimatorOptions(OptionsV2):
         :attr:`~twirling` options.
 
         Default: ``None``.
-    """
-    optimization_level: Union[UnsetType, int] = Unset
-    r"""(DEPRECATED) How much optimization to perform on the circuits.
-        Higher levels generate more optimized circuits,
-        at the expense of longer processing times.
-
-        * 0: no optimization
-        * 1: light optimization
-
-        Default: 0.
     """
     resilience_level: Union[UnsetType, int] = Unset
     r"""How much resilience to build against errors.
@@ -120,5 +109,4 @@ class EstimatorOptions(OptionsV2):
 
     _gt0 = make_constraint_validator("default_precision", gt=0)
     _ge0 = make_constraint_validator("default_shots", ge=0)
-    _opt_lvl = make_constraint_validator("optimization_level", ge=0, le=MAX_OPTIMIZATION_LEVEL)
     _res_lvl = make_constraint_validator("resilience_level", ge=0, le=MAX_RESILIENCE_LEVEL)

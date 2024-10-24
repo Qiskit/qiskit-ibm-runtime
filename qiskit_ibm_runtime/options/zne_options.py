@@ -65,7 +65,7 @@ class ZneOptions:
         Technical note: for single observables with multiple basis terms it might turn out that
         multiple extrapolation methods are used in *the same* expectation value, for example, ``XX``
         gets linearly extrapolated but ``XY`` gets exponentially extrapolated in the observable
-        ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *hetergeneous fit*. The data from (2) is
+        ``{"XX": 0.5, "XY": 0.5}``. Let's call this a *heterogeneous fit*. The data from (2) is
         evaluated from heterogeneous fits by selecting the best fit for every individual distinct
         term, whereas data from (1) is evaluated from forced homogenous fits, one for each provided
         extrapolator. If your work requires a nuanced distinction in this regard, we presently

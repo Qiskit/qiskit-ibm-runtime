@@ -89,13 +89,12 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
         if cls.dependencies.channel == "ibm_cloud":
-            # TODO use real device when cloud supports it
-            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
         if cls.dependencies.channel == "ibm_quantum":
             cls.dependencies.service._account.instance = (
                 None  # set instance to none to avoid filtering
             )
-            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""

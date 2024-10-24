@@ -69,15 +69,14 @@ def run_quantum_and_cloud_fake(func):
 
 
 def _get_integration_test_config():
-    token, url, instance, qpu, channel_strategy = (
+    token, url, instance, qpu = (
         os.getenv("QISKIT_IBM_TOKEN"),
         os.getenv("QISKIT_IBM_URL"),
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("QISKIT_IBM_QPU"),
-        os.getenv("CHANNEL_STRATEGY"),
     )
     channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
-    return channel, token, url, instance, qpu, channel_strategy
+    return channel, token, url, instance, qpu
 
 
 def run_integration_test(func):
@@ -117,7 +116,7 @@ def integration_test_setup(
                 ["ibm_cloud", "ibm_quantum"] if supported_channel is None else supported_channel
             )
 
-            channel, token, url, instance, qpu, channel_strategy = _get_integration_test_config()
+            channel, token, url, instance, qpu = _get_integration_test_config()
             if not all([channel, token, url]):
                 raise Exception("Configuration Issue")  # pylint: disable=broad-exception-raised
 
@@ -133,7 +132,6 @@ def integration_test_setup(
                     channel=channel,
                     token=token,
                     url=url,
-                    channel_strategy=channel_strategy,
                 )
             dependencies = IntegrationTestDependencies(
                 channel=channel,
@@ -142,7 +140,6 @@ def integration_test_setup(
                 instance=instance,
                 qpu=qpu,
                 service=service,
-                channel_strategy=channel_strategy,
             )
             kwargs["dependencies"] = dependencies
             func(self, *args, **kwargs)
@@ -162,7 +159,6 @@ class IntegrationTestDependencies:
     token: str
     channel: str
     url: str
-    channel_strategy: str
 
 
 def integration_test_setup_with_backend(

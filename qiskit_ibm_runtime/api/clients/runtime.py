@@ -61,7 +61,6 @@ class RuntimeClient(BaseBackendClient):
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,
-        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -78,7 +77,6 @@ class RuntimeClient(BaseBackendClient):
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
-            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -99,7 +97,6 @@ class RuntimeClient(BaseBackendClient):
             start_session=start_session,
             session_time=session_time,
             private=private,
-            channel_strategy=channel_strategy,
             **hgp_dict,
         )
 
@@ -274,27 +271,17 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(
-        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
-    ) -> List[str]:
+    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
         """Return IBM backends available for this service instance.
 
         Args:
             hgp: Filter by hub/group/project.
-            channel_strategy: Filter by channel strategy.
 
         Returns:
             IBM backends available for this service instance.
         """
-        return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
 
-    def is_qctrl_enabled(self) -> bool:
-        """Returns a boolean of whether or not the instance has q-ctrl enabled.
-
-        Returns:
-            Boolean value.
-        """
-        return self._api.is_qctrl_enabled()
+        return self._api.backends(hgp=hgp)["devices"]
 
     def backend_configuration(self, backend_name: str, refresh: bool = False) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
