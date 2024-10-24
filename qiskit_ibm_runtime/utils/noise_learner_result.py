@@ -286,18 +286,140 @@ class LayerError:
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
-            self,
-            embedding,
-            colorscale,
-            color_no_data,
-            color_out_of_scale,
-            num_edge_segments,
-            edge_width,
-            height,
-            highest_rate,
-            background_color,
-            radius,
-            width,
+            layer_error=self,
+            embedding=embedding,
+            colorscale=colorscale,
+            color_no_data=color_no_data,
+            color_out_of_scale=color_out_of_scale,
+            num_edge_segments=num_edge_segments,
+            edge_width=edge_width,
+            height=height,
+            highest_rate=highest_rate,
+            background_color=background_color,
+            radius=radius,
+            width=width,
+        )
+
+    def draw_1q_bar_plot(
+        self,
+        qubits: Optional[list[int]] = None,
+        generators: Optional[list[str]] = None,
+        colors: Optional[list[str]] = None,
+        grouping: str = "qubit",
+        height: int = 500,
+        width: int = 800,
+    ) -> go.Figure:
+        r"""
+        Draw a bar plot containing all the one-body terms in this layer error.
+
+        Args:
+            qubits: The qubits to include in the bar plot. If ``None``, all the qubits in the given
+                ``layer_error`` are included.
+            generators: The (one-qubit) generators to include in the bar plot, e.g. ``("X", "Z")``. If
+                ``None``, all the generators in the given ``layer_error`` are included.
+            colors: A list of colors for the bars in the plot, or ``None`` if these colors are to be
+                chosen automatically.
+            grouping: How to group the bars. Available values are:
+                * ``"qubits"``: Group by qubit.
+                * ``"generator"``: Group the bar by generator.
+            height: The height of the returned figure.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+
+        from ..visualization import draw_layer_error_1q_bar_plot
+
+        return draw_layer_error_1q_bar_plot(
+            layer_error=self,
+            qubits=qubits,
+            generators=generators,
+            colors=colors,
+            grouping=grouping,
+            height=height,
+            width=width,
+        )
+
+    def draw_2q_bar_plot(
+        self,
+        edges: Optional[list[tuple[int, int]]] = None,
+        generators: Optional[list[str]] = None,
+        colors: Optional[list[str]] = None,
+        grouping: str = "edge",
+        height: int = 500,
+        width: int = 800,
+    ) -> go.Figure:
+        r"""
+        Draw a bar plot containing all the two-body terms in this layer error.
+
+        Args:
+            edges: The edges (specified as pairs of qubit labels) to include in the bar plot. If
+                ``None``, all the edges in the given ``layer_error`` are included.
+            generators: The (two-qubit) generators to include in the bar plot, e.g.
+                ``("XY", "ZZ")``. If ``None``, all the generators in the given ``layer_error`` are
+                included.
+            colors: A list of colors for the bars in the plot, or ``None`` if these colors are to
+                be chosen automatically.
+            grouping: How to group the bars. Available values are:
+                * ``"edge"``: Group by edge.
+                * ``"generator"``: Group the bar by generator.
+            height: The height of the returned figure.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+
+        from ..visualization import draw_layer_error_2q_bar_plot
+
+        return draw_layer_error_2q_bar_plot(
+            layer_error=self,
+            edges=edges,
+            generators=generators,
+            colors=colors,
+            grouping=grouping,
+            height=height,
+            width=width,
+        )
+
+    def draw_layer_errors_swarm(
+        self,
+        other_layer_errors: Optional[list[LayerError]] = None,
+        colors: Optional[list[str]] = None,
+        bin_size: Optional[Union[int, float]] = None,
+        opacities: Union[float, list[float]] = 0.4,
+        names: Optional[list[str]] = None,
+        height: int = 500,
+        width: int = 800,
+    ) -> go.Figure:
+        r"""
+        Draw a swarm plot of the rates in this layer error.
+
+        This function plots the ll rates along a vertical axes, offsetting the rates along the ``x``
+        axis so that they do not overlap with each other.
+
+        Args:
+            other_layer_errors: A list of other layer errors to draw in the same plot.
+            colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
+                chosen automatically.
+            bin_size: The size of the bins that the rates are placed into prior to calculating the
+                offsets. If ``None``, it automatically calculates the ``bin_size`` so that all the
+                rates are placed in ``10`` consecutive bins.
+            opacities: A list of opacities for the markers.
+            names: The names of the various layers as displayed in the legend. If ``None``, default
+                names are assigned based on the layers' position inside the ``layer_errors`` list.
+            height: The height of the returned figure.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+
+        from ..visualization import draw_layer_errors_swarm
+
+        return draw_layer_errors_swarm(
+            layer_errors=[self] + list(other_layer_errors) if other_layer_errors else [self],
+            colors=colors,
+            bin_size=bin_size,
+            opacities=opacities,
+            names=names,
+            height=height,
+            width=width,
         )
 
     def _json(self) -> dict:
