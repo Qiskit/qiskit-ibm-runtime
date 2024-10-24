@@ -121,7 +121,7 @@ class NoiseLearner:
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
            cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
-           Nature Physics volume 19, pages1116–1121 (2023).
+           Nature Physics volume 19, pages 1116–1121 (2023).
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
 
     """
