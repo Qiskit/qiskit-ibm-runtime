@@ -122,6 +122,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
+        if backend.simulator:
+            raise SkipTest("Simulator target is the same.")
         with self.subTest(backend=backend.name):
             old_target = backend.target
             old_configuration = backend.configuration()
