@@ -221,6 +221,10 @@ class NoiseLearner:
         """Return the program ID."""
         return "noise-learner"
 
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
     def _set_options(
         self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
     ) -> None:
