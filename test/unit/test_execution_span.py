@@ -291,3 +291,9 @@ class TestExecutionSpans(IBMTestCase):
         self.assertIsNot(inplace_sort, spans)
         self.assertLess(spans[1], spans[0])
         self.assertLess(new_sort[0], new_sort[1])
+
+    @ddt.data(False, True)
+    def test_draw(self, normalize_y):
+        """Test the draw method."""
+        spans = ExecutionSpans([self.span2, self.span1])
+        self.save_plotly_artifact(spans.draw(normalize_y=normalize_y))
