@@ -81,7 +81,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_sampler_run(self, service):
         """Test Sampler.run()."""
 
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             _, _, target = self._cases[1]
             with self.subTest("single"):
                 sampler = Sampler(mode=session, options=self._options)
@@ -162,7 +162,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_run_single_circuit(self, service):
         """Test for single circuit case."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             sampler = Sampler(mode=session, options=self._options)
 
             with self.subTest("No parameter"):
@@ -253,7 +253,7 @@ class TestSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_run_numpy_params(self, service):
         """Test for numpy array as parameter values"""
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             qc = RealAmplitudes(num_qubits=2, reps=2)
             qc.measure_all()
             qc = transpile(circuits=qc, backend=self._backend)
@@ -276,7 +276,7 @@ class TestSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_run_with_shots_option(self, service):
         """test with shots option."""
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             _, _, _ = self._cases[1]
             shots = 100
             with self.subTest("init option"):
@@ -363,7 +363,7 @@ class TestSampler(IBMIntegrationTestCase):
         """Test for circuit with unitary gate."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             with self.subTest("identity"):
                 gate = UnitaryGate(np.eye(2))
 
@@ -398,7 +398,7 @@ class TestSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_circuit_with_multiple_cregs(self, service):
         """Test for circuit with multiple classical registers."""
-        with Session(service, self.dependencies.qpu) as session:
+        with Session(service, self._backend) as session:
             cases = []
             pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
