@@ -26,7 +26,6 @@ from .utils import (
     default_runtime_url_resolver,
     resolve_crn,
     are_circuits_dynamic,
-    PlotlyFigure,
 )
 from .validations import (
     validate_estimator_pubs,

@@ -22,10 +22,11 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from plotly.graph_objects import Figure as PlotlyFigure
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
-from qiskit_ibm_runtime.utils import PlotlyFigure
+
 
 from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup

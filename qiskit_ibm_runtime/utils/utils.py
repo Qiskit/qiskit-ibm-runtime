@@ -34,14 +34,6 @@ from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
 
-try:
-    # This lives in the general utils folder instead of in visualization so that
-    # anything can import it without worrying about circular imports.
-    # pylint: disable=unused-import
-    from plotly.graph_objects import Figure as PlotlyFigure
-except (AttributeError, ImportError, ModuleNotFoundError):
-    PlotlyFigure = None
-
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     """Return true if the backend is a simulator.

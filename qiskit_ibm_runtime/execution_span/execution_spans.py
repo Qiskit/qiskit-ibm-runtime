@@ -15,10 +15,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import overload, Iterable, Iterator
+from typing import overload, Iterable, Iterator, TYPE_CHECKING
 
-from ..utils import PlotlyFigure
 from .execution_span import ExecutionSpan
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class ExecutionSpans:
@@ -115,7 +117,7 @@ class ExecutionSpans:
         obj._spans.sort()
         return obj
 
-    def draw(self, normalize_y: bool = False) -> PlotlyFigure:
+    def draw(self, normalize_y: bool = False) -> "PlotlyFigure":
         """Draw these execution spans on a plot.
 
         .. note::

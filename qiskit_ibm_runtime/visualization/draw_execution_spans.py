@@ -10,15 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Functions to visualize :class:`~.ExecutionSpans` objects."""
+
 from __future__ import annotations
 
 from functools import partial
 from itertools import cycle
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from ..execution_span import ExecutionSpans
-from ..utils.utils import PlotlyFigure
 from .utils import plotly_module
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 HOVER_TEMPLATE = "<br>".join(
@@ -45,7 +50,7 @@ def _get_id(span, multiple):
 
 def draw_execution_spans(
     *list_of_spans: ExecutionSpans, common_start: bool = False, normalize_y: bool = False
-) -> PlotlyFigure:
+) -> "PlotlyFigure":
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
     Args:
