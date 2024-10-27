@@ -58,6 +58,9 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
         x: The `x` coordinate of the centre of the pie.
         y: The `y` coordinate of the centre of the pie.
         radius: the radius of the pie.
+
+    Returns:
+        A path string.
     """
     t = np.linspace(angle_st * np.pi / 180, angle_end * np.pi / 180, 10)
 
@@ -76,7 +79,7 @@ def get_rgb_color(
     discreet_colorscale: list[str], val: float, default: str, color_out_of_scale: str
 ) -> str:
     r"""
-    Maps a float to an RGB color based on a discreet colorscale that contains
+    Map a float to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
 
     Args:
