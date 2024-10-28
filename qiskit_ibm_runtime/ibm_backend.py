@@ -222,7 +222,7 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
         # Lazy load properties and pulse defaults and construct the target object.
-        self._properties = self.properties()
+        self.properties()
         self._get_defaults()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps
@@ -334,7 +334,7 @@ class IBMBackend(Backend):
         Returns:
             Target
         """
-        self._properties = self.properties()
+        self.properties()
         self._get_defaults()
         self._convert_to_target()
         return self._target
@@ -370,7 +370,7 @@ class IBMBackend(Backend):
             instance=self._instance,
         ):
             self._configuration = config
-        self._get_properties(datetime=python_datetime.now())
+        self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
         self._get_defaults(refresh=True)
         self._convert_to_target(refresh=True)
 
