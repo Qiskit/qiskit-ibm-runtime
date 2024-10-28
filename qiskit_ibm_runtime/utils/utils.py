@@ -72,9 +72,13 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
         # errors (beyond pi/2 does not trigger an error down the stack, only may become less
         # accurate).
-        if name == "rzz" and not isinstance(instruction.operation.params[0], Parameter) and (
-            instruction.operation.params[0] < 0.0
-            or instruction.operation.params[0] > 1.001 * np.pi / 2
+        if (
+            name == "rzz"
+            and not isinstance(instruction.operation.params[0], Parameter)
+            and (
+                instruction.operation.params[0] < 0.0
+                or instruction.operation.params[0] > 1.001 * np.pi / 2
+            )
         ):
             return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
             range [0, pi/2], but an angle of {instruction.operation.params[0]} has been provided."
