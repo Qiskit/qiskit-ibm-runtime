@@ -40,7 +40,6 @@ class TestOptionsUtils(IBMTestCase):
             {"default_shots": 99, "seed_estimator": 42},
             {"resilience_level": 99, "default_shots": 98},
             {
-                "optimization_level": 1,
                 "environment": {"log_level": "INFO"},
             },
             {
