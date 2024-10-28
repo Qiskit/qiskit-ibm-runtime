@@ -239,7 +239,7 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
-    def _get_defaults(self) -> None:
+    def _get_defaults(self, refresh: bool = False) -> None:
         """Gets defaults if pulse backend and decodes it"""
         if (
             not self._defaults and isinstance(self._configuration, PulseBackendConfiguration)

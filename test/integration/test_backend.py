@@ -126,6 +126,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             properties = backend.properties()
             backend.target_history(datetime=datetime.now() - timedelta(60))
             self.assertEqual(properties, backend.properties())
+
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
