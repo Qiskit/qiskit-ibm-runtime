@@ -61,7 +61,6 @@ class TestSamplerV2(IBMTestCase):
             np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
     @data(
-        {"optimization_level": 4},
         {"resilience_level": 1},
         {"resilience": {"zne_mitigation": True}},
         {"execution": {"meas_type": "unclassified"}},
