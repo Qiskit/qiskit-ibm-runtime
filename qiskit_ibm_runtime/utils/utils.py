@@ -29,7 +29,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
@@ -72,7 +72,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
         # errors (beyond pi/2 does not trigger an error down the stack, only may become less
         # accurate).
-        if name == "rzz" and (
+        if name == "rzz" and not isinstance(instruction.operation.params[0], Parameter) and (
             instruction.operation.params[0] < 0.0
             or instruction.operation.params[0] > 1.001 * np.pi / 2
         ):
