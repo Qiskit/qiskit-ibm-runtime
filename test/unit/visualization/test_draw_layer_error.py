@@ -329,7 +329,8 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
             {
                 "title": {"text": "layers"},
                 "range": [-1, 3],
-                "showticklabels": False,
+                "ticktext": ["l1", "l2", "l3"],
+                "tickvals": [0, 1, 2],
                 "showgrid": False,
                 "zeroline": False,
             },
