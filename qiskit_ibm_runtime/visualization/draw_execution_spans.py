@@ -19,7 +19,7 @@ from itertools import cycle
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from ..execution_span import ExecutionSpans
+from ..execution_span import ExecutionSpan, ExecutionSpans
 from .utils import plotly_module
 
 if TYPE_CHECKING:
@@ -37,14 +37,14 @@ HOVER_TEMPLATE = "<br>".join(
 )
 
 
-def _get_idxs(span, limit=10):
+def _get_idxs(span: ExecutionSpan, limit: int = 10) -> str:
     if len(idxs := span.pub_idxs) <= limit:
         return str(idxs)
     else:
         return f"[{', '.join(map(str, idxs[:limit]))}, ...]"
 
 
-def _get_id(span, multiple):
+def _get_id(span: ExecutionSpan, multiple: bool) -> str:
     return f"<{hex(id(span))}>" if multiple else ""
 
 
@@ -74,16 +74,15 @@ def draw_execution_spans(
             continue
 
         # sort the spans but remember their original order
-        spans = sorted(enumerate(spans), key=lambda x: x[1])
+        sorted_spans = sorted(enumerate(spans), key=lambda x: x[1])
 
         offset = timedelta()
         if common_start:
-            first_span = spans[0][1]
-            offset = first_span.start.replace(tzinfo=None) - datetime(year=1970, month=1, day=1)
+            offset = spans[0].start.replace(tzinfo=None) - datetime(year=1970, month=1, day=1)
 
-        total_size = sum(span.size for _, span in spans) if normalize_y else 1
-        y_value = 0
-        for idx, span in spans:
+        total_size = sum(span.size for span in spans) if normalize_y else 1
+        y_value = 0.0
+        for idx, span in sorted_spans:
             y_value += span.size / total_size
             text = HOVER_TEMPLATE.format(span=span, idx=idx, idxs=_get_idxs(span), id=get_id(span))
             # Create a line representing each span as a Scatter trace

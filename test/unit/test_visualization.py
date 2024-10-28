@@ -56,13 +56,15 @@ class TestDrawExecutionSpans(IBMTestCase):
         spans1 = []
         for idx in range(100):
             delta = timedelta(seconds=4 + 2 * random.random())
-            sl = {0: ((100,), slice(idx, idx + 1))}
-            spans0.append(SliceSpan(time0, time0 := time0 + delta, sl))
+            spans0.append(
+                SliceSpan(time0, time0 := time0 + delta, {0: ((100,), slice(idx, idx + 1))})
+            )
 
             if idx < 50:
                 delta = timedelta(seconds=3 + 3 * random.random())
-                sl = {0: ((50,), slice(idx, idx + 1))}
-                spans1.append(SliceSpan(time1, time1 := time1 + delta, sl))
+                spans1.append(
+                    SliceSpan(time1, time1 := time1 + delta, {0: ((50,), slice(idx, idx + 1))})
+                )
 
         self.spans0 = ExecutionSpans(spans0)
         self.spans1 = ExecutionSpans(spans1)
