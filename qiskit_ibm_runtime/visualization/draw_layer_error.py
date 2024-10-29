@@ -466,7 +466,7 @@ def draw_layer_errors_swarm(
     num_bins: Optional[int] = None,
     opacities: Union[float, list[float]] = 0.4,
     names: Optional[list[str]] = None,
-    x_coo: Optional[list[float]]=None,
+    x_coo: Optional[list[float]] = None,
     height: int = 500,
     width: int = 800,
 ) -> go.Figure:
@@ -477,7 +477,7 @@ def draw_layer_errors_swarm(
     offsetting the rates along the ``x`` axis to minimize the overlap between the markers. It helps
     visualizing the distribution of errors for different layer errors, as well as to track (using
     the ``connected`` argument) the evolution of specific generators across different layers.
-    
+
     .. note::
 
         To calculate the offsets, this arranges the rates in ``num_bins`` equally-spaced bins, and
@@ -528,7 +528,7 @@ def draw_layer_errors_swarm(
     names = [f"layer #{i}" for i in range(len(layer_errors))] if not names else names
     if len(names) != len(layer_errors):
         raise ValueError(f"Expected {len(layer_errors)} names, found {len(names)}.")
-    
+
     x_coo = list(range(len(layer_errors))) if not x_coo else x_coo
     if len(x_coo) != len(layer_errors):
         raise ValueError(f"Expected {len(layer_errors)} ``x_coo``, found {len(x_coo)}.")

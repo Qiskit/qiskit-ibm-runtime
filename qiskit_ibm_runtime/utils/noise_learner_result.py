@@ -390,7 +390,7 @@ class LayerError:
         num_bins: Optional[int] = None,
         opacities: Union[float, list[float]] = 0.4,
         names: Optional[list[str]] = None,
-        x_coo: Optional[list[float]]=None,
+        x_coo: Optional[list[float]] = None,
         height: int = 500,
         width: int = 800,
     ) -> go.Figure:
