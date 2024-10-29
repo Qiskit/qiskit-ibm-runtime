@@ -117,7 +117,7 @@ class ExecutionSpans:
         obj._spans.sort()
         return obj
 
-    def draw(self, normalize_y: bool = False) -> "PlotlyFigure":
+    def draw(self, normalize_y: bool = False, line_width: int = 4) -> "PlotlyFigure":
         """Draw these execution spans.
 
         .. note::
@@ -127,6 +127,7 @@ class ExecutionSpans:
         Args:
             normalize_y: Whether to display the y-axis units as a percentage of work
                 complete, rather than cumulative shots completed.
+            line_width: The thickness of line segments.
 
         Returns:
             A plotly figure.
@@ -134,4 +135,4 @@ class ExecutionSpans:
         # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_execution_spans
 
-        return draw_execution_spans(self, normalize_y=normalize_y)
+        return draw_execution_spans(self, normalize_y=normalize_y, line_width=line_width)

@@ -49,7 +49,10 @@ def _get_id(span: ExecutionSpan, multiple: bool) -> str:
 
 
 def draw_execution_spans(
-    *spans: ExecutionSpans, common_start: bool = False, normalize_y: bool = False
+    *spans: ExecutionSpans,
+    common_start: bool = False,
+    normalize_y: bool = False,
+    line_width: int = 4,
 ) -> PlotlyFigure:
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
@@ -59,6 +62,7 @@ def draw_execution_spans(
             at :math:`t=0`.
         normalize_y: Whether to display the y-axis units as a percentage of work complete, rather
             than cumulative shots completed.
+        line_width: The thickness of line segments.
 
     Returns:
         A plotly figure.
@@ -92,7 +96,7 @@ def draw_execution_spans(
                     x=[span.start - offset, span.stop - offset],
                     y=[y_value, y_value],
                     mode="lines",
-                    line={"width": 4, "color": color},
+                    line={"width": line_width, "color": color},
                     text=text,
                     hoverinfo="text",
                 )
