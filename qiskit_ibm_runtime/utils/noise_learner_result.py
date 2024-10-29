@@ -30,7 +30,7 @@ import numpy as np
 
 from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import PauliList
+from qiskit.quantum_info import PauliList, Pauli
 
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
@@ -382,10 +382,15 @@ class LayerError:
     def draw_layer_errors_swarm(
         self,
         other_layer_errors: Optional[list[LayerError]] = None,
+        num_bodies: Optional[int] = None,
+        max_rate: Optional[float] = None,
+        min_rate: Optional[float] = None,
+        connected: Optional[Union[list[Pauli], list[str]]] = None,
         colors: Optional[list[str]] = None,
-        bin_size: Optional[Union[int, float]] = None,
+        num_bins: Optional[int] = None,
         opacities: Union[float, list[float]] = 0.4,
         names: Optional[list[str]] = None,
+        x_coo: Optional[list[float]]=None,
         height: int = 500,
         width: int = 800,
     ) -> go.Figure:
@@ -397,14 +402,22 @@ class LayerError:
 
         Args:
             other_layer_errors: A list of other layer errors to draw in the same plot.
+            num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
+                generators should be included.
+            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
+                set.
+            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
+                set.
+            connected: A list of generators whose markers are to be connected by lines.
             colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
                 chosen automatically.
-            bin_size: The size of the bins that the rates are placed into prior to calculating the
-                offsets. If ``None``, it automatically calculates the ``bin_size`` so that all the
-                rates are placed in ``10`` consecutive bins.
+            num_bins: The number of bins to place the rates into when calculating the ``x``-axis
+                offsets.
             opacities: A list of opacities for the markers.
             names: The names of the various layers as displayed in the legend. If ``None``, default
                 names are assigned based on the layers' position inside the ``layer_errors`` list.
+            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
+                ``None`` if these axes should be placed at regular intervals.
             height: The height of the returned figure.
             width: The width of the returned figure.
         """
@@ -414,10 +427,15 @@ class LayerError:
 
         return draw_layer_errors_swarm(
             layer_errors=[self] + list(other_layer_errors) if other_layer_errors else [self],
+            num_bodies=num_bodies,
+            max_rate=max_rate,
+            min_rate=min_rate,
+            connected=connected,
             colors=colors,
-            bin_size=bin_size,
+            num_bins=num_bins,
             opacities=opacities,
             names=names,
+            x_coo=x_coo,
             height=height,
             width=width,
         )

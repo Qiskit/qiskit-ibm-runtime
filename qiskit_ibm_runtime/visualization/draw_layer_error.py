@@ -466,6 +466,7 @@ def draw_layer_errors_swarm(
     num_bins: Optional[int] = None,
     opacities: Union[float, list[float]] = 0.4,
     names: Optional[list[str]] = None,
+    x_coo: Optional[list[float]]=None,
     height: int = 500,
     width: int = 800,
 ) -> go.Figure:
@@ -473,14 +474,20 @@ def draw_layer_errors_swarm(
     Draw a swarm plot for the given list of layer errors.
 
     This function plots the rates of each of the given layer errors along a vertical axes,
-    offsetting the rates along the ``x`` axis to minimize the overlap between the markers. To
-    calculate the offsets, it arranges the rates in ``num_bins`` equally-spaced bins, and then it
-    assigns the ``x`` coordinates so that all the rates in the same bins are spaced around the
-    vertical axis.
+    offsetting the rates along the ``x`` axis to minimize the overlap between the markers. It helps
+    visualizing the distribution of errors for different layer errors, as well as to track (using
+    the ``connected`` argument) the evolution of specific generators across different layers.
+    
+    .. note::
+
+        To calculate the offsets, this arranges the rates in ``num_bins`` equally-spaced bins, and
+        then it assigns the ``x`` coordinates so that all the rates in the same bins are spaced
+        around the vertical axis. Thus, a higher value of ``num_bins`` will result in higher
+        overlaps between the markers.
 
     Args:
         layer_errors: The layer errors to draw.
-        num_bodies: The weight of the generators to include in the plot, or ``None`` if no all the
+        num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
             generators should be included.
         max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
             set.
@@ -489,12 +496,13 @@ def draw_layer_errors_swarm(
         connected: A list of generators whose markers are to be connected by lines.
         colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
             chosen automatically.
-        bin_size: The size of the bins that the rates are placed into prior to calculating the
-            offsets. If ``None``, it automatically calculates the ``bin_size`` so that all the
-            rates are placed in ``10`` consecutive bins.
+        num_bins: The number of bins to place the rates into when calculating the ``x``-axis
+            offsets.
         opacities: A list of opacities for the markers.
         names: The names of the various layers as displayed in the legend. If ``None``, default
             names are assigned based on the layers' position inside the ``layer_errors`` list.
+        x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
+            ``None`` if these axes should be placed at regular intervals.
         height: The height of the returned figure.
         width: The width of the returned figure.
 
@@ -520,16 +528,20 @@ def draw_layer_errors_swarm(
     names = [f"layer #{i}" for i in range(len(layer_errors))] if not names else names
     if len(names) != len(layer_errors):
         raise ValueError(f"Expected {len(layer_errors)} names, found {len(names)}.")
+    
+    x_coo = list(range(len(layer_errors))) if not x_coo else x_coo
+    if len(x_coo) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} ``x_coo``, found {len(x_coo)}.")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
     fig.update_xaxes(
-        range=[-1, len(layer_errors)],
+        range=[x_coo[0] - 1, x_coo[-1] + 1],
         showgrid=False,
         zeroline=False,
         title="layers",
     )
     fig.update_yaxes(title="rates")
-    fig.update_layout(xaxis=dict(tickvals=list(range(len(names))), ticktext=names))
+    fig.update_layout(xaxis=dict(tickvals=x_coo, ticktext=names))
 
     # Initialize a dictionary to store the coordinates of the generators that need to be connected
     connected = {str(p): {"xs": [], "ys": []} for p in connected} if connected else {}
@@ -558,7 +570,7 @@ def draw_layer_errors_swarm(
         hoverinfo = []
         for values in bins.values():
             for idx, (gen, rate, is_connected) in enumerate(values):
-                xs.append(x := l_error_idx + (idx - len(values) // 2) / len(rates))
+                xs.append(x := x_coo[l_error_idx] + (idx - len(values) // 2) / len(rates))
                 ys.append(rate)
                 hoverinfo.append(f"Generator: {gen}<br>  rate: {rate}")
 
