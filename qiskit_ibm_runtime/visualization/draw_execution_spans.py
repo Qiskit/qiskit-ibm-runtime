@@ -49,12 +49,12 @@ def _get_id(span: ExecutionSpan, multiple: bool) -> str:
 
 
 def draw_execution_spans(
-    *list_of_spans: ExecutionSpans, common_start: bool = False, normalize_y: bool = False
+    *spans: ExecutionSpans, common_start: bool = False, normalize_y: bool = False
 ) -> "PlotlyFigure":
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
     Args:
-        list_of_spans: One or more :class:`~.ExecutionSpans`.
+        spans: One or more :class:`~.ExecutionSpans`.
         common_start: Whether to shift all collections of spans so that their first span's start is
             at :math:`t=0`.
         normalize_y: Whether to display the y-axis units as a percentage of work complete, rather
@@ -67,20 +67,21 @@ def draw_execution_spans(
     colors = plotly_module(".colors").qualitative.Plotly
 
     fig = go.Figure()
-    get_id = partial(_get_id, multiple=len(list_of_spans) > 1)
+    get_id = partial(_get_id, multiple=len(spans) > 1)
 
-    for spans, color in zip(list_of_spans, cycle(colors)):
-        if not spans:
+    for single_spans, color in zip(spans, cycle(colors)):
+        if not single_spans:
             continue
 
         # sort the spans but remember their original order
-        sorted_spans = sorted(enumerate(spans), key=lambda x: x[1])
+        sorted_spans = sorted(enumerate(single_spans), key=lambda x: x[1])
 
         offset = timedelta()
         if common_start:
-            offset = spans[0].start.replace(tzinfo=None) - datetime(year=1970, month=1, day=1)
+            first_start = sorted_spans[0][1].start.replace(tzinfo=None)
+            offset = first_start - datetime(year=1970, month=1, day=1)
 
-        total_size = sum(span.size for span in spans) if normalize_y else 1
+        total_size = sum(span.size for span in single_spans) if normalize_y else 1
         y_value = 0.0
         for idx, span in sorted_spans:
             y_value += span.size / total_size
