@@ -121,7 +121,7 @@ class ExecutionSpans:
         """Draw these execution spans.
 
         .. note::
-            To draw multiple sets of execution spans at once, for examule, coming from multiple
+            To draw multiple sets of execution spans at once, for example coming from multiple
             jobs, consider calling :func:`~.draw_execution_spans` directly.
 
         Args:
