@@ -118,7 +118,7 @@ class ExecutionSpans:
         return obj
 
     def draw(self, normalize_y: bool = False) -> "PlotlyFigure":
-        """Draw these execution spans on a plot.
+        """Draw these execution spans.
 
         .. note::
             To draw multiple sets of execution spans at once, for examule, coming from multiple
