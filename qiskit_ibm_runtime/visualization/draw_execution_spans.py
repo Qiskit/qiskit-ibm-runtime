@@ -50,7 +50,7 @@ def _get_id(span: ExecutionSpan, multiple: bool) -> str:
 
 def draw_execution_spans(
     *spans: ExecutionSpans, common_start: bool = False, normalize_y: bool = False
-) -> "PlotlyFigure":
+) -> PlotlyFigure:
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
     Args:
@@ -58,7 +58,7 @@ def draw_execution_spans(
         common_start: Whether to shift all collections of spans so that their first span's start is
             at :math:`t=0`.
         normalize_y: Whether to display the y-axis units as a percentage of work complete, rather
-            than cummulative shots completed.
+            than cumulative shots completed.
 
     Returns:
         A plotly figure.

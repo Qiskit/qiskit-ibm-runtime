@@ -231,7 +231,7 @@ class LayerError:
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> "PlotlyFigure":
+    ) -> PlotlyFigure:
         r"""
         Draw a map view of a this layer error.
 

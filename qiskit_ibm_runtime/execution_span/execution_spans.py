@@ -126,7 +126,7 @@ class ExecutionSpans:
 
         Args:
             normalize_y: Whether to display the y-axis units as a percentage of work
-                complete, rather than cummulative shots completed.
+                complete, rather than cumulative shots completed.
 
         Returns:
             A plotly figure.
