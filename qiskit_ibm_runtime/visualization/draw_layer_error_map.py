@@ -20,10 +20,10 @@ from qiskit.providers.backend import BackendV2
 
 from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
-from .utils import get_rgb_color, pie_slice
+from .utils import get_rgb_color, pie_slice, plotly_module
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 def draw_layer_error_map(
@@ -39,7 +39,7 @@ def draw_layer_error_map(
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
-) -> go.Figure:
+) -> PlotlyFigure:
     r"""
     Draw a map view of a :class:`~.LayerError`.
 
@@ -64,13 +64,8 @@ def draw_layer_error_map(
         ValueError: If ``backend`` has no coupling map.
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
-    # pylint: disable=import-outside-toplevel
-
-    try:
-        import plotly.graph_objects as go
-        from plotly.colors import sample_colorscale
-    except ModuleNotFoundError as msg:
-        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+    go = plotly_module(".graph_objects")
+    sample_colorscale = plotly_module(".colors").sample_colorscale
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
@@ -111,8 +106,8 @@ def draw_layer_error_map(
 
     highest_rate = highest_rate if highest_rate else max_rate
 
-    # A discreet colorscale that contains 1000 hues.
-    discreet_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
+    # A discrete colorscale that contains 1000 hues.
+    discrete_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
 
     # Plot the edges
     for q1, q2 in edges:
@@ -132,7 +127,7 @@ def draw_layer_error_map(
             ]
             color = [
                 get_rgb_color(
-                    discreet_colorscale, v / highest_rate, color_no_data, color_out_of_scale
+                    discrete_colorscale, v / highest_rate, color_no_data, color_out_of_scale
                 )
                 for v in all_vals
             ]
@@ -185,7 +180,7 @@ def draw_layer_error_map(
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
             fillcolor = get_rgb_color(
-                discreet_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
+                discrete_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
             )
             shapes += [
                 {

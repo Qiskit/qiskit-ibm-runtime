@@ -26,7 +26,9 @@ Functions
 .. autosummary::
     :toctree: ../stubs/
 
+    draw_execution_spans
     draw_layer_error_map
 """
 
+from .draw_execution_spans import draw_execution_spans
 from .draw_layer_error_map import draw_layer_error_map
