@@ -78,18 +78,19 @@ def draw_execution_spans(
     # assign a name to each span
     if names is None:
         show_legend = False if show_legend is None else show_legend
-        names = []
+        all_names = []
     else:
         show_legend = True if show_legend is None else show_legend
         if isinstance(names, str):
-            names = [names]
+            all_names = [names]
 
     # make sure there are always at least as many names as span sets
-    names.extend(
+    all_names.extend(
         f"ExecutionSpans{_get_id(single_span, len(spans)>1)}" for single_span in spans[len(names) :]
     )
 
-    for single_spans, color, name in zip(spans, cycle(colors), names):
+    # loop through and make a trace in the figure for each ExecutionSpans
+    for single_spans, color, name in zip(spans, cycle(colors), all_names):
         if not single_spans:
             continue
 
@@ -117,7 +118,6 @@ def draw_execution_spans(
             y_data.extend([y_value, y_value, None])
             text_data.append(text)
 
-        # put all data for this ExecutionSpans into one Scatter trace
         fig.add_trace(
             go.Scatter(
                 x=x_data,
@@ -130,7 +130,7 @@ def draw_execution_spans(
             )
         )
 
-    # Axis and layout settings
+    # axis and layout settings
     fig.update_layout(
         xaxis={"title": "Time", "type": "date"},
         showlegend=show_legend,
