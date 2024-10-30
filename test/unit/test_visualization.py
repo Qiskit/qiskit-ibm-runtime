@@ -75,9 +75,11 @@ class TestDrawExecutionSpans(IBMTestCase):
         fig = draw_execution_spans(self.spans0, normalize_y=normalize_y)
         self.save_plotly_artifact(fig)
 
-    @ddt.data((False, False, 4), (True, True, 8))
+    @ddt.data(
+        (False, False, 4, None), (True, True, 8, "alpha"), (True, False, 4, ["alpha", "beta"])
+    )
     @ddt.unpack
-    def test_two_spans(self, normalize_y, common_start, width):
+    def test_two_spans(self, normalize_y, common_start, width, names):
         """Test with two sets of spans."""
         fig = draw_execution_spans(
             self.spans0,
@@ -85,5 +87,6 @@ class TestDrawExecutionSpans(IBMTestCase):
             normalize_y=normalize_y,
             common_start=common_start,
             line_width=width,
+            names=names,
         )
         self.save_plotly_artifact(fig)

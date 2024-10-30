@@ -117,7 +117,9 @@ class ExecutionSpans:
         obj._spans.sort()
         return obj
 
-    def draw(self, normalize_y: bool = False, line_width: int = 4) -> "PlotlyFigure":
+    def draw(
+        self, name: str = None, normalize_y: bool = False, line_width: int = 4
+    ) -> "PlotlyFigure":
         """Draw these execution spans.
 
         .. note::
@@ -125,6 +127,7 @@ class ExecutionSpans:
             jobs, consider calling :func:`~.draw_execution_spans` directly.
 
         Args:
+            name: The name of this set of spans.
             normalize_y: Whether to display the y-axis units as a percentage of work
                 complete, rather than cumulative shots completed.
             line_width: The thickness of line segments.
@@ -135,4 +138,6 @@ class ExecutionSpans:
         # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_execution_spans
 
-        return draw_execution_spans(self, normalize_y=normalize_y, line_width=line_width)
+        return draw_execution_spans(
+            self, normalize_y=normalize_y, line_width=line_width, names=name
+        )

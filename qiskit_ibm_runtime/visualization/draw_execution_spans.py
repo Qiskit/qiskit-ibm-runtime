@@ -14,10 +14,9 @@
 
 from __future__ import annotations
 
-from functools import partial
 from itertools import cycle
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 from ..execution_span import ExecutionSpan, ExecutionSpans
 from .utils import plotly_module
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
 
 HOVER_TEMPLATE = "<br>".join(
     [
-        "<b>ExecutionSpans{id}[{idx}]</b>",
+        "<b>{name}[{idx}]</b>",
         "<b>&nbsp;&nbsp;&nbsp;Start:</b> {span.start:%Y-%m-%d %H:%M:%S.%f}",
         "<b>&nbsp;&nbsp;&nbsp;Stop:</b> {span.stop:%Y-%m-%d %H:%M:%S.%f}",
         "<b>&nbsp;&nbsp;&nbsp;Size:</b> {span.size}",
@@ -44,25 +43,29 @@ def _get_idxs(span: ExecutionSpan, limit: int = 10) -> str:
         return f"[{', '.join(map(str, idxs[:limit]))}, ...]"
 
 
-def _get_id(span: ExecutionSpan, multiple: bool) -> str:
-    return f"<{hex(id(span))}>" if multiple else ""
+def _get_id(spans: ExecutionSpans, multiple: bool) -> str:
+    return f"<{hex(id(spans))}>" if multiple else ""
 
 
 def draw_execution_spans(
     *spans: ExecutionSpans,
+    names: str | Iterable[str] | None = None,
     common_start: bool = False,
     normalize_y: bool = False,
     line_width: int = 4,
+    show_legend: bool = None,
 ) -> PlotlyFigure:
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
     Args:
         spans: One or more :class:`~.ExecutionSpans`.
+        names: Name or names to assign to respective ``spans``.
         common_start: Whether to shift all collections of spans so that their first span's start is
             at :math:`t=0`.
         normalize_y: Whether to display the y-axis units as a percentage of work complete, rather
             than cumulative shots completed.
         line_width: The thickness of line segments.
+        show_legend: Whether to show a legend. By default, this choice is automatic.
 
     Returns:
         A plotly figure.
@@ -71,9 +74,22 @@ def draw_execution_spans(
     colors = plotly_module(".colors").qualitative.Plotly
 
     fig = go.Figure()
-    get_id = partial(_get_id, multiple=len(spans) > 1)
 
-    for single_spans, color in zip(spans, cycle(colors)):
+    # assign a name to each span
+    if names is None:
+        show_legend = False if show_legend is None else show_legend
+        names = []
+    else:
+        show_legend = True if show_legend is None else show_legend
+        if isinstance(names, str):
+            names = [names]
+
+    # make sure there are always at least as many names as span sets
+    names.extend(
+        f"ExecutionSpans{_get_id(single_span, len(spans)>1)}" for single_span in spans[len(names) :]
+    )
+
+    for single_spans, color, name in zip(spans, cycle(colors), names):
         if not single_spans:
             continue
 
@@ -82,30 +98,43 @@ def draw_execution_spans(
 
         offset = timedelta()
         if common_start:
+            # plotly doesn't have a way to display timedeltas or relative times on a axis. the
+            # standard workaround i've found is to shift times to t=0 (unix epoch) and suppress
+            # plotting the year/month.
             first_start = sorted_spans[0][1].start.replace(tzinfo=None)
             offset = first_start - datetime(year=1970, month=1, day=1)
 
         total_size = sum(span.size for span in single_spans) if normalize_y else 1
         y_value = 0.0
+        x_data = []
+        y_data = []
+        text_data = []
         for idx, span in sorted_spans:
             y_value += span.size / total_size
-            text = HOVER_TEMPLATE.format(span=span, idx=idx, idxs=_get_idxs(span), id=get_id(span))
-            # Create a line representing each span as a Scatter trace
-            fig.add_trace(
-                go.Scatter(
-                    x=[span.start - offset, span.stop - offset],
-                    y=[y_value, y_value],
-                    mode="lines",
-                    line={"width": line_width, "color": color},
-                    text=text,
-                    hoverinfo="text",
-                )
+            text = HOVER_TEMPLATE.format(span=span, idx=idx, idxs=_get_idxs(span), name=name)
+
+            x_data.extend([span.start - offset, span.stop - offset, None])
+            y_data.extend([y_value, y_value, None])
+            text_data.append(text)
+
+        # put all data for this ExecutionSpans into one Scatter trace
+        fig.add_trace(
+            go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode="lines",
+                line={"width": line_width, "color": color},
+                text=text_data,
+                hoverinfo="text",
+                name=name,
             )
+        )
 
     # Axis and layout settings
     fig.update_layout(
         xaxis={"title": "Time", "type": "date"},
-        showlegend=False,
+        showlegend=show_legend,
+        legend={"yanchor": "bottom", "y": 0.01, "xanchor": "right", "x": 0.99},
         margin={"l": 70, "r": 20, "t": 20, "b": 70},
     )
 
