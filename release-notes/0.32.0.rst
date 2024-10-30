@@ -24,7 +24,7 @@ New Features
 - Added a new method, ``backend.refresh()`` that refreshes the
   current backend target with the latest updates from the server. (`1955 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1955>`__)
 - Added :class:`.DoubleSliceSpan`, an :class:`ExecutionSpan` for batching with two slices. (`1982 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1982>`__)
-- :class:`.SamplerV2`, :class:`.EstimatorV2`, and :class:`.noise_learner.NoiseLearner` now each has
+- Each of :class:`.SamplerV2`, :class:`.EstimatorV2`, and :class:`.noise_learner.NoiseLearner` now has
   a ``backend()`` method that returns the backend the class is configured with. (`1995 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1995>`__)
 
 
