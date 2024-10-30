@@ -151,6 +151,8 @@ class FakeBackendV2(BackendV2):
         conf_dict = self._load_json(self.conf_filename)  # type: ignore
         decode_backend_configuration(conf_dict)
         conf_dict["backend_name"] = self.backend_name
+        # Set simulator to True cause config comes from real system and has it False
+        conf_dict["simulator"] = True
         return conf_dict
 
     def _set_props_dict_from_json(self) -> None:
