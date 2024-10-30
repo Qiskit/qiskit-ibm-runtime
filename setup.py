@@ -84,4 +84,5 @@ setuptools.setup(
             "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
         ]
     },
+    extras_require={"visualization": ["plotly>=5.23.0"]},
 )
