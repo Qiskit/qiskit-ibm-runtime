@@ -6,7 +6,7 @@ New Features
 
 - Added :func:`~.draw_execution_spans`, a function for creating a Plotly figure that 
   visualizes one or more :class:`~.ExecutionSpans` objects. Also added the convenience
-  method :meth:`~.ExecutionSpans.draw` for invoking the drawing function on a 
+  method :meth:`~.ExecutionSpans.draw` to invoke the drawing function on a 
   particular instance. (`1923 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1923>`__)
 
   .. code-block:: python
