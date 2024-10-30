@@ -29,13 +29,6 @@ from qiskit_ibm_runtime.visualization import (
 
 from ...ibm_test_case import IBMTestCase
 
-try:
-    import plotly.graph_objects as go
-
-    PLOTLY_INSTALLED = True
-except ImportError:
-    PLOTLY_INSTALLED = False
-
 
 class DrawLayerErrorBase(IBMTestCase):
     """Base class for testing the functions that draw layer errors."""
@@ -71,7 +64,6 @@ class DrawLayerErrorBase(IBMTestCase):
         self.layer_errors = [layer_error1, layer_error2, layer_error3]
 
 
-@skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
 class TestDrawLayerErrorMap(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_error_map`` function."""
 
@@ -85,17 +77,18 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
             color_no_data="blue",
             colorscale="reds",
             radius=0.2,
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
         layout = fig_d["layout"]
         self.assertEqual(len(data), 160)
-        self.assertEqual(layout["height"], 200)
-        self.assertEqual(layout["width"], 500)
+        self.assertEqual(layout["height"], 1000)
+        self.assertEqual(layout["width"], 1000)
+
+        self.save_plotly_artifact(fig)
 
     def test_no_coupling_map(self):
         r"""
@@ -105,7 +98,6 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
             draw_layer_error_map(self.layer_errors[0], AerSimulator())
 
 
-@skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
 class TestDraw1QBarPlot(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_error_1q_bar_plot`` function."""
 
@@ -116,10 +108,9 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
         fig = draw_layer_error_1q_bar_plot(
             self.layer_errors[2],
             grouping="qubit",
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -134,8 +125,10 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+        
+        self.save_plotly_artifact(fig)
 
     def test_plotting_generator(self):
         r"""
@@ -144,10 +137,9 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
         fig = draw_layer_error_1q_bar_plot(
             self.layer_errors[2],
             grouping="generator",
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -162,8 +154,10 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+        
+        self.save_plotly_artifact(fig)
 
     def test_filter_by_qubit(self):
         r"""
@@ -173,10 +167,9 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
             self.layer_errors[2],
             grouping="generator",
             qubits=self.layer_errors[2].qubits[:2],
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -189,8 +182,10 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+
+        self.save_plotly_artifact(fig)
 
     def test_filter_by_generator(self):
         r"""
@@ -200,10 +195,9 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
             self.layer_errors[2],
             grouping="generator",
             generators=["X"],
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -218,8 +212,10 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+
+        self.save_plotly_artifact(fig)
 
     def test_errors(self):
         r"""
@@ -232,7 +228,6 @@ class TestDraw1QBarPlot(DrawLayerErrorBase):
             draw_layer_error_1q_bar_plot(self.layer_errors[0], colors=["blue"])
 
 
-@skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
 class TestDraw2QBarPlot(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_error_2q_bar_plot`` function."""
 
@@ -243,10 +238,9 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
         fig = draw_layer_error_2q_bar_plot(
             self.layer_errors[2],
             grouping="edge",
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -258,8 +252,10 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+
+        self.save_plotly_artifact(fig)
 
     def test_plotting_generator(self):
         r"""
@@ -268,10 +264,9 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
         fig = draw_layer_error_2q_bar_plot(
             self.layer_errors[2],
             grouping="generator",
-            width=500,
-            height=200,
+            width=1000,
+            height=1000,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -284,8 +279,10 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
 
         self.assertEqual(layout["xaxis"], {"title": {"text": "generators"}})
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 1000)
+
+        self.save_plotly_artifact(fig)
 
     def test_errors(self):
         r"""
@@ -298,7 +295,6 @@ class TestDraw2QBarPlot(DrawLayerErrorBase):
             draw_layer_error_2q_bar_plot(self.layer_errors[0], colors=["blue", "red"])
 
 
-@skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
 class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_errors_swarm`` function."""
 
@@ -310,10 +306,9 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
             self.layer_errors,
             colors=["red", "blue", "green"],
             names=["l1", "l2", "l3"],
-            width=500,
-            height=200,
+            width=1000,
+            height=800,
         )
-        self.assertIsInstance(fig, go.Figure)
 
         fig_d = fig.to_dict()
         data = fig_d["data"]
@@ -336,8 +331,10 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
             },
         )
         self.assertEqual(layout["yaxis"], {"title": {"text": "rates"}})
-        self.assertEqual(layout["width"], 500)
-        self.assertEqual(layout["height"], 200)
+        self.assertEqual(layout["width"], 1000)
+        self.assertEqual(layout["height"], 800)
+
+        self.save_plotly_artifact(fig)
 
     def test_errors(self):
         r"""
