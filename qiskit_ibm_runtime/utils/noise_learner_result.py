@@ -36,7 +36,7 @@ from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class PauliLindbladError:
@@ -231,7 +231,7 @@ class LayerError:
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a map view of a this layer error.
 

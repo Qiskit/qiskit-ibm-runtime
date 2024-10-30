@@ -23,10 +23,10 @@ from qiskit.quantum_info import Pauli
 
 from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
-from .utils import get_rgb_color, pie_slice
+from .utils import get_rgb_color, pie_slice, plotly_module
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 def draw_layer_error_map(
@@ -42,7 +42,7 @@ def draw_layer_error_map(
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
-) -> go.Figure:
+) -> PlotlyFigure:
     r"""
     Draw a map view of a :class:`~.LayerError`.
 
@@ -67,11 +67,8 @@ def draw_layer_error_map(
         ValueError: If ``backend`` has no coupling map.
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
-    try:
-        import plotly.graph_objects as go
-        from plotly.colors import sample_colorscale
-    except ModuleNotFoundError as msg:
-        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+    go = plotly_module(".graph_objects")
+    sample_colorscale = plotly_module(".colors").sample_colorscale
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
 
@@ -112,8 +109,8 @@ def draw_layer_error_map(
 
     highest_rate = highest_rate if highest_rate else highest_rate
 
-    # A discreet colorscale that contains 1000 hues.
-    discreet_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
+    # A discrete colorscale that contains 1000 hues.
+    discrete_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
 
     # Plot the edges
     for q1, q2 in edges:
@@ -133,7 +130,7 @@ def draw_layer_error_map(
             ]
             color = [
                 get_rgb_color(
-                    discreet_colorscale, v / highest_rate, color_no_data, color_out_of_scale
+                    discrete_colorscale, v / highest_rate, color_no_data, color_out_of_scale
                 )
                 for v in all_vals
             ]
@@ -186,7 +183,7 @@ def draw_layer_error_map(
         for pauli, angle in [("Z", -30), ("X", 90), ("Y", 210)]:
             rate = rates_1q.get(qubit, {}).get(pauli, 0)
             fillcolor = get_rgb_color(
-                discreet_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
+                discrete_colorscale, rate / highest_rate, color_no_data, color_out_of_scale
             )
             shapes += [
                 {
@@ -278,7 +275,7 @@ def draw_layer_error_1q_bar_plot(
     grouping: str = "qubit",
     height: int = 500,
     width: int = 800,
-) -> go.Figure:
+) -> PlotlyFigure:
     r"""
     Draw a bar plot containing all the one-body terms in the given layer error.
 
@@ -302,10 +299,7 @@ def draw_layer_error_1q_bar_plot(
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
 
     """
-    try:
-        import plotly.graph_objects as go
-    except ModuleNotFoundError as msg:
-        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+    go = plotly_module(".graph_objects")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
     fig.update_layout(
@@ -366,7 +360,7 @@ def draw_layer_error_2q_bar_plot(
     grouping: str = "edge",
     height: int = 500,
     width: int = 800,
-) -> go.Figure:
+) -> PlotlyFigure:
     r"""
     Draw a bar plot containing all the two-body terms in this :class:`~.LayerError`.
 
@@ -390,10 +384,7 @@ def draw_layer_error_2q_bar_plot(
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
 
     """
-    try:
-        import plotly.graph_objects as go
-    except ModuleNotFoundError as msg:
-        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+    go = plotly_module(".graph_objects")
 
     fig = go.Figure(layout=go.Layout(width=width, height=height))
     fig.update_layout(
@@ -469,7 +460,7 @@ def draw_layer_errors_swarm(
     x_coo: Optional[list[float]] = None,
     height: int = 500,
     width: int = 800,
-) -> go.Figure:
+) -> PlotlyFigure:
     r"""
     Draw a swarm plot for the given list of layer errors.
 
@@ -512,10 +503,7 @@ def draw_layer_errors_swarm(
         ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
 
     """
-    try:
-        import plotly.graph_objects as go
-    except ModuleNotFoundError as msg:
-        raise ModuleNotFoundError(f"Failed to import 'plotly' dependencies with error: {msg}.")
+    go = plotly_module(".graph_objects")
 
     colors = colors if colors else [None] * len(layer_errors)
     if len(colors) != len(layer_errors):
