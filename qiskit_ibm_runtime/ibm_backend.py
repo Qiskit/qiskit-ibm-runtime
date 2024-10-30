@@ -251,21 +251,13 @@ class IBMBackend(Backend):
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
-            if self.options.use_fractional_gates is None:
-                include_control_flow = True
-                include_fractional_gates = True
-            else:
-                # In IBM backend architecture as of today
-                # these features can be only exclusively supported.
-                include_control_flow = not self.options.use_fractional_gates
-                include_fractional_gates = self.options.use_fractional_gates
-
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
-                include_control_flow=include_control_flow,
-                include_fractional_gates=include_fractional_gates,
+                include_control_flow=self.options.use_fractional_gates is None
+                or not self.options.use_fractional_gates,
+                include_fractional_gates=self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -346,21 +338,14 @@ class IBMBackend(Backend):
             Target with properties found on `datetime`
         """
         self._get_defaults()
-        if self.options.use_fractional_gates is None:
-            include_control_flow = True
-            include_fractional_gates = True
-        else:
-            # In IBM backend architecture as of today
-            # these features can be only exclusively supported.
-            include_control_flow = not self.options.use_fractional_gates
-            include_fractional_gates = self.options.use_fractional_gates
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
             defaults=self._defaults,
-            include_control_flow=include_control_flow,
-            include_fractional_gates=include_fractional_gates,
+            include_control_flow=self.options.use_fractional_gates is None
+            or not self.options.use_fractional_gates,
+            include_fractional_gates=self.options.use_fractional_gates,
         )
 
     def refresh(self) -> None:
