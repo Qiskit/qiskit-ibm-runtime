@@ -86,7 +86,8 @@ def draw_execution_spans(
 
     # make sure there are always at least as many names as span sets
     all_names.extend(
-        f"ExecutionSpans{_get_id(single_span, len(spans)>1)}" for single_span in spans[len(names) :]
+        f"ExecutionSpans{_get_id(single_span, len(spans)>1)}"
+        for single_span in spans[len(all_names) :]
     )
 
     # loop through and make a trace in the figure for each ExecutionSpans
@@ -100,11 +101,12 @@ def draw_execution_spans(
         offset = timedelta()
         if common_start:
             # plotly doesn't have a way to display timedeltas or relative times on a axis. the
-            # standard workaround i've found is to shift times to t=0 (unix epoch) and suppress
-            # plotting the year/month.
+            # standard workaround i've found is to shift times to t=0 (ie unix epoch) and suppress
+            # showing the year/month in the tick labels.
             first_start = sorted_spans[0][1].start.replace(tzinfo=None)
             offset = first_start - datetime(year=1970, month=1, day=1)
 
+        # gather x/y/text data for each span
         total_size = sum(span.size for span in single_spans) if normalize_y else 1
         y_value = 0.0
         x_data = []
@@ -118,6 +120,7 @@ def draw_execution_spans(
             y_data.extend([y_value, y_value, None])
             text_data.append(text)
 
+        # add the data to the plot
         fig.add_trace(
             go.Scatter(
                 x=x_data,
