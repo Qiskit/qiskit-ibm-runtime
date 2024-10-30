@@ -1,4 +1,0 @@
-Deprecations from the ``0.25.0`` release have been removed. 
-
-    - ``optimization_level`` is no longer a valid option for ``EstimatorV2``.
-    - Job methods ``interim_results()`` and ``stream_results()`` have been removed.

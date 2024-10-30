@@ -1,2 +1,0 @@
-Added a new method, ``backend.refresh()`` that refreshes the
-current backend target with the latest updates from the server.
