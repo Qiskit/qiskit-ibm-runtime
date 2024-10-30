@@ -76,13 +76,15 @@ def draw_execution_spans(
     fig = go.Figure()
 
     # assign a name to each span
+    all_names = []
     if names is None:
         show_legend = False if show_legend is None else show_legend
-        all_names = []
     else:
         show_legend = True if show_legend is None else show_legend
         if isinstance(names, str):
             all_names = [names]
+        else:
+            all_names.extend(names)
 
     # make sure there are always at least as many names as span sets
     all_names.extend(
