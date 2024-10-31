@@ -118,4 +118,4 @@ Upgrade Notes
 -  Final result is also streamed now after interim results when you
    specify a ``callback`` to
    ``qiskit_ibm_runtime.IBMRuntimeService.run()`` or
-   `qiskit_ibm_runtime.RuntimeJob.stream_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#stream_results>`__.
+   `qiskit_ibm_runtime.RuntimeJob.stream_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.30/qiskit_ibm_runtime.RuntimeJob#stream_results>`__.
