@@ -15,7 +15,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, Dict, Optional, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
@@ -351,10 +351,12 @@ def draw_layer_errors_swarm(
         title="layers",
     )
     fig.update_yaxes(title="rates")
-    fig.update_layout(xaxis=dict(tickvals=x_coo, ticktext=names))
+    fig.update_layout(xaxis={"tickvals": x_coo, "ticktext": names})
 
     # Initialize a dictionary to store the coordinates of the generators that need to be connected
-    connected = {str(p): {"xs": [], "ys": []} for p in connected} if connected else {}
+    connected_d: dict[str, dict[str, list[float]]] = (
+        {str(p): {"xs": [], "ys": []} for p in connected} if connected else {}
+    )
 
     for l_error_idx, l_error in enumerate(layer_errors):
         error = l_error.error.restrict_num_bodies(num_bodies) if num_bodies else l_error.error
@@ -365,14 +367,14 @@ def draw_layer_errors_swarm(
         # Create bins
         num_bins = num_bins or 10
         bin_size = (highest_rate - smallest_rate) / num_bins
-        bins: dict[int, list[list[str, float, bool]]] = {i: [] for i in range(num_bins + 1)}
+        bins: dict[int, list[Any]] = {i: [] for i in range(num_bins + 1)}
 
         # Populate the bins
         for idx, (gen, rate) in enumerate(zip(generators, rates)):
-            if gen not in connected:
+            if gen not in connected_d:
                 if (min_rate and rate < min_rate) or (max_rate and rate > max_rate):
                     continue
-            bins[int((rate - smallest_rate) // bin_size)] += [(gen, rate, gen in connected)]
+            bins[int((rate - smallest_rate) // bin_size)] += [(gen, rate, gen in connected_d)]
 
         # Assign `x` and `y` coordinates based on the bins
         xs = []
@@ -385,8 +387,8 @@ def draw_layer_errors_swarm(
                 hoverinfo.append(f"Generator: {gen}<br>  rate: {rate}")
 
                 if is_connected:
-                    connected[gen]["xs"].append(x)
-                    connected[gen]["ys"].append(rate)
+                    connected_d[gen]["xs"].append(x)
+                    connected_d[gen]["ys"].append(rate)
 
         # Add the traces for the swarm plot of this layer error
         fig.add_trace(
@@ -406,15 +408,15 @@ def draw_layer_errors_swarm(
         )
 
     # Add the traces for the tracked errors
-    for gen, values in connected.items():
+    for gen, vals in connected_d.items():
         hoverinfo = []
-        for name, y in zip(names, values["ys"]):
+        for name, y in zip(names, vals["ys"]):
             hoverinfo += [f"{name}<br>  gen.: {gen}<br>  rate: {y}"]
 
         fig.add_trace(
             go.Scatter(
-                y=values["ys"],
-                x=values["xs"],
+                y=vals["ys"],
+                x=vals["xs"],
                 mode="lines+markers",
                 name=str(gen),
                 hovertemplate=hoverinfo,

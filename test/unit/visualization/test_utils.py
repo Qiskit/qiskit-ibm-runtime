@@ -15,7 +15,6 @@
 
 from types import ModuleType
 
-from qiskit_ibm_runtime.visualization import draw_execution_spans
 from qiskit_ibm_runtime.visualization.utils import plotly_module
 
 from ...ibm_test_case import IBMTestCase
