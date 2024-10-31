@@ -19,6 +19,7 @@ import numpy as np
 
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Session, SamplerV2, SamplerOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke, FakeCusco
@@ -61,7 +62,6 @@ class TestSamplerV2(IBMTestCase):
             np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
     @data(
-        {"optimization_level": 4},
         {"resilience_level": 1},
         {"resilience": {"zne_mitigation": True}},
         {"execution": {"meas_type": "unclassified"}},
@@ -297,3 +297,15 @@ class TestSamplerV2(IBMTestCase):
         else:
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[(circ)])
+
+    def test_rzz_validates_only_for_fixed_angles(self):
+        """Verify that the rzz validation occurs only when the angle is a number, and not a
+        parameter"""
+        backend = FakeFractionalBackend()
+        param = Parameter("p")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(param, 0, 1)
+
+        # Should run without an error
+        SamplerV2(backend).run(pubs=[(circ, [1])])

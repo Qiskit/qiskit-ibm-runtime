@@ -15,8 +15,34 @@
 Utility functions for visualizing qiskit-ibm-runtime's objects.
 """
 
-from typing import List
+from __future__ import annotations
+
+import importlib
+from types import ModuleType
+
 import numpy as np
+
+
+def plotly_module(submodule: str = ".") -> ModuleType:
+    """Import and return a plotly module.
+
+    Args:
+        submodule: The plotly submodule to import, relative or absolute.
+
+    Returns:
+        The submodule.
+
+    Raises:
+        ModuleNotFoundError: If it can't be imported.
+    """
+    try:
+        return importlib.import_module(submodule, "plotly")
+    except (ModuleNotFoundError, ImportError) as ex:
+        raise ModuleNotFoundError(
+            "The plotly Python package is required for visualization. "
+            "Install all qiskit-ibm-runtime visualization dependencies with "
+            "pip install 'qiskit-ibm-runtime[visualization]'."
+        ) from ex
 
 
 def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: float) -> str:
@@ -32,6 +58,9 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
         x: The `x` coordinate of the centre of the pie.
         y: The `y` coordinate of the centre of the pie.
         radius: the radius of the pie.
+
+    Returns:
+        A path string.
     """
     t = np.linspace(angle_st * np.pi / 180, angle_end * np.pi / 180, 10)
 
@@ -46,15 +75,18 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
     return path
 
 
-def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> str:
+def get_rgb_color(
+    discreet_colorscale: list[str], val: float, default: str, color_out_of_scale: str
+) -> str:
     r"""
-    Maps a float to an RGB color based on a discreet colorscale that contains
+    Map a float to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
 
     Args:
         discreet_colorscale: A discreet colorscale.
         val: A value to map to a color.
         default: A default color returned when ``val`` is ``0``.
+        color_out_of_scale: The color that is returned when ``val`` is larger than ``1``.
 
     Raises:
         ValueError: If the colorscale contains more or less than ``1000`` hues.
@@ -62,7 +94,9 @@ def get_rgb_color(discreet_colorscale: List[str], val: float, default: str) -> s
     if len(discreet_colorscale) != 1000:
         raise ValueError("Invalid ``discreet_colorscale.``")
 
-    if val >= 1:
+    if val > 1:
+        return color_out_of_scale
+    if val == 1:
         return discreet_colorscale[-1]
     if val == 0:
         return default

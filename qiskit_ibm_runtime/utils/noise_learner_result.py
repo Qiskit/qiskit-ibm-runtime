@@ -36,7 +36,7 @@ from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class PauliLindbladError:
@@ -223,13 +223,15 @@ class LayerError:
         embedding: Union[Embedding, BackendV2],
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
+        color_out_of_scale: str = "lightgreen",
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
+        highest_rate: Optional[float] = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a map view of a this layer error.
 
@@ -238,12 +240,46 @@ class LayerError:
                 to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
+            color_out_of_scale: The color used for rates with value greater than ``highest_rate``.
             num_edge_segments: The number of equal-sized segments that edges are made of.
             edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
+            highest_rate: The highest rate, used to normalize all other rates before choosing their
+                colors. If ``None``, it defaults to the highest value found in the ``layer_error``.
             background_color: The background color.
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
+
+            .. code:: python
+
+                from qiskit import QuantumCircuit
+                from qiskit.quantum_info import PauliList
+                from qiskit_ibm_runtime.utils.embeddings import Embedding
+                from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
+
+                # A five-qubit 1-D embedding with nearest neighbouring connectivity
+                coordinates1 = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+                coupling_map1 = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+                embedding1 = Embedding(coordinates1, coupling_map1)
+
+                # A six-qubit horseshoe-shaped embedding with nearest neighbouring connectivity
+                coordinates2 = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+                coupling_map2 = [(0, 1), (1, 2), (0, 3), (3, 4), (4, 5)]
+                embedding2 = Embedding(coordinates2, coupling_map2)
+
+                # A LayerError object
+                circuit = QuantumCircuit(4)
+                qubits = [1, 2, 3, 4]
+                generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+                rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+                error = PauliLindbladError(generators, rates)
+                layer_error = LayerError(circuit, qubits, error)
+
+                # Draw the layer error on embedding1
+                layer_error.draw_map(embedding1)
+
+                # Draw the layer error on embedding2
+                layer_error.draw_map(embedding2)
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
 
@@ -254,9 +290,11 @@ class LayerError:
             embedding,
             colorscale,
             color_no_data,
+            color_out_of_scale,
             num_edge_segments,
             edge_width,
             height,
+            highest_rate,
             background_color,
             radius,
             width,

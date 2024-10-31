@@ -121,7 +121,7 @@ class NoiseLearner:
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
            cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
-           Nature Physics volume 19, pages1116–1121 (2023).
+           Nature Physics volume 19, pages 1116–1121 (2023).
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
 
     """
@@ -220,6 +220,10 @@ class NoiseLearner:
     def _program_id(cls) -> str:
         """Return the program ID."""
         return "noise-learner"
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
 
     def _set_options(
         self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
