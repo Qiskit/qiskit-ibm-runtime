@@ -266,6 +266,7 @@ def draw_layer_error_map(
 
     return fig
 
+
 def draw_layer_errors_swarm(
     layer_errors: list[LayerError],
     num_bodies: Optional[int] = None,
@@ -394,7 +395,11 @@ def draw_layer_errors_swarm(
                 x=xs,
                 hovertemplate=hoverinfo,
                 mode="markers",
-                marker={"color": colors[l_error_idx], "opacity": opacities[l_error_idx], "size": marker_size},
+                marker={
+                    "color": colors[l_error_idx],
+                    "opacity": opacities[l_error_idx],
+                    "size": marker_size,
+                },
                 name=names[l_error_idx],
                 showlegend=False,
             )

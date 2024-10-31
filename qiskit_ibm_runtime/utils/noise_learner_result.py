@@ -299,7 +299,7 @@ class LayerError:
             radius=radius,
             width=width,
         )
-    
+
     def draw_layer_errors_swarm(
         self,
         num_bodies: Optional[int] = None,
@@ -342,7 +342,7 @@ class LayerError:
                 names are assigned based on the layers' position inside the ``layer_errors`` list.
             x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
                 ``None`` if these axes should be placed at regular intervals.
-            marker_size: The size of the marker in the plot.    
+            marker_size: The size of the marker in the plot.
             height: The height of the returned figure.
             width: The width of the returned figure.
         """
