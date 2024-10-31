@@ -318,7 +318,7 @@ class LayerError:
         r"""
         Draw a swarm plot of the rates in this layer error.
 
-        This function plots the ll rates along a vertical axes, offsetting the rates along the ``x``
+        This function plots the rates along a vertical axes, offsetting the rates along the ``x``
         axis so that they do not overlap with each other.
 
         .. note::

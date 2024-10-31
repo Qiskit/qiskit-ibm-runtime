@@ -87,7 +87,7 @@ def draw_layer_error_map(
     edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
 
     # The highest rate
-    highest_rate = 0
+    max_rate = 0
 
     # Initialize a dictionary of one-qubit errors
     qubits = layer_error.qubits
@@ -96,7 +96,7 @@ def draw_layer_error_map(
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit_idx = np.where(pauli.x | pauli.z)[0][0]
         rates_1q[qubits[qubit_idx]][str(pauli[qubit_idx])] = rate
-        highest_rate = max(highest_rate, rate)
+        max_rate = max(max_rate, rate)
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.restrict_num_bodies(2)
@@ -105,9 +105,9 @@ def draw_layer_error_map(
         err_idxs = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
         edge = (qubits[err_idxs[0]], qubits[err_idxs[1]])
         rates_2q[edge][str(pauli[[err_idxs[0], err_idxs[1]]])] = rate
-        highest_rate = max(highest_rate, rate)
+        max_rate = max(max_rate, rate)
 
-    highest_rate = highest_rate if highest_rate else highest_rate
+    highest_rate = highest_rate if highest_rate else max_rate
 
     # A discrete colorscale that contains 1000 hues.
     discrete_colorscale = sample_colorscale(colorscale, np.linspace(0, 1, 1000))
