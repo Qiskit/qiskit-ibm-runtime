@@ -458,6 +458,7 @@ def draw_layer_errors_swarm(
     opacities: Union[float, list[float]] = 0.4,
     names: Optional[list[str]] = None,
     x_coo: Optional[list[float]] = None,
+    marker_size: Optional[float] = None,
     height: int = 500,
     width: int = 800,
 ) -> PlotlyFigure:
@@ -494,6 +495,7 @@ def draw_layer_errors_swarm(
             names are assigned based on the layers' position inside the ``layer_errors`` list.
         x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
             ``None`` if these axes should be placed at regular intervals.
+        marker_size: The size of the marker in the plot.
         height: The height of the returned figure.
         width: The width of the returned figure.
 
@@ -505,7 +507,7 @@ def draw_layer_errors_swarm(
     """
     go = plotly_module(".graph_objects")
 
-    colors = colors if colors else [None] * len(layer_errors)
+    colors = colors if colors else ["dodgerblue"] * len(layer_errors)
     if len(colors) != len(layer_errors):
         raise ValueError(f"Expected {len(layer_errors)} colors, found {len(colors)}.")
 
@@ -573,7 +575,7 @@ def draw_layer_errors_swarm(
                 x=xs,
                 hovertemplate=hoverinfo,
                 mode="markers",
-                marker={"color": colors[l_error_idx], "opacity": opacities[l_error_idx]},
+                marker={"color": colors[l_error_idx], "opacity": opacities[l_error_idx], "size": marker_size},
                 name=names[l_error_idx],
                 showlegend=False,
             )

@@ -308,7 +308,7 @@ class LayerError:
         grouping: str = "qubit",
         height: int = 500,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a bar plot containing all the one-body terms in this layer error.
 
@@ -347,7 +347,7 @@ class LayerError:
         grouping: str = "edge",
         height: int = 500,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a bar plot containing all the two-body terms in this layer error.
 
@@ -381,7 +381,6 @@ class LayerError:
 
     def draw_layer_errors_swarm(
         self,
-        other_layer_errors: Optional[list[LayerError]] = None,
         num_bodies: Optional[int] = None,
         max_rate: Optional[float] = None,
         min_rate: Optional[float] = None,
@@ -391,17 +390,21 @@ class LayerError:
         opacities: Union[float, list[float]] = 0.4,
         names: Optional[list[str]] = None,
         x_coo: Optional[list[float]] = None,
+        marker_size: Optional[float] = None,
         height: int = 500,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a swarm plot of the rates in this layer error.
 
         This function plots the ll rates along a vertical axes, offsetting the rates along the ``x``
         axis so that they do not overlap with each other.
 
+        .. note::
+            To draw multiple layer errors at once, consider calling
+            :meth:`~qiskit_ibm_runtime.visualization.draw_execution_spans` directly.
+
         Args:
-            other_layer_errors: A list of other layer errors to draw in the same plot.
             num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
                 generators should be included.
             max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
@@ -418,6 +421,7 @@ class LayerError:
                 names are assigned based on the layers' position inside the ``layer_errors`` list.
             x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
                 ``None`` if these axes should be placed at regular intervals.
+            marker_size: The size of the marker in the plot.    
             height: The height of the returned figure.
             width: The width of the returned figure.
         """
@@ -426,7 +430,7 @@ class LayerError:
         from ..visualization import draw_layer_errors_swarm
 
         return draw_layer_errors_swarm(
-            layer_errors=[self] + list(other_layer_errors) if other_layer_errors else [self],
+            layer_errors=[self],
             num_bodies=num_bodies,
             max_rate=max_rate,
             min_rate=min_rate,
@@ -436,6 +440,7 @@ class LayerError:
             opacities=opacities,
             names=names,
             x_coo=x_coo,
+            marker_size=marker_size,
             height=height,
             width=width,
         )

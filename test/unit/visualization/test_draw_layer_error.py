@@ -12,8 +12,6 @@
 
 """Tests for the classes used to instantiate noise learner results."""
 
-from unittest import skipIf
-
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 from qiskit_aer import AerSimulator
