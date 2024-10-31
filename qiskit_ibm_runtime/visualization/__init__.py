@@ -32,8 +32,6 @@ Functions
 
 from .draw_layer_error import (
     draw_layer_error_map,
-    draw_layer_error_1q_bar_plot,
-    draw_layer_error_2q_bar_plot,
-    draw_layer_errors_swarm,
+    draw_layer_errors_swarm
 )
 from .draw_execution_spans import draw_execution_spans
