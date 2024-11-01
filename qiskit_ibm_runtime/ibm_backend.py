@@ -257,7 +257,8 @@ class IBMBackend(Backend):
                 defaults=self._defaults,
                 include_control_flow=self.options.use_fractional_gates is None
                 or not self.options.use_fractional_gates,
-                include_fractional_gates=self.options.use_fractional_gates,
+                include_fractional_gates=self.options.use_fractional_gates is None
+                or self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -345,7 +346,8 @@ class IBMBackend(Backend):
             defaults=self._defaults,
             include_control_flow=self.options.use_fractional_gates is None
             or not self.options.use_fractional_gates,
-            include_fractional_gates=self.options.use_fractional_gates,
+            include_fractional_gates=self.options.use_fractional_gates
+            or self.options.use_fractional_gates,
         )
 
     def refresh(self) -> None:
