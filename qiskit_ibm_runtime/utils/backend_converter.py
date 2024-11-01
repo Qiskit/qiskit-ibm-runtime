@@ -277,13 +277,13 @@ def convert_to_target(
                     or prop_name_map[name] is None
                     or qubits not in prop_name_map[name]
                 ):
-                    logger.debug(
-                        "Gate calibration for instruction %s on qubits %s is found "
-                        "in the PulseDefaults payload. However, this entry is not defined in "
-                        "the gate mapping of Target. This calibration is ignored.",
-                        name,
-                        qubits,
-                    )
+                    # logger.debug(
+                    #     "Gate calibration for instruction %s on qubits %s is found "
+                    #     "in the PulseDefaults payload. However, this entry is not defined in "
+                    #     "the gate mapping of Target. This calibration is ignored.",
+                    #     name,
+                    #     qubits,
+                    # )
                     continue
 
                 if (name, qubits) in faulty_ops:
