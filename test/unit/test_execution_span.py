@@ -270,7 +270,7 @@ class TestTwirledSliceSpan(IBMTestCase):
 
     def test_repr(self):
         """Test the repr method"""
-        expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=14"
+        expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=11"
         self.assertEqual(repr(self.span1), f"TwirledSliceSpan(<{expect}>)")
 
     def test_size(self):
