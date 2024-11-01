@@ -79,6 +79,7 @@ from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     SliceSpan,
     ExecutionSpans,
+    TwirledSliceSpan,
 )
 
 from .noise_learner_result import NoiseLearnerResult
@@ -341,6 +342,16 @@ class RuntimeEncoder(json.JSONEncoder):
                 },
             }
             return {"__type__": "DoubleSliceSpan", "__value__": out_val}
+        if isinstance(obj, TwirledSliceSpan):
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
+                    for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
+                },
+            }
+            return {"__type__": "TwirledSliceSpan", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -470,6 +481,13 @@ class RuntimeDecoder(json.JSONDecoder):
                     for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
                 }
                 return DoubleSliceSpan(**obj_val)
+            if obj_type == "TwirledSliceSpan":
+                data_slices = obj_val["data_slices"]
+                obj_val["data_slices"] = {
+                    int(idx): (tuple(shape), at_start, slice(arg0, arg1), slice(shot0, shot1))
+                    for idx, (shape, at_start, arg0, arg1, shot0, shot1) in data_slices.items()
+                }
+                return TwirledSliceSpan(**obj_val)
             if obj_type == "ExecutionSpan":
                 new_slices = {
                     int(idx): (tuple(shape), slice(*sl_args))
