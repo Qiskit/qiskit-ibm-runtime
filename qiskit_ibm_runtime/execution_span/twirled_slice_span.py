@@ -29,16 +29,19 @@ class TwirledSliceSpan(ExecutionSpan):
 
     This type of execution span references pub result data that came from a twirled sampler
     experiment which was executed by either prepending or appending an axis to paramater values
-    to account for twirling. The value format of ``data_slices`` begins with the shape of the
-    parameter values accounting for twirling, and the second element indicates whether the
-    twirling axis is the first or the last. ``shape_slice`` and ``shots_slice`` are the same as
-    for :class:`~.DoubleSliceSpan`.
+    to account for twirling. See ``data_slices`` below for details.
 
     Args:
         start: The start time of the span, in UTC.
         stop: The stop time of the span, in UTC.
-        data_slices: A map from pub indices to
-            ``(twirled_shape, at_front, shape_slice, shots_slice)``.
+        data_slices: A map from pub indices to tuples of the form
+            ``(twirled_shape, at_front, shape_slice, shots_slice)`` where
+             - ``twirled_shape`` is the shape tuple including a twirling axis, and where the last
+               axis is shots per randomization.
+            - ``at_front`` is whether ``num_randomizations`` is at the front of the tuple, as
+              opposed to right before the ``shots`` axis at the end.
+            - ``shape_slice`` is a slice of an array of shape ``twirled_shape[:-1]``, flattened.
+            - ``shots_slice`` is a slice of ``twirled_shape[-1]``.
     """
 
     def __init__(
