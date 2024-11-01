@@ -31,15 +31,15 @@ from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
-from qiskit.providers.fake_provider.utils.json_decoder import (
-    decode_backend_configuration,
-    decode_backend_properties,
-    decode_pulse_defaults,
-)
 
 from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
+from qiskit_ibm_runtime.utils.backend_decoder import (
+    _decode_backend_configuration,
+    properties_from_server_data,
+    defaults_from_server_data,
+)
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
@@ -149,20 +149,20 @@ class FakeBackendV2(BackendV2):
         if not self.conf_filename:
             return None
         conf_dict = self._load_json(self.conf_filename)  # type: ignore
-        decode_backend_configuration(conf_dict)
+        _decode_backend_configuration(conf_dict)
         conf_dict["backend_name"] = self.backend_name
         return conf_dict
 
     def _set_props_dict_from_json(self) -> None:
         if self.props_filename:
             props_dict = self._load_json(self.props_filename)  # type: ignore
-            decode_backend_properties(props_dict)
+            properties_from_server_data(props_dict)
             self._props_dict = props_dict
 
     def _set_defs_dict_from_json(self) -> None:
         if self.defs_filename:
             defs_dict = self._load_json(self.defs_filename)  # type: ignore
-            decode_pulse_defaults(defs_dict)
+            defaults_from_server_data(defs_dict)
             self._defs_dict = defs_dict
 
     def _supports_dynamic_circuits(self) -> bool:
