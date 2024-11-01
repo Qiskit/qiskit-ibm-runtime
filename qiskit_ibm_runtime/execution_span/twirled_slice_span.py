@@ -36,12 +36,12 @@ class TwirledSliceSpan(ExecutionSpan):
         stop: The stop time of the span, in UTC.
         data_slices: A map from pub indices to tuples of the form
             ``(twirled_shape, at_front, shape_slice, shots_slice)`` where
-             - ``twirled_shape`` is the shape tuple including a twirling axis, and where the last
+            * ``twirled_shape`` is the shape tuple including a twirling axis, and where the last
                axis is shots per randomization.
-            - ``at_front`` is whether ``num_randomizations`` is at the front of the tuple, as
+            * ``at_front`` is whether ``num_randomizations`` is at the front of the tuple, as
               opposed to right before the ``shots`` axis at the end.
-            - ``shape_slice`` is a slice of an array of shape ``twirled_shape[:-1]``, flattened.
-            - ``shots_slice`` is a slice of ``twirled_shape[-1]``.
+            * ``shape_slice`` is a slice of an array of shape ``twirled_shape[:-1]``, flattened.
+            * ``shots_slice`` is a slice of ``twirled_shape[-1]``.
     """
 
     def __init__(
