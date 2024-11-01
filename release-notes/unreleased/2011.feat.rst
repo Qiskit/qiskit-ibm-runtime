@@ -1,0 +1,4 @@
+Added :class:`.TwirledSliceSpan`, an :class:`ExecutionSpan` to be used when 
+twirling is enabled in the sampler. In particular, it keeps track of an extra shape
+axis corresponding to twirling randomizations, and also whether this axis exists at
+the front of the shape tuple, or right before the shots axis.
