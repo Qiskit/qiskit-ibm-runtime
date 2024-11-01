@@ -287,8 +287,8 @@ class TestTwirledSliceSpan(IBMTestCase):
         """Test the mask() method"""
         # reminder: ((3, 1, 5), True, slice(1), slice(2, 4))
         mask1 = np.zeros((3, 1, 5), dtype=bool)
-        mask1.reshape(3, 5)[:1, 2:4] = True
-        mask1 = mask1.transpose(1, 0, 2).reshape(1, 15)
+        mask1.reshape((3, 5))[:1, 2:4] = True
+        mask1 = mask1.transpose((1, 0, 2)).reshape((1, 15))
         npt.assert_array_equal(self.span1.mask(2), mask1)
 
         # reminder: ((1, 5, 2, 3), False, slice(3,9), slice(1, 3)),
@@ -301,7 +301,7 @@ class TestTwirledSliceSpan(IBMTestCase):
                 [[[0, 1, 1], [0, 0, 0]]],
             ]
         ]
-        mask2 = np.array(mask2, dtype=bool).reshape(1, 5, 6)
+        mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))
         npt.assert_array_equal(self.span2.mask(1), mask2)
 
     @ddt.data(

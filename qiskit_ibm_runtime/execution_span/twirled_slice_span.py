@@ -74,16 +74,16 @@ class TwirledSliceSpan(ExecutionSpan):
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
         twirled_shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx]
         mask = np.zeros(twirled_shape, dtype=np.bool_)
-        mask.reshape(np.prod(twirled_shape[:-1]), twirled_shape[-1])[(shape_sl, shots_sl)] = True
+        mask.reshape((np.prod(twirled_shape[:-1]), twirled_shape[-1]))[(shape_sl, shots_sl)] = True
 
         if at_front:
             # if the first axis is over twirling samples, push them right before shots
             ndim = len(twirled_shape)
-            mask = mask.transpose(*range(1, ndim - 1), 0, ndim - 1)
+            mask = mask.transpose((*range(1, ndim - 1), 0, ndim - 1))
             twirled_shape = twirled_shape[1:-1] + twirled_shape[:1] + twirled_shape[-1:]
 
         # merge twirling axis and shots axis before returning
-        return mask.reshape(*twirled_shape[:-2], math.prod(twirled_shape[-2:]))
+        return mask.reshape((*twirled_shape[:-2], math.prod(twirled_shape[-2:])))
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "TwirledSliceSpan":
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
