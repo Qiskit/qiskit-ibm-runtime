@@ -255,6 +255,8 @@ class IBMBackend(Backend):
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
                 include_control_flow=self.options.use_fractional_gates is None
                 or not self.options.use_fractional_gates,
                 include_fractional_gates=self.options.use_fractional_gates is None
@@ -344,6 +346,8 @@ class IBMBackend(Backend):
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
             defaults=self._defaults,
+            # In IBM backend architecture as of today
+            # these features can be only exclusively supported.
             include_control_flow=self.options.use_fractional_gates is None
             or not self.options.use_fractional_gates,
             include_fractional_gates=self.options.use_fractional_gates
