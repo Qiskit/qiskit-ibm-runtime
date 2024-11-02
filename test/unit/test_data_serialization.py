@@ -51,6 +51,7 @@ from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     SliceSpan,
     ExecutionSpans,
+    TwirledSliceSpan,
 )
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -467,6 +468,14 @@ class TestContainerSerialization(IBMTestCase):
                             datetime(2024, 8, 20),
                             datetime(2024, 8, 21),
                             {0: ((14,), slice(2, 3), slice(1, 9))},
+                        ),
+                        TwirledSliceSpan(
+                            datetime(2024, 9, 20),
+                            datetime(2024, 3, 21),
+                            {
+                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+                            },
                         ),
                     ]
                 )

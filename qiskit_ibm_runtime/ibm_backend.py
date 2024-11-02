@@ -222,7 +222,7 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
         # Lazy load properties and pulse defaults and construct the target object.
-        self._get_properties()
+        self.properties()
         self._get_defaults()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps
@@ -239,16 +239,6 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
-    def _get_properties(self, datetime: Optional[python_datetime] = None) -> None:
-        """Gets backend properties and decodes it"""
-        if datetime:
-            datetime = local_to_utc(datetime)
-        if datetime or not self._properties:
-            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
-            if api_properties:
-                backend_properties = properties_from_server_data(api_properties)
-                self._properties = backend_properties
-
     def _get_defaults(self, refresh: bool = False) -> None:
         """Gets defaults if pulse backend and decodes it"""
         if (
@@ -261,21 +251,16 @@ class IBMBackend(Backend):
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
-            if self.options.use_fractional_gates is None:
-                include_control_flow = True
-                include_fractional_gates = True
-            else:
-                # In IBM backend architecture as of today
-                # these features can be only exclusively supported.
-                include_control_flow = not self.options.use_fractional_gates
-                include_fractional_gates = self.options.use_fractional_gates
-
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
-                include_control_flow=include_control_flow,
-                include_fractional_gates=include_fractional_gates,
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
+                include_control_flow=self.options.use_fractional_gates is None
+                or not self.options.use_fractional_gates,
+                include_fractional_gates=self.options.use_fractional_gates is None
+                or self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -344,7 +329,7 @@ class IBMBackend(Backend):
         Returns:
             Target
         """
-        self._get_properties()
+        self.properties()
         self._get_defaults()
         self._convert_to_target()
         return self._target
@@ -355,10 +340,19 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self._get_properties(datetime=datetime)
         self._get_defaults()
-        self._convert_to_target(refresh=True)
-        return self._target
+
+        return convert_to_target(
+            configuration=self._configuration,  # type: ignore[arg-type]
+            properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
+            defaults=self._defaults,
+            # In IBM backend architecture as of today
+            # these features can be only exclusively supported.
+            include_control_flow=self.options.use_fractional_gates is None
+            or not self.options.use_fractional_gates,
+            include_fractional_gates=self.options.use_fractional_gates
+            or self.options.use_fractional_gates,
+        )
 
     def refresh(self) -> None:
         """Retrieve the newest backend configuration and refresh the current backend target."""
@@ -367,7 +361,7 @@ class IBMBackend(Backend):
             instance=self._instance,
         ):
             self._configuration = config
-        self._get_properties(datetime=python_datetime.now())
+        self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
         self._get_defaults(refresh=True)
         self._convert_to_target(refresh=True)
 
