@@ -36,7 +36,7 @@ from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from qiskit_ibm_runtime.utils.backend_decoder import (
-    _decode_backend_configuration,
+    decode_backend_configuration,
     properties_from_server_data,
     defaults_from_server_data,
 )
@@ -149,7 +149,7 @@ class FakeBackendV2(BackendV2):
         if not self.conf_filename:
             return None
         conf_dict = self._load_json(self.conf_filename)  # type: ignore
-        _decode_backend_configuration(conf_dict)
+        decode_backend_configuration(conf_dict)
         conf_dict["backend_name"] = self.backend_name
         return conf_dict
 
