@@ -1,0 +1,2 @@
+Fix the location of hover text on the `draw_execution_spans()` function. Previous to this fix,
+they were drawn on the wrong markers.
