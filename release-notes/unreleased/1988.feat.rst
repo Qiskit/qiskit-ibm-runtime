@@ -1,4 +1,3 @@
 Added :func:`~.draw_layer_errors_swarm` to draw a swarm plot of one or more
 :class:`~.LayerError` objects. Also added the convenience method
 :meth:`~.LayerError.draw_swarm` to invoke the drawing function on a particular instance.
-(`1988 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1988>`__)
