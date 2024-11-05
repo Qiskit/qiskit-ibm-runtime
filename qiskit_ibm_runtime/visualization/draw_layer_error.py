@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=import-outside-toplevel
-
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
@@ -65,7 +63,6 @@ def draw_layer_error_map(
     Raises:
         ValueError: If the given coordinates are incompatible with the specified backend.
         ValueError: If ``backend`` has no coupling map.
-        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
     go = plotly_module(".graph_objects")
     sample_colorscale = plotly_module(".colors").sample_colorscale
@@ -272,7 +269,7 @@ def draw_layer_errors_swarm(
     num_bodies: Optional[int] = None,
     max_rate: Optional[float] = None,
     min_rate: Optional[float] = None,
-    connected: Optional[Union[list[Pauli], list[str]]] = None,
+    connected: Optional[list[Union[Pauli, str]]] = None,
     colors: Optional[list[str]] = None,
     num_bins: Optional[int] = None,
     opacities: Union[float, list[float]] = 0.4,
@@ -322,8 +319,6 @@ def draw_layer_errors_swarm(
     Raises:
         ValueError: If an invalid grouping option is given.
         ValueError: If ``colors`` is given but its length is incorrect.
-        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
-
     """
     go = plotly_module(".graph_objects")
 
@@ -409,9 +404,9 @@ def draw_layer_errors_swarm(
 
     # Add the traces for the tracked errors
     for gen, vals in connected_d.items():
-        hoverinfo = []
-        for name, y in zip(names, vals["ys"]):
-            hoverinfo += [f"{name}<br>  gen.: {gen}<br>  rate: {y}"]
+        hoverinfo = [
+            f"{name}<br>  gen.: {gen}<br>  rate: {y}" for name, y in zip(names, vals["ys"])
+        ]
 
         fig.add_trace(
             go.Scatter(
