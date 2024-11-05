@@ -30,6 +30,7 @@ HOVER_TEMPLATE = "<br>".join(
         "<b>{name}[{idx}]</b>",
         "<b>&nbsp;&nbsp;&nbsp;Start:</b> {span.start:%Y-%m-%d %H:%M:%S.%f}",
         "<b>&nbsp;&nbsp;&nbsp;Stop:</b> {span.stop:%Y-%m-%d %H:%M:%S.%f}",
+        "<b>&nbsp;&nbsp;&nbsp;Duration:</b> {span.duration:.4g}s",
         "<b>&nbsp;&nbsp;&nbsp;Size:</b> {span.size}",
         "<b>&nbsp;&nbsp;&nbsp;Pub Indexes:</b> {idxs}",
     ]
@@ -120,7 +121,7 @@ def draw_execution_spans(
 
             x_data.extend([span.start - offset, span.stop - offset, None])
             y_data.extend([y_value, y_value, None])
-            text_data.append(text)
+            text_data.extend([text] * 3)
 
         # add the data to the plot
         fig.add_trace(
