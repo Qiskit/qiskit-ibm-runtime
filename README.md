@@ -99,6 +99,9 @@ ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOU
 
 # For an IBM Quantum account.
 ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+
+# For a generic/custom channel platform.
+ibm_quantum_service = QiskitRuntimeService(channel="generic", token="MY_TOKEN", url="https://my.url:1234/")
 ```
 
 ## Primitives
