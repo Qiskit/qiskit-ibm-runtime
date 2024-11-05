@@ -119,6 +119,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
     @production_only
+    def test_properties_not_cached_target_history(self):
+        """Check backend properties is not cached in target_history()."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            properties = backend.properties()
+            backend.target_history(datetime=datetime.now() - timedelta(60))
+            self.assertEqual(properties, backend.properties())
+
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
