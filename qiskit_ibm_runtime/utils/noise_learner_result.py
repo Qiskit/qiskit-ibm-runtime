@@ -300,7 +300,7 @@ class LayerError:
             width=width,
         )
 
-    def draw_layer_errors_swarm(
+    def draw_swarm(
         self,
         num_bodies: Optional[int] = None,
         max_rate: Optional[float] = None,
@@ -323,7 +323,7 @@ class LayerError:
 
         .. note::
             To draw multiple layer errors at once, consider calling
-            :meth:`~qiskit_ibm_runtime.visualization.draw_execution_spans` directly.
+            :meth:`~qiskit_ibm_runtime.visualization.draw_layer_errors_swarm` directly.
 
         Args:
             num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
