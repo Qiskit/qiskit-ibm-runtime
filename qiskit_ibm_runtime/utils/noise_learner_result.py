@@ -30,7 +30,7 @@ import numpy as np
 
 from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import PauliList
+from qiskit.quantum_info import PauliList, Pauli
 
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
@@ -286,18 +286,84 @@ class LayerError:
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
-            self,
-            embedding,
-            colorscale,
-            color_no_data,
-            color_out_of_scale,
-            num_edge_segments,
-            edge_width,
-            height,
-            highest_rate,
-            background_color,
-            radius,
-            width,
+            layer_error=self,
+            embedding=embedding,
+            colorscale=colorscale,
+            color_no_data=color_no_data,
+            color_out_of_scale=color_out_of_scale,
+            num_edge_segments=num_edge_segments,
+            edge_width=edge_width,
+            height=height,
+            highest_rate=highest_rate,
+            background_color=background_color,
+            radius=radius,
+            width=width,
+        )
+
+    def draw_swarm(
+        self,
+        num_bodies: Optional[int] = None,
+        max_rate: Optional[float] = None,
+        min_rate: Optional[float] = None,
+        connected: Optional[Union[list[Pauli], list[str]]] = None,
+        colors: Optional[list[str]] = None,
+        num_bins: Optional[int] = None,
+        opacities: Union[float, list[float]] = 0.4,
+        names: Optional[list[str]] = None,
+        x_coo: Optional[list[float]] = None,
+        marker_size: Optional[float] = None,
+        height: int = 500,
+        width: int = 800,
+    ) -> PlotlyFigure:
+        r"""
+        Draw a swarm plot of the rates in this layer error.
+
+        This function plots the rates along a vertical axes, offsetting the rates along the ``x``
+        axis so that they do not overlap with each other.
+
+        .. note::
+            To draw multiple layer errors at once, consider calling
+            :meth:`~qiskit_ibm_runtime.visualization.draw_layer_errors_swarm` directly.
+
+        Args:
+            num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
+                generators should be included.
+            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
+                set.
+            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
+                set.
+            connected: A list of generators whose markers are to be connected by lines.
+            colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
+                chosen automatically.
+            num_bins: The number of bins to place the rates into when calculating the ``x``-axis
+                offsets.
+            opacities: A list of opacities for the markers.
+            names: The names of the various layers as displayed in the legend. If ``None``, default
+                names are assigned based on the layers' position inside the ``layer_errors`` list.
+            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
+                ``None`` if these axes should be placed at regular intervals.
+            marker_size: The size of the marker in the plot.
+            height: The height of the returned figure.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+
+        from ..visualization import draw_layer_errors_swarm
+
+        return draw_layer_errors_swarm(
+            layer_errors=[self],
+            num_bodies=num_bodies,
+            max_rate=max_rate,
+            min_rate=min_rate,
+            connected=connected,
+            colors=colors,
+            num_bins=num_bins,
+            opacities=opacities,
+            names=names,
+            x_coo=x_coo,
+            marker_size=marker_size,
+            height=height,
+            width=width,
         )
 
     def _json(self) -> dict:
