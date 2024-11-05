@@ -16,7 +16,7 @@ from typing import Dict, Optional, Any, Union, Callable
 from ..proxies import ProxyConfiguration
 
 from ..utils import default_runtime_url_resolver
-from ..api.auth import QuantumAuth, CloudAuth
+from ..api.auth import QuantumAuth, CloudAuth, GenericAuth
 
 TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
 """str: Template for creating an IBM Quantum URL with hub/group/project information."""
@@ -59,16 +59,21 @@ class ClientParameters:
             url_resolver = default_runtime_url_resolver
         self.url_resolver = url_resolver
 
-    def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
+    def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth, GenericAuth]:
         """Returns the respective authentication handler."""
         if self.channel == "ibm_cloud":
             return CloudAuth(api_key=self.token, crn=self.instance)
-
-        return QuantumAuth(access_token=self.token)
+        elif self.channel == "generic":
+            return GenericAuth(api_key=self.token, crn=self.instance)
+        else:
+            return QuantumAuth(access_token=self.token)
 
     def get_runtime_api_base_url(self) -> str:
         """Returns the Runtime API base url."""
-        return self.url_resolver(self.url, self.instance, self.private_endpoint)
+        if self.channel == "generic":
+            return self.url
+        else:
+            return self.url_resolver(self.url, self.instance, self.private_endpoint)
 
     def connection_parameters(self) -> Dict[str, Any]:
         """Construct connection related parameters.
