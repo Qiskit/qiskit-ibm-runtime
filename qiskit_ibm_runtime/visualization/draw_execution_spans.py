@@ -120,7 +120,7 @@ def draw_execution_spans(
 
             x_data.extend([span.start - offset, span.stop - offset, None])
             y_data.extend([y_value, y_value, None])
-            text_data.append(text)
+            text_data.extend([text] * 3)
 
         # add the data to the plot
         fig.add_trace(
