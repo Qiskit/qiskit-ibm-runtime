@@ -161,6 +161,9 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     if isinstance(helper_result, str):
         return helper_result
 
+    if len(helper_result) == 0:
+        return ""
+
     # helper_result is a set of parameter names
     rzz_params = list(helper_result)
 
