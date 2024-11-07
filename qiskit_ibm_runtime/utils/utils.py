@@ -32,6 +32,9 @@ from ibm_platform_services import ResourceControllerV2  # pylint: disable=import
 from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+
 from .deprecation import deprecate_function
 
 
@@ -156,7 +159,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
 
     if not isinstance(helper_result, str):
         return helper_result
-    
+
     # helper_result is a set of parameter names
     rzz_params = list(helper_result)
 
@@ -165,7 +168,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # BindingsArray(<shape=(2, 2, 3), num_parameters=4, parameters=['a', 'b', 'c', 'd']>)
     # param_values.data is a dictionary, whose keys are tuples of parameter names.
     # For examples, the keys can be: dict_keys([('a', 'b'), ('c',), ('d',)])
-    
+
     pub_params = list(chain(*[list(param_names) for param_names in pvalue.data.keys()]))
     # pub_params is the list of parameter names in the pub, for example: ['a', 'b', 'c', 'd']
 
@@ -192,8 +195,8 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     bad = np.where(arr < 0.0 or angle > 1.001 * np.pi / 2)
 
     if len(bad) > 0:
-        return f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter \'{pub_params[col_indices[bad[1][0]]]}\' is an invalid angle for the rzz gate"
-    
+        return f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter '{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
+
     return ""
 
 
