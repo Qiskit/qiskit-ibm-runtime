@@ -230,7 +230,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertEqual(
                 backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
             )
-            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(backend_copy.defaults().to_dict(), backend.defaults().to_dict())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,
