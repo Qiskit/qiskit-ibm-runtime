@@ -51,6 +51,7 @@ from qiskit.circuit import (
     QuantumCircuit,
     QuantumRegister,
 )
+from qiskit.transpiler import CouplingMap
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
@@ -236,6 +237,8 @@ class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
     def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
+        if isinstance(obj, CouplingMap):
+            return {"__type__": "CouplingMap", "__value__": list(obj)}
         if isinstance(obj, date):
             return {"__type__": "datetime", "__value__": obj.isoformat()}
         if isinstance(obj, complex):
@@ -404,6 +407,9 @@ class RuntimeDecoder(json.JSONDecoder):
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
 
+            if obj_type == "CouplingMap":
+                print("decode coupling map")
+                return CouplingMap(obj_val)
             if obj_type == "datetime":
                 return dateutil.parser.parse(obj_val)
             if obj_type == "complex":
