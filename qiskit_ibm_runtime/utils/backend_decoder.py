@@ -50,7 +50,7 @@ def configuration_from_server_data(
         )
         return None
     try:
-        _decode_backend_configuration(raw_config)
+        decode_backend_configuration(raw_config)
         try:
             return PulseBackendConfiguration.from_dict(raw_config)
         except (KeyError, TypeError):
@@ -110,7 +110,7 @@ def properties_from_server_data(properties: Dict) -> BackendProperties:
     return BackendProperties.from_dict(properties)
 
 
-def _decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: Dict) -> None:
     """Decode backend configuration.
 
     Args:
