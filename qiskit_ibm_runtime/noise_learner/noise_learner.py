@@ -31,7 +31,7 @@ from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
 from ..options.utils import remove_dict_unset_values, remove_empty_dict
-from ..utils import validate_isa_circuits
+from ..utils import validate_isa_circuits, validate_rzz_pubs
 from ..utils.utils import is_simulator
 
 from ..fake_provider.local_service import QiskitRuntimeLocalService
@@ -177,6 +177,8 @@ class NoiseLearner:
         inputs.update(learner_options)
 
         if self._backend:
+            if not is_simulator(self._backend):
+                validate_rzz_pubs(pubs)
             for task in circuits:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([task], self._backend.target)

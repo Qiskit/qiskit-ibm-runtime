@@ -27,7 +27,7 @@ from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
-from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
+from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits, validate_rzz_pubs
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
@@ -171,6 +171,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
         if self._backend:
+            if not is_simulator(self._backend):
+                validate_rzz_pubs(pubs)
             for pub in pubs:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([pub.circuit], self._backend.target)

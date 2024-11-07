@@ -33,6 +33,7 @@ from .validations import (
     validate_no_dd_with_dynamic_circuits,
     validate_isa_circuits,
     validate_job_tags,
+    validate_rzz_pubs,
 )
 
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string
