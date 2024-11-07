@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple
+from typing import List, Optional, Any, Dict, Union, Tuple, Set
 from urllib.parse import urlparse
 from itertools import chain
 import numpy as np
@@ -106,7 +106,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
-def _is_rzz_pub_helper(circuit: QuantumCircuit) -> str:
+def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
     """
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
