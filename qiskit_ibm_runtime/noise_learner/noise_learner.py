@@ -31,7 +31,6 @@ from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
 from ..options.utils import remove_dict_unset_values, remove_empty_dict
-from ..utils import validate_isa_circuits, validate_rzz_pubs
 from ..utils.utils import is_simulator
 
 from ..fake_provider.local_service import QiskitRuntimeLocalService

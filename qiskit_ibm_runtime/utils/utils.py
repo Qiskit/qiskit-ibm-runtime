@@ -22,8 +22,8 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
-import numpy as np
 from itertools import chain
+import numpy as np
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
@@ -170,7 +170,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # param_values.data is a dictionary, whose keys are tuples of parameter names.
     # For examples, the keys can be: dict_keys([('a', 'b'), ('c',), ('d',)])
 
-    pub_params = list(chain(*[list(param_names) for param_names in param_value.data.keys()]))
+    pub_params = list(chain(*[list(param_names) for param_names in param_values.data.keys()]))
     # pub_params is the list of parameter names in the pub, for example: ['a', 'b', 'c', 'd']
 
     col_indices = np.where(np.isin(pub_params, rzz_params))[0]
