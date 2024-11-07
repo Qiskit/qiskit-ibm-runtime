@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
-from typing import List, Sequence, Optional, Any
+from typing import List, Sequence, Optional, Any, Union
 import warnings
 import keyword
 

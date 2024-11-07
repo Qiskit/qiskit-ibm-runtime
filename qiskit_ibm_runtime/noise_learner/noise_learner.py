@@ -177,8 +177,6 @@ class NoiseLearner:
         inputs.update(learner_options)
 
         if self._backend:
-            if not is_simulator(self._backend):
-                validate_rzz_pubs(pubs)
             for task in circuits:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([task], self._backend.target)

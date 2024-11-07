@@ -23,6 +23,7 @@ from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
 import numpy as np
+from itertools import chain
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
@@ -138,7 +139,7 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> str:
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                body_result = _is_isa_circuit_helper(sub_circ)
+                body_result = _is_rzz_pub_helper(sub_circ)
                 if isinstance(body_result, str):
                     return body_result
                 angle_params.update(body_result)
@@ -155,7 +156,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     Returns:
         An empty string if all angles are valid, otherwise an error message.
     """
-    helper_result = _is_rzz_helper(pub.circuit)
+    helper_result = _is_rzz_pub_helper(pub.circuit)
 
     if not isinstance(helper_result, str):
         return helper_result
@@ -163,19 +164,19 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # helper_result is a set of parameter names
     rzz_params = list(helper_result)
 
-    param_values = circ.parameter_values
+    param_values = pub.circuit.parameter_values
     # param_values is of the form:
     # BindingsArray(<shape=(2, 2, 3), num_parameters=4, parameters=['a', 'b', 'c', 'd']>)
     # param_values.data is a dictionary, whose keys are tuples of parameter names.
     # For examples, the keys can be: dict_keys([('a', 'b'), ('c',), ('d',)])
 
-    pub_params = list(chain(*[list(param_names) for param_names in pvalue.data.keys()]))
+    pub_params = list(chain(*[list(param_names) for param_names in param_value.data.keys()]))
     # pub_params is the list of parameter names in the pub, for example: ['a', 'b', 'c', 'd']
 
     col_indices = np.where(np.isin(pub_params, rzz_params))[0]
     # col_indices is the indices of columns in the parameter value array that have to be checked
 
-    arr = parameter_values.as_array()
+    arr = param_values.as_array()
 
     # almost-flatten the parameter:
     # 'arr' will be a 2-dimensional array, where each line represents assignment of values to
@@ -192,10 +193,11 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
     # errors (beyond pi/2 does not trigger an error down the stack, only may become less
     # accurate).
-    bad = np.where(arr < 0.0 or angle > 1.001 * np.pi / 2)
+    bad = np.where(arr < 0.0 or arr > 1.001 * np.pi / 2)
 
     if len(bad) > 0:
-        return f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter '{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
+        return f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter" \
+        "'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
 
     return ""
 
