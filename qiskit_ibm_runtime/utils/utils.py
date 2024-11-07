@@ -164,7 +164,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # helper_result is a set of parameter names
     rzz_params = list(helper_result)
 
-    param_values = pub.circuit.parameter_values
+    param_values = pub.parameter_values
     # param_values is of the form:
     # BindingsArray(<shape=(2, 2, 3), num_parameters=4, parameters=['a', 'b', 'c', 'd']>)
     # param_values.data is a dictionary, whose keys are tuples of parameter names.
