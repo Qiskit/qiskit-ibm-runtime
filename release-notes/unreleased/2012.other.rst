@@ -1,0 +1,2 @@
+The remaining fake V1 backends - ``FakeMelbourne``, ``FakePoughkeepsie``,
+``FakeTenerife``, ``FakeTokyo``, and ``FakeRueschlikon`` have been removed. 
