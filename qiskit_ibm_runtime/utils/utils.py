@@ -158,7 +158,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     """
     helper_result = _is_rzz_pub_helper(pub.circuit)
 
-    if not isinstance(helper_result, str):
+    if isinstance(helper_result, str):
         return helper_result
 
     # helper_result is a set of parameter names
