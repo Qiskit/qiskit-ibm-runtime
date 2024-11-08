@@ -1,0 +1,27 @@
+0.33.0 (2024-11-07)
+===================
+
+New Features
+------------
+
+- Added :func:`~.draw_layer_errors_swarm` which draws a swarm plot of one or more
+  :class:`~.LayerError` objects. Also added the convenience method
+  :meth:`~.LayerError.draw_swarm` to invoke the drawing function on a particular instance. (`1988 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1988>`__)
+- Added :class:`.TwirledSliceSpan`, an :class:`ExecutionSpan` to be used when 
+  twirling is enabled in the Sampler. In particular, it keeps track of an extra shape
+  axis corresponding to twirling randomizations, and also whether this axis exists at
+  the front of the shape tuple, or right before the shots axis. (`2011 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2011>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed the location of hover text on the ``draw_execution_spans()`` function. Previous to this fix,
+  they were drawn on the wrong markers. (`2014 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2014>`__)
+
+
+Other Notes
+-----------
+
+- The remaining fake V1 backends - ``FakeMelbourne``, ``FakePoughkeepsie``,
+  ``FakeTenerife``, ``FakeTokyo``, and ``FakeRueschlikon`` have been removed. (`2012 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2012>`__)

@@ -213,6 +213,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
+        if self.backend.simulator:
+            raise SkipTest("Simulator has no backend defaults.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
