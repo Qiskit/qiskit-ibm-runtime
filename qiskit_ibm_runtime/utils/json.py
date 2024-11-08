@@ -238,7 +238,7 @@ class RuntimeEncoder(json.JSONEncoder):
 
     def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
         if isinstance(obj, CouplingMap):
-            return {"__type__": "CouplingMap", "__value__": list(obj)}
+            return list(obj)
         if isinstance(obj, date):
             return {"__type__": "datetime", "__value__": obj.isoformat()}
         if isinstance(obj, complex):
@@ -407,9 +407,6 @@ class RuntimeDecoder(json.JSONDecoder):
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
 
-            if obj_type == "CouplingMap":
-                print("decode coupling map")
-                return CouplingMap(obj_val)
             if obj_type == "datetime":
                 return dateutil.parser.parse(obj_val)
             if obj_type == "complex":
