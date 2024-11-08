@@ -98,8 +98,7 @@ class Batch(Session):
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Instance of ``Backend`` class or backend string name. Note that passing a
-                backend name is deprecated.
+            backend: Instance of ``Backend`` class.
 
             max_time:
                 Maximum amount of time a runtime session can be open before being
@@ -119,13 +118,6 @@ class Batch(Session):
                     "The service can be extracted from the backend object so "
                     "it is no longer necessary."
                 ),
-                period="3 months",
-            )
-        if isinstance(backend, str):
-            issue_deprecation_msg(
-                msg="Passing a backend as a string is deprecated",
-                version="0.26.0",
-                remedy="Use the actual backend object instead.",
                 period="3 months",
             )
 

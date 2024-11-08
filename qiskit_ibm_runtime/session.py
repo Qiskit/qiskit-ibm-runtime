@@ -87,7 +87,7 @@ class Session:
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
+        backend: Optional[Union[BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
@@ -97,8 +97,7 @@ class Session:
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Instance of ``Backend`` class or string name of backend. Note that passing a
-                backend name is deprecated.
+            backend: Instance of ``Backend`` class.
 
             max_time:
                 Maximum amount of time, a runtime session can be open before being
@@ -140,14 +139,6 @@ class Session:
                     if QiskitRuntimeService.global_service is None
                     else QiskitRuntimeService.global_service
                 )
-            if isinstance(backend, str):
-                issue_deprecation_msg(
-                    msg="Passing a backend as a string is deprecated",
-                    version="0.26.0",
-                    remedy="Use the actual backend object instead.",
-                    period="3 months",
-                )
-                self._backend = self._service.backend(backend)
             elif backend is None:
                 raise ValueError('"backend" is required')
             else:

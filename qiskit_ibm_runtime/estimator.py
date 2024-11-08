@@ -26,7 +26,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from .runtime_job_v2 import RuntimeJobV2
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
-from .utils.deprecation import issue_deprecation_msg
 from .utils import validate_estimator_pubs
 
 # pylint: disable=unused-import,cyclic-import
@@ -121,13 +120,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
-        if isinstance(mode, str):
-            issue_deprecation_msg(
-                msg="Passing a backend as a string is deprecated",
-                version="0.26.0",
-                remedy="Use the actual backend object instead.",
-                period="3 months",
-            )
 
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 

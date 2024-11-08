@@ -29,7 +29,6 @@ from .base_primitive import BasePrimitiveV2
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
-from .utils.deprecation import issue_deprecation_msg
 from .utils import validate_classical_registers
 from .options import SamplerOptions
 
@@ -61,7 +60,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
@@ -83,15 +82,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
-
-        if isinstance(mode, str):
-            issue_deprecation_msg(
-                msg="Passing a backend as a string is deprecated",
-                version="0.26.0",
-                remedy="Use the actual backend object instead.",
-                period="3 months",
-                stacklevel=2,
-            )
 
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
