@@ -192,18 +192,19 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
 
     # project only to the parameters that have to be checked
     arr = arr[:, col_indices]
+    print(arr)
 
     # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
     # errors (beyond pi/2 does not trigger an error down the stack, only may become less
     # accurate).
-    bad = np.where(arr < 0.0 or arr > 1.001 * np.pi / 2)
+    bad = np.where((arr < 0.0) | (arr > 1.001 * np.pi / 2))
 
     # `bad` is a tuple of two arrays, which can be empty, like this:
     # (array([], dtype=int64), array([], dtype=int64))
     if len(bad[0]) > 0:
         return (
-            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter"
-            "'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
+            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter "
+            f"'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
         )
 
     return ""
