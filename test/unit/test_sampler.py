@@ -353,10 +353,12 @@ class TestSamplerV2(IBMTestCase):
         if flawed_params is None:
             SamplerV2(backend).run(pubs=[pub])
         else:
-            with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"):
+            with self.assertRaisesRegex(
+                IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"
+            ):
                 SamplerV2(backend).run(pubs=[pub])
 
-    @data(("a", -1), ("b", 2), ("d", 3), (-1 ,1), (1, 2), None)
+    @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
     def test_rzz_recursive(self, flawed_params):
         """Testing rzz validation in the currently non-existing case of dynamic instructions"""
 
@@ -407,8 +409,12 @@ class TestSamplerV2(IBMTestCase):
             SamplerV2(backend).run(pubs=[pub])
         else:
             if isinstance(flawed_params[0], str):
-                with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"):
+                with self.assertRaisesRegex(
+                    IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"
+                ):
                     SamplerV2(backend).run(pubs=[pub])
             else:
-                with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"):
+                with self.assertRaisesRegex(
+                    IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"
+                ):
                     SamplerV2(backend).run(pubs=[pub])
