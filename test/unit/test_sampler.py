@@ -350,7 +350,60 @@ class TestSamplerV2(IBMTestCase):
 
         pub = (circ, {("a", "b"): val_ab, "c": val_c, "d": val_d})
 
-        if flawed_params is Nonee:
+        if flawed_params is None:
+            SamplerV2(backend).run(pubs=[pub])
+        else:
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend).run(pubs=[pub])
+
+    @data((["a", "b"], -1), (["b", "d"], 2), (["d", "a"], 3), (-1 ,1), (1, 2), None)
+    def test_rzz_recursive(self, flawed_params):
+        """Testing rzz validation in the currently non-existing case of dynamic instructions"""
+
+        # FakeFractionalBackend has both fractional and dynamic instructions
+        backend = FakeFractionalBackend()
+
+        aparam = Parameter("a")
+        bparam = Parameter("b")
+        cparam = Parameter("c")
+        dparam = Parameter("d")
+
+        angle1 = 1
+        angle2 = 1
+        if flawed_params is not None and not isinstance(flawed_params[0], list):
+            angle1 = flawed_params[0]
+            angle2 = flawed_params[1]
+
+        circ = QuantumCircuit(2, 1)
+        circ.rzz(bparam, 0, 1)
+        circ.rzz(angle1, 0, 1)
+        circ.measure(0, 0)
+        with circ.if_test((0, 1)):
+            circ.rzz(aparam, 0, 1)
+            circ.rzz(angle2, 0, 1)
+        circ.rx(cparam, 0)
+        circ.rzz(dparam, 0, 1)
+        circ.rzz(1, 0, 1)
+        circ.rzz(aparam, 0, 1)
+
+        val_ab = np.ones([2, 2, 3, 2])
+        val_c = (-1) * np.ones([2, 2, 3])
+        val_d = np.ones([2, 2, 3])
+
+        if flawed_params is not None and isinstance(flawed_params[0], list):
+            if flawed_params[0] == ["a", "b"]:
+                val_ab[0, 1, 1, 0] = flawed_params[1]
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+            if flawed_params[0] == ["b", "d"]:
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+                val_d[1, 1, 1] = flawed_params[1]
+            if flawed_params[0] == ["d", "a"]:
+                val_d[1, 1, 1] = flawed_params[1]
+                val_ab[1, 1, 2, 1] = flawed_params[1]
+
+        pub = (circ, {("a", "b"): val_ab, "c": val_c, "d": val_d})
+
+        if flawed_params is None:
             SamplerV2(backend).run(pubs=[pub])
         else:
             with self.assertRaises(IBMInputValueError):
