@@ -192,7 +192,6 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
 
     # project only to the parameters that have to be checked
     arr = arr[:, col_indices]
-    print(arr)
 
     # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
     # errors (beyond pi/2 does not trigger an error down the stack, only may become less

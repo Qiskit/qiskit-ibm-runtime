@@ -313,3 +313,45 @@ class TestSamplerV2(IBMTestCase):
         else:
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
+
+    @data((["a", "b"], -1), (["b", "d"], 2), (["d", "a"], 3), None)
+    def test_rzz_parametrized_angle_validation_complex(self, flawed_params):
+        """Test exception when rzz gate is used with a parameter which is assigned a value outside
+        the range [0, pi/2]"""
+        backend = FakeFractionalBackend()
+
+        aparam = Parameter("a")
+        bparam = Parameter("b")
+        cparam = Parameter("c")
+        dparam = Parameter("d")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(bparam, 0, 1)
+        circ.rzz(aparam, 0, 1)
+        circ.rx(cparam, 0)
+        circ.rzz(dparam, 0, 1)
+        circ.rzz(1, 0, 1)
+        circ.rzz(aparam, 0, 1)
+
+        val_ab = np.ones([2, 2, 3, 2])
+        val_c = (-1) * np.ones([2, 2, 3])
+        val_d = np.ones([2, 2, 3])
+
+        if flawed_params is not None:
+            if flawed_params[0] == ["a", "b"]:
+                val_ab[0, 1, 1, 0] = flawed_params[1]
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+            if flawed_params[0] == ["b", "d"]:
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+                val_d[1, 1, 1] = flawed_params[1]
+            if flawed_params[0] == ["d", "a"]:
+                val_d[1, 1, 1] = flawed_params[1]
+                val_ab[1, 1, 2, 1] = flawed_params[1]
+
+        pub = (circ, {("a", "b"): val_ab, "c": val_c, "d": val_d})
+
+        if flawed_params is Nonee:
+            SamplerV2(backend).run(pubs=[pub])
+        else:
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend).run(pubs=[pub])
