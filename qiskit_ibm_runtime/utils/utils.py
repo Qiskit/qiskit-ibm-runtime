@@ -198,7 +198,9 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # accurate).
     bad = np.where(arr < 0.0 or arr > 1.001 * np.pi / 2)
 
-    if len(bad) > 0:
+    # `bad` is a tuple of two arrays, which can be empty, like this:
+    # (array([], dtype=int64), array([], dtype=int64))
+    if len(bad[0]) > 0:
         return (
             f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter"
             "'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
