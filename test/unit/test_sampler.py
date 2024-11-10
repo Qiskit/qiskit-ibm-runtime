@@ -361,6 +361,7 @@ class TestSamplerV2(IBMTestCase):
     @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
     def test_rzz_recursive(self, flawed_params):
         """Testing rzz validation in the currently non-existing case of dynamic instructions"""
+        # pylint: disable=not-context-manager
 
         # FakeFractionalBackend has both fractional and dynamic instructions
         backend = FakeFractionalBackend()
