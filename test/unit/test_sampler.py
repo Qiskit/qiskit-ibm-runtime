@@ -295,7 +295,7 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ)])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
                 SamplerV2(backend).run(pubs=[(circ)])
 
     @data(-1, 1, 2)
@@ -311,10 +311,10 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with self.assertRaisesRegex(IBMInputValueError, f"{angle}.*Parameter 'p'"):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
 
-    @data((["a", "b"], -1), (["b", "d"], 2), (["d", "a"], 3), None)
+    @data(("a", -1), ("b", 2), ("d", 3), None)
     def test_rzz_parametrized_angle_validation_complex(self, flawed_params):
         """Test exception when rzz gate is used with a parameter which is assigned a value outside
         the range [0, pi/2]"""
@@ -338,13 +338,13 @@ class TestSamplerV2(IBMTestCase):
         val_d = np.ones([2, 2, 3])
 
         if flawed_params is not None:
-            if flawed_params[0] == ["a", "b"]:
+            if flawed_params[0] == "a":
                 val_ab[0, 1, 1, 0] = flawed_params[1]
                 val_ab[1, 0, 2, 1] = flawed_params[1]
-            if flawed_params[0] == ["b", "d"]:
+            if flawed_params[0] == "b":
                 val_ab[1, 0, 2, 1] = flawed_params[1]
                 val_d[1, 1, 1] = flawed_params[1]
-            if flawed_params[0] == ["d", "a"]:
+            if flawed_params[0] == "d":
                 val_d[1, 1, 1] = flawed_params[1]
                 val_ab[1, 1, 2, 1] = flawed_params[1]
 
@@ -353,10 +353,10 @@ class TestSamplerV2(IBMTestCase):
         if flawed_params is None:
             SamplerV2(backend).run(pubs=[pub])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"):
                 SamplerV2(backend).run(pubs=[pub])
 
-    @data((["a", "b"], -1), (["b", "d"], 2), (["d", "a"], 3), (-1 ,1), (1, 2), None)
+    @data(("a", -1), ("b", 2), ("d", 3), (-1 ,1), (1, 2), None)
     def test_rzz_recursive(self, flawed_params):
         """Testing rzz validation in the currently non-existing case of dynamic instructions"""
 
@@ -370,7 +370,7 @@ class TestSamplerV2(IBMTestCase):
 
         angle1 = 1
         angle2 = 1
-        if flawed_params is not None and not isinstance(flawed_params[0], list):
+        if flawed_params is not None and not isinstance(flawed_params[0], str):
             angle1 = flawed_params[0]
             angle2 = flawed_params[1]
 
@@ -390,14 +390,14 @@ class TestSamplerV2(IBMTestCase):
         val_c = (-1) * np.ones([2, 2, 3])
         val_d = np.ones([2, 2, 3])
 
-        if flawed_params is not None and isinstance(flawed_params[0], list):
-            if flawed_params[0] == ["a", "b"]:
+        if flawed_params is not None and isinstance(flawed_params[0], str):
+            if flawed_params[0] == "a":
                 val_ab[0, 1, 1, 0] = flawed_params[1]
                 val_ab[1, 0, 2, 1] = flawed_params[1]
-            if flawed_params[0] == ["b", "d"]:
+            if flawed_params[0] == "b":
                 val_ab[1, 0, 2, 1] = flawed_params[1]
                 val_d[1, 1, 1] = flawed_params[1]
-            if flawed_params[0] == ["d", "a"]:
+            if flawed_params[0] == "d":
                 val_d[1, 1, 1] = flawed_params[1]
                 val_ab[1, 1, 2, 1] = flawed_params[1]
 
@@ -406,5 +406,9 @@ class TestSamplerV2(IBMTestCase):
         if flawed_params is None:
             SamplerV2(backend).run(pubs=[pub])
         else:
-            with self.assertRaises(IBMInputValueError):
-                SamplerV2(backend).run(pubs=[pub])
+            if isinstance(flawed_params[0], str):
+                with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"):
+                    SamplerV2(backend).run(pubs=[pub])
+            else:
+                with self.assertRaisesRegex(IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"):
+                    SamplerV2(backend).run(pubs=[pub])
