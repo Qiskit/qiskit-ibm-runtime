@@ -29,7 +29,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter, ParameterExpression
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
