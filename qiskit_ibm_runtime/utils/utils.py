@@ -29,7 +29,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
@@ -74,14 +74,13 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         # accurate).
         if (
             name == "rzz"
-            and not isinstance(instruction.operation.params[0], Parameter)
-            and (
-                instruction.operation.params[0] < 0.0
-                or instruction.operation.params[0] > 1.001 * np.pi / 2
-            )
+            and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
+            and (param < 0.0 or param > 1.001 * np.pi / 2)
         ):
-            return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
-            range [0, pi/2], but an angle of {instruction.operation.params[0]} has been provided."
+            return (
+                f"The instruction {name} on qubits {qargs} is supported only for angles in the "
+                f"range [0, pi/2], but an angle of {param} has been provided."
+            )
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
