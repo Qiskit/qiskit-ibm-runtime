@@ -302,21 +302,16 @@ class TestSamplerV2(IBMTestCase):
         """Verify that the rzz validation occurs only when the angle is a number, and not a
         parameter"""
         backend = FakeFractionalBackend()
+        param = Parameter("p")
 
         with self.subTest("parameter"):
-            param = Parameter("p")
-
             circ = QuantumCircuit(2)
             circ.rzz(param, 0, 1)
-
             # Should run without an error
             SamplerV2(backend).run(pubs=[(circ, [1])])
 
         with self.subTest("parameter expression"):
-            param = Parameter("p")
-
             circ = QuantumCircuit(2)
             circ.rzz(2 * param, 0, 1)
-
             # Should run without an error
-            SamplerV2(backend).run(pubs=[(circ, [1])])
+            SamplerV2(backend).run(pubs=[(circ, [0.5])])
