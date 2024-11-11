@@ -247,8 +247,8 @@ isa_circuit = pm.run(circuit)
 isa_observables = M1.apply_layout(isa_circuit.layout)
 
 # 3. Execute iteratively using the Estimator primitive
-with Session(service=service, backend=backend) as session:
-    estimator = Estimator(session=session)
+with Session(backend=backend) as session:
+    estimator = Estimator(mode=session)
     estimator.options.default_precision = 0.03  # Options can be set using auto-complete.
     #next test range
     thetac = thetab - (thetab - thetaa) / gr

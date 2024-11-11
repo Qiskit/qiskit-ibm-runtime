@@ -305,8 +305,11 @@ class TestSamplerV2(IBMTestCase):
         backend = FakeFractionalBackend()
         param = Parameter("p")
 
-        circ = QuantumCircuit(2)
-        circ.rzz(param, 0, 1)
+        with self.subTest("parameter"):
+            circ = QuantumCircuit(2)
+            circ.rzz(param, 0, 1)
+            # Should run without an error
+            SamplerV2(backend).run(pubs=[(circ, [1])])
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])

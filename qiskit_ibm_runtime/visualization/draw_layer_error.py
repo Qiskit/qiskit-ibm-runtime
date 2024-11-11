@@ -13,10 +13,11 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, Dict, Optional, Tuple, Union, TYPE_CHECKING
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
+from qiskit.quantum_info import Pauli
 
 from ..utils.embeddings import Embedding
 from ..utils.noise_learner_result import LayerError
@@ -62,7 +63,6 @@ def draw_layer_error_map(
     Raises:
         ValueError: If the given coordinates are incompatible with the specified backend.
         ValueError: If ``backend`` has no coupling map.
-        ModuleNotFoundError: If the required ``plotly`` dependencies cannot be imported.
     """
     go = plotly_module(".graph_objects")
     sample_colorscale = plotly_module(".colors").sample_colorscale
@@ -260,5 +260,162 @@ def draw_layer_error_map(
     # Ensure that the circle is non-deformed
     fig.update_yaxes(scaleanchor="x", scaleratio=1)
     fig.update_layout(plot_bgcolor=background_color)
+
+    return fig
+
+
+def draw_layer_errors_swarm(
+    layer_errors: list[LayerError],
+    num_bodies: Optional[int] = None,
+    max_rate: Optional[float] = None,
+    min_rate: Optional[float] = None,
+    connected: Optional[list[Union[Pauli, str]]] = None,
+    colors: Optional[list[str]] = None,
+    num_bins: Optional[int] = None,
+    opacities: Union[float, list[float]] = 0.4,
+    names: Optional[list[str]] = None,
+    x_coo: Optional[list[float]] = None,
+    marker_size: Optional[float] = None,
+    height: int = 500,
+    width: int = 800,
+) -> PlotlyFigure:
+    r"""
+    Draw a swarm plot for the given list of layer errors.
+
+    This function plots the rates of each of the given layer errors along a vertical axes,
+    offsetting the rates along the ``x`` axis to minimize the overlap between the markers. It helps
+    visualizing the distribution of errors for different layer errors, as well as to track (using
+    the ``connected`` argument) the evolution of specific generators across different layers.
+
+    .. note::
+
+        To calculate the offsets, this arranges the rates in ``num_bins`` equally-spaced bins, and
+        then it assigns the ``x`` coordinates so that all the rates in the same bins are spaced
+        around the vertical axis. Thus, a higher value of ``num_bins`` will result in higher
+        overlaps between the markers.
+
+    Args:
+        layer_errors: The layer errors to draw.
+        num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
+            generators should be included.
+        max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
+            set.
+        min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
+            set.
+        connected: A list of generators whose markers are to be connected by lines.
+        colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
+            chosen automatically.
+        num_bins: The number of bins to place the rates into when calculating the ``x``-axis
+            offsets.
+        opacities: A list of opacities for the markers.
+        names: The names of the various layers as displayed in the legend. If ``None``, default
+            names are assigned based on the layers' position inside the ``layer_errors`` list.
+        x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
+            ``None`` if these axes should be placed at regular intervals.
+        marker_size: The size of the marker in the plot.
+        height: The height of the returned figure.
+        width: The width of the returned figure.
+
+    Raises:
+        ValueError: If an invalid grouping option is given.
+        ValueError: If ``colors`` is given but its length is incorrect.
+    """
+    go = plotly_module(".graph_objects")
+
+    colors = colors if colors else ["dodgerblue"] * len(layer_errors)
+    if len(colors) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} colors, found {len(colors)}.")
+
+    opacities = [opacities] * len(layer_errors) if isinstance(opacities, float) else opacities
+    if len(opacities) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} opacities, found {len(opacities)}.")
+
+    names = [f"layer #{i}" for i in range(len(layer_errors))] if not names else names
+    if len(names) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} names, found {len(names)}.")
+
+    x_coo = list(range(len(layer_errors))) if not x_coo else x_coo
+    if len(x_coo) != len(layer_errors):
+        raise ValueError(f"Expected {len(layer_errors)} ``x_coo``, found {len(x_coo)}.")
+
+    fig = go.Figure(layout=go.Layout(width=width, height=height))
+    fig.update_xaxes(
+        range=[x_coo[0] - 1, x_coo[-1] + 1],
+        showgrid=False,
+        zeroline=False,
+        title="layers",
+    )
+    fig.update_yaxes(title="rates")
+    fig.update_layout(xaxis={"tickvals": x_coo, "ticktext": names})
+
+    # Initialize a dictionary to store the coordinates of the generators that need to be connected
+    connected_d: dict[str, dict[str, list[float]]] = (
+        {str(p): {"xs": [], "ys": []} for p in connected} if connected else {}
+    )
+
+    for l_error_idx, l_error in enumerate(layer_errors):
+        error = l_error.error.restrict_num_bodies(num_bodies) if num_bodies else l_error.error
+        generators = error.generators.to_labels()
+        smallest_rate = min(rates := error.rates)
+        highest_rate = max(rates)
+
+        # Create bins
+        num_bins = num_bins or 10
+        bin_size = (highest_rate - smallest_rate) / num_bins
+        bins: dict[int, list[Any]] = {i: [] for i in range(num_bins + 1)}
+
+        # Populate the bins
+        for idx, (gen, rate) in enumerate(zip(generators, rates)):
+            if gen not in connected_d:
+                if (min_rate and rate < min_rate) or (max_rate and rate > max_rate):
+                    continue
+            bins[int((rate - smallest_rate) // bin_size)] += [(gen, rate, gen in connected_d)]
+
+        # Assign `x` and `y` coordinates based on the bins
+        xs = []
+        ys = []
+        hoverinfo = []
+        for values in bins.values():
+            for idx, (gen, rate, is_connected) in enumerate(values):
+                xs.append(x := x_coo[l_error_idx] + (idx - len(values) // 2) / len(rates))
+                ys.append(rate)
+                hoverinfo.append(f"Generator: {gen}<br>  rate: {rate}")
+
+                if is_connected:
+                    connected_d[gen]["xs"].append(x)
+                    connected_d[gen]["ys"].append(rate)
+
+        # Add the traces for the swarm plot of this layer error
+        fig.add_trace(
+            go.Scatter(
+                y=ys,
+                x=xs,
+                hovertemplate=hoverinfo,
+                mode="markers",
+                marker={
+                    "color": colors[l_error_idx],
+                    "opacity": opacities[l_error_idx],
+                    "size": marker_size,
+                },
+                name=names[l_error_idx],
+                showlegend=False,
+            )
+        )
+
+    # Add the traces for the tracked errors
+    for gen, vals in connected_d.items():
+        hoverinfo = [
+            f"{name}<br>  gen.: {gen}<br>  rate: {y}" for name, y in zip(names, vals["ys"])
+        ]
+
+        fig.add_trace(
+            go.Scatter(
+                y=vals["ys"],
+                x=vals["xs"],
+                mode="lines+markers",
+                name=str(gen),
+                hovertemplate=hoverinfo,
+            )
+        )
 
     return fig

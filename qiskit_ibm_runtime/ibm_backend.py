@@ -223,7 +223,7 @@ class IBMBackend(Backend):
             )
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
-        self._get_defaults()
+        self.defaults()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps
         try:
@@ -238,15 +238,6 @@ class IBMBackend(Backend):
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
-
-    def _get_defaults(self, refresh: bool = False) -> None:
-        """Gets defaults if pulse backend and decodes it"""
-        if (
-            not self._defaults and isinstance(self._configuration, PulseBackendConfiguration)
-        ) or refresh:
-            api_defaults = self._api_client.backend_pulse_defaults(self.name)
-            if api_defaults:
-                self._defaults = defaults_from_server_data(api_defaults)
 
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
@@ -330,7 +321,7 @@ class IBMBackend(Backend):
             Target
         """
         self.properties()
-        self._get_defaults()
+        self.defaults()
         self._convert_to_target()
         return self._target
 
@@ -340,7 +331,7 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self._get_defaults()
+        self.defaults()
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
@@ -362,7 +353,7 @@ class IBMBackend(Backend):
         ):
             self._configuration = config
         self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
-        self._get_defaults(refresh=True)
+        self.defaults(refresh=True)
         self._convert_to_target(refresh=True)
 
     def properties(

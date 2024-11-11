@@ -50,7 +50,7 @@ def configuration_from_server_data(
         )
         return None
     try:
-        _decode_backend_configuration(raw_config)
+        decode_backend_configuration(raw_config)
         try:
             return PulseBackendConfiguration.from_dict(raw_config)
         except (KeyError, TypeError):
@@ -110,7 +110,7 @@ def properties_from_server_data(properties: Dict) -> BackendProperties:
     return BackendProperties.from_dict(properties)
 
 
-def _decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: Dict) -> None:
     """Decode backend configuration.
 
     Args:
@@ -123,6 +123,10 @@ def _decode_backend_configuration(config: Dict) -> None:
         for u_channel_list in config["u_channel_lo"]:
             for u_channel_lo in u_channel_list:
                 u_channel_lo["scale"] = _to_complex(u_channel_lo["scale"])
+
+
+# TODO: remove this when no longer needed server-side
+_decode_backend_configuration = decode_backend_configuration
 
 
 def _to_complex(value: Union[List[float], complex]) -> complex:

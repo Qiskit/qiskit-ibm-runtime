@@ -119,12 +119,13 @@ class ExecutionSpans:
 
     def draw(
         self, name: str = None, normalize_y: bool = False, line_width: int = 4
-    ) -> "PlotlyFigure":
+    ) -> PlotlyFigure:
         """Draw these execution spans.
 
         .. note::
             To draw multiple sets of execution spans at once, for example coming from multiple
-            jobs, consider calling :func:`~.draw_execution_spans` directly.
+            jobs, consider calling :meth:`~qiskit_ibm_runtime.visualization.draw_execution_spans`
+            directly.
 
         Args:
             name: The name of this set of spans.
