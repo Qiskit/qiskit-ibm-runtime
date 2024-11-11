@@ -125,6 +125,10 @@ def decode_backend_configuration(config: Dict) -> None:
                 u_channel_lo["scale"] = _to_complex(u_channel_lo["scale"])
 
 
+# TODO: remove this when no longer needed server-side
+_decode_backend_configuration = decode_backend_configuration
+
+
 def _to_complex(value: Union[List[float], complex]) -> complex:
     """Convert the input value to type ``complex``.
 
