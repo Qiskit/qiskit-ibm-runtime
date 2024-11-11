@@ -75,7 +75,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         if (
             name == "rzz"
             and not isinstance(
-                (param := instruction.operation.params[0]), (Parameter, ParameterExpression)
+                (param := instruction.operation.params[0]), ParameterExpression
             )
             and (param < 0.0 or param > 1.001 * np.pi / 2)
         ):
