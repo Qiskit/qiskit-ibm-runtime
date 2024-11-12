@@ -195,7 +195,9 @@ class RuntimeJob(Job, BaseRuntimeJob):
             (
                 "In a future release of qiskit-ibm-runtime no sooner than 3 months "
                 "after the release date of 0.30.0, RuntimeJob.status() will be returned as a string "
-                "instead of an instance of `JobStatus`."
+                "instead of an instance of `JobStatus`. "
+                "To prepare for this change, you can use the idiom "
+                "`status.name if isinstance(status, JobStatus) else status`."
             ),
             DeprecationWarning,
             stacklevel=2,
