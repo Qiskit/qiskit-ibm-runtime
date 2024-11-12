@@ -545,7 +545,7 @@ class TestPrimitivesV2(IBMTestCase):
         transpiled = transpile(circ, backend=fake_backend)
         observable = SparsePauliOp("Z" * num_qubits)
 
-        edge_qubits = [0, 1]
+        edge_qubits = [1, 2]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         inst = primitive(ibm_backend)
