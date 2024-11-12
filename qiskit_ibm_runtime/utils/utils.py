@@ -133,7 +133,9 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
             angle = instruction.operation.params[0]
             if isinstance(angle, Parameter):
                 angle_params.add(angle.name)
-            elif not isinstance(angle, ParameterExpression) and (angle < 0.0 or angle > 1.001 * np.pi / 2):
+            elif not isinstance(angle, ParameterExpression) and (
+                angle < 0.0 or angle > 1.001 * np.pi / 2
+            ):
                 return f"The rzz instruction is supported only for angles in the \
                 range [0, pi/2], but an angle of {angle} has been provided."
 
