@@ -378,3 +378,15 @@ class TestSamplerV2(IBMTestCase):
                     IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"
                 ):
                     SamplerV2(backend).run(pubs=[pub])
+
+    def test_rzz_validation_skips_param_exp(self):
+        """Verify that the rzz validation occurs only when the angle is a number or a parameter,
+        but not a parameter expression"""
+        backend = FakeFractionalBackend()
+        param = Parameter("p")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(2 * param, 0, 1)
+
+        # Should run without an error
+        SamplerV2(backend).run(pubs=[(circ, [1])])

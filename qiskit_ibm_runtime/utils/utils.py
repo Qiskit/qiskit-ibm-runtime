@@ -30,7 +30,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter, ParameterExpression
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -133,7 +133,7 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
             angle = instruction.operation.params[0]
             if isinstance(angle, Parameter):
                 angle_params.add(angle.name)
-            elif angle < 0.0 or angle > 1.001 * np.pi / 2:
+            elif not isinstance(angle, ParameterExpression) and (angle < 0.0 or angle > 1.001 * np.pi / 2):
                 return f"The rzz instruction is supported only for angles in the \
                 range [0, pi/2], but an angle of {angle} has been provided."
 
