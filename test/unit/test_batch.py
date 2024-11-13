@@ -12,8 +12,6 @@
 
 """Tests for Batch class."""
 
-from unittest.mock import MagicMock
-
 from qiskit_ibm_runtime import Batch
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
@@ -45,7 +43,7 @@ class TestBatch(IBMTestCase):
 
     def test_run_after_close(self):
         """Test running after session is closed."""
-        backend = get_mocked_backend(name='ibm_gotham')
+        backend = get_mocked_backend(name="ibm_gotham")
         session = Batch(backend=backend)
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
@@ -53,7 +51,7 @@ class TestBatch(IBMTestCase):
 
     def test_context_manager(self):
         """Test session as a context manager."""
-        backend = get_mocked_backend(name='ibm_gotham')
+        backend = get_mocked_backend(name="ibm_gotham")
         with Batch(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()

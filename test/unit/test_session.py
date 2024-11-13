@@ -83,7 +83,7 @@ class TestSession(IBMTestCase):
         ]
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
-                backend = get_mocked_backend('ibm_gotham')
+                backend = get_mocked_backend("ibm_gotham")
                 session = Session(service=MagicMock(), backend=backend, max_time=max_t)
                 self.assertEqual(session._max_time, expected)
         for max_t, expected in max_times:
@@ -93,7 +93,7 @@ class TestSession(IBMTestCase):
 
     def test_run_after_close(self):
         """Test running after session is closed."""
-        backend = get_mocked_backend('ibm_gotham')
+        backend = get_mocked_backend("ibm_gotham")
         session = Session(service=MagicMock(), backend=backend)
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
@@ -129,7 +129,7 @@ class TestSession(IBMTestCase):
 
     def test_context_manager(self):
         """Test session as a context manager."""
-        backend = get_mocked_backend('ibm_gotham')
+        backend = get_mocked_backend("ibm_gotham")
         with Session(service=MagicMock(), backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
@@ -138,7 +138,7 @@ class TestSession(IBMTestCase):
     def test_global_service(self):
         """Test that global service is used in Session"""
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        backend = get_mocked_backend('common_backend')
+        backend = get_mocked_backend("common_backend")
         session = Session(backend=backend)
         self.assertTrue(isinstance(session._service, FakeRuntimeService))
         self.assertEqual(session._service._account.token, "abc")
@@ -163,7 +163,7 @@ class TestSession(IBMTestCase):
     def test_correct_execution_mode(self):
         """Test that the execution mode is correctly set."""
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        backend = get_mocked_backend('ibm_gotham')
+        backend = get_mocked_backend("ibm_gotham")
         session = Session(backend=backend)
         self.assertEqual(session.details()["mode"], "dedicated")
 
