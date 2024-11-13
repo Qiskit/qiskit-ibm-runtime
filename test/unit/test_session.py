@@ -135,21 +135,6 @@ class TestSession(IBMTestCase):
             session.cancel()
         self.assertFalse(session._active)
 
-    def test_global_service(self):
-        """Test that global service is used in Session"""
-        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        backend = get_mocked_backend("common_backend")
-        session = Session(backend=backend)
-        self.assertTrue(isinstance(session._service, FakeRuntimeService))
-        self.assertEqual(session._service._account.token, "abc")
-        _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
-        session = Session(backend=backend)
-        self.assertEqual(session._service._account.token, "xyz")
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="common_backend"
-        ) as session:
-            self.assertEqual(session._service._account.token, "uvw")
-
     def test_session_from_id(self):
         """Create session with given session_id"""
         service = FakeRuntimeService(channel="ibm_quantum", token="abc")

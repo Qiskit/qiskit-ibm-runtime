@@ -68,9 +68,10 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_unsupported_values_for_sampler_options(self, opt):
         """Test exception when options levels are not supported."""
+        backend = get_mocked_backend()
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
             with self.assertRaises(ValueError) as exc:
@@ -131,9 +132,10 @@ class TestSamplerV2(IBMTestCase):
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
+        backend = get_mocked_backend()
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))

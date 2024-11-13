@@ -187,7 +187,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
 
-        with Session(service=backend.service, backend=backend_name) as session:
+        with Session(service=backend.service, backend=backend) as session:
             inst = primitive()
             self.assertEqual(inst.mode, session)
             self.assertEqual(inst.mode.backend(), backend_name)
@@ -195,11 +195,11 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
         """Test using a different backend within context manager."""
-        cm_backend = "ibm_metropolis"
+        session_backend = get_mocked_backend("ibm_metropolis")
         backend = get_mocked_backend()
         service = backend.service
 
-        with Session(service=service, backend=cm_backend):
+        with Session(service=service, backend=session_backend):
             inst = primitive(mode=backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))

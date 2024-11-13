@@ -77,9 +77,10 @@ class TestEstimatorV2(IBMTestCase):
             },
         ]
 
+        backend = get_mocked_backend()
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             for bad_opt in options_bad:
                 inst = EstimatorV2(mode=session)
