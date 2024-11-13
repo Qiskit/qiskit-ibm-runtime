@@ -1,0 +1,7 @@
+0.33.1 (2024-11-08)
+===================
+
+Other Notes
+-----------
+
+- Added a private alias to ``decode_backend_configuration()``. (`2028 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2028>`__)

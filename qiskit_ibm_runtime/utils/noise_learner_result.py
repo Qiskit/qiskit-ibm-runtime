@@ -250,36 +250,36 @@ class LayerError:
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
 
-            .. code:: python
+        .. code:: python
 
-                from qiskit import QuantumCircuit
-                from qiskit.quantum_info import PauliList
-                from qiskit_ibm_runtime.utils.embeddings import Embedding
-                from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
+            from qiskit import QuantumCircuit
+            from qiskit.quantum_info import PauliList
+            from qiskit_ibm_runtime.utils.embeddings import Embedding
+            from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
 
-                # A five-qubit 1-D embedding with nearest neighbouring connectivity
-                coordinates1 = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
-                coupling_map1 = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
-                embedding1 = Embedding(coordinates1, coupling_map1)
+            # A five-qubit 1-D embedding with nearest neighbouring connectivity
+            coordinates1 = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+            coupling_map1 = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+            embedding1 = Embedding(coordinates1, coupling_map1)
 
-                # A six-qubit horseshoe-shaped embedding with nearest neighbouring connectivity
-                coordinates2 = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
-                coupling_map2 = [(0, 1), (1, 2), (0, 3), (3, 4), (4, 5)]
-                embedding2 = Embedding(coordinates2, coupling_map2)
+            # A six-qubit horseshoe-shaped embedding with nearest neighbouring connectivity
+            coordinates2 = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+            coupling_map2 = [(0, 1), (1, 2), (0, 3), (3, 4), (4, 5)]
+            embedding2 = Embedding(coordinates2, coupling_map2)
 
-                # A LayerError object
-                circuit = QuantumCircuit(4)
-                qubits = [1, 2, 3, 4]
-                generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
-                rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
-                error = PauliLindbladError(generators, rates)
-                layer_error = LayerError(circuit, qubits, error)
+            # A LayerError object
+            circuit = QuantumCircuit(4)
+            qubits = [1, 2, 3, 4]
+            generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+            rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+            error = PauliLindbladError(generators, rates)
+            layer_error = LayerError(circuit, qubits, error)
 
-                # Draw the layer error on embedding1
-                layer_error.draw_map(embedding1)
+            # Draw the layer error on embedding1
+            layer_error.draw_map(embedding1)
 
-                # Draw the layer error on embedding2
-                layer_error.draw_map(embedding2)
+            # Draw the layer error on embedding2
+            layer_error.draw_map(embedding2)
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
 
