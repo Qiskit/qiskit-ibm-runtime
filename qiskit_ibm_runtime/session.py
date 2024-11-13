@@ -27,7 +27,6 @@ from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
@@ -86,17 +85,12 @@ class Session:
 
     def __init__(
         self,
-        service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
         Args:
-            service: (DEPRECATED) Optional instance of the ``QiskitRuntimeService`` class.
-                If ``None``, the service associated with the backend, if known, is used.
-                Otherwise ``QiskitRuntimeService()`` is used to initialize
-                your default saved account.
             backend: Instance of ``Backend`` class.
 
             max_time:
@@ -114,18 +108,6 @@ class Session:
         self._active = True
         self._session_id = None
 
-        if service:
-            issue_deprecation_msg(
-                msg="The service parameter is deprecated",
-                version="0.26.0",
-                remedy=(
-                    "The service can be extracted from the backend object so "
-                    "it is no longer necessary."
-                ),
-                period="3 months",
-            )
-
-        self._service = service
         if isinstance(backend, IBMBackend):
             self._service = self._service or backend.service
             self._backend = backend
@@ -139,8 +121,6 @@ class Session:
                     if QiskitRuntimeService.global_service is None
                     else QiskitRuntimeService.global_service
                 )
-            elif backend is None:
-                raise ValueError('"backend" is required')
             else:
                 raise ValueError(f"Invalid backend type {type(backend)}")
 
@@ -369,7 +349,7 @@ class Session:
             )
 
         cls._create_new_session = False
-        session = cls(service, backend)
+        session = cls(backend)
         cls._create_new_session = True
         if state == "closed":
             session._active = False

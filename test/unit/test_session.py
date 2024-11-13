@@ -41,31 +41,12 @@ class TestSession(IBMTestCase):
         self.assertIsNotNone(session.service)
         mock_service.assert_called_once()
 
-    def test_missing_backend(self):
-        """Test missing backend."""
-        service = MagicMock()
-        service.channel = "ibm_quantum"
-        with self.assertRaises(ValueError):
-            Session(service=service)
-
-        service.channel = "ibm_cloud"
-        with self.assertRaises(ValueError):
-            Session(service=service)
-
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
-        session = Session(service=backend.service, backend=backend)
-        self.assertEqual(session.backend(), backend_name)
-
-    def test_using_ibm_backend_service(self):
-        """Test using service from an IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
         session = Session(backend=backend)
-        self.assertEqual(session.service, backend.service)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_max_time(self):
         """Test max time."""
@@ -84,7 +65,7 @@ class TestSession(IBMTestCase):
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
                 backend = get_mocked_backend("ibm_gotham")
-                session = Session(service=MagicMock(), backend=backend, max_time=max_t)
+                session = Session(backend=backend, max_time=max_t)
                 self.assertEqual(session._max_time, expected)
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
@@ -94,7 +75,7 @@ class TestSession(IBMTestCase):
     def test_run_after_close(self):
         """Test running after session is closed."""
         backend = get_mocked_backend("ibm_gotham")
-        session = Session(service=MagicMock(), backend=backend)
+        session = Session(backend=backend)
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
             session._run(program_id="program_id", inputs={})
@@ -112,7 +93,7 @@ class TestSession(IBMTestCase):
         program_id = "batman_begins"
         decoder = MagicMock()
         max_time = 42
-        session = Session(service=service, backend=backend, max_time=max_time)
+        session = Session(backend=backend, max_time=max_time)
 
         session._run(
             program_id=program_id,
@@ -130,7 +111,7 @@ class TestSession(IBMTestCase):
     def test_context_manager(self):
         """Test session as a context manager."""
         backend = get_mocked_backend("ibm_gotham")
-        with Session(service=MagicMock(), backend=backend) as session:
+        with Session(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)

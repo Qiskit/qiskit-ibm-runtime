@@ -43,7 +43,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        with Session(service, backend=backend) as session:
+        with Session(backend=backend) as session:
             estimator = EstimatorV2(mode=session)
             result = estimator.run([(psi1, H1, [theta1])]).result()
             self.assertIsInstance(result, PrimitiveResult)
@@ -67,7 +67,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         instance = self.dependencies.instance
         backend = service.backend(self.dependencies.qpu, self.dependencies.instance)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        with Session(service, backend=backend) as session:
+        with Session(backend=backend) as session:
             sampler = SamplerV2(mode=session)
             job = sampler.run([pm.run(bell())])
             self.assertEqual(instance, backend._instance)
@@ -82,7 +82,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             raise SkipTest("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
-        with Session(service, backend=backend) as session:
+        with Session(backend=backend) as session:
             sampler = SamplerV2(mode=session)
             sampler.run(isa_circuit)
 
@@ -99,6 +99,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     def test_job_mode_warning(self, service):
         """Test deprecation warning is raised when using job mode inside a session."""
         backend = service.backend(self.dependencies.qpu)
-        with Session(service, backend=backend):
+        with Session(backend=backend):
             with self.assertWarns(DeprecationWarning):
                 _ = SamplerV2(mode=backend)

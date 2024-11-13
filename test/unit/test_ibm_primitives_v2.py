@@ -187,7 +187,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
 
-        with Session(service=backend.service, backend=backend) as session:
+        with Session(backend=backend) as session:
             inst = primitive()
             self.assertEqual(inst.mode, session)
             self.assertEqual(inst.mode.backend(), backend_name)
@@ -199,7 +199,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend = get_mocked_backend()
         service = backend.service
 
-        with Session(service=service, backend=session_backend):
+        with Session(backend=session_backend):
             inst = primitive(mode=backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
@@ -600,7 +600,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend)
+        session = Session(backend=fake_backend)
 
         inst = primitive(mode=session)
         if isinstance(inst, IBMBaseEstimator):

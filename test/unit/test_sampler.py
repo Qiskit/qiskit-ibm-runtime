@@ -26,7 +26,6 @@ from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbroo
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 @ddt
@@ -70,7 +69,6 @@ class TestSamplerV2(IBMTestCase):
         """Test exception when options levels are not supported."""
         backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
@@ -134,7 +132,6 @@ class TestSamplerV2(IBMTestCase):
         """Test exceptions when failing client-side validations."""
         backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)

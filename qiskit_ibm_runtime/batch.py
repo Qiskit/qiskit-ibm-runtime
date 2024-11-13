@@ -18,7 +18,6 @@ from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .session import Session
-from .utils.deprecation import issue_deprecation_msg
 
 
 class Batch(Session):
@@ -87,17 +86,12 @@ class Batch(Session):
 
     def __init__(
         self,
-        service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Batch constructor.
 
         Args:
-            service: (DEPRECATED) Optional instance of the ``QiskitRuntimeService`` class.
-                If ``None``, the service associated with the backend, if known, is used.
-                Otherwise ``QiskitRuntimeService()`` is used to initialize
-                your default saved account.
             backend: Instance of ``Backend`` class.
 
             max_time:
@@ -110,18 +104,8 @@ class Batch(Session):
         Raises:
             ValueError: If an input value is invalid.
         """
-        if service:
-            issue_deprecation_msg(
-                msg="The service parameter is deprecated",
-                version="0.26.0",
-                remedy=(
-                    "The service can be extracted from the backend object so "
-                    "it is no longer necessary."
-                ),
-                period="3 months",
-            )
 
-        super().__init__(service=service, backend=backend, max_time=max_time)
+        super().__init__(backend=backend, max_time=max_time)
 
     def _create_session(self) -> Optional[str]:
         """Create a session."""
