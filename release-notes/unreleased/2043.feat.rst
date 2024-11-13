@@ -1,0 +1,9 @@
+Add new transpiler translation plugin :class:`IBMFractionalTranslationPlugin` 
+and a pass :class:`FoldRzzAngle`.
+This plugin is automatically appled for backends
+retrieved with the `use_fractional_gates` optin,
+and the folding pass is added when the backend target includes the `RZZ` gate.
+
+New pass modifies the input quantum circuit so that all `RZZ` gates in the
+circuit has an angle parameter within [0, pi/2] which is supported 
+by IBM Quantum processors.
