@@ -20,8 +20,9 @@ from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.transpiler.preset_passmanagers import common
 from qiskit.transpiler.passes import ConvertConditionsToIfOps
 
-from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import (
+from qiskit_ibm_runtime.transpiler.passes.basis import (
     ConvertIdToDelay,
+    FoldRzzAngle,
 )
 
 
@@ -96,3 +97,41 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
             plugin_passes += [ConvertConditionsToIfOps()]
 
         return PassManager(plugin_passes) + translator_pm
+
+
+class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
+    """A translation stage plugin for targeting Qiskit circuits
+    to IBM Quantum system with fractional gate support.
+
+    Currently coexistense of fractional gate operations and
+    dynamic circuit is not assumed.
+    """
+
+    def pass_manager(
+        self,
+        pass_manager_config: PassManagerConfig,
+        optimization_level: Optional[int] = None,
+    ) -> PassManager:
+        """Build IBMTranslationPlugin PassManager."""
+
+        translator_pm = common.generate_translation_passmanager(
+            target=pass_manager_config.target,
+            basis_gates=pass_manager_config.basis_gates,
+            approximation_degree=pass_manager_config.approximation_degree,
+            coupling_map=pass_manager_config.coupling_map,
+            backend_props=pass_manager_config.backend_properties,
+            unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
+            unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
+            hls_config=pass_manager_config.hls_config,
+        )
+
+        instruction_durations = pass_manager_config.instruction_durations
+        pre_passes = []
+        post_passes = []
+        target = pass_manager_config.target or pass_manager_config.basis_gates
+        if instruction_durations and not "id" in target:
+            pre_passes.append(ConvertIdToDelay(instruction_durations))
+        if "rzz" in target:
+            # Apply this pass after SU4 is translated.
+            post_passes.append(FoldRzzAngle())
+        return PassManager(pre_passes) + translator_pm + PassManager(post_passes)
