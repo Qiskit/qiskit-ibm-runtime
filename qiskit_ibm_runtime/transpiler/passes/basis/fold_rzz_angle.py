@@ -47,7 +47,7 @@ class FoldRzzAngle(TransformationPass):
         This pass doesn't transform the circuit when the
         Rzz gate angle is an unbound parameter.
         In this case, the user must assign a gate angle before
-        transpile, or be responsible for choosing parameters
+        transpilation, or be responsible for choosing parameters
         from the calibrated range of [0, pi/2].
     """
 
