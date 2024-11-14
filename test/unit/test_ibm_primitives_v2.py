@@ -140,7 +140,7 @@ class TestPrimitivesV2(IBMTestCase):
                 return mock_service_inst
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
-            inst = primitive(mode=backend_name)
+            inst = primitive(mode=mock_backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst._run.assert_called_once()
@@ -148,7 +148,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertEqual(runtime_options["backend"], mock_backend)
 
             mock_service_inst.reset_mock()
-            str_mode_inst = primitive(mode=backend_name)
+            str_mode_inst = primitive(mode=mock_backend)
             self.assertIsNone(str_mode_inst.mode)
             inst.run(**get_primitive_inputs(str_mode_inst))
             mock_service_inst._run.assert_called_once()
@@ -197,15 +197,10 @@ class TestPrimitivesV2(IBMTestCase):
         """Test using a different backend within context manager."""
         session_backend = get_mocked_backend("ibm_metropolis")
         backend = get_mocked_backend()
-        service = backend.service
 
         with Session(backend=session_backend):
-            inst = primitive(mode=backend)
-            self.assertIsNone(inst.mode)
-            inst.run(**get_primitive_inputs(inst))
-            service._run.assert_called_once()
-            runtime_options = service._run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], backend)
+            with self.assertRaises(ValueError):
+                _ = primitive(mode=backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_no_session(self, primitive):

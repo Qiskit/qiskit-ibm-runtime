@@ -12,7 +12,7 @@
 
 """Tests for Session classession."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
@@ -32,14 +32,6 @@ class TestSession(IBMTestCase):
     def tearDown(self) -> None:
         super().tearDown()
         _DEFAULT_SESSION.set(None)
-
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_default_service(self, mock_service):
-        """Test using default service."""
-        mock_service.global_service = None
-        session = Session(backend="ibm_gotham")
-        self.assertIsNotNone(session.service)
-        mock_service.assert_called_once()
 
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""

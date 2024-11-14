@@ -69,6 +69,12 @@ def _get_mode_service_backend(
                 "is open so this job will run inside this session/batch "
                 "instead of in job mode."
             )
+            if get_cm_session()._backend != mode:
+                raise ValueError(
+                    "The backend passed in to the primitive is different from the session backend. "
+                    "Please check which backend you intend to use or leave the mode parameter "
+                    "empty to use the session backend."
+                )
             return get_cm_session(), mode.service, mode
         return None, mode.service, mode
     elif isinstance(mode, (BackendV1, BackendV2)):
