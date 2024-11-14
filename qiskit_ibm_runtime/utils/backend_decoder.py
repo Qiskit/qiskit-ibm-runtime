@@ -28,16 +28,23 @@ from .converters import utc_to_local_all
 
 logger = logging.getLogger(__name__)
 
+FRACTIONAL_GATES = ("rzz", "rx")
+DYNAMIC_INSTRUCTIONS = ("if_else", "while_loop", "for_loop", "switch_case")
+
 
 def configuration_from_server_data(
     raw_config: Dict,
     instance: str = "",
+    use_fractional_gates: Optional[bool] = False,
 ) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
     """Create an IBMBackend instance from raw server data.
 
     Args:
         raw_config: Raw configuration.
         instance: Service instance.
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+                for further details.
 
     Returns:
         Backend configuration.
@@ -51,6 +58,7 @@ def configuration_from_server_data(
         return None
     try:
         decode_backend_configuration(raw_config)
+        filter_raw_configuration(raw_config, use_fractional_gates=use_fractional_gates)
         try:
             return PulseBackendConfiguration.from_dict(raw_config)
         except (KeyError, TypeError):
@@ -64,6 +72,43 @@ def configuration_from_server_data(
         )
         logger.debug("Invalid device configuration: %s", traceback.format_exc())
     return None
+
+
+def filter_raw_configuration(
+    raw_config: dict, use_fractional_gates: Optional[bool] = False
+) -> None:
+    """Filter unwanted entries from raw configuration data
+
+    Args:
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+                for further details.
+    """
+    if use_fractional_gates is None:
+        return
+
+    if use_fractional_gates:
+        if "supported_instructions" in raw_config:
+            raw_config["supported_instructions"] = [
+                i for i in raw_config["supported_instructions"] if i not in DYNAMIC_INSTRUCTIONS
+            ]
+        if "supported_features" in raw_config:
+            raw_config["supported_features"] = [
+                g for g in raw_config["supported_features"] if g != "qasm3"
+            ]
+    else:
+        if "basis_gates" in raw_config:
+            raw_config["basis_gates"] = [
+                g for g in raw_config["basis_gates"] if g not in FRACTIONAL_GATES
+            ]
+        if "gates" in raw_config:
+            raw_config["gates"] = [
+                g for g in raw_config["gates"] if g.get("name") not in FRACTIONAL_GATES
+            ]
+        if "supported_instructions" in raw_config:
+            raw_config["supported_instructions"] = [
+                i for i in raw_config["supported_instructions"] if i not in FRACTIONAL_GATES
+            ]
 
 
 def defaults_from_server_data(defaults: Dict) -> PulseDefaults:

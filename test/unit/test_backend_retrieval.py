@@ -264,6 +264,7 @@ class TestGetBackend(IBMTestCase):
     @named_data(
         ("with_fractional", True),
         ("without_fractional", False),
+        ("without_filtering", None),
     )
     def test_get_backend_with_fractional_optin(self, use_fractional):
         """Test getting backend with fractional gate opt-in.
@@ -282,19 +283,19 @@ class TestGetBackend(IBMTestCase):
         test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
         self.assertEqual(
             "rx" in test_backend.target,
-            use_fractional,
+            use_fractional or use_fractional is None,
         )
         self.assertEqual(
-            "rzx" in test_backend.target,
-            use_fractional,
+            "rzz" in test_backend.target,
+            use_fractional or use_fractional is None,
         )
         self.assertEqual(
             "if_else" in test_backend.target.operation_names,
-            not use_fractional,
+            not use_fractional or use_fractional is None,
         )
         self.assertEqual(
             "while_loop" in test_backend.target.operation_names,
-            not use_fractional,
+            not use_fractional or use_fractional is None,
         )
 
     def test_backend_with_and_without_fractional_from_same_service(self):
@@ -316,14 +317,3 @@ class TestGetBackend(IBMTestCase):
         self.assertIn("rx", backend_with_fg.target)
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
-
-    def test_get_backend_with_no_instr_filtering(self):
-        """Test getting backend with no instruction filtering."""
-        service = FakeRuntimeService(
-            channel="ibm_quantum",
-            token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
-        )
-        test_backend = service.backends("fake_fractional", use_fractional_gates=None)[0]
-        for instr in ["rx", "rzx", "if_else", "while_loop"]:
-            self.assertIn(instr, test_backend.target)

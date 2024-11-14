@@ -513,7 +513,9 @@ class QiskitRuntimeService:
                 backend_names = self._backend_allowed_list
                 hgp = None
             for backend_name in backend_names:
-                if backend := self._create_backend_obj(backend_name, instance=hgp):
+                if backend := self._create_backend_obj(
+                    backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
+                ):
                     backends.append(backend)
         else:
             if instance:
@@ -522,7 +524,9 @@ class QiskitRuntimeService:
                 )
             for backend_name in self._backend_allowed_list:
                 if backend := self._create_backend_obj(
-                    backend_name, instance=self._account.instance
+                    backend_name,
+                    instance=self._account.instance,
+                    use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
 
@@ -550,12 +554,16 @@ class QiskitRuntimeService:
         self,
         backend_name: str,
         instance: Optional[str] = None,
+        use_fractional_gates: Optional[bool] = False,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
         Args:
             backend_name: Name of backend to instantiate.
             instance: the current h/g/p.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+                for further details.
 
         Returns:
             A backend object.
@@ -566,6 +574,7 @@ class QiskitRuntimeService:
         if config := configuration_from_server_data(
             raw_config=self._api_client.backend_configuration(backend_name),
             instance=instance,
+            use_fractional_gates=use_fractional_gates,
         ):
             if self._channel == "ibm_quantum":
                 if not instance:
