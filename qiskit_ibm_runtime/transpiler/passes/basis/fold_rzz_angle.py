@@ -38,25 +38,31 @@ class FoldRzzAngle(TransformationPass):
         # Currently control flow ops and Rzz cannot live in the same circuit.
         # Once it's supported, we need to recursively check subroutines.
         for node in dag.op_nodes():
-            if not isinstance(node.op, RZZGate) or isinstance(
-                angle := node.op.params[0], ParameterExpression
-            ):
+            if not isinstance(node.op, RZZGate):
+                continue
+            angle = node.op.params[0]
+            if isinstance(angle, ParameterExpression) or 0 <= angle <= pi / 2:
+                # Angle is unbound parameter or calibrated value.
                 continue
             wrap_angle = np.angle(np.exp(1j * angle))
-            if -pi <= wrap_angle <= -pi / 2:
+            if 0 <= wrap_angle <= pi / 2:
+                # In the first quadrant after phase wrapping.
+                # We just need to remove 2pi offset.
+                dag.substitute_node(
+                    node,
+                    RZZGate(wrap_angle),
+                    inplace=True,
+                )
+                continue
+            elif pi /2 < wrap_angle <= pi:
+                # In the second quadrant.
+                replace = _quad2(wrap_angle, node.qargs)
+            elif -pi <= wrap_angle <= - pi / 2:
+                # In the third quadrant.
                 replace = _quad3(wrap_angle, node.qargs)
             elif -pi / 2 < wrap_angle < 0:
-                replace = _quad4(wrap_angle, node.qargs)
-            elif pi / 2 < wrap_angle <= pi:
-                replace = _quad2(wrap_angle, node.qargs)
-            else:
-                if angle != wrap_angle:
-                    dag.substitute_node(
-                        node,
-                        RZZGate(wrap_angle),
-                        inplace=True,
-                    )
-                continue
+                # In the forth quadrant.
+                 replace = _quad4(wrap_angle, node.qargs)
             dag.substitute_node_with_dag(node, replace)
         return dag
 
