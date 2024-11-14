@@ -28,10 +28,26 @@ class FoldRzzAngle(TransformationPass):
     """Fold Rzz gate angle into calibrated range of 0-pi/2 with
     local gate tweaks.
 
-    This pass preserves the number of Rzz gates, but it may add
-    extra single qubit gate operations.
-    These gates might be reduced by the following
-    single qubit optimization passes.
+    In the IBM Quantum ISA, the instruction Rzz(theta) has
+    valid "theta" value of [0, pi/2] and any instruction outside
+    this range becomes non-ISA operation for the quantum backend.
+    The transpiler pass discovers such non-ISA Rzz gates
+    and folds the gate angle into the calibrated range
+    with addition of single qubit gates while preserving
+    logical equivalency of the input quantum circuit.
+    Added local gates might be efficiently merged into
+    neighboring single qubit gates by the following single qubit
+    optimization passes.
+
+    This pass allows the Qiskit users to naively use the Rzz gates
+    with angle of arbitrary real numbers.
+
+    .. note::
+        This pass doesn't transform the circuit when the
+        Rzz gate angle is unbound parameter.
+        In this case, the user must assign gate angle before
+        transpile, or be responsible for choosing parameters
+        from the calibrated range of [0, pi/2].
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
@@ -54,15 +70,17 @@ class FoldRzzAngle(TransformationPass):
                     inplace=True,
                 )
                 continue
-            elif pi /2 < wrap_angle <= pi:
+            if pi / 2 < wrap_angle <= pi:
                 # In the second quadrant.
                 replace = _quad2(wrap_angle, node.qargs)
-            elif -pi <= wrap_angle <= - pi / 2:
+            elif -pi <= wrap_angle <= -pi / 2:
                 # In the third quadrant.
                 replace = _quad3(wrap_angle, node.qargs)
             elif -pi / 2 < wrap_angle < 0:
                 # In the forth quadrant.
-                 replace = _quad4(wrap_angle, node.qargs)
+                replace = _quad4(wrap_angle, node.qargs)
+            else:
+                raise RuntimeError("Unreacheable.")
             dag.substitute_node_with_dag(node, replace)
         return dag
 
