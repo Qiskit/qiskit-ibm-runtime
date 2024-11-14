@@ -62,7 +62,7 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
         self.assertEqual(qc, isa)
-    
+
     def test_identity(self):
         """Create identity circuit with angles with [-4pi, 4pi] and transpile."""
         # Angle sum is zero
@@ -73,3 +73,30 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
         self.assertTrue(Operator.from_label("II").equiv(Operator.from_circuit(isa)))
+
+    def test_controlflow(self):
+        """Test non-ISA Rzz gates inside/outside a control flow branch."""
+        qc = QuantumCircuit(2, 1)
+        qc.rzz(-0.2, 0, 1)
+        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+            qc.rzz(-0.1, 0, 1)
+            with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+                qc.rzz(-0.3, 0, 1)
+
+        pm = PassManager([FoldRzzAngle()])
+        isa = pm.run(qc)
+
+        expected = QuantumCircuit(2, 1)
+        expected.x(0)
+        expected.rzz(0.2, 0, 1)
+        expected.x(0)
+        with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+            expected.x(0)
+            expected.rzz(0.1, 0, 1)
+            expected.x(0)
+            with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+                expected.x(0)
+                expected.rzz(0.3, 0, 1)
+                expected.x(0)
+
+        self.assertEqual(isa, expected)

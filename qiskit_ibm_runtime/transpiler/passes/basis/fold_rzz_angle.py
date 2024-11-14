@@ -15,9 +15,10 @@
 from typing import Tuple
 from math import pi
 
+from qiskit.converters import dag_to_circuit, circuit_to_dag
 from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate
 from qiskit.circuit.parameterexpression import ParameterExpression
-from qiskit.circuit import Qubit
+from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
@@ -51,15 +52,44 @@ class FoldRzzAngle(TransformationPass):
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
-        # Currently control flow ops and Rzz cannot live in the same circuit.
-        # Once it's supported, we need to recursively check subroutines.
+        self._run_inner(dag)
+        return dag
+
+    def _run_inner(self, dag: DAGCircuit) -> DAGCircuit:
+        """Mutate the input dag to fix non-ISA Rzz angles."""
+        modified = False
         for node in dag.op_nodes():
+            if isinstance(node.op, ControlFlowOp):
+                modified_blocks = False
+                new_blocks = []
+                for block in node.op.blocks:
+                    block_dag = circuit_to_dag(block)
+                    if self._run_inner(block_dag):
+                        # Store circuit with Rzz modification
+                        new_blocks.append(dag_to_circuit(block_dag))
+                        modified_blocks = True
+                    else:
+                        # Keep original circuit to save memory
+                        new_blocks.append(block)
+                if modified_blocks:
+                    dag.substitute_node(
+                        node,
+                        node.op.replace_blocks(new_blocks),
+                        inplace=True,
+                    )
+                    modified = True
+                continue
+
             if not isinstance(node.op, RZZGate):
                 continue
+
             angle = node.op.params[0]
             if isinstance(angle, ParameterExpression) or 0 <= angle <= pi / 2:
                 # Angle is unbound parameter or calibrated value.
                 continue
+
+            # Modify circuit around Rzz gate to address non-ISA angles.
+            modified = True
             wrap_angle = np.angle(np.exp(1j * angle))
             if 0 <= wrap_angle <= pi / 2:
                 # In the first quadrant after phase wrapping.
@@ -82,7 +112,7 @@ class FoldRzzAngle(TransformationPass):
             else:
                 raise RuntimeError("Unreacheable.")
             dag.substitute_node_with_dag(node, replace)
-        return dag
+        return modified
 
 
 def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
