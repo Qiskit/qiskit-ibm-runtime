@@ -14,6 +14,7 @@
 
 from math import pi
 from ddt import ddt, named_data
+import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import Operator
@@ -61,3 +62,14 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
         self.assertEqual(qc, isa)
+    
+    def test_identity(self):
+        """Create identity circuit with angles with [-4pi, 4pi] and transpile."""
+        # Angle sum is zero
+        angles = pi * np.linspace(-4, 4, 17)
+        qc = QuantumCircuit(2)
+        for angle in angles:
+            qc.rzz(angle, 0, 1)
+        pm = PassManager([FoldRzzAngle()])
+        isa = pm.run(qc)
+        self.assertTrue(Operator.from_label("II").equiv(Operator.from_circuit(isa)))
