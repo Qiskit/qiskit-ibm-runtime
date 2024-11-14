@@ -7,4 +7,5 @@ The deprecations from the ``0.26.0`` release have been removed.
     to run jobs in job mode, even if a session context manager was open. These jobs will now
     run inside of the open session. Additionally, if a backend that is different
     from the session backend is passed in as the mode, an error will be raised. 
+    - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``.
 
