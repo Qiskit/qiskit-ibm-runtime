@@ -115,14 +115,7 @@ class Session:
             self._service = QiskitRuntimeLocalService()
             self._backend = backend
         else:
-            if not self._service:
-                self._service = (
-                    QiskitRuntimeService()
-                    if QiskitRuntimeService.global_service is None
-                    else QiskitRuntimeService.global_service
-                )
-            else:
-                raise ValueError(f"Invalid backend type {type(backend)}")
+            raise ValueError(f"Invalid backend type {type(backend)}")
 
         self._max_time = (
             max_time
