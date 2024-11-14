@@ -134,8 +134,6 @@ class TestPrimitivesV2(IBMTestCase):
         class MockQRTService:
             """Mock class used to create a new QiskitRuntimeService."""
 
-            global_service = None
-
             def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
                 return mock_service_inst
 
