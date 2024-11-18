@@ -542,10 +542,10 @@ class TestPrimitivesV2(IBMTestCase):
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
-        transpiled = transpile(circ, backend=fake_backend)
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
         observable = SparsePauliOp("Z" * num_qubits)
 
-        edge_qubits = [1, 2]
+        edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         inst = primitive(ibm_backend)

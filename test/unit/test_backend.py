@@ -84,8 +84,8 @@ class TestBackend(IBMTestCase):
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
 
-        transpiled = transpile(circ, backend=fake_backend)
-        edge_qubits = [1, 2]
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
+        edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         sampler = SamplerV2(ibm_backend)
 
