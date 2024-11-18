@@ -14,12 +14,12 @@
 import copy
 from unittest import mock
 
-from ddt import ddt
+from ddt import named_data, ddt
 from qiskit import QuantumCircuit, qasm3, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke, FakeFractionalBackend
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendConfiguration,
@@ -331,4 +331,50 @@ class TestBackend(IBMTestCase):
         self.assertEqual(
             target.qubit_properties[1].frequency,
             faulty_backend.properties().frequency(1),
+        )
+
+    @named_data(
+        ("with_dynamic_with_fractional", [True, True]),
+        ("with_dynamic_without_fractional", [True, False]),
+        ("without_dynamic_with_fractional", [False, True]),
+        ("without_dynamic_without_fractional", [False, False]),
+    )
+    def test_convert_to_target_with_features(self, options):
+        """Test converting into Target model with selective features."""
+        use_dynamic, use_fractional = options
+        backend = FakeFractionalBackend()
+        backend._set_props_dict_from_json()
+        configuration = BackendConfiguration.from_dict(backend._conf_dict)
+        properties = BackendProperties.from_dict(backend._props_dict)
+
+        target = convert_to_target(
+            configuration=configuration,
+            properties=properties,
+            include_control_flow=use_dynamic,
+            include_fractional_gates=use_fractional,
+        )
+
+        self.assertEqual(
+            "rx" in target,
+            use_fractional,
+        )
+        self.assertEqual(
+            "rzx" in target,
+            use_fractional,
+        )
+        self.assertEqual(
+            "rx" in target.operation_names,
+            use_fractional,
+        )
+        self.assertEqual(
+            "rzx" in target.operation_names,
+            use_fractional,
+        )
+        self.assertEqual(
+            "if_else" in target.operation_names,
+            use_dynamic,
+        )
+        self.assertEqual(
+            "while_loop" in target.operation_names,
+            use_dynamic,
         )

@@ -26,7 +26,13 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+from qiskit.circuit.library.standard_gates import (
+    get_standard_gate_name_mapping,
+    RZGate,
+    U1Gate,
+    PhaseGate,
+)
+from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.providers.exceptions import BackendPropertyError
@@ -42,6 +48,9 @@ def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     defaults: PulseDefaults = None,
+    *,
+    include_control_flow: bool = True,
+    include_fractional_gates: bool = True,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -53,6 +62,8 @@ def convert_to_target(
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
         defaults: Backend pulse defaults dictionary or ``PulseDefaults``
+        include_control_flow: Set True to include control flow instructions.
+        include_fractional_gates: Set True to include fractioanl gates.
 
     Returns:
         A ``Target`` instance.
@@ -97,9 +108,27 @@ def convert_to_target(
     # Create name to Qiskit instruction object repr mapping
     for name in all_instructions:
         if name in qiskit_control_flow_mapping:
+            if not include_control_flow:
+                # Remove name if this is control flow and dynamic circuits feature is disabled.
+                logger.info(
+                    "Control flow %s is found but the dynamic circuits are disabled for this backend. "
+                    "This instruction is excluded from the backend Target.",
+                    name,
+                )
+                unsupported_instructions.append(name)
             continue
         if name in qiskit_inst_mapping:
-            inst_name_map[name] = qiskit_inst_mapping[name]
+            qiskit_gate = qiskit_inst_mapping[name]
+            if (not include_fractional_gates) and is_fractional_gate(qiskit_gate):
+                # Remove name if this is fractional gate and fractional gate feature is disabled.
+                logger.info(
+                    "Gate %s is found but the fractional gates are disabled for this backend. "
+                    "This gate is excluded from the backend Target.",
+                    name,
+                )
+                unsupported_instructions.append(name)
+                continue
+            inst_name_map[name] = qiskit_gate
         elif name in gate_configs:
             # GateConfig model is a translator of QASM opcode.
             # This doesn't have quantum definition, so Qiskit transpiler doesn't perform
@@ -320,3 +349,11 @@ def qubit_props_list_from_props(
             )
         )
     return qubit_props
+
+
+def is_fractional_gate(gate: Gate) -> bool:
+    """Test if gate is fractional gate familiy."""
+    # In IBM architecture these gates are virtual-Z and delay,
+    # which don't change control parameter with its gate parameter.
+    exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
+    return len(gate.params) > 0 and not isinstance(gate, exclude_list)
