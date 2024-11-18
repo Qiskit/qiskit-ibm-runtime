@@ -34,7 +34,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         self._backend = self.service.backend(self.dependencies.qpu)
 
     @run_integration_test
-    def test_estimator_v2_session(self, service):
+    def test_estimator_v2_session(self):
         """Verify correct results are returned"""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
@@ -50,7 +50,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])

@@ -94,11 +94,3 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
-
-    @run_integration_test
-    def test_job_mode_warning(self, service):
-        """Test deprecation warning is raised when using job mode inside a session."""
-        backend = service.backend(self.dependencies.qpu)
-        with Session(backend=backend):
-            with self.assertWarns(DeprecationWarning):
-                _ = SamplerV2(mode=backend)
