@@ -359,7 +359,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target,
+            "rzz" in target,
             use_fractional,
         )
         self.assertEqual(
@@ -367,7 +367,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target.operation_names,
+            "rzz" in target.operation_names,
             use_fractional,
         )
         self.assertEqual(
