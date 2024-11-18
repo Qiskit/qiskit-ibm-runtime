@@ -393,9 +393,10 @@ class IBMBackend(Backend):
             if not api_properties:
                 return None
             if "gates" in api_properties and isinstance(api_properties["gates"], list):
-                api_properties["gates"] = [
-                    g for g in api_properties["gates"] if g.get("gate") in FRACTIONAL_GATES
-                ]
+                if self.options.use_fractional_gates is not None and not self.options.use_fractional_gates:
+                    api_properties["gates"] = [
+                        g for g in api_properties["gates"] if g.get("gate") not in FRACTIONAL_GATES
+                    ]
             backend_properties = properties_from_server_data(api_properties)
             if datetime:  # Don't cache result.
                 return backend_properties
