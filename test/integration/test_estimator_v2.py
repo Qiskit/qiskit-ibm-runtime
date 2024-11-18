@@ -22,7 +22,6 @@ from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
 
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
-from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -33,7 +32,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
 
-    @run_integration_test
     def test_estimator_v2_session(self):
         """Verify correct results are returned"""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)

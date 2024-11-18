@@ -77,7 +77,6 @@ class TestSampler(IBMIntegrationTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
-    @run_integration_test
     def test_sampler_run(self):
         """Test Sampler.run()."""
 
@@ -158,7 +157,6 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         self._verify_result_type(result, num_pubs=4)
 
-    @run_integration_test
     def test_run_single_circuit(self):
         """Test for single circuit case."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
@@ -234,7 +232,6 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
         self._verify_result_type(result, num_pubs=2)
 
-    @run_integration_test
     def test_run_empty_parameter(self):
         """Test for empty parameter"""
         with Session(self._backend) as session:
@@ -250,7 +247,6 @@ class TestSampler(IBMIntegrationTestCase):
                 result = sampler.run([qc, qc]).result()
                 self._verify_result_type(result, num_pubs=2)
 
-    @run_integration_test
     def test_run_numpy_params(self):
         """Test for numpy array as parameter values"""
         with Session(self._backend) as session:
@@ -273,7 +269,6 @@ class TestSampler(IBMIntegrationTestCase):
                     result, num_pubs=len(params_list), targets=[np.array(target)]
                 )
 
-    @run_integration_test
     def test_run_with_shots_option(self):
         """test with shots option."""
         with Session(self._backend) as session:
@@ -358,7 +353,6 @@ class TestSampler(IBMIntegrationTestCase):
         _ = job.result()
         self.assertEqual(job.status(), "DONE")
 
-    @run_integration_test
     def test_circuit_with_unitary(self):
         """Test for circuit with unitary gate."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
@@ -395,7 +389,6 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
         self._verify_result_type(result, num_pubs=1)
 
-    @run_integration_test
     def test_circuit_with_multiple_cregs(self):
         """Test for circuit with multiple classical registers."""
         with Session(self._backend) as session:
