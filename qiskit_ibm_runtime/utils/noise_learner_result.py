@@ -17,6 +17,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    PauliLindbladError
    LayerError
