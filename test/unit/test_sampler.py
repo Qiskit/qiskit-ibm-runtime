@@ -322,6 +322,34 @@ class TestSamplerV2(IBMTestCase):
             # Should run without an error
             SamplerV2(backend).run(pubs=[(circ, [0.5])])
 
+    def test_param_expressions_gen3_runtime(self):
+        """Verify that parameter expressions are not used in combination with the gen3-turbo
+        execution path."""
+        backend = FakeCusco()
+        x = Parameter("x")
+        y = Parameter("y")
+        opts = SamplerOptions(experimental={"execution_path": "gen3-turbo"})
+
+        with self.subTest("float"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x, 0)
+            circ.measure(0, 0)
+            bound_circ = circ.assign_parameters({x: 0.1})
+            # expect no error (parameter is bound to a float)
+            SamplerV2(backend, opts).run(pubs=[(bound_circ,)])
+            # expect no error (simple parameter, not a parameter expression)
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.2])])
+
+        with self.subTest("parameter expressions"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x + 2 * y, 0)
+            circ.measure(0, 0)
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
+            # without the gen3-turbo execution path, we expect no error
+            opts.experimental["execution_path"] = ""
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
+
     @data(
         "classified",
         "kerneled",
