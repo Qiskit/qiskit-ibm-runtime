@@ -328,6 +328,7 @@ class TestSamplerV2(IBMTestCase):
         backend = FakeCusco()
         x = Parameter("x")
         y = Parameter("y")
+        # pylint: disable-next=unexpected-keyword-arg
         opts = SamplerOptions(experimental={"execution_path": "gen3-turbo"})
 
         with self.subTest("float"):
@@ -347,6 +348,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaises(IBMInputValueError):
                 SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
             # without the gen3-turbo execution path, we expect no error
+            # pylint: disable-next=unsupported-assignment-operation
             opts.experimental["execution_path"] = ""
             SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
 
