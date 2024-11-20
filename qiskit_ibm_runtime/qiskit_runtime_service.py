@@ -553,8 +553,8 @@ class QiskitRuntimeService:
     def _create_backend_obj(
         self,
         backend_name: str,
-        instance: Optional[str] = None,
-        use_fractional_gates: Optional[bool] = False,
+        instance: Optional[str],
+        use_fractional_gates: Optional[bool],
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
