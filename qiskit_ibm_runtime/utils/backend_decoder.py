@@ -91,6 +91,7 @@ def filter_raw_configuration(
 
     gate_map = get_standard_gate_name_mapping()
     if use_fractional_gates:
+        raw_config["conditional"] = False
         if "supported_instructions" in raw_config:
             raw_config["supported_instructions"] = [
                 i for i in raw_config["supported_instructions"] if i not in DYNAMIC_INSTRUCTIONS
