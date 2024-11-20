@@ -563,10 +563,16 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
-        if config := configuration_from_server_data(
-            raw_config=self._api_client.backend_configuration(backend_name),
-            instance=instance,
-        ):
+        try:
+            config = configuration_from_server_data(
+                raw_config=self._api_client.backend_configuration(backend_name),
+                instance=instance,
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to create retrieve configuration for %s. %s ", backend_name, ex)
+            return None
+
+        if config:
             if self._channel == "ibm_quantum":
                 if not instance:
                     for hgp in list(self._hgps.values()):
