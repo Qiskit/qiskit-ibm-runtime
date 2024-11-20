@@ -493,14 +493,19 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     op = next_node.op
                     theta_r, phi_r, lam_r = op.params
                     op.params = Optimize1qGates.compose_u3(theta_r, phi_r, lam_r, theta, phi, lam)
-                    next_node.op = op
+                    self._block_dag.substitute_node(next_node, op, propagate_condition=False)
                     sequence_gphase += phase
                 elif isinstance(prev_node, DAGOpNode) and isinstance(prev_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the predecessor (from right in circuit)
                     op = prev_node.op
                     theta_l, phi_l, lam_l = op.params
                     op.params = Optimize1qGates.compose_u3(theta, phi, lam, theta_l, phi_l, lam_l)
-                    prev_node.op = op
+                    new_prev_node = self._block_dag.substitute_node(
+                        prev_node, op, propagate_condition=False
+                    )
+                    start_time = self.property_set["node_start_time"].pop(prev_node)
+                    if start_time is not None:
+                        self.property_set["node_start_time"][new_prev_node] = start_time
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse
