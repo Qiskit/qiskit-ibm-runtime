@@ -29,7 +29,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
@@ -127,6 +127,16 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
                 or getattr(inst.operation, "condition", None) is not None
             ):
                 return True
+    return False
+
+
+def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
+    """Checks if the input circuits contain `ParameterExpression`s"""
+    for circuit in circuits:
+        for instruction in circuit.data:
+            for p in instruction.operation.params:
+                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
+                    return True
     return False
 
 

@@ -26,7 +26,11 @@ from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
-from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
+from .utils import (
+    validate_isa_circuits,
+    validate_no_dd_with_dynamic_circuits,
+    validate_no_param_expressions_gen3_runtime,
+)
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
@@ -147,6 +151,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        validate_no_param_expressions_gen3_runtime([pub.circuit for pub in pubs], self.options)
         if self._backend:
             for pub in pubs:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
