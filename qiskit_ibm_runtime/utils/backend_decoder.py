@@ -17,6 +17,8 @@ import logging
 import traceback
 
 import dateutil.parser
+from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+
 from ..models import (
     BackendProperties,
     PulseDefaults,
@@ -25,10 +27,10 @@ from ..models import (
 )
 
 from .converters import utc_to_local_all
+from .utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
 
-FRACTIONAL_GATES = ("rzz", "rx")
 DYNAMIC_INSTRUCTIONS = ("if_else", "while_loop", "for_loop", "switch_case")
 
 
@@ -87,6 +89,7 @@ def filter_raw_configuration(
     if use_fractional_gates is None:
         return
 
+    gate_map = get_standard_gate_name_mapping()
     if use_fractional_gates:
         if "supported_instructions" in raw_config:
             raw_config["supported_instructions"] = [
@@ -99,15 +102,21 @@ def filter_raw_configuration(
     else:
         if "basis_gates" in raw_config:
             raw_config["basis_gates"] = [
-                g for g in raw_config["basis_gates"] if g not in FRACTIONAL_GATES
+                g
+                for g in raw_config["basis_gates"]
+                if g not in gate_map or not is_fractional_gate(gate_map[g])
             ]
         if "gates" in raw_config:
             raw_config["gates"] = [
-                g for g in raw_config["gates"] if g.get("name") not in FRACTIONAL_GATES
+                g
+                for g in raw_config["gates"]
+                if g.get("name") not in gate_map or not is_fractional_gate(gate_map[g.get("name")])
             ]
         if "supported_instructions" in raw_config:
             raw_config["supported_instructions"] = [
-                i for i in raw_config["supported_instructions"] if i not in FRACTIONAL_GATES
+                i
+                for i in raw_config["supported_instructions"]
+                if i not in gate_map or not is_fractional_gate(gate_map[i])
             ]
 
 
@@ -131,15 +140,30 @@ def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
     return PulseDefaults.from_dict(defaults)
 
 
-def properties_from_server_data(properties: Dict) -> BackendProperties:
+def properties_from_server_data(
+    properties: Dict, use_fractional_gates: Optional[bool] = False
+) -> BackendProperties:
     """Decode backend properties.
 
     Args:
         properties: Raw properties data.
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+            for further details.
 
     Returns:
         A ``BackendProperties`` instance.
     """
+    gate_map = get_standard_gate_name_mapping()
+
+    if "gates" in properties and isinstance(properties["gates"], list):
+        if use_fractional_gates is not None and not use_fractional_gates:
+            properties["gates"] = [
+                g
+                for g in properties["gates"]
+                if g.get("name") not in gate_map or not is_fractional_gate(gate_map[g.get("name")])
+            ]
+
     if isinstance(properties["last_update_date"], str):
         properties["last_update_date"] = dateutil.parser.isoparse(properties["last_update_date"])
         for qubit in properties["qubits"]:

@@ -54,7 +54,6 @@ from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBac
 from .utils.backend_converter import convert_to_target
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
-    FRACTIONAL_GATES,
     defaults_from_server_data,
     properties_from_server_data,
     configuration_from_server_data,
@@ -392,15 +391,10 @@ class IBMBackend(Backend):
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if not api_properties:
                 return None
-            if "gates" in api_properties and isinstance(api_properties["gates"], list):
-                if (
-                    self.options.use_fractional_gates is not None
-                    and not self.options.use_fractional_gates
-                ):
-                    api_properties["gates"] = [
-                        g for g in api_properties["gates"] if g.get("gate") not in FRACTIONAL_GATES
-                    ]
-            backend_properties = properties_from_server_data(api_properties)
+            backend_properties = properties_from_server_data(
+                api_properties,
+                use_fractional_gates=self.options.use_fractional_gates,
+            )
             if datetime:  # Don't cache result.
                 return backend_properties
             self._properties = backend_properties
