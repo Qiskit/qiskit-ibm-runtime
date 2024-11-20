@@ -290,7 +290,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         midmeas_dd = pm.run(self.midmeas)
 
-        combined_u = UGate(pi, 0, pi)
+        combined_u = UGate(3 * pi / 4, -pi / 2, pi / 2)
 
         expected = QuantumCircuit(3, 1)
         expected.cx(0, 1)
