@@ -86,7 +86,7 @@ class Batch(Session):
 
     def __init__(
         self,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
+        backend: Optional[Union[BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Batch constructor.

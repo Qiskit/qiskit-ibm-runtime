@@ -109,7 +109,7 @@ class Session:
         self._session_id = None
 
         if isinstance(backend, IBMBackend):
-            self._service = self._service or backend.service
+            self._service = backend.service
             self._backend = backend
         elif isinstance(backend, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
