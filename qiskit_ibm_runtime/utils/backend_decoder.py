@@ -37,14 +37,14 @@ def configuration_from_server_data(
     instance: str = "",
     use_fractional_gates: Optional[bool] = False,
 ) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
-    """Create an IBMBackend instance from raw server data.
+    """Create a backend configuration instance from raw server data.
 
     Args:
         raw_config: Raw configuration.
         instance: Service instance.
         use_fractional_gates: Set True to allow for the backends to include
             fractional gates. See :meth:`~.QiskitRuntimeService.backends`
-                for further details.
+            for further details.
 
     Returns:
         Backend configuration.

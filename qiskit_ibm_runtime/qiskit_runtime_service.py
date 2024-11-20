@@ -458,16 +458,16 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simulataneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
                 If ``None``, then both fractional gates and control flow operations are
-                included in the backend targets.
+                included in the backends.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -545,7 +545,7 @@ class QiskitRuntimeService:
                 )
             )
 
-        # Set fractional gate feature before Target object is created.
+        # Set fractional gate flag for use when loading properties or refreshing backend.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
@@ -562,8 +562,10 @@ class QiskitRuntimeService:
             backend_name: Name of backend to instantiate.
             instance: the current h/g/p.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. See :meth:`~.QiskitRuntimeService.backends`
-                for further details.
+                fractional gates, False to include control flow operations, and
+                None to include both fractional gates and control flow
+                operations.  See :meth:`~.QiskitRuntimeService.backends` for
+                further details.
 
         Returns:
             A backend object.
@@ -735,16 +737,16 @@ class QiskitRuntimeService:
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simulataneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
                 If ``None``, then both fractional gates and control flow operations are
-                included in the backend targets.
+                included in the backends.
 
         Returns:
             Backend: A backend matching the filtering.
