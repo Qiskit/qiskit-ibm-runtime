@@ -18,6 +18,10 @@ import traceback
 
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+try:
+    from qiskit.circuit import CONTROL_FLOW_OP_NAMES
+except ImportError:  # Remove when dropping support for Qiskit < 1.3
+    CONTROL_FLOW_OP_NAMES = frozenset(("for_loop", "while_loop", "if_else", "switch_case"))
 
 from ..models import (
     BackendProperties,
@@ -31,7 +35,6 @@ from .utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
 
-DYNAMIC_INSTRUCTIONS = ("if_else", "while_loop", "for_loop", "switch_case")
 
 
 def configuration_from_server_data(
@@ -94,7 +97,7 @@ def filter_raw_configuration(
         raw_config["conditional"] = False
         if "supported_instructions" in raw_config:
             raw_config["supported_instructions"] = [
-                i for i in raw_config["supported_instructions"] if i not in DYNAMIC_INSTRUCTIONS
+                i for i in raw_config["supported_instructions"] if i not in CONTROL_FLOW_OP_NAMES
             ]
         if "supported_features" in raw_config:
             raw_config["supported_features"] = [
