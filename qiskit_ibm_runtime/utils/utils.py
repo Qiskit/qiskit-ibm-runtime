@@ -185,14 +185,8 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # helper_result is a set of parameter names
     rzz_params = list(helper_result)
 
-    param_values = pub.parameter_values
-    # param_values is of the form:
-    # BindingsArray(<shape=(2, 2, 3), num_parameters=4, parameters=['a', 'b', 'c', 'd']>)
-    # param_values.data is a dictionary, whose keys are tuples of parameter names.
-    # For examples, the keys can be: dict_keys([('a', 'b'), ('c',), ('d',)])
-
-    pub_params = list(chain(*[list(param_names) for param_names in param_values.data.keys()]))
-    # pub_params is the list of parameter names in the pub, for example: ['a', 'b', 'c', 'd']
+    # gather all parameter names, in order
+    pub_params = list(chain.from_iterable(pub.parameter_values.data))
 
     col_indices = np.where(np.isin(pub_params, rzz_params))[0]
     # col_indices is the indices of columns in the parameter value array that have to be checked
