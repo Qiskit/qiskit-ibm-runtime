@@ -16,6 +16,7 @@ import numpy as np
 from numpy import pi
 
 from ddt import ddt, data
+from qiskit import pulse
 from qiskit.circuit import QuantumCircuit, Delay
 from qiskit.circuit.library import XGate, YGate, RXGate, UGate
 from qiskit.quantum_info import Operator
@@ -472,6 +473,41 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         with self.assertRaises(TranspilerError):
             pm.run(self.ghz4)
+
+    @data(0.5, 1.5)
+    def test_dd_with_calibrations_with_parameters(self, param_value):
+        """Check that calibrations in a circuit with parameters work fine."""
+
+        circ = QuantumCircuit(2)
+        circ.x(0)
+        circ.cx(0, 1)
+        circ.rx(param_value, 1)
+
+        rx_duration = int(param_value * 1000)
+
+        with pulse.build() as rx:
+            pulse.play(
+                pulse.Gaussian(rx_duration, 0.1, rx_duration // 4),
+                pulse.DriveChannel(1),
+            )
+
+        circ.add_calibration("rx", (1,), rx, params=[param_value])
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 100), ("cx", None, 300)])
+
+        dd_sequence = [XGate(), XGate()]
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(durations),
+                PadDynamicalDecoupling(durations, dd_sequence, schedule_idle_qubits=True),
+            ]
+        )
+        dd_circuit = pm.run(circ)
+
+        for instruction in dd_circuit.data:
+            op = instruction.operation
+            if isinstance(op, RXGate):
+                self.assertEqual(op._params, [param_value])
 
     def test_insert_dd_ghz_xy4_with_alignment(self):
         """Test DD with pulse alignment constraints."""
