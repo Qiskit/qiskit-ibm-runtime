@@ -191,16 +191,8 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     col_indices = np.where(np.isin(pub_params, rzz_params))[0]
     # col_indices is the indices of columns in the parameter value array that have to be checked
 
-    arr = param_values.as_array()
-
-    # almost-flatten the parameter:
-    # 'arr' will be a 2-dimensional array, where each line represents assignment of values to
-    # the circuit parameter. For example
-    # [[ 1.  2. 25. 45.]
-    #  [ 3.  4. 26. 46.]]
-    # The first line is an assignment of 1 to the first parameter, 2 to the second parameter,
-    # 25 to the third parameter, and 45 to the fourth parameter
-    arr = arr.reshape(-1, arr.shape[-1])
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = param_values.ravel().as_array()
 
     # project only to the parameters that have to be checked
     arr = arr[:, col_indices]
