@@ -535,7 +535,7 @@ class TestPrimitivesV2(IBMTestCase):
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
-        transpiled = transpile(circ, backend=fake_backend)
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
         observable = SparsePauliOp("Z" * num_qubits)
 
         edge_qubits = [0, 1]
