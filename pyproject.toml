@@ -55,7 +55,6 @@ name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
 description = "IBM Quantum client for Qiskit Runtime."
 readme = {file = "README.txt", content-type = "text/markdown"}
-#url="https://github.com/Qiskit/qiskit-ibm-runtime"
 authors = [
     {name = "Qiskit Development Team", email="qiskit@us.ibm.com"},
 ]
@@ -81,8 +80,6 @@ keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
 
 requires-python=">=3.8"
 
-
-
 #[project.entry-points."qiskit.transpiler.translation"]
 #ibm_backend = "qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin"
 #ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin"
@@ -99,10 +96,10 @@ dependencies = [
     "qiskit>=1.1.0",
 ]
 
-#[project.urls]
-#documentation = "https://docs.quantum.ibm.com/"
-#repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
-#issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
+[project.urls]
+documentation = "https://docs.quantum.ibm.com/"
+repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
+issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 
 
 [project.optional-dependencies]
