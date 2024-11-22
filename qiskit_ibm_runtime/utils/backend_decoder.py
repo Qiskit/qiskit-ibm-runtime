@@ -18,6 +18,7 @@ import traceback
 
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+
 try:
     from qiskit.circuit import CONTROL_FLOW_OP_NAMES
 except ImportError:  # Remove when dropping support for Qiskit < 1.3
@@ -34,7 +35,6 @@ from .converters import utc_to_local_all
 from .utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
-
 
 
 def configuration_from_server_data(

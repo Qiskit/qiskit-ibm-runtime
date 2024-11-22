@@ -33,6 +33,7 @@ from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models import BackendConfiguration, BackendProperties, PulseDefaults
+
 # is_fractional_gate used to be defined in this module and might be referenced
 # from here externally
 from .utils import is_fractional_gate  # See comment above before removing
