@@ -738,7 +738,7 @@ class QiskitRuntimeService:
                 For users without access to a premium provider, the default open provider will be used.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate
+                simultaneously with dynamic circuits, PEC, PEA, or gate
                 twirling.  When this flag is set, control flow instructions are
                 automatically removed from the backend.
                 When you use a dynamic circuits feature (e.g. ``if_else``) in your
