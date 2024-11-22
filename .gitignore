@@ -114,3 +114,6 @@ Qconfig.py
 
 # Generated release notes file
 docs/release_notes.rst
+
+# Version.txt
+qiskit_ibm_runtime/VERSION.txt
