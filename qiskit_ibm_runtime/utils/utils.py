@@ -199,7 +199,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # col_indices is the indices of columns in the parameter value array that have to be checked
 
     # first axis will be over flattened shape, second axis over circuit parameters
-    arr = param_values.ravel().as_array()
+    arr = pub.parameter_values.ravel().as_array()
 
     # project only to the parameters that have to be checked
     arr = arr[:, col_indices]
