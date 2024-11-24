@@ -86,7 +86,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         if (
             name == "rzz"
             and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
-            and (param < 0.0 or param > 1.001 * np.pi / 2)
+            and (param < 0.0 or param > np.pi / 2 + 1e-10)
         ):
             return (
                 f"The instruction {name} on qubits {qargs} is supported only for angles in the "
@@ -155,7 +155,7 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
             if isinstance(angle, Parameter):
                 angle_params.add(angle.name)
             elif not isinstance(angle, ParameterExpression) and (
-                angle < 0.0 or angle > 1.001 * np.pi / 2
+                angle < 0.0 or angle > np.pi / 2 + 1e-10
             ):
                 return (
                     "The instruction rzz is supported only for angles in the "
@@ -207,7 +207,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
     # errors (beyond pi/2 does not trigger an error down the stack, only may become less
     # accurate).
-    bad = np.where((arr < 0.0) | (arr > 1.001 * np.pi / 2))
+    bad = np.where((arr < 0.0) | (arr > np.pi / 2 + 1e-10))
 
     # `bad` is a tuple of two arrays, which can be empty, like this:
     # (array([], dtype=int64), array([], dtype=int64))
