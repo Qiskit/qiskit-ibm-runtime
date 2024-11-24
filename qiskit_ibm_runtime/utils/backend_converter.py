@@ -26,19 +26,17 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import (
-    get_standard_gate_name_mapping,
-    RZGate,
-    U1Gate,
-    PhaseGate,
-)
-from qiskit.circuit.delay import Delay
+from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models import BackendConfiguration, BackendProperties, PulseDefaults
+
+# is_fractional_gate used to be defined in this module and might be referenced
+# from here externally
+from .utils import is_fractional_gate  # See comment above before removing
 
 
 logger = logging.getLogger(__name__)
@@ -349,11 +347,3 @@ def qubit_props_list_from_props(
             )
         )
     return qubit_props
-
-
-def is_fractional_gate(gate: Gate) -> bool:
-    """Test if gate is fractional gate familiy."""
-    # In IBM architecture these gates are virtual-Z and delay,
-    # which don't change control parameter with its gate parameter.
-    exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
-    return len(gate.params) > 0 and not isinstance(gate, exclude_list)

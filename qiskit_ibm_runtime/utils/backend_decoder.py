@@ -17,6 +17,13 @@ import logging
 import traceback
 
 import dateutil.parser
+from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+
+try:
+    from qiskit.circuit import CONTROL_FLOW_OP_NAMES
+except ImportError:  # Remove when dropping support for Qiskit < 1.3
+    CONTROL_FLOW_OP_NAMES = frozenset(("for_loop", "while_loop", "if_else", "switch_case"))
+
 from ..models import (
     BackendProperties,
     PulseDefaults,
@@ -25,6 +32,7 @@ from ..models import (
 )
 
 from .converters import utc_to_local_all
+from .utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +40,16 @@ logger = logging.getLogger(__name__)
 def configuration_from_server_data(
     raw_config: Dict,
     instance: str = "",
+    use_fractional_gates: Optional[bool] = False,
 ) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
-    """Create an IBMBackend instance from raw server data.
+    """Create a backend configuration instance from raw server data.
 
     Args:
         raw_config: Raw configuration.
         instance: Service instance.
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+            for further details.
 
     Returns:
         Backend configuration.
@@ -51,6 +63,7 @@ def configuration_from_server_data(
         return None
     try:
         decode_backend_configuration(raw_config)
+        filter_raw_configuration(raw_config, use_fractional_gates=use_fractional_gates)
         try:
             return PulseBackendConfiguration.from_dict(raw_config)
         except (KeyError, TypeError):
@@ -64,6 +77,51 @@ def configuration_from_server_data(
         )
         logger.debug("Invalid device configuration: %s", traceback.format_exc())
     return None
+
+
+def filter_raw_configuration(
+    raw_config: dict, use_fractional_gates: Optional[bool] = False
+) -> None:
+    """Filter unwanted entries from raw configuration data
+
+    Args:
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+                for further details.
+    """
+    if use_fractional_gates is None:
+        return
+
+    gate_map = get_standard_gate_name_mapping()
+    if use_fractional_gates:
+        raw_config["conditional"] = False
+        if "supported_instructions" in raw_config:
+            raw_config["supported_instructions"] = [
+                i for i in raw_config["supported_instructions"] if i not in CONTROL_FLOW_OP_NAMES
+            ]
+        if "supported_features" in raw_config:
+            raw_config["supported_features"] = [
+                g for g in raw_config["supported_features"] if g != "qasm3"
+            ]
+    else:
+        if "basis_gates" in raw_config:
+            raw_config["basis_gates"] = [
+                g
+                for g in raw_config["basis_gates"]
+                if g not in gate_map or not is_fractional_gate(gate_map[g])
+            ]
+        if "gates" in raw_config:
+            raw_config["gates"] = [
+                g
+                for g in raw_config["gates"]
+                if g.get("name") not in gate_map or not is_fractional_gate(gate_map[g.get("name")])
+            ]
+        if "supported_instructions" in raw_config:
+            raw_config["supported_instructions"] = [
+                i
+                for i in raw_config["supported_instructions"]
+                if i not in gate_map or not is_fractional_gate(gate_map[i])
+            ]
 
 
 def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
@@ -86,15 +144,30 @@ def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
     return PulseDefaults.from_dict(defaults)
 
 
-def properties_from_server_data(properties: Dict) -> BackendProperties:
+def properties_from_server_data(
+    properties: Dict, use_fractional_gates: Optional[bool] = False
+) -> BackendProperties:
     """Decode backend properties.
 
     Args:
         properties: Raw properties data.
+        use_fractional_gates: Set True to allow for the backends to include
+            fractional gates. See :meth:`~.QiskitRuntimeService.backends`
+            for further details.
 
     Returns:
         A ``BackendProperties`` instance.
     """
+    gate_map = get_standard_gate_name_mapping()
+
+    if "gates" in properties and isinstance(properties["gates"], list):
+        if use_fractional_gates is not None and not use_fractional_gates:
+            properties["gates"] = [
+                g
+                for g in properties["gates"]
+                if g.get("name") not in gate_map or not is_fractional_gate(gate_map[g.get("name")])
+            ]
+
     if isinstance(properties["last_update_date"], str):
         properties["last_update_date"] = dateutil.parser.isoparse(properties["last_update_date"])
         for qubit in properties["qubits"]:

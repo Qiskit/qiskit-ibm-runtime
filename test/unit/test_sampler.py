@@ -15,17 +15,24 @@
 from unittest.mock import MagicMock
 
 from ddt import data, ddt, named_data
+from packaging.version import Version, parse as parse_version
 import numpy as np
 
+from qiskit.version import get_version_info as get_qiskit_version_info
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes
+from qiskit.providers import BackendV2, Options
+from qiskit.result import Result
+from qiskit.result.models import ExperimentResult, ExperimentResultData
+from qiskit.transpiler import Target
 from qiskit_ibm_runtime import Session, SamplerV2, SamplerOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke, FakeCusco
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -156,14 +163,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = True
+        backend = service.backends("fake_fractional", use_fractional_gates=True)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -177,14 +182,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = False
+        backend = service.backends("fake_fractional", use_fractional_gates=False)[0]
 
         fractional_circuit = QuantumCircuit(1, 1)
         fractional_circuit.rx(1.23, 0)
@@ -200,14 +203,12 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = use_fractional
+        backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -390,3 +391,141 @@ class TestSamplerV2(IBMTestCase):
 
         # Should run without an error
         SamplerV2(backend).run(pubs=[(circ, [1])])
+
+    def test_param_expressions_gen3_runtime(self):
+        """Verify that parameter expressions are not used in combination with the gen3-turbo
+        execution path."""
+        backend = FakeCusco()
+        x = Parameter("x")
+        y = Parameter("y")
+        # pylint: disable-next=unexpected-keyword-arg
+        opts = SamplerOptions(experimental={"execution_path": "gen3-turbo"})
+
+        with self.subTest("float"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x, 0)
+            circ.measure(0, 0)
+            bound_circ = circ.assign_parameters({x: 0.1})
+            # expect no error (parameter is bound to a float)
+            SamplerV2(backend, opts).run(pubs=[(bound_circ,)])
+            # expect no error (simple parameter, not a parameter expression)
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.2])])
+
+        with self.subTest("parameter expressions"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x + 2 * y, 0)
+            circ.measure(0, 0)
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
+            # without the gen3-turbo execution path, we expect no error
+            # pylint: disable-next=unsupported-assignment-operation
+            opts.experimental["execution_path"] = ""
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
+
+    @data(
+        "classified",
+        "kerneled",
+        "avg_kerneled",
+    )
+    def test_backend_run_options(self, meas_type):
+        """Test translation of sampler options into backend run options"""
+
+        # This test is checking that meas_level, meas_return, and noise_model
+        # get through the backend's run() call when SamplerV2 falls back to
+        # BackendSamplerV2 in local mode. To do this, it creates a dummy
+        # backend class that returns a result of the right format so that the
+        # sampler execution completes successfully.
+
+        if parse_version(get_qiskit_version_info()) < Version("1.3.0rc1"):
+            self.skipTest("Feature not supported on this version of Qiskit")
+
+        class DummyJob:
+            """Enough of a job class to return a result"""
+
+            def __init__(self, run_options):
+                self.run_options = run_options
+
+            def result(self):
+                """Return result object"""
+                shots = self.run_options["shots"]
+
+                if self.run_options["meas_level"] == 1:
+                    counts = None
+                    if self.run_options["meas_return"] == "single":
+                        memory = [[[0.0, 0.0]] * shots]
+                    else:
+                        memory = [[0.0, 0.0]]
+                else:
+                    counts = {"0": shots}
+                    memory = ["0"] * shots
+                result = Result(
+                    backend_name="test_backend",
+                    backend_version="0.0",
+                    qobj_id="xyz",
+                    job_id="123",
+                    success=True,
+                    results=[
+                        ExperimentResult(
+                            shots=100,
+                            success=True,
+                            data=ExperimentResultData(memory=memory, counts=counts),
+                        )
+                    ],
+                )
+                return result
+
+        class DummyBackend(BackendV2):
+            """Test backend that saves run options into the result"""
+
+            max_circuits = 1
+            # The backend gets cloned inside of the sampler execution code, so
+            # it is difficult to get a handle on the actual backend used to run
+            # the job. Here we save the run options into a class level variable
+            # that can be checked after run() is called.
+            used_run_options = {}
+
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+
+                self._target = Target()
+
+            @classmethod
+            def _default_options(cls):
+                return Options()
+
+            @property
+            def target(self):
+                return self._target
+
+            def run(self, run_input, **run_options):
+                nonlocal used_run_options
+                DummyBackend.used_run_options = run_options
+                return DummyJob(run_options)
+
+        backend = DummyBackend()
+
+        circ = QuantumCircuit(1, 1)
+        circ.measure(0, 0)
+
+        sampler = SamplerV2(mode=backend)
+        sampler.options.simulator.noise_model = {"name": "some_model"}
+        sampler.options.execution.meas_type = meas_type
+
+        job = sampler.run([circ], shots=100)
+        result = job.result()
+
+        used_run_options = DummyBackend.used_run_options
+        self.assertDictEqual(used_run_options["noise_model"], {"name": "some_model"})
+
+        if meas_type == "classified":
+            self.assertEqual(used_run_options["meas_level"], 2)
+            self.assertDictEqual(result[0].data.c.get_counts(), {"0": 100})
+        elif meas_type == "kerneled":
+            self.assertEqual(used_run_options["meas_level"], 1)
+            self.assertEqual(used_run_options["meas_return"], "single")
+            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1, 100))))
+        else:  # meas_type == "avg_kerneled"
+            self.assertEqual(used_run_options["meas_level"], 1)
+            self.assertEqual(used_run_options["meas_return"], "avg")
+            self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+

@@ -30,7 +30,14 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, Parameter, ParameterExpression
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
+from qiskit.circuit.delay import Delay
+from qiskit.circuit.gate import Instruction
+from qiskit.circuit.library.standard_gates import (
+    RZGate,
+    U1Gate,
+    PhaseGate,
+)
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -224,6 +231,40 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
                 or getattr(inst.operation, "condition", None) is not None
             ):
                 return True
+    return False
+
+
+def is_fractional_gate(gate: Instruction) -> bool:
+    """Test if a gate is considered fractional by IBM
+
+    Fractional gates produce a rotation based on a continuous input parameter
+    and require a non-zero gate duration. The latter distinction excludes gates
+    like ``RZGate`` which can be implemented in software with no duration. The
+    fractional gate definition is based on the current IBM compiler system
+    which currently can not use fractional gates and dynamic circuit
+    instructions in the same job. In that sense, this function is really
+    testing if a gate is currently incompatible with dynamic circuit
+    instructions for IBM's compiler.
+
+    Args:
+        gate: The instruction to test for status as a fractional gate
+
+    Returns:
+        True if the gate is a fractional gate
+    """
+    # In IBM architecture these gates are virtual-Z and delay,
+    # which don't change control parameter with its gate parameter.
+    exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
+    return len(gate.params) > 0 and not isinstance(gate, exclude_list)
+
+
+def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
+    """Checks if the input circuits contain `ParameterExpression`s"""
+    for circuit in circuits:
+        for instruction in circuit.data:
+            for p in instruction.operation.params:
+                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
+                    return True
     return False
 
 
