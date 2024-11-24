@@ -528,4 +528,3 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(used_run_options["meas_level"], 1)
             self.assertEqual(used_run_options["meas_return"], "avg")
             self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
-
