@@ -12,10 +12,11 @@
 
 """Qiskit runtime local mode job class."""
 
-from typing import Any, Dict
+from typing import Any, Dict, Literal
 from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
+from qiskit_ibm_runtime.models import BackendProperties
 from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 
 
@@ -23,7 +24,12 @@ class LocalRuntimeJob(PrimitiveJob):
     """Job class for qiskit-ibm-runtime's local mode."""
 
     def __init__(  # type: ignore[no-untyped-def]
-        self, future, backend: FakeBackendV2, *args, **kwargs
+        self,
+        future,
+        backend: FakeBackendV2,
+        primitive: Literal["sampler", "estimator"],
+        *args,
+        **kwargs,
     ) -> None:
         """LocalRuntimeJob constructor.
 
@@ -34,6 +40,7 @@ class LocalRuntimeJob(PrimitiveJob):
         super().__init__(*args, **kwargs)
         self._future = future
         self._backend = backend
+        self._primitive = primitive
         self._created = datetime.now()
         self._running = datetime.now()
         self._finished = datetime.now()
@@ -65,3 +72,17 @@ class LocalRuntimeJob(PrimitiveJob):
     def useage(self) -> float:
         """Return job usage in seconds."""
         return 0
+
+    def properties(self) -> BackendProperties:
+        """Return the backend properties for this job"""
+        return self._backend.properties()
+
+    @property
+    def creation_date(self) -> datetime:
+        """Job creation date in local time."""
+        return self._created
+
+    @property
+    def primitive_id(self) -> str:
+        """Primitive name."""
+        return self._primitive

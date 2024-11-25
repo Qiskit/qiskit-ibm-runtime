@@ -271,7 +271,10 @@ class QiskitRuntimeLocalService:
         primitive_job = primitive_inst.run(**inputs)
 
         local_runtime_job = LocalRuntimeJob(
-            function=primitive_job._function, future=primitive_job._future, backend=backend
+            function=primitive_job._function,
+            future=primitive_job._future,
+            backend=backend,
+            primitive=primitive,
         )
 
         return local_runtime_job
