@@ -1,0 +1,4 @@
+Add `draw_zne` and `draw_zne_extrapolators` functions to visaulize data from
+experiments using ZNE.
+Add `EstimatorPubResult` with methods `draw_zne` and 
+`draw_zne_extrapolators`, invoking the corresponding visualization functions.
