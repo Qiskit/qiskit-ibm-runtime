@@ -1,8 +1,8 @@
 .. vale off
 
-********************************
-qiskit-ibm-runtime API reference
-********************************
+************************************
+``qiskit-ibm-runtime`` API reference
+************************************
 
 .. toctree::
    :maxdepth: 1

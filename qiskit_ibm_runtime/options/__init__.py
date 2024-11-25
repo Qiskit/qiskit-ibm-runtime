@@ -57,6 +57,7 @@ Base primitive options
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    EstimatorOptions
    SamplerOptions
@@ -67,6 +68,7 @@ Suboptions
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    NoiseLearnerOptions
    DynamicalDecouplingOptions
