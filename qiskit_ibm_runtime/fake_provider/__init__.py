@@ -91,6 +91,7 @@ Fake providers provide access to a list of fake backends.
 
 .. autosummary::
     :toctree: ../stubs/
+    :nosignatures:
 
     FakeProviderForBackendV2
 
@@ -106,6 +107,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
 
 .. autosummary::
     :toctree: ../stubs/
+    :nosignatures:
 
     FakeAlgiers
     FakeAlmadenV2

@@ -29,6 +29,7 @@ Classes
 
 .. autosummary::
     :toctree: ../stubs/
+    :nosignatures:
 
     DoubleSliceSpan
     ExecutionSpan
