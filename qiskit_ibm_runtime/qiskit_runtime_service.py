@@ -455,16 +455,16 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simultaneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
                 If ``None``, then both fractional gates and control flow operations are
-                included in the backend targets.
+                included in the backends.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -510,7 +510,9 @@ class QiskitRuntimeService:
                 backend_names = self._backend_allowed_list
                 hgp = None
             for backend_name in backend_names:
-                if backend := self._create_backend_obj(backend_name, instance=hgp):
+                if backend := self._create_backend_obj(
+                    backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
+                ):
                     backends.append(backend)
         else:
             if instance:
@@ -519,7 +521,9 @@ class QiskitRuntimeService:
                 )
             for backend_name in self._backend_allowed_list:
                 if backend := self._create_backend_obj(
-                    backend_name, instance=self._account.instance
+                    backend_name,
+                    instance=self._account.instance,
+                    use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
 
@@ -538,7 +542,7 @@ class QiskitRuntimeService:
                 )
             )
 
-        # Set fractional gate feature before Target object is created.
+        # Set fractional gate flag for use when loading properties or refreshing backend.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
@@ -546,13 +550,19 @@ class QiskitRuntimeService:
     def _create_backend_obj(
         self,
         backend_name: str,
-        instance: Optional[str] = None,
+        instance: Optional[str],
+        use_fractional_gates: Optional[bool],
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
         Args:
             backend_name: Name of backend to instantiate.
             instance: the current h/g/p.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates, False to include control flow operations, and
+                None to include both fractional gates and control flow
+                operations.  See :meth:`~.QiskitRuntimeService.backends` for
+                further details.
 
         Returns:
             A backend object.
@@ -563,6 +573,7 @@ class QiskitRuntimeService:
         if config := configuration_from_server_data(
             raw_config=self._api_client.backend_configuration(backend_name),
             instance=instance,
+            use_fractional_gates=use_fractional_gates,
         ):
             if self._channel == "ibm_quantum":
                 if not instance:
@@ -723,16 +734,16 @@ class QiskitRuntimeService:
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simultaneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
                 If ``None``, then both fractional gates and control flow operations are
-                included in the backend targets.
+                included in the backends.
 
         Returns:
             Backend: A backend matching the filtering.

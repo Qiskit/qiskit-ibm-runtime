@@ -246,12 +246,6 @@ class IBMBackend(Backend):
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
-                # In IBM backend architecture as of today
-                # these features can be only exclusively supported.
-                include_control_flow=self.options.use_fractional_gates is None
-                or not self.options.use_fractional_gates,
-                include_fractional_gates=self.options.use_fractional_gates is None
-                or self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -337,12 +331,6 @@ class IBMBackend(Backend):
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
             defaults=self._defaults,
-            # In IBM backend architecture as of today
-            # these features can be only exclusively supported.
-            include_control_flow=self.options.use_fractional_gates is None
-            or not self.options.use_fractional_gates,
-            include_fractional_gates=self.options.use_fractional_gates
-            or self.options.use_fractional_gates,
         )
 
     def refresh(self) -> None:
@@ -350,6 +338,7 @@ class IBMBackend(Backend):
         if config := configuration_from_server_data(
             raw_config=self._service._api_client.backend_configuration(self.name, refresh=True),
             instance=self._instance,
+            use_fractional_gates=self.options.use_fractional_gates,
         ):
             self._configuration = config
         self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
@@ -402,7 +391,10 @@ class IBMBackend(Backend):
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if not api_properties:
                 return None
-            backend_properties = properties_from_server_data(api_properties)
+            backend_properties = properties_from_server_data(
+                api_properties,
+                use_fractional_gates=self.options.use_fractional_gates,
+            )
             if datetime:  # Don't cache result.
                 return backend_properties
             self._properties = backend_properties
