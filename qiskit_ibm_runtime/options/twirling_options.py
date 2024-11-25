@@ -94,6 +94,9 @@ class TwirlingOptions:
         twirled layer.
 
       Default: "active-accum".
+
+    .. image:: /source_images/twirling_strategy_options.png
+      :alt: Twirling strategy options diagram 
     """
 
     _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
