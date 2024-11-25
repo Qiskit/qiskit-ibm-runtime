@@ -32,6 +32,7 @@ from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbroo
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -162,14 +163,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = True
+        backend = service.backends("fake_fractional", use_fractional_gates=True)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -183,14 +182,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = False
+        backend = service.backends("fake_fractional", use_fractional_gates=False)[0]
 
         fractional_circuit = QuantumCircuit(1, 1)
         fractional_circuit.rx(1.23, 0)
@@ -206,14 +203,12 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = use_fractional
+        backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -321,6 +316,36 @@ class TestSamplerV2(IBMTestCase):
             circ.rzz(2 * param, 0, 1)
             # Should run without an error
             SamplerV2(backend).run(pubs=[(circ, [0.5])])
+
+    def test_param_expressions_gen3_runtime(self):
+        """Verify that parameter expressions are not used in combination with the gen3-turbo
+        execution path."""
+        backend = FakeCusco()
+        x = Parameter("x")
+        y = Parameter("y")
+        # pylint: disable-next=unexpected-keyword-arg
+        opts = SamplerOptions(experimental={"execution_path": "gen3-turbo"})
+
+        with self.subTest("float"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x, 0)
+            circ.measure(0, 0)
+            bound_circ = circ.assign_parameters({x: 0.1})
+            # expect no error (parameter is bound to a float)
+            SamplerV2(backend, opts).run(pubs=[(bound_circ,)])
+            # expect no error (simple parameter, not a parameter expression)
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.2])])
+
+        with self.subTest("parameter expressions"):
+            circ = QuantumCircuit(1, 1)
+            circ.rz(x + 2 * y, 0)
+            circ.measure(0, 0)
+            with self.assertRaises(IBMInputValueError):
+                SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
+            # without the gen3-turbo execution path, we expect no error
+            # pylint: disable-next=unsupported-assignment-operation
+            opts.experimental["execution_path"] = ""
+            SamplerV2(backend, opts).run(pubs=[(circ, [0.1, 0.2])])
 
     @data(
         "classified",

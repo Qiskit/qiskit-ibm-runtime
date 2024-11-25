@@ -84,7 +84,7 @@ class TestBackend(IBMTestCase):
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
 
-        transpiled = transpile(circ, backend=fake_backend)
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
         edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         sampler = SamplerV2(ibm_backend)
@@ -359,7 +359,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target,
+            "rzz" in target,
             use_fractional,
         )
         self.assertEqual(
@@ -367,7 +367,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target.operation_names,
+            "rzz" in target.operation_names,
             use_fractional,
         )
         self.assertEqual(

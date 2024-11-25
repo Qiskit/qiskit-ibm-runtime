@@ -895,7 +895,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc = QuantumCircuit(qr0, cr)
             qc.x(qr0[0]).c_if(cr[0], True)
 
-            qc_transpiled = transpile(qc, backend, initial_layout=[0])
+            qc_transpiled = transpile(qc, backend, initial_layout=[0], optimization_level=1)
 
         scheduled = pm.run(qc_transpiled)
 
@@ -2052,7 +2052,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc = QuantumCircuit(qr0, cr)
             qc.x(qr0[0]).c_if(cr[0], True)
 
-            qc_transpiled = transpile(qc, backend, initial_layout=[0])
+            qc_transpiled = transpile(qc, backend, initial_layout=[0], optimization_level=1)
 
         scheduled = pm.run(qc_transpiled)
 
