@@ -89,13 +89,12 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
         if cls.dependencies.channel == "ibm_cloud":
-            # TODO use real device when cloud supports it
-            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
         if cls.dependencies.channel == "ibm_quantum":
             cls.dependencies.service._account.instance = (
                 None  # set instance to none to avoid filtering
             )
-            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""
@@ -118,6 +117,32 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.target_history())
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
+
+    @production_only
+    def test_properties_not_cached_target_history(self):
+        """Check backend properties is not cached in target_history()."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            properties = backend.properties()
+            backend.target_history(datetime=datetime.now() - timedelta(60))
+            self.assertEqual(properties, backend.properties())
+
+    def test_backend_target_refresh(self):
+        """Test refreshing the backend target."""
+        backend = self.backend
+        if backend.simulator:
+            raise SkipTest("Simulator target is the same.")
+        with self.subTest(backend=backend.name):
+            old_target = backend.target
+            old_configuration = backend.configuration()
+            old_properties = backend.properties()
+            old_defaults = backend.defaults()
+            backend.refresh()
+            new_target = backend.target
+            self.assertNotEqual(old_target, new_target)
+            self.assertIsNot(old_configuration, backend.configuration())
+            self.assertIsNot(old_properties, backend.properties())
+            self.assertIsNot(old_defaults, backend.defaults())
 
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
@@ -188,6 +213,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
+        if self.backend.simulator:
+            raise SkipTest("Simulator has no backend defaults.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
@@ -205,7 +232,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertEqual(
                 backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
             )
-            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(backend_copy.defaults().to_dict(), backend.defaults().to_dict())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,

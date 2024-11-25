@@ -195,7 +195,9 @@ class RuntimeJob(Job, BaseRuntimeJob):
             (
                 "In a future release of qiskit-ibm-runtime no sooner than 3 months "
                 "after the release date of 0.30.0, RuntimeJob.status() will be returned as a string "
-                "instead of an instance of `JobStatus`."
+                "instead of an instance of `JobStatus`. "
+                "To prepare for this change, you can use the idiom "
+                "`status.name if isinstance(status, JobStatus) else status`."
             ),
             DeprecationWarning,
             stacklevel=2,
@@ -364,55 +366,3 @@ class RuntimeJob(Job, BaseRuntimeJob):
             except RequestsApiError as err:
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
         return self._backend
-
-    @deprecate_function("stream_results()", "0.25", "", stacklevel=1)
-    def stream_results(
-        self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
-    ) -> None:
-        """(DEPRECATED) Start streaming job results.
-
-        Args:
-            callback: Callback function to be invoked for any interim results and final result.
-                The callback function will receive 2 positional parameters:
-
-                    1. Job ID
-                    2. Job result.
-
-            decoder: A :class:`ResultDecoder` subclass used to decode job results.
-
-        Raises:
-            RuntimeInvalidStateError: If a callback function is already streaming results or
-                if the job already finished.
-        """
-        if self._status in self.JOB_FINAL_STATES:
-            raise RuntimeInvalidStateError("Job already finished.")
-        if self._is_streaming():
-            raise RuntimeInvalidStateError("A callback function is already streaming results.")
-        self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        self._executor.submit(
-            self._stream_results,
-            result_queue=self._result_queue,
-            user_callback=callback,
-            decoder=decoder,
-        )
-
-    @deprecate_function("interim_results()", "0.25", "", stacklevel=1)
-    def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
-        """(DEPRECATED) Return the interim results of the job.
-
-        Args:
-            decoder: A :class:`ResultDecoder` subclass used to decode interim results.
-
-        Returns:
-            Runtime job interim results.
-
-        Raises:
-            RuntimeJobFailureError: If the job failed.
-        """
-        if not self._final_interim_results:
-            _decoder = decoder or self._interim_result_decoder
-            interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id())
-            self._interim_results = _decoder.decode(interim_results_raw)
-            if self.status() in self.JOB_FINAL_STATES:
-                self._final_interim_results = True
-        return self._interim_results

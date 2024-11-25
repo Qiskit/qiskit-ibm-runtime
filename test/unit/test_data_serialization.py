@@ -47,7 +47,12 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     NoiseLearnerResult,
 )
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
-from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
+from qiskit_ibm_runtime.execution_span import (
+    DoubleSliceSpan,
+    SliceSpan,
+    ExecutionSpans,
+    TwirledSliceSpan,
+)
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -450,6 +455,27 @@ class TestContainerSerialization(IBMTestCase):
                         ),
                         SliceSpan(
                             datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
+                        ),
+                        DoubleSliceSpan(
+                            datetime(2022, 1, 1),
+                            datetime(2023, 1, 1),
+                            {
+                                1: ((100,), slice(4, 9), slice(1, 2)),
+                                0: ((2, 5), slice(5, 7), slice(3, 4)),
+                            },
+                        ),
+                        DoubleSliceSpan(
+                            datetime(2024, 8, 20),
+                            datetime(2024, 8, 21),
+                            {0: ((14,), slice(2, 3), slice(1, 9))},
+                        ),
+                        TwirledSliceSpan(
+                            datetime(2024, 9, 20),
+                            datetime(2024, 3, 21),
+                            {
+                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+                            },
                         ),
                     ]
                 )

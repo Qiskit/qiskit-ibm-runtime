@@ -16,17 +16,17 @@ from __future__ import annotations
 
 from itertools import product
 from typing import Sequence, TYPE_CHECKING
-from plotly.colors import sample_colorscale
-from plotly.subplots import make_subplots
 import numpy as np
 
+from .utils import plotly_module
 from ..utils.estimator_pub_result import EstimatorPubResult
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
+    from plotly.graph_objects import Scatter as PlotlyScatter
 
 
-def plot_zne(
+def draw_zne(
     result: EstimatorPubResult,
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,
@@ -37,7 +37,7 @@ def plot_zne(
     width: int = 1000,
     n_cols: int = 4,
     colorscale: str = "Aggrnyl",
-) -> go.Figure:
+) -> PlotlyFigure:
     """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
 
     This function generates a subfigure for each estimated expectation value.
@@ -65,6 +65,8 @@ def plot_zne(
         ValueError: If ``result`` does not contain zero noise extrapolation data.
         ValueError: If the length of ``names`` is not equal to the length of ``indices``.
     """
+    sample_colorscale = plotly_module(".colors").sample_colorscale
+    make_subplots = plotly_module(".subplots").make_subplots
     zne_metadata = _validate_metadata(result.metadata)
 
     if indices is None:
@@ -150,7 +152,7 @@ def plot_zne(
     return fig
 
 
-def plot_zne_extrapolators(
+def draw_zne_extrapolators(
     result: EstimatorPubResult,
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,
@@ -160,7 +162,7 @@ def plot_zne_extrapolators(
     height: int = 500,
     width: int = 1000,
     colorscale: str = "Aggrnyl",
-) -> go.Figure:
+) -> PlotlyFigure:
     """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
 
     This function generates a subfigure for each extrapolator.
@@ -187,6 +189,8 @@ def plot_zne_extrapolators(
         ValueError: If ``result`` does not contain zero noise extrapolation data.
         ValueError: If the length of ``names`` is not equal to the length of ``indices``.
     """
+    sample_colorscale = plotly_module(".colors").sample_colorscale
+    make_subplots = plotly_module(".subplots").make_subplots
     zne_metadata = _validate_metadata(result.metadata)
 
     if indices is None:
@@ -276,7 +280,7 @@ def _line_fill_trace(
     legend_group: int | None = None,
     color: str | None = None,
     show_legend: bool = False,
-) -> list[go.Scatter]:
+) -> list[PlotlyScatter]:
     """Return a list of traces for a line plot with a standard deviation fill.
 
     Args:
@@ -292,6 +296,7 @@ def _line_fill_trace(
     Returns:
         A list of traces.
     """
+    go = plotly_module(".graph_objects")
     hovertemplate = "extrapolator: " + name + "<br>noise_factor: %{x}<br>ev_extrap: %{y:.4f}"
     hovertemplate += "<br>std: %{customdata:.4f}<extra></extra>"
     return [
@@ -331,7 +336,7 @@ def _scatter_trace(
     legend_group: int | None = None,
     color: str | None = None,
     show_legend: bool = False,
-) -> go.Scatter:
+) -> PlotlyScatter:
     """Return a trace for a scatter plot with error bars.
 
     Args:
@@ -346,6 +351,7 @@ def _scatter_trace(
     Returns:
         A trace containing a scatter plot.
     """
+    go = plotly_module(".graph_objects")
     return go.Scatter(
         x=x_values,
         y=y_values,

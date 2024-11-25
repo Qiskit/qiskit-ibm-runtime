@@ -45,7 +45,6 @@ class AccountManager:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
-        channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
     ) -> None:
@@ -61,7 +60,6 @@ class AccountManager:
             instance=instance,
             proxies=proxies,
             verify=verify,
-            channel_strategy=channel_strategy,
             private_endpoint=private_endpoint,
         )
         return save_config(

@@ -29,7 +29,14 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
+from qiskit.circuit.delay import Delay
+from qiskit.circuit.gate import Instruction
+from qiskit.circuit.library.standard_gates import (
+    RZGate,
+    U1Gate,
+    PhaseGate,
+)
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from .deprecation import deprecate_function
@@ -72,11 +79,15 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
         # errors (beyond pi/2 does not trigger an error down the stack, only may become less
         # accurate).
-        if name == "rzz" and (
-            instruction.params[0] < 0.0 or instruction.params[0] > 1.001 * np.pi / 2
+        if (
+            name == "rzz"
+            and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
+            and (param < 0.0 or param > 1.001 * np.pi / 2)
         ):
-            return f"The instruction {name} on qubits {qargs} is supported only for angles in the \
-            range [0, pi/2], but an angle of {instruction.params[0]} has been provided."
+            return (
+                f"The instruction {name} on qubits {qargs} is supported only for angles in the "
+                f"range [0, pi/2], but an angle of {param} has been provided."
+            )
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
@@ -123,6 +134,40 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
                 or getattr(inst.operation, "condition", None) is not None
             ):
                 return True
+    return False
+
+
+def is_fractional_gate(gate: Instruction) -> bool:
+    """Test if a gate is considered fractional by IBM
+
+    Fractional gates produce a rotation based on a continuous input parameter
+    and require a non-zero gate duration. The latter distinction excludes gates
+    like ``RZGate`` which can be implemented in software with no duration. The
+    fractional gate definition is based on the current IBM compiler system
+    which currently can not use fractional gates and dynamic circuit
+    instructions in the same job. In that sense, this function is really
+    testing if a gate is currently incompatible with dynamic circuit
+    instructions for IBM's compiler.
+
+    Args:
+        gate: The instruction to test for status as a fractional gate
+
+    Returns:
+        True if the gate is a fractional gate
+    """
+    # In IBM architecture these gates are virtual-Z and delay,
+    # which don't change control parameter with its gate parameter.
+    exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
+    return len(gate.params) > 0 and not isinstance(gate, exclude_list)
+
+
+def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
+    """Checks if the input circuits contain `ParameterExpression`s"""
+    for circuit in circuits:
+        for instruction in circuit.data:
+            for p in instruction.operation.params:
+                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
+                    return True
     return False
 
 

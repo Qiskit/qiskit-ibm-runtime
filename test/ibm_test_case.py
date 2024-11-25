@@ -22,9 +22,11 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from plotly.graph_objects import Figure as PlotlyFigure
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
+
 
 from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -33,6 +35,7 @@ from .decorators import IntegrationTestDependencies, integration_test_setup
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
+    ARTIFACT_DIR = ".test_artifacts"
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
@@ -47,6 +50,9 @@ class IBMTestCase(TestCase):
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
         # fail test on deprecation warnings from qiskit
         warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+
+        # Ensure the artifact directory exists
+        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:
@@ -160,6 +166,19 @@ class IBMTestCase(TestCase):
         else:
             return ""
 
+    def save_plotly_artifact(self, fig: PlotlyFigure, name: str = None) -> str:
+        """Save a Plotly figure as an HTML artifact."""
+        # nested folder path based on the test module, class, and method
+        test_path = self.id().split(".")[1:]
+        nested_dir = os.path.join(self.ARTIFACT_DIR, *test_path[:-1])
+        name = test_path[-1]
+        os.makedirs(nested_dir, exist_ok=True)
+
+        # save figure
+        artifact_path = os.path.join(nested_dir, f"{name}.html")
+        fig.write_html(artifact_path)
+        return artifact_path
+
 
 class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with qiskit-ibm-runtime."""
@@ -219,7 +238,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # Simulators or tests backends can be not available
         cls.sim_backends[cls.service.channel] = None
         for backend in backends:
-            if backend.simulator or backend.name.startswith("test_"):
+            if backend.simulator or backend.name.startswith("test_eagle"):
                 cls.sim_backends[cls.service.channel] = backend.name
                 break
 

@@ -30,12 +30,16 @@ Classes
 .. autosummary::
     :toctree: ../stubs/
 
+    DoubleSliceSpan
     ExecutionSpan
     ExecutionSpans
     ShapeType
     SliceSpan
+    TwirledSliceSpan
 """
 
+from .double_slice_span import DoubleSliceSpan
 from .execution_span import ExecutionSpan, ShapeType
 from .execution_spans import ExecutionSpans
 from .slice_span import SliceSpan
+from .twirled_slice_span import TwirledSliceSpan

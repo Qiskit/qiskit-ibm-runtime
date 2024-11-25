@@ -21,16 +21,18 @@ EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_
 
 from __future__ import annotations
 
-from typing import Sequence
-import plotly.graph_objects as go
+from typing import Sequence, TYPE_CHECKING
 
 from qiskit.primitives.containers import PubResult
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class EstimatorPubResult(PubResult):
     """Result of Estimator Pub."""
 
-    def plot_zne(
+    def draw_zne(
         self,
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
@@ -41,7 +43,7 @@ class EstimatorPubResult(PubResult):
         width: int = 1000,
         n_cols: int = 4,
         colorscale: str = "Aggrnyl",
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
 
         This method generates a subfigure for each expectation value.
@@ -65,9 +67,9 @@ class EstimatorPubResult(PubResult):
             A plotly figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from ..visualization import plot_zne
+        from ..visualization import draw_zne
 
-        return plot_zne(
+        return draw_zne(
             self,
             indices=indices,
             names=names,
@@ -80,7 +82,7 @@ class EstimatorPubResult(PubResult):
             colorscale=colorscale,
         )
 
-    def plot_zne_extrapolators(
+    def draw_zne_extrapolators(
         self,
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
@@ -90,7 +92,7 @@ class EstimatorPubResult(PubResult):
         height: int = 500,
         width: int = 1000,
         colorscale: str = "Aggrnyl",
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
 
         This method generates a subfigure for each extrapolator.
@@ -113,9 +115,9 @@ class EstimatorPubResult(PubResult):
             A plotly figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from ..visualization import plot_zne_extrapolators
+        from ..visualization import draw_zne_extrapolators
 
-        return plot_zne_extrapolators(
+        return draw_zne_extrapolators(
             self,
             indices=indices,
             names=names,

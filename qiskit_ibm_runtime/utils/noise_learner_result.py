@@ -30,13 +30,13 @@ import numpy as np
 
 from qiskit.providers.backend import BackendV2
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import PauliList
+from qiskit.quantum_info import PauliList, Pauli
 
 from ..utils.embeddings import Embedding
 from ..utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
-    import plotly.graph_objs as go
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class PauliLindbladError:
@@ -223,13 +223,15 @@ class LayerError:
         embedding: Union[Embedding, BackendV2],
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
+        color_out_of_scale: str = "lightgreen",
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
+        highest_rate: Optional[float] = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
-    ) -> go.Figure:
+    ) -> PlotlyFigure:
         r"""
         Draw a map view of a this layer error.
 
@@ -238,28 +240,130 @@ class LayerError:
                 to draw the layer error on, or a backend to generate an :class:`~.Embedding` for.
             colorscale: The colorscale used to show the rates of this layer error.
             color_no_data: The color used for qubits and edges for which no data is available.
+            color_out_of_scale: The color used for rates with value greater than ``highest_rate``.
             num_edge_segments: The number of equal-sized segments that edges are made of.
             edge_width: The line width of the edges in pixels.
             height: The height of the returned figure.
+            highest_rate: The highest rate, used to normalize all other rates before choosing their
+                colors. If ``None``, it defaults to the highest value found in the ``layer_error``.
             background_color: The background color.
             radius: The radius of the pie charts representing the qubits.
             width: The width of the returned figure.
+
+        .. code:: python
+
+            from qiskit import QuantumCircuit
+            from qiskit.quantum_info import PauliList
+            from qiskit_ibm_runtime.utils.embeddings import Embedding
+            from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
+
+            # A five-qubit 1-D embedding with nearest neighbouring connectivity
+            coordinates1 = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
+            coupling_map1 = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]
+            embedding1 = Embedding(coordinates1, coupling_map1)
+
+            # A six-qubit horseshoe-shaped embedding with nearest neighbouring connectivity
+            coordinates2 = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
+            coupling_map2 = [(0, 1), (1, 2), (0, 3), (3, 4), (4, 5)]
+            embedding2 = Embedding(coordinates2, coupling_map2)
+
+            # A LayerError object
+            circuit = QuantumCircuit(4)
+            qubits = [1, 2, 3, 4]
+            generators = PauliList(["IIIX", "IIXI", "IXII", "YIII", "ZIII", "XXII", "ZZII"])
+            rates = [0.01, 0.01, 0.01, 0.005, 0.02, 0.01, 0.01]
+            error = PauliLindbladError(generators, rates)
+            layer_error = LayerError(circuit, qubits, error)
+
+            # Draw the layer error on embedding1
+            layer_error.draw_map(embedding1)
+
+            # Draw the layer error on embedding2
+            layer_error.draw_map(embedding2)
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
 
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
-            self,
-            embedding,
-            colorscale,
-            color_no_data,
-            num_edge_segments,
-            edge_width,
-            height,
-            background_color,
-            radius,
-            width,
+            layer_error=self,
+            embedding=embedding,
+            colorscale=colorscale,
+            color_no_data=color_no_data,
+            color_out_of_scale=color_out_of_scale,
+            num_edge_segments=num_edge_segments,
+            edge_width=edge_width,
+            height=height,
+            highest_rate=highest_rate,
+            background_color=background_color,
+            radius=radius,
+            width=width,
+        )
+
+    def draw_swarm(
+        self,
+        num_bodies: Optional[int] = None,
+        max_rate: Optional[float] = None,
+        min_rate: Optional[float] = None,
+        connected: Optional[Union[list[Pauli], list[str]]] = None,
+        colors: Optional[list[str]] = None,
+        num_bins: Optional[int] = None,
+        opacities: Union[float, list[float]] = 0.4,
+        names: Optional[list[str]] = None,
+        x_coo: Optional[list[float]] = None,
+        marker_size: Optional[float] = None,
+        height: int = 500,
+        width: int = 800,
+    ) -> PlotlyFigure:
+        r"""
+        Draw a swarm plot of the rates in this layer error.
+
+        This function plots the rates along a vertical axes, offsetting the rates along the ``x``
+        axis so that they do not overlap with each other.
+
+        .. note::
+            To draw multiple layer errors at once, consider calling
+            :meth:`~qiskit_ibm_runtime.visualization.draw_layer_errors_swarm` directly.
+
+        Args:
+            num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
+                generators should be included.
+            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
+                set.
+            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
+                set.
+            connected: A list of generators whose markers are to be connected by lines.
+            colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
+                chosen automatically.
+            num_bins: The number of bins to place the rates into when calculating the ``x``-axis
+                offsets.
+            opacities: A list of opacities for the markers.
+            names: The names of the various layers as displayed in the legend. If ``None``, default
+                names are assigned based on the layers' position inside the ``layer_errors`` list.
+            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
+                ``None`` if these axes should be placed at regular intervals.
+            marker_size: The size of the marker in the plot.
+            height: The height of the returned figure.
+            width: The width of the returned figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+
+        from ..visualization import draw_layer_errors_swarm
+
+        return draw_layer_errors_swarm(
+            layer_errors=[self],
+            num_bodies=num_bodies,
+            max_rate=max_rate,
+            min_rate=min_rate,
+            connected=connected,
+            colors=colors,
+            num_bins=num_bins,
+            opacities=opacities,
+            names=names,
+            x_coo=x_coo,
+            marker_size=marker_size,
+            height=height,
+            width=width,
         )
 
     def _json(self) -> dict:

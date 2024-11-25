@@ -26,7 +26,7 @@ REQUIREMENTS = [
     "python-dateutil>=2.8.0",
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
-    "pydantic>=2.5.0",
+    "pydantic>=2.5.0,<2.10",
     "qiskit>=1.1.0",
 ]
 
@@ -84,4 +84,5 @@ setuptools.setup(
             "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
         ]
     },
+    extras_require={"visualization": ["plotly>=5.23.0"]},
 )
