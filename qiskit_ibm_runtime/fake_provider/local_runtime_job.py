@@ -10,21 +10,23 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Qiskit runtime local mode job class."""
+
 from typing import Any, Dict
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 
-from qiskit.providers import JobError
 from qiskit.primitives.primitive_job import PrimitiveJob
-from .fake_backend import FakeBackendV2
+from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 
 
 class LocalRuntimeJob(PrimitiveJob):
     """Job class for qiskit-ibm-runtime's local mode."""
 
-    def __init__(self, future: Any, backend: FakeBackendV2, *args, **kwargs) -> None:
+    def __init__(  # type: ignore[no-untyped-def]
+        self, future, backend: FakeBackendV2, *args, **kwargs
+    ) -> None:
         """LocalRuntimeJob constructor.
-        
+
         Args:
             future: Thread executor the job is run on.
             backend: The backend to run the primitive on.
