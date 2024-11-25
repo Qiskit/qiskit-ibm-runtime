@@ -101,10 +101,10 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
 class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum system with fractional gate support.
+    to IBM Quantum systems with fractional gate support.
 
-    Currently coexistense of fractional gate operations and
-    dynamic circuit is not assumed.
+    Currently coexistence of fractional gate operations and
+    dynamic circuits is not assumed.
     """
 
     def pass_manager(

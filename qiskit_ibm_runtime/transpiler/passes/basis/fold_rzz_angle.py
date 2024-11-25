@@ -31,7 +31,7 @@ class FoldRzzAngle(TransformationPass):
 
     In the IBM Quantum ISA, the instruction Rzz(theta) has
     valid "theta" value of [0, pi/2] and any instruction outside
-    this range becomes non-ISA operation for the quantum backend.
+    this range becomes a non-ISA operation for the quantum backend.
     The transpiler pass discovers such non-ISA Rzz gates
     and folds the gate angle into the calibrated range
     with addition of single qubit gates while preserving
@@ -55,7 +55,7 @@ class FoldRzzAngle(TransformationPass):
         self._run_inner(dag)
         return dag
 
-    def _run_inner(self, dag: DAGCircuit) -> DAGCircuit:
+    def _run_inner(self, dag: DAGCircuit) -> bool:
         """Mutate the input dag to fix non-ISA Rzz angles."""
         modified = False
         for node in dag.op_nodes():
@@ -85,7 +85,7 @@ class FoldRzzAngle(TransformationPass):
 
             angle = node.op.params[0]
             if isinstance(angle, ParameterExpression) or 0 <= angle <= pi / 2:
-                # Angle is unbound parameter or calibrated value.
+                # Angle is an unbound parameter or a calibrated value.
                 continue
 
             # Modify circuit around Rzz gate to address non-ISA angles.
@@ -118,7 +118,7 @@ class FoldRzzAngle(TransformationPass):
 def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     """Handle angle between (pi/2, pi].
 
-    Circuit is transformed into following form:
+    Circuit is transformed into the following form:
 
              ┌───────┐┌───┐            ┌───┐
         q_0: ┤ Rz(π) ├┤ X ├─■──────────┤ X ├
