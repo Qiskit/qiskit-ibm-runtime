@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from plotly.graph_objects import Scatter as PlotlyScatter
 
 
-def draw_zne(
+def draw_zne_evs(
     result: EstimatorPubResult,
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,

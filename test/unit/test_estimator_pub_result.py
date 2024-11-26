@@ -59,8 +59,8 @@ class TestEstimatorPubResult(IBMTestCase):
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plot_zne(self):
-        """Test that plots are generated with both modes."""
-        fig = self.pub_result.draw_zne()
+        """Test that plots are generated with each method."""
+        fig = self.pub_result.draw_zne_evs()
         self.assertIsInstance(fig, go.Figure)
 
         fig = self.pub_result.draw_zne_extrapolators()
@@ -70,12 +70,12 @@ class TestEstimatorPubResult(IBMTestCase):
     def test_plot_zne_raises(self):
         """Test the raises."""
         with self.assertRaises(ValueError):
-            EstimatorPubResult(DataBin()).draw_zne()
+            EstimatorPubResult(DataBin()).draw_zne_evs()
 
         with self.assertRaises(ValueError):
-            EstimatorPubResult(DataBin(), {"resilience": {"measure_mitigation": ""}}).draw_zne()
+            EstimatorPubResult(DataBin(), {"resilience": {"measure_mitigation": ""}}).draw_zne_evs()
 
         with self.assertRaises(ValueError):
-            EstimatorPubResult(DataBin(), {"resilience": {"zne": {"noise_factors": [1]}}}).draw_zne(
-                names=["test"]
-            )
+            EstimatorPubResult(
+                DataBin(), {"resilience": {"zne": {"noise_factors": [1]}}}
+            ).draw_zne_evs(names=["test"])

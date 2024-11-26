@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 class EstimatorPubResult(PubResult):
     """Result of Estimator Pub."""
 
-    def draw_zne(
+    def draw_zne_evs(
         self,
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
@@ -67,9 +67,9 @@ class EstimatorPubResult(PubResult):
             A plotly figure.
         """
         # pylint: disable=import-outside-toplevel, cyclic-import
-        from ..visualization import draw_zne
+        from ..visualization import draw_zne_evs
 
-        return draw_zne(
+        return draw_zne_evs(
             self,
             indices=indices,
             names=names,

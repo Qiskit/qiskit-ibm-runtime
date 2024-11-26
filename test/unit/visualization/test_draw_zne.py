@@ -16,7 +16,7 @@ import numpy as np
 
 from qiskit.primitives.containers import DataBin
 
-from qiskit_ibm_runtime.visualization import draw_zne, draw_zne_extrapolators
+from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 from ...ibm_test_case import IBMTestCase
@@ -55,13 +55,13 @@ class DrawZNEBase(IBMTestCase):
 
 
 class TestDrawZNE(DrawZNEBase):
-    """Class for testing the ``draw_zne`` function."""
+    """Class for testing the ``draw_zne_evs`` function."""
 
     def test_plotting(self):
         r"""
         Test to make sure that it produces the right figure.
         """
-        fig = draw_zne(self.zne_data)
+        fig = draw_zne_evs(self.zne_data)
 
         # 1 expectation value with 2 extrapolators each with 1 std is
         # 1 + 2 * 2 = 5 traces
@@ -74,7 +74,7 @@ class TestDrawZNE(DrawZNEBase):
         """
         for error in self.error_data:
             with self.assertRaises(ValueError):
-                draw_zne(error)
+                draw_zne_evs(error)
 
 
 class TestDrawZNEExtrapolators(DrawZNEBase):
