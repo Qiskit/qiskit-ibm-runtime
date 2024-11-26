@@ -127,7 +127,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
-def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
     """
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
@@ -164,7 +164,7 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
 
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                body_result = _is_rzz_pub_helper(sub_circ)
+                body_result = _is_valid_rzz_pub_helper(sub_circ)
                 if isinstance(body_result, str):
                     return body_result
                 angle_params.update(body_result)
@@ -172,7 +172,7 @@ def _is_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
     return angle_params
 
 
-def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     """Verify that all rzz angles are in the range [0, pi/2].
 
     Args:
@@ -181,7 +181,7 @@ def is_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     Returns:
         An empty string if all angles are valid, otherwise an error message.
     """
-    helper_result = _is_rzz_pub_helper(pub.circuit)
+    helper_result = _is_valid_rzz_pub_helper(pub.circuit)
 
     if isinstance(helper_result, str):
         return helper_result

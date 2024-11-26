@@ -22,7 +22,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import (
     is_isa_circuit,
     are_circuits_dynamic,
-    is_rzz_pub,
+    is_valid_rzz_pub,
     has_param_expressions,
 )
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -110,7 +110,7 @@ def validate_rzz_pubs(pubs: Union[List[EstimatorPub], List[SamplerPub]]) -> None
         pubs: A list of pubs.
     """
     for pub in pubs:
-        message = is_rzz_pub(pub)
+        message = is_valid_rzz_pub(pub)
         if message:
             raise IBMInputValueError(message)
 
