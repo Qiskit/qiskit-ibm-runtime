@@ -389,7 +389,10 @@ class TestSamplerV2(IBMTestCase):
         circ = QuantumCircuit(2)
         circ.rzz(2 * param, 0, 1)
 
-        # Should run without an error
+        # Since we currently don't validate parameter expressions, the following line should run
+        # without an error, in spite of the angle being larger than pi/2
+        # (if there is an error, it is an expected one, such as a parameter expression being
+        # treated as if it were a float)
         SamplerV2(backend).run(pubs=[(circ, [1])])
 
     def test_param_expressions_gen3_runtime(self):
