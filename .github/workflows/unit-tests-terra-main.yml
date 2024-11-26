@@ -37,7 +37,7 @@ jobs:
           python -m pip install --upgrade pip
           # Installing the complete environment should happen in one `pip install` step,
           # or pip will generally allow broken combinations of packages to be installed.
-          pip install -e .[dev] git+https://github.com/Qiskit/qiskit.git
+          pip install -e '.[dev, visualization]' git+https://github.com/Qiskit/qiskit.git
       - name: Run tests
         # running unit tests against latest (non-released) code of qiskit-terra gives a basic level
         # of confidence that the integration between qiskit-ibm-runtime and qiskit-terra works
