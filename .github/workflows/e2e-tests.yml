@@ -47,6 +47,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -c constraints.txt -r requirements-dev.txt -e .
+          pip install -e .[dev]
       - name: Run e2e tests
         run: make e2e-test
