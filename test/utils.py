@@ -325,6 +325,7 @@ def get_mocked_backend(
 
     mock_api_client.backend_properties = lambda *args, **kwargs: properties
     mock_api_client.backend_pulse_defaults = lambda *args, **kwargs: defaults
+    mock_api_client.session_details = lambda *args, **kwargs: {"mode": "dedicated"}
     mock_backend = IBMBackend(
         configuration=configuration, service=mock_service, api_client=mock_api_client
     )
