@@ -77,11 +77,10 @@ class TestSampler(IBMIntegrationTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
-    @run_integration_test
-    def test_sampler_run(self, service):
+    def test_sampler_run(self):
         """Test Sampler.run()."""
 
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             _, _, target = self._cases[1]
             with self.subTest("single"):
                 sampler = Sampler(mode=session, options=self._options)
@@ -158,11 +157,10 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         self._verify_result_type(result, num_pubs=4)
 
-    @run_integration_test
-    def test_run_single_circuit(self, service):
+    def test_run_single_circuit(self):
         """Test for single circuit case."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             sampler = Sampler(mode=session, options=self._options)
 
             with self.subTest("No parameter"):
@@ -234,10 +232,9 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
         self._verify_result_type(result, num_pubs=2)
 
-    @run_integration_test
-    def test_run_empty_parameter(self, service):
+    def test_run_empty_parameter(self):
         """Test for empty parameter"""
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             n = 5
             qc = QuantumCircuit(n, n - 1)
             qc.measure(range(n - 1), range(n - 1))
@@ -250,10 +247,9 @@ class TestSampler(IBMIntegrationTestCase):
                 result = sampler.run([qc, qc]).result()
                 self._verify_result_type(result, num_pubs=2)
 
-    @run_integration_test
-    def test_run_numpy_params(self, service):
+    def test_run_numpy_params(self):
         """Test for numpy array as parameter values"""
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             qc = RealAmplitudes(num_qubits=2, reps=2)
             qc.measure_all()
             qc = transpile(circuits=qc, backend=self._backend)
@@ -273,10 +269,9 @@ class TestSampler(IBMIntegrationTestCase):
                     result, num_pubs=len(params_list), targets=[np.array(target)]
                 )
 
-    @run_integration_test
-    def test_run_with_shots_option(self, service):
+    def test_run_with_shots_option(self):
         """test with shots option."""
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             _, _, _ = self._cases[1]
             shots = 100
             with self.subTest("init option"):
@@ -358,12 +353,11 @@ class TestSampler(IBMIntegrationTestCase):
         _ = job.result()
         self.assertEqual(job.status(), "DONE")
 
-    @run_integration_test
-    def test_circuit_with_unitary(self, service):
+    def test_circuit_with_unitary(self):
         """Test for circuit with unitary gate."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             with self.subTest("identity"):
                 gate = UnitaryGate(np.eye(2))
 
@@ -395,10 +389,9 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
         self._verify_result_type(result, num_pubs=1)
 
-    @run_integration_test
-    def test_circuit_with_multiple_cregs(self, service):
+    def test_circuit_with_multiple_cregs(self):
         """Test for circuit with multiple classical registers."""
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             cases = []
             pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 

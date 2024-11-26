@@ -12,7 +12,7 @@
 
 """Tests for Session classession."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
@@ -33,39 +33,12 @@ class TestSession(IBMTestCase):
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_default_service(self, mock_service):
-        """Test using default service."""
-        mock_service.global_service = None
-        session = Session(backend="ibm_gotham")
-        self.assertIsNotNone(session.service)
-        mock_service.assert_called_once()
-
-    def test_missing_backend(self):
-        """Test missing backend."""
-        service = MagicMock()
-        service.channel = "ibm_quantum"
-        with self.assertRaises(ValueError):
-            Session(service=service)
-
-        service.channel = "ibm_cloud"
-        with self.assertRaises(ValueError):
-            Session(service=service)
-
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
-        session = Session(service=backend.service, backend=backend)
-        self.assertEqual(session.backend(), backend_name)
-
-    def test_using_ibm_backend_service(self):
-        """Test using service from an IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
         session = Session(backend=backend)
-        self.assertEqual(session.service, backend.service)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_max_time(self):
         """Test max time."""
@@ -83,7 +56,8 @@ class TestSession(IBMTestCase):
         ]
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
-                session = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
+                backend = get_mocked_backend("ibm_gotham")
+                session = Session(backend=backend, max_time=max_t)
                 self.assertEqual(session._max_time, expected)
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
@@ -92,7 +66,8 @@ class TestSession(IBMTestCase):
 
     def test_run_after_close(self):
         """Test running after session is closed."""
-        session = Session(service=MagicMock(), backend="ibm_gotham")
+        backend = get_mocked_backend("ibm_gotham")
+        session = Session(backend=backend)
         session.cancel()
         with self.assertRaises(IBMRuntimeError):
             session._run(program_id="program_id", inputs={})
@@ -110,7 +85,7 @@ class TestSession(IBMTestCase):
         program_id = "batman_begins"
         decoder = MagicMock()
         max_time = 42
-        session = Session(service=service, backend=backend, max_time=max_time)
+        session = Session(backend=backend, max_time=max_time)
 
         session._run(
             program_id=program_id,
@@ -127,24 +102,11 @@ class TestSession(IBMTestCase):
 
     def test_context_manager(self):
         """Test session as a context manager."""
-        with Session(service=MagicMock(), backend="ibm_gotham") as session:
+        backend = get_mocked_backend("ibm_gotham")
+        with Session(backend=backend) as session:
             session._run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)
-
-    def test_global_service(self):
-        """Test that global service is used in Session"""
-        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        session = Session(backend="common_backend")
-        self.assertTrue(isinstance(session._service, FakeRuntimeService))
-        self.assertEqual(session._service._account.token, "abc")
-        _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
-        session = Session(backend="common_backend")
-        self.assertEqual(session._service._account.token, "xyz")
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="common_backend"
-        ) as session:
-            self.assertEqual(session._service._account.token, "uvw")
 
     def test_session_from_id(self):
         """Create session with given session_id"""
@@ -159,7 +121,8 @@ class TestSession(IBMTestCase):
     def test_correct_execution_mode(self):
         """Test that the execution mode is correctly set."""
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        session = Session(backend="common_backend")
+        backend = get_mocked_backend("ibm_gotham")
+        session = Session(backend=backend)
         self.assertEqual(session.details()["mode"], "dedicated")
 
     def test_cm_session_fractional(self):
