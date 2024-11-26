@@ -53,8 +53,6 @@ SERVICE_NAME = "runtime"
 class QiskitRuntimeService:
     """Class for interacting with the Qiskit Runtime service."""
 
-    global_service = None
-
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         channel = kwargs.get("channel", None)
         if channel == "local":
@@ -178,7 +176,6 @@ class QiskitRuntimeService:
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
-        QiskitRuntimeService.global_service = self
 
     def _discover_account(
         self,

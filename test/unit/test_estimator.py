@@ -23,7 +23,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime import Session, EstimatorV2, EstimatorOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
-from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     get_mocked_backend,
@@ -77,9 +76,9 @@ class TestEstimatorV2(IBMTestCase):
             },
         ]
 
+        backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             for bad_opt in options_bad:
                 inst = EstimatorV2(mode=session)

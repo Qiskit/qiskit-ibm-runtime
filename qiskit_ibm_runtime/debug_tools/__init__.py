@@ -24,6 +24,7 @@ Classes
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    Neat
    NeatResult

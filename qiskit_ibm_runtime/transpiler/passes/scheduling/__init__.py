@@ -33,6 +33,7 @@ Classes
 =======
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
     BlockBasePadder
     ALAPScheduleAnalysis
