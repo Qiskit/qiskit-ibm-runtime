@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e[dev] .
       - name: Run black
         run: make style
       - name: Run lint
@@ -58,7 +58,7 @@ jobs:
           pip install -U tox
           pip install nbqa docutils
           sudo apt install -y graphviz pandoc
-          pip install -e .
+          pip install -e[dev] .
 
           wget https://github.com/errata-ai/vale/releases/download/v2.23.0/vale_2.23.0_Linux_64-bit.tar.gz
           mkdir $HOME/bin && tar -xf vale_2.23.0_Linux_64-bit.tar.gz -C $HOME/bin
@@ -103,7 +103,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e[dev] .
       - name: Run unit tests
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
@@ -146,7 +146,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e[dev] .
       - name: Run integration tests
         run: make integration-test
   tests-finished:
