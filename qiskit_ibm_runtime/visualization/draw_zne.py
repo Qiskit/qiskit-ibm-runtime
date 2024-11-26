@@ -388,7 +388,8 @@ def _validate_metadata(metadata: dict) -> dict:
     """
     if not (resilience := metadata.get("resilience")):
         raise ValueError(
-            "Result does not contain resilience metadata. Enable ZNE options on an estimator to use this function."
+            "Result does not contain resilience metadata. Enable ZNE options on an estimator to use "
+            "this function."
         )
 
     if not (zne_metadata := resilience.get("zne")):
