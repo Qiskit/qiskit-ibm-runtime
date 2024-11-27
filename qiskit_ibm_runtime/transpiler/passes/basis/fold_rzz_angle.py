@@ -16,7 +16,7 @@ from typing import Tuple
 from math import pi
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate
+from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
@@ -131,6 +131,7 @@ def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
+    new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[0],),
@@ -140,26 +141,22 @@ def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[1],),
-        cargs=(),
         check=False,
     )
     if not np.isclose(new_angle := (pi - angle), 0.0):
         new_dag.apply_operation_back(
             XGate(),
             qargs=(qubits[0],),
-            cargs=(),
             check=False,
         )
         new_dag.apply_operation_back(
             RZZGate(new_angle),
             qargs=qubits,
-            cargs=(),
             check=False,
         )
         new_dag.apply_operation_back(
             XGate(),
             qargs=(qubits[0],),
-            cargs=(),
             check=False,
         )
     return new_dag
@@ -184,20 +181,17 @@ def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[0],),
-        cargs=(),
         check=False,
     )
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[1],),
-        cargs=(),
         check=False,
     )
     if not np.isclose(new_angle := (pi - np.abs(angle)), 0.0):
         new_dag.apply_operation_back(
             RZZGate(new_angle),
             qargs=qubits,
-            cargs=(),
             check=False,
         )
     return new_dag
@@ -221,19 +215,16 @@ def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     new_dag.apply_operation_back(
         XGate(),
         qargs=(qubits[0],),
-        cargs=(),
         check=False,
     )
     new_dag.apply_operation_back(
         RZZGate(abs(angle)),
         qargs=qubits,
-        cargs=(),
         check=False,
     )
     new_dag.apply_operation_back(
         XGate(),
         qargs=(qubits[0],),
-        cargs=(),
         check=False,
     )
     return new_dag
