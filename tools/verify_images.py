@@ -13,27 +13,41 @@
 
 """Utility script to verify that all images have alt text"""
 
+from typing import NewType
 import multiprocessing
 import sys
 import glob
 
-def is_image(line):
+# Dictionary to allowlist lines of code that the checker will not error
+# # Format: {"file_path": [list_of_line_numbers]}
+ALLOWLIST_MISSING_ALT_TEXT = {"qiskit_ibm_runtime/fake_provider/__init__.py": [34]}
+
+
+def is_image(line) -> bool:
     return line.strip().startswith(".. image:")
 
-def is_plot(line):
+
+def is_plot(line) -> bool:
     return line.strip().startswith(".. plot:")
 
 
-def validate_image(file_path):
+def allowlist(filename, line_num) -> bool:
+    return line_num in ALLOWLIST_MISSING_ALT_TEXT[filename]
+
+
+Error = NewType("Error", tuple[int, str])
+
+
+def validate_image(file_path) -> tuple[str, bool, list[Error]]:
     """Validate all the images of a single file"""
-    invalid_images = []
+    invalid_images: list[Error] = []
 
     with open(file_path, encoding="utf8") as fd:
         lines = fd.readlines()
-    
+
         for index, line in enumerate(lines):
-            if is_image(line) or is_plot(line):
-                options = []
+            if (is_image(line) or is_plot(line)) and not allowlist(file_path, index + 1):
+                options: list[str] = []
                 option_idx = index
 
                 while option_idx + 1 < len(lines):
@@ -47,39 +61,39 @@ def validate_image(file_path):
 
                 alt_exists = any(option.startswith(":alt:") for option in options)
                 nofig_exists = any(option.startswith(":nofig:") for option in options)
-                
-                if is_image(line) and not alt_exists:
-                    invalid_images.append((index+1, line))
-                
-                if is_plot(line) and not alt_exists and not nofig_exists:
-                    invalid_images.append((index+1, line))
 
-    return (invalid_images, len(invalid_images) == 0, file_path)
+                # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
+                # All `.. image::` directives need alt text and they don't have a `:nofig:` option.
+                if not alt_exists and not nofig_exists:
+                    invalid_images.append(Error((index + 1, line)))
+
+    return (file_path, len(invalid_images) == 0, invalid_images)
 
 
-def main():
-    files = glob.glob('qiskit_ibm_runtime/**/*.py', recursive=True)
+def main() -> None:
+    files = glob.glob("qiskit_ibm_runtime/**/*.py", recursive=True)
 
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
-    failed_files = list(filter(lambda x: x[1] is False, results)) 
+    failed_files = list(filter(lambda x: x[1] is False, results))
 
     if len(failed_files):
         sys.stderr.write("💔 Some images are missing the alt text\n\n")
 
         for failed_file in failed_files:
-            sys.stderr.write("Errors found in %s:\n" % failed_file[2])
+            sys.stderr.write("Errors found in %s:\n" % failed_file[0])
 
-            for image in failed_file[0]:
+            for image in failed_file[2]:
                 sys.stderr.write("- Error in line %s: %s\n" % (image[0], image[1].strip()))
 
             sys.stderr.write("\n")
 
         sys.exit(1)
 
-    sys.stdout.write("✅ All images have alt text\n")  
+    sys.stdout.write("✅ All images have alt text\n")
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
