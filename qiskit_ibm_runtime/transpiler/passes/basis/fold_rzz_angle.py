@@ -92,15 +92,9 @@ class FoldRzzAngle(TransformationPass):
             modified = True
             wrap_angle = np.angle(np.exp(1j * angle))
             if 0 <= wrap_angle <= pi / 2:
-                # In the first quadrant after phase wrapping.
-                # We just need to remove 2pi offset.
-                dag.substitute_node(
-                    node,
-                    RZZGate(wrap_angle),
-                    inplace=True,
-                )
-                continue
-            if pi / 2 < wrap_angle <= pi:
+                # In the first quadrant.
+                replace = _quad1(wrap_angle, node.qargs)
+            elif pi / 2 < wrap_angle <= pi:
                 # In the second quadrant.
                 replace = _quad2(wrap_angle, node.qargs)
             elif -pi <= wrap_angle <= -pi / 2:
@@ -111,8 +105,28 @@ class FoldRzzAngle(TransformationPass):
                 replace = _quad4(wrap_angle, node.qargs)
             else:
                 raise RuntimeError("Unreacheable.")
+            if not np.isclose(angle, wrap_angle):
+                replace.apply_operation_back(GlobalPhaseGate(pi))
             dag.substitute_node_with_dag(node, replace)
         return modified
+
+
+def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    """Handle angle between [0, pi/2].
+
+    Circuit is not transformed - the Rzz gate is calibrated for the angle.
+
+    Returns:
+        A new dag with the same Rzz gate.
+    """
+    new_dag = DAGCircuit()
+    new_dag.add_qubits(qubits=qubits)
+    new_dag.apply_operation_back(
+        RZZGate(angle),
+        qargs=qubits,
+        check=False,
+    )
+    return new_dag
 
 
 def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
