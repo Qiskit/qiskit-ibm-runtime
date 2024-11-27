@@ -32,7 +32,9 @@ def is_plot(line) -> bool:
 
 
 def allowlist(filename, line_num) -> bool:
-    return line_num in ALLOWLIST_MISSING_ALT_TEXT[filename]
+    return (
+        filename in ALLOWLIST_MISSING_ALT_TEXT and line_num in ALLOWLIST_MISSING_ALT_TEXT[filename]
+    )
 
 
 Error = NewType("Error", tuple[int, str])
