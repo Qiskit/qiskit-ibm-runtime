@@ -20,7 +20,29 @@ import glob
 
 # Dictionary to allowlist lines of code that the checker will not error
 # # Format: {"file_path": [list_of_line_numbers]}
-ALLOWLIST_MISSING_ALT_TEXT = {"qiskit_ibm_runtime/fake_provider/__init__.py": [34]}
+ALLOWLIST_MISSING_ALT_TEXT = {
+    "qiskit_ibm_runtime/fake_provider/__init__.py": [34, 55, 63],
+    "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py": [56, 88],
+    "qiskit_ibm_runtime/transpiler/passes/scheduling/__init__.py": [
+        51,
+        102,
+        137,
+        152,
+        176,
+        207,
+        226,
+        240,
+        256,
+        274,
+        294,
+        313,
+        328,
+        342,
+        363,
+        382,
+        406,
+    ],
+}
 
 
 def is_image(line) -> bool:
