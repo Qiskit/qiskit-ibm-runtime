@@ -41,9 +41,9 @@ class TestFoldRzzAngle(IBMTestCase):
         ("quad3_no_wrap", -pi + 0.1),
         ("quad4_no_wrap", -0.1),
         ("quad1_wrap", 2 * pi + 0.1),
-        ("quad2_wrap", - 3 * pi / 2 + 0.1),
+        ("quad2_wrap", -3 * pi / 2 + 0.1),
         ("quad3_wrap", pi + 0.1),
-        ("quad4_wrap", 2 * pi - 0.1)
+        ("quad4_wrap", 2 * pi - 0.1),
     )
     def test_folding_rzz_angles(self, angle):
         """Test folding gate angle into calibrated range."""
