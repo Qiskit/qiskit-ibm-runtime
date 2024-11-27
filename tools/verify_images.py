@@ -13,7 +13,6 @@
 
 """Utility script to verify that all images have alt text"""
 
-from typing import NewType
 import multiprocessing
 import sys
 import glob
@@ -46,11 +45,7 @@ ALLOWLIST_MISSING_ALT_TEXT = {
 
 
 def is_image(line) -> bool:
-    return line.strip().startswith(".. image:")
-
-
-def is_plot(line) -> bool:
-    return line.strip().startswith(".. plot:")
+    return line.strip().startswith(".. image:") or line.strip().startswith(".. plot:")
 
 
 def allowlist(filename, line_num) -> bool:
@@ -59,18 +54,15 @@ def allowlist(filename, line_num) -> bool:
     )
 
 
-Error = NewType("Error", tuple[int, str])
-
-
-def validate_image(file_path) -> tuple[str, bool, list[Error]]:
+def validate_image(file_path) -> tuple[str, list[str]]:
     """Validate all the images of a single file"""
-    invalid_images: list[Error] = []
+    invalid_images: list[str] = []
 
     with open(file_path, encoding="utf8") as fd:
         lines = fd.readlines()
 
         for index, line in enumerate(lines):
-            if (is_image(line) or is_plot(line)) and not allowlist(file_path, index + 1):
+            if is_image(line) and not allowlist(file_path, index + 1):
                 options: list[str] = []
                 option_idx = index
 
@@ -89,9 +81,9 @@ def validate_image(file_path) -> tuple[str, bool, list[Error]]:
                 # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
                 # All `.. image::` directives need alt text and they don't have a `:nofig:` option.
                 if not alt_exists and not nofig_exists:
-                    invalid_images.append(Error((index + 1, line)))
+                    invalid_images.append(f"- Error in line {index + 1}: {line}")
 
-    return (file_path, len(invalid_images) == 0, invalid_images)
+    return (file_path, invalid_images)
 
 
 def main() -> None:
@@ -100,7 +92,7 @@ def main() -> None:
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
-    failed_files = list(filter(lambda x: x[1] is False, results))
+    failed_files = list(filter(lambda x: len(x[1]), results))
 
     if len(failed_files):
         sys.stderr.write("💔 Some images are missing the alt text\n\n")
@@ -108,8 +100,8 @@ def main() -> None:
         for failed_file in failed_files:
             sys.stderr.write("Errors found in %s:\n" % failed_file[0])
 
-            for image in failed_file[2]:
-                sys.stderr.write("- Error in line %s: %s\n" % (image[0], image[1].strip()))
+            for image_error in failed_file[1]:
+                sys.stderr.write(image_error)
 
             sys.stderr.write(
                 "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.\n"
