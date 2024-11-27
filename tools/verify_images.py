@@ -19,7 +19,7 @@ import sys
 import glob
 
 # Dictionary to allowlist lines of code that the checker will not error
-# # Format: {"file_path": [list_of_line_numbers]}
+# Format: {"file_path": [list_of_line_numbers]}
 ALLOWLIST_MISSING_ALT_TEXT = {
     "qiskit_ibm_runtime/fake_provider/__init__.py": [34, 55, 63],
     "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py": [56, 88],
@@ -111,7 +111,9 @@ def main() -> None:
             for image in failed_file[2]:
                 sys.stderr.write("- Error in line %s: %s\n" % (image[0], image[1].strip()))
 
-            sys.stderr.write("\n")
+            sys.stderr.write(
+                "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.\n"
+            )
 
         sys.exit(1)
 

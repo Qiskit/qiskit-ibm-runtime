@@ -16,6 +16,7 @@
 lint:
 	pylint -rn qiskit_ibm_runtime test
 	tools/verify_headers.py qiskit_ibm_runtime test
+	tools/verify_images.py
 
 mypy:
 	mypy --module qiskit_ibm_runtime --package test
