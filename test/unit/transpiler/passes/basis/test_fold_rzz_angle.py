@@ -36,10 +36,14 @@ class TestFoldRzzAngle(IBMTestCase):
         ("pi/2_neg", -pi / 2),
         ("pi_pos", pi),
         ("pi_neg", -pi),
-        ("quad1", 0.1),
-        ("quad2", pi / 2 + 0.1),
-        ("quad3", -pi + 0.1),
-        ("quad4", -0.1),
+        ("quad1_no_wrap", 0.1),
+        ("quad2_no_wrap", pi / 2 + 0.1),
+        ("quad3_no_wrap", -pi + 0.1),
+        ("quad4_no_wrap", -0.1),
+        ("quad1_wrap", 2 * pi + 0.1),
+        ("quad2_wrap", - 3 * pi / 2 + 0.1),
+        ("quad3_wrap", pi + 0.1),
+        ("quad4_wrap", 2 * pi - 0.1)
     )
     def test_folding_rzz_angles(self, angle):
         """Test folding gate angle into calibrated range."""
@@ -48,7 +52,7 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
 
-        self.assertTrue(Operator.from_circuit(qc).equiv(Operator.from_circuit(isa)))
+        self.assertEqual(Operator.from_circuit(qc), Operator.from_circuit(isa))
         for inst_data in isa.data:
             if inst_data.operation.name == "rzz":
                 fold_angle = inst_data.operation.params[0]
