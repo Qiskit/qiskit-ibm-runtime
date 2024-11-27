@@ -178,6 +178,7 @@ def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
     """
     new_dag = DAGCircuit()
     new_dag.add_qubits(qubits=qubits)
+    new_dag.apply_operation_back(GlobalPhaseGate(- pi / 2))
     new_dag.apply_operation_back(
         RZGate(pi),
         qargs=(qubits[0],),
