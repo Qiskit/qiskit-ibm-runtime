@@ -59,16 +59,16 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
 
     lines = Path(file_path).read_text().splitlines()
 
-    for line_number, line in enumerate(lines):
-        if not is_image(line) or in_allowlist(file_path, line_number + 1):
+    for line_index, line in enumerate(lines):
+        if not is_image(line) or in_allowlist(file_path, line_index + 1):
             continue
 
         options: list[str] = []
-        options_line_number = line_number
+        options_line_index = line_index
 
-        while options_line_number + 1 < len(lines):
-            options_line_number += 1
-            option_line = lines[options_line_number].strip()
+        while options_line_index + 1 < len(lines):
+            options_line_index += 1
+            option_line = lines[options_line_index].strip()
 
             if not option_line.startswith(":"):
                 break
@@ -81,7 +81,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
         # Only `.. plot::`` directives without the `:nofigs:` option are required to have alt text.
         # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofigs:` option.
         if not alt_exists and not nofigs_exists:
-            invalid_images.append(f"- Error in line {line_number + 1}: {line.strip()}")
+            invalid_images.append(f"- Error in line {line_index + 1}: {line.strip()}")
 
     return (file_path, invalid_images)
 
