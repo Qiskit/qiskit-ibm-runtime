@@ -49,7 +49,7 @@ def is_image(line: str) -> bool:
     return line.strip().startswith((".. image:", ".. plot:"))
 
 
-def in_allowlist(filename: str, line_num: str) -> bool:
+def in_allowlist(filename: str, line_num: int) -> bool:
     return line_num in ALLOWLIST_MISSING_ALT_TEXT.get(filename, [])
 
 
@@ -81,7 +81,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
         # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
         # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofig:` option.
         if not alt_exists and not nofig_exists:
-            invalid_images.append(f"- Error in line {line_number + 1}: {line}\n")
+            invalid_images.append(f"- Error in line {line_number + 1}: {line}")
 
     return (file_path, invalid_images)
 
@@ -104,7 +104,7 @@ def main() -> None:
         print(f"Errors found in {filename}:", file=sys.stderr)
 
         for image_error in image_errors:
-            sys.stderr.write(image_error)
+            print(image_error, file=sys.stderr)
 
         print(
             "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
