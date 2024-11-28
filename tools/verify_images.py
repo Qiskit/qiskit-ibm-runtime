@@ -76,11 +76,11 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
             options.append(option_line)
 
         alt_exists = any(option.startswith(":alt:") for option in options)
-        nofig_exists = any(option.startswith(":nofig:") for option in options)
+        nofigs_exists = any(option.startswith(":nofigs:") for option in options)
 
-        # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
-        # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofig:` option.
-        if not alt_exists and not nofig_exists:
+        # Only `.. plot::`` directives without the `:nofigs:` option are required to have alt text.
+        # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofigs:` option.
+        if not alt_exists and not nofigs_exists:
             invalid_images.append(f"- Error in line {line_number + 1}: {line.strip()}")
 
     return (file_path, invalid_images)
