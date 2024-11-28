@@ -81,7 +81,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
         # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
         # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofig:` option.
         if not alt_exists and not nofig_exists:
-            invalid_images.append(f"- Error in line {line_number + 1}: {line}")
+            invalid_images.append(f"- Error in line {line_number + 1}: {line.strip()}")
 
     return (file_path, invalid_images)
 
@@ -95,21 +95,21 @@ def main() -> None:
     failed_files = [x for x in results if len(x[1])]
 
     if not len(failed_files):
-        print("✅ All images have alt text\n")
+        print("✅ All images have alt text")
         sys.exit(0)
 
-    print("💔 Some images are missing the alt text\n", file=sys.stderr)
+    print("💔 Some images are missing the alt text", file=sys.stderr)
 
     for filename, image_errors in failed_files:
-        print(f"Errors found in {filename}:", file=sys.stderr)
+        print(f"\nErrors found in {filename}:", file=sys.stderr)
 
         for image_error in image_errors:
             print(image_error, file=sys.stderr)
 
-        print(
-            "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
-            file=sys.stderr,
-        )
+    print(
+        "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
+        file=sys.stderr,
+    )
 
     sys.exit(1)
 
