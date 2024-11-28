@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020
+# (C) Copyright IBM 2024
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,6 +13,7 @@
 
 """Utility script to verify that all images have alt text"""
 
+from pathlib import Path
 import multiprocessing
 import sys
 import glob
@@ -44,44 +45,43 @@ ALLOWLIST_MISSING_ALT_TEXT = {
 }
 
 
-def is_image(line) -> bool:
-    return line.strip().startswith(".. image:") or line.strip().startswith(".. plot:")
+def is_image(line: str) -> bool:
+    return line.strip().startswith((".. image:", ".. plot:"))
 
 
-def allowlist(filename, line_num) -> bool:
-    return (
-        filename in ALLOWLIST_MISSING_ALT_TEXT and line_num in ALLOWLIST_MISSING_ALT_TEXT[filename]
-    )
+def in_allowlist(filename: str, line_num: str) -> bool:
+    return line_num in ALLOWLIST_MISSING_ALT_TEXT.get(filename, [])
 
 
-def validate_image(file_path) -> tuple[str, list[str]]:
+def validate_image(file_path: str) -> tuple[str, list[str]]:
     """Validate all the images of a single file"""
     invalid_images: list[str] = []
 
-    with open(file_path, encoding="utf8") as fd:
-        lines = fd.readlines()
+    lines = Path(file_path).read_text().splitlines()
 
-        for index, line in enumerate(lines):
-            if is_image(line) and not allowlist(file_path, index + 1):
-                options: list[str] = []
-                option_idx = index
+    for line_number, line in enumerate(lines):
+        if not is_image(line) or in_allowlist(file_path, line_number + 1):
+            continue
 
-                while option_idx + 1 < len(lines):
-                    option_idx += 1
-                    option_line = lines[option_idx].strip()
+        options: list[str] = []
+        options_line_number = line_number
 
-                    if not option_line.startswith(":"):
-                        break
+        while options_line_number + 1 < len(lines):
+            options_line_number += 1
+            option_line = lines[options_line_number].strip()
 
-                    options.append(option_line)
+            if not option_line.startswith(":"):
+                break
 
-                alt_exists = any(option.startswith(":alt:") for option in options)
-                nofig_exists = any(option.startswith(":nofig:") for option in options)
+            options.append(option_line)
 
-                # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
-                # All `.. image::` directives need alt text and they don't have a `:nofig:` option.
-                if not alt_exists and not nofig_exists:
-                    invalid_images.append(f"- Error in line {index + 1}: {line}")
+        alt_exists = any(option.startswith(":alt:") for option in options)
+        nofig_exists = any(option.startswith(":nofig:") for option in options)
+
+        # Only `.. plot::`` directives without the `:nofig:` option are required to have alt text.
+        # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofig:` option.
+        if not alt_exists and not nofig_exists:
+            invalid_images.append(f"- Error in line {line_number + 1}: {line}\n")
 
     return (file_path, invalid_images)
 
@@ -92,25 +92,26 @@ def main() -> None:
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
-    failed_files = list(filter(lambda x: len(x[1]), results))
+    failed_files = [x for x in results if len(x[1])]
 
-    if len(failed_files):
-        sys.stderr.write("💔 Some images are missing the alt text\n\n")
+    if not len(failed_files):
+        print("✅ All images have alt text\n")
+        sys.exit(0)
 
-        for failed_file in failed_files:
-            sys.stderr.write("Errors found in %s:\n" % failed_file[0])
+    print("💔 Some images are missing the alt text\n", file=sys.stderr)
 
-            for image_error in failed_file[1]:
-                sys.stderr.write(image_error)
+    for filename, image_errors in failed_files:
+        print(f"Errors found in {filename}:", file=sys.stderr)
 
-            sys.stderr.write(
-                "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.\n"
-            )
+        for image_error in image_errors:
+            sys.stderr.write(image_error)
 
-        sys.exit(1)
+        print(
+            "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
+            file=sys.stderr,
+        )
 
-    sys.stdout.write("✅ All images have alt text\n")
-    sys.exit(0)
+    sys.exit(1)
 
 
 if __name__ == "__main__":
