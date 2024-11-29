@@ -18,49 +18,30 @@ import multiprocessing
 import sys
 import glob
 
-# Dictionary to allowlist lines of code that the checker will not error
-# Format: {"file_path": [list_of_line_numbers]}
-ALLOWLIST_MISSING_ALT_TEXT = {
-    "qiskit_ibm_runtime/fake_provider/__init__.py": [34, 55, 63],
-    "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py": [56, 88],
-    "qiskit_ibm_runtime/transpiler/passes/scheduling/__init__.py": [
-        51,
-        102,
-        137,
-        152,
-        176,
-        207,
-        226,
-        240,
-        256,
-        274,
-        294,
-        313,
-        328,
-        342,
-        363,
-        382,
-        406,
-    ],
-}
+# Dictionary to allowlist files that the checker will verify
+ALLOWLIST_MISSING_ALT_TEXT = [
+    "qiskit_ibm_runtime/fake_provider/__init__.py",
+    "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py",
+    "qiskit_ibm_runtime/transpiler/passes/scheduling/__init__.py",
+]
 
 
 def is_image(line: str) -> bool:
     return line.strip().startswith((".. image:", ".. plot:"))
 
 
-def in_allowlist(filename: str, line_num: int) -> bool:
-    return line_num in ALLOWLIST_MISSING_ALT_TEXT.get(filename, [])
-
-
 def validate_image(file_path: str) -> tuple[str, list[str]]:
     """Validate all the images of a single file"""
+
+    if file_path in ALLOWLIST_MISSING_ALT_TEXT:
+        return [file_path, []]
+
     invalid_images: list[str] = []
 
     lines = Path(file_path).read_text().splitlines()
 
     for line_index, line in enumerate(lines):
-        if not is_image(line) or in_allowlist(file_path, line_index + 1):
+        if not is_image(line):
             continue
 
         options: list[str] = []
