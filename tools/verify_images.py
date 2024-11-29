@@ -18,7 +18,7 @@ import multiprocessing
 import sys
 import glob
 
-# Dictionary to allowlist files that the checker will verify
+# List of allowlist files that the checker will not verify
 ALLOWLIST_MISSING_ALT_TEXT = [
     "qiskit_ibm_runtime/fake_provider/__init__.py",
     "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py",
