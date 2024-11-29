@@ -20,7 +20,7 @@ import glob
 
 # Dictionary to allowlist files that the checker will verify
 ALLOWLIST_MISSING_ALT_TEXT = [
-    #  "qiskit_ibm_runtime/fake_provider/__init__.py",
+    "qiskit_ibm_runtime/fake_provider/__init__.py",
     "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py",
     "qiskit_ibm_runtime/transpiler/passes/scheduling/__init__.py",
 ]
