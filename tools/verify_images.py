@@ -20,7 +20,7 @@ import glob
 
 # Dictionary to allowlist files that the checker will verify
 ALLOWLIST_MISSING_ALT_TEXT = [
-    "qiskit_ibm_runtime/fake_provider/__init__.py",
+    #  "qiskit_ibm_runtime/fake_provider/__init__.py",
     "qiskit_ibm_runtime/transpiler/passes/scheduling/dynamical_decoupling.py",
     "qiskit_ibm_runtime/transpiler/passes/scheduling/__init__.py",
 ]
@@ -28,6 +28,19 @@ ALLOWLIST_MISSING_ALT_TEXT = [
 
 def is_image(line: str) -> bool:
     return line.strip().startswith((".. image:", ".. plot:"))
+
+
+def is_option(line: str) -> bool:
+    return line.strip().startswith(":")
+
+
+def is_valid_image(options: list[str]) -> bool:
+    alt_exists = any(option.strip().startswith(":alt:") for option in options)
+    nofigs_exists = any(option.strip().startswith(":nofigs:") for option in options)
+
+    # Only `.. plot::`` directives without the `:nofigs:` option are required to have alt text.
+    # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofigs:` option.
+    return alt_exists or nofigs_exists
 
 
 def validate_image(file_path: str) -> tuple[str, list[str]]:
@@ -40,29 +53,20 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
 
     lines = Path(file_path).read_text().splitlines()
 
+    image_found = False
+    options: list[str] = []
+
     for line_index, line in enumerate(lines):
-        if not is_image(line):
+        if image_found and is_option(line):
+            options.append(line)
             continue
 
-        options: list[str] = []
-        options_line_index = line_index
+        if image_found and not is_valid_image(options):
+            image_line = line_index - len(options)
+            invalid_images.append(f"- Error in line {image_line}: {lines[image_line-1].strip()}")
 
-        while options_line_index + 1 < len(lines):
-            options_line_index += 1
-            option_line = lines[options_line_index].strip()
-
-            if not option_line.startswith(":"):
-                break
-
-            options.append(option_line)
-
-        alt_exists = any(option.startswith(":alt:") for option in options)
-        nofigs_exists = any(option.startswith(":nofigs:") for option in options)
-
-        # Only `.. plot::`` directives without the `:nofigs:` option are required to have alt text.
-        # Meanwhile, all `.. image::` directives need alt text and they don't have a `:nofigs:` option.
-        if not alt_exists and not nofigs_exists:
-            invalid_images.append(f"- Error in line {line_index + 1}: {line.strip()}")
+        image_found = is_image(line)
+        options = []
 
     return (file_path, invalid_images)
 
