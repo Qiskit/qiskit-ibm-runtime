@@ -19,6 +19,5 @@ ddt>=1.2.0,!=1.4.0,!=1.4.3
 # Documentation
 nbsphinx
 Sphinx>=6
-jupyter-sphinx
 sphinxcontrib-katex==0.9.9
 packaging
