@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals
+import argparse
 import sys
 from getpass import getpass
 from typing import List, Literal, Callable
@@ -23,19 +24,36 @@ from .accounts.exceptions import AccountAlreadyExistsError
 
 Channel = Literal["ibm_quantum", "ibm_cloud"]
 
+SCRIPT_NAME = "Qiskit IBM Runtime save account"
+
+
 def save_account() -> None:
     """
     A CLI that guides users through getting their account information and saving it to disk.
     """
+    # Use argparse to create the --help feature
+    parser = argparse.ArgumentParser(
+        prog=SCRIPT_NAME,
+        description=dedent(
+            """
+            An interactive command-line interface to save your Qiskit IBM 
+            Runtime account locally. This script is interactive-only and takes 
+            no arguments
+            """
+        ),
+    )
+    parser.parse_args()
+
     try:
         CLI.main()
     except KeyboardInterrupt:
         sys.exit()
 
+
 class CLI:
     @classmethod
     def main(self) -> None:
-        self.print_box(["Qiskit IBM Runtime account setup"])
+        self.print_box([SCRIPT_NAME])
         channel = self.get_channel()
         token = self.get_token(channel)
         print("Verifying, this might take few seconds...")
