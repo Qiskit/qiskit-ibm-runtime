@@ -1,4 +1,4 @@
-The `requirements.txt` files and `setup.py`` have been removed in favor of a new dependency management
+The `requirements.txt` files and `setup.py` have been removed in favor of a new dependency management
 approach using ``pyproject``. This transition simplifies the development workflow. Dependencies
 are now managed directly through the `pyproject.toml` file.
 
