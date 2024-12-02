@@ -94,6 +94,13 @@ class TwirlingOptions:
         twirled layer.
 
       Default: "active-accum".
+
+    .. image:: /source_images/twirling_strategy_options.png
+      :alt: Image illustrating the differences among twirling strategies. If "active", only
+            instruction qubits in each layer will be twirled. If "active-circuit", 
+            all instruction qubits in the circuit will be twirled. If "active-accum", the union 
+            all instruction qubits in the circuit up to the current twirled layer will be twirled. 
+            Finally, if "all", all qubits in the input circuit will be twirled in each twirled layer.
     """
 
     _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
