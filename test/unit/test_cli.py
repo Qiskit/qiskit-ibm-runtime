@@ -24,6 +24,7 @@ from ..ibm_test_case import IBMTestCase
 
 class MockIO:
     """Mock `input` and `getpass`"""
+
     # pylint: disable=missing-function-docstring
 
     def __init__(self, inputs: List[str]):
@@ -41,6 +42,7 @@ class MockIO:
 
 class TestCLI(IBMTestCase):
     """Tests for the save-account CLI."""
+
     # pylint: disable=missing-class-docstring, missing-function-docstring
 
     def test_select_from_list(self):
