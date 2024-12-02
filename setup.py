@@ -82,6 +82,9 @@ setuptools.setup(
         "qiskit.transpiler.translation": [
             "ibm_backend = qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin",
             "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
+        ],
+        "console_scripts": [
+            "qiskit-ibm-runtime = qiskit_ibm_runtime._cli:entry_point"
         ]
     },
     extras_require={"visualization": ["plotly>=5.23.0"]},

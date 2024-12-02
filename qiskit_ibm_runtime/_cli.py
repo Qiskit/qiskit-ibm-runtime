@@ -24,26 +24,43 @@ from .accounts.exceptions import AccountAlreadyExistsError
 
 Channel = Literal["ibm_quantum", "ibm_cloud"]
 
-SCRIPT_NAME = "Qiskit IBM Runtime save account"
+
+def entry_point() -> None:
+    """
+    This is the entry point for the `qiskit-ibm-runtime` command. At the
+    moment, we only support one script (save-account), but we want to have a
+    `qiskit-ibm-runtime` command so users can run `pipx run qiskit-ibm-runtime
+    save-account`.
+    """
+    # Use argparse to create the --help feature
+    parser = argparse.ArgumentParser(
+        prog="qiskit-ibm-runtime",
+        description="Scripts for the Qiskit IBM Runtime Python package",
+    )
+    subparsers = parser.add_subparsers(
+        title="Scripts",
+        description="This package supports the following scripts:",
+        dest="script",
+        required=True,
+    )
+    save_account_subparser = subparsers.add_parser(
+        "save-account",
+        description=(
+            "An interactive command-line interface to save your Qiskit IBM "
+            "Runtime account locally. This script is interactive-only and takes "
+            "no arguments."
+        ),
+        help="Interactive command-line interface to save your account locally.",
+    )
+    args = parser.parse_args()
+    if args.script == "save-account":
+        save_account()
 
 
 def save_account() -> None:
     """
     A CLI that guides users through getting their account information and saving it to disk.
     """
-    # Use argparse to create the --help feature
-    parser = argparse.ArgumentParser(
-        prog=SCRIPT_NAME,
-        description=dedent(
-            """
-            An interactive command-line interface to save your Qiskit IBM 
-            Runtime account locally. This script is interactive-only and takes 
-            no arguments
-            """
-        ),
-    )
-    parser.parse_args()
-
     try:
         CLI.main()
     except KeyboardInterrupt:
@@ -53,7 +70,7 @@ def save_account() -> None:
 class CLI:
     @classmethod
     def main(self) -> None:
-        self.print_box([SCRIPT_NAME])
+        self.print_box(["Qiskit IBM Runtime save account"])
         channel = self.get_channel()
         token = self.get_token(channel)
         print("Verifying, this might take few seconds...")
