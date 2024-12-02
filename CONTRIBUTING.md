@@ -18,24 +18,24 @@ contributing to qiskit-ibm-runtime, these are documented below.
 To install from source download this repository and follow the next steps.
 
 - Create a virtual environment
-    ```sh
-    python3 -m venv .venv
-    ```
+``` {.bash}
+$ python3 -m venv .venv
+```
 - Activate your virtual environment`
-    ```sh
-    source .venv/bin/activate
-    ```
+``` {.bash}
+$ source .venv/bin/activate
+```
 - Install the dependencies
-    ```sh
-    pip install -e .
-    ```
+``` {.bash}
+$ pip install -e .
+```
 - Install the visualization dependencies
-```bash
-pip install -e ".[visualization]"
+``` {.bash}
+$ pip install -e ".[visualization]"
 ```
 - Install the development dependencies
-```bash
-pip install -e ".[dev]"
+``` {.bash}
+$ pip install -e ".[dev]"
 ```
 
 ### Open an issue
