@@ -16,21 +16,21 @@ import unittest
 from unittest.mock import patch
 from textwrap import dedent
 
-from qiskit_ibm_runtime._cli import CLI, select_from_list
+from qiskit_ibm_runtime._cli import SaveAccountCLI, select_from_list
 
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
-from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 
 
 class MockIO:
     """Mock `input` and `getpass`"""
+    # pylint: disable=missing-function-docstring
 
     def __init__(self, inputs: List[str]):
         self.inputs = inputs
         self.output = ""
 
-    def mock_input(self, *args, **kwargs):
+    def mock_input(self, *args, **_kwargs):
         if args:
             self.mock_print(args[0])
         return self.inputs.pop(0)
@@ -40,11 +40,12 @@ class MockIO:
 
 
 class TestCLI(IBMTestCase):
-    """Tests for Account class."""
+    """Tests for the save-account CLI."""
+    # pylint: disable=missing-class-docstring, missing-function-docstring
 
     def test_select_from_list(self):
         """Test the `select_from_list` helper function"""
-        self.maxDiff = 1500
+        self.maxDiff = 1500  # pylint: disable=invalid-name
 
         # Check a bunch of invalid inputs before entering a valid one
         mockio = MockIO(["", "0", "-1", "3.14", "9", " 3"])
@@ -91,7 +92,7 @@ class TestCLI(IBMTestCase):
         selected_instance = 2  # == instances[1]
 
         class MockRuntimeService:
-            def __init__(*args, **kwargs):
+            def __init__(self, *_args, **_kwargs):
                 pass
 
             def instances(self):
@@ -134,7 +135,7 @@ class TestCLI(IBMTestCase):
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
-            CLI.main()
+            SaveAccountCLI.main()
 
         run_cli()
         self.assertEqual(mockio.inputs, [])
@@ -150,7 +151,7 @@ class TestCLI(IBMTestCase):
         instance = "my/only/instance"
 
         class MockRuntimeService:
-            def __init__(*args, **kwargs):
+            def __init__(self, *_args, **_kwargs):
                 pass
 
             def instances(self):
@@ -179,7 +180,7 @@ class TestCLI(IBMTestCase):
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
-            CLI.main()
+            SaveAccountCLI.main()
 
         run_cli()
         self.assertEqual(mockio.inputs, [])

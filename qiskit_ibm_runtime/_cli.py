@@ -9,6 +9,9 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals
+"""
+The `save-account` command-line interface. These classes and functions are not public.
+"""
 import argparse
 import sys
 from getpass import getpass
@@ -43,7 +46,7 @@ def entry_point() -> None:
         dest="script",
         required=True,
     )
-    save_account_subparser = subparsers.add_parser(
+    subparsers.add_parser(
         "save-account",
         description=(
             "An interactive command-line interface to save your Qiskit IBM "
@@ -54,25 +57,26 @@ def entry_point() -> None:
     )
     args = parser.parse_args()
     if args.script == "save-account":
-        save_account()
+        try:
+            SaveAccountCLI.main()
+        except KeyboardInterrupt:
+            sys.exit()
 
 
-def save_account() -> None:
+class SaveAccountCLI:
     """
-    A CLI that guides users through getting their account information and saving it to disk.
+    This class contains the save-account command and helper functions.
     """
-    try:
-        CLI.main()
-    except KeyboardInterrupt:
-        sys.exit()
 
-
-class CLI:
     @classmethod
-    def main(self) -> None:
-        self.print_box(["Qiskit IBM Runtime save account"])
-        channel = self.get_channel()
-        token = self.get_token(channel)
+    def main(cls) -> None:
+        """
+        A CLI that guides users through getting their account information and
+        saving it to disk.
+        """
+        cls.print_box(["Qiskit IBM Runtime save account"])
+        channel = cls.get_channel()
+        token = cls.get_token(channel)
         print("Verifying, this might take few seconds...")
         try:
             service = QiskitRuntimeService(channel=channel, token=token)
@@ -82,36 +86,41 @@ class CLI:
                 + Format.red(err.message)
             )
             sys.exit(1)
-        instance = self.get_instance(service)
-        self.save_account({
-            "channel": channel,
-            "token": token,
-            "instance": instance,
-        })
+        instance = cls.get_instance(service)
+        cls.save_to_disk(
+            {
+                "channel": channel,
+                "token": token,
+                "instance": instance,
+            }
+        )
 
     @classmethod
-    def print_box(self, lines: List[str]) -> None:
+    def print_box(cls, lines: List[str]) -> None:
+        """Print lines in a box using Unicode box-drawing characters"""
         width = max(len(line) for line in lines)
         box_lines = [
-            "╭─" + "─"*width + "─╮",
+            "╭─" + "─" * width + "─╮",
             *(f"│ {Format.bold(line.ljust(width))} │" for line in lines),
-            "╰─" + "─"*width + "─╯",
+            "╰─" + "─" * width + "─╯",
         ]
         print("\n".join(box_lines))
 
     @classmethod
-    def get_channel(self) -> Channel:
+    def get_channel(cls) -> Channel:
+        """Ask user which channel to use"""
         print(Format.bold("Select a channel"))
         return select_from_list(["ibm_quantum", "ibm_cloud"])
 
     @classmethod
-    def get_token(self, channel: Channel) -> str:
+    def get_token(cls, channel: Channel) -> str:
+        """Ask user for their token"""
         token_url = {
             "ibm_quantum": "https://quantum.ibm.com",
             "ibm_cloud": "https://cloud.ibm.com/iam/apikeys",
         }[channel]
         print(
-            Format.bold(f"\nPaste your API token")
+            Format.bold("\nPaste your API token")
             + f"\nYou can get this from {Format.cyan(token_url)}."
             + "\nFor security, you might not see any feedback when typing."
         )
@@ -119,9 +128,13 @@ class CLI:
             token = getpass("Token: ").strip()
             if token != "":
                 return token
-    
+
     @classmethod
-    def get_instance(self, service: QiskitRuntimeService) -> str:
+    def get_instance(cls, service: QiskitRuntimeService) -> str:
+        """
+        Ask user which instance to use, or select automatically if only one
+        is available.
+        """
         instances = service.instances()
         if len(instances) == 1:
             instance = instances[0]
@@ -129,30 +142,42 @@ class CLI:
             return instance
         print(Format.bold("\nSelect a default instance"))
         return select_from_list(instances)
-    
+
     @classmethod
-    def save_account(self, account):
+    def save_to_disk(cls, account):
+        """
+        Save account details to disk, confirming if they'd like to overwrite if
+        one exists already. Display a warning that token is stored in plain
+        text.
+        """
         try:
             AccountManager.save(**account)
         except AccountAlreadyExistsError:
             response = user_input(
                 message="\nDefault account already exists, would you like to overwrite it? (y/N):",
-                is_valid=lambda response: response.strip().lower() in ["y", "yes", "n", "no", ""]
+                is_valid=lambda response: response.strip().lower() in ["y", "yes", "n", "no", ""],
             )
             if response in ["y", "yes"]:
                 AccountManager.save(**account, overwrite=True)
             else:
                 print("Account not saved.")
                 return
-        
+
         print(f"Account saved to {Format.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
-        self.print_box([
-            "⚠️ Warning: your token is saved to disk in plain text.",
-            "If on a shared computer, make sure to revoke your token",
-            "by regenerating it in your account settings when finished.",
-        ])
+        cls.print_box(
+            [
+                "⚠️ Warning: your token is saved to disk in plain text.",
+                "If on a shared computer, make sure to revoke your token",
+                "by regenerating it in your account settings when finished.",
+            ]
+        )
+
 
 def user_input(message: str, is_valid: Callable[[str], bool]):
+    """
+    Repeatedly ask user for input until they give us something that satisifies
+    `is_valid`.
+    """
     while True:
         response = input(message + " ").strip()
         if response == "quit":
@@ -161,33 +186,46 @@ def user_input(message: str, is_valid: Callable[[str], bool]):
             return response
         print("Did not understand input, trying again... (type 'quit' to quit)")
 
+
 def select_from_list(options: List[str]) -> str:
+    """
+    Prompt user to select from a list of options by entering a number.
+    """
     print()
     for index, option in enumerate(options):
         print(f"  ({index+1}) {option}")
     print()
     response = user_input(
         message=f"Enter a number 1-{len(options)} and press enter:",
-        is_valid=lambda response: response.isdigit() and int(response) in range(1, len(options)+1)
+        is_valid=lambda response: response.isdigit()
+        and int(response) in range(1, len(options) + 1),
     )
-    choice = options[int(response)-1]
+    choice = options[int(response) - 1]
     print(f"Selected {Format.greenbold(choice)}")
     return choice
 
+
 class Format:
     """Format using terminal escape codes"""
+
+    # pylint: disable=missing-function-docstring
+
     @classmethod
-    def bold(self, s: str) -> str:
+    def bold(cls, s: str) -> str:
         return f"\033[1m{s}\033[0m"
+
     @classmethod
-    def green(self, s: str) -> str:
+    def green(cls, s: str) -> str:
         return f"\033[32m{s}\033[0m"
+
     @classmethod
-    def red(self, s: str) -> str:
+    def red(cls, s: str) -> str:
         return f"\033[31m{s}\033[0m"
+
     @classmethod
-    def cyan(self, s: str) -> str:
+    def cyan(cls, s: str) -> str:
         return f"\033[36m{s}\033[0m"
+
     @classmethod
-    def greenbold(self, s: str) -> str:
-        return self.green(self.bold(s))
+    def greenbold(cls, s: str) -> str:
+        return cls.green(cls.bold(s))
