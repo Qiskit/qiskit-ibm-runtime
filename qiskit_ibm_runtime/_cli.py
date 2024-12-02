@@ -8,10 +8,12 @@
 #
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
-# that they have been altered from the originals
+# that they have been altered from the originals.
+
 """
 The `save-account` command-line interface. These classes and functions are not public.
 """
+
 import argparse
 import sys
 from getpass import getpass
