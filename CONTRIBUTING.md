@@ -21,7 +21,7 @@ To install from source download this repository and follow the next steps.
 ``` {.bash}
 $ python3 -m venv .venv
 ```
-- Activate your virtual environment`
+- Activate your virtual environment
 ``` {.bash}
 $ source .venv/bin/activate
 ```
