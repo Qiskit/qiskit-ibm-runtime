@@ -11,7 +11,7 @@
 # that they have been altered from the originals
 import sys
 from getpass import getpass
-from typing import Literal, Callable
+from typing import List, Literal, Callable
 
 from ibm_cloud_sdk_core.api_exception import ApiException
 
@@ -55,7 +55,7 @@ class CLI:
         })
 
     @classmethod
-    def print_box(self, lines: list[str]) -> None:
+    def print_box(self, lines: List[str]) -> None:
         width = max(len(line) for line in lines)
         box_lines = [
             "╭─" + "─"*width + "─╮",
@@ -81,7 +81,7 @@ class CLI:
             + "\nFor security, you might not see any feedback when typing."
         )
         while True:
-            token = getpass(prompt="Token: ").strip()
+            token = getpass("Token: ").strip()
             if token != "":
                 return token
     
@@ -113,8 +113,8 @@ class CLI:
         print(f"Account saved to {Format.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
         self.print_box([
             "⚠️ Warning: your token is saved to disk in plain text.",
-            "If on a shared computer, make sure to regenerate your",
-            "token when you're finished.",
+            "If on a shared computer, make sure to revoke your token",
+            "by regenerating it in your account settings when finished.",
         ])
 
 def user_input(message: str, is_valid: Callable[[str], bool]):
@@ -126,7 +126,7 @@ def user_input(message: str, is_valid: Callable[[str], bool]):
             return response
         print("Did not understand input, trying again... (type 'quit' to quit)")
 
-def select_from_list(options: list[str]) -> str:
+def select_from_list(options: List[str]) -> str:
     print()
     for index, option in enumerate(options):
         print(f"  ({index+1}) {option}")
