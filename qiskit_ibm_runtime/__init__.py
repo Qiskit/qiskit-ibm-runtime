@@ -183,6 +183,7 @@ Classes
 =======
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    QiskitRuntimeService
    Estimator
