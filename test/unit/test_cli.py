@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import patch
 from textwrap import dedent
 
-from qiskit_ibm_runtime.cli import CLI, select_from_list
+from qiskit_ibm_runtime._cli import CLI, select_from_list
 
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -131,8 +131,8 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.open", mock_open)
         @patch("builtins.print", mockio.mock_print)
-        @patch("qiskit_ibm_runtime.cli.getpass", mockio.mock_input)
-        @patch("qiskit_ibm_runtime.cli.QiskitRuntimeService", MockRuntimeService)
+        @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
+        @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
             CLI.main()
 
@@ -176,8 +176,8 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.open", mock_open)
         @patch("builtins.print", mockio.mock_print)
-        @patch("qiskit_ibm_runtime.cli.getpass", mockio.mock_input)
-        @patch("qiskit_ibm_runtime.cli.QiskitRuntimeService", MockRuntimeService)
+        @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
+        @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
             CLI.main()
 
