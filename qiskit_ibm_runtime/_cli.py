@@ -17,7 +17,7 @@ The `save-account` command-line interface. These classes and functions are not p
 import argparse
 import sys
 from getpass import getpass
-from typing import List, Literal, Callable
+from typing import List, Literal, Callable, TypeVar
 
 from ibm_cloud_sdk_core.api_exception import ApiException
 
@@ -28,6 +28,7 @@ from .accounts.management import AccountManager, _DEFAULT_ACCOUNT_CONFIG_JSON_FI
 from .accounts.exceptions import AccountAlreadyExistsError
 
 Channel = Literal["ibm_quantum", "ibm_cloud"]
+T = TypeVar("T")
 
 
 def entry_point() -> None:
@@ -146,7 +147,7 @@ class SaveAccountCLI:
         return select_from_list(instances)
 
     @classmethod
-    def save_to_disk(cls, account):
+    def save_to_disk(cls, account: dict) -> None:
         """
         Save account details to disk, confirming if they'd like to overwrite if
         one exists already. Display a warning that token is stored in plain
@@ -175,7 +176,7 @@ class SaveAccountCLI:
         )
 
 
-def user_input(message: str, is_valid: Callable[[str], bool]):
+def user_input(message: str, is_valid: Callable[[str], bool]) -> str:
     """
     Repeatedly ask user for input until they give us something that satisifies
     `is_valid`.
@@ -189,7 +190,7 @@ def user_input(message: str, is_valid: Callable[[str], bool]):
         print("Did not understand input, trying again... (type 'quit' to quit)")
 
 
-def select_from_list(options: List[str]) -> str:
+def select_from_list(options: List[T]) -> T:
     """
     Prompt user to select from a list of options by entering a number.
     """
@@ -203,7 +204,7 @@ def select_from_list(options: List[str]) -> str:
         and int(response) in range(1, len(options) + 1),
     )
     choice = options[int(response) - 1]
-    print(f"Selected {Format.greenbold(choice)}")
+    print(f"Selected {Format.greenbold(str(choice))}")
     return choice
 
 
