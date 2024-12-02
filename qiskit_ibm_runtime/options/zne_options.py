@@ -111,8 +111,8 @@ class ZneOptions:
             The available options are:
 
                 * ``"exponential"``, which fits the data using an exponential decaying function defined
-                  as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)` is the
-                  value at zero noise (:math:`x=0`\\) and :math:`\tau>0` is a positive rate.
+                  as :math:`f(x; A, \\tau) = A e^{-x/\\tau}`, where :math:`A = f(0; A, \\tau)` is the
+                  value at zero noise (:math:`x=0`) and :math:`\\tau>0` is a positive rate.
                 * ``"double_exponential"``, which uses a sum of two exponential as in Ref. 1.
                 * ``"polynomial_degree_(1 <= k <= 7)"``, which uses a polynomial function defined as
                   :math:`f(x; c_0, c_1, \\ldots, c_k) = \\sum_{i=0, k} c_i x^i`.
