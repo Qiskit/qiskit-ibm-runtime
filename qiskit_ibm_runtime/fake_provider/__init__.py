@@ -33,6 +33,7 @@ Here is an example of using a fake backend for transpilation and simulation.
 
 .. plot::
    :include-source:
+   :context: close-figs
 
    from qiskit import QuantumCircuit
    from qiskit import transpile
@@ -51,10 +52,18 @@ Here is an example of using a fake backend for transpilation and simulation.
    circuit.measure_all()
    circuit.draw('mpl', style="iqp")
 
+.. plot::
+   :include-source:
+   :context: close-figs
+
    # Transpile the ideal circuit to a circuit that can be directly executed by the backend
    transpiled_circuit = transpile(circuit, backend)
    transpiled_circuit.draw('mpl', style="iqp")
 
+.. plot::
+   :include-source:
+   :context: close-figs
+   
    # Run the transpiled circuit using the simulated fake backend
    sampler = SamplerV2(backend)
    job = sampler.run([transpiled_circuit])

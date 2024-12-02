@@ -53,7 +53,9 @@ class PadDynamicalDecoupling(BlockBasePadder):
     This pass ensures that the inserted sequence preserves the circuit exactly
     (including global phase).
 
-    .. jupyter-execute::
+    .. plot::
+       :include-source:
+       :context: close-figs
 
         import numpy as np
         from qiskit.circuit import QuantumCircuit
@@ -76,16 +78,16 @@ class PadDynamicalDecoupling(BlockBasePadder):
              ("x", None, 50), ("measure", None, 1000)]
         )
 
-    .. jupyter-execute::
-
         # balanced X-X sequence on all qubits
         dd_sequence = [XGate(), XGate()]
         pm = PassManager([ALAPScheduleAnalysis(durations),
                           PadDynamicalDecoupling(durations, dd_sequence)])
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw('mpl', style="iqp")
 
-    .. jupyter-execute::
+    .. plot::
+       :include-source:
+       :context: close-figs
 
         # Uhrig sequence on qubit 0
         n = 8
@@ -103,7 +105,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             ]
         )
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw('mpl', style="iqp")
 
     .. note::
 
