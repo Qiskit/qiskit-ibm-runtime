@@ -56,7 +56,8 @@ class FoldRzzAngle(TransformationPass):
         return dag
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
-        """Mutate the input dag to fix non-ISA Rzz angles."""
+        """Mutate the input dag to fix non-ISA Rzz angles.
+        Return true if the dag was modified."""
         modified = False
         for node in dag.op_nodes():
             if isinstance(node.op, ControlFlowOp):
@@ -105,7 +106,7 @@ class FoldRzzAngle(TransformationPass):
                 replace = _quad4(wrap_angle, node.qargs)
             else:
                 raise RuntimeError("Unreacheable.")
-            if not np.isclose(angle, wrap_angle):
+            if pi < angle % (4 * pi) < 3 * pi:
                 replace.apply_operation_back(GlobalPhaseGate(pi))
             dag.substitute_node_with_dag(node, replace)
         return modified
