@@ -82,7 +82,7 @@ def main() -> None:
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
-    failed_files = [x for x in results if len(x[1])]
+    failed_files = {file: image_errors for file, image_errors in results if image_errors}
 
     if not len(failed_files):
         print("✅ All images have alt text")
@@ -90,8 +90,8 @@ def main() -> None:
 
     print("💔 Some images are missing the alt text", file=sys.stderr)
 
-    for filename, image_errors in failed_files:
-        print(f"\nErrors found in {filename}:", file=sys.stderr)
+    for file, image_errors in failed_files.items():
+        print(f"\nErrors found in {file}:", file=sys.stderr)
 
         for image_error in image_errors:
             print(image_error, file=sys.stderr)
