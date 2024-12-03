@@ -17,11 +17,13 @@ from ddt import ddt, named_data
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import Operator
-from qiskit.transpiler.passmanager import PassManager
 from qiskit.circuit.parameter import Parameter
+from qiskit.transpiler.passmanager import PassManager
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.quantum_info import Operator
 
 from qiskit_ibm_runtime.transpiler.passes.basis import FoldRzzAngle
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from .....ibm_test_case import IBMTestCase
 
 
@@ -106,3 +108,21 @@ class TestFoldRzzAngle(IBMTestCase):
                 expected.x(0)
 
         self.assertEqual(isa, expected)
+
+    def test_fractional_plugin(self):
+        """Verify that a pass manager created for a fractional backend applies the rzz folding
+        pass"""
+
+        circ = QuantumCircuit(2)
+        circ.rzz(7, 0, 1)
+
+        pm = generate_preset_pass_manager(
+            optimization_level=0,
+            backend=FakeFractionalBackend(),
+            translation_method="ibm_fractional",
+        )
+        isa_circ = pm.run(circ)
+
+        self.assertEqual(isa_circ.data[0].operation.name, "global_phase")
+        self.assertEqual(isa_circ.data[1].operation.name, "rzz")
+        self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
