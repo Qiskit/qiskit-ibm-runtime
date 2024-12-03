@@ -17,7 +17,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union, TypeVar, Generic, Type
 import logging
 from dataclasses import asdict, replace
-import warnings
 
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -27,7 +26,13 @@ from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
-from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
+
+from .utils import (
+    validate_isa_circuits,
+    validate_no_dd_with_dynamic_circuits,
+    validate_rzz_pubs,
+    validate_no_param_expressions_gen3_runtime,
+)
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
@@ -44,7 +49,7 @@ OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
 def _get_mode_service_backend(
-    mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None
+    mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
 ) -> tuple[
     Union[Session, Batch, None],
     Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
@@ -65,43 +70,21 @@ def _get_mode_service_backend(
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
         if get_cm_session():
-            warnings.warn(
-                (
-                    "Passing a backend as the mode currently runs the job in job mode even "
-                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
-                    "version 0.26.0, this behavior is deprecated and in a future "
-                    "release no sooner than than 3 months "
-                    "after the release date, the session/batch will take precendence and "
-                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
-                    "mode, pass in the session/batch or leave the mode parameter emtpy."
-                ),
-                DeprecationWarning,
-                stacklevel=4,
+            logger.warning(
+                "A backend was passed in as the mode but a session context manager "
+                "is open so this job will run inside this session/batch "
+                "instead of in job mode."
             )
+            if get_cm_session()._backend != mode:
+                raise ValueError(
+                    "The backend passed in to the primitive is different from the session backend. "
+                    "Please check which backend you intend to use or leave the mode parameter "
+                    "empty to use the session backend."
+                )
+            return get_cm_session(), mode.service, mode
         return None, mode.service, mode
     elif isinstance(mode, (BackendV1, BackendV2)):
         return None, QiskitRuntimeLocalService(), mode
-    elif isinstance(mode, str):
-        if get_cm_session():
-            warnings.warn(
-                (
-                    "Passing a backend as the mode currently runs the job in job mode even "
-                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
-                    "version 0.26.0, this behavior is deprecated and in a future "
-                    "release no sooner than than 3 months "
-                    "after the release date, the session/batch will take precendence and "
-                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
-                    "mode, pass in the session/batch or leave the mode parameter emtpy."
-                ),
-                DeprecationWarning,
-                stacklevel=4,
-            )
-        service = (
-            QiskitRuntimeService()
-            if QiskitRuntimeService.global_service is None
-            else QiskitRuntimeService.global_service
-        )
-        return None, service, service.backend(mode)
     elif mode is not None:  # type: ignore[unreachable]
         raise ValueError("mode must be of type Backend, Session, Batch or None")
     elif get_cm_session():
@@ -170,7 +153,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        validate_no_param_expressions_gen3_runtime([pub.circuit for pub in pubs], self.options)
         if self._backend:
+            if not is_simulator(self._backend):
+                validate_rzz_pubs(pubs)
             for pub in pubs:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([pub.circuit], self._backend.target)

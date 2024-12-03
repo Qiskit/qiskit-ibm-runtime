@@ -23,6 +23,7 @@ transpilation and passes.
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    ConvertIdToDelay
    ConvertISAToClifford

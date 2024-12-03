@@ -25,9 +25,11 @@ Functions
 
 .. autosummary::
     :toctree: ../stubs/
+    :nosignatures:
 
     draw_execution_spans
     draw_layer_error_map
+    draw_layer_errors_swarm
 """
 
 from .draw_layer_error import draw_layer_error_map, draw_layer_errors_swarm

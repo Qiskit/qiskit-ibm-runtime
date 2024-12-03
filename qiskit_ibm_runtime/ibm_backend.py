@@ -223,7 +223,7 @@ class IBMBackend(Backend):
             )
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
-        self._get_defaults()
+        self.defaults()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps
         try:
@@ -239,15 +239,6 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
-    def _get_defaults(self, refresh: bool = False) -> None:
-        """Gets defaults if pulse backend and decodes it"""
-        if (
-            not self._defaults and isinstance(self._configuration, PulseBackendConfiguration)
-        ) or refresh:
-            api_defaults = self._api_client.backend_pulse_defaults(self.name)
-            if api_defaults:
-                self._defaults = defaults_from_server_data(api_defaults)
-
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
@@ -255,12 +246,6 @@ class IBMBackend(Backend):
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
-                # In IBM backend architecture as of today
-                # these features can be only exclusively supported.
-                include_control_flow=self.options.use_fractional_gates is None
-                or not self.options.use_fractional_gates,
-                include_fractional_gates=self.options.use_fractional_gates is None
-                or self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -330,7 +315,7 @@ class IBMBackend(Backend):
             Target
         """
         self.properties()
-        self._get_defaults()
+        self.defaults()
         self._convert_to_target()
         return self._target
 
@@ -340,18 +325,12 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self._get_defaults()
+        self.defaults()
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
             defaults=self._defaults,
-            # In IBM backend architecture as of today
-            # these features can be only exclusively supported.
-            include_control_flow=self.options.use_fractional_gates is None
-            or not self.options.use_fractional_gates,
-            include_fractional_gates=self.options.use_fractional_gates
-            or self.options.use_fractional_gates,
         )
 
     def refresh(self) -> None:
@@ -359,10 +338,11 @@ class IBMBackend(Backend):
         if config := configuration_from_server_data(
             raw_config=self._service._api_client.backend_configuration(self.name, refresh=True),
             instance=self._instance,
+            use_fractional_gates=self.options.use_fractional_gates,
         ):
             self._configuration = config
         self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
-        self._get_defaults(refresh=True)
+        self.defaults(refresh=True)
         self._convert_to_target(refresh=True)
 
     def properties(
@@ -411,7 +391,10 @@ class IBMBackend(Backend):
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if not api_properties:
                 return None
-            backend_properties = properties_from_server_data(api_properties)
+            backend_properties = properties_from_server_data(
+                api_properties,
+                use_fractional_gates=self.options.use_fractional_gates,
+            )
             if datetime:  # Don't cache result.
                 return backend_properties
             self._properties = backend_properties
