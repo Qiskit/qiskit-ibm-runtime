@@ -20,17 +20,29 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple
+from typing import List, Optional, Any, Dict, Union, Tuple, Set
 from urllib.parse import urlparse
+from itertools import chain
+import numpy as np
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit, ControlFlowOp
+from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
+from qiskit.circuit.delay import Delay
+from qiskit.circuit.gate import Instruction
+from qiskit.circuit.library.standard_gates import (
+    RZGate,
+    U1Gate,
+    PhaseGate,
+)
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+
 from .deprecation import deprecate_function
 
 
@@ -67,9 +79,27 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
                 f"The instruction {name} on qubits {qargs} is not supported by the target system."
             )
 
+        # rzz gate is calibrated only for the range [0, pi/2].
+        # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+        # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+        # accurate).
+        if (
+            name == "rzz"
+            and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
+            and (param < 0.0 or param > np.pi / 2 + 1e-10)
+        ):
+            return (
+                f"The instruction {name} on qubits {qargs} is supported only for angles in the "
+                f"range [0, pi/2], but an angle of {param} has been provided."
+            )
+
         if isinstance(operation, ControlFlowOp):
             for sub_circ in operation.blocks:
-                sub_string = _is_isa_circuit_helper(sub_circ, target, qubit_map)
+                inner_map = {
+                    inner: qubit_map[outer]
+                    for outer, inner in zip(instruction.qubits, sub_circ.qubits)
+                }
+                sub_string = _is_isa_circuit_helper(sub_circ, target, inner_map)
                 if sub_string:
                     return sub_string
 
@@ -97,6 +127,99 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
+    """
+    For rzz gates:
+    - Verify that numeric angles are in the range [0, pi/2]
+    - Collect parameterized angles
+
+    Returns one of the following:
+    - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
+    - A list of names of all the parameters that participate in an rzz gate
+
+    Note: we check for parametrized rzz gates inside control flow operation, although fractional
+    gates are actually impossible in combination with dynamic circuits. This is in order to remain
+    correct if this restriction is removed at some point.
+    """
+    angle_params = set()
+
+    for instruction in circuit.data:
+        operation = instruction.operation
+
+        # rzz gate is calibrated only for the range [0, pi/2].
+        # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+        # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+        # accurate).
+        if operation.name == "rzz":
+            angle = instruction.operation.params[0]
+            if isinstance(angle, Parameter):
+                angle_params.add(angle.name)
+            elif not isinstance(angle, ParameterExpression) and (
+                angle < 0.0 or angle > np.pi / 2 + 1e-10
+            ):
+                return (
+                    "The instruction rzz is supported only for angles in the "
+                    f"range [0, pi/2], but an angle of {angle} has been provided."
+                )
+
+        if isinstance(operation, ControlFlowOp):
+            for sub_circ in operation.blocks:
+                body_result = _is_valid_rzz_pub_helper(sub_circ)
+                if isinstance(body_result, str):
+                    return body_result
+                angle_params.update(body_result)
+
+    return angle_params
+
+
+def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+    """Verify that all rzz angles are in the range [0, pi/2].
+
+    Args:
+        pub: A pub to be checked
+
+    Returns:
+        An empty string if all angles are valid, otherwise an error message.
+    """
+    helper_result = _is_valid_rzz_pub_helper(pub.circuit)
+
+    if isinstance(helper_result, str):
+        return helper_result
+
+    if len(helper_result) == 0:
+        return ""
+
+    # helper_result is a set of parameter names
+    rzz_params = list(helper_result)
+
+    # gather all parameter names, in order
+    pub_params = list(chain.from_iterable(pub.parameter_values.data))
+
+    col_indices = np.where(np.isin(pub_params, rzz_params))[0]
+    # col_indices is the indices of columns in the parameter value array that have to be checked
+
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
+    # project only to the parameters that have to be checked
+    arr = arr[:, col_indices]
+
+    # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+    # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+    # accurate).
+    bad = np.where((arr < 0.0) | (arr > np.pi / 2 + 1e-10))
+
+    # `bad` is a tuple of two arrays, which can be empty, like this:
+    # (array([], dtype=int64), array([], dtype=int64))
+    if len(bad[0]) > 0:
+        return (
+            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter "
+            f"'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
+        )
+
+    return ""
+
+
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
     """Checks if the input circuits are dynamic."""
     for circuit in circuits:
@@ -108,6 +231,40 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
                 or getattr(inst.operation, "condition", None) is not None
             ):
                 return True
+    return False
+
+
+def is_fractional_gate(gate: Instruction) -> bool:
+    """Test if a gate is considered fractional by IBM
+
+    Fractional gates produce a rotation based on a continuous input parameter
+    and require a non-zero gate duration. The latter distinction excludes gates
+    like ``RZGate`` which can be implemented in software with no duration. The
+    fractional gate definition is based on the current IBM compiler system
+    which currently can not use fractional gates and dynamic circuit
+    instructions in the same job. In that sense, this function is really
+    testing if a gate is currently incompatible with dynamic circuit
+    instructions for IBM's compiler.
+
+    Args:
+        gate: The instruction to test for status as a fractional gate
+
+    Returns:
+        True if the gate is a fractional gate
+    """
+    # In IBM architecture these gates are virtual-Z and delay,
+    # which don't change control parameter with its gate parameter.
+    exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
+    return len(gate.params) > 0 and not isinstance(gate, exclude_list)
+
+
+def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
+    """Checks if the input circuits contain `ParameterExpression`s"""
+    for circuit in circuits:
+        for instruction in circuit.data:
+            for p in instruction.operation.params:
+                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
+                    return True
     return False
 
 

@@ -16,12 +16,13 @@
 lint:
 	pylint -rn qiskit_ibm_runtime test
 	tools/verify_headers.py qiskit_ibm_runtime test
+	tools/verify_images.py
 
 mypy:
 	mypy --module qiskit_ibm_runtime --package test
 
 style:
-	black --check qiskit_ibm_runtime setup.py test
+	black --check qiskit_ibm_runtime test
 
 unit-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
@@ -40,4 +41,4 @@ unit-test-coverage:
 	coverage lcov
 
 black:
-	black qiskit_ibm_runtime setup.py test
+	black qiskit_ibm_runtime test

@@ -225,11 +225,43 @@ class QiskitRuntimeLocalService:
         options_copy = copy.deepcopy(options)
 
         prim_options = {}
-        if seed_simulator := options_copy.pop("simulator", {}).pop("seed_simulator", None):
+        sim_options = options_copy.get("simulator", {})
+        if seed_simulator := sim_options.pop("seed_simulator", None):
             prim_options["seed_simulator"] = seed_simulator
         if primitive == "sampler":
+            # Create a dummy primitive to check which options it supports
+            dummy_prim = BackendSamplerV2(backend=backend)
+            use_run_options = hasattr(dummy_prim.options, "run_options")
+
+            run_options = {}
+            if use_run_options and "run_options" in options_copy:
+                run_options = options_copy.pop("run_options")
+            if use_run_options and "noise_model" in sim_options:
+                run_options["noise_model"] = sim_options.pop("noise_model")
+
             if default_shots := options_copy.pop("default_shots", None):
                 prim_options["default_shots"] = default_shots
+            if use_run_options and (
+                meas_type := options_copy.get("execution", {}).pop("meas_type", None)
+            ):
+                if meas_type == "classified":
+                    run_options["meas_level"] = 2
+                elif meas_type == "kerneled":
+                    run_options["meas_level"] = 1
+                    run_options["meas_return"] = "single"
+                elif meas_type == "avg_kerneled":
+                    run_options["meas_level"] = 1
+                    run_options["meas_return"] = "avg"
+                else:
+                    # Put unexepcted meas_type back so it is in the warning below
+                    options_copy["execution"]["meas_type"] = meas_type
+
+                if not options_copy["execution"]:
+                    del options_copy["execution"]
+
+            if run_options:
+                prim_options["run_options"] = run_options
+
             primitive_inst = BackendSamplerV2(backend=backend, options=prim_options)
         else:
             if default_shots := options_copy.pop("default_shots", None):
@@ -238,6 +270,9 @@ class QiskitRuntimeLocalService:
                 prim_options["default_precision"] = default_precision
             primitive_inst = BackendEstimatorV2(backend=backend, options=prim_options)
 
+        if not sim_options:
+            # Pop to avoid warning below if all contents were popped above
+            options_copy.pop("simulator", None)
         if options_copy:
             warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
 

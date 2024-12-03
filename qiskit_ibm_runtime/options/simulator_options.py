@@ -37,26 +37,32 @@ class SimulatorOptions:
     For best practice in simulating a backend make sure to pass the
     basis gates and coupling map of that backend.
 
-    Args:
-        noise_model: Noise model for the simulator. Default: ``None``.
-
-        seed_simulator: Random seed to control sampling. Default: ``None``.
-
-        coupling_map: Directed coupling map to target in mapping. If
-            the coupling map is symmetric, both directions need to be specified.
-            Each entry in the list specifies a directed two-qubit interactions,
-            e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
-            Default: ``None``, which implies no connectivity constraints.
-
-        basis_gates: List of basis gate names to unroll to. For example,
-            ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
-            Default: all basis gates supported by the simulator.
     """
 
     noise_model: Optional[Union[UnsetType, dict, NoiseModel]] = Unset
+    r"""Noise model for the simulator. 
+
+        Default: ``None``.
+    """
     seed_simulator: Union[UnsetType, int] = Unset
+    r"""Random seed to control sampling. 
+    
+        Default: ``None``.
+    """
     coupling_map: Union[UnsetType, List[List[int]], CouplingMap] = Unset
+    r"""Directed coupling map to target in mapping. If
+        the coupling map is symmetric, both directions need to be specified.
+        Each entry in the list specifies a directed two-qubit interaction,
+        e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
+    
+        Default: ``None``, which implies no connectivity constraints.
+    """
     basis_gates: Union[UnsetType, List[str]] = Unset
+    r"""List of basis gate names to unroll to. For example,
+        ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
+        
+        Default: all basis gates supported by the simulator.
+    """
 
     @field_validator("noise_model", mode="plain")
     @classmethod

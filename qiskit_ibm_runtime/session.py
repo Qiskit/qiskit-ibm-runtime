@@ -27,7 +27,6 @@ from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
@@ -86,19 +85,13 @@ class Session:
 
     def __init__(
         self,
-        service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
+        backend: Optional[Union[BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
         Args:
-            service: (DEPRECATED) Optional instance of the ``QiskitRuntimeService`` class.
-                If ``None``, the service associated with the backend, if known, is used.
-                Otherwise ``QiskitRuntimeService()`` is used to initialize
-                your default saved account.
-            backend: Instance of ``Backend`` class or string name of backend. Note that passing a
-                backend name is deprecated.
+            backend: Instance of ``Backend`` class.
 
             max_time:
                 Maximum amount of time, a runtime session can be open before being
@@ -115,43 +108,14 @@ class Session:
         self._active = True
         self._session_id = None
 
-        if service:
-            issue_deprecation_msg(
-                msg="The service parameter is deprecated",
-                version="0.26.0",
-                remedy=(
-                    "The service can be extracted from the backend object so "
-                    "it is no longer necessary."
-                ),
-                period="3 months",
-            )
-
-        self._service = service
         if isinstance(backend, IBMBackend):
-            self._service = self._service or backend.service
+            self._service = backend.service
             self._backend = backend
         elif isinstance(backend, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
             self._backend = backend
         else:
-            if not self._service:
-                self._service = (
-                    QiskitRuntimeService()
-                    if QiskitRuntimeService.global_service is None
-                    else QiskitRuntimeService.global_service
-                )
-            if isinstance(backend, str):
-                issue_deprecation_msg(
-                    msg="Passing a backend as a string is deprecated",
-                    version="0.26.0",
-                    remedy="Use the actual backend object instead.",
-                    period="3 months",
-                )
-                self._backend = self._service.backend(backend)
-            elif backend is None:
-                raise ValueError('"backend" is required')
-            else:
-                raise ValueError(f"Invalid backend type {type(backend)}")
+            raise ValueError(f"Invalid backend type {type(backend)}")
 
         self._max_time = (
             max_time
@@ -174,7 +138,7 @@ class Session:
         return None
 
     @_active_session
-    def run(
+    def _run(
         self,
         program_id: str,
         inputs: Dict,
@@ -194,15 +158,6 @@ class Session:
         Returns:
             Submitted job.
         """
-        issue_deprecation_msg(
-            msg="session.run is deprecated",
-            version="0.24.0",
-            remedy="session.run will instead be converted into a private method "
-            "since it should not be called directly.",
-            period="3 months",
-            stacklevel=3,
-        )
-
         options = options or {}
 
         if "instance" not in options:
@@ -211,7 +166,7 @@ class Session:
         options["backend"] = self._backend
 
         if isinstance(self._service, QiskitRuntimeService):
-            job = self._service.run(
+            job = self._service._run(
                 program_id=program_id,  # type: ignore[arg-type]
                 options=options,
                 inputs=inputs,
@@ -231,11 +186,6 @@ class Session:
             )
 
         return job
-
-    @_active_session
-    def _run(self, *args: Any, **kwargs: Any) -> RuntimeJob:
-        """Private run method"""
-        return self.run(*args, **kwargs)
 
     def cancel(self) -> None:
         """Cancel all pending jobs in a session."""
@@ -392,7 +342,7 @@ class Session:
             )
 
         cls._create_new_session = False
-        session = cls(service, backend)
+        session = cls(backend)
         cls._create_new_session = True
         if state == "closed":
             session._active = False

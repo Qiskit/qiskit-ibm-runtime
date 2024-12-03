@@ -17,21 +17,24 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, Union, TypeVar, Generic, Type
 import logging
 from dataclasses import asdict, replace
-import warnings
-
-from pydantic import ValidationError
 
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from .options.options import BaseOptions, OptionsV2
-from .options.utils import merge_options, merge_options_v2
+from .options.utils import merge_options_v2
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
-from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
+
+from .utils import (
+    validate_isa_circuits,
+    validate_no_dd_with_dynamic_circuits,
+    validate_rzz_pubs,
+    validate_no_param_expressions_gen3_runtime,
+)
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg, deprecate_function
+from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -46,7 +49,7 @@ OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
 def _get_mode_service_backend(
-    mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None
+    mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
 ) -> tuple[
     Union[Session, Batch, None],
     Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
@@ -67,43 +70,21 @@ def _get_mode_service_backend(
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
         if get_cm_session():
-            warnings.warn(
-                (
-                    "Passing a backend as the mode currently runs the job in job mode even "
-                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
-                    "version 0.26.0, this behavior is deprecated and in a future "
-                    "release no sooner than than 3 months "
-                    "after the release date, the session/batch will take precendence and "
-                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
-                    "mode, pass in the session/batch or leave the mode parameter emtpy."
-                ),
-                DeprecationWarning,
-                stacklevel=4,
+            logger.warning(
+                "A backend was passed in as the mode but a session context manager "
+                "is open so this job will run inside this session/batch "
+                "instead of in job mode."
             )
+            if get_cm_session()._backend != mode:
+                raise ValueError(
+                    "The backend passed in to the primitive is different from the session backend. "
+                    "Please check which backend you intend to use or leave the mode parameter "
+                    "empty to use the session backend."
+                )
+            return get_cm_session(), mode.service, mode
         return None, mode.service, mode
     elif isinstance(mode, (BackendV1, BackendV2)):
         return None, QiskitRuntimeLocalService(), mode
-    elif isinstance(mode, str):
-        if get_cm_session():
-            warnings.warn(
-                (
-                    "Passing a backend as the mode currently runs the job in job mode even "
-                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
-                    "version 0.26.0, this behavior is deprecated and in a future "
-                    "release no sooner than than 3 months "
-                    "after the release date, the session/batch will take precendence and "
-                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
-                    "mode, pass in the session/batch or leave the mode parameter emtpy."
-                ),
-                DeprecationWarning,
-                stacklevel=4,
-            )
-        service = (
-            QiskitRuntimeService()
-            if QiskitRuntimeService.global_service is None
-            else QiskitRuntimeService.global_service
-        )
-        return None, service, service.backend(mode)
     elif mode is not None:  # type: ignore[unreachable]
         raise ValueError("mode must be of type Backend, Session, Batch or None")
     elif get_cm_session():
@@ -172,7 +153,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        validate_no_param_expressions_gen3_runtime([pub.circuit for pub in pubs], self.options)
         if self._backend:
+            if not is_simulator(self._backend):
+                validate_rzz_pubs(pubs)
             for pub in pubs:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([pub.circuit], self._backend.target)
@@ -194,7 +178,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         # Batch or Session
         if self._mode:
-            return self._mode.run(
+            return self._mode._run(
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
@@ -208,7 +192,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 runtime_options["instance"] = self._backend._instance
 
         if isinstance(self._service, QiskitRuntimeService):
-            return self._service.run(
+            return self._service._run(
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
@@ -221,16 +205,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             options=runtime_options,
             inputs=primitive_inputs,
         )
-
-    @property
-    def session(self) -> Optional[Session]:
-        """Return session used by this primitive.
-
-        Returns:
-            Session used by this primitive, or ``None`` if session is not used.
-        """
-        deprecate_function("session", "0.24.0", "Please use the 'mode' property instead.")
-        return self._mode
 
     @property
     def mode(self) -> Optional[Session | Batch]:
@@ -246,23 +220,17 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return options"""
         return self._options
 
+    def backend(self) -> BackendV1 | BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
+
     def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            try:
-                self._options = self._options_class(**merge_options_v2(default_options, options))
-            except ValidationError:
-                self._options = self._options_class(**merge_options(default_options, options))
-                issue_deprecation_msg(
-                    "Specifying options without the full dictionary structure is deprecated",
-                    "0.24.0",
-                    "Instead, pass in a fully structured dictionary. For example, use "
-                    "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
-                    4,
-                )
+            self._options = self._options_class(**merge_options_v2(default_options, options))
 
         elif isinstance(options, self._options_class):
             self._options = replace(options)

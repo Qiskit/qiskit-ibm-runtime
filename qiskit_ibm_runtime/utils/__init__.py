@@ -18,6 +18,7 @@ from .converters import (
     seconds_to_duration,
     duration_difference,
 )
+from .embeddings import Embedding
 from .utils import (
     to_python_identifier,
     is_crn,
@@ -32,6 +33,8 @@ from .validations import (
     validate_no_dd_with_dynamic_circuits,
     validate_isa_circuits,
     validate_job_tags,
+    validate_rzz_pubs,
+    validate_no_param_expressions_gen3_runtime,
 )
 
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string

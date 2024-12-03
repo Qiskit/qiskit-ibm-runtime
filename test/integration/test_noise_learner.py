@@ -31,10 +31,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        try:
-            self.backend = self.service.backend("test_eagle")
-        except:
-            raise SkipTest("test_eagle not available in this environment")
+
+        self._backend = self.service.backend(self.dependencies.qpu)
 
         c1 = QuantumCircuit(2)
         c1.ecr(0, 1)
@@ -58,10 +56,10 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with default options."""
-        backend = self.backend
-
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
         options = NoiseLearnerOptions()
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
         job = learner.run(self.circuits)
 
@@ -70,12 +68,12 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with non-default options."""
-        backend = self.backend
-
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
         job = learner.run(self.circuits)
 
@@ -87,11 +85,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
-        backend = self.backend
-
+        if self._backend.simulator:
+            raise SkipTest("Skip if simulator backend is used.")
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
         job = learner.run(self.circuits)
 
@@ -104,7 +102,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_learner_plus_estimator(self, service):  # pylint: disable=unused-argument
         """Test feeding noise learner data to estimator."""
-        backend = self.backend
+        if self._backend.simulator:
+            raise SkipTest("Simulator does not have coupling map")
 
         options = EstimatorOptions()
         options.resilience.zne_mitigation = True  # pylint: disable=assigning-non-slot
@@ -121,7 +120,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         pubs = [(circuit, "Z" * circuit.num_qubits)]
 
-        with Session(service, backend) as session:
+        with Session(self._backend) as session:
             learner = NoiseLearner(mode=session, options=options)
             learner_job = learner.run(self.circuits)
             noise_model = learner_job.result()
@@ -160,7 +159,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(circuit.num_qubits, error.num_qubits)
 
         metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), self.backend.name)
+        self.assertEqual(metadata.pop("backend", None), self._backend.name)
         for key, val in expected_input_options.items():
             metadatum = metadata["input_options"].pop(key, None)
             self.assertEqual(val, metadatum)

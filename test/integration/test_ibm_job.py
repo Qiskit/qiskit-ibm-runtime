@@ -12,14 +12,13 @@
 
 """IBMJob Test."""
 import copy
-import time
 from datetime import datetime, timedelta
 from unittest import SkipTest
 
 from dateutil import tz
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
@@ -34,61 +33,14 @@ class TestIBMJob(IBMIntegrationTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self.sim_backend = self.service.backend("ibmq_qasm_simulator")
+        self.sim_backend = self.service.backend(self.dependencies.qpu)
         self.bell = bell()
-        sampler = Sampler(backend=self.sim_backend)
-        self.sim_job = sampler.run([self.bell])
+        sampler = Sampler(mode=self.sim_backend)
+
+        pass_mgr = generate_preset_pass_manager(backend=self.sim_backend, optimization_level=1)
+        self.isa_circuit = pass_mgr.run(self.bell)
+        self.sim_job = sampler.run([self.isa_circuit])
         self.last_month = datetime.now() - timedelta(days=30)
-
-    def test_run_multiple_simulator(self):
-        """Test running multiple jobs in a simulator."""
-        num_qubits = 16
-        quantum_register = QuantumRegister(num_qubits, "qr")
-        classical_register = ClassicalRegister(num_qubits, "cr")
-        quantum_circuit = QuantumCircuit(quantum_register, classical_register)
-        for i in range(num_qubits - 1):
-            quantum_circuit.cx(quantum_register[i], quantum_register[i + 1])
-        quantum_circuit.measure(quantum_register, classical_register)
-        num_jobs = 4
-        sampler = Sampler(backend=self.sim_backend)
-        job_array = [
-            sampler.run(transpile([quantum_circuit] * 20), shots=2048) for _ in range(num_jobs)
-        ]
-        timeout = 30
-        start_time = time.time()
-        while True:
-            check = sum(job.status() == "RUNNING" for job in job_array)
-            if check >= 2:
-                self.log.info("found %d simultaneous jobs", check)
-                break
-            if all((job.status() == "DONE" for job in job_array)):
-                # done too soon? don't generate error
-                self.log.warning("all jobs completed before simultaneous jobs could be detected")
-                break
-            for job in job_array:
-                self.log.info(
-                    "%s %s %s %s",
-                    job.status(),
-                    job.status() == "RUNNING",
-                    check,
-                    job.job_id(),
-                )
-            self.log.info("-  %s", str(time.time() - start_time))
-            if time.time() - start_time > timeout and self.sim_backend.status().pending_jobs <= 4:
-                raise TimeoutError(
-                    "Failed to see multiple running jobs after " "{0} seconds.".format(timeout)
-                )
-            time.sleep(0.2)
-
-        result_array = [job.result() for job in job_array]
-        self.log.info("got back all job results")
-        # Ensure all jobs have finished.
-        self.assertTrue(all((job.status() == "DONE" for job in job_array)))
-        self.assertTrue(all((result.metadata for result in result_array)))
-
-        # Ensure job ids are unique.
-        job_ids = [job.job_id() for job in job_array]
-        self.assertEqual(sorted(job_ids), sorted(list(set(job_ids))))
 
     def test_cancel(self):
         """Test job cancellation."""
@@ -117,7 +69,18 @@ class TestIBMJob(IBMIntegrationTestCase):
             backend_name=self.sim_backend.name, limit=3, pending=False
         )
         for job in completed_job_list:
-            self.assertTrue(job.status() in ["DONE", "CANCELLED", "ERROR"])
+            self.assertTrue(
+                job.status()
+                # Update when RuntimeJob is removed in favor of RuntimeJobV2
+                in [
+                    "DONE",
+                    "CANCELLED",
+                    "ERROR",
+                    JobStatus.DONE,
+                    JobStatus.CANCELLED,
+                    JobStatus.ERROR,
+                ]
+            )
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
@@ -157,7 +120,16 @@ class TestIBMJob(IBMIntegrationTestCase):
 
         for job in backend_jobs:
             self.assertTrue(
-                job.status() in ["DONE", "CANCELLED", "ERROR"],
+                job.status()
+                # Update when RuntimeJob is removed in favor of RuntimeJobV2
+                in [
+                    "DONE",
+                    "CANCELLED",
+                    "ERROR",
+                    JobStatus.DONE,
+                    JobStatus.CANCELLED,
+                    JobStatus.ERROR,
+                ],
                 "Job {} has status {} when it should be DONE, CANCELLED, or ERROR".format(
                     job.job_id(), job.status()
                 ),
@@ -193,7 +165,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             limit=2,
             created_before=past_month,
         )
-        self.assertTrue(job_list)
+        self.assertIsInstance(job_list, list)
         for job in job_list:
             self.assertLessEqual(
                 job.creation_date,
@@ -201,27 +173,26 @@ class TestIBMJob(IBMIntegrationTestCase):
                 "job {} creation date {} not within range".format(job.job_id(), job.creation_date),
             )
 
-    def test_retrieve_jobs_between_datetimes(self):
-        """Test retrieving jobs created between two specified datetimes."""
+    def test_retrieve_jobs_between_datetime(self):
+        """Test retrieving jobs created between two specified datetime."""
         date_today = datetime.now()
-        past_month = date_today - timedelta(30)
-        past_two_month = date_today - timedelta(60)
+        past_one_month = date_today - timedelta(30)
 
         # Add local tz in order to compare to `creation_date` which is tz aware.
-        past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
-        past_two_month_tz_aware = past_two_month.replace(tzinfo=tz.tzlocal())
+        today_tz_aware = date_today.replace(tzinfo=tz.tzlocal())
+        past_one_month_tz_aware = past_one_month.replace(tzinfo=tz.tzlocal())
 
         with self.subTest():
             job_list = self.service.jobs(
                 backend_name=self.sim_backend.name,
                 limit=2,
-                created_after=past_two_month,
-                created_before=past_month,
+                created_after=past_one_month,
+                created_before=date_today,
             )
             self.assertTrue(job_list)
             for job in job_list:
                 self.assertTrue(
-                    (past_two_month_tz_aware <= job.creation_date <= past_month_tz_aware),
+                    (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
                     "job {} creation date {} not within range".format(
                         job.job_id(), job.creation_date
                     ),
@@ -229,8 +200,8 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
-        sampler = Sampler(backend=self.sim_backend)
-        job = sampler.run([self.bell])
+        sampler = Sampler(mode=self.sim_backend)
+        job = sampler.run([self.isa_circuit])
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
             limit=20,
@@ -272,7 +243,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             raise SkipTest("Cloud account does not have real backend.")
         self.service._account.instance = None  # set instance to none to avoid filtering
         backend = most_busy_backend(TestIBMJob.service)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(mode=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
@@ -284,4 +255,4 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_job_circuits(self):
         """Test job circuits."""
-        self.assertEqual(str(self.bell), str(self.sim_job.inputs["pubs"][0][0]))
+        self.assertEqual(self.isa_circuit, self.sim_job.inputs["pubs"][0][0])

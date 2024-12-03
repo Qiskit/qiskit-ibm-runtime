@@ -13,6 +13,31 @@ https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 In addition to the general guidelines there are specific details for
 contributing to qiskit-ibm-runtime, these are documented below.
 
+### Installing from source
+
+To install from source download this repository and follow the next steps.
+
+- Create a virtual environment
+``` {.bash}
+$ python3 -m venv .venv
+```
+- Activate your virtual environment
+``` {.bash}
+$ source .venv/bin/activate
+```
+- Install the dependencies
+``` {.bash}
+$ pip install -e .
+```
+- Install the visualization dependencies
+``` {.bash}
+$ pip install -e ".[visualization]"
+```
+- Install the development dependencies
+``` {.bash}
+$ pip install -e ".[dev]"
+```
+
 ### Open an issue
 
 * For documentation issues relating to pages in the Start, Build, Transpile, Verify, Run, and Migration guides sections of https://docs.quantum.ibm.com, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
@@ -155,7 +180,7 @@ Finally, preview the docs build by following the instructions in
 Building The release notes are part of the standard qiskit-ibm-runtime
 documentation builds. To check what the rendered html output of the release
 notes will look like for the current state of the repo you can run:
-`tox -edocs` which will build all the documentation into `docs/_build/html`
+`tox -e docs` which will build all the documentation into `docs/_build/html`
 and the release notes in particular will be located at
 `docs/_build/html/release_notes.html`.
 
@@ -206,6 +231,7 @@ Sample configuration for IBM Quantum
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
 QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
+QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
 ```
 
 Sample configuration for IBM Cloud
@@ -213,13 +239,16 @@ Sample configuration for IBM Cloud
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
+QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
 
 
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
-upon.
+upon. 
+
+For example, in your github fork settings, add the environment you want to run tests on (ibm-quantum-production, ibm-quantum-staging, ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 
 ### Style guide
 

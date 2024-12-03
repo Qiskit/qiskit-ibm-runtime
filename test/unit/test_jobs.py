@@ -189,14 +189,6 @@ class TestRuntimeJob(IBMTestCase):
             self.assertTrue(result)
 
     @run_quantum_and_cloud_fake
-    def test_interim_results(self, service):
-        """Test getting interim results."""
-        job = run_program(service)
-        # TODO maybe a bit more validation on the returned interim results
-        interim_results = job.interim_results()
-        self.assertTrue(interim_results)
-
-    @run_quantum_and_cloud_fake
     def test_job_status(self, service):
         """Test job status."""
         job = run_program(service)

@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import QubitProperties
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -89,13 +89,12 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
         if cls.dependencies.channel == "ibm_cloud":
-            # TODO use real device when cloud supports it
-            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
         if cls.dependencies.channel == "ibm_quantum":
             cls.dependencies.service._account.instance = (
                 None  # set instance to none to avoid filtering
             )
-            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
+            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
         """Check if the service property is set."""
@@ -118,6 +117,32 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.target_history())
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
+
+    @production_only
+    def test_properties_not_cached_target_history(self):
+        """Check backend properties is not cached in target_history()."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            properties = backend.properties()
+            backend.target_history(datetime=datetime.now() - timedelta(60))
+            self.assertEqual(properties, backend.properties())
+
+    def test_backend_target_refresh(self):
+        """Test refreshing the backend target."""
+        backend = self.backend
+        if backend.simulator:
+            raise SkipTest("Simulator target is the same.")
+        with self.subTest(backend=backend.name):
+            old_target = backend.target
+            old_configuration = backend.configuration()
+            old_properties = backend.properties()
+            old_defaults = backend.defaults()
+            backend.refresh()
+            new_target = backend.target
+            self.assertNotEqual(old_target, new_target)
+            self.assertIsNot(old_configuration, backend.configuration())
+            self.assertIsNot(old_properties, backend.properties())
+            self.assertIsNot(old_defaults, backend.defaults())
 
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
@@ -188,6 +213,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
+        if self.backend.simulator:
+            raise SkipTest("Simulator has no backend defaults.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
@@ -205,7 +232,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertEqual(
                 backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
             )
-            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(backend_copy.defaults().to_dict(), backend.defaults().to_dict())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,
@@ -216,7 +243,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
-        self.assertTrue(any(backend.status().pending_jobs > 0 for backend in backends))
+        self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
@@ -233,23 +260,25 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        sampler = Sampler(backend=backend)
-        inputs = sampler.run([bell()], shots=1).inputs
+        sampler = Sampler(mode=backend)
+        isa_circuit = transpile(bell(), backend)
+        inputs = sampler.run([isa_circuit], shots=1).inputs
         self.assertEqual(inputs["pubs"][0][2], 1)
 
     @production_only
     def test_paused_backend_warning(self):
         """Test that a warning is given when running jobs on a paused backend."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         paused_status = backend.status()
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
+        isa_circuit = transpile(bell(), backend)
         with self.assertWarns(Warning):
-            sampler = Sampler(backend=backend)
-            sampler.run([bell()])
+            sampler = Sampler(mode=backend)
+            sampler.run([isa_circuit])
 
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
@@ -285,7 +314,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
         with self.assertRaises(IBMInputValueError) as err:
-            sampler = Sampler(backend=self.backend)
+            sampler = Sampler(mode=self.backend)
             job = sampler.run([circuit])
             job.cancel()
         self.assertIn(

@@ -15,9 +15,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import overload, Iterable, Iterator
+from typing import overload, Iterable, Iterator, TYPE_CHECKING
 
 from .execution_span import ExecutionSpan
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
 
 
 class ExecutionSpans:
@@ -113,3 +116,29 @@ class ExecutionSpans:
         obj = self if inplace else ExecutionSpans(self)
         obj._spans.sort()
         return obj
+
+    def draw(
+        self, name: str = None, normalize_y: bool = False, line_width: int = 4
+    ) -> PlotlyFigure:
+        """Draw these execution spans.
+
+        .. note::
+            To draw multiple sets of execution spans at once, for example coming from multiple
+            jobs, consider calling :meth:`~qiskit_ibm_runtime.visualization.draw_execution_spans`
+            directly.
+
+        Args:
+            name: The name of this set of spans.
+            normalize_y: Whether to display the y-axis units as a percentage of work
+                complete, rather than cumulative shots completed.
+            line_width: The thickness of line segments.
+
+        Returns:
+            A plotly figure.
+        """
+        # pylint: disable=import-outside-toplevel, cyclic-import
+        from ..visualization import draw_execution_spans
+
+        return draw_execution_spans(
+            self, normalize_y=normalize_y, line_width=line_width, names=name
+        )

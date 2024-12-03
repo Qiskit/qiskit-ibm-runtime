@@ -15,31 +15,11 @@ Fake Johannesburg device (20 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_qasm_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeJohannesburgV2(fake_backend.FakeBackendV2):
     """A fake Johannesburg V2 backend.
-
-    .. code-block:: text
-
-        00 ↔ 01 ↔ 02 ↔ 03 ↔ 04
-         ↕                   ↕
-        05 ↔ 06 ↔ 07 ↔ 08 ↔ 09
-         ↕         ↕         ↕
-        10 ↔ 11 ↔ 12 ↔ 13 ↔ 14
-         ↕                   ↕
-        15 ↔ 16 ↔ 17 ↔ 18 ↔ 19
-    """
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_johannesburg.json"  # type: ignore
-    props_filename = "props_johannesburg.json"  # type: ignore
-    backend_name = "fake_johannesburg"  # type: ignore
-
-
-class FakeJohannesburg(fake_qasm_backend.FakeQasmBackend):
-    """A fake Johannesburg backend.
 
     .. code-block:: text
 

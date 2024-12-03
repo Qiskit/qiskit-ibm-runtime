@@ -36,7 +36,7 @@ class TestRetrieveJobs(IBMTestCase):
         job = run_program(service=service, program_id=program_id, inputs=params)
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
-        self.assertEqual(program_id, rjob.program_id)
+        self.assertEqual(program_id, rjob.primitive_id)
 
     @run_quantum_and_cloud_fake
     def test_jobs_no_limit(self, service):
@@ -186,7 +186,7 @@ class TestRetrieveJobs(IBMTestCase):
             job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=instance)
         self.assertTrue(rjobs)
-        self.assertEqual(program_id, rjobs[0].program_id)
+        self.assertEqual(program_id, rjobs[0].primitive_id)
         self.assertEqual(1, len(rjobs))
         rjobs = service.jobs(program_id=program_id, instance="nohub1/nogroup1/noproject1")
         self.assertFalse(rjobs)

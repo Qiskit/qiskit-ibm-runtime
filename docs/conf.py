@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.30.0'
+release = '0.34.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -38,8 +38,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     # This is used by qiskit/documentation to generate links to github.com.
     "sphinx.ext.linkcode",
-    'jupyter_sphinx',
-    'sphinx_autodoc_typehints',
     'nbsphinx',
     'sphinxcontrib.katex',
     'matplotlib.sphinxext.plot_directive',
@@ -83,10 +81,19 @@ intersphinx_mapping = {
 # -----------------------------------------------------------------------------
 
 autosummary_generate = True
-
+autosummary_generate_overwrite = False
+autoclass_content = "both"
+autodoc_typehints = "description"
 autodoc_default_options = {
-    'inherited-members': None,
+    "inherited-members": None,
+    "show-inheritance": True,
 }
+autodoc_type_aliases = {
+    "EstimatorPubLike": "EstimatorPubLike",
+    "SamplerPubLike": "SamplerPubLike",
+}
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 
 
 # If true, figures, tables and code-blocks are automatically numbered if they
@@ -130,7 +137,6 @@ html_title = f"{project} {release}"
 
 html_last_updated_fmt = '%Y/%m/%d'
 html_sourcelink_suffix = ''
-autoclass_content = 'both'
 
 
 # ----------------------------------------------------------------------------------
@@ -176,17 +182,26 @@ def linkcode_resolve(domain, info):
     if module is None or "qiskit_ibm_runtime" not in module_name:
         return None
 
+    def is_valid_code_object(obj):
+        return (
+            inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
+        )
+
     obj = module
     for part in info["fullname"].split("."):
         try:
             obj = getattr(obj, part)
         except AttributeError:
             return None
-        is_valid_code_object = (
-            inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
-        )
-        if not is_valid_code_object:
+        if not is_valid_code_object(obj):
             return None
+
+    # Unwrap decorators. This requires they used `functools.wrap()`.
+    while hasattr(obj, "__wrapped__"):
+        obj = getattr(obj, "__wrapped__")
+        if not is_valid_code_object(obj):
+            return None
+
     try:
         full_file_name = inspect.getsourcefile(obj)
     except TypeError:

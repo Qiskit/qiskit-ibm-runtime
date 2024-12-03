@@ -26,7 +26,6 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
-from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -54,8 +53,6 @@ SERVICE_NAME = "runtime"
 class QiskitRuntimeService:
     """Class for interacting with the Qiskit Runtime service."""
 
-    global_service = None
-
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         channel = kwargs.get("channel", None)
         if channel == "local":
@@ -76,7 +73,6 @@ class QiskitRuntimeService:
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
-        channel_strategy: Optional[str] = None,
         private_endpoint: Optional[bool] = None,
         url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
     ) -> None:
@@ -116,7 +112,6 @@ class QiskitRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
-            channel_strategy: Error mitigation strategy.
             private_endpoint: Connect to private API URL.
             url_resolver: Function used to resolve the runtime url.
 
@@ -137,7 +132,6 @@ class QiskitRuntimeService:
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
-            channel_strategy=channel_strategy,
         )
 
         if private_endpoint is not None:
@@ -154,7 +148,6 @@ class QiskitRuntimeService:
             url_resolver=url_resolver,
         )
 
-        self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
@@ -162,7 +155,6 @@ class QiskitRuntimeService:
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
-            self._validate_channel_strategy()
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
@@ -184,7 +176,6 @@ class QiskitRuntimeService:
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
-        QiskitRuntimeService.global_service = self
 
     def _discover_account(
         self,
@@ -196,19 +187,11 @@ class QiskitRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
-        channel_strategy: Optional[str] = None,
     ) -> Account:
         """Discover account."""
         account = None
         verify_ = verify or True
-        if channel_strategy:
-            if channel_strategy not in ["q-ctrl", "default"]:
-                raise ValueError(f"{channel_strategy} is not a valid channel strategy.")
-            if channel and channel != "ibm_cloud":
-                raise ValueError(
-                    f"The channel strategy {channel_strategy} is "
-                    "only supported on the ibm_cloud channel."
-                )
+
         if name:
             if filename:
                 if any([channel, token, url]):
@@ -237,7 +220,6 @@ class QiskitRuntimeService:
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                    channel_strategy=channel_strategy,
                 )
             else:
                 if url:
@@ -268,35 +250,13 @@ class QiskitRuntimeService:
 
         return account
 
-    def _validate_channel_strategy(self) -> None:
-        """Raise an error if the passed in channel_strategy and
-        instance do not match.
-
-        """
-        qctrl_enabled = self._api_client.is_qctrl_enabled()
-        if self._channel_strategy == "q-ctrl":
-            if not qctrl_enabled:
-                raise IBMNotAuthorizedError(
-                    "The instance passed in is not compatible with Q-CTRL channel strategy. "
-                    "Please switch to or create an instance with the Q-CTRL strategy enabled. "
-                    "See https://cloud.ibm.com/docs/quantum-computing?"
-                    "topic=quantum-computing-get-started for more information"
-                )
-        else:
-            if qctrl_enabled:
-                raise IBMNotAuthorizedError(
-                    "The instance passed in is only compatible with Q-CTRL performance "
-                    "management strategy. "
-                    "To use this instance, set channel_strategy='q-ctrl'."
-                )
-
     def _discover_cloud_backends(self) -> List[str]:
         """Return the remote backends available for this service instance.
 
         Returns:
             A list of the remote backend names.
         """
-        return self._api_client.list_backends(channel_strategy=self._channel_strategy)
+        return self._api_client.list_backends()
 
     def _resolve_crn(self, account: Account) -> None:
         account.resolve_crn()
@@ -474,7 +434,7 @@ class QiskitRuntimeService:
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -495,14 +455,16 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simultaneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backends.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -548,7 +510,9 @@ class QiskitRuntimeService:
                 backend_names = self._backend_allowed_list
                 hgp = None
             for backend_name in backend_names:
-                if backend := self._create_backend_obj(backend_name, instance=hgp):
+                if backend := self._create_backend_obj(
+                    backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
+                ):
                     backends.append(backend)
         else:
             if instance:
@@ -557,7 +521,9 @@ class QiskitRuntimeService:
                 )
             for backend_name in self._backend_allowed_list:
                 if backend := self._create_backend_obj(
-                    backend_name, instance=self._account.instance
+                    backend_name,
+                    instance=self._account.instance,
+                    use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
 
@@ -576,7 +542,7 @@ class QiskitRuntimeService:
                 )
             )
 
-        # Set fractional gate feature before Target object is created.
+        # Set fractional gate flag for use when loading properties or refreshing backend.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
@@ -584,13 +550,19 @@ class QiskitRuntimeService:
     def _create_backend_obj(
         self,
         backend_name: str,
-        instance: Optional[str] = None,
+        instance: Optional[str],
+        use_fractional_gates: Optional[bool],
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
         Args:
             backend_name: Name of backend to instantiate.
             instance: the current h/g/p.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates, False to include control flow operations, and
+                None to include both fractional gates and control flow
+                operations.  See :meth:`~.QiskitRuntimeService.backends` for
+                further details.
 
         Returns:
             A backend object.
@@ -601,6 +573,7 @@ class QiskitRuntimeService:
         if config := configuration_from_server_data(
             raw_config=self._api_client.backend_configuration(backend_name),
             instance=instance,
+            use_fractional_gates=use_fractional_gates,
         ):
             if self._channel == "ibm_quantum":
                 if not instance:
@@ -676,7 +649,6 @@ class QiskitRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
-        channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
     ) -> None:
@@ -698,7 +670,6 @@ class QiskitRuntimeService:
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
-            channel_strategy: Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
@@ -714,7 +685,6 @@ class QiskitRuntimeService:
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
             overwrite=overwrite,
-            channel_strategy=channel_strategy,
             set_as_default=set_as_default,
             private_endpoint=private_endpoint,
         )
@@ -751,9 +721,9 @@ class QiskitRuntimeService:
 
     def backend(
         self,
-        name: str = None,
+        name: str,
         instance: Optional[str] = None,
-        use_fractional_gates: bool = False,
+        use_fractional_gates: Optional[bool] = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -764,14 +734,16 @@ class QiskitRuntimeService:
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates in target. Currently this feature cannot be used
-                simulataneously with dynamic circuits, PEC, PEA, or gate twirling.
-                When this flag is set, control flow instructions are automatically
-                removed from the backend target.
-                When you use the dynamic circuits feature (e.g. if_else) in your
+                fractional gates. Currently this feature cannot be used
+                simultaneously with dynamic circuits, PEC, PEA, or gate
+                twirling.  When this flag is set, control flow instructions are
+                automatically removed from the backend.
+                When you use a dynamic circuits feature (e.g. ``if_else``) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
                 supports dynamic circuits and fractional gates simultaneously.
+                If ``None``, then both fractional gates and control flow operations are
+                included in the backends.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -779,33 +751,18 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        # pylint: disable=arguments-differ, line-too-long
-        if not name:
-            warnings.warn(
-                (
-                    "The `name` parameter will be required in a future release no sooner than "
-                    "3 months after the release of qiskit-ibm-runtime 0.24.0 ."
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
+                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
-    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
-    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
-        """Return a single backend matching the specified filtering."""
-        return self.backend(name, **kwargs)
-
-    def run(
+    def _run(
         self,
         program_id: str,
         inputs: Dict,
@@ -844,13 +801,7 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        issue_deprecation_msg(
-            msg="service.run is deprecated",
-            version="0.24.0",
-            remedy="service.run will instead be converted into a private method "
-            "since it should not be called directly.",
-            period="3 months",
-        )
+
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -898,9 +849,6 @@ class QiskitRuntimeService:
                 start_session=start_session,
                 session_time=qrt_options.session_time,
                 private=qrt_options.private,
-                channel_strategy=(
-                    None if self._channel_strategy == "default" else self._channel_strategy
-                ),
             )
             if self._channel == "ibm_quantum":
                 messages = response.get("messages")
@@ -928,10 +876,6 @@ class QiskitRuntimeService:
             service=self,
             version=version,
         )
-
-    def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
-        """Private run method"""
-        return self.run(*args, **kwargs)
 
     def check_pending_jobs(self) -> None:
         """Check the number of pending jobs and wait for the oldest pending job if
@@ -1241,5 +1185,4 @@ class QiskitRuntimeService:
             self._channel == other._channel
             and self._account.instance == other._account.instance
             and self._account.token == other._account.token
-            and self._channel_strategy == other._channel_strategy
         )

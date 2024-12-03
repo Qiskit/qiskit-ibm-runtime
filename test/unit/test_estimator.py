@@ -23,7 +23,6 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime import Session, EstimatorV2, EstimatorOptions, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
-from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     get_mocked_backend,
@@ -50,9 +49,9 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         t_pubs = transpile_pubs(abs_pubs, backend, "estimator")
 
-        inst = EstimatorV2(backend=backend)
+        inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
@@ -72,16 +71,17 @@ class TestEstimatorV2(IBMTestCase):
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
-            {"resilience_level": 4, "optimization_level": 1},
-            {"optimization_level": 4, "resilience_level": 2},
+            {
+                "resilience_level": 4,
+            },
         ]
 
+        backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             for bad_opt in options_bad:
-                inst = EstimatorV2(session=session)
+                inst = EstimatorV2(mode=session)
                 with self.assertRaises(ValueError) as exc:
                     inst.options.update(**bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
@@ -92,7 +92,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         with self.assertRaises(ValueError) as exc:
             estimator.run(**get_primitive_inputs(estimator), precision=0)
         self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
@@ -102,7 +102,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
-        inst = EstimatorV2(backend=backend, options={"resilience": {"pec_mitigation": True}})
+        inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
         self.assertIn("coupling map", str(exc.exception))
@@ -114,10 +114,6 @@ class TestEstimatorV2(IBMTestCase):
             (
                 EstimatorOptions(default_shots=1024),  # pylint: disable=unexpected-keyword-arg
                 {"default_shots": 1024},
-            ),
-            (
-                EstimatorOptions(optimization_level=1),  # pylint: disable=unexpected-keyword-arg
-                {"transpilation": {"optimization_level": 1}},
             ),
             (
                 {
@@ -132,9 +128,9 @@ class TestEstimatorV2(IBMTestCase):
         ]
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = EstimatorV2(backend=backend, options=options)
+                inst = EstimatorV2(mode=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
-                options = backend.service.run.call_args.kwargs["inputs"]["options"]
+                options = backend.service._run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
                     dict_paritally_equal(options, expected),
                     f"{options} and {expected} not partially equal.",
@@ -148,7 +144,7 @@ class TestEstimatorV2(IBMTestCase):
         """Test invalid resilience options."""
         backend = get_mocked_backend()
         with self.assertRaises(ValueError) as exc:
-            inst = EstimatorV2(backend=backend, options={"resilience": res_opt})
+            inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
         self.assertIn(list(res_opt.values())[0], str(exc.exception))
         if len(res_opt.keys()) > 1:
@@ -181,7 +177,7 @@ class TestEstimatorV2(IBMTestCase):
         circuit.cx(0, 1)
         isa_circuit = transpile(circuit, backend=backend)
 
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         for obs in all_obs:
             with self.subTest(obs=obs):
                 pub = (isa_circuit, remap_observables(obs, isa_circuit))
@@ -217,7 +213,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         for obs in all_obs:
             with self.subTest(obs=obs):
                 obs1 = remap_observables(obs[0], circuit1)
@@ -239,7 +235,7 @@ class TestEstimatorV2(IBMTestCase):
         ]
 
         circuit = QuantumCircuit(2)
-        estimator = EstimatorV2(backend=get_mocked_backend())
+        estimator = EstimatorV2(mode=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):
@@ -256,7 +252,7 @@ class TestEstimatorV2(IBMTestCase):
 
         in_pubs = [(dynamic_circuit, ["XXX"])]
         backend = get_mocked_backend()
-        inst = EstimatorV2(backend=backend)
+        inst = EstimatorV2(mode=backend)
         inst.options.dynamical_decoupling.enable = True
         with self.assertRaisesRegex(
             IBMInputValueError,
@@ -267,7 +263,7 @@ class TestEstimatorV2(IBMTestCase):
     def test_estimator_validations(self):
         """Test exceptions when failing client-side validations."""
         backend = get_mocked_backend()
-        inst = EstimatorV2(backend=backend)
+        inst = EstimatorV2(mode=backend)
         circ = QuantumCircuit(2)
         obs = []
         with self.assertRaisesRegex(ValueError, "Empty observables array is not allowed"):
@@ -277,7 +273,7 @@ class TestEstimatorV2(IBMTestCase):
         """Test exception when circuits contain gates that are not basis gates"""
         # pylint: disable=invalid-name,not-context-manager
         backend = FakeSherbrooke()
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         observable = SparsePauliOp("Z")
 
         circ = QuantumCircuit(1, 1)

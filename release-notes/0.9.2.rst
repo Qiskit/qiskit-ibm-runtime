@@ -50,7 +50,7 @@ Bug Fixes
    ``None``, causing the job to fail.
 
 -  If an instance is passed in to
-   `qiskit_ibm_runtime.QiskitRuntimeService.get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService.get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
    and then the backend is used in a session, all jobs within the
    session will be run from the original instance passed in.
 

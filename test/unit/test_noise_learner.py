@@ -71,7 +71,7 @@ class TestNoiseLearner(IBMTestCase):
         inst = NoiseLearner(backend, options)
         inst.run(tasks)
 
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
 
         expected = self.dict_options
@@ -91,7 +91,7 @@ class TestNoiseLearner(IBMTestCase):
         inst = NoiseLearner(backend)
         inst.run(tasks)
 
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
         self.assertEqual(input_params["options"], {"support_qiskit": True})
 
@@ -102,7 +102,7 @@ class TestNoiseLearner(IBMTestCase):
         inst = NoiseLearner(backend)
         inst.run([QuantumCircuit(3)])
 
-        input_params = backend.service.run.call_args.kwargs["inputs"]
+        input_params = backend.service._run.call_args.kwargs["inputs"]
         self.assertIn("circuits", input_params)
         self.assertEqual(input_params["circuits"], [QuantumCircuit(3)])
 
@@ -125,3 +125,9 @@ class TestNoiseLearner(IBMTestCase):
         """Test exception when circuits is not ISA."""
         with self.assertRaisesRegex(ValueError, "not currently supported in local mode"):
             NoiseLearner(FakeSherbrooke())
+
+    def test_get_backend(self):
+        """Test getting the backend used."""
+        backend = get_mocked_backend()
+        inst = NoiseLearner(backend)
+        self.assertEqual(inst.backend().name, backend.name)

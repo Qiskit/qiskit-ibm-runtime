@@ -9,7 +9,7 @@ New Features
    jobs. Currently only supported for legacy authentication.
 
 -  You can now use the
-   `qiskit_ibm_runtime.RuntimeJob.interim_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#interim_results>`__
+   `qiskit_ibm_runtime.RuntimeJob.interim_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.30/qiskit_ibm_runtime.RuntimeJob#interim_results>`__
    method to retrieve runtime program interim results. Note that interim
    results will only be available for up to two days.
 

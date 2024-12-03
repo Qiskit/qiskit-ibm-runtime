@@ -121,7 +121,7 @@ class NoiseLearner:
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
            cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
-           Nature Physics volume 19, pages1116–1121 (2023).
+           Nature Physics volume 19, pages 1116–1121 (2023).
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
 
     """
@@ -188,7 +188,7 @@ class NoiseLearner:
 
         # Batch or Session
         if self._mode:
-            return self._mode.run(
+            return self._mode._run(
                 program_id=self._program_id(),
                 inputs=inputs,
                 options=runtime_options,
@@ -202,7 +202,7 @@ class NoiseLearner:
                 runtime_options["instance"] = self._backend._instance
 
         if isinstance(self._service, QiskitRuntimeService):
-            return self._service.run(
+            return self._service._run(
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
@@ -210,7 +210,7 @@ class NoiseLearner:
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
-        return self._service.run(  # type: ignore[attr-defined]
+        return self._service._run(  # type: ignore[attr-defined]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=inputs,
@@ -220,6 +220,10 @@ class NoiseLearner:
     def _program_id(cls) -> str:
         """Return the program ID."""
         return "noise-learner"
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
 
     def _set_options(
         self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None

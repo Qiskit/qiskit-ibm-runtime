@@ -22,7 +22,6 @@ from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
 
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
-from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -31,13 +30,11 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.backend = "ibmq_qasm_simulator"
+        self._backend = self.service.backend(self.dependencies.qpu)
 
-    @run_integration_test
-    def test_estimator_v2_session(self, service):
+    def test_estimator_v2_session(self):
         """Verify correct results are returned"""
-        backend = service.backend(self.backend)
-        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
         psi1 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=3))
@@ -51,8 +48,8 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(service, self.backend) as session:
-            estimator = EstimatorV2(session=session)
+        with Session(self._backend) as session:
+            estimator = EstimatorV2(mode=session)
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
@@ -66,15 +63,14 @@ class TestEstimatorV2(IBMIntegrationTestCase):
             result3 = job3.result()
             self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
-    @run_integration_test
-    def test_estimator_v2_options(self, service):
+    def test_estimator_v2_options(self):
         """Test V2 Estimator with different options."""
-        backend = service.backend(self.backend)
-        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
-        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
-        observables = SparsePauliOp("X" * circuit.num_qubits).apply_layout(circuit.layout)
+        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
-        estimator = EstimatorV2(backend=backend)
+        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
+        observable = SparsePauliOp("X" * circuit.num_qubits)
+
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
@@ -98,26 +94,26 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.twirling.strategy = "active"
         estimator.options.twirling.num_randomizations = 16
         estimator.options.twirling.shots_per_randomization = 100
+        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
 
-        job = estimator.run([(circuit, observables)])
+        job = estimator.run([(circuit, observable)])
         result = job.result()
         self._verify_result_type(result, num_pubs=1, shapes=[()])
         self.assertEqual(result[0].metadata["shots"], 1600)
 
     @skip("Skip until simulator options are accepted by server.")
-    @run_integration_test
-    def test_pec(self, service):
+    def test_pec(self):
         """Test running with PEC."""
-        backend = service.backend(self.backend)
-        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
-        observables = SparsePauliOp("X" * circuit.num_qubits).apply_layout(circuit.layout)
+        observables = SparsePauliOp("X" * circuit.num_qubits)
 
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=self._backend)
         estimator.options.resilience_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
         estimator.options.simulator.set_backend(FakeAuckland())
+        estimator.options.environment = {"job_tags": [".".join(self.id().split(".")[-2:])]}
 
         job = estimator.run([(circuit, observables)])
         result = job.result()

@@ -29,7 +29,7 @@ V2 Primitives
 
    service = QiskitRuntimeService()
    backend = service.least_busy(operational=True, simulator=False)
-   estimator = EstimatorV2(backend=backend)
+   estimator = EstimatorV2(mode=backend)
    estimator.options.resilience_level = 1
 
 You can also use the ``update()`` method to do bulk update. For example::
@@ -38,7 +38,7 @@ You can also use the ``update()`` method to do bulk update. For example::
 
    service = QiskitRuntimeService()
    backend = service.least_busy(operational=True, simulator=False)
-   estimator = EstimatorV2(backend=backend)
+   estimator = EstimatorV2(mode=backend)
    estimator.options.update(resilience_level=1)
 
 Refer to :class:`SamplerOptions` and :class:`EstimatorOptions` for V2 Sampler and
@@ -57,6 +57,7 @@ Base primitive options
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    EstimatorOptions
    SamplerOptions
@@ -67,6 +68,7 @@ Suboptions
 
 .. autosummary::
    :toctree: ../stubs/
+   :nosignatures:
 
    NoiseLearnerOptions
    DynamicalDecouplingOptions

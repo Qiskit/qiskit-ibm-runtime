@@ -16,20 +16,10 @@ Fake Guadalupe device (5 qubit).
 
 import os
 
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeGuadalupeV2(fake_backend.FakeBackendV2):
-    """A fake 16 qubit backend."""
-
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_guadalupe.json"  # type: ignore
-    props_filename = "props_guadalupe.json"  # type: ignore
-    defs_filename = "defs_guadalupe.json"  # type: ignore
-    backend_name = "fake_guadalupe"  # type: ignore
-
-
-class FakeGuadalupe(fake_pulse_backend.FakePulseBackend):
     """A fake 16 qubit backend."""
 
     dirname = os.path.dirname(__file__)  # type: ignore

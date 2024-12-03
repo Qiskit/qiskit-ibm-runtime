@@ -46,8 +46,13 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     LayerError,
     NoiseLearnerResult,
 )
-from qiskit_ibm_runtime.fake_provider import FakeNairobi
-from qiskit_ibm_runtime.execution_span import SliceSpan, ExecutionSpans
+from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
+from qiskit_ibm_runtime.execution_span import (
+    DoubleSliceSpan,
+    SliceSpan,
+    ExecutionSpans,
+    TwirledSliceSpan,
+)
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -138,7 +143,7 @@ class TestDataSerialization(IBMTestCase):
 
     def test_coder_noise_model(self):
         """Test encoding and decoding a noise model."""
-        noise_model = NoiseModel.from_backend(FakeNairobi())
+        noise_model = NoiseModel.from_backend(FakeNairobiV2())
         self.assertIsInstance(noise_model, NoiseModel)
         encoded = json.dumps(noise_model, cls=RuntimeEncoder)
         self.assertIsInstance(encoded, str)
@@ -340,8 +345,9 @@ class TestContainerSerialization(IBMTestCase):
 
     def assert_pauli_lindblad_error_equal(self, error1, error2):
         """Tests that two PauliLindbladError objects are equal"""
-        self.assertEqual(error1.generators, error2.generators)
-        self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
+        if error1 or error2:
+            self.assertEqual(error1.generators, error2.generators)
+            self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
     def assert_layer_errors_equal(self, layer_error1, layer_error2):
         """Tests that two LayerError objects are equal"""
@@ -450,6 +456,27 @@ class TestContainerSerialization(IBMTestCase):
                         SliceSpan(
                             datetime(2024, 8, 20), datetime(2024, 8, 21), {0: ((14,), slice(2, 3))}
                         ),
+                        DoubleSliceSpan(
+                            datetime(2022, 1, 1),
+                            datetime(2023, 1, 1),
+                            {
+                                1: ((100,), slice(4, 9), slice(1, 2)),
+                                0: ((2, 5), slice(5, 7), slice(3, 4)),
+                            },
+                        ),
+                        DoubleSliceSpan(
+                            datetime(2024, 8, 20),
+                            datetime(2024, 8, 21),
+                            {0: ((14,), slice(2, 3), slice(1, 9))},
+                        ),
+                        TwirledSliceSpan(
+                            datetime(2024, 9, 20),
+                            datetime(2024, 3, 21),
+                            {
+                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9)),
+                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
+                            },
+                        ),
                     ]
                 )
             }
@@ -459,13 +486,13 @@ class TestContainerSerialization(IBMTestCase):
         primitive_results.append(result)
         return primitive_results
 
-    def make_test_noise_learner_results(self):
+    def make_test_noise_learner_results(self, unknown_err=False):
         """Generates test data for NoiseLearnerResult test"""
         noise_learner_results = []
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.measure_all()
-        error = PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
+        error = None if unknown_err else PauliLindbladError(PauliList(["XX", "ZZ"]), [0.1, 0.2])
         layer_error = LayerError(circuit, [3, 5], error)
 
         noise_learner_result = NoiseLearnerResult([layer_error])
@@ -596,9 +623,10 @@ class TestContainerSerialization(IBMTestCase):
             self.assertIsInstance(decoded, PrimitiveResult)
             self.assert_primitive_results_equal(primitive_result, decoded)
 
-    def test_noise_learner_result(self):
+    @data(True, False)
+    def test_noise_learner_result(self, unknown_err):
         """Test encoding and decoding NoiseLearnerResult"""
-        for noise_learner_result in self.make_test_noise_learner_results():
+        for noise_learner_result in self.make_test_noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]

@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -52,7 +52,7 @@ class TestSamplerOptions(IBMTestCase):
         """Test converting to program inputs from sampler options."""
         # pylint: disable=unexpected-keyword-arg
 
-        noise_model = NoiseModel.from_backend(FakeManila())
+        noise_model = NoiseModel.from_backend(FakeManilaV2())
         simulator = {
             "noise_model": noise_model,
             "seed_simulator": 42,
@@ -147,7 +147,7 @@ class TestSamplerOptions(IBMTestCase):
     def test_zero_values(self, opt_dict):
         """Test options with values of 0."""
         backend = get_mocked_backend()
-        sampler = Sampler(backend=backend, options=opt_dict)
+        sampler = Sampler(mode=backend, options=opt_dict)
         _ = sampler.run(**get_primitive_inputs(sampler))
-        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        options = backend.service._run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, opt_dict)

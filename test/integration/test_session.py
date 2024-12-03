@@ -34,22 +34,21 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_estimator_sampler(self, service):
         """Test calling both estimator and sampler."""
-
-        backend = service.backend("ibmq_qasm_simulator")
-        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
-        psi1 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=2))
-        # pylint: disable=invalid-name
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        theta1 = [0, 1, 1, 2, 3, 5]
+        backend = service.backend(self.dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+        psi1 = pm.run(RealAmplitudes(num_qubits=2, reps=2))
 
-        with Session(service, backend=backend) as session:
-            estimator = EstimatorV2(session=session)
+        # pylint: disable=invalid-name
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
+        theta1 = [0, 1, 1, 2, 3, 5]
+
+        with Session(backend=backend) as session:
+            estimator = EstimatorV2(mode=session)
             result = estimator.run([(psi1, H1, [theta1])]).result()
             self.assertIsInstance(result, PrimitiveResult)
 
-            sampler = SamplerV2(session=session)
+            sampler = SamplerV2(mode=session)
             result = sampler.run([pm.run(bell())]).result()
             self.assertIsInstance(result, PrimitiveResult)
 
@@ -66,10 +65,10 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     def test_using_correct_instance(self, service):
         """Test the instance used when filtering backends is honored."""
         instance = self.dependencies.instance
-        backend = service.backend("ibmq_qasm_simulator", instance=instance)
+        backend = service.backend(self.dependencies.qpu, self.dependencies.instance)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        with Session(service, backend=backend) as session:
-            sampler = SamplerV2(session=session)
+        with Session(backend=backend) as session:
+            sampler = SamplerV2(mode=session)
             job = sampler.run([pm.run(bell())])
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
@@ -83,8 +82,8 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             raise SkipTest("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
-        with Session(service, backend=backend) as session:
-            sampler = SamplerV2(session=session)
+        with Session(backend=backend) as session:
+            sampler = SamplerV2(mode=session)
             sampler.run(isa_circuit)
 
         new_session = Session.from_id(session_id=session._session_id, service=service)
@@ -95,11 +94,3 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
-
-    @run_integration_test
-    def test_job_mode_warning(self, service):
-        """Test deprecation warning is raised when using job mode inside a session."""
-        backend = service.backend("ibmq_qasm_simulator")
-        with Session(service, backend=backend):
-            with self.assertWarns(DeprecationWarning):
-                _ = SamplerV2(mode=backend)

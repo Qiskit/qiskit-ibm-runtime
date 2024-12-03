@@ -19,7 +19,7 @@ from qiskit import QuantumCircuit, qasm3, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeFractionalBackend
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke, FakeFractionalBackend
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendConfiguration,
@@ -39,7 +39,7 @@ class TestBackend(IBMTestCase):
 
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits):
@@ -57,7 +57,7 @@ class TestBackend(IBMTestCase):
 
     def test_raise_faulty_qubits_many(self):
         """Test faulty qubits is raised if one circuit uses it."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
 
         circ1 = QuantumCircuit(1, 1)
@@ -78,13 +78,13 @@ class TestBackend(IBMTestCase):
 
     def test_raise_faulty_edge(self):
         """Test faulty edge is raised."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         num_qubits = fake_backend.configuration().num_qubits
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
 
-        transpiled = transpile(circ, backend=fake_backend)
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
         edge_qubits = [0, 1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         sampler = SamplerV2(ibm_backend)
@@ -98,7 +98,7 @@ class TestBackend(IBMTestCase):
     @staticmethod
     def test_faulty_qubit_not_used():
         """Test faulty qubit is not raise if not used."""
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         circ = QuantumCircuit(2, 2)
         for i in range(2):
             circ.x(i)
@@ -117,7 +117,7 @@ class TestBackend(IBMTestCase):
     def test_faulty_edge_not_used():
         """Test faulty edge is not raised if not used."""
 
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
 
         circ = QuantumCircuit(2, 2)
@@ -136,7 +136,7 @@ class TestBackend(IBMTestCase):
     @staticmethod
     def _create_dc_test_backend():
         """Create a test backend with an IfElseOp enables."""
-        model_backend = FakeManila()
+        model_backend = FakeManilaV2()
         properties = model_backend.properties()
 
         out_backend = IBMBackend(
@@ -237,7 +237,7 @@ class TestBackend(IBMTestCase):
 
     def test_too_many_circuits(self):
         """Test exception when number of circuits exceeds backend._max_circuits"""
-        model_backend = FakeManila()
+        model_backend = FakeManilaV2()
         backend = IBMBackend(
             configuration=model_backend.configuration(),
             service=mock.MagicMock(),
@@ -302,7 +302,7 @@ class TestBackend(IBMTestCase):
         """
 
         # Filter out faulty Q1
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         faulty_qubit = 1
         faulty_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         target = convert_to_target(
@@ -315,7 +315,7 @@ class TestBackend(IBMTestCase):
     def test_convert_to_target(self):
         """Test converting legacy data structure to V2 target model with missing qubit property."""
 
-        fake_backend = FakeManila()
+        fake_backend = FakeManilaV2()
         faulty_qubit = 1
         faulty_backend = create_faulty_backend(fake_backend, faulty_q1_property=faulty_qubit)
         target = convert_to_target(
@@ -359,7 +359,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target,
+            "rzz" in target,
             use_fractional,
         )
         self.assertEqual(
@@ -367,7 +367,7 @@ class TestBackend(IBMTestCase):
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target.operation_names,
+            "rzz" in target.operation_names,
             use_fractional,
         )
         self.assertEqual(

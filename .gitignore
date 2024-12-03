@@ -50,6 +50,7 @@ test/python/*.log
 test/python/*.pdf
 test/python/*.prof
 .stestr/
+.test_artifacts
 
 # Translations
 *.mo
@@ -116,3 +117,6 @@ docs/release_notes.rst
 
 # Locally run jobs 
 qiskit_ibm_runtime/fake_provider/local_jobs
+
+# Version.txt
+qiskit_ibm_runtime/VERSION.txt

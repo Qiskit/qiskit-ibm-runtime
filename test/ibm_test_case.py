@@ -22,8 +22,11 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from plotly.graph_objects import Figure as PlotlyFigure
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
+
 
 from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -32,6 +35,7 @@ from .decorators import IntegrationTestDependencies, integration_test_setup
 class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
+    ARTIFACT_DIR = ".test_artifacts"
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
@@ -46,6 +50,9 @@ class IBMTestCase(TestCase):
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
         # fail test on deprecation warnings from qiskit
         warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+
+        # Ensure the artifact directory exists
+        os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:
@@ -159,6 +166,19 @@ class IBMTestCase(TestCase):
         else:
             return ""
 
+    def save_plotly_artifact(self, fig: PlotlyFigure, name: str = None) -> str:
+        """Save a Plotly figure as an HTML artifact."""
+        # nested folder path based on the test module, class, and method
+        test_path = self.id().split(".")[1:]
+        nested_dir = os.path.join(self.ARTIFACT_DIR, *test_path[:-1])
+        name = test_path[-1]
+        os.makedirs(nested_dir, exist_ok=True)
+
+        # save figure
+        artifact_path = os.path.join(nested_dir, f"{name}.html")
+        fig.write_html(artifact_path)
+        return artifact_path
+
 
 class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with qiskit-ibm-runtime."""
@@ -213,8 +233,14 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
 
     @classmethod
     def _find_sim_backends(cls):
-        """Find a simulator backend for each service."""
-        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[0].name
+        """Find a simulator or test backend for each service."""
+        backends = cls.service.backends()
+        # Simulators or tests backends can be not available
+        cls.sim_backends[cls.service.channel] = None
+        for backend in backends:
+            if backend.simulator or backend.name.startswith("test_eagle"):
+                cls.sim_backends[cls.service.channel] = backend.name
+                break
 
     def _run_program(
         self,
@@ -233,16 +259,19 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
+        pid = program_id or self.program_ids[service.channel]
+        backend_name = backend if backend is not None else self.sim_backends[service.channel]
+        backend = service.backend(backend_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         inputs = (
             inputs
             if inputs is not None
             else {
                 "interim_results": interim_results or {},
-                "circuits": circuits or bell(),
+                "circuits": pm.run(circuits) if circuits else pm.run(bell()),
             }
         )
-        pid = program_id or self.program_ids[service.channel]
-        backend_name = backend if backend is not None else self.sim_backends[service.channel]
+
         options = {
             "backend": backend_name,
             "log_level": log_level,
@@ -250,14 +279,13 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            backend = service.backend(backend_name)
-            sampler = SamplerV2(backend=backend)
+            sampler = SamplerV2(mode=backend)
             if job_tags:
                 sampler.options.environment.job_tags = job_tags
             if circuits:
-                job = sampler.run([circuits])
+                job = sampler.run([pm.run(circuits) if circuits else pm.run(bell())])
             else:
-                job = sampler.run([bell()])
+                job = sampler.run([pm.run(bell())])
         else:
             job = service._run(
                 program_id=pid,
