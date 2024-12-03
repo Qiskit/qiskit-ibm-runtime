@@ -57,13 +57,18 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
     options: list[str] = []
 
     for line_index, line in enumerate(lines):
-        if image_found and is_option(line):
-            options.append(line)
-            continue
+        if image_found:
+            if is_option(line):
+                options.append(line)
+                continue
 
-        if image_found and not is_valid_image(options):
-            image_line = line_index - len(options)
-            invalid_images.append(f"- Error in line {image_line}: {lines[image_line-1].strip()}")
+            # Else, the prior image_found has no more options so we should determine if it was valid.
+            #
+            # Note that, either way, we do not early exit out of the loop iteration because this `line`
+            # might be the start of a new image.
+            if not is_valid_image(options):
+                image_line = line_index - len(options)
+                invalid_images.append(f"- Error in line {image_line}: {lines[image_line-1].strip()}")
 
         image_found = is_image(line)
         options = []
