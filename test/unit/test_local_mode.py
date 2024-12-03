@@ -25,6 +25,7 @@ from qiskit.primitives import (
 from qiskit.primitives.containers.data_bin import DataBin
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime import (
     Session,
     Batch,
@@ -43,6 +44,10 @@ from ..utils import (
 class TestLocalModeV2(IBMTestCase):
     """Class for testing local mode for V2 primitives."""
 
+    def setUp(self) -> None:
+        super().setUp()
+        self._service = QiskitRuntimeLocalService()
+
     @combine(backend=[FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_sampler(self, backend, num_sets):
         """Test V2 Sampler on a local backend."""
@@ -55,6 +60,7 @@ class TestLocalModeV2(IBMTestCase):
             self.assertIsInstance(pub_result, SamplerPubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
+        self._service.delete_job(job.job_id())
 
     @combine(backend=[FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_estimator(self, backend, num_sets):
@@ -68,6 +74,7 @@ class TestLocalModeV2(IBMTestCase):
             self.assertIsInstance(pub_result, PubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
+        self._service.delete_job(job.job_id())
 
     @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_sampler_with_accepted_options(self, backend):
@@ -77,6 +84,7 @@ class TestLocalModeV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertEqual(pub_result.data.meas.num_shots, 10)
+        self._service.delete_job(job.job_id())
 
     @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_estimator_with_accepted_options(self, backend):
@@ -87,6 +95,7 @@ class TestLocalModeV2(IBMTestCase):
         pub_result = job.result()[0]
         self.assertIn(("target_precision", 0.03125), pub_result.metadata.items())
         self.assertTrue(pub_result.data)
+        self._service.delete_job(job.job_id())
 
     @data(FakeManilaV2(), AerSimulator.from_backend(FakeManilaV2()))
     def test_v2_estimator_with_default_shots_option(self, backend):
@@ -96,6 +105,7 @@ class TestLocalModeV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertIn(("target_precision", 0.1), pub_result.metadata.items())
+        self._service.delete_job(job.job_id())
 
     @combine(primitive=[SamplerV2, EstimatorV2], backend=[FakeManilaV2(), AerSimulator()])
     def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
@@ -111,6 +121,7 @@ class TestLocalModeV2(IBMTestCase):
             _ = job.result()
             warning_messages = "".join([str(warn.message) for warn in warns])
             self.assertIn("dynamical_decoupling", warning_messages)
+        self._service.delete_job(job.job_id())
 
     @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session(self, session_cls, backend):
@@ -125,6 +136,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result, PubResult)
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
+        self._service.delete_job(job.job_id())
 
     @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session_no_params(self, session_cls, backend):
@@ -139,6 +151,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result, PubResult)
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
+        self._service.delete_job(job.job_id())
 
     @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_estimator_v2_session(self, session_cls, backend):
@@ -153,6 +166,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result, PubResult)
                 self.assertIsInstance(pub_result.data, DataBin)
                 self.assertIsInstance(pub_result.metadata, dict)
+        self._service.delete_job(job.job_id())
 
     @data(FakeManilaV2(), AerSimulator())
     def test_non_primitive(self, backend):
@@ -160,3 +174,32 @@ class TestLocalModeV2(IBMTestCase):
         session = Session(backend=backend)
         with self.assertRaisesRegex(ValueError, "Only sampler and estimator"):
             session._run(program_id="foo", inputs={})
+
+    @combine(backend=[FakeManilaV2()])
+    def test_retrieve_job(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(mode=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
+        rjob = self._service.job(job.job_id())
+        self.assertEqual(rjob.job_id(), job.job_id())
+        self._service.delete_job(job.job_id())
+
+    @combine(backend=[FakeManilaV2()])
+    def test_retrieve_jobs(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(mode=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
+        rjobs = self._service.jobs()
+        self.assertIn(job.job_id(), [rjob.job_id() for rjob in rjobs])
+        self._service.delete_job(job.job_id())
+
+    @combine(backend=[FakeManilaV2()])
+    def test_delete_job(self, backend):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(mode=backend)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        job.result()
+        self._service.delete_job(job.job_id())
+        self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in self._service.jobs()])
