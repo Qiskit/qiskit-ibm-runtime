@@ -1,0 +1,7 @@
+The `requirements.txt` files and `setup.py` have been removed in favor of a new dependency management
+approach using ``pyproject``. This transition simplifies the development workflow. Dependencies
+are now managed directly through the `pyproject.toml` file.
+
+    - Use ``pip install -e .`` to install qiskit-ibm-runtime dependencies.
+    - Use ``pip install -e ".[dev]"`` to install the development dependencies.
+    - Use ``pip install -e ".[visualization]"`` to install the visualization dependencies.
