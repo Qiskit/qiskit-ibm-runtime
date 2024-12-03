@@ -32,6 +32,7 @@ from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbroo
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -74,9 +75,9 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_unsupported_values_for_sampler_options(self, opt):
         """Test exception when options levels are not supported."""
+        backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
             with self.assertRaises(ValueError) as exc:
@@ -137,9 +138,9 @@ class TestSamplerV2(IBMTestCase):
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
+        backend = get_mocked_backend()
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+            backend=backend,
         ) as session:
             inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))
@@ -162,14 +163,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = True
+        backend = service.backends("fake_fractional", use_fractional_gates=True)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -183,14 +182,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = False
+        backend = service.backends("fake_fractional", use_fractional_gates=False)[0]
 
         fractional_circuit = QuantumCircuit(1, 1)
         fractional_circuit.rx(1.23, 0)
@@ -206,14 +203,12 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
-        model_backend = FakeFractionalBackend()
-        model_backend._set_props_dict_from_json()
-        backend = get_mocked_backend(
-            name="fake_fractional",
-            configuration=model_backend._conf_dict,
-            properties=model_backend._props_dict,
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        backend.options.use_fractional_gates = use_fractional
+        backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
 
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.measure(0, 0)
@@ -291,7 +286,7 @@ class TestSamplerV2(IBMTestCase):
                 SamplerV2(backend).run(pubs=[(circ)])
 
     @data(-1, 1, 2)
-    def test_rzz_angle_validation(self, angle):
+    def test_rzz_fixed_angle_validation(self, angle):
         """Test exception when rzz gate is used with an angle outside the range [0, pi/2]"""
         backend = FakeFractionalBackend()
 
@@ -301,12 +296,13 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ)])
         else:
-            with self.assertRaises(IBMInputValueError):
+            with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
                 SamplerV2(backend).run(pubs=[(circ)])
 
-    def test_rzz_validates_only_for_fixed_angles(self):
-        """Verify that the rzz validation occurs only when the angle is a number, and not a
-        parameter"""
+    @data(-1, 1, 2)
+    def test_rzz_parametrized_angle_validation(self, angle):
+        """Test exception when rzz gate is used with a parameter which is assigned a value outside
+        the range [0, pi/2]"""
         backend = FakeFractionalBackend()
         param = Parameter("p")
 
@@ -316,11 +312,88 @@ class TestSamplerV2(IBMTestCase):
             # Should run without an error
             SamplerV2(backend).run(pubs=[(circ, [1])])
 
-        with self.subTest("parameter expression"):
-            circ = QuantumCircuit(2)
-            circ.rzz(2 * param, 0, 1)
-            # Should run without an error
-            SamplerV2(backend).run(pubs=[(circ, [0.5])])
+        if angle == 1:
+            SamplerV2(backend).run(pubs=[(circ, [angle])])
+        else:
+            with self.assertRaisesRegex(IBMInputValueError, f"{angle}.*Parameter 'p'"):
+                SamplerV2(backend).run(pubs=[(circ, [angle])])
+
+    @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
+    def test_rzz_complex(self, flawed_params):
+        """Testing rzz validation in the currently non-existing case of dynamic instructions"""
+        # pylint: disable=not-context-manager
+
+        # FakeFractionalBackend has both fractional and dynamic instructions
+        backend = FakeFractionalBackend()
+
+        aparam = Parameter("a")
+        bparam = Parameter("b")
+        cparam = Parameter("c")
+        dparam = Parameter("d")
+
+        angle1 = 1
+        angle2 = 1
+        if flawed_params is not None and not isinstance(flawed_params[0], str):
+            angle1 = flawed_params[0]
+            angle2 = flawed_params[1]
+
+        circ = QuantumCircuit(2, 1)
+        circ.rzz(bparam, 0, 1)
+        circ.rzz(angle1, 0, 1)
+        circ.measure(0, 0)
+        with circ.if_test((0, 1)):
+            circ.rzz(aparam, 0, 1)
+            circ.rzz(angle2, 0, 1)
+        circ.rx(cparam, 0)
+        circ.rzz(dparam, 0, 1)
+        circ.rzz(1, 0, 1)
+        circ.rzz(aparam, 0, 1)
+
+        val_ab = np.ones([2, 2, 3, 2])
+        val_c = (-1) * np.ones([2, 2, 3])
+        val_d = np.ones([2, 2, 3])
+
+        if flawed_params is not None and isinstance(flawed_params[0], str):
+            if flawed_params[0] == "a":
+                val_ab[0, 1, 1, 0] = flawed_params[1]
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+            if flawed_params[0] == "b":
+                val_ab[1, 0, 2, 1] = flawed_params[1]
+                val_d[1, 1, 1] = flawed_params[1]
+            if flawed_params[0] == "d":
+                val_d[1, 1, 1] = flawed_params[1]
+                val_ab[1, 1, 2, 1] = flawed_params[1]
+
+        pub = (circ, {("a", "b"): val_ab, "c": val_c, "d": val_d})
+
+        if flawed_params is None:
+            SamplerV2(backend).run(pubs=[pub])
+        else:
+            if isinstance(flawed_params[0], str):
+                with self.assertRaisesRegex(
+                    IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"
+                ):
+                    SamplerV2(backend).run(pubs=[pub])
+            else:
+                with self.assertRaisesRegex(
+                    IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"
+                ):
+                    SamplerV2(backend).run(pubs=[pub])
+
+    def test_rzz_validation_skips_param_exp(self):
+        """Verify that the rzz validation occurs only when the angle is a number or a parameter,
+        but not a parameter expression"""
+        backend = FakeFractionalBackend()
+        param = Parameter("p")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(2 * param, 0, 1)
+
+        # Since we currently don't validate parameter expressions, the following line should run
+        # without an error, in spite of the angle being larger than pi/2
+        # (if there is an error, it is an expected one, such as a parameter expression being
+        # treated as if it were a float)
+        SamplerV2(backend).run(pubs=[(circ, [1])])
 
     def test_param_expressions_gen3_runtime(self):
         """Verify that parameter expressions are not used in combination with the gen3-turbo
