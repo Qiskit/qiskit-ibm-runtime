@@ -94,16 +94,16 @@ class FoldRzzAngle(TransformationPass):
             wrap_angle = np.angle(np.exp(1j * angle))
             if 0 <= wrap_angle <= pi / 2:
                 # In the first quadrant.
-                replace = _quad1(wrap_angle, node.qargs)
+                replace = self._quad1(wrap_angle, node.qargs)
             elif pi / 2 < wrap_angle <= pi:
                 # In the second quadrant.
-                replace = _quad2(wrap_angle, node.qargs)
+                replace = self._quad2(wrap_angle, node.qargs)
             elif -pi <= wrap_angle <= -pi / 2:
                 # In the third quadrant.
-                replace = _quad3(wrap_angle, node.qargs)
+                replace = self._quad3(wrap_angle, node.qargs)
             elif -pi / 2 < wrap_angle < 0:
                 # In the forth quadrant.
-                replace = _quad4(wrap_angle, node.qargs)
+                replace = self._quad4(wrap_angle, node.qargs)
             else:
                 raise RuntimeError("Unreacheable.")
             if pi < angle % (4 * pi) < 3 * pi:
@@ -111,61 +111,130 @@ class FoldRzzAngle(TransformationPass):
             dag.substitute_node_with_dag(node, replace)
         return modified
 
+    @staticmethod
+    def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        """Handle angle between [0, pi/2].
 
-def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
-    """Handle angle between [0, pi/2].
+        Circuit is not transformed - the Rzz gate is calibrated for the angle.
 
-    Circuit is not transformed - the Rzz gate is calibrated for the angle.
+        Returns:
+            A new dag with the same Rzz gate.
+        """
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
+        new_dag.apply_operation_back(
+            RZZGate(angle),
+            qargs=qubits,
+            check=False,
+        )
+        return new_dag
 
-    Returns:
-        A new dag with the same Rzz gate.
-    """
-    new_dag = DAGCircuit()
-    new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(
-        RZZGate(angle),
-        qargs=qubits,
-        check=False,
-    )
-    return new_dag
+    @staticmethod
+    def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        """Handle angle between (pi/2, pi].
 
+        Circuit is transformed into the following form:
 
-def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
-    """Handle angle between (pi/2, pi].
+                ┌───────┐┌───┐            ┌───┐
+            q_0: ┤ Rz(π) ├┤ X ├─■──────────┤ X ├
+                ├───────┤└───┘ │ZZ(π - θ) └───┘
+            q_1: ┤ Rz(π) ├──────■───────────────
+                └───────┘
 
-    Circuit is transformed into the following form:
+        Returns:
+            New dag to replace Rzz gate.
+        """
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
+        new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
+        new_dag.apply_operation_back(
+            RZGate(pi),
+            qargs=(qubits[0],),
+            cargs=(),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZGate(pi),
+            qargs=(qubits[1],),
+            check=False,
+        )
+        if not np.isclose(new_angle := (pi - angle), 0.0):
+            new_dag.apply_operation_back(
+                XGate(),
+                qargs=(qubits[0],),
+                check=False,
+            )
+            new_dag.apply_operation_back(
+                RZZGate(new_angle),
+                qargs=qubits,
+                check=False,
+            )
+            new_dag.apply_operation_back(
+                XGate(),
+                qargs=(qubits[0],),
+                check=False,
+            )
+        return new_dag
 
-             ┌───────┐┌───┐            ┌───┐
-        q_0: ┤ Rz(π) ├┤ X ├─■──────────┤ X ├
-             ├───────┤└───┘ │ZZ(π - θ) └───┘
-        q_1: ┤ Rz(π) ├──────■───────────────
-             └───────┘
+    @staticmethod
+    def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        """Handle angle between [-pi, -pi/2].
 
-    Returns:
-        New dag to replace Rzz gate.
-    """
-    new_dag = DAGCircuit()
-    new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
-    new_dag.apply_operation_back(
-        RZGate(pi),
-        qargs=(qubits[0],),
-        cargs=(),
-        check=False,
-    )
-    new_dag.apply_operation_back(
-        RZGate(pi),
-        qargs=(qubits[1],),
-        check=False,
-    )
-    if not np.isclose(new_angle := (pi - angle), 0.0):
+        Circuit is transformed into following form:
+
+                ┌───────┐
+            q_0: ┤ Rz(π) ├─■───────────────
+                ├───────┤ │ZZ(π - Abs(θ))
+            q_1: ┤ Rz(π) ├─■───────────────
+                └───────┘
+
+        Returns:
+            New dag to replace Rzz gate.
+        """
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
+        new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
+        new_dag.apply_operation_back(
+            RZGate(pi),
+            qargs=(qubits[0],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZGate(pi),
+            qargs=(qubits[1],),
+            check=False,
+        )
+        if not np.isclose(new_angle := (pi - np.abs(angle)), 0.0):
+            new_dag.apply_operation_back(
+                RZZGate(new_angle),
+                qargs=qubits,
+                check=False,
+            )
+        return new_dag
+
+    @staticmethod
+    def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        """Handle angle between (-pi/2, 0).
+
+        Circuit is transformed into following form:
+
+                ┌───┐             ┌───┐
+            q_0: ┤ X ├─■───────────┤ X ├
+                └───┘ │ZZ(Abs(θ)) └───┘
+            q_1: ──────■────────────────
+
+        Returns:
+            New dag to replace Rzz gate.
+        """
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(
             XGate(),
             qargs=(qubits[0],),
             check=False,
         )
         new_dag.apply_operation_back(
-            RZZGate(new_angle),
+            RZZGate(abs(angle)),
             qargs=qubits,
             check=False,
         )
@@ -174,73 +243,4 @@ def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
             qargs=(qubits[0],),
             check=False,
         )
-    return new_dag
-
-
-def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
-    """Handle angle between [-pi, -pi/2].
-
-    Circuit is transformed into following form:
-
-             ┌───────┐
-        q_0: ┤ Rz(π) ├─■───────────────
-             ├───────┤ │ZZ(π - Abs(θ))
-        q_1: ┤ Rz(π) ├─■───────────────
-             └───────┘
-
-    Returns:
-        New dag to replace Rzz gate.
-    """
-    new_dag = DAGCircuit()
-    new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
-    new_dag.apply_operation_back(
-        RZGate(pi),
-        qargs=(qubits[0],),
-        check=False,
-    )
-    new_dag.apply_operation_back(
-        RZGate(pi),
-        qargs=(qubits[1],),
-        check=False,
-    )
-    if not np.isclose(new_angle := (pi - np.abs(angle)), 0.0):
-        new_dag.apply_operation_back(
-            RZZGate(new_angle),
-            qargs=qubits,
-            check=False,
-        )
-    return new_dag
-
-
-def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
-    """Handle angle between (-pi/2, 0).
-
-    Circuit is transformed into following form:
-
-             ┌───┐             ┌───┐
-        q_0: ┤ X ├─■───────────┤ X ├
-             └───┘ │ZZ(Abs(θ)) └───┘
-        q_1: ──────■────────────────
-
-    Returns:
-        New dag to replace Rzz gate.
-    """
-    new_dag = DAGCircuit()
-    new_dag.add_qubits(qubits=qubits)
-    new_dag.apply_operation_back(
-        XGate(),
-        qargs=(qubits[0],),
-        check=False,
-    )
-    new_dag.apply_operation_back(
-        RZZGate(abs(angle)),
-        qargs=qubits,
-        check=False,
-    )
-    new_dag.apply_operation_back(
-        XGate(),
-        qargs=(qubits[0],),
-        check=False,
-    )
-    return new_dag
+        return new_dag
