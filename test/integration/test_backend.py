@@ -119,6 +119,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
     @production_only
+    def test_properties_not_cached_target_history(self):
+        """Check backend properties is not cached in target_history()."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            properties = backend.properties()
+            backend.target_history(datetime=datetime.now() - timedelta(60))
+            self.assertEqual(properties, backend.properties())
+
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
@@ -205,6 +213,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
+        if self.backend.simulator:
+            raise SkipTest("Simulator has no backend defaults.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
@@ -222,7 +232,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertEqual(
                 backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
             )
-            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(backend_copy.defaults().to_dict(), backend.defaults().to_dict())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,

@@ -120,7 +120,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         pubs = [(circuit, "Z" * circuit.num_qubits)]
 
-        with Session(service, self._backend) as session:
+        with Session(self._backend) as session:
             learner = NoiseLearner(mode=session, options=options)
             learner_job = learner.run(self.circuits)
             noise_model = learner_job.result()

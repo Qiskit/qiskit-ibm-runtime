@@ -53,7 +53,9 @@ class PadDynamicalDecoupling(BlockBasePadder):
     This pass ensures that the inserted sequence preserves the circuit exactly
     (including global phase).
 
-    .. jupyter-execute::
+    .. plot::
+       :include-source:
+       :context: close-figs
 
         import numpy as np
         from qiskit.circuit import QuantumCircuit
@@ -76,16 +78,16 @@ class PadDynamicalDecoupling(BlockBasePadder):
              ("x", None, 50), ("measure", None, 1000)]
         )
 
-    .. jupyter-execute::
-
         # balanced X-X sequence on all qubits
         dd_sequence = [XGate(), XGate()]
         pm = PassManager([ALAPScheduleAnalysis(durations),
                           PadDynamicalDecoupling(durations, dd_sequence)])
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw('mpl', style="iqp")
 
-    .. jupyter-execute::
+    .. plot::
+       :include-source:
+       :context: close-figs
 
         # Uhrig sequence on qubit 0
         n = 8
@@ -103,7 +105,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             ]
         )
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw('mpl', style="iqp")
 
     .. note::
 
@@ -493,14 +495,19 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     op = next_node.op
                     theta_r, phi_r, lam_r = op.params
                     op.params = Optimize1qGates.compose_u3(theta_r, phi_r, lam_r, theta, phi, lam)
-                    next_node.op = op
+                    self._block_dag.substitute_node(next_node, op, propagate_condition=False)
                     sequence_gphase += phase
                 elif isinstance(prev_node, DAGOpNode) and isinstance(prev_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the predecessor (from right in circuit)
                     op = prev_node.op
                     theta_l, phi_l, lam_l = op.params
                     op.params = Optimize1qGates.compose_u3(theta, phi, lam, theta_l, phi_l, lam_l)
-                    prev_node.op = op
+                    new_prev_node = self._block_dag.substitute_node(
+                        prev_node, op, propagate_condition=False
+                    )
+                    start_time = self.property_set["node_start_time"].pop(prev_node)
+                    if start_time is not None:
+                        self.property_set["node_start_time"][new_prev_node] = start_time
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse

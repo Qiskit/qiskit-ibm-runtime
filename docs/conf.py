@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.33.0'
+release = '0.34.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -38,8 +38,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     # This is used by qiskit/documentation to generate links to github.com.
     "sphinx.ext.linkcode",
-    'jupyter_sphinx',
-    'sphinx_autodoc_typehints',
     'nbsphinx',
     'sphinxcontrib.katex',
     'matplotlib.sphinxext.plot_directive',
@@ -83,10 +81,19 @@ intersphinx_mapping = {
 # -----------------------------------------------------------------------------
 
 autosummary_generate = True
-
+autosummary_generate_overwrite = False
+autoclass_content = "both"
+autodoc_typehints = "description"
 autodoc_default_options = {
-    'inherited-members': None,
+    "inherited-members": None,
+    "show-inheritance": True,
 }
+autodoc_type_aliases = {
+    "EstimatorPubLike": "EstimatorPubLike",
+    "SamplerPubLike": "SamplerPubLike",
+}
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 
 
 # If true, figures, tables and code-blocks are automatically numbered if they
@@ -130,7 +137,6 @@ html_title = f"{project} {release}"
 
 html_last_updated_fmt = '%Y/%m/%d'
 html_sourcelink_suffix = ''
-autoclass_content = 'both'
 
 
 # ----------------------------------------------------------------------------------

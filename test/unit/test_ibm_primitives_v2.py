@@ -134,13 +134,11 @@ class TestPrimitivesV2(IBMTestCase):
         class MockQRTService:
             """Mock class used to create a new QiskitRuntimeService."""
 
-            global_service = None
-
             def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
                 return mock_service_inst
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
-            inst = primitive(mode=backend_name)
+            inst = primitive(mode=mock_backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst._run.assert_called_once()
@@ -148,7 +146,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertEqual(runtime_options["backend"], mock_backend)
 
             mock_service_inst.reset_mock()
-            str_mode_inst = primitive(mode=backend_name)
+            str_mode_inst = primitive(mode=mock_backend)
             self.assertIsNone(str_mode_inst.mode)
             inst.run(**get_primitive_inputs(str_mode_inst))
             mock_service_inst._run.assert_called_once()
@@ -187,7 +185,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
 
-        with Session(service=backend.service, backend=backend_name) as session:
+        with Session(backend=backend) as session:
             inst = primitive()
             self.assertEqual(inst.mode, session)
             self.assertEqual(inst.mode.backend(), backend_name)
@@ -195,17 +193,12 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
         """Test using a different backend within context manager."""
-        cm_backend = "ibm_metropolis"
+        session_backend = get_mocked_backend("ibm_metropolis")
         backend = get_mocked_backend()
-        service = backend.service
 
-        with Session(service=service, backend=cm_backend):
-            inst = primitive(mode=backend)
-            self.assertIsNone(inst.mode)
-            inst.run(**get_primitive_inputs(inst))
-            service._run.assert_called_once()
-            runtime_options = service._run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], backend)
+        with Session(backend=session_backend):
+            with self.assertRaises(ValueError):
+                _ = primitive(mode=backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_no_session(self, primitive):
@@ -542,7 +535,7 @@ class TestPrimitivesV2(IBMTestCase):
         circ = QuantumCircuit(num_qubits, num_qubits)
         for i in range(num_qubits - 2):
             circ.cx(i, i + 1)
-        transpiled = transpile(circ, backend=fake_backend)
+        transpiled = transpile(circ, backend=fake_backend, optimization_level=1)
         observable = SparsePauliOp("Z" * num_qubits)
 
         edge_qubits = [0, 1]
@@ -600,7 +593,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend)
+        session = Session(backend=fake_backend)
 
         inst = primitive(mode=session)
         if isinstance(inst, IBMBaseEstimator):

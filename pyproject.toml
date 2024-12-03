@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -37,3 +37,108 @@ issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{iss
     directory = "other"
     name = "Other Notes"
     showcontent = true
+
+[tool.setuptools.packages.find]
+exclude = ["test*"]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+
+[tool.setuptools_scm]
+root = "."
+write_to = "qiskit_ibm_runtime/VERSION.txt"
+version_scheme = "release-branch-semver"
+
+[project]
+name = "qiskit-ibm-runtime"
+dynamic = [ "version" ]
+description = "IBM Quantum client for Qiskit Runtime."
+readme = {file = "README.txt", content-type = "text/markdown"}
+authors = [
+    {name = "Qiskit Development Team", email="qiskit@us.ibm.com"},
+]
+license = {text = "Apache 2.0"}
+classifiers=[
+    "Environment :: Console",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+
+keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
+
+requires-python=">=3.8"
+
+dependencies = [
+    "requests>=2.19",
+    "requests-ntlm>=1.1.0",
+    "numpy>=1.13",
+    "urllib3>=1.21.1",
+    "python-dateutil>=2.8.0",
+    "websocket-client>=1.5.1",
+    "ibm-platform-services>=0.22.6",
+    "pydantic>=2.5.0,<2.10",
+    "qiskit>=1.1.0",
+]
+
+[project.entry-points."qiskit.transpiler.translation"]
+ibm_backend = "qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin"
+ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin"
+
+[project.urls]
+documentation = "https://docs.quantum.ibm.com/"
+repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
+issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
+
+
+[project.optional-dependencies]
+
+common = [
+    "mypy==0.931",
+    "pylint==3.0.0",
+    "pproxy==2.7.8",
+    "nbqa==1.5.3",
+    "matplotlib>=2.1",
+    "jupyter",
+    "scipy>=1.0",
+    "nbformat>=4.4.0",
+    "nbconvert>=5.3.1",
+    "qiskit-aer>=0.14.2",
+    "websockets>=8",
+    "black~=24.1",
+    "coverage>=6.3",
+    "pylatexenc",
+    "scikit-learn",
+    "setuptools",
+    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
+]
+
+documentation = [
+    "nbsphinx",
+    "Sphinx>=6",
+    "sphinx-automodapi",
+    "sphinx-autodoc-typehints<=1.19.2",
+    "jupyter-sphinx",
+    "sphinxcontrib-katex==0.9.9",
+    "packaging",
+]
+
+visualization = ["plotly>=5.23.0"]
+
+dev = [
+    "qiskit-ibm-runtime[common]",
+    "qiskit-ibm-runtime[documentation]",
+]
+
+
