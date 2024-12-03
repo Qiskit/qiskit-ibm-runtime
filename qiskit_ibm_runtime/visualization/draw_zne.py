@@ -30,12 +30,12 @@ def draw_zne_evs(
     result: EstimatorPubResult,
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,
-    n_stds: int = 1,
+    num_stds: int = 1,
     max_mag: float = 10,
     max_std: float = 0.2,
     height: int = 500,
     width: int = 1000,
-    n_cols: int = 4,
+    num_cols: int = 4,
     colorscale: str = "Aggrnyl",
 ) -> PlotlyFigure:
     """Plot the zero noise extrapolation data in an :class:`~.EstimatorPubResult`.
@@ -48,14 +48,14 @@ def draw_zne_evs(
             values. See :class:`~.ZneOptions` for information on the indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to the
             indices.
-        n_stds: The number of standard deviations to include around each fit.
+        num_stds: The number of standard deviations to include around each fit.
         max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
             greater magnitude than this value, the expectation value is omitted from the plot.
         max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
             this value for an expectation value and extrapolator, the fit is omitted from the plot.
         height: The height of the plot in pixels.
         width: The width of the plot in pixels.
-        n_cols: The maximum number of columns in the figure.
+        num_cols: The maximum number of columns in the figure.
         colorscale: The colorscale to use.
 
     Returns:
@@ -82,14 +82,14 @@ def draw_zne_evs(
     extrapolators = zne_metadata["extrapolators"]
 
     colors = sample_colorscale(colorscale, np.linspace(0, 1, len(extrapolators)))
-    div, mod = divmod(len(indices), n_cols)
+    div, mod = divmod(len(indices), num_cols)
     fig = make_subplots(
-        cols=n_cols if div else mod, rows=div + bool(mod), shared_xaxes=True, subplot_titles=names
+        cols=num_cols if div else mod, rows=div + bool(mod), shared_xaxes=True, subplot_titles=names
     )
 
     models = set()
     for i, idx in enumerate(indices):
-        div, mod = divmod(i, n_cols)
+        div, mod = divmod(i, num_cols)
         col = mod + 1
         row = div + 1
         evs = result.data.evs_noise_factors[idx]
@@ -115,7 +115,7 @@ def draw_zne_evs(
                     e_noise_factors,
                     evs,
                     stds,
-                    n_stds,
+                    num_stds,
                     model,
                     idx_m,
                     colors[idx_m],
@@ -156,7 +156,7 @@ def draw_zne_extrapolators(
     result: EstimatorPubResult,
     indices: Sequence[tuple[int, ...]] | None = None,
     names: Sequence[str] | None = None,
-    n_stds: int = 1,
+    num_stds: int = 1,
     max_mag: float = 10,
     max_std: float = 0.2,
     height: int = 500,
@@ -173,7 +173,7 @@ def draw_zne_extrapolators(
             values. See :class:`~.ZneOptions` for information on the indexing scheme.
         names: The names to assign to the expectation values. If ``None``, the names correspond to the
             indices.
-        n_stds: The number of standard deviations to include around each fit.
+        num_stds: The number of standard deviations to include around each fit.
         max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
             greater magnitude than this value, the expectation value is omitted from the plot.
         max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
@@ -230,7 +230,7 @@ def draw_zne_extrapolators(
                         e_noise_factors,
                         evs,
                         stds,
-                        n_stds,
+                        num_stds,
                         name=extrapolator,
                         legend_group=i,
                         color=color,
@@ -275,7 +275,7 @@ def _line_fill_trace(
     x_values: np.array,
     y_values: np.array,
     stds: np.array,
-    n_stds: int = 1,
+    num_stds: int = 1,
     name: str | None = None,
     legend_group: int | None = None,
     color: str | None = None,
@@ -287,7 +287,7 @@ def _line_fill_trace(
         x_values: The values for the x-axis.
         y_values: The values for the y-axis.
         stds: The standard deviation for the ``y_values``.
-        n_stds: The number of standard deviations to include around the line plot.
+        num_stds: The number of standard deviations to include around the line plot.
         name: The name of this trace.
         legend_group: The legend group that this trace belongs to.
         color: The color of the fill around the line.
@@ -323,7 +323,7 @@ def _line_fill_trace(
                 hoverinfo="skip",
                 showlegend=False,
             )
-            for i in range(1, n_stds + 1)
+            for i in range(1, num_stds + 1)
         ),
     ]
 

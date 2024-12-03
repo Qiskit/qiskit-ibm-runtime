@@ -36,12 +36,12 @@ class EstimatorPubResult(PubResult):
         self,
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
-        n_stds: int = 1,
+        num_stds: int = 1,
         max_mag: float = 10,
         max_std: float = 0.2,
         height: int = 500,
         width: int = 1000,
-        n_cols: int = 4,
+        num_cols: int = 4,
         colorscale: str = "Aggrnyl",
     ) -> PlotlyFigure:
         """Plot the zero noise extrapolation data contained in this estimator pub result.
@@ -53,14 +53,14 @@ class EstimatorPubResult(PubResult):
                 all values. See :class:`~.ZneOptions` for information on the indexing scheme.
             names: The names to assign to the expectation values. If ``None``, the names correspond to
                 the indices.
-            n_stds: The number of standard deviations to include around each fit.
+            num_stds: The number of standard deviations to include around each fit.
             max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
                 a greater magnitude than this value, the expectation value is omitted from the plot.
             max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
                 this value for an expectation value and extrapolator, the fit is omitted from the plot.
             height: The height of the plot in pixels.
             width: The width of the plot in pixels.
-            n_cols: The maximum number of columns in the figure.
+            num_cols: The maximum number of columns in the figure.
             colorscale: The colorscale to use.
 
         Returns:
@@ -73,12 +73,12 @@ class EstimatorPubResult(PubResult):
             self,
             indices=indices,
             names=names,
-            n_stds=n_stds,
+            num_stds=num_stds,
             max_mag=max_mag,
             max_std=max_std,
             height=height,
             width=width,
-            n_cols=n_cols,
+            num_cols=num_cols,
             colorscale=colorscale,
         )
 
@@ -86,7 +86,7 @@ class EstimatorPubResult(PubResult):
         self,
         indices: Sequence[tuple[int, ...]] | None = None,
         names: Sequence[str] | None = None,
-        n_stds: int = 1,
+        num_stds: int = 1,
         max_mag: float = 10,
         max_std: float = 0.2,
         height: int = 500,
@@ -102,7 +102,7 @@ class EstimatorPubResult(PubResult):
                 all values. See :class:`~.ZneOptions` for information on the indexing scheme.
             names: The names to assign to the expectation values. If ``None``, the names correspond to
                 the indices.
-            n_stds: The number of standard deviations to include around each fit.
+            num_stds: The number of standard deviations to include around each fit.
             max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
                 a greater magnitude than this value, the expectation value is omitted from the plot.
             max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
@@ -121,7 +121,7 @@ class EstimatorPubResult(PubResult):
             self,
             indices=indices,
             names=names,
-            n_stds=n_stds,
+            num_stds=num_stds,
             max_mag=max_mag,
             max_std=max_std,
             height=height,
