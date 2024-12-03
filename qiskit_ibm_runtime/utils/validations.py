@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
-from typing import List, Sequence, Optional, Any
+from typing import List, Sequence, Optional, Any, Union
 import warnings
 import keyword
 
@@ -22,6 +22,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import (
     is_isa_circuit,
     are_circuits_dynamic,
+    is_valid_rzz_pub,
     has_param_expressions,
 )
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -100,6 +101,18 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
                 "(https://docs.quantum.ibm.com/guides/primitives-examples) to see "
                 "this coupled with operator transformations."
             )
+
+
+def validate_rzz_pubs(pubs: Union[List[EstimatorPub], List[SamplerPub]]) -> None:
+    """Validate that rzz angles are always in the range [0, pi/2]
+
+    Args:
+        pubs: A list of pubs.
+    """
+    for pub in pubs:
+        message = is_valid_rzz_pub(pub)
+        if message:
+            raise IBMInputValueError(message)
 
 
 def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
