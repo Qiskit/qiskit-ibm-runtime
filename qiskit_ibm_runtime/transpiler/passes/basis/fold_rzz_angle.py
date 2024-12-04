@@ -87,7 +87,7 @@ class FoldRzzAngle(TransformationPass):
             # Modify circuit around Rzz gate to address non-ISA angles.
             modified = True
             if isinstance(angle, ParameterExpression):
-                #replace = self._unbounded_parameter(angle, node.qrgs)
+                # replace = self._unbounded_parameter(angle, node.qrgs)
                 pass
             else:
                 replace = self._numeric_parameter(angle, node.qargs)
@@ -95,7 +95,7 @@ class FoldRzzAngle(TransformationPass):
             dag.substitute_node_with_dag(node, replace)
 
         return modified
-    
+
     # The next functions are required because sympy doesn't convert Boolean values to integers.
     # symengine maybe does but I failed to find it in its documentation.
     @staticmethod
@@ -120,13 +120,18 @@ class FoldRzzAngle(TransformationPass):
 
         quad1 = self.between(wrap_angle, 0, pi / 2)
         quad2 = self.between(wrap_angle, pi / 2, pi)
-        quad3 = self.between(wrap_angle, - pi, - pi / 2)
-        quad4 = self.between(wrap_angle, - pi / 2, 0)
+        quad3 = self.between(wrap_angle, -pi, -pi / 2)
+        quad4 = self.between(wrap_angle, -pi / 2, 0)
 
-        global_phase = quad2 * pi / 2 + quad3 * (- pi / 2) + pi_phase * pi
+        global_phase = quad2 * pi / 2 + quad3 * (-pi / 2) + pi_phase * pi
         rz_angle = quad2 * pi + quad3 * pi
         rx_angle = quad2 * pi + quad4 * pi
-        rzz_angle = quad1 * wrap_angle + quad2 * (pi - wrap_angle) + quad3 * (pi + wrap_angle) + quad4 * (- wrap_angle)
+        rzz_angle = (
+            quad1 * wrap_angle
+            + quad2 * (pi - wrap_angle)
+            + quad3 * (pi + wrap_angle)
+            + quad4 * (-wrap_angle)
+        )
 
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
@@ -159,7 +164,7 @@ class FoldRzzAngle(TransformationPass):
         )
 
         return new_dag
-    
+
     def _numeric_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         wrap_angle = np.angle(np.exp(1j * angle))
         if 0 <= wrap_angle <= pi / 2:
