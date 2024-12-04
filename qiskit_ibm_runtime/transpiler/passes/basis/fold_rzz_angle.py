@@ -87,8 +87,7 @@ class FoldRzzAngle(TransformationPass):
             # Modify circuit around Rzz gate to address non-ISA angles.
             modified = True
             if isinstance(angle, ParameterExpression):
-                # replace = self._unbounded_parameter(angle, node.qrgs)
-                pass
+                replace = self._unbounded_parameter(angle, node.qrgs)
             else:
                 replace = self._numeric_parameter(angle, node.qargs)
 
@@ -98,20 +97,17 @@ class FoldRzzAngle(TransformationPass):
 
     # The next functions are required because sympy doesn't convert Boolean values to integers.
     # symengine maybe does but I failed to find it in its documentation.
-    @staticmethod
-    def gt_op(exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+    def gt_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         tmp = (exp1 - exp2).sign()
 
         # We want to return 1 if tmp is -1 or 0, and 1 otherwise
         return tmp * tmp * (tmp + 1) / 2
 
-    @staticmethod
-    def and_op(exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+    def and_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         return exp1 * exp2
 
-    @staticmethod
-    def between(exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression):
-        return and_op(gt_op(exp, lower), gt_op(upper, exp))
+    def between(self, exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression):
+        return self.and_op(self.gt_op(exp, lower), self.gt_op(upper, exp))
 
     def _unbounded_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
