@@ -14,9 +14,10 @@
 
 from typing import Tuple
 from math import pi
+from operator import mod
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
+from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
@@ -42,13 +43,6 @@ class FoldRzzAngle(TransformationPass):
 
     This pass allows the Qiskit users to naively use the Rzz gates
     with angle of arbitrary real numbers.
-
-    .. note::
-        This pass doesn't transform the circuit when the
-        Rzz gate angle is an unbound parameter.
-        In this case, the user must assign a gate angle before
-        transpilation, or be responsible for choosing parameters
-        from the calibrated range of [0, pi/2].
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
@@ -85,31 +79,107 @@ class FoldRzzAngle(TransformationPass):
                 continue
 
             angle = node.op.params[0]
-            if isinstance(angle, ParameterExpression) or 0 <= angle <= pi / 2:
+
+            if not isinstance(angle, ParameterExpression) and 0 <= angle <= pi / 2:
                 # Angle is an unbound parameter or a calibrated value.
                 continue
 
             # Modify circuit around Rzz gate to address non-ISA angles.
             modified = True
-            wrap_angle = np.angle(np.exp(1j * angle))
-            if 0 <= wrap_angle <= pi / 2:
-                # In the first quadrant.
-                replace = self._quad1(wrap_angle, node.qargs)
-            elif pi / 2 < wrap_angle <= pi:
-                # In the second quadrant.
-                replace = self._quad2(wrap_angle, node.qargs)
-            elif -pi <= wrap_angle <= -pi / 2:
-                # In the third quadrant.
-                replace = self._quad3(wrap_angle, node.qargs)
-            elif -pi / 2 < wrap_angle < 0:
-                # In the forth quadrant.
-                replace = self._quad4(wrap_angle, node.qargs)
+            if isinstance(angle, ParameterExpression):
+                #replace = self._unbounded_parameter(angle, node.qrgs)
+                pass
             else:
-                raise RuntimeError("Unreacheable.")
-            if pi < angle % (4 * pi) < 3 * pi:
-                replace.apply_operation_back(GlobalPhaseGate(pi))
+                replace = self._numeric_parameter(angle, node.qargs)
+
             dag.substitute_node_with_dag(node, replace)
+
         return modified
+    
+    # The next functions are required because sympy doesn't convert Boolean values to integers.
+    # symengine maybe does but I failed to find it in its documentation.
+    @staticmethod
+    def gt_op(exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        tmp = (exp1 - exp2).sign()
+
+        # We want to return 1 if tmp is -1 or 0, and 1 otherwise
+        return tmp * tmp * (tmp + 1) / 2
+
+    @staticmethod
+    def and_op(exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        return exp1 * exp2
+
+    @staticmethod
+    def between(exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression):
+        return and_op(gt_op(exp, lower), gt_op(upper, exp))
+
+    def _unbounded_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
+
+        pi_phase = pi * self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
+
+        quad1 = self.between(wrap_angle, 0, pi / 2)
+        quad2 = self.between(wrap_angle, pi / 2, pi)
+        quad3 = self.between(wrap_angle, - pi, - pi / 2)
+        quad4 = self.between(wrap_angle, - pi / 2, 0)
+
+        global_phase = quad2 * pi / 2 + quad3 * (- pi / 2) + pi_phase * pi
+        rz_angle = quad2 * pi + quad3 * pi
+        rx_angle = quad2 * pi + quad4 * pi
+        rzz_angle = quad1 * wrap_angle + quad2 * (pi - wrap_angle) + quad3 * (pi + wrap_angle) + quad4 * (- wrap_angle)
+
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
+        new_dag.apply_operation_back(GlobalPhaseGate(global_phase))
+        new_dag.apply_operation_back(
+            RZGate(rz_angle),
+            qargs=(qubits[0],),
+            cargs=(),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZGate(rz_angle),
+            qargs=(qubits[1],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RXGate(rx_angle),
+            qargs=(qubits[0],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZZGate(rzz_angle),
+            qargs=qubits,
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RXGate(rx_angle),
+            qargs=(qubits[0],),
+            check=False,
+        )
+
+        return new_dag
+    
+    def _numeric_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        wrap_angle = np.angle(np.exp(1j * angle))
+        if 0 <= wrap_angle <= pi / 2:
+            # In the first quadrant.
+            replace = self._quad1(wrap_angle, qubits)
+        elif pi / 2 < wrap_angle <= pi:
+            # In the second quadrant.
+            replace = self._quad2(wrap_angle, qubits)
+        elif -pi <= wrap_angle <= -pi / 2:
+            # In the third quadrant.
+            replace = self._quad3(wrap_angle, qubits)
+        elif -pi / 2 < wrap_angle < 0:
+            # In the forth quadrant.
+            replace = self._quad4(wrap_angle, qubits)
+        else:
+            raise RuntimeError("Unreacheable.")
+        if pi < angle % (4 * pi) < 3 * pi:
+            replace.apply_operation_back(GlobalPhaseGate(pi))
+
+        return replace
 
     @staticmethod
     def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
