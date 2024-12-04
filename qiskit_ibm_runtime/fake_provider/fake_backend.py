@@ -42,6 +42,7 @@ from qiskit_ibm_runtime.utils.backend_decoder import (
 )
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
+from ..utils.backend_decoder import configuration_from_server_data
 
 from ..models import (
     BackendProperties,
@@ -590,54 +591,53 @@ class FakeBackendV2(BackendV2):
             backends = service.backends(prod_name)
             real_backend = backends[0]
 
-            real_props = real_backend.properties()
-            real_config = real_backend.configuration()
-            real_defs = real_backend.defaults()
+            real_props = real_backend.properties(refresh=True)
+            real_config = configuration_from_server_data(
+                raw_config=service._api_client.backend_configuration(prod_name, refresh=True)
+            )
+            real_defs = real_backend.defaults(refresh=True)
 
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
-            if updated_config != self._conf_dict:
+            if real_config:
+                config_path = os.path.join(self.dirname, self.conf_filename)
+                with open(config_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
-                if real_config:
-                    config_path = os.path.join(self.dirname, self.conf_filename)
-                    with open(config_path, "w", encoding="utf-8") as fd:
-                        fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
+            if real_props:
+                props_path = os.path.join(self.dirname, self.props_filename)
+                with open(props_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-                if real_props:
-                    props_path = os.path.join(self.dirname, self.props_filename)
-                    with open(props_path, "w", encoding="utf-8") as fd:
-                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+            if real_defs:
+                defs_path = os.path.join(self.dirname, self.defs_filename)
+                with open(defs_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
-                if real_defs:
-                    defs_path = os.path.join(self.dirname, self.defs_filename)
-                    with open(defs_path, "w", encoding="utf-8") as fd:
-                        fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+            if self._target is not None:
+                self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
+                self._set_props_dict_from_json()
+                self._set_defs_dict_from_json()
 
-                if self._target is not None:
-                    self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
-                    self._set_props_dict_from_json()
-                    self._set_defs_dict_from_json()
+                updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
+                updated_properties = BackendProperties.from_dict(self._props_dict)
+                updated_defaults = PulseDefaults.from_dict(self._defs_dict)
 
-                    updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
-                    updated_properties = BackendProperties.from_dict(self._props_dict)
-                    updated_defaults = PulseDefaults.from_dict(self._defs_dict)
-
-                    self._target = convert_to_target(
-                        configuration=updated_configuration,
-                        properties=updated_properties,
-                        defaults=updated_defaults,
-                        include_control_flow=True,
-                        include_fractional_gates=True,
-                    )
-
-                logger.info(
-                    "The backend %s has been updated from version %s to %s version.",
-                    self.backend_name,
-                    version,
-                    real_props.backend_version,
+                self._target = convert_to_target(
+                    configuration=updated_configuration,
+                    properties=updated_properties,
+                    defaults=updated_defaults,
+                    include_control_flow=True,
+                    include_fractional_gates=True,
                 )
-            else:
-                logger.info("There are no available new updates for %s.", self.backend_name)
+
+            logger.info(
+                "The backend %s has been updated from version %s to %s version.",
+                self.backend_name,
+                version,
+                real_props.backend_version,
+            )
+
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))
