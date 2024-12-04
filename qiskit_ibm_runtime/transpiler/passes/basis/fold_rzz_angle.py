@@ -87,7 +87,7 @@ class FoldRzzAngle(TransformationPass):
             # Modify circuit around Rzz gate to address non-ISA angles.
             modified = True
             if isinstance(angle, ParameterExpression):
-                replace = self._unbounded_parameter(angle, node.qrgs)
+                replace = self._unbounded_parameter(angle, node.qargs)
             else:
                 replace = self._numeric_parameter(angle, node.qargs)
 
@@ -100,16 +100,26 @@ class FoldRzzAngle(TransformationPass):
     def gt_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         tmp = (exp1 - exp2).sign()
 
-        # We want to return 1 if tmp is -1 or 0, and 1 otherwise
+        # We want to return 0 if tmp is -1 or 0, and 1 otherwise
         return tmp * tmp * (tmp + 1) / 2
+
+    def gteq_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        tmp = (exp1 - exp2).sign()
+
+        # We want to return 1 if tmp is 1 or 0, and 0 otherwise
+        return (tmp + 1)._apply_operation(mod, 2) + tmp * tmp * (tmp + 1) / 2
 
     def and_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         return exp1 * exp2
 
-    def between(self, exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression):
-        return self.and_op(self.gt_op(exp, lower), self.gt_op(upper, exp))
+    def between(
+        self, exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression
+    ):
+        return self.and_op(self.gteq_op(exp, lower), self.gt_op(upper, exp))
 
-    def _unbounded_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _unbounded_parameter(
+        self, angle: ParameterExpression, qubits: Tuple[Qubit, ...]
+    ) -> DAGCircuit:
         wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
 
         pi_phase = pi * self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
@@ -127,6 +137,16 @@ class FoldRzzAngle(TransformationPass):
             + quad2 * (pi - wrap_angle)
             + quad3 * (pi + wrap_angle)
             + quad4 * (-wrap_angle)
+        )
+
+        print(
+            wrap_angle.assign(angle, pi / 2),
+            pi_phase.assign(angle, pi / 2),
+            global_phase.assign(angle, pi / 2),
+            quad1.assign(angle, pi / 2),
+            quad2.assign(angle, pi / 2),
+            quad3.assign(angle, pi / 2),
+            quad4.assign(angle, pi / 2),
         )
 
         new_dag = DAGCircuit()
