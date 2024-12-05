@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Added the ``draw_zne_evs`` and ``draw_zne_extrapolators`` functions to visaulize data from
+- Added the ``draw_zne_evs`` and ``draw_zne_extrapolators`` functions to visualize data from
   experiments using ZNE.
   Added ``EstimatorPubResult`` with methods ``draw_zne_evs`` and 
   ``draw_zne_extrapolators``, invoking the corresponding visualization functions. (`1820 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1820>`__)
