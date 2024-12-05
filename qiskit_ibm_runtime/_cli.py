@@ -43,11 +43,11 @@ def entry_point() -> None:
     # Use argparse to create the --help feature
     parser = argparse.ArgumentParser(
         prog="qiskit-ibm-runtime",
-        description="Scripts for the Qiskit IBM Runtime Python package",
+        description="Commands for the Qiskit IBM Runtime Python package",
     )
     subparsers = parser.add_subparsers(
-        title="Scripts",
-        description="This package supports the following scripts:",
+        title="Commands",
+        description="This package supports the following commands:",
         dest="script",
         required=True,
     )
