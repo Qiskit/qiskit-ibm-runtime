@@ -98,23 +98,31 @@ class FoldRzzAngle(TransformationPass):
     # The next functions are required because sympy doesn't convert Boolean values to integers.
     # symengine maybe does but I failed to find it in its documentation.
     def gt_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        """Return an expression which, after substitution, will be equal to 1 if `exp1` is
+        greater than `exp2`, and 0 otherwise"""
         tmp = (exp1 - exp2).sign()
 
         # We want to return 0 if tmp is -1 or 0, and 1 otherwise
         return tmp * tmp * (tmp + 1) / 2
 
     def gteq_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        """Return an expression which, after substitution, will be equal to 1 if `exp1` is
+        greater or equal than `exp2`, and 0 otherwise"""
         tmp = (exp1 - exp2).sign()
 
         # We want to return 1 if tmp is 1 or 0, and 0 otherwise
         return (1 - tmp * tmp) + tmp * tmp * (tmp + 1) / 2
 
     def and_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        """Return an expression which, after substitution, will be equal to 1 if `exp1` and `exp2`
+        are both 1, and 0 if at least one of then is 0"""
         return exp1 * exp2
 
     def between(
         self, exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression
     ):
+        """Return an expression which, after substitution, will be equal to 1 if `exp1` is
+        greater or equal than `lower` and smaller than `upper`, and 0 otherwise"""
         return self.and_op(self.gteq_op(exp, lower), self.gt_op(upper, exp))
 
     def _unbounded_parameter(
