@@ -120,7 +120,7 @@ class FoldRzzAngle(TransformationPass):
 
     def between(
         self, exp: ParameterExpression, lower: ParameterExpression, upper: ParameterExpression
-    ):
+    ) -> ParameterExpression:
         """Return an expression which, after substitution, will be equal to 1 if `exp1` is
         greater or equal than `lower` and smaller than `upper`, and 0 otherwise"""
         return self.and_op(self.gteq_op(exp, lower), self.gt_op(upper, exp))
