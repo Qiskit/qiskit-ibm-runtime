@@ -185,11 +185,11 @@ def user_input(message: str, is_valid: Callable[[str], bool]) -> str:
     """
     while True:
         response = input(message + " ").strip()
-        if response == "quit":
+        if response in ["q", "quit"]:
             sys.exit()
         if is_valid(response):
             return response
-        print("Did not understand input, trying again... (type 'quit' to quit)")
+        print("Did not understand input, trying again... (or type 'q' to quit)")
 
 
 def select_from_list(options: List[T]) -> T:

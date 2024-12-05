@@ -47,7 +47,7 @@ class TestCLI(IBMTestCase):
 
     def test_select_from_list(self):
         """Test the `select_from_list` helper function"""
-        self.maxDiff = 1500  # pylint: disable=invalid-name
+        self.maxDiff = 3000  # pylint: disable=invalid-name
 
         # Check a bunch of invalid inputs before entering a valid one
         mockio = MockIO(["", "0", "-1", "3.14", "9", " 3"])
@@ -69,19 +69,19 @@ class TestCLI(IBMTestCase):
               (3) c
               (4) d
 
-            Enter a number 1-4 and press enter: 
-            Did not understand input, trying again... (type 'quit' to quit)
-            Enter a number 1-4 and press enter: 
-            Did not understand input, trying again... (type 'quit' to quit)
-            Enter a number 1-4 and press enter: 
-            Did not understand input, trying again... (type 'quit' to quit)
-            Enter a number 1-4 and press enter: 
-            Did not understand input, trying again... (type 'quit' to quit)
-            Enter a number 1-4 and press enter: 
-            Did not understand input, trying again... (type 'quit' to quit)
-            Enter a number 1-4 and press enter: 
+            Enter a number 1-4 and press enter:•
+            Did not understand input, trying again... (or type 'q' to quit)
+            Enter a number 1-4 and press enter:•
+            Did not understand input, trying again... (or type 'q' to quit)
+            Enter a number 1-4 and press enter:•
+            Did not understand input, trying again... (or type 'q' to quit)
+            Enter a number 1-4 and press enter:•
+            Did not understand input, trying again... (or type 'q' to quit)
+            Enter a number 1-4 and press enter:•
+            Did not understand input, trying again... (or type 'q' to quit)
+            Enter a number 1-4 and press enter:•
             Selected \033[32m\033[1mc\033[0m\033[0m
-            """
+            """.replace("•", " ")
             ),
         )
 
