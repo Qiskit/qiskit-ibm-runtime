@@ -74,7 +74,7 @@ class Session:
         isa_circuit = pm.run(qc)
 
         with Session(backend=backend) as session:
-            sampler = Sampler(session=session)
+            sampler = Sampler(mode=session)
             job = sampler.run([isa_circuit])
             pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
