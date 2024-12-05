@@ -107,7 +107,7 @@ class FoldRzzAngle(TransformationPass):
         tmp = (exp1 - exp2).sign()
 
         # We want to return 1 if tmp is 1 or 0, and 0 otherwise
-        return (tmp + 1)._apply_operation(mod, 2) + tmp * tmp * (tmp + 1) / 2
+        return (1 - tmp * tmp) + tmp * tmp * (tmp + 1) / 2
 
     def and_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         return exp1 * exp2
