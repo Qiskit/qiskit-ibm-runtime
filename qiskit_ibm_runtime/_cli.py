@@ -151,7 +151,7 @@ class SaveAccountCLI:
                 message="\nDefault account already exists, would you like to overwrite it? (y/N):",
                 is_valid=lambda response: response.strip().lower() in ["y", "yes", "n", "no", ""],
             )
-            if response.lower() in ["y", "yes"]:
+            if response.strip().lower() in ["y", "yes"]:
                 AccountManager.save(**account, overwrite=True)
             else:
                 print("Account not saved.")
