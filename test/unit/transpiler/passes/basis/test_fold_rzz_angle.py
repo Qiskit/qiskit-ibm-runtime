@@ -93,8 +93,13 @@ class TestFoldRzzAngle(IBMTestCase):
         qc.assign_parameters({param: angle}, inplace=True)
         isa.assign_parameters({param: angle}, inplace=True)
 
+        print(isa)
+
         self.assertEqual(Operator.from_circuit(qc), Operator.from_circuit(isa))
+        print(Operator.from_circuit(qc))
+        print(Operator.from_circuit(isa))
         for inst_data in isa.data:
+            print(inst_data.operation.name, inst_data.operation.params[0].assign(param, angle))
             if inst_data.operation.name == "rzz":
                 fold_angle = float(inst_data.operation.params[0].assign(param, angle))
                 self.assertGreaterEqual(fold_angle, 0.0)

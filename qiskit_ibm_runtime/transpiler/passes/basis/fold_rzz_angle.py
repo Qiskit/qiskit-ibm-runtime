@@ -121,8 +121,7 @@ class FoldRzzAngle(TransformationPass):
         self, angle: ParameterExpression, qubits: Tuple[Qubit, ...]
     ) -> DAGCircuit:
         wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
-
-        pi_phase = pi * self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
+        pi_phase = self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
 
         quad1 = self.between(wrap_angle, 0, pi / 2)
         quad2 = self.between(wrap_angle, pi / 2, pi)
@@ -139,14 +138,15 @@ class FoldRzzAngle(TransformationPass):
             + quad4 * (-wrap_angle)
         )
 
+        val = 0.1 + 2 * pi
         print(
-            wrap_angle.assign(angle, pi / 2),
-            pi_phase.assign(angle, pi / 2),
-            global_phase.assign(angle, pi / 2),
-            quad1.assign(angle, pi / 2),
-            quad2.assign(angle, pi / 2),
-            quad3.assign(angle, pi / 2),
-            quad4.assign(angle, pi / 2),
+            wrap_angle.assign(angle, val),
+            pi_phase.assign(angle, val),
+            global_phase.assign(angle, val),
+            quad1.assign(angle, val),
+            quad2.assign(angle, val),
+            quad3.assign(angle, val),
+            quad4.assign(angle, val),
         )
 
         new_dag = DAGCircuit()
