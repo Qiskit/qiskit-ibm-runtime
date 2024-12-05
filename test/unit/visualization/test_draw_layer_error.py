@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for the classes used to instantiate noise learner results."""
+"""Tests for the functions used to visualize noise learner results."""
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
