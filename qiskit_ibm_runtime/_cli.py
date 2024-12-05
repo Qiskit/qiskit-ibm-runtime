@@ -79,7 +79,7 @@ class SaveAccountCLI:
         A CLI that guides users through getting their account information and
         saving it to disk.
         """
-        cls.print_box(["Qiskit IBM Runtime save account"])
+        print(Format.box(["Qiskit IBM Runtime save account"]))
         channel = cls.get_channel()
         token = cls.get_token(channel)
         print("Verifying, this might take few seconds...")
@@ -99,17 +99,6 @@ class SaveAccountCLI:
                 "instance": instance,
             }
         )
-
-    @classmethod
-    def print_box(cls, lines: List[str]) -> None:
-        """Print lines in a box using Unicode box-drawing characters"""
-        width = max(len(line) for line in lines)
-        box_lines = [
-            "╭─" + "─" * width + "─╮",
-            *(f"│ {Format.bold(line.ljust(width))} │" for line in lines),
-            "╰─" + "─" * width + "─╯",
-        ]
-        print("\n".join(box_lines))
 
     @classmethod
     def get_channel(cls) -> Channel:
@@ -169,13 +158,13 @@ class SaveAccountCLI:
                 return
 
         print(f"Account saved to {Format.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
-        cls.print_box(
+        print(Format.box(
             [
                 "⚠️ Warning: your token is saved to disk in plain text.",
                 "If on a shared computer, make sure to revoke your token",
                 "by regenerating it in your account settings when finished.",
             ]
-        )
+        ))
 
 
 def user_input(message: str, is_valid: Callable[[str], bool]) -> str:
@@ -215,22 +204,33 @@ class Format:
 
     # pylint: disable=missing-function-docstring
 
-    @classmethod
-    def bold(cls, s: str) -> str:
+    @staticmethod
+    def box(lines: List[str]) -> str:
+        """Print lines in a box using Unicode box-drawing characters"""
+        width = max(len(line) for line in lines)
+        box_lines = [
+            "╭─" + "─" * width + "─╮",
+            *(f"│ {Format.bold(line.ljust(width))} │" for line in lines),
+            "╰─" + "─" * width + "─╯",
+        ]
+        return "\n".join(box_lines)
+
+    @staticmethod
+    def bold(s: str) -> str:
         return f"\033[1m{s}\033[0m"
 
-    @classmethod
-    def green(cls, s: str) -> str:
+    @staticmethod
+    def green(s: str) -> str:
         return f"\033[32m{s}\033[0m"
 
-    @classmethod
-    def red(cls, s: str) -> str:
+    @staticmethod
+    def red(s: str) -> str:
         return f"\033[31m{s}\033[0m"
 
-    @classmethod
-    def cyan(cls, s: str) -> str:
+    @staticmethod
+    def cyan(s: str) -> str:
         return f"\033[36m{s}\033[0m"
 
-    @classmethod
-    def greenbold(cls, s: str) -> str:
+    @staticmethod
+    def greenbold(s: str) -> str:
         return cls.green(cls.bold(s))
