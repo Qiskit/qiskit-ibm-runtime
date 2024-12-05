@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import patch
 from textwrap import dedent
 
-from qiskit_ibm_runtime._cli import SaveAccountCLI, select_from_list
+from qiskit_ibm_runtime._cli import SaveAccountCLI, UserInput
 
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
 from ..ibm_test_case import IBMTestCase
@@ -46,7 +46,7 @@ class TestCLI(IBMTestCase):
     # pylint: disable=missing-class-docstring, missing-function-docstring
 
     def test_select_from_list(self):
-        """Test the `select_from_list` helper function"""
+        """Test the `UserInput.select_from_list` helper method"""
         self.maxDiff = 3000  # pylint: disable=invalid-name
 
         # Check a bunch of invalid inputs before entering a valid one
@@ -55,7 +55,7 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.print", mockio.mock_print)
         def run_test():
-            choice = select_from_list(["a", "b", "c", "d"])
+            choice = UserInput.select_from_list(["a", "b", "c", "d"])
             self.assertEqual(choice, "c")
 
         run_test()

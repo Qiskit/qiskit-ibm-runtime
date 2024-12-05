@@ -104,7 +104,7 @@ class SaveAccountCLI:
     def get_channel(cls) -> Channel:
         """Ask user which channel to use"""
         print(Format.bold("Select a channel"))
-        return select_from_list(["ibm_quantum", "ibm_cloud"])
+        return UserInput.select_from_list(["ibm_quantum", "ibm_cloud"])
 
     @classmethod
     def get_token(cls, channel: Channel) -> str:
@@ -118,10 +118,7 @@ class SaveAccountCLI:
             + f"\nYou can get this from {Format.cyan(token_url)}."
             + "\nFor security, you might not see any feedback when typing."
         )
-        while True:
-            token = getpass("Token: ").strip()
-            if token != "":
-                return token
+        return UserInput.token()
 
     @classmethod
     def get_instance(cls, service: QiskitRuntimeService) -> str:
@@ -135,7 +132,7 @@ class SaveAccountCLI:
             print(f"Using instance {Format.greenbold(instance)}")
             return instance
         print(Format.bold("\nSelect a default instance"))
-        return select_from_list(instances)
+        return UserInput.select_from_list(instances)
 
     @classmethod
     def save_to_disk(cls, account: dict) -> None:
@@ -147,7 +144,7 @@ class SaveAccountCLI:
         try:
             AccountManager.save(**account)
         except AccountAlreadyExistsError:
-            response = user_input(
+            response = UserInput.input(
                 message="\nDefault account already exists, would you like to overwrite it? (y/N):",
                 is_valid=lambda response: response.strip().lower() in ["y", "yes", "n", "no", ""],
             )
@@ -166,37 +163,49 @@ class SaveAccountCLI:
             ]
         ))
 
+class UserInput:
+    """
+    Helper functions to get different types input from user.
+    """
 
-def user_input(message: str, is_valid: Callable[[str], bool]) -> str:
-    """
-    Repeatedly ask user for input until they give us something that satisifies
-    `is_valid`.
-    """
-    while True:
-        response = input(message + " ").strip()
-        if response in ["q", "quit"]:
-            sys.exit()
-        if is_valid(response):
-            return response
-        print("Did not understand input, trying again... (or type 'q' to quit)")
+    @staticmethod
+    def input(message: str, is_valid: Callable[[str], bool]) -> str:
+        """
+        Repeatedly ask user for input until they give us something that satisifies
+        `is_valid`.
+        """
+        while True:
+            response = input(message + " ").strip()
+            if response in ["q", "quit"]:
+                sys.exit()
+            if is_valid(response):
+                return response
+            print("Did not understand input, trying again... (or type 'q' to quit)")
 
+    @staticmethod
+    def token() -> str:
+        while True:
+            token = getpass("Token: ").strip()
+            if token != "":
+                return token
 
-def select_from_list(options: List[T]) -> T:
-    """
-    Prompt user to select from a list of options by entering a number.
-    """
-    print()
-    for index, option in enumerate(options):
-        print(f"  ({index+1}) {option}")
-    print()
-    response = user_input(
-        message=f"Enter a number 1-{len(options)} and press enter:",
-        is_valid=lambda response: response.isdigit()
-        and int(response) in range(1, len(options) + 1),
-    )
-    choice = options[int(response) - 1]
-    print(f"Selected {Format.greenbold(str(choice))}")
-    return choice
+    @staticmethod
+    def select_from_list(options: List[T]) -> T:
+        """
+        Prompt user to select from a list of options by entering a number.
+        """
+        print()
+        for index, option in enumerate(options):
+            print(f"  ({index+1}) {option}")
+        print()
+        response = UserInput.input(
+            message=f"Enter a number 1-{len(options)} and press enter:",
+            is_valid=lambda response: response.isdigit()
+            and int(response) in range(1, len(options) + 1),
+        )
+        choice = options[int(response) - 1]
+        print(f"Selected {Format.greenbold(str(choice))}")
+        return choice
 
 
 class Format:
