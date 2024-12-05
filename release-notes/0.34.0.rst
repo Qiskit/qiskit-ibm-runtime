@@ -50,7 +50,7 @@ Bug Fixes
   target were not consistent with those in the configuration and properties data.
   For the most part, this change should be transparent to users, but if there is
   code relying on the configuration and properties data containing all
-  instructions it will need to be updated (note that setting
+  instructions, it will need to be updated (note that setting
   ``use_fractional_gates`` to ``None`` will load all instructions without
   filtering). (`2031 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2031>`__)
 - Invalid or non-existing backend configurations on the server will no longer 
