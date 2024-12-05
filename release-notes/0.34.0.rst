@@ -67,8 +67,8 @@ Other Notes
       - Passing a backend as a string into ``Session``, ``Batch``, 
         ``Sampler``, and ``Estimator`` is no longer valid. Use the actual backend
         object instead.
-      - Passing a backend as the mode into ``SamplerV2`` or ``EstimatorV2`` used
-        to run jobs in job mode, even if a session context manager was open. These jobs will now
+      - Previously, passing a backend as the mode into ``SamplerV2`` or ``EstimatorV2``
+        ran jobs in job mode, even if a session context manager was open. These jobs will now
         run inside of the open session. Additionally, if a backend that is different
         from the session backend is passed in as the mode, an error will be raised.
       - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``. (`2027 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2027>`__) 
