@@ -138,17 +138,6 @@ class FoldRzzAngle(TransformationPass):
             + quad4 * (-wrap_angle)
         )
 
-        val = -0.1
-        print(
-            wrap_angle.assign(angle, val),
-            pi_phase.assign(angle, val),
-            global_phase.assign(angle, val),
-            quad1.assign(angle, val),
-            quad2.assign(angle, val),
-            quad3.assign(angle, val),
-            quad4.assign(angle, val),
-        )
-
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(GlobalPhaseGate(global_phase))

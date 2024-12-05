@@ -93,11 +93,6 @@ class TestFoldRzzAngle(IBMTestCase):
         qc.assign_parameters({param: angle}, inplace=True)
         isa.assign_parameters({param: angle}, inplace=True)
 
-        print(isa)
-        
-        print(Operator.from_circuit(qc))
-        print(Operator.from_circuit(isa))
-
         self.assertEqual(Operator.from_circuit(qc), Operator.from_circuit(isa))
         for inst_data in isa.data:
             if inst_data.operation.name == "rzz":
