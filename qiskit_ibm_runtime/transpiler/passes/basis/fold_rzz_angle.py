@@ -128,7 +128,7 @@ class FoldRzzAngle(TransformationPass):
         quad3 = self.between(wrap_angle, -pi, -pi / 2)
         quad4 = self.between(wrap_angle, -pi / 2, 0)
 
-        global_phase = quad2 * pi / 2 + quad3 * (-pi / 2) + pi_phase * pi
+        global_phase = quad2 * (-pi / 2) + quad3 * (-pi / 2) + quad4 * pi + pi_phase * pi
         rz_angle = quad2 * pi + quad3 * pi
         rx_angle = quad2 * pi + quad4 * pi
         rzz_angle = (
@@ -138,7 +138,7 @@ class FoldRzzAngle(TransformationPass):
             + quad4 * (-wrap_angle)
         )
 
-        val = 0.1 + 2 * pi
+        val = -0.1
         print(
             wrap_angle.assign(angle, val),
             pi_phase.assign(angle, val),
@@ -155,7 +155,6 @@ class FoldRzzAngle(TransformationPass):
         new_dag.apply_operation_back(
             RZGate(rz_angle),
             qargs=(qubits[0],),
-            cargs=(),
             check=False,
         )
         new_dag.apply_operation_back(
