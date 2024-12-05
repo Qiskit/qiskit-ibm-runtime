@@ -1,2 +1,0 @@
-Invalid or non-existing backend configurations on the server will no longer 
-prevent all backends from being retrieved with ``service.backends()``.

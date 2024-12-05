@@ -1,2 +1,0 @@
-Fixed an issue where ``FakeBackendV2.refresh()`` wouldn't always
-refresh the backend properties, defaults, and configuration.
