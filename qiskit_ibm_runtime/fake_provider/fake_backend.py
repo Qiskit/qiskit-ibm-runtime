@@ -585,7 +585,6 @@ class FakeBackendV2(BackendV2):
                 " required to retrieve the real backend's current properties and settings."
             )
 
-        version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
             backends = service.backends(prod_name)
@@ -633,10 +632,8 @@ class FakeBackendV2(BackendV2):
                 )
 
             logger.info(
-                "The backend %s has been updated from version %s to %s version.",
+                "The backend %s has been updated with the latest data from the server.",
                 self.backend_name,
-                version,
-                real_props.backend_version,
             )
 
         except Exception as ex:  # pylint: disable=broad-except
