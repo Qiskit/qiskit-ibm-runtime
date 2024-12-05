@@ -11,7 +11,9 @@
 # that they have been altered from the originals.
 
 """
-The `save-account` command-line interface. These classes and functions are not public.
+The `save-account` command-line interface.
+
+These classes and functions are not public.
 """
 
 import argparse
