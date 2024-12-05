@@ -19,7 +19,7 @@ New Features
   translated into ``meas_level`` and ``meas_return`` options under
   ``run_options`` of the :class:`~qiskit.primitives.BackendSamplerV2` if it
   supports ``run_options``. This change allows support for level 1 data in local
-  testing mode, where previously the only level 2 (classified) data was
+  testing mode, where previously only level 2 (classified) data was
   supported. (`1990 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1990>`__)
 - A new function ``validate_rzz_pubs`` was added. The function verifies that ``rzz`` parameters are in the range between ``0`` and ``pi/2``, for numeric parameters (e.g. ``rzz(np.pi/4, 0)``), and for unbounded parameters (``rzz(theta, 0)``) with values to substitute provided in the pub. Parameter expressions (e.g. ``rzz(theta + phi, 0)``) are still not validated. (`2021 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2021>`__)
 - Added a new transpiler translation plugin :class:`~.IBMFractionalTranslationPlugin` 
