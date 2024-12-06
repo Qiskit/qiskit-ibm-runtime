@@ -54,7 +54,7 @@ version_scheme = "release-branch-semver"
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
 description = "IBM Quantum client for Qiskit Runtime."
-readme = {file = "README.txt", content-type = "text/markdown"}
+readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
     {name = "Qiskit Development Team", email="qiskit@us.ibm.com"},
 ]
