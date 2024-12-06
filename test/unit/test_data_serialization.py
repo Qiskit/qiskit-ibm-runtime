@@ -422,7 +422,7 @@ class TestContainerSerialization(IBMTestCase):
         pub_result = PubResult(DataBin(a=1.0, b=2), {"x": 1})
         pub_results.append(pub_result)
         return pub_results
-    
+
     def make_test_estimator_pub_results(self):
         """Generates test data for EstimatorPubResult test"""
         pub_results = []
