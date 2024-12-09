@@ -46,7 +46,7 @@ class FoldRzzAngle(TransformationPass):
     with angle of arbitrary real numbers.
     """
 
-    def __init__(self, target: Optional[Union[Target , list[str]]] = None):
+    def __init__(self, target: Optional[Union[Target, list[str]]] = None):
         """
         Args:
             target - either a target or only a list of basis gates, either way it can be checked
