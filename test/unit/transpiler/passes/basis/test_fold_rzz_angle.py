@@ -18,12 +18,14 @@ import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
+from qiskit.circuit.library import RZZGate
+from qiskit.transpiler.target import InstructionProperties
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.quantum_info import Operator
 
 from qiskit_ibm_runtime.transpiler.passes.basis import FoldRzzAngle
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke
 from .....ibm_test_case import IBMTestCase
 
 
@@ -144,3 +146,23 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[0].operation.name, "global_phase")
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
+
+    def test_unsupported_instructions_skip(self):
+        """Verify that the pass does not output gates that are not in the basis gates"""
+        backend = FakeSherbrooke()
+        backend.target.add_instruction(RZZGate(Parameter("θ")), {(0, 1): InstructionProperties()})
+
+        p = Parameter("p")
+        circ = QuantumCircuit(2)
+        circ.rzz(p, 0, 1)
+
+        pm = generate_preset_pass_manager(
+            optimization_level=0,
+            backend=FakeSherbrooke(),
+            translation_method="ibm_fractional",
+            basis_gates=backend.target.operation_names,
+        )
+        isa_circ = pm.run(circ)
+
+        self.assertEqual(isa_circ.data[0].operation.name, "rzz")
+        self.assertTrue(isinstance(isa_circ.data[0].operation.params[0], Parameter))

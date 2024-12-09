@@ -21,6 +21,7 @@ from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, Global
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
+from qiskit.transpiler import Target
 from qiskit.transpiler.basepasses import TransformationPass
 
 import numpy as np
@@ -44,6 +45,19 @@ class FoldRzzAngle(TransformationPass):
     This pass allows the Qiskit users to naively use the Rzz gates
     with angle of arbitrary real numbers.
     """
+
+    def __init__(self, target: Target | list[str] | None = None):
+        """
+        Args:
+            target - either a target or only a list of basis gates, either way it can be checked
+            if an instruction is supported using the `in` operator, for example `"rx" in target`.
+            If None then we assume that there is no limit on the gates in the transpiled circuit.
+        """
+        super().__init__()
+        if target is None:
+            self._target = ["rz", "x", "rx", "rzz"]
+        else:
+            self._target = target
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         self._run_inner(dag)
@@ -85,13 +99,14 @@ class FoldRzzAngle(TransformationPass):
                 continue
 
             # Modify circuit around Rzz gate to address non-ISA angles.
-            modified = True
             if isinstance(angle, ParameterExpression):
                 replace = self._unbounded_parameter(angle, node.qargs)
             else:
                 replace = self._numeric_parameter(angle, node.qargs)
 
-            dag.substitute_node_with_dag(node, replace)
+            if replace is not None:
+                dag.substitute_node_with_dag(node, replace)
+                modified = True
 
         return modified
 
@@ -128,6 +143,9 @@ class FoldRzzAngle(TransformationPass):
     def _unbounded_parameter(
         self, angle: ParameterExpression, qubits: Tuple[Qubit, ...]
     ) -> DAGCircuit:
+        if "rz" not in self._target or "rx" not in self._target or "rzz" not in self._target:
+            return None
+
         wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
         pi_phase = self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
 
@@ -198,8 +216,7 @@ class FoldRzzAngle(TransformationPass):
 
         return replace
 
-    @staticmethod
-    def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad1(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [0, pi/2].
 
         Circuit is not transformed - the Rzz gate is calibrated for the angle.
@@ -207,6 +224,9 @@ class FoldRzzAngle(TransformationPass):
         Returns:
             A new dag with the same Rzz gate.
         """
+        if "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(
@@ -216,8 +236,7 @@ class FoldRzzAngle(TransformationPass):
         )
         return new_dag
 
-    @staticmethod
-    def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad2(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (pi/2, pi].
 
         Circuit is transformed into the following form:
@@ -231,6 +250,9 @@ class FoldRzzAngle(TransformationPass):
         Returns:
             New dag to replace Rzz gate.
         """
+        if "rz" not in self._target or "x" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
@@ -263,8 +285,7 @@ class FoldRzzAngle(TransformationPass):
             )
         return new_dag
 
-    @staticmethod
-    def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad3(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [-pi, -pi/2].
 
         Circuit is transformed into following form:
@@ -278,6 +299,9 @@ class FoldRzzAngle(TransformationPass):
         Returns:
             New dag to replace Rzz gate.
         """
+        if "rz" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
@@ -299,8 +323,7 @@ class FoldRzzAngle(TransformationPass):
             )
         return new_dag
 
-    @staticmethod
-    def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad4(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (-pi/2, 0).
 
         Circuit is transformed into following form:
@@ -313,6 +336,9 @@ class FoldRzzAngle(TransformationPass):
         Returns:
             New dag to replace Rzz gate.
         """
+        if "x" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(
