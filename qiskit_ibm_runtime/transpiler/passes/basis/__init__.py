@@ -13,3 +13,4 @@
 """Passes to layout circuits to IBM backend's instruction sets."""
 
 from .convert_id_to_delay import ConvertIdToDelay
+from .fold_rzz_angle import FoldRzzAngle

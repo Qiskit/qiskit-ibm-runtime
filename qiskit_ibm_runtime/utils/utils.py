@@ -20,8 +20,9 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple
+from typing import List, Optional, Any, Dict, Union, Tuple, Set
 from urllib.parse import urlparse
+from itertools import chain
 import numpy as np
 
 import requests
@@ -39,6 +40,9 @@ from qiskit.circuit.library.standard_gates import (
 )
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+
 from .deprecation import deprecate_function
 
 
@@ -82,7 +86,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         if (
             name == "rzz"
             and not isinstance((param := instruction.operation.params[0]), ParameterExpression)
-            and (param < 0.0 or param > 1.001 * np.pi / 2)
+            and (param < 0.0 or param > np.pi / 2 + 1e-10)
         ):
             return (
                 f"The instruction {name} on qubits {qargs} is supported only for angles in the "
@@ -121,6 +125,99 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 
     qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}
     return _is_isa_circuit_helper(circuit, target, qubit_map)
+
+
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
+    """
+    For rzz gates:
+    - Verify that numeric angles are in the range [0, pi/2]
+    - Collect parameterized angles
+
+    Returns one of the following:
+    - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
+    - A list of names of all the parameters that participate in an rzz gate
+
+    Note: we check for parametrized rzz gates inside control flow operation, although fractional
+    gates are actually impossible in combination with dynamic circuits. This is in order to remain
+    correct if this restriction is removed at some point.
+    """
+    angle_params = set()
+
+    for instruction in circuit.data:
+        operation = instruction.operation
+
+        # rzz gate is calibrated only for the range [0, pi/2].
+        # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+        # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+        # accurate).
+        if operation.name == "rzz":
+            angle = instruction.operation.params[0]
+            if isinstance(angle, Parameter):
+                angle_params.add(angle.name)
+            elif not isinstance(angle, ParameterExpression) and (
+                angle < 0.0 or angle > np.pi / 2 + 1e-10
+            ):
+                return (
+                    "The instruction rzz is supported only for angles in the "
+                    f"range [0, pi/2], but an angle of {angle} has been provided."
+                )
+
+        if isinstance(operation, ControlFlowOp):
+            for sub_circ in operation.blocks:
+                body_result = _is_valid_rzz_pub_helper(sub_circ)
+                if isinstance(body_result, str):
+                    return body_result
+                angle_params.update(body_result)
+
+    return angle_params
+
+
+def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+    """Verify that all rzz angles are in the range [0, pi/2].
+
+    Args:
+        pub: A pub to be checked
+
+    Returns:
+        An empty string if all angles are valid, otherwise an error message.
+    """
+    helper_result = _is_valid_rzz_pub_helper(pub.circuit)
+
+    if isinstance(helper_result, str):
+        return helper_result
+
+    if len(helper_result) == 0:
+        return ""
+
+    # helper_result is a set of parameter names
+    rzz_params = list(helper_result)
+
+    # gather all parameter names, in order
+    pub_params = list(chain.from_iterable(pub.parameter_values.data))
+
+    col_indices = np.where(np.isin(pub_params, rzz_params))[0]
+    # col_indices is the indices of columns in the parameter value array that have to be checked
+
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
+    # project only to the parameters that have to be checked
+    arr = arr[:, col_indices]
+
+    # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
+    # errors (beyond pi/2 does not trigger an error down the stack, only may become less
+    # accurate).
+    bad = np.where((arr < 0.0) | (arr > np.pi / 2 + 1e-10))
+
+    # `bad` is a tuple of two arrays, which can be empty, like this:
+    # (array([], dtype=int64), array([], dtype=int64))
+    if len(bad[0]) > 0:
+        return (
+            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter "
+            f"'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
+        )
+
+    return ""
 
 
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:

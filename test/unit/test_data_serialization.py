@@ -41,6 +41,7 @@ from qiskit.primitives.containers import (
 )
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 from qiskit_ibm_runtime.utils.noise_learner_result import (
     PauliLindbladError,
     LayerError,
@@ -422,6 +423,15 @@ class TestContainerSerialization(IBMTestCase):
         pub_results.append(pub_result)
         return pub_results
 
+    def make_test_estimator_pub_results(self):
+        """Generates test data for EstimatorPubResult test"""
+        pub_results = []
+        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2))
+        pub_results.append(pub_result)
+        pub_result = EstimatorPubResult(DataBin(a=1.0, b=2), {"x": 1})
+        pub_results.append(pub_result)
+        return pub_results
+
     def make_test_sampler_pub_results(self):
         """Generates test data for SamplerPubResult test"""
         pub_results = []
@@ -603,6 +613,15 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
             self.assertIsInstance(decoded, PubResult)
+            self.assert_pub_results_equal(pub_result, decoded)
+
+    def test_estimator_pub_result(self):
+        """Test encoding and decoding EstimatorPubResult"""
+        for pub_result in self.make_test_estimator_pub_results():
+            payload = {"estimator_pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["estimator_pub_result"]
+            self.assertIsInstance(decoded, EstimatorPubResult)
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_sampler_pub_result(self):
