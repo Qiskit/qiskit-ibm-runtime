@@ -241,11 +241,11 @@ class FoldRzzAngle(TransformationPass):
 
         Circuit is transformed into the following form:
 
-                ┌───────┐┌───┐            ┌───┐
+                 ┌───────┐┌───┐            ┌───┐
             q_0: ┤ Rz(π) ├┤ X ├─■──────────┤ X ├
-                ├───────┤└───┘ │ZZ(π - θ) └───┘
+                 ├───────┤└───┘ │ZZ(π - θ) └───┘
             q_1: ┤ Rz(π) ├──────■───────────────
-                └───────┘
+                 └───────┘
 
         Returns:
             New dag to replace Rzz gate.
@@ -290,11 +290,11 @@ class FoldRzzAngle(TransformationPass):
 
         Circuit is transformed into following form:
 
-                ┌───────┐
+                 ┌───────┐
             q_0: ┤ Rz(π) ├─■───────────────
-                ├───────┤ │ZZ(π - Abs(θ))
+                 ├───────┤ │ZZ(π - Abs(θ))
             q_1: ┤ Rz(π) ├─■───────────────
-                └───────┘
+                 └───────┘
 
         Returns:
             New dag to replace Rzz gate.
@@ -328,9 +328,9 @@ class FoldRzzAngle(TransformationPass):
 
         Circuit is transformed into following form:
 
-                ┌───┐             ┌───┐
+                 ┌───┐             ┌───┐
             q_0: ┤ X ├─■───────────┤ X ├
-                └───┘ │ZZ(Abs(θ)) └───┘
+                 └───┘ │ZZ(Abs(θ)) └───┘
             q_1: ──────■────────────────
 
         Returns:
