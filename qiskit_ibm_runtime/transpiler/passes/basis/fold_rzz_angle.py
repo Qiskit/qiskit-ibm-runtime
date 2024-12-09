@@ -12,7 +12,7 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple
+from typing import Tuple, Optional, Union
 from math import pi
 from operator import mod
 
@@ -46,7 +46,7 @@ class FoldRzzAngle(TransformationPass):
     with angle of arbitrary real numbers.
     """
 
-    def __init__(self, target: Target | list[str] | None = None):
+    def __init__(self, target: Optional[Union[Target , list[str]]] = None):
         """
         Args:
             target - either a target or only a list of basis gates, either way it can be checked
