@@ -55,7 +55,7 @@ Here is an example of using a fake backend for transpilation and simulation.
 
 .. plot::
    :alt: [Circuit diagram output by the previous code.]
-   :include-source::alt: [Circuit diagram output by the previous code.]
+   :include-source:
    :context: close-figs
 
    # Transpile the ideal circuit to a circuit that can be 
