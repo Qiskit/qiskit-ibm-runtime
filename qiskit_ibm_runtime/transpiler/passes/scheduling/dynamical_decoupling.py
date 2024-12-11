@@ -54,6 +54,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
     (including global phase).
 
     .. plot::
+       :alt: [Circuit diagram output by the previous code.]
        :include-source:
        :context: close-figs
 
@@ -86,6 +87,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         circ_dd.draw('mpl', style="iqp")
 
     .. plot::
+       :alt: [Circuit diagram output by the previous code.]
        :include-source:
        :context: close-figs
 
