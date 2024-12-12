@@ -32,7 +32,7 @@ Example Usage
 Here is an example of using a fake backend for transpilation and simulation.
 
 .. plot::
-   :alt: [Circuit diagram output by the previous code.]
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -54,7 +54,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    circuit.draw('mpl', style="iqp")
 
 .. plot::
-   :alt: [Circuit diagram output by the previous code.]
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -64,7 +64,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    transpiled_circuit.draw('mpl', style="iqp")
 
 .. plot::
-   :alt: [Histogram output by the previous code.]
+   :alt: Histogram output by the previous code.
    :include-source:
    :context: close-figs
    
