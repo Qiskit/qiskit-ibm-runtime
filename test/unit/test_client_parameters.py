@@ -77,9 +77,9 @@ class TestClientParameters(IBMTestCase):
             (
                 "ibm_quantum",
                 "h/g/p",
-                "https://auth.quantum-computing.ibm.com/api",
+                "https://auth.quantum.ibm.com/api",
                 None,
-                "https://auth.quantum-computing.ibm.com/api",
+                "https://auth.quantum.ibm.com/api",
             ),
             (
                 "ibm_cloud",
@@ -92,9 +92,9 @@ class TestClientParameters(IBMTestCase):
             (
                 "ibm_quantum",
                 "h/g/p",
-                "https://auth.quantum-computing.ibm.com/api",
+                "https://auth.quantum.ibm.com/api",
                 lambda a, b, c: f"{a}:{b}:{c}",
-                "https://auth.quantum-computing.ibm.com/api:h/g/p:False",
+                "https://auth.quantum.ibm.com/api:h/g/p:False",
             ),
         ]
         for spec in test_specs:

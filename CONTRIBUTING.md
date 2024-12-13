@@ -229,7 +229,7 @@ Integration and E2E tests require an environment configuration and can be run ag
 Sample configuration for IBM Quantum
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
-QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
+QISKIT_IBM_URL=https://auth.quantum.ibm.com/api       # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
 QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
 ```
