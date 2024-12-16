@@ -16,7 +16,7 @@ import unittest
 from unittest.mock import patch
 from textwrap import dedent
 
-from qiskit_ibm_runtime._cli import SaveAccountCLI, UserInput
+from qiskit_ibm_runtime._cli import SaveAccountCLI, UserInput, Formatter
 
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
 from ..ibm_test_case import IBMTestCase
@@ -55,7 +55,7 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.print", mockio.mock_print)
         def run_test():
-            choice = UserInput.select_from_list(["a", "b", "c", "d"])
+            choice = UserInput.select_from_list(["a", "b", "c", "d"], Formatter(color=False))
             self.assertEqual(choice, "c")
 
         run_test()
@@ -80,8 +80,10 @@ class TestCLI(IBMTestCase):
             Enter a number 1-4 and press enter:•
             Did not understand input, trying again... (or type 'q' to quit)
             Enter a number 1-4 and press enter:•
-            Selected \033[32m\033[1mc\033[0m\033[0m
-            """.replace("•", " ")
+            Selected c
+            """.replace(
+                    "•", " "
+                )
             ),
         )
 
@@ -137,7 +139,7 @@ class TestCLI(IBMTestCase):
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
-            SaveAccountCLI.main()
+            SaveAccountCLI(color=True).main()
 
         run_cli()
         self.assertEqual(mockio.inputs, [])
@@ -182,7 +184,7 @@ class TestCLI(IBMTestCase):
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
-            SaveAccountCLI.main()
+            SaveAccountCLI(color=True).main()
 
         run_cli()
         self.assertEqual(mockio.inputs, [])

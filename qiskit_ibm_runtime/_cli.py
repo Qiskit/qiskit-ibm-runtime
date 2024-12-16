@@ -45,25 +45,26 @@ def entry_point() -> None:
         prog="qiskit-ibm-runtime",
         description="Commands for the Qiskit IBM Runtime Python package",
     )
-    subparsers = parser.add_subparsers(
+    parser.add_subparsers(
         title="Commands",
         description="This package supports the following commands:",
         dest="script",
         required=True,
-    )
-    subparsers.add_parser(
+    ).add_parser(
         "save-account",
         description=(
             "An interactive command-line interface to save your Qiskit IBM "
-            "Runtime account locally. This script is interactive-only and takes "
-            "no arguments."
+            "Runtime account locally. This script is interactive-only."
         ),
         help="Interactive command-line interface to save your account locally.",
+    ).add_argument(
+        "--no-color", action="store_true", help="Hide ANSI escape codes in output"
     )
     args = parser.parse_args()
+    use_color = not args.no_color
     if args.script == "save-account":
         try:
-            SaveAccountCLI.main()
+            SaveAccountCLI(color=use_color).main()
         except KeyboardInterrupt:
             sys.exit()
 
@@ -73,26 +74,29 @@ class SaveAccountCLI:
     This class contains the save-account command and helper functions.
     """
 
-    @classmethod
-    def main(cls) -> None:
+    def __init__(self, color: bool):
+        self.color = color
+        self.fmt = Formatter(color=color)
+
+    def main(self) -> None:
         """
         A CLI that guides users through getting their account information and
         saving it to disk.
         """
-        print(Format.box(["Qiskit IBM Runtime save account"]))
-        channel = cls.get_channel()
-        token = cls.get_token(channel)
+        print(self.fmt.box(["Qiskit IBM Runtime save account"]))
+        channel = self.get_channel()
+        token = self.get_token(channel)
         print("Verifying, this might take few seconds...")
         try:
             service = QiskitRuntimeService(channel=channel, token=token)
         except (ApiException, IBMNotAuthorizedError, RequestsApiError) as err:
             print(
-                Format.red(Format.bold("\nError while authorizing with your token\n"))
-                + Format.red(err.message)
+                self.fmt.red(self.fmt.bold("\nError while authorizing with your token\n"))
+                + self.fmt.red(err.message or "")
             )
             sys.exit(1)
-        instance = cls.get_instance(service)
-        cls.save_to_disk(
+        instance = self.get_instance(service)
+        self.save_to_disk(
             {
                 "channel": channel,
                 "token": token,
@@ -100,28 +104,25 @@ class SaveAccountCLI:
             }
         )
 
-    @classmethod
-    def get_channel(cls) -> Channel:
+    def get_channel(self) -> Channel:
         """Ask user which channel to use"""
-        print(Format.bold("Select a channel"))
-        return UserInput.select_from_list(["ibm_quantum", "ibm_cloud"])
+        print(self.fmt.bold("Select a channel"))
+        return UserInput.select_from_list(["ibm_quantum", "ibm_cloud"], self.fmt)
 
-    @classmethod
-    def get_token(cls, channel: Channel) -> str:
+    def get_token(self, channel: Channel) -> str:
         """Ask user for their token"""
         token_url = {
             "ibm_quantum": "https://quantum.ibm.com",
             "ibm_cloud": "https://cloud.ibm.com/iam/apikeys",
         }[channel]
         print(
-            Format.bold("\nPaste your API token")
-            + f"\nYou can get this from {Format.cyan(token_url)}."
+            self.fmt.bold("\nPaste your API token")
+            + f"\nYou can get this from {self.fmt.cyan(token_url)}."
             + "\nFor security, you might not see any feedback when typing."
         )
         return UserInput.token()
 
-    @classmethod
-    def get_instance(cls, service: QiskitRuntimeService) -> str:
+    def get_instance(self, service: QiskitRuntimeService) -> str:
         """
         Ask user which instance to use, or select automatically if only one
         is available.
@@ -129,13 +130,12 @@ class SaveAccountCLI:
         instances = service.instances()
         if len(instances) == 1:
             instance = instances[0]
-            print(f"Using instance {Format.greenbold(instance)}")
+            print(f"Using instance {self.fmt.greenbold(instance)}")
             return instance
-        print(Format.bold("\nSelect a default instance"))
-        return UserInput.select_from_list(instances)
+        print(self.fmt.bold("\nSelect a default instance"))
+        return UserInput.select_from_list(instances, self.fmt)
 
-    @classmethod
-    def save_to_disk(cls, account: dict) -> None:
+    def save_to_disk(self, account: dict) -> None:
         """
         Save account details to disk, confirming if they'd like to overwrite if
         one exists already. Display a warning that token is stored in plain
@@ -154,14 +154,17 @@ class SaveAccountCLI:
                 print("Account not saved.")
                 return
 
-        print(f"Account saved to {Format.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
-        print(Format.box(
-            [
-                "⚠️ Warning: your token is saved to disk in plain text.",
-                "If on a shared computer, make sure to revoke your token",
-                "by regenerating it in your account settings when finished.",
-            ]
-        ))
+        print(f"Account saved to {self.fmt.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
+        print(
+            self.fmt.box(
+                [
+                    "⚠️ Warning: your token is saved to disk in plain text.",
+                    "If on a shared computer, make sure to revoke your token",
+                    "by regenerating it in your account settings when finished.",
+                ]
+            )
+        )
+
 
 class UserInput:
     """
@@ -190,7 +193,7 @@ class UserInput:
                 return token
 
     @staticmethod
-    def select_from_list(options: List[T]) -> T:
+    def select_from_list(options: List[T], formatter: Formatter) -> T:
         """
         Prompt user to select from a list of options by entering a number.
         """
@@ -204,42 +207,55 @@ class UserInput:
             and int(response) in range(1, len(options) + 1),
         )
         choice = options[int(response) - 1]
-        print(f"Selected {Format.greenbold(str(choice))}")
+        print(f"Selected {formatter.greenbold(str(choice))}")
         return choice
 
 
-class Format:
+class Formatter:
     """Format using terminal escape codes"""
 
     # pylint: disable=missing-function-docstring
+    #
+    def __init__(self, color: bool):
+        self.color = color
 
     @staticmethod
-    def box(lines: List[str]) -> str:
+    def _skip_if_no_color(method):
+        """Decorator to skip the method if self.color == False"""
+
+        def new_method(self, s: str) -> str:
+            if not self.color:
+                return s
+            return method(self, s)
+
+        return new_method
+
+    def box(self, lines: List[str]) -> str:
         """Print lines in a box using Unicode box-drawing characters"""
         width = max(len(line) for line in lines)
         box_lines = [
             "╭─" + "─" * width + "─╮",
-            *(f"│ {Format.bold(line.ljust(width))} │" for line in lines),
+            *(f"│ {self.bold(line.ljust(width))} │" for line in lines),
             "╰─" + "─" * width + "─╯",
         ]
         return "\n".join(box_lines)
 
-    @staticmethod
-    def bold(s: str) -> str:
+    @_skip_if_no_color
+    def bold(self, s: str) -> str:
         return f"\033[1m{s}\033[0m"
 
-    @staticmethod
-    def green(s: str) -> str:
+    @_skip_if_no_color
+    def green(self, s: str) -> str:
         return f"\033[32m{s}\033[0m"
 
-    @staticmethod
-    def red(s: str) -> str:
+    @_skip_if_no_color
+    def red(self, s: str) -> str:
         return f"\033[31m{s}\033[0m"
 
-    @staticmethod
-    def cyan(s: str) -> str:
+    @_skip_if_no_color
+    def cyan(self, s: str) -> str:
         return f"\033[36m{s}\033[0m"
 
-    @staticmethod
-    def greenbold(s: str) -> str:
-        return cls.green(cls.bold(s))
+    @_skip_if_no_color
+    def greenbold(self, s: str) -> str:
+        return self.green(self.bold(s))
