@@ -23,7 +23,7 @@ circuits with support for classical control-flow/feedback based off
 of measurement results.
 
 .. warning::
-    You should not mix these scheduling passes with Qiskit's builtin scheduling
+    You should not mix these scheduling passes with Qiskit's built in scheduling
     passes as they will negatively interact with the scheduling routines for
     dynamic circuits. This includes setting ``scheduling_method`` in
     :func:`~qiskit.compiler.transpile` or
@@ -49,6 +49,7 @@ Below we demonstrate how to schedule and pad a teleportation circuit with delays
 for a dynamic circuit backend's execution model:
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -100,6 +101,7 @@ Instead of padding with delays we may also insert a dynamical decoupling sequenc
 using the :class:`PadDynamicalDecoupling` pass as shown below:
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -135,6 +137,7 @@ Scheduling old format ``c_if`` conditioned gates
 Scheduling with old format ``c_if`` conditioned gates is not supported.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -150,6 +153,7 @@ conditioned gates to new-style control-flow.
 We may then schedule the transpiled circuit without further modification.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -174,6 +178,7 @@ work around this please manually run the pass
 prior to your scheduling pass.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -205,6 +210,7 @@ as the measurements flow directly into the conditional blocks which in turn only
 gates to the same measurement qubit.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -224,6 +230,7 @@ The circuit below will not use the fast-path as the conditional gate is
 on a different qubit than the measurement qubit.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -238,6 +245,7 @@ Similarly, the circuit below contains gates on multiple qubits
 and will not be performed using the fast-path.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -254,6 +262,7 @@ If there are multiple fast-path blocks being performed in parallel each block wi
 padded out to the duration of the longest block.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -272,6 +281,7 @@ padded out to the duration of the longest block.
 This behavior is also applied to the else condition of a fast-path eligible branch.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -292,6 +302,7 @@ eligible block it will be applied followed by the non-fast-path blocks which wil
 the standard higher latency conditional branch.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -311,6 +322,7 @@ If you wish to prevent the usage of the fast-path you may insert a barrier betwe
 the conditional branch.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -326,6 +338,7 @@ the conditional branch.
 Conditional measurements are not eligible for the fast-path.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -340,6 +353,7 @@ Conditional measurements are not eligible for the fast-path.
 Similarly nested control-flow is not eligible.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -361,6 +375,7 @@ there are fast-path blocks that will be performed in parallel they currently *wi
 be padded out by the scheduler to ensure they are of the same duration in Qiskit
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -380,6 +395,7 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
     qc.draw(output="mpl", style="iqp")
 
 .. plot::
+    :alt: Circuit diagram output by the previous code.
     :include-source:
     :context: close-figs
 
@@ -404,6 +420,7 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
     For example:
 
     .. plot::
+       :alt: Circuit diagram output by the previous code.
        :include-source:
        :context: close-figs
 
