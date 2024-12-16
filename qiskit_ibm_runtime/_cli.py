@@ -69,6 +69,56 @@ def entry_point() -> None:
             sys.exit()
 
 
+class Formatter:
+    """Format using terminal escape codes"""
+
+    # pylint: disable=missing-function-docstring
+    #
+    def __init__(self, color: bool):
+        self.color = color
+
+    @staticmethod
+    def _skip_if_no_color(method):
+        """Decorator to skip the method if self.color == False"""
+
+        def new_method(self, s: str) -> str:
+            if not self.color:
+                return s
+            return method(self, s)
+
+        return new_method
+
+    def box(self, lines: List[str]) -> str:
+        """Print lines in a box using Unicode box-drawing characters"""
+        width = max(len(line) for line in lines)
+        box_lines = [
+            "╭─" + "─" * width + "─╮",
+            *(f"│ {self.bold(line.ljust(width))} │" for line in lines),
+            "╰─" + "─" * width + "─╯",
+        ]
+        return "\n".join(box_lines)
+
+    @_skip_if_no_color
+    def bold(self, s: str) -> str:
+        return f"\033[1m{s}\033[0m"
+
+    @_skip_if_no_color
+    def green(self, s: str) -> str:
+        return f"\033[32m{s}\033[0m"
+
+    @_skip_if_no_color
+    def red(self, s: str) -> str:
+        return f"\033[31m{s}\033[0m"
+
+    @_skip_if_no_color
+    def cyan(self, s: str) -> str:
+        return f"\033[36m{s}\033[0m"
+
+    @_skip_if_no_color
+    def greenbold(self, s: str) -> str:
+        return self.green(self.bold(s))
+
+
 class SaveAccountCLI:
     """
     This class contains the save-account command and helper functions.
@@ -209,53 +259,3 @@ class UserInput:
         choice = options[int(response) - 1]
         print(f"Selected {formatter.greenbold(str(choice))}")
         return choice
-
-
-class Formatter:
-    """Format using terminal escape codes"""
-
-    # pylint: disable=missing-function-docstring
-    #
-    def __init__(self, color: bool):
-        self.color = color
-
-    @staticmethod
-    def _skip_if_no_color(method):
-        """Decorator to skip the method if self.color == False"""
-
-        def new_method(self, s: str) -> str:
-            if not self.color:
-                return s
-            return method(self, s)
-
-        return new_method
-
-    def box(self, lines: List[str]) -> str:
-        """Print lines in a box using Unicode box-drawing characters"""
-        width = max(len(line) for line in lines)
-        box_lines = [
-            "╭─" + "─" * width + "─╮",
-            *(f"│ {self.bold(line.ljust(width))} │" for line in lines),
-            "╰─" + "─" * width + "─╯",
-        ]
-        return "\n".join(box_lines)
-
-    @_skip_if_no_color
-    def bold(self, s: str) -> str:
-        return f"\033[1m{s}\033[0m"
-
-    @_skip_if_no_color
-    def green(self, s: str) -> str:
-        return f"\033[32m{s}\033[0m"
-
-    @_skip_if_no_color
-    def red(self, s: str) -> str:
-        return f"\033[31m{s}\033[0m"
-
-    @_skip_if_no_color
-    def cyan(self, s: str) -> str:
-        return f"\033[36m{s}\033[0m"
-
-    @_skip_if_no_color
-    def greenbold(self, s: str) -> str:
-        return self.green(self.bold(s))
