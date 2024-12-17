@@ -70,7 +70,12 @@ class RuntimeOptions:
                 this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
                 clock time.
             session_time: Length of session in seconds.
-            private: Boolean of whether or not the job is marked as private.
+            private: Boolean that indicates whether the job is marked as private. When set to true,
+                input parameters are not returned, and the result can only be read once; after it is
+                read, both the input parameters and the results are deleted from the service. If the
+                result is not read, the parameters and results are automatically deleted after a
+                specified time. When set to false, the input parameters and results follow the standard
+                retention behavior.
         """
         self.backend = backend
         self.image = image
