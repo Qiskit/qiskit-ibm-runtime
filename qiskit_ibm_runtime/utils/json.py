@@ -82,6 +82,7 @@ from qiskit_ibm_runtime.execution_span import (
     ExecutionSpans,
     TwirledSliceSpan,
 )
+from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 from .noise_learner_result import NoiseLearnerResult
 
@@ -323,6 +324,9 @@ class RuntimeEncoder(json.JSONEncoder):
                 obj.parameter_values.as_array(obj.circuit.parameters),
                 obj.shots,
             )
+        if isinstance(obj, EstimatorPubResult):
+            out_val = {"data": obj.data, "metadata": obj.metadata}
+            return {"__type__": "EstimatorPubResult", "__value__": out_val}
         if isinstance(obj, SamplerPubResult):
             out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "SamplerPubResult", "__value__": out_val}
@@ -470,6 +474,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 return DataBin(shape=shape, **obj_val["fields"])
+            if obj_type == "EstimatorPubResult":
+                return EstimatorPubResult(**obj_val)
             if obj_type == "SamplerPubResult":
                 return SamplerPubResult(**obj_val)
             if obj_type == "PubResult":

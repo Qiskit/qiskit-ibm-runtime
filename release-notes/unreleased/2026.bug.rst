@@ -1,2 +1,0 @@
-``CouplingMap`` was added to :class:`~.RuntimeEncoder` so it can now be passed to 
-the :class:`~.NoiseLearner` program.
