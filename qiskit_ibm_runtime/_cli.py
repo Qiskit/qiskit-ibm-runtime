@@ -237,6 +237,7 @@ class UserInput:
 
     @staticmethod
     def token() -> str:
+        """Ask for API token, prompting again if empty"""
         while True:
             token = getpass("Token: ").strip()
             if token != "":
