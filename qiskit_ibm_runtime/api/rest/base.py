@@ -23,6 +23,8 @@ class RestAdapterBase:
 
     _HEADER_JSON_CONTENT = {"Content-Type": "application/json"}
 
+    _HEADER_JSON_ACCEPT = {"Accept": "application/json"}
+
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         """RestAdapterBase constructor.
 

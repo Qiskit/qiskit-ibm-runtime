@@ -56,6 +56,8 @@ class ProgramJob(RestAdapterBase):
         payload = {}
         if exclude_params:
             payload["exclude_params"] = "true"
+
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(self.get_url("self"), params=payload).json(cls=RuntimeDecoder)
 
     def delete(self) -> None:
@@ -98,6 +100,7 @@ class ProgramJob(RestAdapterBase):
         Returns:
             Job Metadata.
         """
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(self.get_url("metrics")).json()
 
     def update_tags(self, tags: list) -> Response:

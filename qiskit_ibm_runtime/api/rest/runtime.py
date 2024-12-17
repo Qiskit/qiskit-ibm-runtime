@@ -196,6 +196,7 @@ class Runtime(RestAdapterBase):
             payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(url, params=payload).json()
 
     def backend(self, backend_name: str) -> CloudBackend:
@@ -227,6 +228,7 @@ class Runtime(RestAdapterBase):
         params = {}
         if hgp:
             params["provider"] = hgp
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(url, params=params, timeout=timeout).json()
 
     def usage(self) -> Dict[str, Any]:
@@ -236,4 +238,5 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("usage")
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(url).json()

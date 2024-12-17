@@ -85,4 +85,6 @@ class RuntimeSession(RestAdapterBase):
 
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
+
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(self.get_url("self")).json()

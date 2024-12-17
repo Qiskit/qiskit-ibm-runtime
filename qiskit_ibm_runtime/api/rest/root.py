@@ -53,6 +53,8 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("hubs")
+
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         return self.session.get(url).json()
 
     def version(self) -> Dict[str, Union[str, bool]]:
@@ -69,6 +71,7 @@ class Api(RestAdapterBase):
                 * ``api-*`` (str): The versions of each individual API component
         """
         url = self.get_url("version")
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         response = self.session.get(url)
 
         try:
@@ -99,6 +102,8 @@ class Api(RestAdapterBase):
             JSON response of user information.
         """
         url = self.get_url("user_info")
+
+        self.session.headers.update(self._HEADER_JSON_ACCEPT)
         response = self.session.get(url).json()
 
         return response
