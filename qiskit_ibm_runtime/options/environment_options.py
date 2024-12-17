@@ -52,4 +52,6 @@ class EnvironmentOptions:
         Default: ``None``.
     """
     private: Optional[bool] = False
-    r"""Boolean value for marking jobs as private."""
+    r"""Boolean value for marking jobs as private. Private jobs do not have their job parameters
+    returned and job results can only be retrieved once. This option is only supported in the 
+    ``ibm_quantum`` channel."""
