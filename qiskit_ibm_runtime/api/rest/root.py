@@ -89,6 +89,7 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("login")
+        self.session.headers.update(self._HEADER_JSON_CONTENT)
         return self.session.post(url, json={"apiToken": api_token}).json()
 
     def user_info(self) -> Dict[str, Any]:

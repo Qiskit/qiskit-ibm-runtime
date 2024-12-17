@@ -106,4 +106,5 @@ class ProgramJob(RestAdapterBase):
         Returns:
             API Response.
         """
+        self.session.headers.update(self._HEADER_JSON_CONTENT)
         return self.session.put(self.get_url("tags"), data=json.dumps({"tags": tags}))

@@ -126,6 +126,7 @@ class Runtime(RestAdapterBase):
         if private:
             payload["private"] = True
         data = json.dumps(payload, cls=RuntimeEncoder)
+        self.session.headers.update(self._HEADER_JSON_CONTENT)
         return self.session.post(url, data=data, timeout=900).json()
 
     def jobs_get(
