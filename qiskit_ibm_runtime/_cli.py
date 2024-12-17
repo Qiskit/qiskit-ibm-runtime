@@ -78,10 +78,12 @@ class Formatter:
         self.color = color
 
     @staticmethod
-    def _skip_if_no_color(method):
+    def _skip_if_no_color(
+        method: Callable[["Formatter", str], str]
+    ) -> Callable[["Formatter", str], str]:
         """Decorator to skip the method if self.color == False"""
 
-        def new_method(self, s: str) -> str:
+        def new_method(self: "Formatter", s: str) -> str:
             if not self.color:
                 return s
             return method(self, s)
