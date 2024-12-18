@@ -74,7 +74,7 @@ class Formatter:
 
     # pylint: disable=missing-function-docstring
     #
-    def __init__(self, color: bool):
+    def __init__(self, *, color: bool) -> None:
         self.color = color
 
     @staticmethod
@@ -126,8 +126,7 @@ class SaveAccountCLI:
     This class contains the save-account command and helper functions.
     """
 
-    def __init__(self, color: bool):
-        self.color = color
+    def __init__(self, *, color: bool) -> None:
         self.fmt = Formatter(color=color)
 
     def main(self) -> None:
