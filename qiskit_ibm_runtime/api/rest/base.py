@@ -25,6 +25,8 @@ class RestAdapterBase:
 
     _HEADER_JSON_ACCEPT = {"Accept": "application/json"}
 
+    _HEADER_API_VERSION = {"IBM-API-Version": "2024-01-01"}
+
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         """RestAdapterBase constructor.
 
@@ -33,6 +35,7 @@ class RestAdapterBase:
             prefix_url: String to be prepend to all URLs.
         """
         self.session = session
+        self.session.headers = self._HEADER_API_VERSION
         self.prefix_url = prefix_url
 
     def get_url(self, identifier: str) -> str:

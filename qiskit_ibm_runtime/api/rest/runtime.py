@@ -126,8 +126,9 @@ class Runtime(RestAdapterBase):
         if private:
             payload["private"] = True
         data = json.dumps(payload, cls=RuntimeEncoder)
-        self.session.headers.update(self._HEADER_JSON_CONTENT)
-        return self.session.post(url, data=data, timeout=900).json()
+        return self.session.post(
+            url, data=data, timeout=900, headers=self._HEADER_JSON_CONTENT
+        ).json()
 
     def jobs_get(
         self,
@@ -196,8 +197,7 @@ class Runtime(RestAdapterBase):
             payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
-        self.session.headers.update(self._HEADER_JSON_ACCEPT)
-        return self.session.get(url, params=payload).json()
+        return self.session.get(url, params=payload, headers=self._HEADER_JSON_ACCEPT).json()
 
     def backend(self, backend_name: str) -> CloudBackend:
         """Return an adapter for the IBM backend.
@@ -228,8 +228,9 @@ class Runtime(RestAdapterBase):
         params = {}
         if hgp:
             params["provider"] = hgp
-        self.session.headers.update(self._HEADER_JSON_ACCEPT)
-        return self.session.get(url, params=params, timeout=timeout).json()
+        return self.session.get(
+            url, params=params, timeout=timeout, headers=self._HEADER_JSON_ACCEPT
+        ).json()
 
     def usage(self) -> Dict[str, Any]:
         """Return monthly open plan usage information.
@@ -238,5 +239,4 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("usage")
-        self.session.headers.update(self._HEADER_JSON_ACCEPT)
-        return self.session.get(url).json()
+        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()

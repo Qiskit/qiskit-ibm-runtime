@@ -57,8 +57,9 @@ class ProgramJob(RestAdapterBase):
         if exclude_params:
             payload["exclude_params"] = "true"
 
-        self.session.headers.update(self._HEADER_JSON_ACCEPT)
-        return self.session.get(self.get_url("self"), params=payload).json(cls=RuntimeDecoder)
+        return self.session.get(
+            self.get_url("self"), params=payload, headers=self._HEADER_JSON_ACCEPT
+        ).json(cls=RuntimeDecoder)
 
     def delete(self) -> None:
         """Delete program job."""
@@ -100,8 +101,7 @@ class ProgramJob(RestAdapterBase):
         Returns:
             Job Metadata.
         """
-        self.session.headers.update(self._HEADER_JSON_ACCEPT)
-        return self.session.get(self.get_url("metrics")).json()
+        return self.session.get(self.get_url("metrics"), headers=self._HEADER_JSON_ACCEPT).json()
 
     def update_tags(self, tags: list) -> Response:
         """Update job tags.
@@ -109,5 +109,6 @@ class ProgramJob(RestAdapterBase):
         Returns:
             API Response.
         """
-        self.session.headers.update(self._HEADER_JSON_CONTENT)
-        return self.session.put(self.get_url("tags"), data=json.dumps({"tags": tags}))
+        return self.session.put(
+            self.get_url("tags"), data=json.dumps({"tags": tags}), headers=self._HEADER_JSON_CONTENT
+        )
