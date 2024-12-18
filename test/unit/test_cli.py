@@ -136,6 +136,7 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.open", mock_open)
         @patch("builtins.print", mockio.mock_print)
+        @patch("os.path.isfile", lambda *args: True)
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
@@ -181,6 +182,7 @@ class TestCLI(IBMTestCase):
         @patch("builtins.input", mockio.mock_input)
         @patch("builtins.open", mock_open)
         @patch("builtins.print", mockio.mock_print)
+        @patch("os.path.isfile", lambda *args: False)
         @patch("qiskit_ibm_runtime._cli.getpass", mockio.mock_input)
         @patch("qiskit_ibm_runtime._cli.QiskitRuntimeService", MockRuntimeService)
         def run_cli():
@@ -191,4 +193,5 @@ class TestCLI(IBMTestCase):
 
         print(mock_open().write.mock_calls)
         written_output = "".join(call.args[0] for call in mock_open().write.mock_calls)
-        self.assertEqual(written_output.strip(), expected_saved_account.strip())
+        # The extra "{}" is runtime ensuring the file exists
+        self.assertEqual(written_output.strip(), "{}" + expected_saved_account.strip())
