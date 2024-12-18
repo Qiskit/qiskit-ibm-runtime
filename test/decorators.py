@@ -75,7 +75,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("QISKIT_IBM_QPU"),
     )
-    channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
+    channel: Any = "ibm_quantum" if url.find("quantum.ibm.com") >= 0 else "ibm_cloud"
     return channel, token, url, instance, qpu
 
 
