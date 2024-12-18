@@ -47,7 +47,7 @@ def entry_point() -> None:
     )
     parser.add_subparsers(
         title="Commands",
-        description="This package supports the following commands:",
+        description="This package supports the following command:",
         dest="script",
         required=True,
     ).add_parser(
@@ -124,7 +124,8 @@ class SaveAccountCLI:
         except (ApiException, IBMNotAuthorizedError, RequestsApiError) as err:
             print(
                 self.fmt.text("\nError while authorizing with your token\n", "red bold")
-                + self.fmt.text(err.message or "", "red")
+                + self.fmt.text(err.message or "", "red"),
+                file=sys.stderr,
             )
             sys.exit(1)
         instance = self.get_instance(service)
@@ -184,7 +185,7 @@ class SaveAccountCLI:
             if response.strip().lower() in ["y", "yes"]:
                 AccountManager.save(**account, overwrite=True)
             else:
-                print("Account not saved.")
+                print("Account not saved.", file=sys.stderr)
                 return
 
         print(f"Account saved to " + self.fmt.text(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, "green bold"))
@@ -195,7 +196,8 @@ class SaveAccountCLI:
                     "If on a shared computer, make sure to revoke your token",
                     "by regenerating it in your account settings when finished.",
                 ]
-            )
+            ),
+            file=sys.stderr,
         )
 
 
