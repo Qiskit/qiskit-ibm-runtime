@@ -36,7 +36,7 @@ class MockIO:
             self.mock_print(args[0])
         return self.inputs.pop(0)
 
-    def mock_print(self, *args):
+    def mock_print(self, *args, **_kwargs):
         self.output += " ".join(args) + "\n"
 
 
