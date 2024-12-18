@@ -191,7 +191,6 @@ class TestCLI(IBMTestCase):
         run_cli()
         self.assertEqual(mockio.inputs, [])
 
-        print(mock_open().write.mock_calls)
         written_output = "".join(call.args[0] for call in mock_open().write.mock_calls)
         # The extra "{}" is runtime ensuring the file exists
         self.assertEqual(written_output.strip(), "{}" + expected_saved_account.strip())
