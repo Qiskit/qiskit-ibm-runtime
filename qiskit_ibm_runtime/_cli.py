@@ -91,13 +91,13 @@ class Formatter:
     def text(self, text: str, styles: str) -> str:
         if not self.color:
             return text
-        CODES = {
+        codes = {
             "bold": 1,
             "green": 32,
             "red": 31,
             "cyan": 36,
         }
-        ansi_start = "".join([f"\033[{CODES[style]}m" for style in styles.split(" ")])
+        ansi_start = "".join([f"\033[{codes[style]}m" for style in styles.split(" ")])
         ansi_end = "\033[0m"
         return f"{ansi_start}{text}{ansi_end}"
 
@@ -164,7 +164,7 @@ class SaveAccountCLI:
         instances = service.instances()
         if len(instances) == 1:
             instance = instances[0]
-            print(f"Using instance " + self.fmt.text(instance, "green bold"))
+            print("Using instance " + self.fmt.text(instance, "green bold"))
             return instance
         print(self.fmt.text("\nSelect a default instance", "bold"))
         return UserInput.select_from_list(instances, self.fmt)
@@ -188,7 +188,7 @@ class SaveAccountCLI:
                 print("Account not saved.", file=sys.stderr)
                 return
 
-        print(f"Account saved to " + self.fmt.text(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, "green bold"))
+        print("Account saved to " + self.fmt.text(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, "green bold"))
         print(
             self.fmt.box(
                 [
@@ -243,5 +243,5 @@ class UserInput:
             and int(response) in range(1, len(options) + 1),
         )
         choice = options[int(response) - 1]
-        print(f"Selected " + formatter.text(str(choice), "green bold"))
+        print("Selected " + formatter.text(str(choice), "green bold"))
         return choice
