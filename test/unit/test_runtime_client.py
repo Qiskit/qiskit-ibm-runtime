@@ -85,3 +85,8 @@ class TestAccountClient(IBMTestCase):
             client._session.custom_header = None
             client._session._set_custom_header()
             self.assertNotIn(custom_header, client._session.headers["X-Qx-Client-Application"])
+
+    def test_header_api_version(self):
+        """Test IBM-API-Version is in header."""
+        client = self._get_client()
+        self.assertIn("IBM-API-Version", client._session.headers)

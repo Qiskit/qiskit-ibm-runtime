@@ -62,7 +62,7 @@ class RuntimeSession(RestAdapterBase):
                 payload["max_session_ttl"] = max_time  # type: ignore[assignment]
             else:
                 payload["max_ttl"] = max_time  # type: ignore[assignment]
-        return self.session.post(url, json=payload).json()
+        return self.session.post(url, json=payload, headers=self._HEADER_JSON_CONTENT).json()
 
     def cancel(self) -> None:
         """Cancel all jobs in the session."""
@@ -74,7 +74,7 @@ class RuntimeSession(RestAdapterBase):
         payload = {"accepting_jobs": False}
         url = self.get_url("self")
         try:
-            self.session.patch(url, json=payload)
+            self.session.patch(url, json=payload, headers=self._HEADER_JSON_CONTENT)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 pass
@@ -83,4 +83,5 @@ class RuntimeSession(RestAdapterBase):
 
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
-        return self.session.get(self.get_url("self")).json()
+
+        return self.session.get(self.get_url("self"), headers=self._HEADER_JSON_ACCEPT).json()
