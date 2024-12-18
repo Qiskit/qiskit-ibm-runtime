@@ -88,8 +88,8 @@ class TestCLI(IBMTestCase):
         )
 
     def test_cli_multiple_instances_saved_account(self):
-        """Test a runthrough of the CLI when the user has access to many
-        instances and already has an account saved
+        """
+        Full CLI: User has many instances and account saved.
         """
         token = "Password123"
         instances = ["my/instance/1", "my/instance/2", "my/instance/3"]
@@ -148,8 +148,8 @@ class TestCLI(IBMTestCase):
         self.assertEqual(written_output.strip(), expected_saved_account.strip())
 
     def test_cli_one_instance_no_saved_account(self):
-        """Test a runthrough of the CLI when the user only has access to one
-        instance and has no account saved.
+        """
+        Full CLI: user only has one instance and no account saved.
         """
         token = "QJjjbOxSfzZiskMZiyty"
         instance = "my/only/instance"
