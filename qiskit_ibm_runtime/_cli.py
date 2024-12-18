@@ -77,48 +77,29 @@ class Formatter:
     def __init__(self, *, color: bool) -> None:
         self.color = color
 
-    @staticmethod
-    def _skip_if_no_color(
-        method: Callable[["Formatter", str], str]
-    ) -> Callable[["Formatter", str], str]:
-        """Decorator to skip the method if self.color == False"""
-
-        def new_method(self: "Formatter", s: str) -> str:
-            if not self.color:
-                return s
-            return method(self, s)
-
-        return new_method
-
     def box(self, lines: List[str]) -> str:
         """Print lines in a box using Unicode box-drawing characters"""
         width = max(len(line) for line in lines)
+        styled_lines = [self.text(line.ljust(width), "bold") for line in lines]
         box_lines = [
             "╭─" + "─" * width + "─╮",
-            *(f"│ {self.bold(line.ljust(width))} │" for line in lines),
+            *(f"│ {line} │" for line in styled_lines),
             "╰─" + "─" * width + "─╯",
         ]
         return "\n".join(box_lines)
 
-    @_skip_if_no_color
-    def bold(self, s: str) -> str:
-        return f"\033[1m{s}\033[0m"
-
-    @_skip_if_no_color
-    def green(self, s: str) -> str:
-        return f"\033[32m{s}\033[0m"
-
-    @_skip_if_no_color
-    def red(self, s: str) -> str:
-        return f"\033[31m{s}\033[0m"
-
-    @_skip_if_no_color
-    def cyan(self, s: str) -> str:
-        return f"\033[36m{s}\033[0m"
-
-    @_skip_if_no_color
-    def greenbold(self, s: str) -> str:
-        return self.green(self.bold(s))
+    def text(self, text: str, styles: str) -> str:
+        if not self.color:
+            return text
+        CODES = {
+            "bold": 1,
+            "green": 32,
+            "red": 31,
+            "cyan": 36,
+        }
+        ansi_start = "".join([f"\033[{CODES[style]}m" for style in styles.split(" ")])
+        ansi_end = "\033[0m"
+        return f"{ansi_start}{text}{ansi_end}"
 
 
 class SaveAccountCLI:
@@ -142,8 +123,8 @@ class SaveAccountCLI:
             service = QiskitRuntimeService(channel=channel, token=token)
         except (ApiException, IBMNotAuthorizedError, RequestsApiError) as err:
             print(
-                self.fmt.red(self.fmt.bold("\nError while authorizing with your token\n"))
-                + self.fmt.red(err.message or "")
+                self.fmt.text("\nError while authorizing with your token\n", "red bold")
+                + self.fmt.text(err.message or "", "red")
             )
             sys.exit(1)
         instance = self.get_instance(service)
@@ -157,7 +138,7 @@ class SaveAccountCLI:
 
     def get_channel(self) -> Channel:
         """Ask user which channel to use"""
-        print(self.fmt.bold("Select a channel"))
+        print(self.fmt.text("Select a channel", "bold"))
         return UserInput.select_from_list(["ibm_quantum", "ibm_cloud"], self.fmt)
 
     def get_token(self, channel: Channel) -> str:
@@ -166,9 +147,10 @@ class SaveAccountCLI:
             "ibm_quantum": "https://quantum.ibm.com",
             "ibm_cloud": "https://cloud.ibm.com/iam/apikeys",
         }[channel]
+        styled_token_url = self.fmt.text(token_url, "cyan")
         print(
-            self.fmt.bold("\nPaste your API token")
-            + f"\nYou can get this from {self.fmt.cyan(token_url)}."
+            self.fmt.text("\nPaste your API token", "bold")
+            + f"\nYou can get this from {styled_token_url}."
             + "\nFor security, you might not see any feedback when typing."
         )
         return UserInput.token()
@@ -181,9 +163,9 @@ class SaveAccountCLI:
         instances = service.instances()
         if len(instances) == 1:
             instance = instances[0]
-            print(f"Using instance {self.fmt.greenbold(instance)}")
+            print(f"Using instance " + self.fmt.text(instance, "green bold"))
             return instance
-        print(self.fmt.bold("\nSelect a default instance"))
+        print(self.fmt.text("\nSelect a default instance", "bold"))
         return UserInput.select_from_list(instances, self.fmt)
 
     def save_to_disk(self, account: dict) -> None:
@@ -205,7 +187,7 @@ class SaveAccountCLI:
                 print("Account not saved.")
                 return
 
-        print(f"Account saved to {self.fmt.greenbold(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)}")
+        print(f"Account saved to " + self.fmt.text(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, "green bold"))
         print(
             self.fmt.box(
                 [
@@ -259,5 +241,5 @@ class UserInput:
             and int(response) in range(1, len(options) + 1),
         )
         choice = options[int(response) - 1]
-        print(f"Selected {formatter.greenbold(str(choice))}")
+        print(f"Selected " + formatter.text(str(choice), "green bold"))
         return choice
