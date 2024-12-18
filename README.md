@@ -280,7 +280,7 @@ Access to IBM Quantum Platform channel is controlled by the instances (previousl
 
 > **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
 
-To view a list of your instances, visit your [account settings page](https://www.quantum-computing.ibm.com/account) or use the `instances()` method.
+To view a list of your instances, visit your [account settings page](https://www.quantum.ibm.com/account) or use the `instances()` method.
 
 You can specify an instance when initializing the service or provider, or when picking a backend:
 
@@ -352,9 +352,9 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 [Apache License 2.0].
 
 
-[IBM Quantum]: https://www.ibm.com/quantum-computing/
-[IBM Quantum login page]:  https://quantum-computing.ibm.com/login
-[IBM Quantum account page]: https://quantum-computing.ibm.com/account
+[IBM Quantum]: https://www.ibm.com/quantum/
+[IBM Quantum login page]:  https://quantum.ibm.com/login
+[IBM Quantum account page]: https://quantum.ibm.com/account
 [contribution guidelines]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CONTRIBUTING.md
 [code of conduct]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CODE_OF_CONDUCT.md
 [GitHub issues]: https://github.com/Qiskit/qiskit-ibm-runtime/issues

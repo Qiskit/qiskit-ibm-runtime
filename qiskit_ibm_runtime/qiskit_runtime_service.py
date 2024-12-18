@@ -99,7 +99,7 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+                https://auth.quantum.ibm.com/api (ibm_quantum).
             filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
@@ -664,7 +664,7 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+                https://auth.quantum.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             filename: Full path of the file where the account is saved.
