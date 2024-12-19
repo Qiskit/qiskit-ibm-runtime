@@ -306,11 +306,8 @@ class TestSamplerV2(IBMTestCase):
         backend = FakeFractionalBackend()
         param = Parameter("p")
 
-        with self.subTest("parameter"):
-            circ = QuantumCircuit(2)
-            circ.rzz(param, 0, 1)
-            # Should run without an error
-            SamplerV2(backend).run(pubs=[(circ, [1])])
+        circ = QuantumCircuit(2)
+        circ.rzz(param, 0, 1)
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
@@ -320,7 +317,9 @@ class TestSamplerV2(IBMTestCase):
 
     @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
     def test_rzz_complex(self, flawed_params):
-        """Testing rzz validation in the currently non-existing case of dynamic instructions"""
+        """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
+        tests a more complex case. In addition, we test the currently non-existing case of dynamic
+        instructions."""
         # pylint: disable=not-context-manager
 
         # FakeFractionalBackend has both fractional and dynamic instructions
