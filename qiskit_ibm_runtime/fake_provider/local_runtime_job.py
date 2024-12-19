@@ -28,6 +28,7 @@ class LocalRuntimeJob(PrimitiveJob):
         future,
         backend: FakeBackendV2,
         primitive: Literal["sampler", "estimator"],
+        inputs: dict,
         *args,
         **kwargs,
     ) -> None:
@@ -41,6 +42,7 @@ class LocalRuntimeJob(PrimitiveJob):
         self._future = future
         self._backend = backend
         self._primitive = primitive
+        self._inputs = inputs
         self._created = datetime.now()
         self._running = datetime.now()
         self._finished = datetime.now()
@@ -74,8 +76,23 @@ class LocalRuntimeJob(PrimitiveJob):
         return 0
 
     def properties(self) -> BackendProperties:
-        """Return the backend properties for this job"""
+        """Return the backend properties for this job."""
         return self._backend.properties()
+
+    def error_message(self) -> str:
+        """Returns the reason if the job failed."""
+        return ""
+
+    @property
+    def inputs(self) -> Dict:
+        """Return job input parameters."""
+        return self._inputs
+
+    @property
+    def session_id(self) -> str:
+        """Return the Session ID which would just be the job ID in local mode."""
+
+        return self._job_id
 
     @property
     def creation_date(self) -> datetime:
