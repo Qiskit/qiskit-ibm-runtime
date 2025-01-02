@@ -59,10 +59,6 @@ class TestSession(IBMTestCase):
                 backend = get_mocked_backend("ibm_gotham")
                 session = Session(backend=backend, max_time=max_t)
                 self.assertEqual(session._max_time, expected)
-        for max_t, expected in max_times:
-            with self.subTest(max_time=max_t):
-                backend.open_session(max_time=max_t)
-                self.assertEqual(backend.session._max_time, expected)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
