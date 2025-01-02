@@ -206,11 +206,7 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
         projected_arr = arr[:, col_indices]
 
         for row in projected_arr:
-            angle = float(
-                param_exp.bind(
-                    {param: param_val for param, param_val in zip(param_exp.parameters, row)}
-                )
-            )
+            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
             if angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 vals_msg = ", ".join(
                     [f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)]
@@ -218,7 +214,8 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle of {angle} has been provided; "
-                    f"via parameter value(s) {vals_msg}, substituted in parameter expression {param_exp}."
+                    f"via parameter value(s) {vals_msg}, substituted in parameter expression "
+                    f"{param_exp}."
                 )
 
     return ""

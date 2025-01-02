@@ -318,8 +318,8 @@ class TestSamplerV2(IBMTestCase):
     @data([1.0, 2.0], [1.0, 0.0])
     @unpack
     def test_rzz_validation_param_exp(self, val1, val2):
-        """Test exception when rzz gate is used with a parameter expression, which is evaluated to a value outside
-        the range [0, pi/2]"""
+        """Test exception when rzz gate is used with a parameter expression, which is evaluated to
+        a value outside the range [0, pi/2]"""
         backend = FakeFractionalBackend()
         p1 = Parameter("p1")
         p2 = Parameter("p2")
