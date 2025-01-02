@@ -193,19 +193,19 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     # gather all parameter names, in order
     pub_params = np.array(list(chain.from_iterable(pub.parameter_values.data)))
 
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
     for param_exp in rzz_params:
         param_names = [param.name for param in param_exp.parameters]
 
         col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
         # col_indices is the indices of columns in the parameter value array that have to be checked
 
-        # first axis will be over flattened shape, second axis over circuit parameters
-        arr = pub.parameter_values.ravel().as_array()
-
         # project only to the parameters that have to be checked
-        arr = arr[:, col_indices]
+        projected_arr = arr[:, col_indices]
 
-        for row in arr:
+        for row in projected_arr:
             angle = float(param_exp.bind({param: param_val for param, param_val in zip(param_exp.parameters, row)}))
             if angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 vals_msg = ", ".join([f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)])
