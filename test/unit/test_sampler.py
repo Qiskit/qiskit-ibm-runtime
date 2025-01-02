@@ -14,7 +14,7 @@
 
 from unittest.mock import MagicMock
 
-from ddt import data, ddt, named_data
+from ddt import data, ddt, named_data, unpack
 from packaging.version import Version, parse as parse_version
 import numpy as np
 
@@ -315,6 +315,24 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaisesRegex(IBMInputValueError, f"{angle}.*Parameter 'p'"):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
 
+    @data([1.0, 2.0], [1.0, 0.0])
+    @unpack
+    def test_rzz_validation_param_exp(self, val1, val2):
+        """Test exception when rzz gate is used with a parameter expression, which is evaluated to a value outside
+        the range [0, pi/2]"""
+        backend = FakeFractionalBackend()
+        p1 = Parameter("p1")
+        p2 = Parameter("p2")
+
+        circ = QuantumCircuit(2)
+        circ.rzz(2 * p2 + p1, 0, 1)
+
+        if val2 == 0:
+            SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
+        else:
+            with self.assertRaisesRegex(IBMInputValueError, f"p2={val2}, p1={val1}"):
+                SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
+
     @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
     def test_rzz_complex(self, flawed_params):
         """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
@@ -378,21 +396,6 @@ class TestSamplerV2(IBMTestCase):
                     IBMInputValueError, f"{flawed_params[0] * flawed_params[1]}"
                 ):
                     SamplerV2(backend).run(pubs=[pub])
-
-    def test_rzz_validation_skips_param_exp(self):
-        """Verify that the rzz validation occurs only when the angle is a number or a parameter,
-        but not a parameter expression"""
-        backend = FakeFractionalBackend()
-        param = Parameter("p")
-
-        circ = QuantumCircuit(2)
-        circ.rzz(2 * param, 0, 1)
-
-        # Since we currently don't validate parameter expressions, the following line should run
-        # without an error, in spite of the angle being larger than pi/2
-        # (if there is an error, it is an expected one, such as a parameter expression being
-        # treated as if it were a float)
-        SamplerV2(backend).run(pubs=[(circ, [1])])
 
     def test_param_expressions_gen3_runtime(self):
         """Verify that parameter expressions are not used in combination with the gen3-turbo

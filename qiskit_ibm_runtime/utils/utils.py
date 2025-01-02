@@ -152,11 +152,9 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
         # accurate).
         if operation.name == "rzz":
             angle = instruction.operation.params[0]
-            if isinstance(angle, Parameter):
-                angle_params.add(angle.name)
-            elif not isinstance(angle, ParameterExpression) and (
-                angle < 0.0 or angle > np.pi / 2 + 1e-10
-            ):
+            if isinstance(angle, ParameterExpression):
+                angle_params.add(angle)
+            elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle of {angle} has been provided."
@@ -189,34 +187,34 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     if len(helper_result) == 0:
         return ""
 
-    # helper_result is a set of parameter names
+    # helper_result is a set of parameter expressions
     rzz_params = list(helper_result)
 
     # gather all parameter names, in order
-    pub_params = list(chain.from_iterable(pub.parameter_values.data))
+    pub_params = np.array(list(chain.from_iterable(pub.parameter_values.data)))
 
-    col_indices = np.where(np.isin(pub_params, rzz_params))[0]
-    # col_indices is the indices of columns in the parameter value array that have to be checked
+    for param_exp in rzz_params:
+        param_names = [param.name for param in param_exp.parameters]
 
-    # first axis will be over flattened shape, second axis over circuit parameters
-    arr = pub.parameter_values.ravel().as_array()
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
+        # col_indices is the indices of columns in the parameter value array that have to be checked
 
-    # project only to the parameters that have to be checked
-    arr = arr[:, col_indices]
+        # first axis will be over flattened shape, second axis over circuit parameters
+        arr = pub.parameter_values.ravel().as_array()
 
-    # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
-    # errors (beyond pi/2 does not trigger an error down the stack, only may become less
-    # accurate).
-    bad = np.where((arr < 0.0) | (arr > np.pi / 2 + 1e-10))
+        # project only to the parameters that have to be checked
+        arr = arr[:, col_indices]
 
-    # `bad` is a tuple of two arrays, which can be empty, like this:
-    # (array([], dtype=int64), array([], dtype=int64))
-    if len(bad[0]) > 0:
-        return (
-            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter "
-            f"'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
-        )
-
+        for row in arr:
+            angle = float(param_exp.bind({param: param_val for param, param_val in zip(param_exp.parameters, row)}))
+            if angle < 0.0 or angle > np.pi / 2 + 1e-10:
+                vals_msg = ", ".join([f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)])
+                return (
+                    "The instruction rzz is supported only for angles in the "
+                    f"range [0, pi/2], but an angle of {angle} has been provided; "
+                    f"via parameter values {vals_msg}, substituted in parameter expression {param_exp}."
+                )
+            
     return ""
 
 
