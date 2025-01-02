@@ -32,6 +32,7 @@ Example Usage
 Here is an example of using a fake backend for transpilation and simulation.
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
@@ -53,14 +54,17 @@ Here is an example of using a fake backend for transpilation and simulation.
    circuit.draw('mpl', style="iqp")
 
 .. plot::
+   :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
-   # Transpile the ideal circuit to a circuit that can be directly executed by the backend
+   # Transpile the ideal circuit to a circuit that can be 
+   # directly executed by the backend
    transpiled_circuit = transpile(circuit, backend)
    transpiled_circuit.draw('mpl', style="iqp")
 
 .. plot::
+   :alt: Histogram output by the previous code.
    :include-source:
    :context: close-figs
    
@@ -89,7 +93,8 @@ Here is an example of using a fake backend for transpilation and simulation.
         service = QiskitRuntimeService()
         backend = service.backend('ibmq_manila')
 
-        # generate a simulator that mimics the real quantum system with the latest calibration results
+        # generate a simulator that mimics the real quantum 
+        # system with the latest calibration results
         backend_sim = AerSimulator.from_backend(backend)
 
 

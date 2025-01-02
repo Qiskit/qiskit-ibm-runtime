@@ -99,7 +99,7 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+                https://auth.quantum.ibm.com/api (ibm_quantum).
             filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
@@ -570,11 +570,17 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
-        if config := configuration_from_server_data(
-            raw_config=self._api_client.backend_configuration(backend_name),
-            instance=instance,
-            use_fractional_gates=use_fractional_gates,
-        ):
+        try:
+            config = configuration_from_server_data(
+                raw_config=self._api_client.backend_configuration(backend_name),
+                instance=instance,
+                use_fractional_gates=use_fractional_gates,
+            )
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to create retrieve configuration for %s. %s ", backend_name, ex)
+            return None
+
+        if config:
             if self._channel == "ibm_quantum":
                 if not instance:
                     for hgp in list(self._hgps.values()):
@@ -658,7 +664,7 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+                https://auth.quantum.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             filename: Full path of the file where the account is saved.

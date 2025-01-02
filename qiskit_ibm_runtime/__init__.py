@@ -67,15 +67,15 @@ Below is an example of using primitives within a session::
     psi_isa_circuit = pm.run(psi)
     isa_observables = H1.apply_layout(psi_isa_circuit.layout)
 
-    with Session(service=service, backend=backend) as session:
+    with Session(backend=backend) as session:
         # Submit a request to the Sampler primitive within the session.
-        sampler = Sampler(session=session)
+        sampler = Sampler(mode=session)
         job = sampler.run([bell_isa_circuit])
         pub_result = job.result()[0]
         print(f"Counts: {pub_result.data.cr.get_counts()}")
 
         # Submit a request to the Estimator primitive within the session.
-        estimator = Estimator(session=session)
+        estimator = Estimator(mode=session)
         estimator.options.resilience_level = 1  # Set options.
         job = estimator.run(
             [(psi_isa_circuit, isa_observables, theta)]
@@ -120,7 +120,7 @@ instance is used when instantiating a primitive or a session. For example::
     pm = generate_preset_pass_manager(backend=aer_sim, optimization_level=1)
     isa_qc = pm.run(qc)
     with Session(backend=aer_sim) as session:
-        sampler = Sampler(session=session)
+        sampler = Sampler(mode=session)
         result = sampler.run([isa_qc]).result()
 
 Backend data

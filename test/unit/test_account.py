@@ -44,7 +44,7 @@ from ..account import (
 _TEST_IBM_QUANTUM_ACCOUNT = Account.create_account(
     channel="ibm_quantum",
     token="token-x",
-    url="https://auth.quantum-computing.ibm.com/api",
+    url="https://auth.quantum.ibm.com/api",
     instance="ibm-q/open/main",
 )
 
@@ -66,7 +66,7 @@ class TestAccount(IBMTestCase):
 
     dummy_token = "123"
     dummy_ibm_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
-    dummy_ibm_quantum_url = "https://auth.quantum-computing.ibm.com/api"
+    dummy_ibm_quantum_url = "https://auth.quantum.ibm.com/api"
 
     def test_skip_crn_resolution_for_crn(self):
         """Test that CRN resolution is skipped if the instance value is already a CRN."""
