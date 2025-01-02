@@ -47,7 +47,7 @@ class CloudBackend(RestAdapterBase):
             JSON response of backend configuration.
         """
         url = self.get_url("configuration")
-        return self.session.get(url).json()
+        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def properties(self, datetime: Optional[python_datetime] = None) -> Dict[str, Any]:
         """Return backend properties.
@@ -61,7 +61,7 @@ class CloudBackend(RestAdapterBase):
         if datetime:
             params["updated_before"] = datetime.isoformat()
 
-        response = self.session.get(url, params=params).json()
+        response = self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
         # Adjust name of the backend.
         if response:
             response["backend_name"] = self.backend_name
@@ -74,7 +74,7 @@ class CloudBackend(RestAdapterBase):
             JSON response of pulse defaults.
         """
         url = self.get_url("pulse_defaults")
-        return self.session.get(url).json()
+        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def status(self) -> Dict[str, Any]:
         """Return backend status.
@@ -83,7 +83,7 @@ class CloudBackend(RestAdapterBase):
             JSON response of backend status.
         """
         url = self.get_url("status")
-        response = self.session.get(url).json()
+        response = self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
         # Adjust fields according to the specs (BackendStatus).
         ret = {
             "backend_name": self.backend_name,
