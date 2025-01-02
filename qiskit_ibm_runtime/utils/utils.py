@@ -212,7 +212,7 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle of {angle} has been provided; "
-                    f"via parameter values {vals_msg}, substituted in parameter expression {param_exp}."
+                    f"via parameter value(s) {vals_msg}, substituted in parameter expression {param_exp}."
                 )
             
     return ""

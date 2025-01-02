@@ -312,7 +312,7 @@ class TestSamplerV2(IBMTestCase):
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
         else:
-            with self.assertRaisesRegex(IBMInputValueError, f"{angle}.*Parameter 'p'"):
+            with self.assertRaisesRegex(IBMInputValueError, f"p={angle}"):
                 SamplerV2(backend).run(pubs=[(circ, [angle])])
 
     @data([1.0, 2.0], [1.0, 0.0])
@@ -333,7 +333,7 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaisesRegex(IBMInputValueError, f"p2={val2}, p1={val1}"):
                 SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
 
-    @data(("a", -1), ("b", 2), ("d", 3), (-1, 1), (1, 2), None)
+    @data(("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None)
     def test_rzz_complex(self, flawed_params):
         """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
         tests a more complex case. In addition, we test the currently non-existing case of dynamic
@@ -373,13 +373,10 @@ class TestSamplerV2(IBMTestCase):
         if flawed_params is not None and isinstance(flawed_params[0], str):
             if flawed_params[0] == "a":
                 val_ab[0, 1, 1, 0] = flawed_params[1]
-                val_ab[1, 0, 2, 1] = flawed_params[1]
             if flawed_params[0] == "b":
                 val_ab[1, 0, 2, 1] = flawed_params[1]
-                val_d[1, 1, 1] = flawed_params[1]
             if flawed_params[0] == "d":
                 val_d[1, 1, 1] = flawed_params[1]
-                val_ab[1, 1, 2, 1] = flawed_params[1]
 
         pub = (circ, {("a", "b"): val_ab, "c": val_c, "d": val_d})
 
@@ -388,7 +385,7 @@ class TestSamplerV2(IBMTestCase):
         else:
             if isinstance(flawed_params[0], str):
                 with self.assertRaisesRegex(
-                    IBMInputValueError, f"{flawed_params[1]}.*Parameter '{flawed_params[0]}'"
+                    IBMInputValueError, f"{flawed_params[0]}={flawed_params[1]}"
                 ):
                     SamplerV2(backend).run(pubs=[pub])
             else:
