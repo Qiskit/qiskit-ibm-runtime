@@ -14,10 +14,12 @@
 
 from __future__ import annotations
 
+import os
 import math
 import copy
 import logging
 import warnings
+import pickle
 from dataclasses import asdict
 from typing import Callable, Dict, List, Literal, Optional, Union
 
@@ -49,6 +51,11 @@ class QiskitRuntimeLocalService:
             An instance of QiskitRuntimeService.
 
         """
+        self._channel_strategy = None
+        self._saved_jobs_directory = (
+            os.getenv("QISKIT_LOCAL_JOBS_DIRECTORY")
+            or f"{os.path.dirname(os.path.realpath(__file__))}/local_jobs"
+        )
 
     def backend(
         self, name: str = None, instance: str = None  # pylint: disable=unused-argument
@@ -188,12 +195,14 @@ class QiskitRuntimeLocalService:
         inputs = copy.deepcopy(inputs)
 
         primitive_inputs = {"pubs": inputs.pop("pubs")}
-        return self._run_backend_primitive_v2(
+        job = self._run_backend_primitive_v2(
             backend=backend,
             primitive=program_id,
             options=inputs.get("options", {}),
             inputs=primitive_inputs,
         )
+        self._save_job(job)
+        return job
 
     def _run_backend_primitive_v2(
         self,
@@ -268,3 +277,40 @@ class QiskitRuntimeLocalService:
             warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
 
         return primitive_inst.run(**inputs)
+
+    def job(self, job_id: str) -> PrimitiveJob:
+        """Return saved local job."""
+        os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
+        with open(f"{self._saved_jobs_directory}/{job_id}.pkl", "rb") as file:
+            return pickle.load(file)
+
+    def jobs(self) -> List[PrimitiveJob]:
+        """Return all saved local jobs."""
+        all_jobs = []
+        os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
+        for filename in os.listdir(self._saved_jobs_directory):
+            with open(f"{self._saved_jobs_directory}/{filename}", "rb") as file:
+                all_jobs.append(pickle.load(file))
+        return all_jobs
+
+    def delete_job(self, job_id: str) -> None:
+        """Delete a local job."""
+        try:
+            os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
+            os.remove(f"{self._saved_jobs_directory}/{job_id}.pkl")
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to delete job %s. %s", job_id, ex)
+
+    def _save_job(self, job: PrimitiveJob) -> None:
+        """Pickle and save job locally in the specified directory.
+
+        Args:
+            job: PrimitiveJob.
+        """
+        try:
+            job._prepare_dump()
+            os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
+            with open(f"{self._saved_jobs_directory}/{job.job_id()}.pkl", "wb") as file:
+                pickle.dump(job, file)
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to save job %s. %s", job.job_id(), ex)
