@@ -53,7 +53,8 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("hubs")
-        return self.session.get(url).json()
+
+        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def version(self) -> Dict[str, Union[str, bool]]:
         """Return the version information.
@@ -69,7 +70,7 @@ class Api(RestAdapterBase):
                 * ``api-*`` (str): The versions of each individual API component
         """
         url = self.get_url("version")
-        response = self.session.get(url)
+        response = self.session.get(url, headers=self._HEADER_JSON_ACCEPT)
 
         try:
             version_info = response.json()
@@ -89,7 +90,9 @@ class Api(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("login")
-        return self.session.post(url, json={"apiToken": api_token}).json()
+        return self.session.post(
+            url, json={"apiToken": api_token}, headers=self._HEADER_JSON_CONTENT
+        ).json()
 
     def user_info(self) -> Dict[str, Any]:
         """Return user information.
@@ -98,6 +101,7 @@ class Api(RestAdapterBase):
             JSON response of user information.
         """
         url = self.get_url("user_info")
-        response = self.session.get(url).json()
+
+        response = self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
         return response

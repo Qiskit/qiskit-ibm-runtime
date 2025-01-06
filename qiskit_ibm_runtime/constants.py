@@ -21,7 +21,7 @@ from .utils.sampler_result_decoder import SamplerResultDecoder
 from .utils.runner_result import RunnerResult
 
 
-QISKIT_IBM_RUNTIME_API_URL = "https://auth.quantum-computing.ibm.com/api"
+QISKIT_IBM_RUNTIME_API_URL = "https://auth.quantum.ibm.com/api"
 
 API_TO_JOB_STATUS = {
     "QUEUED": JobStatus.QUEUED,
