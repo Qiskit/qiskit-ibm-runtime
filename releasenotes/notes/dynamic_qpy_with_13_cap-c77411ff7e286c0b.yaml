@@ -1,4 +1,6 @@
 ---
 upgrade:
   - |
+    The minimal ``qiskit`` version is now 1.3.
+  - |
     The QPY payload now is generated based on ``qiskit.qpy.QPY_VERSION`` and capped until version 13.
