@@ -97,6 +97,9 @@ ibm_backend = "qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin"
 ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin"
 ibm_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMFractionalTranslationPlugin"
 
+[project.entry-points."console_scripts"]
+qiskit-ibm-runtime = "qiskit_ibm_runtime._cli:entry_point"
+
 [project.urls]
 documentation = "https://docs.quantum.ibm.com/"
 repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
