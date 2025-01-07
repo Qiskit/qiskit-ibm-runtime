@@ -20,7 +20,6 @@ import importlib
 import inspect
 import io
 import json
-import re
 import warnings
 import zlib
 from datetime import date
@@ -55,7 +54,6 @@ from qiskit.transpiler import CouplingMap
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.qpy import QPY_VERSION as QISKIT_QPY_VERSION
-from qiskit.utils import optionals
 from qiskit.qpy import (
     load,
     dump,
@@ -254,8 +252,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
-            kwargs["version"] = min(13, QISKIT_QPY_VERSION)
+            kwargs: Dict[str, object] = {"version": min(13, QISKIT_QPY_VERSION)}
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
@@ -273,8 +270,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
-            kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
-            kwargs["version"] = min(13, QISKIT_QPY_VERSION)
+            kwargs = {"version": min(13, QISKIT_QPY_VERSION)}
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
