@@ -139,6 +139,5 @@ visualization = ["plotly>=5.23.0"]
 dev = [
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[documentation]",
+    "qiskit-ibm-runtime[visualization]",
 ]
-
-
