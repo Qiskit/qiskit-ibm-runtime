@@ -12,7 +12,6 @@
 
 """Qiskit runtime service."""
 
-import json
 import logging
 import traceback
 import warnings
@@ -161,14 +160,8 @@ class QiskitRuntimeService:
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
-            try:
-                self._hgps = self._initialize_hgps(auth_client)
-            except json.decoder.JSONDecodeError:
-                raise IBMApiError(
-                    "Unexpected response received from server. "
-                    "Please check if the service is in maintenance mode "
-                    "https://docs.quantum.ibm.com/announcements/service-alerts."
-                )
+            self._hgps = self._initialize_hgps(auth_client)
+
             self._backend_allowed_list = sorted(
                 set(sum([hgp.backends for hgp in self._hgps.values()], []))
             )
@@ -275,6 +268,10 @@ class QiskitRuntimeService:
             Authentication client.
         """
         version_info = self._check_api_version(client_params)
+
+        if "ERROR" in version_info and version_info["ERROR"]["name"] == "MAINTENANCE":  # type: ignore
+            raise IBMApiError(version_info["ERROR"]["message"])  # type: ignore
+
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:
             raise IBMInputValueError(
