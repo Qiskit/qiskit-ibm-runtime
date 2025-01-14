@@ -19,14 +19,16 @@ from requests.auth import AuthBase
 from ..exceptions import IBMNotAuthorizedError
 
 CLOUD_IAM_URL = "https://iam.cloud.ibm.com/identity/token"
+STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
 
 
 class CloudAuth(AuthBase):
     """Attaches IBM Cloud Authentication to the given Request object."""
 
-    def __init__(self, api_key: str, crn: str):
+    def __init__(self, api_key: str, crn: str, url: str):
         self.api_key = api_key
         self.crn = crn
+        self.url = url
         self.access_token = self._get_access_token()
 
     def __eq__(self, other: object) -> bool:
@@ -46,9 +48,12 @@ class CloudAuth(AuthBase):
     def _get_access_token(self) -> str:
         """Return IBM Cloud access token."""
         try:
+            url = CLOUD_IAM_URL
+            if "test" in self.url:
+                url = STAGING_CLOUD_IAM_URL
             headers = {"Content-Type": "application/x-www-form-urlencoded"}
             data = f"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={self.api_key}"
-            response = post(CLOUD_IAM_URL, headers=headers, data=data, timeout=10).json()
+            response = post(url, headers=headers, data=data, timeout=10).json()
             return response["access_token"]
         except Exception as ex:  # pylint: disable=broad-except
             raise IBMNotAuthorizedError(
