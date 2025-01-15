@@ -34,7 +34,7 @@ from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
-from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound, IBMApiError
+from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
@@ -268,9 +268,6 @@ class QiskitRuntimeService:
             Authentication client.
         """
         version_info = self._check_api_version(client_params)
-
-        if "ERROR" in version_info and version_info["ERROR"]["name"] == "MAINTENANCE":  # type: ignore
-            raise IBMApiError(version_info["ERROR"]["message"])  # type: ignore
 
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:

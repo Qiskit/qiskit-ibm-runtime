@@ -38,7 +38,6 @@ STATUS_FORCELIST = (
     503,  # Service Unavailable
     504,  # Gateway Timeout
     520,  # Cloudflare general error
-    521,  # Cloudflare web server is down
     522,  # Cloudflare connection timeout
     524,  # Cloudflare Timeout
 )
@@ -348,6 +347,12 @@ class RetrySession(Session):
                     message += f". {ex.response.text}"
             if status_code == 401:
                 raise IBMNotAuthorizedError(message) from ex
+            if status_code == 521:
+                raise RequestsApiError(
+                    "Unexpected response received from server. Please check if the service "
+                    "is in maintenance mode "
+                    f"https://docs.quantum.ibm.com/announcements/service-alerts {message}"
+                )
             raise RequestsApiError(message, status_code) from ex
 
         return response
