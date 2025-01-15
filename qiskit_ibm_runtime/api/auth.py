@@ -14,9 +14,9 @@
 
 from typing import Dict
 
+import warnings
 from requests import PreparedRequest, post
 from requests.auth import AuthBase
-from ..exceptions import IBMNotAuthorizedError
 
 CLOUD_IAM_URL = "https://iam.cloud.ibm.com/identity/token"
 STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
@@ -55,14 +55,15 @@ class CloudAuth(AuthBase):
             data = f"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={self.api_key}"
             response = post(url, headers=headers, data=data, timeout=10).json()
             return response["access_token"]
-        except Exception as ex:  # pylint: disable=broad-except
-            raise IBMNotAuthorizedError(
-                "Unable to retrieve IBM Cloud access token. Please check your credentials"
-            ) from ex
+        except Exception:  # pylint: disable=broad-except
+            warnings.warn("Unable to retrieve IBM Cloud access token. API Key will be used instead")
+            return None
 
     def get_headers(self) -> Dict:
         """Return authorization information to be stored in header."""
-        return {"Service-CRN": self.crn, "Authorization": f"Bearer {self.access_token}"}
+        if self.access_token:
+            return {"Service-CRN": self.crn, "Authorization": f"Bearer {self.access_token}"}
+        return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
 
 
 class QuantumAuth(AuthBase):
