@@ -62,7 +62,7 @@ class ClientParameters:
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
         if self.channel == "ibm_cloud":
-            return CloudAuth(api_key=self.token, crn=self.instance)
+            return CloudAuth(api_key=self.token, crn=self.instance, url=self.url)
 
         return QuantumAuth(access_token=self.token)
 
