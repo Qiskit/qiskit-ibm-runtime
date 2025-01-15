@@ -35,9 +35,9 @@ from ..version import __version__ as ibm_runtime_version
 STATUS_FORCELIST = (
     500,  # General server error
     502,  # Bad Gateway
-    503,  # Service Unavailable
     504,  # Gateway Timeout
     520,  # Cloudflare general error
+    521,  # Cloudflare web server is down
     522,  # Cloudflare connection timeout
     524,  # Cloudflare Timeout
 )
@@ -347,7 +347,7 @@ class RetrySession(Session):
                     message += f". {ex.response.text}"
             if status_code == 401:
                 raise IBMNotAuthorizedError(message) from ex
-            if status_code == 521:
+            if status_code == 503:  # Planned maintenance outage
                 raise RequestsApiError(
                     "Unexpected response received from server. Please check if the service "
                     "is in maintenance mode "
