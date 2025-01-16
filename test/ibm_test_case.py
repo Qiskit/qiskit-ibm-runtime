@@ -44,7 +44,9 @@ class IBMTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.log = logging.getLogger(cls.__name__)
+        default_logger = logging.getLogger(cls.__name__)
+        default_logger.setLevel(logging.INFO)
+        cls.log = default_logger
         filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
