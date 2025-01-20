@@ -46,6 +46,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
+            qubits_initially_zero=pass_manager_config.qubits_initially_zero,
         )
 
         plugin_passes = []
