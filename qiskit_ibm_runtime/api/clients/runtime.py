@@ -356,3 +356,7 @@ class RuntimeClient(BaseBackendClient):
             API Response.
         """
         return self._api.usage()
+
+    def instance(self) -> Dict[str, Any]:
+        """Return instance usage information."""
+        return self._api.instance()

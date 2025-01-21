@@ -1042,6 +1042,10 @@ class QiskitRuntimeService:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
+    def instance_usage(self) -> Dict[str, Any]:
+        """Return information on usage in the current instance."""
+        return self._api_client.instance()
+
     def usage(self) -> Dict[str, Any]:
         """Return monthly open plan usage information.
 
