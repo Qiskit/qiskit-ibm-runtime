@@ -92,6 +92,7 @@ class TestSamplerV2(IBMTestCase):
         dynamic_circuit.if_else(
             (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
         )
+        dynamic_circuit.measure_all()
 
         in_pubs = [(dynamic_circuit,)]
         backend = get_mocked_backend()
@@ -144,11 +145,13 @@ class TestSamplerV2(IBMTestCase):
         ) as session:
             inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))
+            circ.measure_all()
             with self.assertRaisesRegex(ValueError, "Classical register .* is of size 0"):
                 inst.run([(circ,)])
 
             creg = ClassicalRegister(2, "not-an-identifier")
             circ = QuantumCircuit(QuantumRegister(2), creg)
+            circ.measure_all()
             with self.assertRaisesRegex(
                 ValueError, "Classical register names must be valid identifiers"
             ):
@@ -156,6 +159,7 @@ class TestSamplerV2(IBMTestCase):
 
             creg = ClassicalRegister(2, "lambda")
             circ = QuantumCircuit(QuantumRegister(2), creg)
+            circ.measure_all()
             with self.assertRaisesRegex(
                 ValueError, "Classical register names cannot be Python keywords"
             ):
@@ -175,6 +179,7 @@ class TestSamplerV2(IBMTestCase):
         dynamic_circuit.if_else(
             (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
         )
+        dynamic_circuit.measure_all()
 
         inst = SamplerV2(mode=backend)
         with self.assertRaises(IBMInputValueError):
@@ -292,6 +297,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(angle, 0, 1)
+        circ.measure_all()
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ)])
@@ -308,6 +314,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(param, 0, 1)
+        circ.measure_all()
 
         if angle == 1:
             SamplerV2(backend).run(pubs=[(circ, [angle])])
@@ -387,6 +394,7 @@ class TestSamplerV2(IBMTestCase):
 
         circ = QuantumCircuit(2)
         circ.rzz(2 * param, 0, 1)
+        circ.measure_all()
 
         # Since we currently don't validate parameter expressions, the following line should run
         # without an error, in spite of the angle being larger than pi/2
