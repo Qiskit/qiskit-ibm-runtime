@@ -68,7 +68,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
+    logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
 
 def most_busy_backend(
@@ -459,6 +459,7 @@ def transpile_pubs(in_pubs, backend, program):
     """Return pubs with transformed circuits and observables."""
     t_pubs = []
     for pub in in_pubs:
+        pub[0].measure_all()
         t_circ = transpile(pub[0], backend=backend)
         if program == "estimator":
             t_obs = remap_observables(pub[1], t_circ)
