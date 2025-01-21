@@ -1044,6 +1044,8 @@ class QiskitRuntimeService:
 
     def instance_usage(self) -> Dict[str, Any]:
         """Return information on usage in the current instance."""
+        if hasattr(self, "_current_instance"):
+            return self._api_client.instance(self._current_instance)
         return self._api_client.instance()
 
     def usage(self) -> Dict[str, Any]:

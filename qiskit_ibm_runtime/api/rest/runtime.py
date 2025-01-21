@@ -36,6 +36,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "instance_usage": "/instances/usage",
+        "analytics_usage": "/analytics/usage",
         "instance_configuration": "/instances/configuration",
         "usage": "/usage",
     }
@@ -242,10 +243,15 @@ class Runtime(RestAdapterBase):
         url = self.get_url("usage")
         return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
-    def instance(self) -> Any:
+    def instance(self, instance: Optional[str] = None) -> Any:
         """Return instance usage information."""
         # configuration endpoint returns incorrect data?
         # configuration_url = self.get_url('instance_configuration')
         # configuration = self.session.get(configuration_url, headers=self._HEADER_JSON_ACCEPT).json()
-        usage_url = self.get_url("instance_usage")
-        return self.session.get(usage_url, headers=self._HEADER_JSON_ACCEPT).json()
+        params = {}
+        if instance:
+            params["instance"] = instance
+            usage_url = self.get_url("analytics_usage")
+        else:
+            usage_url = self.get_url("instance_usage")
+        return self.session.get(usage_url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
