@@ -48,6 +48,7 @@ from .lima import FakeLimaV2
 from .london import FakeLondonV2
 from .manhattan import FakeManhattanV2
 from .manila import FakeManilaV2
+from .marrakesh import FakeMarrakesh
 from .melbourne import FakeMelbourneV2
 from .montreal import FakeMontrealV2
 from .mumbai import FakeMumbaiV2

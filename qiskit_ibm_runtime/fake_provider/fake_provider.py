@@ -83,6 +83,7 @@ class FakeProviderForBackendV2:
             FakeManhattanV2(),  # type: ignore
             FakeManilaV2(),  # type: ignore
             FakeMelbourneV2(),  # type: ignore
+            FakeMarrakesh(), # type: ignore
             FakeMontrealV2(),  # type: ignore
             FakeMumbaiV2(),  # type: ignore
             FakeNairobiV2(),  # type: ignore
