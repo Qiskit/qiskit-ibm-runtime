@@ -80,12 +80,15 @@ class ResilienceOptionsV2:
     r"""Layer noise learning options.
         See :class:`LayerNoiseLearningOptions` for all options.
     """
-    layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError]] = Unset
+    layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError], None] = Unset
     r"""A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
-        objects. If set, all the mitigation strategies that require noise data (e.g., PEC and
-        PEA) skip the noise-learning stage, and instead gather the required information from
-        ``layer_noise_model``. Layers whose information is missing in ``layer_noise_model``
-        are treated as noiseless and their noise is not mitigated.
+        objects. If ``None``, all the mitigation strategies that require noise data (e.g., PEC
+        and PEA) perform a noise-learning stage. Otherwise, this noise-learning stage is skipped,
+        and instead gather the required information from ``layer_noise_model``. Layers whose
+        information is missing in ``layer_noise_model`` are treated as noiseless and their noise is
+        not mitigated.
+
+        Default: ``None``.
     """
 
     @model_validator(mode="after")
