@@ -954,7 +954,8 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: Filter by session id. All jobs in the session will be
+                returned in desceding order of the job creation date.
             created_after: Filter by the given start date, in local time. This is used to
                 find jobs whose creation dates are after (greater than or equal to) this
                 local date/time.
