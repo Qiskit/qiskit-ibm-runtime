@@ -1,0 +1,1 @@
+Two new fake backends, ``FakeFez`` and ``FakeMarrakesh`` have been added. These are 156 qubit Heron devices.
