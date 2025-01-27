@@ -28,7 +28,7 @@ from ..utils import resolve_crn
 AccountType = Optional[Literal["cloud", "legacy"]]
 ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum", "local"]]
 
-IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
+IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 logger = logging.getLogger(__name__)
 

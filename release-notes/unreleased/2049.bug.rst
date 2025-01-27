@@ -1,2 +1,0 @@
-Pin ``pydantic`` dependency version to ``<2.10`` to avoid a regression breaking
-the build process.

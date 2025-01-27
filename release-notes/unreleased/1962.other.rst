@@ -1,0 +1,4 @@
+Support for ``backend.run()`` has been removed. Please refer to our migration guide 
+https://docs.quantum.ibm.com/migration-guides/qiskit-runtime
+for instructions on how to migrate any existing code that uses 
+``backend.run()`` to the new V2 primitives interface.
