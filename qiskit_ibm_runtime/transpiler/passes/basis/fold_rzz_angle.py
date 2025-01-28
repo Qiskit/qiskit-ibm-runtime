@@ -118,7 +118,7 @@ class FoldRzzAngle(TransformationPass):
         tmp = (exp1 - exp2).sign()
 
         # We want to return 0 if tmp is -1 or 0, and 1 otherwise
-        return tmp * tmp * (tmp + 1) / 2
+        return ((tmp - 0.1).sign() + 1) / 2
 
     def gteq_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         """Return an expression which, after substitution, will be equal to 1 if `exp1` is
@@ -126,7 +126,7 @@ class FoldRzzAngle(TransformationPass):
         tmp = (exp1 - exp2).sign()
 
         # We want to return 1 if tmp is 1 or 0, and 0 otherwise
-        return (1 - tmp * tmp) + tmp * tmp * (tmp + 1) / 2
+        return ((tmp + 0.1).sign() + 1) / 2
 
     def and_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         """Return an expression which, after substitution, will be equal to 1 if `exp1` and `exp2`
