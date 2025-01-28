@@ -19,12 +19,7 @@ from qiskit import QuantumCircuit
 from qiskit.transpiler import Target
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_ibm_runtime.utils.utils import (
-    is_isa_circuit,
-    are_circuits_dynamic,
-    is_valid_rzz_pub,
-    has_param_expressions,
-)
+from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic, is_valid_rzz_pub
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
