@@ -259,16 +259,6 @@ def is_fractional_gate(gate: Instruction) -> bool:
     return len(gate.params) > 0 and not isinstance(gate, exclude_list)
 
 
-def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
-    """Checks if the input circuits contain `ParameterExpression`s"""
-    for circuit in circuits:
-        for instruction in circuit.data:
-            for p in instruction.operation.params:
-                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
-                    return True
-    return False
-
-
 def get_iam_api_url(cloud_url: str) -> str:
     """Computes the IAM API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
