@@ -110,7 +110,7 @@ class FoldRzzAngle(TransformationPass):
 
         return modified
 
-    # The next functions are required because sympy doesn't convert Boolean values to integers.
+    # The next function is required because sympy doesn't convert Boolean values to integers.
     # symengine maybe does but I failed to find it in its documentation.
     def gt_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
         """Return an expression which, after substitution, will be equal to 1 if `exp1` is
@@ -146,6 +146,10 @@ class FoldRzzAngle(TransformationPass):
         if "rz" not in self._target or "rx" not in self._target or "rzz" not in self._target:
             return None
 
+        #phi = pi / 2 - abs(theta % pi - pi / 2)
+        #omega_x = pi / 2 * (1 + (theta % pi - pi / 2).sign())
+        #omega_z = pi / 2 * (1 + ((theta + pi / 2) % (2 * pi) - pi).sign())
+
         wrap_angle = (angle + pi)._apply_operation(mod, 2 * pi) - pi
         pi_phase = self.between(angle._apply_operation(mod, 4 * pi), pi, 3 * pi)
 
@@ -156,13 +160,8 @@ class FoldRzzAngle(TransformationPass):
 
         global_phase = quad2 * (-pi / 2) + quad3 * (-pi / 2) + quad4 * pi + pi_phase * pi
         rz_angle = quad2 * pi + quad3 * pi
-        rx_angle = quad2 * pi + quad4 * pi
-        rzz_angle = (
-            quad1 * wrap_angle
-            + quad2 * (pi - wrap_angle)
-            + quad3 * (pi + wrap_angle)
-            + quad4 * (-wrap_angle)
-        )
+        rx_angle = pi * self.gteq_op(angle._apply_operation(mod, pi), pi / 2)
+        rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
 
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
