@@ -144,24 +144,3 @@ def validate_job_tags(job_tags: Optional[List[str]]) -> None:
         not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise IBMInputValueError("job_tags needs to be a list of strings.")
-
-
-def validate_no_param_expressions_gen3_runtime(
-    circuits: List[QuantumCircuit], options: Any
-) -> None:
-    """Validate that when the gen3 runtime is used, no circuit in the pubs contain
-    ParameterExpressions.
-
-    Args:
-        circuits: A list of QuantumCircuits
-        options: The runtime options
-    """
-    if (
-        not hasattr(options.experimental, "get")
-        or options.experimental.get("execution_path", None) != "gen3-turbo"
-    ):
-        return
-    if has_param_expressions(circuits):
-        raise IBMInputValueError(
-            "The gen3-turbo runtime currently does not support parameter expressions"
-        )
