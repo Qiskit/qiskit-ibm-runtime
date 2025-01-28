@@ -159,7 +159,7 @@ class FoldRzzAngle(TransformationPass):
         quad4 = self.between(wrap_angle, -pi / 2, 0)
 
         global_phase = quad2 * (-pi / 2) + quad3 * (-pi / 2) + quad4 * pi + pi_phase * pi
-        rz_angle = quad2 * pi + quad3 * pi
+        rz_angle = pi * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi)
         rx_angle = pi * self.gteq_op(angle._apply_operation(mod, pi), pi / 2)
         rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
 
