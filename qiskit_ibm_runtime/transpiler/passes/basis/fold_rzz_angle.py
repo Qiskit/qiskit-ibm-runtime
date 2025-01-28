@@ -126,9 +126,11 @@ class FoldRzzAngle(TransformationPass):
         if "rz" not in self._target or "rx" not in self._target or "rzz" not in self._target:
             return None
 
-        global_phase = (-pi / 2) * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi) + \
-            pi * self.gteq_op(angle._apply_operation(mod, 2 * pi), 3 * pi / 2) + \
-            pi * self.gteq_op((angle + pi)._apply_operation(mod, 4 * pi), 2 * pi)
+        global_phase = (
+            (-pi / 2) * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi)
+            + pi * self.gteq_op(angle._apply_operation(mod, 2 * pi), 3 * pi / 2)
+            + pi * self.gteq_op((angle + pi)._apply_operation(mod, 4 * pi), 2 * pi)
+        )
         rz_angle = pi * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi)
         rx_angle = pi * self.gteq_op(angle._apply_operation(mod, pi), pi / 2)
         rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
