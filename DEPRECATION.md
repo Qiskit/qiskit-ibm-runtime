@@ -30,6 +30,22 @@ The guiding principles are:
 - all deprecations, changes and removals are considered API changes, and can
   only occur in minor releases not patch releases, per the [stable branch policy](https://github.com/Qiskit/qiskit/blob/main/MAINTAINING.md#stable-branch-policy).
 
+## What is the public interface?
+
+The public API comprises all *publicly documented* packages, modules, classes, functions, methods, and attributes.
+
+An object is *publicly documented* if and only if it appears in [the hosted API documentation](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime) for `qiskit-ibm-runtime`.
+The presence of a docstring in the Python source (or a `__doc__` attribute) is not sufficient to make an object publicly documented; this documentation must also be rendered in the public API documentation.
+
+As well as the objects themselves needing to be publicly documented, the only public-API *import locations* for a given object is the location it is documented at in [the public API documentation](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime), and parent modules or packages that re-export the object (if any).
+For example, while it is possible to import `RuntimeEncoder` from `qiskit_ibm_runtime.utils.json`, this is not a supported part of the public API because the[`RuntimeEncoder` object is documented as being in `qiskit_ibm_runtime`](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder).
+
+As a rule of thumb, if you are using `qiskit-ibm-runtime`, you should import objects from the highest-level package that exports that object.
+
+Some components of the documented public interface may be marked as "experimental", and not subject to the stability guarantees of semantic versioning.
+These will be clearly denoted in the documentation.
+We will only use these "experimental" features sparingly, when we feel there is a real benefit to making the experimental version public in an unstable form, such as a backwards-incompatible new version of core functionality that shows significant improvements over the existing form for limited inputs, but is not yet fully feature complete.
+Typically, a feature will only become part of the public API when we are ready to commit to its stability properly.
 
 ## Removing a feature
 

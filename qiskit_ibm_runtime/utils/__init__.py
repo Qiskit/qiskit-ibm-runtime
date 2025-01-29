@@ -34,7 +34,6 @@ from .validations import (
     validate_isa_circuits,
     validate_job_tags,
     validate_rzz_pubs,
-    validate_no_param_expressions_gen3_runtime,
 )
 
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string
