@@ -17,7 +17,7 @@ New Features
    allows for different execution modes. Batch mode is now supported
    through ``Batch``, and `Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
    will work the same as way as before. Please see
-   `run/sessions <https://docs.quantum.ibm.com/guides/sessions>`__ for more information.
+   `run/sessions <https://docs.quantum.ibm.com/guides/execution-modes#session-mode>`__ for more information.
 
    Note that ``Session`` and ``Batch`` created from
    ``qiskit-ibm-runtime`` prior to this release will no longer be
