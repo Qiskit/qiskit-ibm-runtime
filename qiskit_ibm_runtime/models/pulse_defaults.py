@@ -13,7 +13,6 @@
 """Model and schema for pulse defaults."""
 from typing import Any, Dict, List, TypeVar, Type
 
-from qiskit.pulse.instruction_schedule_map import InstructionScheduleMap, PulseQobjDef
 from qiskit.qobj import PulseLibraryItem, PulseQobjInstruction
 from qiskit.qobj.converters import QobjToInstructionConverter
 
@@ -203,17 +202,7 @@ class PulseDefaults:
         """Measurement frequencies in Hertz."""
         self.pulse_library = pulse_library
         self.cmd_def = cmd_def
-        self.instruction_schedule_map = InstructionScheduleMap()
         self.converter = QobjToInstructionConverter(pulse_library)
-
-        for inst in cmd_def:
-            entry = PulseQobjDef(converter=self.converter, name=inst.name)
-            entry.define(inst.sequence, user_provided=False)
-            self.instruction_schedule_map._add(
-                instruction_name=inst.name,
-                qubits=tuple(inst.qubits),
-                entry=entry,
-            )
 
         if meas_kernel is not None:
             self.meas_kernel = meas_kernel
