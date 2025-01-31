@@ -243,7 +243,6 @@ class PulseDefaults:
                 "meas_kernel",
                 "discriminator",
                 "converter",
-                "instruction_schedule_map",
             ]:
                 out_dict[key] = value
         out_dict.update(self._data)
@@ -289,4 +288,4 @@ class PulseDefaults:
         meas_freqs = [freq / 1e9 for freq in self.meas_freq_est]
         qfreq = f"Qubit Frequencies [GHz]\n{qubit_freqs}"
         mfreq = f"Measurement Frequencies [GHz]\n{meas_freqs} "
-        return f"<{self.__class__.__name__}({str(self.instruction_schedule_map)}{qfreq}\n{mfreq})>"
+        return f"<{self.__class__.__name__}({qfreq}\n{mfreq})>"

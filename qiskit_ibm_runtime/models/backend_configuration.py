@@ -17,7 +17,6 @@ import re
 import copy
 import numbers
 from typing import Dict, List, Any, Tuple, TypeVar, Type
-from collections import defaultdict
 
 from qiskit.exceptions import QiskitError
 from qiskit.providers.exceptions import BackendConfigurationError
@@ -542,7 +541,6 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         display_name: str = None,
         description: str = None,
         tags: list = None,
-        channels: Dict[set, Any] = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -597,8 +595,6 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
             display_name (str): Alternate name field for the backend
             description (str): A description for the backend
             tags (list): A list of string tags to describe the backend
-            channels: An optional dictionary containing information of each channel -- their
-                purpose, type, and qubits operated on.
             **kwargs: Optional fields.
         """
         self.n_uchannels = n_uchannels
@@ -627,17 +623,6 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
 
         self.dt = dt * 1e-9
         self.dtm = dtm * 1e-9
-
-        if channels is not None:
-            self.channels = channels
-
-            (
-                self._qubit_channel_map,
-                self._channel_qubit_map,
-                self._control_channels,
-            ) = self._parse_channels(channels=channels)
-        else:
-            self._control_channels = defaultdict(list)
 
         if channel_bandwidth is not None:
             self.channel_bandwidth = [
