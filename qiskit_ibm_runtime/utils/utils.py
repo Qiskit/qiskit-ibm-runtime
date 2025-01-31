@@ -43,8 +43,6 @@ from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from .deprecation import deprecate_function
-
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     """Return true if the backend is a simulator.
@@ -305,19 +303,6 @@ def is_crn(locator: str) -> bool:
         Whether the input is a CRN.
     """
     return isinstance(locator, str) and locator.startswith("crn:")
-
-
-@deprecate_function(
-    "get_runtime_api_base_url()",
-    "0.30.0",
-    "Please use default_runtime_url_resolver() instead.",
-    stacklevel=1,
-)
-def get_runtime_api_base_url(
-    url: str, instance: str, private_endpoint: Optional[bool] = False
-) -> str:
-    """Computes the Runtime API base URL based on the provided input parameters."""
-    return default_runtime_url_resolver(url, instance, private_endpoint=private_endpoint)
 
 
 def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:

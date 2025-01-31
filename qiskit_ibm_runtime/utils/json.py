@@ -39,7 +39,7 @@ except ImportError:
 
 try:
     import qiskit_aer
-    from qiskit_ibm_runtime.utils.noise_model import from_dict
+    from qiskit_aer.version import __version__ as _aer_version_string
 
     HAS_AER = True
 except ImportError:
@@ -88,6 +88,10 @@ from .noise_learner_result import NoiseLearnerResult
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
+)
+
+_AER_VERSION = tuple(
+    int(x) for x in re.match(r"\d+\.\d+\.\d", _aer_version_string).group(0).split(".")[:3]
 )
 
 
@@ -509,8 +513,8 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
-                if HAS_AER:
-                    return from_dict(obj_val)
+                if HAS_AER and _AER_VERSION[1] >= 16:
+                    return qiskit_aer.noise.NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
         return obj

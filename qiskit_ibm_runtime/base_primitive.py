@@ -33,7 +33,6 @@ from .utils import (
     validate_rzz_pubs,
 )
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -163,16 +162,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                     self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", primitive_options)
-
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            if primitive_options.get("options", {}).get("simulator", {}).get("noise_model"):
-                issue_deprecation_msg(
-                    msg="The noise_model option is deprecated",
-                    version="0.29.0",
-                    remedy="Use the local testing mode instead.",
-                    period="3 months",
-                    stacklevel=3,
-                )
 
         # Batch or Session
         if self._mode:
