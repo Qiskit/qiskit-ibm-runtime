@@ -228,7 +228,6 @@ class IBMBackend(Backend):
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
-                defaults=self._defaults,
             )
 
     @classmethod
@@ -308,12 +307,10 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self.defaults()
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
-            defaults=self._defaults,
         )
 
     def refresh(self) -> None:

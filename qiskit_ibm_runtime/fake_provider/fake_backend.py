@@ -245,14 +245,10 @@ class FakeBackendV2(BackendV2):
             props = None
             if self._props_dict is not None:
                 props = BackendProperties.from_dict(self._props_dict)  # type: ignore
-            defaults = None
-            if self._defs_dict is not None:
-                defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
             self._target = convert_to_target(
                 configuration=conf,
                 properties=props,
-                defaults=defaults,
                 # Fake backends use the simulator backend.
                 # This doesn't have the exclusive constraint.
                 include_control_flow=True,
@@ -479,12 +475,10 @@ class FakeBackendV2(BackendV2):
 
                 updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
                 updated_properties = BackendProperties.from_dict(self._props_dict)
-                updated_defaults = PulseDefaults.from_dict(self._defs_dict)
 
                 self._target = convert_to_target(
                     configuration=updated_configuration,
                     properties=updated_properties,
-                    defaults=updated_defaults,
                     include_control_flow=True,
                     include_fractional_gates=True,
                 )
