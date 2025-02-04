@@ -1,0 +1,28 @@
+0.35.0 (2025-02-04)
+===================
+
+Upgrade Notes
+-------------
+
+- Python 3.8 reached end-of-life on Oct 7th, 2024. Qiskit SDK dropped support for 3.8 in ``qiskit 1.3``. In the same vein, ``qiskit-ibm-runtime`` does not support Python 3.8 anymore. (`2097 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2097>`__)
+
+
+New Features
+------------
+
+- Jobs run in the local testing mode will now return an instance of a new class, 
+  :class:`.LocalRuntimeJob`. This new class inherits from Qiskit's ``PrimitiveJob`` class 
+  while adding the methods and properties found in :class:`.BaseRuntimeJob`. This way, running jobs 
+  in the local testing mode will be more similar to running jobs on a real backend. (`2057 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2057>`__)
+- Two new fake backends, ``FakeFez`` and ``FakeMarrakesh``, have been added. These are 156-qubit Heron devices. (`2112 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2112>`__)
+
+
+Other Notes
+-----------
+
+- Support for ``backend.run()`` has been removed. Please refer to our `migration guide <https://docs.quantum.ibm.com/migration-guides/qiskit-runtime>`__
+  for instructions on how to migrate any existing code that uses 
+  ``backend.run()`` to the new V2 primitives interface. (`1962 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1962>`__)
+- Parameter expressions with RZZ gates will be checked against the values assigned to them in the pub. An ``IBMInputValueError`` will be raised if parameter values specified in the pub make a parameter expression evaluate to an invalid angle (negative or greater than ``pi/2``). (`2093 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2093>`__)
+- When there is a maintenance outage, an appropriate error message will be raised when trying 
+  to initialize the ``QiskitRuntimeService``. (`2100 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2100>`__)

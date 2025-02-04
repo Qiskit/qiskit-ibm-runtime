@@ -1,1 +1,0 @@
-Parameter expressions with RZZ gates will be checked against the values assigned to them in the pub. An `IBMInputValueError` will be raised if parameter values specified in the pub make a parameter expression evaluate to an invalid angle (negative or greater than `pi/2`).
