@@ -20,8 +20,7 @@ New Features
 Other Notes
 -----------
 
-- Support for ``backend.run()`` has been removed. Please refer to our migration guide 
-  https://docs.quantum.ibm.com/migration-guides/qiskit-runtime
+- Support for ``backend.run()`` has been removed. Please refer to our `migration guide <https://docs.quantum.ibm.com/migration-guides/qiskit-runtime>`__
   for instructions on how to migrate any existing code that uses 
   ``backend.run()`` to the new V2 primitives interface. (`1962 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1962>`__)
 - Parameter expressions with RZZ gates will be checked against the values assigned to them in the pub. An ``IBMInputValueError`` will be raised if parameter values specified in the pub make a parameter expression evaluate to an invalid angle (negative or greater than ``pi/2``). (`2093 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2093>`__)
