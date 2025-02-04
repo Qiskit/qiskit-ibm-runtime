@@ -1,2 +1,0 @@
-When there is a maintenance outage, an approproate error message will be raised when trying 
-to initialize the ``QiskitRuntimeService``. 
