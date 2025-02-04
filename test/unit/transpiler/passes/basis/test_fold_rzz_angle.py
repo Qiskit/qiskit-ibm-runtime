@@ -18,12 +18,14 @@ import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.quantum_info import Operator
 
 from qiskit_ibm_runtime.transpiler.passes.basis import FoldRzzAngle
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
+from qiskit_ibm_runtime.utils.utils import convert_to_rzz_valid_circ_and_vals, is_valid_rzz_pub
 from .....ibm_test_case import IBMTestCase
 
 
@@ -115,3 +117,22 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[0].operation.name, "global_phase")
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
+
+    def test_rzz_pub_conversion(self):
+        """Test the function `convert_to_rzz_valid_circ_and_vals`"""
+        p1 = Parameter("p1")
+        p2 = Parameter("p2")
+
+        circ = QuantumCircuit(3)
+        circ.rzz(p1 + p2, 2, 1)
+
+        param_vals = [(0.1, 0.2), (0.3, 0.4)]
+
+        isa_circ, isa_vals = convert_to_rzz_valid_circ_and_vals(circ, param_vals)
+        isa_pub = SamplerPub.coerce((isa_circ, param_vals))
+
+        self.assertEqual(is_valid_rzz_pub(isa_pub), "")
+        self.assertEqual(
+            Operator.from_circuit(circ.assign_parameters(param_vals[0])),
+            Operator.from_circuit(isa_circ.assign_parameters(isa_vals[0])),
+        )

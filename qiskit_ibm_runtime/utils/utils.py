@@ -60,6 +60,12 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
+def convert_to_rzz_valid_circ_and_vals(
+    circ: QuantumCircuit, param_values: List[Tuple]
+) -> Tuple[QuantumCircuit, List[Tuple]]:
+    return circ, param_values
+
+
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
     """
     A section of is_isa_circuit, separated to allow recursive calls
