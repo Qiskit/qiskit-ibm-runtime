@@ -27,7 +27,6 @@ from qiskit import circuit, QuantumCircuit
 
 from qiskit.providers import BackendV2
 from qiskit import pulse
-from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
@@ -411,68 +410,17 @@ class FakeBackendV2(BackendV2):
             return control_channels_map[qubits]
         return []
 
-    def run(self, run_input, **options):  # type: ignore
-        """Run on the fake backend using a simulator.
-
-        This method runs circuit jobs (an individual or a list of QuantumCircuit
-        ) and pulse jobs (an individual or a list of Schedule or ScheduleBlock)
-        using BasicSimulator or Aer simulator and returns a
-        :class:`~qiskit.providers.Job` object.
-
-        If qiskit-aer is installed, jobs will be run using AerSimulator with
-        noise model of the fake backend. Otherwise, jobs will be run using
-        BasicSimulator without noise.
-
-        Currently noisy simulation of a pulse job is not supported yet in
-        FakeBackendV2.
-
-        Args:
-            run_input (QuantumCircuit or Schedule or ScheduleBlock or list): An
-                individual or a list of
-                :class:`~qiskit.circuit.QuantumCircuit`,
-                :class:`~qiskit.pulse.ScheduleBlock`, or
-                :class:`~qiskit.pulse.Schedule` objects to run on the backend.
-            options: Any kwarg options to pass to the backend for running the
-                config. If a key is also present in the options
-                attribute/object then the expectation is that the value
-                specified will be used instead of what's set in the options
-                object.
-
-        Returns:
-            Job: The job object for the run
-
-        Raises:
-            QiskitError: If a pulse job is supplied and qiskit-aer is not installed.
+    def run(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         """
-        circuits = run_input
-        pulse_job = None
-        if isinstance(circuits, (pulse.Schedule, pulse.ScheduleBlock)):
-            pulse_job = True
-        elif isinstance(circuits, circuit.QuantumCircuit):
-            pulse_job = False
-        elif isinstance(circuits, list):
-            if circuits:
-                if all(isinstance(x, (pulse.Schedule, pulse.ScheduleBlock)) for x in circuits):
-                    pulse_job = True
-                elif all(isinstance(x, circuit.QuantumCircuit) for x in circuits):
-                    pulse_job = False
-        if pulse_job is None:  # submitted job is invalid
-            raise QiskitError(
-                "Invalid input object %s, must be either a "
-                "QuantumCircuit, Schedule, or a list of either" % circuits
-            )
-        if pulse_job:  # pulse job
-            raise QiskitError("Pulse simulation is currently not supported for V2 fake backends.")
-        # circuit job
-        if not _optionals.HAS_AER:
-            warnings.warn(
-                "Aer not found, using qiskit.BasicSimulator and no noise.", RuntimeWarning
-            )
-        if self.sim is None:
-            self._setup_sim()
-        self.sim._options = self._options
-        job = self.sim.run(circuits, **options)
-        return job
+        Raises:
+            NotImplementedError: The run() method is no longer supported.
+
+        """
+        raise NotImplementedError(
+            "Support for backend.run() has been removed. Please see our migration guide "
+            "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime for instructions "
+            "on how to migrate to the primitives interface."
+        )
 
     def _get_noise_model_from_backend_v2(  # type: ignore
         self,
