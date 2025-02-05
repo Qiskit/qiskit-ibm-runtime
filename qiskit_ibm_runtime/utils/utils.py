@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Set
+from typing import List, Optional, Any, Dict, Union, Tuple, Set, get_args
 from urllib.parse import urlparse
 from itertools import chain
 import numpy as np
@@ -40,8 +40,8 @@ from qiskit.circuit.library.standard_gates import (
 )
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
+from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 from .deprecation import deprecate_function
 
@@ -61,9 +61,63 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
 
 
 def convert_to_rzz_valid_circ_and_vals(
-    circ: QuantumCircuit, param_values: List[Tuple]
-) -> Tuple[QuantumCircuit, List[Tuple]]:
-    return circ, param_values
+    program_id: str, pub: SamplerPubLike | EstimatorPubLike
+) -> SamplerPub | EstimatorPub:
+    if program_id == "sampler":
+        pub = SamplerPub.coerce(pub)
+    elif program_id == "estimator":
+        pub = EstimatorPub.coerce(pub)
+    else:
+        raise ValueError(f"Unknown program id {program_id}")
+
+    #print(pub.parameter_values.as_array())
+    val_data = pub.parameter_values.data
+    val_data[("rzz_extra_1", "rzz_extra_2", "rzz_extra_3")] = np.ones([2, 2, 3, 3])
+    print(val_data)
+    isa_pub = SamplerPub.coerce((pub.circuit, val_data))
+
+    print(isa_pub.parameter_values.data)
+
+
+    
+    """
+    pub_params = np.array(list(chain.from_iterable(pub.parameter_values.data)))
+    new_data = []
+
+    for inst in circ.data:
+        op = inst.operation
+        if op.name != "rzz":
+            new_data.append(inst)
+
+    pub_params = np.array(list(chain.from_iterable(pub.parameter_values.data)))
+
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
+    for param_exp in rzz_params:
+        param_names = [param.name for param in param_exp.parameters]
+
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
+        # col_indices is the indices of columns in the parameter value array that have to be checked
+
+        # project only to the parameters that have to be checked
+        projected_arr = arr[:, col_indices]
+
+        for row in projected_arr:
+            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+            if angle < 0.0 or angle > np.pi / 2 + 1e-10:
+                vals_msg = ", ".join(
+                    [f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)]
+                )
+                return (
+                    "The instruction rzz is supported only for angles in the "
+                    f"range [0, pi/2], but an angle of {angle} has been provided; "
+                    f"via parameter value(s) {vals_msg}, substituted in parameter expression "
+                    f"{param_exp}."
+                )  
+    """        
+
+    return pub
 
 
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:

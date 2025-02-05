@@ -122,14 +122,20 @@ class TestFoldRzzAngle(IBMTestCase):
         """Test the function `convert_to_rzz_valid_circ_and_vals`"""
         p1 = Parameter("p1")
         p2 = Parameter("p2")
+        p3 = Parameter("p3")
+        p4 = Parameter("p4")
 
         circ = QuantumCircuit(3)
         circ.rzz(p1 + p2, 2, 1)
+        circ.rzz(p3 + p4, 1, 2)
 
         param_vals = [(0.1, 0.2), (0.3, 0.4)]
+        val_ab = np.ones([2, 2, 3, 2])
+        val_c = (-1) * np.ones([2, 2, 3])
+        val_d = np.ones([2, 2, 3])
+        param_vals = {("a", "b"): val_ab, "c": val_c, "d": val_d}
 
-        isa_circ, isa_vals = convert_to_rzz_valid_circ_and_vals(circ, param_vals)
-        isa_pub = SamplerPub.coerce((isa_circ, param_vals))
+        isa_pub = convert_to_rzz_valid_circ_and_vals("sampler", (circ, param_vals))
 
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
         self.assertEqual(
