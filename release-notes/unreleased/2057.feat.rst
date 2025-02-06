@@ -1,4 +1,0 @@
-Jobs run in the local testing mode will now return an instance of a new class, 
-:class:`.LocalRuntimeJob`. This new class inherits from Qiskit's ``PrimitiveJob`` class 
-while adding the methods and properties found in :class:`.BaseRuntimeJob`. This way, running jobs 
-in the local testing mode will be more similar to running jobs on a real backend. 
