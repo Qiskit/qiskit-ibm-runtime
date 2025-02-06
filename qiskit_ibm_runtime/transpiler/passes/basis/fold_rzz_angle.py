@@ -17,7 +17,7 @@ from math import pi
 from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression
+from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, QuantumCircuit
 from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
@@ -274,8 +274,10 @@ def convert_to_rzz_valid_pub(
      # first axis will be over flattened shape, second axis over circuit parameters
     arr = pub.parameter_values.ravel().as_array()
 
+    new_circ = QuantumCircuit(pub.circuit.qubits, pub.circuit.clbits)
     new_data = []
     rzz_count = 0
+
     for instruction in pub.circuit.data:
         operation = instruction.operation
         if operation.name != "rzz" or not isinstance((param_exp := instruction.operation.params[0]), ParameterExpression):
@@ -295,6 +297,7 @@ def convert_to_rzz_valid_pub(
         rz_angles = np.zeros(num_param_sets)
         rx_angles = np.zeros(num_param_sets)
         rzz_angles = np.zeros(num_param_sets)
+
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
             
@@ -324,8 +327,11 @@ def convert_to_rzz_valid_pub(
         if any(not np.isclose(global_phase, 0) for global_phase in global_phases):
             param_global_phase = Parameter(f"{param_prefix}global_phase")
             new_data.append(CircuitInstruction(GlobalPhaseGate(param_global_phase)))
+            val_data[f"{param_prefix}global_phase"] = global_phases
 
-        
+    new_circ.data = new_data
 
-
-    return pub
+    if program_id == "sampler":
+        return SamplerPub.coerce((new_circ, val_data), pub.shots)
+    else:
+        return EstimatorPub.coerce((new_circ, pub.observables, val_data), pub.shots)
