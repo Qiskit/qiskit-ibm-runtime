@@ -120,7 +120,10 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
 
-    @data([0.2, 0.1, 0.4, 0.3])
+    @data([0.2, 0.1, 0.4, 0.3], # no modification in circuit
+          [0.2, 0.1, 0.3, 0.4], # rx
+          [0.1, 0.2, 0.3, 0.4] # x
+          )
     @unpack
     def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2):
         """Test the function `convert_to_rzz_valid_circ_and_vals`"""

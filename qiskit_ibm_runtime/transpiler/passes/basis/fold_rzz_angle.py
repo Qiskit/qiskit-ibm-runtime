@@ -291,7 +291,6 @@ def convert_to_rzz_valid_pub(
 
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
-            #rint("angle:", angle, angle % pi, pi / 2)
 
             if (angle + pi / 2) % (2 * pi) >= pi:
                 rz_angles[idx] = pi
@@ -303,7 +302,6 @@ def convert_to_rzz_valid_pub(
             else:
                 rx_angles[idx] = 0
 
-        #print("rx angles:", rx_angles)
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
         qubits = instruction.qubits
@@ -315,13 +313,13 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         RZGate(pi),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
                 new_data.append(
                     CircuitInstruction(
                         RZGate(pi),
-                        (qubits[1]),
+                        (qubits[1],),
                     )
                 )
             else:
@@ -329,13 +327,13 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         RZGate(param_rz),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
                 new_data.append(
                     CircuitInstruction(
                         RZGate(param_rz),
-                        (qubits[1]),
+                        (qubits[1],),
                     )
                 )
                 val_data[f"{param_prefix}rz"] = rz_angles
@@ -358,7 +356,7 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         RXGate(param_rx),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
                 val_data[f"{param_prefix}rx"] = rx_angles
@@ -381,7 +379,7 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         RXGate(param_rx),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
 
