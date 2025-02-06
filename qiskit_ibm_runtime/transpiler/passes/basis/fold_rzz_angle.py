@@ -14,6 +14,7 @@
 
 from typing import Tuple
 from math import pi
+from operator import mod
 from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
@@ -259,16 +260,6 @@ def convert_to_rzz_valid_pub(
     else:
         raise ValueError(f"Unknown program id {program_id}")
 
-    """
-    #print(pub.parameter_values.as_array())
-    val_data = pub.parameter_values.data
-    val_data[("rzz_extra_1", "rzz_extra_2", "rzz_extra_3")] = np.ones([2, 3])
-    print(val_data)
-    isa_pub = SamplerPub.coerce((pub.circuit, val_data))
-
-    print(isa_pub.parameter_values.data)
-    """
-
     val_data = pub.parameter_values.data
     pub_params = np.array(list(chain.from_iterable(val_data)))
     # first axis will be over flattened shape, second axis over circuit parameters
@@ -301,17 +292,15 @@ def convert_to_rzz_valid_pub(
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
 
-            if (angle + np.pi / 2) % (2 * np.pi) >= np.pi:
-                rz_angles[idx] = np.pi
+            if (angle + pi / 2) % (2 * pi) >= pi:
+                rz_angles[idx] = pi
             else:
                 rz_angles[idx] = 0
 
-            if angle % np.pi >= np.pi / 2:
+            if angle % pi >= pi / 2:
                 rx_angles[idx] = 0
             else:
-                rx_angles[idx] = np.pi
-
-            rzz_angles[idx] = np.abs(np.pi / 2 - (angle % np.pi - pi / 2))
+                rx_angles[idx] = pi
 
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
@@ -320,16 +309,16 @@ def convert_to_rzz_valid_pub(
         is_rz = False
         if any(not np.isclose(rz_angle, 0) for rz_angle in rz_angles):
             is_rz = True
-            if all(np.isclose(rz_angle, np.pi) for rz_angle in rz_angles):
+            if all(np.isclose(rz_angle, pi) for rz_angle in rz_angles):
                 new_data.append(
                     CircuitInstruction(
-                        RZGate(np.pi),
+                        RZGate(pi),
                         (qubits[0]),
                     )
                 )
                 new_data.append(
                     CircuitInstruction(
-                        RZGate(np.pi),
+                        RZGate(pi),
                         (qubits[1]),
                     )
                 )
@@ -353,7 +342,7 @@ def convert_to_rzz_valid_pub(
         is_x = False
         if any(not np.isclose(rx_angle, 0) for rx_angle in rx_angles):
             is_rx = True
-            if all(np.isclose(rx_angle, np.pi) for rx_angle in rx_angles):
+            if all(np.isclose(rx_angle, pi) for rx_angle in rx_angles):
                 is_x = True
                 new_data.append(
                     CircuitInstruction(
