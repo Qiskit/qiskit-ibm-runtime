@@ -131,8 +131,8 @@ class TestFoldRzzAngle(IBMTestCase):
         p2 = Parameter("p2")
 
         circ = QuantumCircuit(3)
-        circ.rzz(p1 + p2, 2, 1)
-        circ.rzz(p1 - p2, 1, 2)
+        circ.rzz(p1 + p2, 0, 1)
+        circ.rzz(p1 - p2, 2, 1)
 
         param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
         isa_pub = convert_to_rzz_valid_pub("sampler", (circ, param_vals))
