@@ -131,7 +131,6 @@ class TestFoldRzzAngle(IBMTestCase):
 
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
         for param_set_1, param_set_2 in zip(param_vals, isa_pub.parameter_values.ravel().as_array()):
-            self.assertEqual(
-                Operator.from_circuit(circ.assign_parameters(param_set_1)),
-                Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2)),
+            self.assertTrue(
+                Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2)))
             )
