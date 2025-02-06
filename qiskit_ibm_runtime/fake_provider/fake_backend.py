@@ -417,7 +417,7 @@ class FakeBackendV2(BackendV2):
 
         """
         raise NotImplementedError(
-            "Support for backend.run() has been removed. Please see our migration guide "
+            "Support for the run() method has been removed. Please see our migration guide "
             "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime for instructions "
             "on how to migrate to the primitives interface."
         )

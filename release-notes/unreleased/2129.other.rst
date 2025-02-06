@@ -1,0 +1,2 @@
+The ``FakeBackendV2.run()`` method has been removed, as ``backend.run()`` was removed 
+in the previous ``0.35.0`` release.
