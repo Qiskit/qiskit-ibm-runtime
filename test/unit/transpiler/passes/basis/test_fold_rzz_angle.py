@@ -13,7 +13,7 @@
 """Test folding Rzz angle into calibrated range."""
 
 from math import pi
-from ddt import ddt, named_data
+from ddt import ddt, named_data, data, unpack
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
@@ -120,7 +120,9 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
 
-    def test_rzz_pub_conversion(self):
+    @data([0.2, 0.1, 0.4, 0.3])
+    @unpack
+    def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2):
         """Test the function `convert_to_rzz_valid_circ_and_vals`"""
         p1 = Parameter("p1")
         p2 = Parameter("p2")
@@ -129,7 +131,7 @@ class TestFoldRzzAngle(IBMTestCase):
         circ.rzz(p1 + p2, 2, 1)
         circ.rzz(p1 - p2, 1, 2)
 
-        param_vals = [(0.2, 0.1), (0.4, 0.3)]
+        param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
         isa_pub = convert_to_rzz_valid_pub("sampler", (circ, param_vals))
 
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
