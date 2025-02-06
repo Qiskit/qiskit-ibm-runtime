@@ -271,7 +271,7 @@ def convert_to_rzz_valid_pub(
 
     val_data = pub.parameter_values.data
     pub_params = np.array(list(chain.from_iterable(val_data)))
-     # first axis will be over flattened shape, second axis over circuit parameters
+    # first axis will be over flattened shape, second axis over circuit parameters
     arr = pub.parameter_values.ravel().as_array()
 
     new_circ = QuantumCircuit(pub.circuit.qubits, pub.circuit.clbits)
@@ -280,7 +280,9 @@ def convert_to_rzz_valid_pub(
 
     for instruction in pub.circuit.data:
         operation = instruction.operation
-        if operation.name != "rzz" or not isinstance((param_exp := instruction.operation.params[0]), ParameterExpression):
+        if operation.name != "rzz" or not isinstance(
+            (param_exp := instruction.operation.params[0]), ParameterExpression
+        ):
             new_data.append(instruction)
             continue
 
@@ -292,7 +294,7 @@ def convert_to_rzz_valid_pub(
         # project only to the parameters that have to be checked
         projected_arr = arr[:, col_indices]
         num_param_sets = len(projected_arr)
-        
+
         rz_angles = np.zeros(num_param_sets)
         rx_angles = np.zeros(num_param_sets)
 
@@ -314,17 +316,37 @@ def convert_to_rzz_valid_pub(
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
         qubits = instruction.qubits
-        
+
         is_rz = False
         if any(not np.isclose(rz_angle, 0) for rz_angle in rz_angles):
             is_rz = True
             if all(np.isclose(rz_angle, np.pi) for rz_angle in rz_angles):
-                new_data.append(CircuitInstruction(RZGate(np.pi), (qubits[0]),))
-                new_data.append(CircuitInstruction(RZGate(np.pi), (qubits[1]),))
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(np.pi),
+                        (qubits[0]),
+                    )
+                )
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(np.pi),
+                        (qubits[1]),
+                    )
+                )
             else:
                 param_rz = Parameter(f"{param_prefix}rz")
-                new_data.append(CircuitInstruction(RZGate(param_rz), (qubits[0]),))
-                new_data.append(CircuitInstruction(RZGate(param_rz), (qubits[1]),))
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(param_rz),
+                        (qubits[0]),
+                    )
+                )
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(param_rz),
+                        (qubits[1]),
+                    )
+                )
                 val_data[f"{param_prefix}rz"] = rz_angles
 
         is_rx = False
@@ -333,11 +355,21 @@ def convert_to_rzz_valid_pub(
             is_rx = True
             if all(np.isclose(rx_angle, np.pi) for rx_angle in rx_angles):
                 is_x = True
-                new_data.append(CircuitInstruction(XGate(), (qubits[0]),))
+                new_data.append(
+                    CircuitInstruction(
+                        XGate(),
+                        (qubits[0]),
+                    )
+                )
             else:
                 is_x = False
                 param_rx = Parameter(f"{param_prefix}rx")
-                new_data.append(CircuitInstruction(RXGate(param_rx), (qubits[0]),))
+                new_data.append(
+                    CircuitInstruction(
+                        RXGate(param_rx),
+                        (qubits[0]),
+                    )
+                )
                 val_data[f"{param_prefix}rx"] = rx_angles
 
         if is_rz or is_rx:
@@ -348,9 +380,19 @@ def convert_to_rzz_valid_pub(
 
         if is_rx:
             if is_x:
-                new_data.append(CircuitInstruction(XGate(), (qubits[0]),))
+                new_data.append(
+                    CircuitInstruction(
+                        XGate(),
+                        (qubits[0]),
+                    )
+                )
             else:
-                new_data.append(CircuitInstruction(RXGate(param_rx), (qubits[0]),))
+                new_data.append(
+                    CircuitInstruction(
+                        RXGate(param_rx),
+                        (qubits[0]),
+                    )
+                )
 
     new_circ.data = new_data
 
