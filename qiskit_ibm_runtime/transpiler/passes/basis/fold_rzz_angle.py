@@ -291,6 +291,7 @@ def convert_to_rzz_valid_pub(
 
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+            #rint("angle:", angle, angle % pi, pi / 2)
 
             if (angle + pi / 2) % (2 * pi) >= pi:
                 rz_angles[idx] = pi
@@ -298,10 +299,11 @@ def convert_to_rzz_valid_pub(
                 rz_angles[idx] = 0
 
             if angle % pi >= pi / 2:
-                rx_angles[idx] = 0
-            else:
                 rx_angles[idx] = pi
+            else:
+                rx_angles[idx] = 0
 
+        #print("rx angles:", rx_angles)
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
         qubits = instruction.qubits
