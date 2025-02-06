@@ -197,14 +197,8 @@ class BlockBasePadder(TransformationPass):
 
         new_dag.name = dag.name
         new_dag.metadata = dag.metadata
-        new_dag.unit = self.property_set["time_unit"] or "dt"
-        if new_dag.unit != "dt":
-            raise TranspilerError(
-                'All blocks must have time units of "dt". '
-                "Please run TimeUnitConversion pass prior to padding."
-            )
 
-        new_dag.calibrations = dag.calibrations
+        new_dag._calibrations_prop = dag._calibrations_prop
         new_dag.global_phase = dag.global_phase
         return new_dag
 
@@ -262,14 +256,9 @@ class BlockBasePadder(TransformationPass):
 
     def _get_node_duration(self, node: DAGNode) -> int:
         """Get the duration of a node."""
-        if node.op.condition_bits or isinstance(node.op, ControlFlowOp):
-            # As we cannot currently schedule through conditionals model
-            # as zero duration to avoid padding.
-            return 0
-
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
-        if self._block_dag.has_calibration_for(node):
+        if self._block_dag._has_calibration_for(node):
             # If node has calibration, this value should be the highest priority
             cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
             duration = self._block_dag.calibrations[node.op.name][cal_key].duration
@@ -411,8 +400,6 @@ class BlockBasePadder(TransformationPass):
         """check if is fast-path eligible otherwise fall back
         to standard ControlFlowOp handling."""
 
-        if self._will_use_fast_path(node):
-            self._fast_path_nodes.add(node)
         self._visit_control_flow_op(node)
 
     def _will_use_fast_path(self, node: DAGNode) -> bool:
@@ -517,8 +504,6 @@ class BlockBasePadder(TransformationPass):
             self._terminate_block(self._block_duration, self._current_block_idx)
             self._add_block_terminating_barrier(block_idx, t0, node)
 
-        self._conditional_block = bool(node.op.condition_bits)
-
         self._current_block_idx = block_idx
 
         t1 = t0 + self._get_node_duration(node)  # pylint: disable=invalid-name
@@ -537,7 +522,6 @@ class BlockBasePadder(TransformationPass):
 
         # This block will not be padded as it is conditional.
         # See TODO below.
-        self._conditional_block = bool(node.op.condition_bits)
 
         # Now set the current block index.
         self._current_block_idx = block_idx
