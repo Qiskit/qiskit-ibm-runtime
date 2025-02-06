@@ -22,7 +22,10 @@ from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.quantum_info import Operator
 
-from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle, convert_to_rzz_valid_pub
+from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
+    FoldRzzAngle,
+    convert_to_rzz_valid_pub,
+)
 from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
 from .....ibm_test_case import IBMTestCase
@@ -130,7 +133,11 @@ class TestFoldRzzAngle(IBMTestCase):
         isa_pub = convert_to_rzz_valid_pub("sampler", (circ, param_vals))
 
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
-        for param_set_1, param_set_2 in zip(param_vals, isa_pub.parameter_values.ravel().as_array()):
+        for param_set_1, param_set_2 in zip(
+            param_vals, isa_pub.parameter_values.ravel().as_array()
+        ):
             self.assertTrue(
-                Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2)))
+                Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
+                    Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))
+                )
             )
