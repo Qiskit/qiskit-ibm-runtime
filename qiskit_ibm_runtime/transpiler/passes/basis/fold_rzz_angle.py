@@ -318,18 +318,26 @@ def convert_to_rzz_valid_pub(
             else:
                 rx_angles[idx] = np.pi
 
-            rzz_angles[idx] = np.pi / 2 - (angle % np.pi - pi / 2).abs()
+            rzz_angles[idx] = np.abs(np.pi / 2 - (angle % np.pi - pi / 2))
 
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
         qubits = instruction.qubits
 
         if any(not np.isclose(global_phase, 0) for global_phase in global_phases):
-            param_global_phase = Parameter(f"{param_prefix}global_phase")
-            new_data.append(CircuitInstruction(GlobalPhaseGate(param_global_phase)))
-            val_data[f"{param_prefix}global_phase"] = global_phases
+            if all(np.isclose(global_phase, global_phases[0]) for global_phase in global_phases[1:]):
+                new_data.append(CircuitInstruction(GlobalPhaseGate(global_phases[0])))
+            else:
+                param_global_phase = Parameter(f"{param_prefix}global_phase")
+                new_data.append(CircuitInstruction(GlobalPhaseGate(param_global_phase)))
+                val_data[f"{param_prefix}global_phase"] = global_phases
+
+        new_data.append(instruction)
 
     new_circ.data = new_data
+
+    print(new_circ)
+    print(val_data)
 
     if program_id == "sampler":
         return SamplerPub.coerce((new_circ, val_data), pub.shots)
