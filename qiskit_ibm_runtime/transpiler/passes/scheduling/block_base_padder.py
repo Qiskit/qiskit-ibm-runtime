@@ -27,6 +27,7 @@ from qiskit.circuit.bit import Bit
 from qiskit.circuit.library import Barrier
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameterexpression import ParameterExpression
+from qiskit.circuit.controlflow import condition_resources
 from qiskit.converters import dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
@@ -261,7 +262,8 @@ class BlockBasePadder(TransformationPass):
         if self._block_dag._has_calibration_for(node):
             # If node has calibration, this value should be the highest priority
             cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = self._block_dag.calibrations[node.op.name][cal_key].duration
+            duration = self._block_dag._calibrations_prop[node.op.name][cal_key].duration
+
         else:
             duration = self._durations.get(node.op, indices, unit="dt")
 
@@ -399,7 +401,8 @@ class BlockBasePadder(TransformationPass):
     def _visit_if_else_op(self, node: DAGNode) -> None:
         """check if is fast-path eligible otherwise fall back
         to standard ControlFlowOp handling."""
-
+        if self._will_use_fast_path(node):
+            self._fast_path_nodes.add(node)
         self._visit_control_flow_op(node)
 
     def _will_use_fast_path(self, node: DAGNode) -> bool:
@@ -409,7 +412,7 @@ class BlockBasePadder(TransformationPass):
         2. The operation only operates on the qubit that is measured.
         """
         # Verify IfElseOp has a direct measurement predecessor
-        condition_bits = node.op.condition_bits
+        condition_bits = list(condition_resources(node.op.condition).clbits)
         # Fast-path valid only with a single bit.
         if not condition_bits or len(condition_bits) > 1:
             return False

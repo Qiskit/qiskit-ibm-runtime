@@ -202,6 +202,11 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._bit_indices = {q: index for index, q in enumerate(dag.qubits)}
 
     def _get_duration(self, node: DAGNode, dag: Optional[DAGCircuit] = None) -> int:
+        if isinstance(node.op, ControlFlowOp):
+            # As we cannot currently schedule through conditionals model
+            # as zero duration to avoid padding.
+            return 0
+
         indices = [self._bit_indices[qarg] for qarg in self._map_qubits(node)]
 
         # Fall back to current block dag if not specified.
@@ -210,7 +215,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         if dag._has_calibration_for(node):
             # If node has calibration, this value should be the highest priority
             cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = dag.calibrations[node.op.name][cal_key].duration
+            duration = dag._calibrations_prop[node.op.name][cal_key].duration
 
             op = node.op.to_mutable()
             op.duration = duration
