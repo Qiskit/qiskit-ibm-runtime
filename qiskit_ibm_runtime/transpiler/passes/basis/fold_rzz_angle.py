@@ -18,7 +18,7 @@ from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
 from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, QuantumCircuit
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
+from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
@@ -293,20 +293,11 @@ def convert_to_rzz_valid_pub(
         projected_arr = arr[:, col_indices]
         num_param_sets = len(projected_arr)
         
-        global_phases = np.zeros(num_param_sets)
         rz_angles = np.zeros(num_param_sets)
         rx_angles = np.zeros(num_param_sets)
-        rzz_angles = np.zeros(num_param_sets)
 
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
-            
-            if (angle + np.pi / 2) % (2 * np.pi) >= np.pi:
-                global_phases[idx] += -np.pi / 2
-            if angle % (2 * np.pi) >= 3 * np.pi / 2:
-                global_phases[idx] += np.pi
-            if (angle + np.pi) % (4 * np.pi) >= 2 * np.pi:
-                global_phases[idx] += np.pi
 
             if (angle + np.pi / 2) % (2 * np.pi) >= np.pi:
                 rz_angles[idx] = np.pi
@@ -323,16 +314,43 @@ def convert_to_rzz_valid_pub(
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
         qubits = instruction.qubits
-
-        if any(not np.isclose(global_phase, 0) for global_phase in global_phases):
-            if all(np.isclose(global_phase, global_phases[0]) for global_phase in global_phases[1:]):
-                new_data.append(CircuitInstruction(GlobalPhaseGate(global_phases[0])))
+        
+        is_rz = False
+        if any(not np.isclose(rz_angle, 0) for rz_angle in rz_angles):
+            is_rz = True
+            if all(np.isclose(rz_angle, np.pi) for rz_angle in rz_angles):
+                new_data.append(CircuitInstruction(RZGate(np.pi), (qubits[0]),))
+                new_data.append(CircuitInstruction(RZGate(np.pi), (qubits[1]),))
             else:
-                param_global_phase = Parameter(f"{param_prefix}global_phase")
-                new_data.append(CircuitInstruction(GlobalPhaseGate(param_global_phase)))
-                val_data[f"{param_prefix}global_phase"] = global_phases
+                param_rz = Parameter(f"{param_prefix}rz")
+                new_data.append(CircuitInstruction(RZGate(param_rz), (qubits[0]),))
+                new_data.append(CircuitInstruction(RZGate(param_rz), (qubits[1]),))
+                val_data[f"{param_prefix}rz"] = rz_angles
 
-        new_data.append(instruction)
+        is_rx = False
+        is_x = False
+        if any(not np.isclose(rx_angle, 0) for rx_angle in rx_angles):
+            is_rx = True
+            if all(np.isclose(rx_angle, np.pi) for rx_angle in rx_angles):
+                is_x = True
+                new_data.append(CircuitInstruction(XGate(), (qubits[0]),))
+            else:
+                is_x = False
+                param_rx = Parameter(f"{param_prefix}rx")
+                new_data.append(CircuitInstruction(RXGate(param_rx), (qubits[0]),))
+                val_data[f"{param_prefix}rx"] = rx_angles
+
+        if is_rz or is_rx:
+            rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
+            new_data.append(CircuitInstruction(RZZGate(rzz_angle), qubits))
+        else:
+            new_data.append(instruction)
+
+        if is_rx:
+            if is_x:
+                new_data.append(CircuitInstruction(XGate(), (qubits[0]),))
+            else:
+                new_data.append(CircuitInstruction(RXGate(param_rx), (qubits[0]),))
 
     new_circ.data = new_data
 
