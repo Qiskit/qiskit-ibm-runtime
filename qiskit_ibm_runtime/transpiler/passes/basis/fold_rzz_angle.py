@@ -14,13 +14,16 @@
 
 from typing import Tuple
 from math import pi
+from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
+from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression
 from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
-from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
+from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
+from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 import numpy as np
 
@@ -244,3 +247,85 @@ class FoldRzzAngle(TransformationPass):
             check=False,
         )
         return new_dag
+
+
+def convert_to_rzz_valid_pub(
+    program_id: str, pub: SamplerPubLike | EstimatorPubLike
+) -> SamplerPub | EstimatorPub:
+    if program_id == "sampler":
+        pub = SamplerPub.coerce(pub)
+    elif program_id == "estimator":
+        pub = EstimatorPub.coerce(pub)
+    else:
+        raise ValueError(f"Unknown program id {program_id}")
+
+    """
+    #print(pub.parameter_values.as_array())
+    val_data = pub.parameter_values.data
+    val_data[("rzz_extra_1", "rzz_extra_2", "rzz_extra_3")] = np.ones([2, 3])
+    print(val_data)
+    isa_pub = SamplerPub.coerce((pub.circuit, val_data))
+
+    print(isa_pub.parameter_values.data)
+    """
+
+    val_data = pub.parameter_values.data
+    pub_params = np.array(list(chain.from_iterable(val_data)))
+     # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
+    new_data = []
+    rzz_count = 0
+    for instruction in pub.circuit.data:
+        operation = instruction.operation
+        if operation.name != "rzz" or not isinstance((param_exp := instruction.operation.params[0]), ParameterExpression):
+            new_data.append(instruction)
+            continue
+
+        param_names = [param.name for param in param_exp.parameters]
+
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
+        # col_indices is the indices of columns in the parameter value array that have to be checked
+
+        # project only to the parameters that have to be checked
+        projected_arr = arr[:, col_indices]
+        num_param_sets = len(projected_arr)
+        
+        global_phases = np.zeros(num_param_sets)
+        rz_angles = np.zeros(num_param_sets)
+        rx_angles = np.zeros(num_param_sets)
+        rzz_angles = np.zeros(num_param_sets)
+        for idx, row in enumerate(projected_arr):
+            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+            
+            if (angle + np.pi / 2) % (2 * np.pi) >= np.pi:
+                global_phases[idx] += -np.pi / 2
+            if angle % (2 * np.pi) >= 3 * np.pi / 2:
+                global_phases[idx] += np.pi
+            if (angle + np.pi) % (4 * np.pi) >= 2 * np.pi:
+                global_phases[idx] += np.pi
+
+            if (angle + np.pi / 2) % (2 * np.pi) >= np.pi:
+                rz_angles[idx] = np.pi
+            else:
+                rz_angles[idx] = 0
+
+            if angle % np.pi >= np.pi / 2:
+                rx_angles[idx] = 0
+            else:
+                rx_angles[idx] = np.pi
+
+            rzz_angles[idx] = np.pi / 2 - (angle % np.pi - pi / 2).abs()
+
+        rzz_count += 1
+        param_prefix = f"rzz_{rzz_count}_"
+        qubits = instruction.qubits
+
+        if any(not np.isclose(global_phase, 0) for global_phase in global_phases):
+            param_global_phase = Parameter(f"{param_prefix}global_phase")
+            new_data.append(CircuitInstruction(GlobalPhaseGate(param_global_phase)))
+
+        
+
+
+    return pub
