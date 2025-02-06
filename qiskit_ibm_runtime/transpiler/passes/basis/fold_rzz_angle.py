@@ -347,7 +347,7 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         XGate(),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
             else:
@@ -362,7 +362,7 @@ def convert_to_rzz_valid_pub(
                 val_data[f"{param_prefix}rx"] = rx_angles
 
         if is_rz or is_rx:
-            rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
+            rzz_angle = pi / 2 - (param_exp._apply_operation(mod, pi) - pi / 2).abs()
             new_data.append(CircuitInstruction(RZZGate(rzz_angle), qubits))
         else:
             new_data.append(instruction)
@@ -372,7 +372,7 @@ def convert_to_rzz_valid_pub(
                 new_data.append(
                     CircuitInstruction(
                         XGate(),
-                        (qubits[0]),
+                        (qubits[0],),
                     )
                 )
             else:
