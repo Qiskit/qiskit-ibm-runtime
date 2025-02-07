@@ -126,6 +126,8 @@ class NoiseLearner:
 
     """
 
+    version = 2
+
     def __init__(
         self,
         mode: Optional[Union[BackendV2, Session, Batch]] = None,
@@ -173,7 +175,7 @@ class NoiseLearner:
         runtime_options = NoiseLearnerOptions._get_runtime_options(options_dict)
 
         # Define the program inputs
-        inputs = {"circuits": circuits}
+        inputs = {"circuits": circuits, "version": NoiseLearner.version}
         inputs.update(learner_options)
 
         if self._backend:
