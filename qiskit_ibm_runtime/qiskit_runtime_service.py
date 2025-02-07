@@ -66,6 +66,7 @@ class QiskitRuntimeService:
         self,
         channel: Optional[ChannelType] = None,
         token: Optional[str] = None,
+        cloud_access_token: Optional[str] = None,
         url: Optional[str] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
@@ -96,6 +97,7 @@ class QiskitRuntimeService:
              For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
             token: IBM Cloud API key or IBM Quantum API token.
+            cloud_access_token: IBM Cloud access token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum.ibm.com/api (ibm_quantum).
@@ -124,6 +126,7 @@ class QiskitRuntimeService:
 
         self._account = self._discover_account(
             token=token,
+            cloud_access_token=cloud_access_token,
             url=url,
             instance=instance,
             channel=channel,
@@ -139,6 +142,7 @@ class QiskitRuntimeService:
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
+            cloud_access_token=self._account.cloud_access_token,
             url=self._account.url,
             instance=self._account.instance,
             proxies=self._account.proxies,
@@ -154,6 +158,7 @@ class QiskitRuntimeService:
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
+            self._account.cloud_access_token = self._client_params.cloud_access_token
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
@@ -173,6 +178,7 @@ class QiskitRuntimeService:
     def _discover_account(
         self,
         token: Optional[str] = None,
+        cloud_access_token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -187,7 +193,7 @@ class QiskitRuntimeService:
 
         if name:
             if filename:
-                if any([channel, token, url]):
+                if any([channel, token, cloud_access_token, url]):
                     logger.warning(
                         "Loading account from file %s with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
@@ -195,7 +201,7 @@ class QiskitRuntimeService:
                         name,
                     )
             else:
-                if any([channel, token, url]):
+                if any([channel, token, cloud_access_token, url]):
                     logger.warning(
                         "Loading account with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
@@ -209,6 +215,7 @@ class QiskitRuntimeService:
                 account = Account.create_account(
                     channel=channel,
                     token=token,
+                    cloud_access_token=cloud_access_token,
                     url=url,
                     instance=instance,
                     proxies=proxies,
@@ -641,6 +648,7 @@ class QiskitRuntimeService:
     @staticmethod
     def save_account(
         token: Optional[str] = None,
+        cloud_access_token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -656,6 +664,7 @@ class QiskitRuntimeService:
 
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
+            cloud_access_token: IBM Cloud bearer access token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum.ibm.com/api (ibm_quantum).
@@ -677,6 +686,7 @@ class QiskitRuntimeService:
 
         AccountManager.save(
             token=token,
+            cloud_access_token=cloud_access_token,
             url=url,
             instance=instance,
             channel=channel,

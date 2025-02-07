@@ -1,2 +1,4 @@
 IBM Cloud accounts will now use an access token to call the Qiskit Runtime API instead of the 
-token provided by the user. 
+token provided by the user. Users can now also pass in this access token when initializing 
+``QiskitRuntimeService`` or when saving an account with the new parameter, ``cloud_access_token``. 
+The current path of using and saving an IBM Cloud API token will still work the same way.

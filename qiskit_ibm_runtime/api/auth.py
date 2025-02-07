@@ -25,11 +25,14 @@ STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
 class CloudAuth(AuthBase):
     """Attaches IBM Cloud Authentication to the given Request object."""
 
-    def __init__(self, api_key: str, crn: str, url: str):
+    def __init__(self, api_key: str, crn: str, url: str, cloud_access_token: str):
         self.api_key = api_key
         self.crn = crn
         self.url = url
-        self.access_token = self._get_access_token()
+        if cloud_access_token:
+            self.access_token = cloud_access_token
+        else:
+            self.access_token = self._get_access_token()
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):

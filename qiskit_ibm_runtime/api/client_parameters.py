@@ -29,6 +29,7 @@ class ClientParameters:
         self,
         channel: str,
         token: str,
+        cloud_access_token: Optional[str] = None,
         url: str = None,
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
@@ -41,6 +42,7 @@ class ClientParameters:
         Args:
             channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
             token: IBM Quantum API token.
+            cloud_access_token: IBM Cloud bearer access token.
             url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
             instance: Service instance to use.
             proxies: Proxy configuration.
@@ -49,6 +51,7 @@ class ClientParameters:
             url_resolver: Function used to resolve the runtime url.
         """
         self.token = token
+        self.cloud_access_token = cloud_access_token
         self.instance = instance
         self.channel = channel
         self.url = url
@@ -62,7 +65,15 @@ class ClientParameters:
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
         if self.channel == "ibm_cloud":
-            return CloudAuth(api_key=self.token, crn=self.instance, url=self.url)
+            auth = CloudAuth(
+                api_key=self.token,
+                crn=self.instance,
+                url=self.url,
+                cloud_access_token=self.cloud_access_token,
+            )
+            if auth.access_token:
+                self.cloud_access_token = auth.access_token
+            return auth
 
         return QuantumAuth(access_token=self.token)
 
