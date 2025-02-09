@@ -385,9 +385,6 @@ def convert_to_rzz_valid_pub(
 
     new_circ.data = new_data
 
-    print(new_circ)
-    print(val_data)
-
     if program_id == "sampler":
         return SamplerPub.coerce((new_circ, val_data), pub.shots)
     else:
