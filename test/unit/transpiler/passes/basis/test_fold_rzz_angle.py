@@ -13,10 +13,10 @@
 """Test folding Rzz angle into calibrated range."""
 
 from math import pi
-from ddt import ddt, named_data, data, unpack
-import numpy as np
 from itertools import chain
 import unittest
+import numpy as np
+from ddt import ddt, named_data, data, unpack
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
