@@ -120,12 +120,14 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
 
-    @data([0.2, 0.1, 0.4, 0.3], # no modification in circuit
-          [0.2, 0.1, 0.3, 0.4], # rx
-          [0.1, 0.2, 0.3, 0.4] # x
+    @data([0.2, 0.1, 0.4, 0.3, 2], # no modification in circuit
+          [0.2, 0.1, 0.3, 0.4, 3], # rzz_2_rx with values 0 and pi
+          [0.1, 0.2, 0.3, 0.4, 2], # x
+          [0.2, 0.1, 0.3, 2, 5], # rzz_1_rx, rzz_1_rz, rzz_2_rz with values 0 and pi
+          [0.3, 2, 0.3, 2, 2] # circuit changes but no new parameters
           )
     @unpack
-    def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2):
+    def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2, expected_num_params):
         """Test the function `convert_to_rzz_valid_circ_and_vals`"""
         p1 = Parameter("p1")
         p2 = Parameter("p2")
@@ -137,9 +139,13 @@ class TestFoldRzzAngle(IBMTestCase):
         param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
         isa_pub = convert_to_rzz_valid_pub("sampler", (circ, param_vals))
 
+        isa_param_vals = isa_pub.parameter_values.ravel().as_array()
+        num_isa_params = len(isa_param_vals[0])
+        self.assertEqual(num_isa_params, expected_num_params)
+
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
         for param_set_1, param_set_2 in zip(
-            param_vals, isa_pub.parameter_values.ravel().as_array()
+            param_vals, isa_param_vals
         ):
             self.assertTrue(
                 Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
