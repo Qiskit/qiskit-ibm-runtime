@@ -33,6 +33,9 @@ from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
 from .....ibm_test_case import IBMTestCase
 
 
+# pylint: disable=not-context-manager
+
+
 @ddt
 class TestFoldRzzAngle(IBMTestCase):
     """Test FoldRzzAngle pass"""
@@ -81,9 +84,9 @@ class TestFoldRzzAngle(IBMTestCase):
         """Test non-ISA Rzz gates inside/outside a control flow branch."""
         qc = QuantumCircuit(2, 1)
         qc.rzz(-0.2, 0, 1)
-        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+        with qc.if_test((0, 1)):
             qc.rzz(-0.1, 0, 1)
-            with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+            with qc.if_test((0, 1)):
                 qc.rzz(-0.3, 0, 1)
 
         pm = PassManager([FoldRzzAngle()])
@@ -93,11 +96,11 @@ class TestFoldRzzAngle(IBMTestCase):
         expected.x(0)
         expected.rzz(0.2, 0, 1)
         expected.x(0)
-        with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+        with expected.if_test((0, 1)):
             expected.x(0)
             expected.rzz(0.1, 0, 1)
             expected.x(0)
-            with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+            with expected.if_test((0, 1)):
                 expected.x(0)
                 expected.rzz(0.3, 0, 1)
                 expected.x(0)
