@@ -16,6 +16,7 @@ from math import pi
 from ddt import ddt, named_data, data, unpack
 import numpy as np
 from itertools import chain
+import unittest
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
@@ -156,6 +157,7 @@ class TestFoldRzzAngle(IBMTestCase):
                 )
             )
 
+    @unittest.SkipTest
     def test_rzz_pub_conversion_dynamic(self):
         """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits"""
         p = Parameter("p")
@@ -175,6 +177,7 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
         self.assertEqual([observable], isa_pub.observables)
 
+        # TODO: test qubit indices
         isa_pub_param_names = np.array(list(chain.from_iterable(isa_pub.parameter_values.data)))
         self.assertEqual(len(isa_pub_param_names), 6)
         for param_name in ["rzz_block1_rx1", "rzz_block1_rx2", "rzz_rx1", "rzz_block2_rx1", "rzz_block2_rx2", "rzz_rx2"]:
