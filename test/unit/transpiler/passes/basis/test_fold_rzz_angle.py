@@ -15,12 +15,13 @@
 from math import pi
 from ddt import ddt, named_data, data, unpack
 import numpy as np
+from itertools import chain
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.quantum_info import Operator
+from qiskit.quantum_info import Operator, SparsePauliOp
 
 from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
     FoldRzzAngle,
@@ -134,6 +135,8 @@ class TestFoldRzzAngle(IBMTestCase):
 
         circ = QuantumCircuit(3)
         circ.rzz(p1 + p2, 0, 1)
+        circ.rzz(0.3, 0, 1)
+        circ.x(0)
         circ.rzz(p1 - p2, 2, 1)
 
         param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
@@ -152,3 +155,27 @@ class TestFoldRzzAngle(IBMTestCase):
                     Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))
                 )
             )
+
+    def test_rzz_pub_conversion_dynamic(self):
+        """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits"""
+        p = Parameter("p")
+        observable = SparsePauliOp("ZZZ")
+
+        circ = QuantumCircuit(3, 1)
+        with circ.if_test((0, 1)):
+            circ.rzz(p, 1, 2)
+            circ.rzz(p, 1, 2)
+        circ.rzz(p, 0, 1)
+        with circ.if_test((0, 1)):
+            circ.rzz(p, 1, 0)
+            circ.rzz(p, 1, 0)
+        circ.rzz(p, 0 ,1)
+
+        isa_pub = convert_to_rzz_valid_pub("estimator", (circ, observable, [1, -1]))
+        self.assertEqual(is_valid_rzz_pub(isa_pub), "")
+        self.assertEqual([observable], isa_pub.observables)
+
+        isa_pub_param_names = np.array(list(chain.from_iterable(isa_pub.parameter_values.data)))
+        self.assertEqual(len(isa_pub_param_names), 6)
+        for param_name in ["rzz_block1_rx1", "rzz_block1_rx2", "rzz_rx1", "rzz_block2_rx1", "rzz_block2_rx2", "rzz_rx2"]:
+            self.assertIn(param_name, isa_pub_param_names)

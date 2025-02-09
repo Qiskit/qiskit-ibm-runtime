@@ -391,4 +391,4 @@ def convert_to_rzz_valid_pub(
     if program_id == "sampler":
         return SamplerPub.coerce((new_circ, val_data), pub.shots)
     else:
-        return EstimatorPub.coerce((new_circ, pub.observables, val_data), pub.shots)
+        return EstimatorPub.coerce((new_circ, pub.observables, val_data), pub.precision)
