@@ -12,7 +12,7 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple
+from typing import Tuple, Union
 from math import pi
 from operator import mod
 from itertools import chain
@@ -251,8 +251,9 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    program_id: str, pub: SamplerPubLike | EstimatorPubLike
-) -> SamplerPub | EstimatorPub:
+    program_id: str, pub: Union[SamplerPubLike, EstimatorPubLike]
+) -> Union[SamplerPub, EstimatorPub]:
+    """Return a pub which is compatible with Rzz constraints"""
     if program_id == "sampler":
         pub = SamplerPub.coerce(pub)
     elif program_id == "estimator":
