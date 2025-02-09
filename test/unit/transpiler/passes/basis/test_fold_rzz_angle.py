@@ -159,7 +159,7 @@ class TestFoldRzzAngle(IBMTestCase):
                 )
             )
 
-    @unittest.SkipTest
+    @unittest.skip("")
     def test_rzz_pub_conversion_dynamic(self):
         """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits"""
         p = Parameter("p")
