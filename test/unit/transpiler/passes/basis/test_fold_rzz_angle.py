@@ -122,12 +122,13 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
 
-    @data([0.2, 0.1, 0.4, 0.3, 2], # no modification in circuit
-          [0.2, 0.1, 0.3, 0.4, 3], # rzz_2_rx with values 0 and pi
-          [0.1, 0.2, 0.3, 0.4, 2], # x
-          [0.2, 0.1, 0.3, 2, 5], # rzz_1_rx, rzz_1_rz, rzz_2_rz with values 0 and pi
-          [0.3, 2, 0.3, 2, 2] # circuit changes but no new parameters
-          )
+    @data(
+        [0.2, 0.1, 0.4, 0.3, 2],  # no modification in circuit
+        [0.2, 0.1, 0.3, 0.4, 3],  # rzz_2_rx with values 0 and pi
+        [0.1, 0.2, 0.3, 0.4, 2],  # x
+        [0.2, 0.1, 0.3, 2, 5],  # rzz_1_rx, rzz_1_rz, rzz_2_rz with values 0 and pi
+        [0.3, 2, 0.3, 2, 2],  # circuit changes but no new parameters
+    )
     @unpack
     def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2, expected_num_params):
         """Test the function `convert_to_rzz_valid_circ_and_vals`"""
@@ -148,9 +149,7 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(num_isa_params, expected_num_params)
 
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
-        for param_set_1, param_set_2 in zip(
-            param_vals, isa_param_vals
-        ):
+        for param_set_1, param_set_2 in zip(param_vals, isa_param_vals):
             self.assertTrue(
                 Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
                     Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))
@@ -171,7 +170,7 @@ class TestFoldRzzAngle(IBMTestCase):
         with circ.if_test((0, 1)):
             circ.rzz(p, 1, 0)
             circ.rzz(p, 1, 0)
-        circ.rzz(p, 0 ,1)
+        circ.rzz(p, 0, 1)
 
         isa_pub = convert_to_rzz_valid_pub("estimator", (circ, observable, [1, -1]))
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
@@ -180,5 +179,12 @@ class TestFoldRzzAngle(IBMTestCase):
         # TODO: test qubit indices
         isa_pub_param_names = np.array(list(chain.from_iterable(isa_pub.parameter_values.data)))
         self.assertEqual(len(isa_pub_param_names), 6)
-        for param_name in ["rzz_block1_rx1", "rzz_block1_rx2", "rzz_rx1", "rzz_block2_rx1", "rzz_block2_rx2", "rzz_rx2"]:
+        for param_name in [
+            "rzz_block1_rx1",
+            "rzz_block1_rx2",
+            "rzz_rx1",
+            "rzz_block2_rx1",
+            "rzz_block2_rx2",
+            "rzz_rx2",
+        ]:
             self.assertIn(param_name, isa_pub_param_names)
