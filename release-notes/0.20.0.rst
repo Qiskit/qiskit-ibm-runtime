@@ -29,7 +29,7 @@ New Features
    a session will not actually be created. There will be no session ID.
 
 -  Sessions started with
-   `qiskit_ibm_runtime.IBMBackend.open_session() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#open_session>`__
+   `qiskit_ibm_runtime.IBMBackend.open_session() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.34/qiskit_ibm_runtime.IBMBackend#open_session>`__
    will use the new ``/sessions`` endpoint.
 
    The sessions functionality will not change but note that
