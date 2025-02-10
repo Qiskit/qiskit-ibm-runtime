@@ -48,20 +48,15 @@ logger = logging.getLogger(__name__)
 class NoiseLearner:
     """Class for executing noise learning experiments.
 
-    .. note::
-        Currently, the :class:`.NoiseLearner` is released an experimental feature.
-        As such, it is subject to change without notification and its stability is not
-        guaranteed.
-
     The noise learner class allows characterizing the noise processes affecting the gates in one or more
     circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
-    The :meth:`~run` method allows runnig a noise learner job for a list of circuits. After the job is
+    The :meth:`~run` method allows running a noise learner job for a list of circuits. After the job is
     submitted, the gates are collected into independent layers, and subsequently the resulting layers are
-    are characterized individually.
+    characterized individually.
 
     The way in which the gates are collected into layers depends on the twirling ``strategy`` specified
-    in the given ``options`` (see :class:`NoiseLearnerOptions` for more details). Note that all
+    in the given ``options`` (see :class:`.NoiseLearnerOptions` for more details). Note that all
     strategies obey barriers. For example, if you have three ISA entangling layers of interest,
     consider putting them into one circuit separated by barriers acting on the qubits you wish to
     twirl, and select ``strategy="active-circuit"``.
