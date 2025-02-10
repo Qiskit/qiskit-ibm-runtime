@@ -226,7 +226,7 @@ class QuantumAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
-        super().__init__(token, instance, proxies, verify)
+        super().__init__(token, None, instance, proxies, verify)
         resolved_url = url or IBM_QUANTUM_API_URL
         self.channel = "ibm_quantum"
         self.url = resolved_url
