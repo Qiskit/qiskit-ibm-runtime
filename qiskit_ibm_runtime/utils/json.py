@@ -84,6 +84,7 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 from .noise_learner_result import NoiseLearnerResult
 
+SERVICE_MAX_SUPPORTED_QPY_VERSION = 13
 
 def to_base64_string(data: str) -> str:
     """Convert string to base64 string.
@@ -270,7 +271,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
-            kwargs = {"version": min(13, QISKIT_QPY_VERSION)}
+            kwargs = {"version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)}
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
