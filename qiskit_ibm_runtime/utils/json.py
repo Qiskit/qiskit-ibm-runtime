@@ -86,6 +86,7 @@ from .noise_learner_result import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 13
 
+
 def to_base64_string(data: str) -> str:
     """Convert string to base64 string.
 
