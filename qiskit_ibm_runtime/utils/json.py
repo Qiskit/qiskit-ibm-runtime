@@ -254,7 +254,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: Dict[str, object] = {"version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)}
+            kwargs: Dict[str, object] = {
+                "version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)
+            }
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
