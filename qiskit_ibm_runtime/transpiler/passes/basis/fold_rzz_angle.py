@@ -266,7 +266,7 @@ def convert_to_rzz_valid_pub(
     # first axis will be over flattened shape, second axis over circuit parameters
     arr = pub.parameter_values.ravel().as_array()
 
-    new_circ = QuantumCircuit(pub.circuit.qubits, pub.circuit.clbits)
+    new_circ = pub.circuit.copy_empty_like()
     new_data = []
     rzz_count = 0
 
