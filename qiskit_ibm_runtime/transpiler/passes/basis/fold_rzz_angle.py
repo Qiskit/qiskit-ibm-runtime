@@ -18,7 +18,7 @@ from operator import mod
 from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, QuantumCircuit
+from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression
 from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
