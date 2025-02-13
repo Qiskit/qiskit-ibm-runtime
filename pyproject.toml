@@ -40,6 +40,7 @@ issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{iss
 
 [tool.setuptools.packages.find]
 exclude = ["test*"]
+namespaces = false
 
 [tool.setuptools]
 include-package-data = true
@@ -49,6 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
+fallback_version = "0.35.0"
 
 [project]
 name = "qiskit-ibm-runtime"
