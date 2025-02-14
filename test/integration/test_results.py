@@ -12,9 +12,6 @@
 
 """Tests for job functions using real runtime service."""
 
-import time
-from unittest import skip
-from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 
@@ -25,134 +22,6 @@ from ..decorators import run_integration_test
 
 class TestIntegrationResults(IBMIntegrationJobTestCase):
     """Integration tests for result callbacks."""
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_result_callback(self, service):
-        """Test result callback."""
-
-        def result_callback(job_id, result):
-            nonlocal final_it
-            if "iteration" in result:
-                final_it = result["iteration"]
-            nonlocal callback_err
-            if job_id != job.job_id():
-                callback_err.append(f"Unexpected job ID: {job_id}")
-            if "interim_results" in result and result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {result}")
-
-        int_res = "foo"
-        final_it = 0
-        callback_err = []
-        iterations = 3
-        job = self._run_program(
-            service,
-            backend=self.dependencies.qpu,
-            interim_results=int_res,
-            callback=result_callback,
-        )
-        job.wait_for_final_state()
-        self.assertEqual(iterations - 1, final_it)
-        self.assertFalse(callback_err)
-        self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_result_callback_with_job_result(self, service):
-        """Test result callback along with job result."""
-
-        def result_callback(job_id, result):
-            nonlocal count
-            count = count + 1
-            nonlocal final_it
-            if "iteration" in result:
-                final_it = result["iteration"]
-            nonlocal callback_err
-            if job_id != job.job_id():
-                callback_err.append(f"Unexpected job ID: {job_id}")
-            if "interim_results" in result and result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {result}")
-
-        int_res = "foo"
-        count = 0
-        final_it = 0
-        callback_err = []
-        iterations = 3
-        job = self._run_program(
-            service,
-            backend=self.dependencies.qpu,
-            interim_results=int_res,
-            callback=result_callback,
-        )
-        job.result()
-        self.assertEqual(iterations - 1, final_it)
-        self.assertEqual(iterations + 1, count)
-        self.assertFalse(callback_err)
-        self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_stream_results(self, service):
-        """Test stream_results method."""
-
-        def result_callback(job_id, result):
-            nonlocal final_it
-            if "iteration" in result:
-                final_it = result["iteration"]
-            nonlocal callback_err
-            if job_id != job.job_id():
-                callback_err.append(f"Unexpected job ID: {job_id}")
-            if "interim_results" in result and result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {result}")
-
-        int_res = "bar"
-        final_it = 0
-        callback_err = []
-        iterations = 3
-        job = self._run_program(
-            service,
-            backend=self.dependencies.qpu,
-            interim_results=int_res,
-        )
-        job.stream_results(result_callback)
-        job.wait_for_final_state()
-        self.assertEqual(iterations - 1, final_it)
-        self.assertFalse(callback_err)
-        self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_stream_results_done(self, service):
-        """Test streaming results after job is done."""
-
-        def result_callback(job_id, result):
-            # pylint: disable=unused-argument
-            nonlocal called_back_count
-            called_back_count += 1
-
-        called_back_count = 0
-        job = self._run_program(
-            service,
-            backend=self.dependencies.qpu,
-            interim_results="foobar",
-        )
-        job.wait_for_final_state()
-        job._status = JobStatus.RUNNING  # Allow stream_results()
-        job.stream_results(result_callback)
-        time.sleep(2)
-        # Callback is expected twice because both interim and final results are returned
-        self.assertEqual(2, called_back_count)
-        self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_retrieve_interim_results(self, service):
-        """Test retrieving interim results with API endpoint"""
-        job = self._run_program(service)
-        job.wait_for_final_state()
-        interim_results = job.interim_results()
-        self.assertIn("iteration", interim_results[0])
-        self.assertIn("counts", interim_results[0])
 
     @run_integration_test
     def test_result_timeout(self, service):
@@ -167,58 +36,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         job = self._run_program(service)
         with self.assertRaises(RuntimeJobTimeoutError):
             job.wait_for_final_state(0.1)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_callback_error(self, service):
-        """Test error in callback method."""
-
-        def result_callback(job_id, result):
-            # pylint: disable=unused-argument
-            if "iteration" in result and result["iteration"] == 0:
-                raise ValueError("Kaboom!")
-            nonlocal final_it
-            if "iteration" in result:
-                final_it = result["iteration"]
-
-        final_it = 0
-        iterations = 10
-        inputs = {"iterations": iterations, "sleep_per_iteration": 3}
-        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
-            job = self._run_program(
-                service,
-                backend=self.dependencies.qpu,
-                inputs=inputs,
-                interim_results="foo",
-                callback=result_callback,
-            )
-            job.wait_for_final_state()
-
-        self.assertIn("Kaboom", ", ".join(err_cm.output))
-        self.assertEqual(iterations - 1, final_it)
-        self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @skip("skip until qiskit-ibm-runtime #933 is fixed")
-    @run_integration_test
-    def test_websocket_proxy(self, service):
-        """Test connecting to websocket via proxy."""
-
-        def result_callback(job_id, result):  # pylint: disable=unused-argument
-            nonlocal callback_called
-            callback_called = True
-
-        MockProxyServer(self, self.log).start()
-        callback_called = False
-
-        with use_proxies(service, MockProxyServer.VALID_PROXIES):
-            job = self._run_program(
-                service,
-                backend=self.dependencies.qpu,
-                callback=result_callback,
-            )
-            job.wait_for_final_state()
-
-        self.assertTrue(callback_called)
 
     @run_integration_test
     def test_websocket_proxy_invalid_port(self, service):

@@ -59,7 +59,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
@@ -76,7 +75,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             creation_date: Job creation date, in UTC.
@@ -93,7 +91,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             self,
             backend=backend,
             api_client=api_client,
-            client_params=client_params,
             job_id=job_id,
             program_id=program_id,
             service=service,
@@ -106,8 +103,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             version=version,
         )
         self._status: JobStatus = "INITIALIZING"
-        if user_callback is not None:
-            self.stream_results(user_callback)
 
     def result(  # pylint: disable=arguments-differ
         self,
@@ -157,7 +152,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             if ex.status_code == 409:
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
-        self.cancel_result_streaming()
         self._status = "CANCELLED"
 
     def status(self) -> JobStatus:

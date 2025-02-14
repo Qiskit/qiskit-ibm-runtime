@@ -67,13 +67,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             print("The job finished with result {}".format(job_result))
         except RuntimeJobFailureError as ex:
             print("Job failed!: {}".format(ex))
-
-    If the primitive has any interim results, you can use the ``callback``
-    parameter of the
-    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
-    method to stream the interim results along with the final result.
-    Alternatively, you can use the :meth:`stream_results` method to stream
-    the results at a later time, but before the job finishes.
     """
 
     JOB_FINAL_STATES = JOB_FINAL_STATES
@@ -83,7 +76,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
@@ -100,7 +92,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             creation_date: Job creation date, in UTC.
@@ -117,7 +108,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             self,
             backend=backend,
             api_client=api_client,
-            client_params=client_params,
             job_id=job_id,
             program_id=program_id,
             service=service,
@@ -130,8 +120,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             version=version,
         )
         self._status = JobStatus.INITIALIZING
-        if user_callback is not None:
-            self.stream_results(user_callback)
 
     def result(  # pylint: disable=arguments-differ
         self,
@@ -181,7 +169,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             if ex.status_code == 409:
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
-        self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
     def status(self) -> JobStatus:
