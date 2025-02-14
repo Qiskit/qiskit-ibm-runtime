@@ -22,7 +22,6 @@ from .embeddings import Embedding
 from .utils import (
     to_python_identifier,
     is_crn,
-    get_runtime_api_base_url,
     default_runtime_url_resolver,
     resolve_crn,
     are_circuits_dynamic,

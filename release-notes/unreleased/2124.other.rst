@@ -1,0 +1,9 @@
+The following outdated deprecations have been removed: 
+
+    - Support for the simulator option ``noise_model`` on real simulators has been removed. 
+    This option will still work in the local testing mode. 
+
+    - The ``NoiseLearnerResult`` properties ``generators`` and ``rates`` have been removed. They 
+    can still be accessed in the ``error`` property.
+
+    - The utility function ``get_runtime_api_base_url()`` has been removed.
