@@ -20,7 +20,6 @@ import importlib
 import inspect
 import io
 import json
-import re
 import warnings
 import zlib
 from datetime import date
@@ -54,8 +53,7 @@ from qiskit.circuit import (
 from qiskit.transpiler import CouplingMap
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
-from qiskit.version import __version__ as _terra_version_string
-from qiskit.utils import optionals
+from qiskit.qpy import QPY_VERSION as QISKIT_QPY_VERSION
 from qiskit.qpy import (
     load,
     dump,
@@ -86,9 +84,7 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 from .noise_learner_result import NoiseLearnerResult
 
-_TERRA_VERSION = tuple(
-    int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
-)
+SERVICE_MAX_SUPPORTED_QPY_VERSION = 13
 
 
 def to_base64_string(data: str) -> str:
@@ -258,9 +254,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
-            if _TERRA_VERSION[0] >= 1:
-                kwargs["version"] = 11
+            kwargs: Dict[str, object] = {
+                "version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)
+            }
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
@@ -278,9 +274,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
-            kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
-            if _TERRA_VERSION[0] >= 1:
-                kwargs["version"] = 11
+            kwargs = {"version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)}
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
