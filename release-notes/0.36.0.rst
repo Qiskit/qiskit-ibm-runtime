@@ -6,7 +6,7 @@ Upgrade Notes
 
 - The minimal required ``qiskit`` version is now 1.3.  
   Qiskit 1.3 introduces QPY version 13. The minimum required Qiskit version was raised so Qiskit Runtime could use the latest QPY version 
-   for serializing circuits in job
+  for serializing circuits in job
   submissions. (`2096 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2096>`__)
 
 
