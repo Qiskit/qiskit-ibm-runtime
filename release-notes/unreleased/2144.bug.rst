@@ -1,0 +1,2 @@
+Fixed an issue where having ``qiskit-aer`` not installed would 
+cause an import error.
