@@ -14,7 +14,6 @@
 
 """Utility functions for the runtime service."""
 
-import re
 import base64
 import copy
 import importlib
@@ -39,7 +38,6 @@ except ImportError:
 
 try:
     import qiskit_aer
-    from qiskit_aer.version import __version__ as _aer_version_string
 
     HAS_AER = True
 except ImportError:
@@ -86,10 +84,6 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 from .noise_learner_result import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 13
-
-_AER_VERSION = tuple(
-    int(x) for x in re.match(r"\d+\.\d+\.\d", _aer_version_string).group(0).split(".")[:3]
-)
 
 
 def to_base64_string(data: str) -> str:
@@ -508,7 +502,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
-                if HAS_AER and _AER_VERSION[1] >= 16:
+                if HAS_AER:
                     return qiskit_aer.noise.NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
