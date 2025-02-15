@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import rustworkx as rx
-from qiskit.circuit import Qubit, Gate
+from qiskit.circuit import Qubit, Gate, ParameterExpression
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.library.standard_gates import IGate, UGate, U3Gate
 from qiskit.circuit.reset import Reset
@@ -350,7 +350,14 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 for index, gate in enumerate(seq):
                     try:
                         # Check calibration.
-                        gate_length = dag.calibrations[gate.name][(physical_index, gate.params)]
+                        params = self._resolve_params(gate)
+                        with warnings.catch_warnings():
+                            warnings.simplefilter(action="ignore", category=DeprecationWarning)
+                            # `schedule.duration` emits pulse deprecation warnings which we don't want
+                            # to see here
+                            gate_length = dag._calibrations_prop[gate.name][
+                                ((physical_index,), params)
+                            ].duration
                         if gate_length % self._alignment != 0:
                             # This is necessary to implement lightweight scheduling logic for this pass.
                             # Usually the pulse alignment constraint and pulse data chunk size take
@@ -421,10 +428,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         if self._qubits and self._block_dag.qubits.index(qubit) not in self._qubits:
             # Target physical qubit is not the target of this DD sequence.
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
-            return
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=DeprecationWarning)
+                self._apply_scheduled_op(
+                    block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
+                )
+                return
 
         if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
             # mark all qubits as dirty if skip_reset_qubits is False
@@ -441,10 +450,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
         if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
             # Previous node is the start edge or reset, i.e. qubit is ground state;
             # or dd to be applied before named barrier only
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
-            return
+            with warnings.catch_warnings():
+                warnings.simplefilter(action="ignore", category=DeprecationWarning)
+                self._apply_scheduled_op(
+                    block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
+                )
+                return
 
         for sequence_idx, _ in enumerate(self._dd_sequences):
             dd_sequence = self._dd_sequences[sequence_idx]
@@ -513,13 +524,15 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     sequence_gphase += phase
                 else:
                     # Don't do anything if there's no single-qubit gate to absorb the inverse
-                    self._apply_scheduled_op(
-                        block_idx,
-                        t_start,
-                        Delay(time_interval, self._block_dag.unit),
-                        qubit,
-                    )
-                    return
+                    with warnings.catch_warnings():
+                        warnings.simplefilter(action="ignore", category=DeprecationWarning)
+                        self._apply_scheduled_op(
+                            block_idx,
+                            t_start,
+                            Delay(time_interval, self._block_dag.unit),
+                            qubit,
+                        )
+                        return
 
             def _constrained_length(values: np.array) -> np.array:
                 return self._alignment * np.floor(values / self._alignment)
@@ -560,10 +573,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
             # Interleave delays with DD sequence operations
             for tau_idx, tau in enumerate(taus):
                 if tau > 0:
-                    self._apply_scheduled_op(
-                        block_idx, idle_after, Delay(tau, self._dag.unit), qubit
-                    )
-                    idle_after += tau
+                    with warnings.catch_warnings():
+                        warnings.simplefilter(action="ignore", category=DeprecationWarning)
+                        self._apply_scheduled_op(
+                            block_idx, idle_after, Delay(tau, self._dag.unit), qubit
+                        )
+                        idle_after += tau
 
                 # Detect if we are on a sequence boundary
                 # If so skip insert of sequence to allow delays to combine
@@ -583,7 +598,20 @@ class PadDynamicalDecoupling(BlockBasePadder):
             return
 
         # DD could not be applied, delay instead
-        self._apply_scheduled_op(
-            block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-        )
-        return
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=DeprecationWarning)
+            self._apply_scheduled_op(
+                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
+            )
+            return
+
+    @staticmethod
+    def _resolve_params(gate: Gate) -> tuple:
+        """Return gate params with any bound parameters replaced with floats"""
+        params = []
+        for p in gate.params:
+            if isinstance(p, ParameterExpression) and not p.parameters:
+                params.append(float(p))
+            else:
+                params.append(p)
+        return tuple(params)
