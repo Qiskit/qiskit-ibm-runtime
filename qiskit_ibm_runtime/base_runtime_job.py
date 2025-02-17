@@ -15,6 +15,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Tuple
 import logging
+import warnings
 from concurrent import futures
 import queue
 from datetime import datetime
@@ -85,28 +86,34 @@ class BaseRuntimeJob(ABC):
         self._backend = backend
         self._job_id = job_id
         self._api_client = api_client
-        self._interim_results: Optional[Any] = None
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
         self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
-        self._final_interim_results = False
         self._service = service
         self._session_id = session_id
         self._tags = tags
         self._usage_estimation: Dict[str, Any] = {}
         self._version = version
         self._queue_info: QueueInfo = None
-        self._user_callback = user_callback
         self._status: Union[RuntimeJobStatus, str] = None
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
-            self._interim_result_decoder, self._final_result_decoder = decoder
+            _, self._final_result_decoder = decoder
         else:
-            self._interim_result_decoder = self._final_result_decoder = decoder
+            self._final_result_decoder = decoder
+
+        if user_callback:
+            warnings.warn(
+                "Interim results streaming was deprecated and removed in previous releases "
+                "so the parameter user_callback will have no effect. "
+                "This parameter will be removed in a future release.",
+                category=FutureWarning,
+                stacklevel=2,
+            )
 
     def job_id(self) -> str:
         """Return a unique id identifying the job."""

@@ -34,6 +34,7 @@ from .utils import (
 )
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
+from .utils.deprecation import issue_deprecation_msg
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
@@ -162,6 +163,16 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                     self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", primitive_options)
+
+        if options_dict.get("environment", {}).get("callback", None):
+            print("issue msg")
+            issue_deprecation_msg(
+                msg="The 'callback' option is deprecated",
+                version="0.37.0",
+                remedy="This option will have no effect since interim "
+                "results streaming was removed in a previous release.",
+                stacklevel=3,
+            )
 
         # Batch or Session
         if self._mode:

@@ -182,17 +182,6 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).results()
 
-    def job_interim_results(self, job_id: str) -> str:
-        """Get the interim results of a program job.
-
-        Args:
-            job_id: Program job ID.
-
-        Returns:
-            Job interim results.
-        """
-        return self._api.program_job(job_id).interim_results()
-
     def job_cancel(self, job_id: str) -> None:
         """Cancel a job.
 
