@@ -140,6 +140,7 @@ visualization = ["plotly>=5.23.0"]
 
 test = [
     "ddt>=1.2.0,!=1.4.0,!=1.4.3", 
+    "coverage>=6.3",
 ]
 
 dev = [
