@@ -123,6 +123,7 @@ common = [
     "pylatexenc",
     "scikit-learn",
     "setuptools",
+    "ddt>=1.2.0,!=1.4.0,!=1.4.3", 
 ]
 
 documentation = [
