@@ -165,7 +165,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         logger.info("Submitting job using options %s", primitive_options)
 
         if options_dict.get("environment", {}).get("callback", None):
-            print("issue msg")
             issue_deprecation_msg(
                 msg="The 'callback' option is deprecated",
                 version="0.37.0",

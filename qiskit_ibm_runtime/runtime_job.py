@@ -79,6 +79,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
+        client_params: Optional[ClientParameters] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -92,10 +93,11 @@ class RuntimeJob(Job, BaseRuntimeJob):
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
+            client_params: (DEPRECATED) Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             creation_date: Job creation date, in UTC.
-            user_callback: User callback function.
+            user_callback: (DEPRECATED) User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
             service: Runtime service.
@@ -108,6 +110,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
             self,
             backend=backend,
             api_client=api_client,
+            client_params=client_params,
             job_id=job_id,
             program_id=program_id,
             service=service,
