@@ -63,6 +63,7 @@ def _get_mode_service_backend(
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
     """
+
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
@@ -131,7 +132,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             ValueError: Invalid arguments are given.
         """
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
-
         self._set_options(options)
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
