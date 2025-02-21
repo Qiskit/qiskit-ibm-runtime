@@ -174,6 +174,14 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             )
 
         if self._backend:
+            if get_cm_session():
+                logger.warning(
+                    "Even though a session/batch context manager is open this job will run in job mode "
+                    "because the %s primitive was initialized outside the context manager. "
+                    "Move the %s initialization inside the context manager to run in a session/batch.",
+                    self._program_id(),
+                    self._program_id(),
+                )
             runtime_options["backend"] = self._backend
             if "instance" not in runtime_options and isinstance(self._backend, IBMBackend):
                 runtime_options["instance"] = self._backend._instance
