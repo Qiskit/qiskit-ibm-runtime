@@ -33,7 +33,6 @@ from .utils import (
     validate_rzz_pubs,
 )
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -164,16 +163,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         logger.info("Submitting job using options %s", primitive_options)
 
-        if not isinstance(self._service, QiskitRuntimeLocalService):
-            if primitive_options.get("options", {}).get("simulator", {}).get("noise_model"):
-                issue_deprecation_msg(
-                    msg="The noise_model option is deprecated",
-                    version="0.29.0",
-                    remedy="Use the local testing mode instead.",
-                    period="3 months",
-                    stacklevel=3,
-                )
-
         # Batch or Session
         if self._mode:
             return self._mode._run(
@@ -185,6 +174,14 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             )
 
         if self._backend:
+            if get_cm_session():
+                logger.warning(
+                    "Even though a session/batch context manager is open this job will run in job mode "
+                    "because the %s primitive was initialized outside the context manager. "
+                    "Move the %s initialization inside the context manager to run in a session/batch.",
+                    self._program_id(),
+                    self._program_id(),
+                )
             runtime_options["backend"] = self._backend
             if "instance" not in runtime_options and isinstance(self._backend, IBMBackend):
                 runtime_options["instance"] = self._backend._instance
