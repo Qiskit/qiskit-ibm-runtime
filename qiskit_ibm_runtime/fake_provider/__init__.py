@@ -83,6 +83,7 @@ Here is an example of using a fake backend for transpilation and simulation.
     to run noisy simulations with the latest backend snapshots, you can use the refresh() method.
 
     .. code-block:: python
+
         from qiskit_ibm_runtime import QiskitRuntimeService
         from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
         
