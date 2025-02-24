@@ -296,8 +296,13 @@ class FakeBackendV2(BackendV2):
         return self._target
 
     @property
-    def max_circuits(self) -> None:
-        return None
+    def max_circuits(self) -> int:
+        """The maximum number of circuits
+
+        The maximum number of circuits that can be
+        run in a single job. If there is no limit this will return None.
+        """
+        return self.configuration().max_experiments
 
     @classmethod
     def _default_options(cls) -> Options:
