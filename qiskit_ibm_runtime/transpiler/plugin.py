@@ -19,7 +19,8 @@ from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.transpiler.preset_passmanagers import common
-from qiskit.transpiler.passes import ConvertConditionsToIfOps
+from qiskit.transpiler import passes
+
 from qiskit.version import __version__ as _terra_version_string
 
 from qiskit_ibm_runtime.transpiler.passes.basis import (
@@ -105,13 +106,9 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
         if instruction_durations and not id_supported:
             plugin_passes.append(ConvertIdToDelay(instruction_durations))
 
-        # Only inject control-flow conversion pass at level 0 and level 1. As of
-        # qiskit 0.22.x transpile() with level 2 and 3 does not support
-        # control flow instructions (including if_else). This can be
-        # removed when higher optimization levels support control flow
-        # instructions.
-        if optimization_level in {0, 1}:
-            plugin_passes += [ConvertConditionsToIfOps()]
+        if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
+            # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
+            plugin_passes += [convert_pass()]
 
         return PassManager(plugin_passes) + translator_pm
 

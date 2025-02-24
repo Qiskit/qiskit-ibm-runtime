@@ -1,0 +1,2 @@
+Added a warning for when a primitive is initialized outside of a session or batch context manager. 
+In this scenario, the job will run in job mode instead of the session or batch.
