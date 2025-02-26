@@ -12,8 +12,6 @@
 
 """Test the dynamic circuits scheduling analysis"""
 
-from unittest.mock import patch
-
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.pulse import Schedule, Play, Constant, DriveChannel
 from qiskit.transpiler.passmanager import PassManager
