@@ -150,7 +150,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_jobs_filter_by_date(self, service):
         """Test retrieving jobs by creation date."""
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
-        job = self._run_program(service, backend="test_heron")
+        job = self._run_program(service)
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc)
         rjobs = service.jobs(
