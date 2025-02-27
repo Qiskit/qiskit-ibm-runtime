@@ -44,7 +44,6 @@ from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-imp
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
-    IBMBackendValueError,
     IBMBackendError,
 )
 from .utils.backend_converter import convert_to_target
@@ -55,6 +54,7 @@ from .utils.backend_decoder import (
     configuration_from_server_data,
 )
 from .utils import local_to_utc
+from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class IBMBackend(Backend):
         * conditional: backend supports conditional operations.
         * open_pulse: backend supports open pulse.
         * memory: backend supports memory.
-        * max_shots: maximum number of shots supported.
+        * max_shots: (DEPRECATED) maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
         * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
@@ -126,7 +126,7 @@ class IBMBackend(Backend):
           [d->u->m] x n_registers. Latency (in units of dt) to do a
           conditional operation on channel n from register slot m
         * meas_map (list): Grouping of measurement which are multiplexed
-        * max_circuits (int): The maximum number of experiments per job
+        * max_circuits (int): (DEPRECATED) The maximum number of experiments per job
         * sample_name (str): Sample name for the backend
         * n_registers (int): Number of register slots available for feedback
           (if conditional is True)
@@ -210,6 +210,14 @@ class IBMBackend(Backend):
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
+
+        if name in ["max_experiments", "max_shots"]:
+            issue_deprecation_msg(
+                f"{name} is deprecated",
+                "0.37.0",
+                "Please see our documentation on job limits "
+                "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+            )
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
         self.defaults()
@@ -277,11 +285,18 @@ class IBMBackend(Backend):
 
     @property
     def max_circuits(self) -> int:
-        """The maximum number of circuits
+        """(DEPRECATED) The maximum number of circuits
 
         The maximum number of circuits (or Pulse schedules) that can be
         run in a single job. If there is no limit this will return None.
         """
+
+        issue_deprecation_msg(
+            "max_circuits is deprecated",
+            "0.37.0",
+            "Please see our documentation on job limits "
+            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+        )
         return self._max_circuits
 
     @property
@@ -507,26 +522,6 @@ class IBMBackend(Backend):
     def __call__(self) -> "IBMBackend":
         # For backward compatibility only, can be removed later.
         return self
-
-    def _check_circuits_attributes(self, circuits: List[Union[QuantumCircuit, str]]) -> None:
-        """Check that circuits can be executed on backend.
-        Raises:
-            IBMBackendValueError:
-                - If one of the circuits contains more qubits than on the backend."""
-
-        if len(circuits) > self._max_circuits:
-            raise IBMBackendValueError(
-                f"Number of circuits, {len(circuits)} exceeds the "
-                f"maximum for this backend, {self._max_circuits})"
-            )
-        for circ in circuits:
-            if isinstance(circ, QuantumCircuit):
-                if circ.num_qubits > self._configuration.num_qubits:
-                    raise IBMBackendValueError(
-                        f"Circuit contains {circ.num_qubits} qubits, "
-                        f"but backend has only {self.num_qubits}."
-                    )
-                self.check_faulty(circ)
 
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
