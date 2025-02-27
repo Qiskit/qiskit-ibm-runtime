@@ -123,12 +123,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
     def _visit_node(self, node: DAGNode) -> None:
         if isinstance(node.op, ControlFlowOp):
             self._visit_control_flow_op(node)
-        elif node.op.condition_bits:
-            raise TranspilerError(
-                "c_if control-flow is not supported by this pass. "
-                'Please apply "ConvertConditionsToIfOps" to convert these '
-                "conditional operations to new-style Qiskit control-flow."
-            )
         else:
             if isinstance(node.op, Measure):
                 self._visit_measure(node)
@@ -208,11 +202,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._bit_indices = {q: index for index, q in enumerate(dag.qubits)}
 
     def _get_duration(self, node: DAGNode, dag: Optional[DAGCircuit] = None) -> int:
-        if node.op.condition_bits or isinstance(node.op, ControlFlowOp):
-            # As we cannot currently schedule through conditionals model
-            # as zero duration to avoid padding.
-            return 0
-
         indices = [self._bit_indices[qarg] for qarg in self._map_qubits(node)]
 
         # Fall back to current block dag if not specified.
