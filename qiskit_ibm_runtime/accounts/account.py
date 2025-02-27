@@ -75,6 +75,8 @@ class Account:
         proxies = data.get("proxies")
         proxies = ProxyConfiguration(**proxies) if proxies else None
         url = data.get("url")
+        if channel == "ibm_quantum" and "-computing" in url:
+            url = url.replace("-computing", "")
         token = data.get("token")
         instance = data.get("instance")
         verify = data.get("verify", True)
