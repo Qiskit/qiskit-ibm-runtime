@@ -15,7 +15,7 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Optional, List, Any
+from typing import Callable, Optional, List
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -75,7 +75,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("QISKIT_IBM_QPU"),
     )
-    channel: Any = "ibm_quantum" if url.find("quantum.ibm.com") >= 0 else "ibm_cloud"
+    channel: str = "ibm_cloud" if url.find("cloud") >= 0 else "ibm_quantum"
     return channel, token, url, instance, qpu
 
 
