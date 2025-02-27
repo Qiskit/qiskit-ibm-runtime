@@ -40,9 +40,11 @@ from qiskit_ibm_runtime.utils.backend_decoder import (
     properties_from_server_data,
     defaults_from_server_data,
 )
+
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 from ..utils.backend_decoder import configuration_from_server_data
+from ..utils.deprecation import issue_deprecation_msg
 
 from ..models import (
     BackendProperties,
@@ -295,11 +297,18 @@ class FakeBackendV2(BackendV2):
 
     @property
     def max_circuits(self) -> int:
-        """The maximum number of circuits
+        """(DEPRECATED) The maximum number of circuits
 
         The maximum number of circuits that the backend supports in a single execution.
         Note that the actual number of circuits the service allows may be different.
         """
+
+        issue_deprecation_msg(
+            "max_circuits is deprecated",
+            "0.37.0",
+            "Please see our documentation on job limits "
+            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+        )
         return self.configuration().max_experiments
 
     @classmethod
