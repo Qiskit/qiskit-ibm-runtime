@@ -297,7 +297,8 @@ class FakeBackendV2(BackendV2):
     def max_circuits(self) -> int:
         """The maximum number of circuits
 
-        The maximum number of circuits that the backend supports in a single execution. Note that the actual number of circuits the service allows may be different. 
+        The maximum number of circuits that the backend supports in a single execution.
+        Note that the actual number of circuits the service allows may be different.
         """
         return self.configuration().max_experiments
 
