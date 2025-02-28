@@ -29,7 +29,6 @@ from qiskit.pulse.channels import (
     MeasureChannel,
 )
 
-
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
 UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")  # pylint: disable=[invalid-name]
 QasmBackendConfigurationT = TypeVar("QasmBackendConfigurationT", bound="QasmBackendConfiguration")
@@ -268,7 +267,7 @@ class QasmBackendConfiguration:
                 operations
             open_pulse (bool): True if the backend supports OpenPulse
             memory (bool): True if the backend supports memory
-            max_shots (int): The maximum number of shots allowed on the backend
+            max_shots (DEPRECATED) (int): The maximum number of shots allowed on the backend
             coupling_map (list): The coupling map for the device
             supported_instructions (List[str]): Instructions supported by the backend.
             dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
@@ -279,7 +278,7 @@ class QasmBackendConfiguration:
                 ``dynamic_reprate_enabled=True``.
             default_rep_delay (float): Value of ``rep_delay`` if not specified by user and
                 ``dynamic_reprate_enabled=True``.
-            max_experiments (int): The maximum number of experiments per job
+            max_experiments (DEPRECATED) (int): The maximum number of experiments per job
             sample_name (str): Sample name for the backend
             n_registers (int): Number of register slots available for feedback
                 (if conditional is True)

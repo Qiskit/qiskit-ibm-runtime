@@ -1,0 +1,4 @@
+The :class:`IBMBackend` attributes ``max_shots`` and ``max_experiments``, as well as the property 
+``max_circuits`` have all been deprecated. These attribute values used to be the maximum number of
+shots and circuits that could be submitted in one job but that is no longer the case. See 
+our job limits `guide <https://docs.quantum.ibm.com/guides/job-limits#job-limits>`__ for more details.
