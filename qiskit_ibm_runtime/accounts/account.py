@@ -39,6 +39,7 @@ class Account:
     def __init__(
         self,
         token: str,
+        cloud_access_token: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
@@ -48,6 +49,7 @@ class Account:
         Args:
             channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
             token: Account token to use.
+            cloud_access_token: IBM Cloud bearer access token.
             url: Authentication URL.
             instance: Service instance to use.
             proxies: Proxy configuration.
@@ -55,6 +57,7 @@ class Account:
         """
         self.channel: str = None
         self.url: str = None
+        self.cloud_access_token = cloud_access_token
         self.token = token
         self.instance = instance
         self.proxies = proxies
@@ -76,12 +79,14 @@ class Account:
         proxies = ProxyConfiguration(**proxies) if proxies else None
         url = data.get("url")
         token = data.get("token")
+        cloud_access_token = data.get("cloud_access_token")
         instance = data.get("instance")
         verify = data.get("verify", True)
         private_endpoint = data.get("private_endpoint", False)
         return cls.create_account(
             channel=channel,
             url=url,
+            cloud_access_token=cloud_access_token,
             token=token,
             instance=instance,
             proxies=proxies,
@@ -94,6 +99,7 @@ class Account:
         cls,
         channel: str,
         token: str,
+        cloud_access_token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
@@ -113,6 +119,7 @@ class Account:
             return CloudAccount(
                 url=url,
                 token=token,
+                cloud_access_token=cloud_access_token,
                 instance=instance,
                 proxies=proxies,
                 verify=verify,
@@ -219,7 +226,7 @@ class QuantumAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
-        super().__init__(token, instance, proxies, verify)
+        super().__init__(token, None, instance, proxies, verify)
         resolved_url = url or IBM_QUANTUM_API_URL
         self.channel = "ibm_quantum"
         self.url = resolved_url
@@ -247,6 +254,7 @@ class CloudAccount(Account):
         self,
         token: str,
         url: Optional[str] = None,
+        cloud_access_token: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
@@ -257,12 +265,13 @@ class CloudAccount(Account):
         Args:
             token: Account token to use.
             url: Authentication URL.
+            cloud_access_token: IBM Cloud bearer access token.
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
             private_endpoint: Connect to private API URL.
         """
-        super().__init__(token, instance, proxies, verify)
+        super().__init__(token, cloud_access_token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
@@ -270,7 +279,12 @@ class CloudAccount(Account):
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
-        return CloudAuth(api_key=self.token, crn=self.instance)
+        return CloudAuth(
+            api_key=self.token,
+            crn=self.instance,
+            url=self.url,
+            cloud_access_token=self.cloud_access_token,
+        )
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
