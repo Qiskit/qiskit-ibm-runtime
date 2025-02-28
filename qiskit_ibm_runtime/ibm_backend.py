@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Iterable, Union, Optional, Any, List
+from typing import Union, Optional, Any, List
 from datetime import datetime as python_datetime
 from copy import deepcopy
 
@@ -22,12 +22,6 @@ from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
-from qiskit.pulse.channels import (
-    AcquireChannel,
-    ControlChannel,
-    DriveChannel,
-    MeasureChannel,
-)
 from qiskit.transpiler.target import Target
 
 from .models import (
@@ -234,7 +228,6 @@ class IBMBackend(Backend):
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
-                defaults=self._defaults,
             )
 
     @classmethod
@@ -314,12 +307,10 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self.defaults()
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
-            defaults=self._defaults,
         )
 
     def refresh(self) -> None:
@@ -461,45 +452,6 @@ class IBMBackend(Backend):
             The configuration for the backend.
         """
         return self._configuration
-
-    def drive_channel(self, qubit: int) -> DriveChannel:
-        """Return the drive channel for the given qubit.
-
-        Returns:
-            DriveChannel: The Qubit drive channel
-        """
-        return self._configuration.drive(qubit=qubit)
-
-    def measure_channel(self, qubit: int) -> MeasureChannel:
-        """Return the measure stimulus channel for the given qubit.
-
-        Returns:
-            MeasureChannel: The Qubit measurement stimulus line
-        """
-        return self._configuration.measure(qubit=qubit)
-
-    def acquire_channel(self, qubit: int) -> AcquireChannel:
-        """Return the acquisition channel for the given qubit.
-
-        Returns:
-            AcquireChannel: The Qubit measurement acquisition line.
-        """
-        return self._configuration.acquire(qubit=qubit)
-
-    def control_channel(self, qubits: Iterable[int]) -> List[ControlChannel]:
-        """Return the secondary drive channel for the given qubit
-
-        This is typically utilized for controlling multiqubit interactions.
-        This channel is derived from other channels.
-
-        Args:
-            qubits: Tuple or list of qubits of the form
-                ``(control_qubit, target_qubit)``.
-
-        Returns:
-            List[ControlChannel]: The Qubit measurement acquisition line.
-        """
-        return self._configuration.control(qubits=qubits)
 
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
