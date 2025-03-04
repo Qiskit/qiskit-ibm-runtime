@@ -20,7 +20,7 @@ import logging
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
-from qiskit.providers import BackendV1, BackendV2
+from qiskit.providers import BackendV2
 
 
 from .runtime_job_v2 import RuntimeJobV2
@@ -60,7 +60,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None,
+        mode: Optional[Union[BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
