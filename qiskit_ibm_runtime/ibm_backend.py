@@ -18,7 +18,6 @@ from datetime import datetime as python_datetime
 from copy import deepcopy
 
 from qiskit import QuantumCircuit
-from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -30,6 +29,11 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
+if qiskit.__version__.split(".", 1)[0] == "2":
+    from qiskit.result import MeasLevel, MeasReturnType
+else:
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType
+    
 from .models import (
     BackendStatus,
     BackendProperties,

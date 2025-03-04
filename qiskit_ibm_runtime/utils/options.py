@@ -15,7 +15,11 @@
 from dataclasses import asdict, dataclass
 from typing import Dict, Union, Any, Optional
 from qiskit.circuit import QuantumCircuit
-from qiskit.qobj.utils import MeasLevel, MeasReturnType
+
+if qiskit.__version__.split(".", 1)[0] == "2":
+    from qiskit.result import MeasLevel, MeasReturnType
+else:
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 
 @dataclass
