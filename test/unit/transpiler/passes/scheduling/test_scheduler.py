@@ -12,11 +12,13 @@
 
 """Test the dynamic circuits scheduling analysis"""
 
+import unittest
 from unittest.mock import patch
 
+import qiskit
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.pulse import Schedule, Play, Constant, DriveChannel
-from qiskit.transpiler.passes import ConvertConditionsToIfOps
+from qiskit.transpiler import passes
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.converters import circuit_to_dag
@@ -87,6 +89,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with self.assertRaises(TranspilerError):
             pm.run(qc)
 
+    @unittest.skipUnless(qiskit.__version__.split(".", 1)[0] == "1", "only necessary in Qiskit 1.x")
     def test_c_if_conversion(self):
         """Verify that old format c_if may be converted and scheduled."""
         qc = QuantumCircuit(1, 1)
@@ -95,7 +98,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
-                ConvertConditionsToIfOps(),
+                # Pylint doesn't know that we're only in this branch with Qiskit 1.x.
+                passes.ConvertConditionsToIfOps(),  # pylint: disable=no-member
                 ASAPScheduleAnalysis(durations),
                 PadDelay(durations, schedule_idle_qubits=True),
             ]
@@ -857,7 +861,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
-                ConvertConditionsToIfOps(),
                 ASAPScheduleAnalysis(durations),
                 PadDelay(durations, schedule_idle_qubits=True),
             ]

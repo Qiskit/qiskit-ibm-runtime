@@ -165,8 +165,7 @@ class FakeBackendV2(BackendV2):
         """Return the backend properties
 
         Args:
-            refresh: If ``True``, re-retrieve the backend properties
-            from the local file.
+            refresh: If ``True``, re-retrieve the backend properties from the local file.
 
         Returns:
             The backend properties.
@@ -179,8 +178,7 @@ class FakeBackendV2(BackendV2):
         """Return the pulse defaults for the backend
 
         Args:
-            refresh: If ``True``, re-retrieve the backend defaults from the
-            local file.
+            refresh: If ``True``, re-retrieve the backend defaults from the local file.
 
         Returns:
             The backend pulse defaults or ``None`` if the backend does not support pulse.
@@ -258,8 +256,13 @@ class FakeBackendV2(BackendV2):
         return self._target
 
     @property
-    def max_circuits(self) -> None:
-        return None
+    def max_circuits(self) -> int:
+        """The maximum number of circuits
+
+        The maximum number of circuits that the backend supports in a single execution.
+        Note that the actual number of circuits the service allows may be different.
+        """
+        return self.configuration().max_experiments
 
     @classmethod
     def _default_options(cls) -> Options:
@@ -419,12 +422,13 @@ class FakeBackendV2(BackendV2):
 
         This method pulls the latest backend data files from their real counterpart and
         overwrites the corresponding files in the local installation:
-        *  ../fake_provider/backends/{backend_name}/conf_{backend_name}.json
-        *  ../fake_provider/backends/{backend_name}/defs_{backend_name}.json
-        *  ../fake_provider/backends/{backend_name}/props_{backend_name}.json
+
+        *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
+        *  ``../fake_provider/backends/{backend_name}/defs_{backend_name}.json``
+        *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
 
         The new data files will persist through sessions so the files will stay updated unless they
-         are manually reverted locally or when qiskit-ibm-runtime is upgraded/reinstalled.
+        are manually reverted locally or when ``qiskit-ibm-runtime`` is upgraded or reinstalled.
 
         Args:
             service: A :class:`QiskitRuntimeService` instance

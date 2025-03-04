@@ -1,0 +1,2 @@
+:class:`~qiskit.transpiler.passes.ConvertConditionsToIfOps` now correctly runs at
+all optimization levels of the scheduling plugins for dynamic circuits, if Qiskit 1.x is in use.

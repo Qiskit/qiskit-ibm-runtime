@@ -34,7 +34,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList, Pauli
 
 from ..utils.embeddings import Embedding
-from ..utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
@@ -185,32 +184,6 @@ class LayerError:
         unknown or explicitly disabled.
         """
         return self._error
-
-    @property
-    def generators(self) -> PauliList:
-        r"""
-        (DEPRECATED) The Pauli Lindblad generators of the error channel in this :class:`.~LayerError`.
-        """
-        issue_deprecation_msg(
-            "The ``generators`` property is deprecated",
-            "0.27.0",
-            "Instead, you can access the generators through the ``error`` property.",
-            1,
-        )
-        return self.error.generators
-
-    @property
-    def rates(self) -> NDArray[np.float64]:
-        r"""
-        (DEPRECATED) The Lindblad generator rates of the error channel in this :class:`.~LayerError`.
-        """
-        issue_deprecation_msg(
-            "The ``rates`` property is deprecated",
-            "0.27.0",
-            "Instead, you can access the rates through the ``error`` property.",
-            1,
-        )
-        return self.error.rates
 
     @property
     def num_qubits(self) -> int:
