@@ -37,6 +37,7 @@ class AccountManager:
     def save(
         cls,
         token: Optional[str] = None,
+        cloud_access_token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -56,6 +57,7 @@ class AccountManager:
         config = Account.create_account(
             channel=channel,
             token=token,
+            cloud_access_token=cloud_access_token,
             url=url,
             instance=instance,
             proxies=proxies,
