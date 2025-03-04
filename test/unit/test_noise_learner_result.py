@@ -152,8 +152,7 @@ class TestLayerError(IBMTestCase):
             layer_error2 = LayerError(**layer_error1._json())
             self.assertEqual(layer_error1.circuit, layer_error2.circuit)
             self.assertEqual(layer_error1.qubits, layer_error2.qubits)
-            self.assertEqual(layer_error1.generators, layer_error2.generators)
-            self.assertEqual(layer_error1.rates.tolist(), layer_error2.rates.tolist())
+            self.assertEqual(layer_error1.error, layer_error2.error)
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_no_coupling_map(self):

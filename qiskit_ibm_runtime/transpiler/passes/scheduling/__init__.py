@@ -175,23 +175,22 @@ We may then schedule the transpiled circuit without further modification.
 If you are not using the transpiler plugin stages to
 work around this please manually run the pass
 :class:`qiskit.transpiler.passes.ConvertConditionsToIfOps`
-prior to your scheduling pass.
+prior to your scheduling pass.  This is only necessary in Qiskit 1.x.
 
 .. plot::
    :alt: Circuit diagram output by the previous code.
    :include-source:
    :context: close-figs
 
-    from qiskit.transpiler.passes import ConvertConditionsToIfOps
+    from qiskit.transpiler import passes
 
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
-    pm.scheduling = PassManager(
-          [
-              ConvertConditionsToIfOps(),
-              ALAPScheduleAnalysis(durations),
-              PadDelay(durations),
-          ]
-    )
+
+    scheduling = [ALAPScheduleAnalysis(durations), PadDelay(durations)]
+    if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
+        # This pass is neither present nor necessary in Qiskit 2.x.
+        scheduling = [convert_pass()] + scheduling
+    pm.scheduling = PassManager(scheduling)
 
     qc_if_dd = pm.run(qc_c_if)
     qc_if_dd.draw(output="mpl", style="iqp")

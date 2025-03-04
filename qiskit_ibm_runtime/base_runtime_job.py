@@ -29,7 +29,6 @@ from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
 from .utils.queueinfo import QueueInfo
-from .utils.deprecation import issue_deprecation_msg
 from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
 from .exceptions import (
     IBMError,

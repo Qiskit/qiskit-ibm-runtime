@@ -1,0 +1,8 @@
+0.36.1 (2025-02-14)
+===================
+
+Bug Fixes
+---------
+
+- Fixed an issue where not having ``qiskit-aer`` installed would 
+  cause an import error. (`2144 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2144>`__)

@@ -32,7 +32,6 @@ from .exceptions import (
     RuntimeJobTimeoutError,
 )
 from .utils.result_decoder import ResultDecoder
-from .utils.deprecation import deprecate_function
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters

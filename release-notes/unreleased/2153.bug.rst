@@ -1,0 +1,1 @@
+Fix support for custom scheduling transpiler stages with Qiskit 2.x.
