@@ -30,6 +30,7 @@ from qiskit.pulse.channels import (
 from qiskit.transpiler.target import Target
 
 from qiskit import __version__ as qiskit_version
+
 if qiskit_version.split(".", 1)[0] == "2":
     from qiskit.result import MeasLevel, MeasReturnType
 else:

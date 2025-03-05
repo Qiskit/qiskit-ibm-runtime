@@ -17,6 +17,7 @@ from typing import Dict, Union, Any, Optional
 from qiskit.circuit import QuantumCircuit
 
 from qiskit import __version__ as qiskit_version
+
 if qiskit_version.split(".", 1)[0] == "2":
     from qiskit.result import MeasLevel, MeasReturnType
 else:
