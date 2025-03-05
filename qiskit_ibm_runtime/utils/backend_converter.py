@@ -54,7 +54,6 @@ def convert_to_target(
 
     This function generates :class:`.Target`` instance from intermediate
     legacy objects such as :class:`.BackendProperties` and :class:`.PulseDefaults`.
-    These objects are usually components of the legacy :class:`.BackendV1` model.
 
     Args:
         configuration: Backend configuration as ``BackendConfiguration``
