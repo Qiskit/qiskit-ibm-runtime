@@ -29,10 +29,10 @@ from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
-from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models import BackendConfiguration, BackendProperties, PulseDefaults
+from ..models.exceptions import BackendPropertyError
 
 # is_fractional_gate used to be defined in this module and might be referenced
 # from here externally
