@@ -20,7 +20,6 @@ from typing import Dict, List, Any, Iterable, Tuple, Union, TypeVar, Type
 from collections import defaultdict
 
 from qiskit.exceptions import QiskitError
-from qiskit.providers.exceptions import BackendConfigurationError
 from qiskit.pulse.channels import (
     AcquireChannel,
     Channel,
@@ -29,6 +28,7 @@ from qiskit.pulse.channels import (
     MeasureChannel,
 )
 
+from .exceptions import BackendConfigurationError
 
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
 UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")  # pylint: disable=[invalid-name]
