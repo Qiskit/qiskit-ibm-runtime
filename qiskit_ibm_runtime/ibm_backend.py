@@ -29,11 +29,12 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-if qiskit.__version__.split(".", 1)[0] == "2":
+from qiskit import __version__ as qiskit_version
+if qiskit_version.split(".", 1)[0] == "2":
     from qiskit.result import MeasLevel, MeasReturnType
 else:
     from qiskit.qobj.utils import MeasLevel, MeasReturnType
-    
+
 from .models import (
     BackendStatus,
     BackendProperties,

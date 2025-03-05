@@ -17,8 +17,9 @@ import datetime
 from typing import Any, Iterable, Tuple, Union, Dict, TypeVar, Type, List
 import dateutil.parser
 
-from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.utils.units import apply_prefix
+
+from .exceptions import BackendPropertyError
 
 PropertyT = Tuple[Any, datetime.datetime]
 NduvT = TypeVar("NduvT", bound="Nduv")
