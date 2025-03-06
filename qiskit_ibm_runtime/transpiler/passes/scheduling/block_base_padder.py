@@ -263,6 +263,11 @@ class BlockBasePadder(TransformationPass):
 
     def _get_node_duration(self, node: DAGNode) -> int:
         """Get the duration of a node."""
+        if isinstance(node.op, ControlFlowOp):
+            # As we cannot currently schedule through conditionals model
+            # as zero duration to avoid padding.
+            return 0
+
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
         if self._block_dag.has_calibration_for(node):
