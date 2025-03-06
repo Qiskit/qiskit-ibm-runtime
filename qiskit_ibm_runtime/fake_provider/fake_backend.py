@@ -48,6 +48,9 @@ from ..models import (
     QasmBackendConfiguration,
     PulseBackendConfiguration,
 )
+from ..models.exceptions import (
+    BackendPropertyError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -347,9 +350,6 @@ class FakeBackendV2(BackendV2):
         """
 
         from qiskit.circuit import Delay  # pylint: disable=import-outside-toplevel
-        from qiskit.providers.exceptions import (  # pylint: disable=import-outside-toplevel
-            BackendPropertyError,
-        )
         from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
         from qiskit_aer.noise.device.models import (  # pylint: disable=import-outside-toplevel
             _excited_population,
