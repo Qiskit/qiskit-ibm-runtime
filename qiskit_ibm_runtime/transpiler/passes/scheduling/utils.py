@@ -24,7 +24,7 @@ from qiskit.transpiler.instruction_durations import (
 )
 from qiskit.transpiler.target import Target
 from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.providers import Backend, BackendV1
+from qiskit.providers import Backend
 
 
 BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
@@ -167,8 +167,6 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         Returns:
             DynamicInstructionDurations: The InstructionDurations constructed from backend.
         """
-        if isinstance(backend, BackendV1):
-            return super(DynamicCircuitInstructionDurations, cls).from_backend(backend)
 
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)

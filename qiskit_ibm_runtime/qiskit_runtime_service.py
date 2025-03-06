@@ -1085,7 +1085,7 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        version = 1
+        version = 2
         params = raw_data.get("params", {})
         if isinstance(params, list):
             if len(params) > 0:
@@ -1096,25 +1096,25 @@ class QiskitRuntimeService:
             if params:
                 version = params.get("version", 1)
 
-        if version == 2:
-            return RuntimeJobV2(
+        if version == 1:
+            return RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,
                 service=self,
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
                 creation_date=raw_data.get("created", None),
-                image=raw_data.get("runtime"),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
             )
-        return RuntimeJob(
+        return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
             service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             creation_date=raw_data.get("created", None),
+            image=raw_data.get("runtime"),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
         )
