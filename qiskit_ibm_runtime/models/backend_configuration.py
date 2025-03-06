@@ -19,7 +19,6 @@ import numbers
 from typing import Dict, List, Any, Tuple, TypeVar, Type
 
 from qiskit.exceptions import QiskitError
-from qiskit.providers.exceptions import BackendConfigurationError
 from .exceptions import BackendConfigurationError
 
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")

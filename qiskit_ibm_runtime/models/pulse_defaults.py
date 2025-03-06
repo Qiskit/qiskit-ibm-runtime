@@ -13,9 +13,6 @@
 """Model and schema for pulse defaults."""
 from typing import Any, Dict, List, TypeVar, Type
 
-from qiskit.qobj import PulseLibraryItem, PulseQobjInstruction
-from qiskit.qobj.converters import QobjToInstructionConverter
-
 MeasurementKernelT = TypeVar("MeasurementKernelT", bound="MeasurementKernel")
 DiscriminatorT = TypeVar("DiscriminatorT", bound="Discriminator")
 CommandT = TypeVar("CommandT", bound="Command")
@@ -156,10 +153,7 @@ class Command:
         # To avoid deepcopy and avoid mutating the source object, create new dict here.
         in_data: Dict[str, Any] = {}
         for key, value in data.items():
-            if key == "sequence":
-                in_data[key] = list(map(PulseQobjInstruction.from_dict, value))
-            else:
-                in_data[key] = value
+            in_data[key] = value
         return cls(**in_data)
 
 
@@ -176,7 +170,6 @@ class PulseDefaults:
         qubit_freq_est: List[float],
         meas_freq_est: List[float],
         buffer: int,
-        pulse_library: List[PulseLibraryItem],
         cmd_def: List[Command],
         meas_kernel: MeasurementKernel = None,
         discriminator: Discriminator = None,
@@ -188,7 +181,6 @@ class PulseDefaults:
             qubit_freq_est: Estimated qubit frequencies in GHz.
             meas_freq_est: Estimated measurement cavity frequencies in GHz.
             buffer: Default buffer time (in units of dt) between pulses.
-            pulse_library: Pulse name and sample definitions.
             cmd_def: Operation name and definition in terms of Commands.
             meas_kernel: The measurement kernels
             discriminator: The discriminators
@@ -200,9 +192,7 @@ class PulseDefaults:
         """Qubit frequencies in Hertz."""
         self.meas_freq_est = [freq * 1e9 for freq in meas_freq_est]
         """Measurement frequencies in Hertz."""
-        self.pulse_library = pulse_library
         self.cmd_def = cmd_def
-        self.converter = QobjToInstructionConverter(pulse_library)
 
         if meas_kernel is not None:
             self.meas_kernel = meas_kernel
@@ -262,24 +252,10 @@ class PulseDefaults:
         Returns:
             PulseDefaults: The PulseDefaults from the input dictionary.
         """
-        schema = {
-            "pulse_library": PulseLibraryItem,
-            "cmd_def": Command,
-            "meas_kernel": MeasurementKernel,
-            "discriminator": Discriminator,
-        }
 
-        # Pulse defaults data is nested dictionary.
-        # To avoid deepcopy and avoid mutating the source object, create new dict here.
         in_data: Dict[Any, Any] = {}
         for key, value in data.items():
-            if key in schema:
-                if isinstance(value, list):
-                    in_data[key] = list(map(schema[key].from_dict, value))
-                else:
-                    in_data[key] = schema[key].from_dict(value)
-            else:
-                in_data[key] = value
+            in_data[key] = value
 
         return cls(**in_data)
 
