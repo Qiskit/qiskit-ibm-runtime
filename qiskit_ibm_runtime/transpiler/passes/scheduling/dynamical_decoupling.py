@@ -348,24 +348,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     continue
 
                 for index, gate in enumerate(seq):
-                    try:
-                        # Check calibration.
-                        gate_length = dag.calibrations[gate.name][(physical_index, gate.params)]
-                        if gate_length % self._alignment != 0:
-                            # This is necessary to implement lightweight scheduling logic for this pass.
-                            # Usually the pulse alignment constraint and pulse data chunk size take
-                            # the same value, however, we can intentionally violate this pattern
-                            # at the gate level. For example, we can create a schedule consisting of
-                            # a pi-pulse of 32 dt followed by a post buffer, i.e. delay, of 4 dt
-                            # on the device with 16 dt constraint. Note that the pi-pulse length
-                            # is multiple of 16 dt but the gate length of 36 is not multiple of it.
-                            # Such pulse gate should be excluded.
-                            raise TranspilerError(
-                                f"Pulse gate {gate.name} with length non-multiple of {self._alignment} "
-                                f"is not acceptable in {self.__class__.__name__} pass."
-                            )
-                    except KeyError:
-                        gate_length = self._durations.get(gate, physical_index)
+                    gate_length = self._durations.get(gate, physical_index)
                     seq_length_.append(gate_length)
                     # Update gate duration.
                     # This is necessary for current timeline drawer, i.e. scheduled.

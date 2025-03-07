@@ -123,12 +123,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
     def _visit_node(self, node: DAGNode) -> None:
         if isinstance(node.op, ControlFlowOp):
             self._visit_control_flow_op(node)
-        elif node.op.condition_bits:
-            raise TranspilerError(
-                "c_if control-flow is not supported by this pass. "
-                'Please apply "ConvertConditionsToIfOps" to convert these '
-                "conditional operations to new-style Qiskit control-flow."
-            )
         else:
             if isinstance(node.op, Measure):
                 self._visit_measure(node)
@@ -208,7 +202,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._bit_indices = {q: index for index, q in enumerate(dag.qubits)}
 
     def _get_duration(self, node: DAGNode, dag: Optional[DAGCircuit] = None) -> int:
-        if node.op.condition_bits or isinstance(node.op, ControlFlowOp):
+        if isinstance(node.op, ControlFlowOp):
             # As we cannot currently schedule through conditionals model
             # as zero duration to avoid padding.
             return 0
@@ -218,17 +212,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         # Fall back to current block dag if not specified.
         dag = dag or self._block_dag
 
-        if dag.has_calibration_for(node):
-            # If node has calibration, this value should be the highest priority
-            cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = dag.calibrations[node.op.name][cal_key].duration
-
-            op = node.op.to_mutable()
-            op.duration = duration
-            node.op = op
-        else:
-            # map to outer dag to get the appropriate durations
-            duration = self._durations.get(node.op, indices, unit="dt")
+        duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(

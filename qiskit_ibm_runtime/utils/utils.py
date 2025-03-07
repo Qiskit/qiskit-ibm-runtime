@@ -68,11 +68,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
 
         name = operation.name
         qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
-        if (
-            not target.instruction_supported(name, qargs)
-            and name != "barrier"
-            and not circuit.has_calibration_for(instruction)
-        ):
+        if not target.instruction_supported(name, qargs) and name != "barrier":
             return (
                 f"The instruction {name} on qubits {qargs} is not supported by the target system."
             )
