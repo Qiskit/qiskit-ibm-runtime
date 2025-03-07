@@ -17,7 +17,6 @@ from unittest.mock import patch
 
 import qiskit
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
-from qiskit.pulse import Schedule, Play, Constant, DriveChannel
 from qiskit.transpiler import passes
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.exceptions import TranspilerError
@@ -430,37 +429,6 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with expected.if_test((0, 1)):
             expected.delay(160, 0)
             expected.x(1)
-
-        self.assertEqual(expected, scheduled)
-
-    def test_scheduling_with_calibration(self):
-        """Test if calibrated instruction can update node duration."""
-        qc = QuantumCircuit(2)
-        qc.x(0)
-        qc.cx(0, 1)
-        qc.x(1)
-        qc.cx(0, 1)
-
-        xsched = Schedule(Play(Constant(300, 0.1), DriveChannel(0)))
-        qc.add_calibration("x", (0,), xsched)
-
-        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("cx", None, 600)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
-        scheduled = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.x(0)
-        expected.delay(300, 1)
-        expected.cx(0, 1)
-        expected.x(1)
-        expected.delay(160, 0)
-        expected.cx(0, 1)
-        expected.add_calibration("x", (0,), xsched)
 
         self.assertEqual(expected, scheduled)
 
@@ -1329,37 +1297,6 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         with expected.if_test((0, 1)):
             expected.delay(160, 0)
             expected.x(1)
-
-        self.assertEqual(expected, scheduled)
-
-    def test_scheduling_with_calibration(self):
-        """Test if calibrated instruction can update node duration."""
-        qc = QuantumCircuit(2)
-        qc.x(0)
-        qc.cx(0, 1)
-        qc.x(1)
-        qc.cx(0, 1)
-
-        xsched = Schedule(Play(Constant(300, 0.1), DriveChannel(0)))
-        qc.add_calibration("x", (0,), xsched)
-
-        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("cx", None, 600)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
-        scheduled = pm.run(qc)
-
-        expected = QuantumCircuit(2)
-        expected.x(0)
-        expected.delay(300, 1)
-        expected.cx(0, 1)
-        expected.x(1)
-        expected.delay(160, 0)
-        expected.cx(0, 1)
-        expected.add_calibration("x", (0,), xsched)
 
         self.assertEqual(expected, scheduled)
 
