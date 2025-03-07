@@ -212,17 +212,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         # Fall back to current block dag if not specified.
         dag = dag or self._block_dag
 
-        if dag.has_calibration_for(node):
-            # If node has calibration, this value should be the highest priority
-            cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = dag.calibrations[node.op.name][cal_key].duration
-
-            op = node.op.to_mutable()
-            op.duration = duration
-            node.op = op
-        else:
-            # map to outer dag to get the appropriate durations
-            duration = self._durations.get(node.op, indices, unit="dt")
+        duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(

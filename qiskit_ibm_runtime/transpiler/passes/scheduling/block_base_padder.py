@@ -205,7 +205,6 @@ class BlockBasePadder(TransformationPass):
                 "Please run TimeUnitConversion pass prior to padding."
             )
 
-        new_dag.calibrations = dag.calibrations
         new_dag.global_phase = dag.global_phase
         return new_dag
 
@@ -270,12 +269,7 @@ class BlockBasePadder(TransformationPass):
 
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
-        if self._block_dag.has_calibration_for(node):
-            # If node has calibration, this value should be the highest priority
-            cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = self._block_dag.calibrations[node.op.name][cal_key].duration
-        else:
-            duration = self._durations.get(node.op, indices, unit="dt")
+        duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
