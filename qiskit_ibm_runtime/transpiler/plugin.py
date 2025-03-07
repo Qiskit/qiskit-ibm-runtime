@@ -12,6 +12,7 @@
 
 """Plugin for IBM provider backend transpiler stages."""
 
+import re
 from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
@@ -20,9 +21,15 @@ from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.transpiler.preset_passmanagers import common
 from qiskit.transpiler import passes
 
+from qiskit.version import __version__ as _terra_version_string
+
 from qiskit_ibm_runtime.transpiler.passes.basis import (
     ConvertIdToDelay,
     FoldRzzAngle,
+)
+
+_TERRA_VERSION = tuple(
+    int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
 
 
@@ -37,16 +44,21 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
             qubits_initially_zero=pass_manager_config.qubits_initially_zero,
+            **legacy_options,
         )
 
         plugin_passes = []
@@ -68,15 +80,20 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
+            **legacy_options,
         )
 
         instruction_durations = pass_manager_config.instruction_durations
@@ -111,15 +128,20 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
+            **legacy_options,
         )
 
         instruction_durations = pass_manager_config.instruction_durations
