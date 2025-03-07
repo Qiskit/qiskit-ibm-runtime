@@ -279,12 +279,12 @@ class TestGetBackend(IBMTestCase):
         self.assertEqual(len(sx_errors), backend.num_qubits)
         self.assertEqual(len(cz_errors), 300)
         # Check that the right property values were loaded
-        self.assertAlmostEqual(t1s[0], 1.043e-5, places=8)
-        self.assertAlmostEqual(t1s[-1], 0.000306, places=6)
-        self.assertAlmostEqual(sx_errors[0], 9.75e-5, places=7)
-        self.assertAlmostEqual(sx_errors[-1], 0.00521, places=5)
-        self.assertAlmostEqual(cz_errors[0], 0.00133, places=5)
-        self.assertAlmostEqual(cz_errors[-1], 0.03235, places=5)
+        self.assertAlmostEqual(t1s[0], 3.163e-6, places=8)
+        self.assertAlmostEqual(t1s[-1], 3.077e-4, places=6)
+        self.assertAlmostEqual(sx_errors[0], 1.1358e-4, places=7)
+        self.assertAlmostEqual(sx_errors[-1], 0.01738, places=5)
+        self.assertAlmostEqual(cz_errors[0], 0.001495, places=5)
+        self.assertAlmostEqual(cz_errors[-1], 1.0, places=5)
 
     @named_data(
         ("with_fractional", True),
