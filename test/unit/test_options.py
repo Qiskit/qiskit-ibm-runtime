@@ -16,7 +16,6 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 from pydantic import ValidationError
-from qiskit.providers import BackendV1
 
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
@@ -88,16 +87,8 @@ class TestOptionsV2(IBMTestCase):
         options.simulator.set_backend(fake_backend)
 
         noise_model = NoiseModel.from_backend(fake_backend)
-        basis_gates = (
-            fake_backend.configuration().basis_gates
-            if isinstance(fake_backend, BackendV1)
-            else fake_backend.operation_names
-        )
-        coupling_map = (
-            fake_backend.configuration().coupling_map
-            if isinstance(fake_backend, BackendV1)
-            else fake_backend.coupling_map
-        )
+        basis_gates = fake_backend.operation_names
+        coupling_map = fake_backend.coupling_map
 
         self.assertEqual(options.simulator.coupling_map, coupling_map)
         self.assertEqual(options.simulator.noise_model, noise_model)

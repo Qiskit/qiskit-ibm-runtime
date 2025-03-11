@@ -18,7 +18,7 @@ from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .exceptions import IBMInputValueError, IBMRuntimeError
@@ -85,7 +85,7 @@ class Session:
 
     def __init__(
         self,
-        backend: Optional[Union[BackendV1, BackendV2]] = None,
+        backend: Optional[BackendV2] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
@@ -103,7 +103,7 @@ class Session:
             ValueError: If an input value is invalid.
         """
         self._service: Optional[QiskitRuntimeService | QiskitRuntimeLocalService] = None
-        self._backend: Optional[BackendV1 | BackendV2] = None
+        self._backend: Optional[BackendV2] = None
         self._instance = None
         self._active = True
         self._session_id = None
@@ -111,7 +111,7 @@ class Session:
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
-        elif isinstance(backend, (BackendV1, BackendV2)):
+        elif isinstance(backend, (BackendV2)):
             self._service = QiskitRuntimeLocalService()
             self._backend = backend
         else:

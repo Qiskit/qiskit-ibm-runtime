@@ -17,7 +17,7 @@ from __future__ import annotations
 from typing import Optional, Dict, Union, Iterable
 import logging
 
-from qiskit.providers import BackendV1, BackendV2
+from qiskit.providers import BackendV2
 
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
@@ -99,7 +99,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.

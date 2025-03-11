@@ -26,7 +26,7 @@ from qiskit.primitives import (
     BackendSamplerV2,
 )
 from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
@@ -198,7 +198,7 @@ class QiskitRuntimeLocalService:
 
     def _run_backend_primitive_v2(
         self,
-        backend: BackendV1 | BackendV2,
+        backend: BackendV2,
         primitive: Literal["sampler", "estimator"],
         options: dict,
         inputs: dict,

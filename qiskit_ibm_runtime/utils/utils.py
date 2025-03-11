@@ -39,12 +39,12 @@ from qiskit.circuit.library.standard_gates import (
     PhaseGate,
 )
 from qiskit.transpiler import Target
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 
-def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+def is_simulator(backend: BackendV2) -> bool:
     """Return true if the backend is a simulator.
 
     Args:

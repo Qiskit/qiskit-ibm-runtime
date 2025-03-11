@@ -19,23 +19,23 @@ To install from source download this repository and follow the next steps.
 
 - Create a virtual environment
 ``` {.bash}
-$ python3 -m venv .venv
+python3 -m venv .venv
 ```
 - Activate your virtual environment
 ``` {.bash}
-$ source .venv/bin/activate
+source .venv/bin/activate
 ```
 - Install the dependencies
 ``` {.bash}
-$ pip install -e .
+pip install -e .
 ```
 - Install the visualization dependencies
 ``` {.bash}
-$ pip install -e ".[visualization]"
+pip install -e ".[visualization]"
 ```
 - Install the development dependencies
 ``` {.bash}
-$ pip install -e ".[dev]"
+pip install -e ".[dev]"
 ```
 
 ### Open an issue
@@ -197,7 +197,7 @@ stable and give a basic level of confidence during development.
 
 To execute all unit tests, run:
 ``` {.bash}
-$ make unit-test
+make unit-test
 ```
 
 ##### 2. Integration tests
@@ -208,7 +208,7 @@ client and APIs work well together.
 
 To execute all integration tests, run
 ``` {.bash}
-$ make integration-test
+make integration-test
 ```
 
 ###### Configuration

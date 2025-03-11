@@ -15,7 +15,7 @@
 from typing import List, Union, Optional
 
 from qiskit.exceptions import MissingOptionalLibraryError
-from qiskit.providers import BackendV1, BackendV2
+from qiskit.providers import BackendV2
 from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
@@ -85,7 +85,7 @@ class SimulatorOptions:
                 )
         return model
 
-    def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
+    def set_backend(self, backend: BackendV2) -> None:
         """Set backend for simulation.
         This method changes noise_model, coupling_map, basis_gates according to given backend.
 
@@ -106,9 +106,6 @@ class SimulatorOptions:
 
         self.noise_model = AerNoiseModel.from_backend(backend)
 
-        if isinstance(backend, BackendV1):
-            self.coupling_map = backend.configuration().coupling_map
-            self.basis_gates = backend.configuration().basis_gates
-        elif isinstance(backend, BackendV2):
+        if isinstance(backend, BackendV2):
             self.coupling_map = backend.coupling_map
             self.basis_gates = backend.operation_names

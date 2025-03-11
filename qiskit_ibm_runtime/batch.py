@@ -14,7 +14,7 @@
 
 from typing import Optional, Union
 
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .session import Session
@@ -86,7 +86,7 @@ class Batch(Session):
 
     def __init__(
         self,
-        backend: Optional[Union[BackendV1, BackendV2]] = None,
+        backend: Optional[BackendV2] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Batch constructor.
