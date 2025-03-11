@@ -20,7 +20,7 @@ from dataclasses import asdict, replace
 
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
@@ -46,12 +46,10 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def _get_mode_service_backend(
-    mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
-) -> tuple[
+def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] = None) -> tuple[
     Union[Session, Batch, None],
     Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
-    Union[BackendV1, BackendV2, None],
+    Union[BackendV2, None],
 ]:
     """
     A utility function that returns mode, service, and backend for a given execution mode.
@@ -81,7 +79,7 @@ def _get_mode_service_backend(
                 )
             return get_cm_session(), mode.service, mode
         return None, mode.service, mode
-    elif isinstance(mode, (BackendV1, BackendV2)):
+    elif isinstance(mode, BackendV2):
         return None, QiskitRuntimeLocalService(), mode
     elif mode is not None:  # type: ignore[unreachable]
         raise ValueError("mode must be of type Backend, Session, Batch or None")
@@ -112,7 +110,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
         options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
@@ -174,6 +172,14 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             )
 
         if self._backend:
+            if get_cm_session():
+                logger.warning(
+                    "Even though a session/batch context manager is open this job will run in job mode "
+                    "because the %s primitive was initialized outside the context manager. "
+                    "Move the %s initialization inside the context manager to run in a session/batch.",
+                    self._program_id(),
+                    self._program_id(),
+                )
             runtime_options["backend"] = self._backend
             if "instance" not in runtime_options and isinstance(self._backend, IBMBackend):
                 runtime_options["instance"] = self._backend._instance
@@ -207,7 +213,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return options"""
         return self._options
 
-    def backend(self) -> BackendV1 | BackendV2:
+    def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""
         return self._backend
 

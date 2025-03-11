@@ -14,8 +14,14 @@
 
 from dataclasses import asdict, dataclass
 from typing import Dict, Union, Any, Optional
-from qiskit.circuit import QuantumCircuit
-from qiskit.qobj.utils import MeasLevel, MeasReturnType
+from packaging.version import Version
+
+from qiskit import QuantumCircuit, __version__ as qiskit_version
+
+if Version(qiskit_version).major >= 2:
+    from qiskit.result import MeasLevel, MeasReturnType
+else:
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 
 @dataclass
