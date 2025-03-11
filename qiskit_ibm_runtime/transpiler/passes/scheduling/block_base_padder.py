@@ -12,7 +12,7 @@
 
 """Padding pass to fill timeslots for IBM (dynamic circuit) backends."""
 
-from typing import Dict, Iterable, List, Optional, Union, Set
+from typing import Dict, Iterable, List, Optional, Union, Set, Any
 
 from qiskit.circuit import (
     Qubit,
@@ -23,7 +23,6 @@ from qiskit.circuit import (
     Instruction,
     Measure,
 )
-from qiskit.circuit.bit import Bit
 from qiskit.circuit.library import Barrier
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameterexpression import ParameterExpression
@@ -76,7 +75,7 @@ class BlockBasePadder(TransformationPass):
         self._dag = None
         self._block_dag = None
         self._prev_node: Optional[DAGNode] = None
-        self._wire_map: Optional[Dict[Bit, Bit]] = None
+        self._wire_map: Optional[Dict[Any, Any]] = None
         self._block_duration = 0
         self._current_block_idx = 0
         self._conditional_block = False
@@ -627,7 +626,7 @@ class BlockBasePadder(TransformationPass):
         self.property_set["node_start_time"][new_node] = (block_idx, t_start)
         return new_node
 
-    def _map_wires(self, wires: Iterable[Bit]) -> List[Bit]:
+    def _map_wires(self, wires: Iterable[Any]) -> List[Any]:
         """Map the wires from the current block to the top-level block's wires.
 
         TODO: We should have an easier approach to wire mapping from the transpiler.

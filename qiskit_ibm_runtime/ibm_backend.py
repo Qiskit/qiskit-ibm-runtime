@@ -52,7 +52,7 @@ from .utils import local_to_utc
 if Version(qiskit_version).major >= 2:
     from qiskit.result import MeasLevel, MeasReturnType
 else:
-    from qiskit.qobj.utils import MeasLevel, MeasReturnType
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType  # pylint: disable=import-error
 
 
 logger = logging.getLogger(__name__)
