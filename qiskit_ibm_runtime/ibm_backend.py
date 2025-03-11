@@ -277,7 +277,7 @@ class IBMBackend(Backend):
     def max_circuits(self) -> int:
         """The maximum number of circuits
 
-        The maximum number of circuits (or Pulse schedules) that can be
+        The maximum number of circuits that can be
         run in a single job. If there is no limit this will return None.
         """
         return self._max_circuits
