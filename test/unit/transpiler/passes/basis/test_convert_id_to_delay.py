@@ -63,6 +63,22 @@ class TestConvertIdToDelay(IBMTestCase):
 
         self.assertEqual(expected, transformed)
 
+    def test_if_test_gate(self):
+        """Test if if_test gate is converted."""
+        qc = QuantumCircuit(1, 1)
+
+        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+            qc.id(0)
+
+        pm = PassManager([ConvertIdToDelay(self.durations)])
+        transformed = pm.run(qc)
+
+        expected = QuantumCircuit(1, 1)
+        with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+            expected.delay(160, 0)
+
+        self.assertEqual(expected, transformed)
+
     def test_if_test_id_gate(self):
         """Test if if_test Id gate is converted a if_test delay."""
         qc = QuantumCircuit(1, 1)

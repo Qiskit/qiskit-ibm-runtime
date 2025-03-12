@@ -13,10 +13,11 @@
 """Scheduler for dynamic circuit backends."""
 
 from abc import abstractmethod
-from typing import Dict, List, Optional, Union, Set, Tuple, Any
+from typing import Dict, List, Optional, Union, Set, Tuple
 import itertools
 
 import qiskit
+from qiskit.circuit import Bit
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import circuit_to_dag
 from qiskit.transpiler.basepasses import TransformationPass
@@ -67,8 +68,8 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         self._dag: Optional[DAGCircuit] = None
         self._block_dag: Optional[DAGCircuit] = None
-        self._wire_map: Optional[Dict[Any, Any]] = None
-        self._node_mapped_wires: Optional[Dict[DAGNode, List[Any]]] = None
+        self._wire_map: Optional[Dict[Bit, Bit]] = None
+        self._node_mapped_wires: Optional[Dict[DAGNode, List[Bit]]] = None
         self._node_block_dags: Dict[DAGNode, DAGCircuit] = {}
         # Mapping of control-flow nodes to their containing blocks
         self._block_idx_dag_map: Dict[int, DAGCircuit] = {}
