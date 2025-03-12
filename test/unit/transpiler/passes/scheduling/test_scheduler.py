@@ -37,6 +37,37 @@ from .....ibm_test_case import IBMTestCase
 class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ASAP Scheduling passes"""
 
+    def test_if_test_gate_after_measure(self):
+        """Test if schedules circuits with c_if after measure with a common clbit.
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
+        qc = QuantumCircuit(2, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 0)) as else_:
+            qc.x(1)
+        with else_:
+            qc.x(0)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(2, 1)
+        expected.delay(1000, 1)
+        expected.measure(0, 0)
+        with expected.if_test((0, 0)) as else_:
+            expected.delay(200, 0)
+            expected.x(1)
+        with else_:
+            expected.x(0)
+            expected.delay(200, 1)
+
+        self.assertEqual(expected, scheduled)
+
     def test_measure_after_measure(self):
         """Test if schedules circuits with measure after measure with a common clbit.
 
@@ -60,6 +91,35 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         expected.delay(200, 1)
         expected.measure(0, 0)
         expected.measure(1, 0)
+        self.assertEqual(expected, scheduled)
+
+    def test_if_test_on_different_qubits(self):
+        """Test if schedules circuits with `if_tests`s on different qubits."""
+        qc = QuantumCircuit(3, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+            qc.x(2)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(1000, 1)
+        expected.delay(1000, 2)
+        expected.measure(0, 0)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.x(2)
+
         self.assertEqual(expected, scheduled)
 
     def test_measure_block_not_end(self):
@@ -155,6 +215,40 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         expected.measure(1, 0)
         expected.delay(300, 1)
         expected.delay(1000, 2)
+
+        self.assertEqual(expected, scheduled)
+
+    def test_measure_after_if_test(self):
+        """Test if schedules circuits with if_test after measure with a common clbit."""
+        qc = QuantumCircuit(3, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+        qc.measure(2, 0)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(1000, 1)
+        expected.delay(1000, 2)
+        expected.measure(0, 0)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.delay(200, 2)
+
+        expected.barrier()
+        expected.delay(1000, 0)
+        expected.measure(2, 0)
+        expected.delay(1000, 1)
 
         self.assertEqual(expected, scheduled)
 
@@ -305,6 +399,49 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         with self.assertRaises(TranspilerError):
             PassManager(PadDelay(durations)).run(qc)
+
+    def test_back_to_back_if_test(self):
+        """Test back to back if_test scheduling"""
+
+        qc = QuantumCircuit(3, 1)
+        qc.delay(800, 1)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+        with qc.if_test((0, 1)):
+            qc.x(2)
+
+        qc.delay(1000, 2)
+        qc.x(1)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(800, 0)
+        expected.delay(800, 1)
+        expected.delay(800, 2)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.delay(200, 2)
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.delay(200, 1)
+            expected.x(2)
+        expected.barrier()
+        expected.delay(1000, 0)
+        expected.x(1)
+        expected.delay(800, 1)
+        expected.delay(1000, 2)
+
+        self.assertEqual(expected, scheduled)
 
     def test_no_pad_very_end_of_circuit(self):
         """Test padding option that inserts no delay at the very end of circuit.
@@ -697,6 +834,36 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
+    def test_if_test_gate_after_measure(self):
+        """Test if schedules circuits with c_if_test after measure with a common clbit."""
+        qc = QuantumCircuit(2, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 0)) as else_:
+            qc.x(1)
+        with else_:
+            qc.x(0)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(2, 1)
+        expected.delay(1000, 1)
+        expected.measure(0, 0)
+        with expected.if_test((0, 0)) as else_:
+            expected.delay(200, 0)
+            expected.x(1)
+        with else_:
+            expected.x(0)
+            expected.delay(200, 1)
+
+        self.assertEqual(expected, scheduled)
+
     def test_measure_after_measure(self):
         """Test if schedules circuits with measure after measure with a common clbit.
 
@@ -720,6 +887,35 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         expected.delay(200, 1)
         expected.measure(0, 0)
         expected.measure(1, 0)
+
+        self.assertEqual(expected, scheduled)
+
+    def test_if_test_on_different_qubits(self):
+        """Test if schedules circuits with `if_test`s on different qubits."""
+        qc = QuantumCircuit(3, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+            qc.x(2)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(1000, 1)
+        expected.delay(1000, 2)
+        expected.measure(0, 0)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.x(2)
 
         self.assertEqual(expected, scheduled)
 
@@ -817,6 +1013,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         expected.measure(0, 0)
         expected.measure(1, 0)
         expected.delay(300, 1)
+
+        self.assertEqual(expected, scheduled)
+
+    def test_measure_after_c_if(self):
+        """Test if schedules circuits with c_if after measure with a common clbit."""
+        qc = QuantumCircuit(3, 1)
+        qc.measure(0, 0)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+        qc.measure(2, 0)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(1000, 1)
+        expected.delay(1000, 2)
+        expected.measure(0, 0)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.delay(200, 2)
+        expected.barrier()
+        expected.delay(1000, 0)
+        expected.measure(2, 0)
+        expected.delay(1000, 1)
 
         self.assertEqual(expected, scheduled)
 
@@ -1273,6 +1502,48 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         expected.x(2)
         expected.delay(400, 3)
 
+        self.assertEqual(expected, scheduled)
+
+    def test_back_to_back_if_test(self):
+        """Test back to back if_test scheduling"""
+
+        qc = QuantumCircuit(3, 1)
+        qc.delay(800, 1)
+        with qc.if_test((0, 1)):
+            qc.x(1)
+        with qc.if_test((0, 1)):
+            qc.x(2)
+
+        qc.delay(1000, 2)
+        qc.x(1)
+
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
+        pm = PassManager(
+            [
+                ALAPScheduleAnalysis(durations),
+                PadDelay(durations, schedule_idle_qubits=True),
+            ]
+        )
+        scheduled = pm.run(qc)
+
+        expected = QuantumCircuit(3, 1)
+        expected.delay(800, 0)
+        expected.delay(800, 1)
+        expected.delay(800, 2)
+        expected.barrier()
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.x(1)
+            expected.delay(200, 2)
+        with expected.if_test((0, 1)):
+            expected.delay(200, 0)
+            expected.delay(200, 1)
+            expected.x(2)
+        expected.barrier()
+        expected.delay(1000, 0)
+        expected.delay(800, 1)
+        expected.x(1)
+        expected.delay(1000, 2)
         self.assertEqual(expected, scheduled)
 
     def test_issue_458_extra_idle_bug_0(self):
