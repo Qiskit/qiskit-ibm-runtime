@@ -429,7 +429,12 @@ class QasmBackendConfiguration:
             "max_shots": self.max_shots,
             "coupling_map": self.coupling_map,
             "dynamic_reprate_enabled": self.dynamic_reprate_enabled,
+            "meas_levels": self.meas_levels,
+            "meas_kernels": self.meas_kernels,
+            "discriminators": self.discriminators,
         }
+        if hasattr(self, "meas_map"):
+            out_dict["meas_map"] = self.meas_map
 
         if hasattr(self, "supported_instructions"):
             out_dict["supported_instructions"] = self.supported_instructions

@@ -40,7 +40,7 @@ def configuration_from_server_data(
     raw_config: Dict,
     instance: str = "",
     use_fractional_gates: Optional[bool] = False,
-) -> Optional[Union[QasmBackendConfiguration]]:
+) -> Optional[QasmBackendConfiguration]:
     """Create a backend configuration instance from raw server data.
 
     Args:

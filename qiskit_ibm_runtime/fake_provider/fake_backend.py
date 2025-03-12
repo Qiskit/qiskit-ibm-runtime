@@ -19,8 +19,6 @@ import warnings
 import json
 import os
 
-from typing import Union
-
 from qiskit import QuantumCircuit
 
 from qiskit.providers import BackendV2
@@ -191,7 +189,7 @@ class FakeBackendV2(BackendV2):
             return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
         return None
 
-    def configuration(self) -> Union[QasmBackendConfiguration]:
+    def configuration(self) -> QasmBackendConfiguration:
         """Return the backend configuration."""
         return BackendConfiguration.from_dict(self._conf_dict)
 
