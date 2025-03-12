@@ -46,7 +46,6 @@ from ..models import (
     PulseDefaults,
     BackendStatus,
     QasmBackendConfiguration,
-    PulseBackendConfiguration,
 )
 from ..models.exceptions import (
     BackendPropertyError,
@@ -192,7 +191,7 @@ class FakeBackendV2(BackendV2):
             return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
         return None
 
-    def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+    def configuration(self) -> Union[QasmBackendConfiguration]:
         """Return the backend configuration."""
         return BackendConfiguration.from_dict(self._conf_dict)
 

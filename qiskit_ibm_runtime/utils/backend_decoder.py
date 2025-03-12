@@ -27,7 +27,6 @@ except ImportError:  # Remove when dropping support for Qiskit < 1.3
 from ..models import (
     BackendProperties,
     PulseDefaults,
-    PulseBackendConfiguration,
     QasmBackendConfiguration,
 )
 
@@ -41,7 +40,7 @@ def configuration_from_server_data(
     raw_config: Dict,
     instance: str = "",
     use_fractional_gates: Optional[bool] = False,
-) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
+) -> Optional[Union[QasmBackendConfiguration]]:
     """Create a backend configuration instance from raw server data.
 
     Args:
@@ -64,10 +63,7 @@ def configuration_from_server_data(
     try:
         decode_backend_configuration(raw_config)
         filter_raw_configuration(raw_config, use_fractional_gates=use_fractional_gates)
-        try:
-            return PulseBackendConfiguration.from_dict(raw_config)
-        except (KeyError, TypeError):
-            return QasmBackendConfiguration.from_dict(raw_config)
+        return QasmBackendConfiguration.from_dict(raw_config)
     except Exception:  # pylint: disable=broad-except
         logger.warning(
             'Remote backend "%s" for service instance %s could not be instantiated due '
@@ -187,8 +183,7 @@ def decode_backend_configuration(config: Dict) -> None:
     """Decode backend configuration.
 
     Args:
-        config: A ``QasmBackendConfiguration`` or ``PulseBackendConfiguration``
-            in dictionary format.
+        config: A ``QasmBackendConfiguration`` in dictionary format.
     """
     config["online_date"] = dateutil.parser.isoparse(config["online_date"])
 

@@ -29,7 +29,6 @@ from .models import (
     PulseDefaults,
     GateConfig,
     QasmBackendConfiguration,
-    PulseBackendConfiguration,
 )
 
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
@@ -158,7 +157,7 @@ class IBMBackend(Backend):
 
     def __init__(
         self,
-        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        configuration: Union[QasmBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
         instance: Optional[str] = None,
@@ -434,7 +433,7 @@ class IBMBackend(Backend):
 
     def configuration(
         self,
-    ) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+    ) -> Union[QasmBackendConfiguration]:
         """Return the backend configuration.
 
         Backend configuration contains fixed information about the backend, such
@@ -561,7 +560,7 @@ class IBMRetiredBackend(IBMBackend):
 
     def __init__(
         self,
-        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        configuration: Union[QasmBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: Optional[RuntimeClient] = None,
     ) -> None:

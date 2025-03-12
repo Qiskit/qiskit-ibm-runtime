@@ -14,7 +14,6 @@
 
 from .backend_configuration import (
     BackendConfiguration,
-    PulseBackendConfiguration,
     QasmBackendConfiguration,
     UchannelLO,
     GateConfig,
