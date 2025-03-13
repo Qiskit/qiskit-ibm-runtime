@@ -22,7 +22,7 @@ New Features
 
   See the `Pulse migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/pulse-migration>`__ 
   for details. (`2116 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2116>`__)
-- Added a warning for when a primitive is initialized outside of a session or batch context manager. 
+- Added a warning when a primitive is initialized outside of a session or batch context manager. 
   In this scenario, the job will run in job mode instead of the session or batch. (`2152 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2152>`__)
 
 
