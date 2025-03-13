@@ -42,12 +42,13 @@ from .utils import is_fractional_gate  # See comment above before removing
 logger = logging.getLogger(__name__)
 
 
-def convert_to_target(
+def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     *,
     include_control_flow: bool = True,
     include_fractional_gates: bool = True,
+    **kwargs,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -65,6 +66,11 @@ def convert_to_target(
     """
     add_delay = True
     filter_faulty = True
+
+    if "defaults" in kwargs:
+        warnings.warn(
+            "Backend defaults are no longer necessary for creating a target. Defaults will be ignored."
+        )
 
     required = ["measure", "delay", "reset"]
 
