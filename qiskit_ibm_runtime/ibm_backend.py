@@ -36,6 +36,7 @@ from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-imp
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
+    IBMBackendValueError,
     IBMBackendError,
 )
 from .utils.backend_converter import convert_to_target
@@ -478,6 +479,26 @@ class IBMBackend(Backend):
     def __call__(self) -> "IBMBackend":
         # For backward compatibility only, can be removed later.
         return self
+
+    def _check_circuits_attributes(self, circuits: List[Union[QuantumCircuit, str]]) -> None:
+        """Check that circuits can be executed on backend.
+        Raises:
+            IBMBackendValueError:
+                - If one of the circuits contains more qubits than on the backend."""
+
+        if len(circuits) > self._max_circuits:
+            raise IBMBackendValueError(
+                f"Number of circuits, {len(circuits)} exceeds the "
+                f"maximum for this backend, {self._max_circuits})"
+            )
+        for circ in circuits:
+            if isinstance(circ, QuantumCircuit):
+                if circ.num_qubits > self._configuration.num_qubits:
+                    raise IBMBackendValueError(
+                        f"Circuit contains {circ.num_qubits} qubits, "
+                        f"but backend has only {self.num_qubits}."
+                    )
+                self.check_faulty(circ)
 
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
