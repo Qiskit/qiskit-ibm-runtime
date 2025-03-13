@@ -21,7 +21,7 @@ from qiskit import QuantumCircuit, __version__ as qiskit_version
 if Version(qiskit_version).major >= 2:
     from qiskit.result import MeasLevel, MeasReturnType
 else:
-    from qiskit.qobj.utils import MeasLevel, MeasReturnType
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType  # pylint: disable=import-error
 
 
 @dataclass
