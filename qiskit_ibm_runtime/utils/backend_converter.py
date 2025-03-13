@@ -29,10 +29,10 @@ from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
-from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models import BackendConfiguration, BackendProperties, PulseDefaults
+from ..models.exceptions import BackendPropertyError
 
 # is_fractional_gate used to be defined in this module and might be referenced
 # from here externally
@@ -54,7 +54,6 @@ def convert_to_target(
 
     This function generates :class:`.Target`` instance from intermediate
     legacy objects such as :class:`.BackendProperties` and :class:`.PulseDefaults`.
-    These objects are usually components of the legacy :class:`.BackendV1` model.
 
     Args:
         configuration: Backend configuration as ``BackendConfiguration``

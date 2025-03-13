@@ -16,10 +16,9 @@ import logging
 from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
 from copy import deepcopy
+from packaging.version import Version
 
-from qiskit import QuantumCircuit
-from qiskit.qobj.utils import MeasLevel, MeasReturnType
-
+from qiskit import QuantumCircuit, __version__ as qiskit_version
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.pulse.channels import (
@@ -55,6 +54,12 @@ from .utils.backend_decoder import (
     configuration_from_server_data,
 )
 from .utils import local_to_utc
+
+if Version(qiskit_version).major >= 2:
+    from qiskit.result import MeasLevel, MeasReturnType
+else:
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType
+
 
 logger = logging.getLogger(__name__)
 
