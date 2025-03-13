@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.models import (
     BackendConfiguration,
     BackendProperties,
     BackendStatus,
-    PulseDefaults,
 )
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
@@ -268,7 +267,6 @@ class TestBackend(IBMTestCase):
         target = convert_to_target(
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
-            PulseDefaults.from_dict(backend._defs_dict),
         )
         self.assertTrue(target.instruction_supported("if_else", ()))
         self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
@@ -288,7 +286,6 @@ class TestBackend(IBMTestCase):
         target = convert_to_target(
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
-            PulseDefaults.from_dict(backend._defs_dict),
         )
         self.assertTrue(target.instruction_supported("reset"))
         self.assertTrue(target.instruction_supported(operation_class=Reset))

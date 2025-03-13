@@ -16,18 +16,12 @@ Base class for dummy backends.
 """
 import logging
 import warnings
-import collections
 import json
 import os
-import re
 
-from typing import List, Iterable, Union
-
-from qiskit import circuit, QuantumCircuit
+from qiskit import QuantumCircuit
 
 from qiskit.providers import BackendV2
-from qiskit import pulse
-from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
@@ -50,7 +44,6 @@ from ..models import (
     PulseDefaults,
     BackendStatus,
     QasmBackendConfiguration,
-    PulseBackendConfiguration,
 )
 from ..models.exceptions import (
     BackendPropertyError,
@@ -103,36 +96,6 @@ class FakeBackendV2(BackendV2):
         )
         self._target = None
         self.sim = None
-
-        if "channels" in self._conf_dict:
-            self._parse_channels(self._conf_dict["channels"])
-
-    def _parse_channels(self, channels: dict) -> None:
-        type_map = {
-            "acquire": pulse.AcquireChannel,
-            "drive": pulse.DriveChannel,
-            "measure": pulse.MeasureChannel,
-            "control": pulse.ControlChannel,
-        }
-        identifier_pattern = re.compile(r"\D+(?P<index>\d+)")
-
-        channels_map = {  # type: ignore
-            "acquire": collections.defaultdict(list),
-            "drive": collections.defaultdict(list),
-            "measure": collections.defaultdict(list),
-            "control": collections.defaultdict(list),
-        }
-        for identifier, spec in channels.items():
-            channel_type = spec["type"]
-            out = re.match(identifier_pattern, identifier)
-            if out is None:
-                # Identifier is not a valid channel name format
-                continue
-            channel_index = int(out.groupdict()["index"])
-            qubit_index = tuple(spec["operates"]["qubits"])
-            chan_obj = type_map[channel_type](channel_index)
-            channels_map[channel_type][qubit_index].append(chan_obj)
-        setattr(self, "channels_map", channels_map)
 
     def _setup_sim(self) -> None:
         if _optionals.HAS_AER:
@@ -226,7 +189,7 @@ class FakeBackendV2(BackendV2):
             return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
         return None
 
-    def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+    def configuration(self) -> QasmBackendConfiguration:
         """Return the backend configuration."""
         return BackendConfiguration.from_dict(self._conf_dict)
 
@@ -280,14 +243,10 @@ class FakeBackendV2(BackendV2):
             props = None
             if self._props_dict is not None:
                 props = BackendProperties.from_dict(self._props_dict)  # type: ignore
-            defaults = None
-            if self._defs_dict is not None:
-                defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
             self._target = convert_to_target(
                 configuration=conf,
                 properties=props,
-                defaults=defaults,
                 # Fake backends use the simulator backend.
                 # This doesn't have the exclusive constraint.
                 include_control_flow=True,
@@ -339,89 +298,10 @@ class FakeBackendV2(BackendV2):
         else:
             return None
 
-    @property
-    def meas_map(self) -> List[List[int]]:
-        """Return the grouping of measurements which are multiplexed
-        This is required to be implemented if the backend supports Pulse
-        scheduling.
-
-        Returns:
-            The grouping of measurements which are multiplexed
-        """
-        return self._conf_dict.get("meas_map")
-
-    def drive_channel(self, qubit: int):  # type: ignore
-        """Return the drive channel for the given qubit.
-
-        This is required to be implemented if the backend supports Pulse
-        scheduling.
-
-        Returns:
-            DriveChannel: The Qubit drive channel
-        """
-        drive_channels_map = getattr(self, "channels_map", {}).get("drive", {})
-        qubits = (qubit,)
-        if qubits in drive_channels_map:
-            return drive_channels_map[qubits][0]
-        return None
-
-    def measure_channel(self, qubit: int):  # type: ignore
-        """Return the measure stimulus channel for the given qubit.
-
-        This is required to be implemented if the backend supports Pulse
-        scheduling.
-
-        Returns:
-            MeasureChannel: The Qubit measurement stimulus line
-        """
-        measure_channels_map = getattr(self, "channels_map", {}).get("measure", {})
-        qubits = (qubit,)
-        if qubits in measure_channels_map:
-            return measure_channels_map[qubits][0]
-        return None
-
-    def acquire_channel(self, qubit: int):  # type: ignore
-        """Return the acquisition channel for the given qubit.
-
-        This is required to be implemented if the backend supports Pulse
-        scheduling.
-
-        Returns:
-            AcquireChannel: The Qubit measurement acquisition line.
-        """
-        acquire_channels_map = getattr(self, "channels_map", {}).get("acquire", {})
-        qubits = (qubit,)
-        if qubits in acquire_channels_map:
-            return acquire_channels_map[qubits][0]
-        return None
-
-    def control_channel(self, qubits: Iterable[int]):  # type: ignore
-        """Return the secondary drive channel for the given qubit
-
-        This is typically utilized for controlling multiqubit interactions.
-        This channel is derived from other channels.
-
-        This is required to be implemented if the backend supports Pulse
-        scheduling.
-
-        Args:
-            qubits: Tuple or list of qubits of the form
-                ``(control_qubit, target_qubit)``.
-
-        Returns:
-            List[ControlChannel]: The multi qubit control line.
-        """
-        control_channels_map = getattr(self, "channels_map", {}).get("control", {})
-        qubits = tuple(qubits)
-        if qubits in control_channels_map:
-            return control_channels_map[qubits]
-        return []
-
     def run(self, run_input, **options):  # type: ignore
         """Run on the fake backend using a simulator.
 
-        This method runs circuit jobs (an individual or a list of QuantumCircuit
-        ) and pulse jobs (an individual or a list of Schedule or ScheduleBlock)
+        This method runs circuit jobs (an individual or a list of QuantumCircuit)
         using BasicSimulator or Aer simulator and returns a
         :class:`~qiskit.providers.Job` object.
 
@@ -433,11 +313,9 @@ class FakeBackendV2(BackendV2):
         FakeBackendV2.
 
         Args:
-            run_input (QuantumCircuit or Schedule or ScheduleBlock or list): An
+            run_input (QuantumCircuit or list): An
                 individual or a list of
-                :class:`~qiskit.circuit.QuantumCircuit`,
-                :class:`~qiskit.pulse.ScheduleBlock`, or
-                :class:`~qiskit.pulse.Schedule` objects to run on the backend.
+                :class:`~qiskit.circuit.QuantumCircuit`
             options: Any kwarg options to pass to the backend for running the
                 config. If a key is also present in the options
                 attribute/object then the expectation is that the value
@@ -446,38 +324,11 @@ class FakeBackendV2(BackendV2):
 
         Returns:
             Job: The job object for the run
-
-        Raises:
-            QiskitError: If a pulse job is supplied and qiskit-aer is not installed.
         """
-        circuits = run_input
-        pulse_job = None
-        if isinstance(circuits, (pulse.Schedule, pulse.ScheduleBlock)):
-            pulse_job = True
-        elif isinstance(circuits, circuit.QuantumCircuit):
-            pulse_job = False
-        elif isinstance(circuits, list):
-            if circuits:
-                if all(isinstance(x, (pulse.Schedule, pulse.ScheduleBlock)) for x in circuits):
-                    pulse_job = True
-                elif all(isinstance(x, circuit.QuantumCircuit) for x in circuits):
-                    pulse_job = False
-        if pulse_job is None:  # submitted job is invalid
-            raise QiskitError(
-                "Invalid input object %s, must be either a "
-                "QuantumCircuit, Schedule, or a list of either" % circuits
-            )
-        if pulse_job:  # pulse job
-            raise QiskitError("Pulse simulation is currently not supported for V2 fake backends.")
-        # circuit job
-        if not _optionals.HAS_AER:
-            warnings.warn(
-                "Aer not found, using qiskit.BasicSimulator and no noise.", RuntimeWarning
-            )
         if self.sim is None:
             self._setup_sim()
         self.sim._options = self._options
-        job = self.sim.run(circuits, **options)
+        job = self.sim.run(run_input, **options)
         return job
 
     def _get_noise_model_from_backend_v2(  # type: ignore
@@ -625,12 +476,10 @@ class FakeBackendV2(BackendV2):
 
                 updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
                 updated_properties = BackendProperties.from_dict(self._props_dict)
-                updated_defaults = PulseDefaults.from_dict(self._defs_dict)
 
                 self._target = convert_to_target(
                     configuration=updated_configuration,
                     properties=updated_properties,
-                    defaults=updated_defaults,
                     include_control_flow=True,
                     include_fractional_gates=True,
                 )
