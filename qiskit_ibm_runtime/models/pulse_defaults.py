@@ -216,13 +216,13 @@ class PulseDefaults:
             "qubit_freq_est": self.qubit_freq_est,
             "meas_freq_est": self.qubit_freq_est,
             "buffer": self.buffer,
-            "pulse_library": [x.to_dict() for x in self.pulse_library],
-            "cmd_def": [x.to_dict() for x in self.cmd_def],
+            "pulse_library": list(self.pulse_library),
+            "cmd_def": list(self.cmd_def),
         }
         if hasattr(self, "meas_kernel"):
-            out_dict["meas_kernel"] = self.meas_kernel.to_dict()
+            out_dict["meas_kernel"] = self.meas_kernel
         if hasattr(self, "discriminator"):
-            out_dict["discriminator"] = self.discriminator.to_dict()
+            out_dict["discriminator"] = self.discriminator
         for key, value in self.__dict__.items():
             if key not in [
                 "qubit_freq_est",
