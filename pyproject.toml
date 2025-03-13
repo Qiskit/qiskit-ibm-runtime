@@ -124,7 +124,6 @@ common = [
     "pylatexenc",
     "scikit-learn",
     "setuptools",
-    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
 ]
 
 documentation = [
@@ -138,8 +137,10 @@ documentation = [
 ]
 
 visualization = ["plotly>=5.23.0"]
+test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
 
 dev = [
+    "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
