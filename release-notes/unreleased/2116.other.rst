@@ -1,5 +1,0 @@
-Imports and methods removed in Qiskit 2.0 have been removed or handled accordingly.
-These included ``pulse`` and ``channel`` related imports as support for pulse gates is being sunset. 
-
-See the `Pulse migration guide <https://docs.quantum.ibm.com/migration-guides/pulse-migration>`__ 
-for more details. 
