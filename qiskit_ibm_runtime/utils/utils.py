@@ -39,12 +39,12 @@ from qiskit.circuit.library.standard_gates import (
     PhaseGate,
 )
 from qiskit.transpiler import Target
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 
-def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+def is_simulator(backend: BackendV2) -> bool:
     """Return true if the backend is a simulator.
 
     Args:
@@ -68,11 +68,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
 
         name = operation.name
         qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
-        if (
-            not target.instruction_supported(name, qargs)
-            and name != "barrier"
-            and not circuit.has_calibration_for(instruction)
-        ):
+        if not target.instruction_supported(name, qargs) and name != "barrier":
             return (
                 f"The instruction {name} on qubits {qargs} is not supported by the target system."
             )
