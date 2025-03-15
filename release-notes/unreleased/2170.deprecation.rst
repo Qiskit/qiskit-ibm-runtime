@@ -1,0 +1,3 @@
+:class:`RuntimeJob` is now deprecated. All of the primitives return :class:`RuntimeJobV2` so there is no need for 
+``RuntimeJob`` anymore. The major difference between the two classes is that 
+:meth:`~.RuntimeJobV2.status` returns a string instead of Qiskit's ``JobStatus`` enum.
