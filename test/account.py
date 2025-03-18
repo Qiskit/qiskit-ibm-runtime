@@ -125,6 +125,7 @@ def get_account_config_contents(
     name=None,
     channel="ibm_cloud",
     token=None,
+    cloud_access_token=None,
     url=None,
     instance=None,
     verify=None,
@@ -149,6 +150,7 @@ def get_account_config_contents(
             "url": url,
             "token": token,
             "instance": instance,
+            "cloud_access_token": cloud_access_token,
         }
     }
     if verify is not None:
