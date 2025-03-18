@@ -346,7 +346,9 @@ class TestTwirledSliceSpan(IBMTestCase):
 
     def test_one_dimensional_shape_mask(self):
         """Test that mask doesn't throw with a one-dimensional shape"""
-        span = TwirledSliceSpan(self.start1, self.stop1, {0: ((7,), False, slice(0, 1), slice(0, 7))})
+        span = TwirledSliceSpan(
+            self.start1, self.stop1, {0: ((7,), False, slice(0, 1), slice(0, 7))}
+        )
         span.mask(0)
 
 
