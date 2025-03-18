@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.36.1"
+fallback_version = "0.37.0"
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -89,7 +89,7 @@ dependencies = [
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
     "pydantic>=2.5.0,<2.10",
-    "qiskit>=1.3.2",
+    "qiskit>=1.4.1",
     "packaging"
 ]
 
@@ -116,13 +116,12 @@ common = [
     "scipy>=1.0",
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
-    "qiskit-aer>=0.16.1",
+    "qiskit-aer>=0.17.0",
     "black~=24.1",
     "coverage>=6.3",
     "pylatexenc",
     "scikit-learn",
     "setuptools",
-    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
 ]
 
 documentation = [
@@ -136,8 +135,10 @@ documentation = [
 ]
 
 visualization = ["plotly>=5.23.0"]
+test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
 
 dev = [
+    "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",

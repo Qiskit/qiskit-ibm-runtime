@@ -23,7 +23,7 @@ import numpy as np
 from ddt import data, ddt
 
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
-from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
+from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
 
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliList
@@ -107,7 +107,7 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_qc(self):
         """Test runtime encoder and decoder for circuits."""
         bell_circuit = bell()
-        unbound = EfficientSU2(num_qubits=4, reps=1, entanglement="linear")
+        unbound = efficient_su2(num_qubits=4, reps=1, entanglement="linear")
         subtests = (bell_circuit, unbound, [bell_circuit, unbound])
         for circ in subtests:
             with self.subTest(circ=circ):
