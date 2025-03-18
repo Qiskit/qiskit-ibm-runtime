@@ -308,7 +308,7 @@ If you do not specify an instance, then the code will select one in the followin
 
 ## Access your IBM Quantum backends
 
-A **backend** is a quantum device or simulator capable of running quantum circuits or pulse schedules.
+A **backend** is a quantum device or simulator capable of running quantum circuits.
 
 You can query for the backends you have access to. Attributes and methods of the returned instances
 provide information, such as qubit counts, error rates, and statuses, of the backends.

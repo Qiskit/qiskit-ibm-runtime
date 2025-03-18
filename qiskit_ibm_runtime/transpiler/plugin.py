@@ -108,7 +108,7 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
-            plugin_passes += [convert_pass()]
+            plugin_passes += [convert_pass()]  # pylint: disable=not-callable
 
         return PassManager(plugin_passes) + translator_pm
 
