@@ -226,6 +226,12 @@ class TestDoubleSliceSpan(IBMTestCase):
             DoubleSliceSpan(self.start1, self.stop1, {2: self.slices1[2]}),
         )
 
+    def test_one_dimensional_shape_mask(self):
+        """Test that mask doesn't throw with a one-dimensional shape"""
+        span = DoubleSliceSpan(self.start1, self.stop1, {0: ((7,), slice(0, 1), slice(0, 7))})
+
+        span.mask(0)
+
 
 @ddt.ddt
 class TestTwirledSliceSpan(IBMTestCase):
@@ -337,6 +343,13 @@ class TestTwirledSliceSpan(IBMTestCase):
             self.span1.filter_by_pub(2),
             TwirledSliceSpan(self.start1, self.stop1, {2: self.slices1[2]}),
         )
+
+    def test_one_dimensional_shape_mask(self):
+        """Test that mask doesn't throw with a one-dimensional shape"""
+        span = TwirledSliceSpan(
+            self.start1, self.stop1, {0: ((7,), False, slice(0, 1), slice(0, 7))}
+        )
+        span.mask(0)
 
 
 @ddt.ddt
