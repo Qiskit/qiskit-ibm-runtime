@@ -13,10 +13,6 @@
 """Model and schema for pulse defaults."""
 from typing import Any, Dict, List, TypeVar, Type
 
-from qiskit.pulse.instruction_schedule_map import InstructionScheduleMap, PulseQobjDef
-from qiskit.qobj import PulseLibraryItem, PulseQobjInstruction
-from qiskit.qobj.converters import QobjToInstructionConverter
-
 MeasurementKernelT = TypeVar("MeasurementKernelT", bound="MeasurementKernel")
 DiscriminatorT = TypeVar("DiscriminatorT", bound="Discriminator")
 CommandT = TypeVar("CommandT", bound="Command")
@@ -157,10 +153,7 @@ class Command:
         # To avoid deepcopy and avoid mutating the source object, create new dict here.
         in_data: Dict[str, Any] = {}
         for key, value in data.items():
-            if key == "sequence":
-                in_data[key] = list(map(PulseQobjInstruction.from_dict, value))
-            else:
-                in_data[key] = value
+            in_data[key] = value
         return cls(**in_data)
 
 
@@ -177,7 +170,6 @@ class PulseDefaults:
         qubit_freq_est: List[float],
         meas_freq_est: List[float],
         buffer: int,
-        pulse_library: List[PulseLibraryItem],
         cmd_def: List[Command],
         meas_kernel: MeasurementKernel = None,
         discriminator: Discriminator = None,
@@ -189,7 +181,6 @@ class PulseDefaults:
             qubit_freq_est: Estimated qubit frequencies in GHz.
             meas_freq_est: Estimated measurement cavity frequencies in GHz.
             buffer: Default buffer time (in units of dt) between pulses.
-            pulse_library: Pulse name and sample definitions.
             cmd_def: Operation name and definition in terms of Commands.
             meas_kernel: The measurement kernels
             discriminator: The discriminators
@@ -201,19 +192,7 @@ class PulseDefaults:
         """Qubit frequencies in Hertz."""
         self.meas_freq_est = [freq * 1e9 for freq in meas_freq_est]
         """Measurement frequencies in Hertz."""
-        self.pulse_library = pulse_library
         self.cmd_def = cmd_def
-        self.instruction_schedule_map = InstructionScheduleMap()
-        self.converter = QobjToInstructionConverter(pulse_library)
-
-        for inst in cmd_def:
-            entry = PulseQobjDef(converter=self.converter, name=inst.name)
-            entry.define(inst.sequence, user_provided=False)
-            self.instruction_schedule_map._add(
-                instruction_name=inst.name,
-                qubits=tuple(inst.qubits),
-                entry=entry,
-            )
 
         if meas_kernel is not None:
             self.meas_kernel = meas_kernel
@@ -237,13 +216,13 @@ class PulseDefaults:
             "qubit_freq_est": self.qubit_freq_est,
             "meas_freq_est": self.qubit_freq_est,
             "buffer": self.buffer,
-            "pulse_library": [x.to_dict() for x in self.pulse_library],
-            "cmd_def": [x.to_dict() for x in self.cmd_def],
+            "pulse_library": list(self.pulse_library),
+            "cmd_def": list(self.cmd_def),
         }
         if hasattr(self, "meas_kernel"):
-            out_dict["meas_kernel"] = self.meas_kernel.to_dict()
+            out_dict["meas_kernel"] = self.meas_kernel
         if hasattr(self, "discriminator"):
-            out_dict["discriminator"] = self.discriminator.to_dict()
+            out_dict["discriminator"] = self.discriminator
         for key, value in self.__dict__.items():
             if key not in [
                 "qubit_freq_est",
@@ -254,7 +233,6 @@ class PulseDefaults:
                 "meas_kernel",
                 "discriminator",
                 "converter",
-                "instruction_schedule_map",
             ]:
                 out_dict[key] = value
         out_dict.update(self._data)
@@ -274,24 +252,10 @@ class PulseDefaults:
         Returns:
             PulseDefaults: The PulseDefaults from the input dictionary.
         """
-        schema = {
-            "pulse_library": PulseLibraryItem,
-            "cmd_def": Command,
-            "meas_kernel": MeasurementKernel,
-            "discriminator": Discriminator,
-        }
 
-        # Pulse defaults data is nested dictionary.
-        # To avoid deepcopy and avoid mutating the source object, create new dict here.
         in_data: Dict[Any, Any] = {}
         for key, value in data.items():
-            if key in schema:
-                if isinstance(value, list):
-                    in_data[key] = list(map(schema[key].from_dict, value))
-                else:
-                    in_data[key] = schema[key].from_dict(value)
-            else:
-                in_data[key] = value
+            in_data[key] = value
 
         return cls(**in_data)
 
@@ -300,4 +264,4 @@ class PulseDefaults:
         meas_freqs = [freq / 1e9 for freq in self.meas_freq_est]
         qfreq = f"Qubit Frequencies [GHz]\n{qubit_freqs}"
         mfreq = f"Measurement Frequencies [GHz]\n{meas_freqs} "
-        return f"<{self.__class__.__name__}({str(self.instruction_schedule_map)}{qfreq}\n{mfreq})>"
+        return f"<{self.__class__.__name__}({qfreq}\n{mfreq})>"
