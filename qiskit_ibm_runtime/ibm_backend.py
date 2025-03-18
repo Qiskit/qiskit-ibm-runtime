@@ -425,7 +425,7 @@ class IBMBackend(Backend):
             ) from ex
 
     def defaults(self, refresh: bool = False) -> Optional[PulseDefaults]:
-        """Return the pulse defaults for the backend.
+        """(DEPRECATED) Return the pulse defaults for the backend.
 
         The schema for default pulse configuration can be found in
         `Qiskit/ibm-quantum-schemas/default_pulse_configuration
@@ -438,6 +438,14 @@ class IBMBackend(Backend):
         Returns:
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
+
+        issue_deprecation_msg(
+            "Backend defaults have been deprecated",
+            "0.38.0",
+            "IBM backends no longer support pulse gates and are no longer used to "
+            "construct the backend target. ",
+        )
+
         if refresh or self._defaults is None:
             api_defaults = self._api_client.backend_pulse_defaults(self.name)
             if api_defaults:
