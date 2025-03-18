@@ -152,7 +152,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
         job = self._run_program(service)
         job.wait_for_final_state()
-        time_after_job = datetime.now(timezone.utc)
+        time_after_job = datetime.now(timezone.utc) + timedelta(minutes=1)
         rjobs = service.jobs(
             created_before=time_after_job, created_after=current_time, pending=False, limit=20
         )
