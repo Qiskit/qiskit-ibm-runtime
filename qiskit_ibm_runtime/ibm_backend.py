@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Iterable, Union, Optional, Any, List
+from typing import Union, Optional, Any, List
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version
@@ -21,12 +21,6 @@ from packaging.version import Version
 from qiskit import QuantumCircuit, __version__ as qiskit_version
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
-from qiskit.pulse.channels import (
-    AcquireChannel,
-    ControlChannel,
-    DriveChannel,
-    MeasureChannel,
-)
 from qiskit.transpiler.target import Target
 
 from .models import (
@@ -35,7 +29,6 @@ from .models import (
     PulseDefaults,
     GateConfig,
     QasmBackendConfiguration,
-    PulseBackendConfiguration,
 )
 
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
@@ -54,11 +47,12 @@ from .utils.backend_decoder import (
     configuration_from_server_data,
 )
 from .utils import local_to_utc
+from .utils.deprecation import issue_deprecation_msg
 
 if Version(qiskit_version).major >= 2:
     from qiskit.result import MeasLevel, MeasReturnType
 else:
-    from qiskit.qobj.utils import MeasLevel, MeasReturnType
+    from qiskit.qobj.utils import MeasLevel, MeasReturnType  # pylint: disable=import-error
 
 
 logger = logging.getLogger(__name__)
@@ -100,7 +94,7 @@ class IBMBackend(Backend):
         * conditional: backend supports conditional operations.
         * open_pulse: backend supports open pulse.
         * memory: backend supports memory.
-        * max_shots: maximum number of shots supported.
+        * max_shots: (DEPRECATED) maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
         * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
@@ -131,7 +125,7 @@ class IBMBackend(Backend):
           [d->u->m] x n_registers. Latency (in units of dt) to do a
           conditional operation on channel n from register slot m
         * meas_map (list): Grouping of measurement which are multiplexed
-        * max_circuits (int): The maximum number of experiments per job
+        * max_circuits (int): (DEPRECATED) The maximum number of experiments per job
         * sample_name (str): Sample name for the backend
         * n_registers (int): Number of register slots available for feedback
           (if conditional is True)
@@ -164,7 +158,7 @@ class IBMBackend(Backend):
 
     def __init__(
         self,
-        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
         instance: Optional[str] = None,
@@ -215,6 +209,14 @@ class IBMBackend(Backend):
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
+
+        if name in ["max_experiments", "max_shots"]:
+            issue_deprecation_msg(
+                f"{name} is deprecated",
+                "0.37.0",
+                "Please see our documentation on job limits "
+                "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+            )
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
         self.defaults()
@@ -239,7 +241,6 @@ class IBMBackend(Backend):
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
-                defaults=self._defaults,
             )
 
     @classmethod
@@ -282,11 +283,18 @@ class IBMBackend(Backend):
 
     @property
     def max_circuits(self) -> int:
-        """The maximum number of circuits
+        """(DEPRECATED) The maximum number of circuits
 
-        The maximum number of circuits (or Pulse schedules) that can be
+        The maximum number of circuits that can be
         run in a single job. If there is no limit this will return None.
         """
+
+        issue_deprecation_msg(
+            "max_circuits is deprecated",
+            "0.37.0",
+            "Please see our documentation on job limits "
+            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+        )
         return self._max_circuits
 
     @property
@@ -319,12 +327,10 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-        self.defaults()
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
-            defaults=self._defaults,
         )
 
     def refresh(self) -> None:
@@ -443,7 +449,7 @@ class IBMBackend(Backend):
 
     def configuration(
         self,
-    ) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+    ) -> QasmBackendConfiguration:
         """Return the backend configuration.
 
         Backend configuration contains fixed information about the backend, such
@@ -466,45 +472,6 @@ class IBMBackend(Backend):
             The configuration for the backend.
         """
         return self._configuration
-
-    def drive_channel(self, qubit: int) -> DriveChannel:
-        """Return the drive channel for the given qubit.
-
-        Returns:
-            DriveChannel: The Qubit drive channel
-        """
-        return self._configuration.drive(qubit=qubit)
-
-    def measure_channel(self, qubit: int) -> MeasureChannel:
-        """Return the measure stimulus channel for the given qubit.
-
-        Returns:
-            MeasureChannel: The Qubit measurement stimulus line
-        """
-        return self._configuration.measure(qubit=qubit)
-
-    def acquire_channel(self, qubit: int) -> AcquireChannel:
-        """Return the acquisition channel for the given qubit.
-
-        Returns:
-            AcquireChannel: The Qubit measurement acquisition line.
-        """
-        return self._configuration.acquire(qubit=qubit)
-
-    def control_channel(self, qubits: Iterable[int]) -> List[ControlChannel]:
-        """Return the secondary drive channel for the given qubit
-
-        This is typically utilized for controlling multiqubit interactions.
-        This channel is derived from other channels.
-
-        Args:
-            qubits: Tuple or list of qubits of the form
-                ``(control_qubit, target_qubit)``.
-
-        Returns:
-            List[ControlChannel]: The Qubit measurement acquisition line.
-        """
-        return self._configuration.control(qubits=qubits)
 
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
@@ -609,7 +576,7 @@ class IBMRetiredBackend(IBMBackend):
 
     def __init__(
         self,
-        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: Optional[RuntimeClient] = None,
     ) -> None:

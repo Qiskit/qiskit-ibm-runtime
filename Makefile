@@ -30,6 +30,9 @@ unit-test:
 integration-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/integration
 
+smoke-test:
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/smoke
+
 docs-test:
 	./test/docs/vale.sh
 
