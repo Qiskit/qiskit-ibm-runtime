@@ -177,7 +177,7 @@ class FakeBackendV2(BackendV2):
         return BackendProperties.from_dict(self._props_dict)
 
     def defaults(self, refresh: bool = False) -> PulseDefaults:
-        """Return the pulse defaults for the backend
+        """(DEPRECATED)Return the pulse defaults for the backend
 
         Args:
             refresh: If ``True``, re-retrieve the backend defaults from the local file.
