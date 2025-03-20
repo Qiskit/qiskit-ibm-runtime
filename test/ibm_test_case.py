@@ -248,7 +248,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         service,
         program_id=None,
         inputs=None,
-        interim_results=None,
         circuits=None,
         callback=None,
         backend=None,
@@ -268,7 +267,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             inputs
             if inputs is not None
             else {
-                "interim_results": interim_results or {},
                 "circuits": pm.run(circuits) if circuits else pm.run(bell()),
             }
         )
