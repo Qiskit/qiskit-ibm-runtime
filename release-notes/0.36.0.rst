@@ -9,10 +9,6 @@ Upgrade Notes
   for serializing circuits in job
   submissions. (`2096 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2096>`__)
 
-
-Other Notes
------------
-
 - The following outdated deprecations have been removed: 
 
       - Support for the simulator option ``noise_model`` on cloud simulators has been removed. 
