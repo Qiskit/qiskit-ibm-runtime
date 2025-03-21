@@ -9,8 +9,8 @@ New Features
   the required information from ``layer_noise_model``. (`1858 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1858>`__)
 
 
-Other Notes
------------
+Upgrade Notes
+-------------
 
 - The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please see the
   `migration guide <https://docs.quantum.ibm.com/migration-guides/v2-primitives>`__ and use the V2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
