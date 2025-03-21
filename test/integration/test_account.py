@@ -76,7 +76,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
                 channel="ibm_cloud",
                 url=self.dependencies.url,
                 token=self.dependencies.token,
-                instance=service_instance_name,
+                instance=self.dependencies.instance,
             )
             self.assertEqual(self.dependencies.instance, service._account.instance)
             self.assertEqual(self.dependencies.instance, service.active_account().get("instance"))
