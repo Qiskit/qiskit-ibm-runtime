@@ -325,11 +325,7 @@ def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool
                 f".quantum-computing.{parsed_url.hostname}"
             )
         else:
-            api_host = (
-                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-                f".quantum-computing.{parsed_url.hostname}"
-            )
-
+            api_host = f"{parsed_url.scheme}://quantum.{parsed_url.hostname}/api/v1"
     return api_host
 
 
