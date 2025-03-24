@@ -81,12 +81,12 @@ class Session:
             print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
-    _create_new_session = True
-
     def __init__(
         self,
         backend: Optional[BackendV2] = None,
         max_time: Optional[Union[int, str]] = None,
+        *,
+        new_session: Optional[bool] = True,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -126,11 +126,11 @@ class Session:
         if isinstance(self._backend, IBMBackend):
             self._instance = self._backend._instance
             if not self._backend.configuration().simulator:
-                self._session_id = self._create_session()
+                self._session_id = self._create_session(new_session=new_session)
 
-    def _create_session(self) -> Optional[str]:
+    def _create_session(self, *, new_session: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService) and Session._create_new_session:
+        if isinstance(self._service, QiskitRuntimeService) and new_session:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
@@ -341,9 +341,7 @@ class Session:
                 f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
-        cls._create_new_session = False
-        session = cls(backend)
-        cls._create_new_session = True
+        session = cls(backend, new_session=False)
         if state == "closed":
             session._active = False
         session._session_id = session_id
