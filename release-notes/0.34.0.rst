@@ -32,6 +32,20 @@ New Features
   circuit have an angle parameter within [0, pi/2] which is supported 
   by IBM Quantum processors. (`2043 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2043>`__)
 
+Upgrade Notes
+-------------
+
+- The deprecations from the ``0.26.0`` release have been removed.
+
+  - Passing a backend as a string into ``Session``, ``Batch``, 
+    ``Sampler``, and ``Estimator`` is no longer valid. Use the actual backend
+    object instead.
+  - Previously, passing a backend as the mode into ``SamplerV2`` or ``EstimatorV2``
+    ran jobs in job mode, even if a session context manager was open. These jobs will now
+    run inside of the open session. Additionally, if a backend that is different
+    from the session backend is passed in as the mode, an error will be raised.
+  - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``. (`2027 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2027>`__) 
+
 
 Bug Fixes
 ---------
@@ -58,20 +72,8 @@ Bug Fixes
 - Pin ``pydantic`` dependency version to ``<2.10`` to avoid a regression breaking
   the build process. (`2049 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2049>`__)
 
-
 Other Notes
 -----------
-
-- The deprecations from the ``0.26.0`` release have been removed.
-
-      - Passing a backend as a string into ``Session``, ``Batch``, 
-        ``Sampler``, and ``Estimator`` is no longer valid. Use the actual backend
-        object instead.
-      - Previously, passing a backend as the mode into ``SamplerV2`` or ``EstimatorV2``
-        ran jobs in job mode, even if a session context manager was open. These jobs will now
-        run inside of the open session. Additionally, if a backend that is different
-        from the session backend is passed in as the mode, an error will be raised.
-      - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``. (`2027 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2027>`__) 
   
 - The ``requirements.txt`` and ``setup.py`` files have been removed in favor of a new dependency management
   approach using ``pyproject``. This transition simplifies the development workflow. Dependencies
