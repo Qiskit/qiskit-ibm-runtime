@@ -175,7 +175,7 @@ We may then schedule the transpiled circuit without further modification.
 If you are not using the transpiler plugin stages to
 work around this please manually run the pass
 :class:`qiskit.transpiler.passes.ConvertConditionsToIfOps`
-prior to your scheduling pass.  This is only necessary in Qiskit 1.x.
+prior to your scheduling pass. This is only necessary in Qiskit 1.x.
 
 .. plot::
    :alt: Circuit diagram output by the previous code.

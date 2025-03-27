@@ -66,15 +66,6 @@ class _Credentials:
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend
     snapshots.
-
-    The class inherits :class:`~qiskit.providers.BackendV2` class. This version
-    differs from earlier :class:`~qiskit.providers.fake_provider.FakeBackend` (V1) class in a
-    few aspects. Firstly, configuration attribute no longer exsists. Instead,
-    attributes exposing equivalent required immutable properties of the backend
-    device are added. For example ``fake_backend.configuration().n_qubits`` is
-    accessible from ``fake_backend.num_qubits`` now. Secondly, this version
-    removes extra abstractions :class:`~qiskit.providers.fake_provider.FakeQasmBackend` and
-    :class:`~qiskit.providers.fake_provider.FakePulseBackend` that were present in V1.
     """
 
     # directory and file names for real backend snapshots.

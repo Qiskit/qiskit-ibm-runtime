@@ -53,7 +53,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     """Decode transpiler target from backend data set.
 
     This function generates :class:`.Target`` instance from intermediate
-    legacy objects such as :class:`.BackendProperties` and :class:`.PulseDefaults`.
+    legacy objects such as :class:`.BackendProperties` and :class:`.BackendConfiguration`.
 
     Args:
         configuration: Backend configuration as ``BackendConfiguration``
