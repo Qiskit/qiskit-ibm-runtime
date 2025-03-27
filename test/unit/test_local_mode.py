@@ -205,6 +205,7 @@ class TestLocalModeV2(IBMTestCase):
         self._service.delete_job(job.job_id())
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in self._service.jobs()])
 
+
 class TestLocalRuntimeJob(IBMTestCase):
     """Class for testing local mode runtime jobs."""
 

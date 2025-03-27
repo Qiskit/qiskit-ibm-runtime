@@ -319,10 +319,8 @@ class QiskitRuntimeLocalService:
             job: PrimitiveJob.
         """
         try:
-            job._prepare_dump()
             os.makedirs(f"{self._saved_jobs_directory}", exist_ok=True)
             with open(f"{self._saved_jobs_directory}/{job.job_id()}.pkl", "wb") as file:
                 pickle.dump(job, file)
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("Unable to save job %s. %s", job.job_id(), ex)
-        
