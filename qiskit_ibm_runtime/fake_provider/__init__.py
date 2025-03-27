@@ -79,23 +79,21 @@ Here is an example of using a fake backend for transpilation and simulation.
 
     Please note that the simulation is done using a noise model generated from system snapshots
     obtained in the past (sometimes a few years ago) and the results are not representative of the
-    latest behaviours of the real quantum system which the fake backend is mimicking. If you want to
-    run noisy simulations to compare with the real quantum system, you should use the ``qiskit_aer``
-    library. After installation, you can follow the steps below to generate a simulator that
-    mimics a real quantum system with the latest calibration results.
+    latest behaviors of the real quantum system that the fake backend is mimicking. If you want 
+    to run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
 
     .. code-block:: python
 
         from qiskit_ibm_runtime import QiskitRuntimeService
-        from qiskit_aer import AerSimulator
-
-        # get a real backend from the runtime service
+        from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
+        
+        # initialize service to access real backends
         service = QiskitRuntimeService()
-        backend = service.backend('ibmq_manila')
 
-        # generate a simulator that mimics the real quantum 
-        # system with the latest calibration results
-        backend_sim = AerSimulator.from_backend(backend)
+        # call refresh to retrieve latest backend data
+        # note that this overwrites your local qiskit-ibm-runtime files
+        backend = FakeSherbrooke()
+        backend.refresh(service)
 
 
 Fake Providers
@@ -139,6 +137,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeCasablancaV2
     FakeCusco
     FakeEssexV2
+    FakeFez
     FakeGeneva
     FakeGuadalupeV2
     FakeHanoiV2
@@ -154,6 +153,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeLondonV2
     FakeManhattanV2
     FakeManilaV2
+    FakeMarrakesh
     FakeMelbourneV2
     FakeMontrealV2
     FakeMumbaiV2

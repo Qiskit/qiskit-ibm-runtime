@@ -76,7 +76,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
                 channel="ibm_cloud",
                 url=self.dependencies.url,
                 token=self.dependencies.token,
-                instance=service_instance_name,
+                instance=self.dependencies.instance,
             )
             self.assertEqual(self.dependencies.instance, service._account.instance)
             self.assertEqual(self.dependencies.instance, service.active_account().get("instance"))
@@ -86,8 +86,9 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
         self._skip_on_ibm_quantum()
 
         service_instance_name = "-non-existing-service-name-"
-        with self.subTest(instance="-non-existing-service-name-"), self.assertRaises(
-            CloudResourceNameResolutionError
+        with (
+            self.subTest(instance="-non-existing-service-name-"),
+            self.assertRaises(CloudResourceNameResolutionError),
         ):
             QiskitRuntimeService(
                 channel="ibm_cloud",

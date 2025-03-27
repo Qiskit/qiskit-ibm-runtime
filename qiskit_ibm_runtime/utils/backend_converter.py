@@ -29,10 +29,10 @@ from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
-from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from ..models import BackendConfiguration, BackendProperties, PulseDefaults
+from ..models import BackendConfiguration, BackendProperties
+from ..models.exceptions import BackendPropertyError
 
 # is_fractional_gate used to be defined in this module and might be referenced
 # from here externally
@@ -42,24 +42,22 @@ from .utils import is_fractional_gate  # See comment above before removing
 logger = logging.getLogger(__name__)
 
 
-def convert_to_target(
+def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
-    defaults: PulseDefaults = None,
     *,
     include_control_flow: bool = True,
     include_fractional_gates: bool = True,
+    **kwargs,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
     This function generates :class:`.Target`` instance from intermediate
     legacy objects such as :class:`.BackendProperties` and :class:`.PulseDefaults`.
-    These objects are usually components of the legacy :class:`.BackendV1` model.
 
     Args:
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
-        defaults: Backend pulse defaults dictionary or ``PulseDefaults``
         include_control_flow: Set True to include control flow instructions.
         include_fractional_gates: Set True to include fractioanl gates.
 
@@ -68,6 +66,11 @@ def convert_to_target(
     """
     add_delay = True
     filter_faulty = True
+
+    if "defaults" in kwargs:
+        warnings.warn(
+            "Backend defaults are no longer necessary for creating a target. Defaults will be ignored."
+        )
 
     required = ["measure", "delay", "reset"]
 
@@ -259,45 +262,6 @@ def convert_to_target(
                 for q in range(configuration.num_qubits)
                 if not filter_faulty or (q not in faulty_qubits)
             }
-
-    if defaults:
-        inst_sched_map = defaults.instruction_schedule_map
-
-        for name in inst_sched_map.instructions:
-            for qubits in inst_sched_map.qubits_with_instruction(name):
-
-                if not isinstance(qubits, tuple):
-                    qubits = (qubits,)
-
-                if (
-                    name not in all_instructions
-                    or name not in prop_name_map
-                    or prop_name_map[name] is None
-                    or qubits not in prop_name_map[name]
-                ):
-                    logger.debug(
-                        "Gate calibration for instruction %s on qubits %s is found "
-                        "in the PulseDefaults payload. However, this entry is not defined in "
-                        "the gate mapping of Target. This calibration is ignored.",
-                        name,
-                        qubits,
-                    )
-                    continue
-
-                if (name, qubits) in faulty_ops:
-                    continue
-
-                entry = inst_sched_map._get_calibration_entry(name, qubits)
-
-                try:
-                    prop_name_map[name][qubits].calibration = entry
-                except AttributeError:
-                    logger.info(
-                        "The PulseDefaults payload received contains an instruction %s on "
-                        "qubits %s which is not present in the configuration or properties payload.",
-                        name,
-                        qubits,
-                    )
 
     # Add parsed properties to target
     target = Target(**in_data)

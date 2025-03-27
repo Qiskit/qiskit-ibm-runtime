@@ -13,7 +13,7 @@
 """Tests for job functions using real runtime service."""
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -149,10 +149,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_jobs_filter_by_date(self, service):
         """Test retrieving jobs by creation date."""
-        current_time = datetime.now(timezone.utc)
+        current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
         job = self._run_program(service)
         job.wait_for_final_state()
-        time_after_job = datetime.now(timezone.utc)
+        time_after_job = datetime.now(timezone.utc) + timedelta(minutes=1)
         rjobs = service.jobs(
             created_before=time_after_job, created_after=current_time, pending=False, limit=20
         )

@@ -71,7 +71,7 @@ class EstimatorOptions(OptionsV2):
         * 0: No mitigation.
         * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
         * 2: Medium mitigation costs. Typically reduces bias in estimators but
-            is not guaranteed to be zero bias.
+          is not guaranteed to be zero bias.
 
         Refer to the
         `Configure error mitigation for Qiskit Runtime

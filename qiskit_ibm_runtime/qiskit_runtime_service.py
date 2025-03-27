@@ -12,7 +12,6 @@
 
 """Qiskit runtime service."""
 
-import json
 import logging
 import traceback
 import warnings
@@ -35,7 +34,7 @@ from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
-from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound, IBMApiError
+from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
@@ -161,14 +160,8 @@ class QiskitRuntimeService:
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
-            try:
-                self._hgps = self._initialize_hgps(auth_client)
-            except json.decoder.JSONDecodeError:
-                raise IBMApiError(
-                    "Unexpected response received from server. "
-                    "Please check if the service is in maintenance mode "
-                    "https://docs.quantum.ibm.com/announcements/service-alerts."
-                )
+            self._hgps = self._initialize_hgps(auth_client)
+
             self._backend_allowed_list = sorted(
                 set(sum([hgp.backends for hgp in self._hgps.values()], []))
             )
@@ -275,6 +268,7 @@ class QiskitRuntimeService:
             Authentication client.
         """
         version_info = self._check_api_version(client_params)
+
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:
             raise IBMInputValueError(
@@ -480,7 +474,7 @@ class QiskitRuntimeService:
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://docs.quantum.ibm.com/api/qiskit/providers_models>
+                <https://docs.quantum.ibm.com/api/qiskit/1.4/providers_models>
 
         Returns:
             The list of available backends that match the filter.
@@ -960,7 +954,8 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: Filter by session id. All jobs in the session will be
+                returned in desceding order of the job creation date.
             created_after: Filter by the given start date, in local time. This is used to
                 find jobs whose creation dates are after (greater than or equal to) this
                 local date/time.
@@ -1091,7 +1086,7 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        version = 1
+        version = 2
         params = raw_data.get("params", {})
         if isinstance(params, list):
             if len(params) > 0:
@@ -1102,8 +1097,8 @@ class QiskitRuntimeService:
             if params:
                 version = params.get("version", 1)
 
-        if version == 2:
-            return RuntimeJobV2(
+        if version == 1:
+            return RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,
                 client_params=self._client_params,
@@ -1111,11 +1106,10 @@ class QiskitRuntimeService:
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
                 creation_date=raw_data.get("created", None),
-                image=raw_data.get("runtime"),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
             )
-        return RuntimeJob(
+        return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
@@ -1123,6 +1117,7 @@ class QiskitRuntimeService:
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             creation_date=raw_data.get("created", None),
+            image=raw_data.get("runtime"),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
         )

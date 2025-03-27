@@ -26,6 +26,7 @@ from qiskit.primitives.containers.data_bin import DataBin
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
 from qiskit_ibm_runtime import (
     Session,
     Batch,
@@ -203,3 +204,17 @@ class TestLocalModeV2(IBMTestCase):
         job.result()
         self._service.delete_job(job.job_id())
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in self._service.jobs()])
+
+class TestLocalRuntimeJob(IBMTestCase):
+    """Class for testing local mode runtime jobs."""
+
+    def test_v2_sampler(self):
+        """Test V2 Sampler on a local backend."""
+        inst = SamplerV2(mode=FakeManilaV2())
+        job = inst.run(**get_primitive_inputs(inst))
+
+        self.assertIsInstance(job, LocalRuntimeJob)
+        self.assertTrue(job.metrics())
+        self.assertTrue(job.backend())
+        self.assertTrue(job.inputs)
+        self.assertEqual(job.usage(), 0)

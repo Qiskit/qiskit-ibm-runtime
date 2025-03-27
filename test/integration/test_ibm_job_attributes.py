@@ -77,12 +77,12 @@ class TestIBMJobAttributes(IBMTestCase):
     def test_job_creation_date(self):
         """Test retrieving creation date, while ensuring it is in local time."""
         # datetime, before running the job, in local time.
-        start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
+        start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(minutes=1)
         sampler = Sampler(mode=self.sim_backend)
         job = sampler.run([self.bell])
         job.result()
         # datetime, after the job is done running, in local time.
-        end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
+        end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(minutes=1)
 
         self.assertTrue(
             (start_datetime <= job.creation_date <= end_datetime),

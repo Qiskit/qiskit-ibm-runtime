@@ -28,12 +28,13 @@ from qiskit.primitives import (
     BackendSamplerV2,
 )
 from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
+from .local_runtime_job import LocalRuntimeJob
 from ..ibm_backend import IBMBackend
 from ..runtime_options import RuntimeOptions
 
@@ -206,7 +207,7 @@ class QiskitRuntimeLocalService:
 
     def _run_backend_primitive_v2(
         self,
-        backend: BackendV1 | BackendV2,
+        backend: BackendV2,
         primitive: Literal["sampler", "estimator"],
         options: dict,
         inputs: dict,
@@ -276,7 +277,17 @@ class QiskitRuntimeLocalService:
         if options_copy:
             warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
 
-        return primitive_inst.run(**inputs)
+        primitive_job = primitive_inst.run(**inputs)
+
+        local_runtime_job = LocalRuntimeJob(
+            function=primitive_job._function,
+            future=primitive_job._future,
+            backend=backend,
+            primitive=primitive,
+            inputs=inputs,
+        )
+
+        return local_runtime_job
 
     def job(self, job_id: str) -> PrimitiveJob:
         """Return saved local job."""
@@ -314,3 +325,4 @@ class QiskitRuntimeLocalService:
                 pickle.dump(job, file)
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("Unable to save job %s. %s", job.job_id(), ex)
+        

@@ -39,14 +39,12 @@ from qiskit.circuit.library.standard_gates import (
     PhaseGate,
 )
 from qiskit.transpiler import Target
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from .deprecation import deprecate_function
 
-
-def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+def is_simulator(backend: BackendV2) -> bool:
     """Return true if the backend is a simulator.
 
     Args:
@@ -70,11 +68,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
 
         name = operation.name
         qargs = tuple(qubit_map[bit] for bit in instruction.qubits)
-        if (
-            not target.instruction_supported(name, qargs)
-            and name != "barrier"
-            and not circuit.has_calibration_for(instruction)
-        ):
+        if not target.instruction_supported(name, qargs) and name != "barrier":
             return (
                 f"The instruction {name} on qubits {qargs} is not supported by the target system."
             )
@@ -152,11 +146,9 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
         # accurate).
         if operation.name == "rzz":
             angle = instruction.operation.params[0]
-            if isinstance(angle, Parameter):
-                angle_params.add(angle.name)
-            elif not isinstance(angle, ParameterExpression) and (
-                angle < 0.0 or angle > np.pi / 2 + 1e-10
-            ):
+            if isinstance(angle, ParameterExpression):
+                angle_params.add(angle)
+            elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
                     f"range [0, pi/2], but an angle of {angle} has been provided."
@@ -189,33 +181,36 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     if len(helper_result) == 0:
         return ""
 
-    # helper_result is a set of parameter names
+    # helper_result is a set of parameter expressions
     rzz_params = list(helper_result)
 
     # gather all parameter names, in order
-    pub_params = list(chain.from_iterable(pub.parameter_values.data))
-
-    col_indices = np.where(np.isin(pub_params, rzz_params))[0]
-    # col_indices is the indices of columns in the parameter value array that have to be checked
+    pub_params = np.array(list(chain.from_iterable(pub.parameter_values.data)))
 
     # first axis will be over flattened shape, second axis over circuit parameters
     arr = pub.parameter_values.ravel().as_array()
 
-    # project only to the parameters that have to be checked
-    arr = arr[:, col_indices]
+    for param_exp in rzz_params:
+        param_names = [param.name for param in param_exp.parameters]
 
-    # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
-    # errors (beyond pi/2 does not trigger an error down the stack, only may become less
-    # accurate).
-    bad = np.where((arr < 0.0) | (arr > np.pi / 2 + 1e-10))
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
+        # col_indices is the indices of columns in the parameter value array that have to be checked
 
-    # `bad` is a tuple of two arrays, which can be empty, like this:
-    # (array([], dtype=int64), array([], dtype=int64))
-    if len(bad[0]) > 0:
-        return (
-            f"Assignment of value {arr[bad[0][0], bad[1][0]]} to Parameter "
-            f"'{pub_params[col_indices[bad[1][0]]]}' is an invalid angle for the rzz gate"
-        )
+        # project only to the parameters that have to be checked
+        projected_arr = arr[:, col_indices]
+
+        for row in projected_arr:
+            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+            if angle < 0.0 or angle > np.pi / 2 + 1e-10:
+                vals_msg = ", ".join(
+                    [f"{param_name}={param_val}" for param_name, param_val in zip(param_names, row)]
+                )
+                return (
+                    "The instruction rzz is supported only for angles in the "
+                    f"range [0, pi/2], but an angle of {angle} has been provided; "
+                    f"via parameter value(s) {vals_msg}, substituted in parameter expression "
+                    f"{param_exp}."
+                )
 
     return ""
 
@@ -256,16 +251,6 @@ def is_fractional_gate(gate: Instruction) -> bool:
     # which don't change control parameter with its gate parameter.
     exclude_list = (RZGate, PhaseGate, U1Gate, Delay)
     return len(gate.params) > 0 and not isinstance(gate, exclude_list)
-
-
-def has_param_expressions(circuits: List[QuantumCircuit]) -> bool:
-    """Checks if the input circuits contain `ParameterExpression`s"""
-    for circuit in circuits:
-        for instruction in circuit.data:
-            for p in instruction.operation.params:
-                if isinstance(p, ParameterExpression) and not isinstance(p, Parameter):
-                    return True
-    return False
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -314,19 +299,6 @@ def is_crn(locator: str) -> bool:
         Whether the input is a CRN.
     """
     return isinstance(locator, str) and locator.startswith("crn:")
-
-
-@deprecate_function(
-    "get_runtime_api_base_url()",
-    "0.30.0",
-    "Please use default_runtime_url_resolver() instead.",
-    stacklevel=1,
-)
-def get_runtime_api_base_url(
-    url: str, instance: str, private_endpoint: Optional[bool] = False
-) -> str:
-    """Computes the Runtime API base URL based on the provided input parameters."""
-    return default_runtime_url_resolver(url, instance, private_endpoint=private_endpoint)
 
 
 def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
