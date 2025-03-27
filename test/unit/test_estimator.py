@@ -59,7 +59,6 @@ class TestEstimatorV2(IBMTestCase):
             # Check circuit
             self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check observables
-            a_pub_obs = a_pub_param.observables.tolist()
             for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
                 self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
             # Check parameter values
