@@ -142,7 +142,8 @@ Scheduling with old format ``c_if`` conditioned gates is not supported.
    :context: close-figs
 
     qc_c_if = QuantumCircuit(1, 1)
-    qc_c_if.x(0).c_if(0, 1)
+    # c_if gates are not supported
+    # qc_c_if.x(0).c_if(0, 1)
     qc_c_if.draw(output="mpl", style="iqp")
 
 The :class:`.IBMBackend` configures a translation plugin
