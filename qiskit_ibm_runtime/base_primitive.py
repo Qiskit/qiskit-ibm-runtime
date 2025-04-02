@@ -165,7 +165,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         if options_dict.get("environment", {}).get("callback", None):
             issue_deprecation_msg(
                 msg="The 'callback' option is deprecated",
-                version="0.37.0",
+                version="0.38.0",
                 remedy="This option will have no effect since interim "
                 "results streaming was removed in a previous release.",
                 stacklevel=3,
