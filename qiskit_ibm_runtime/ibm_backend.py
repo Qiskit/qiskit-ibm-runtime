@@ -440,7 +440,7 @@ class IBMBackend(Backend):
         """
 
         issue_deprecation_msg(
-            "Backend defaults have been deprecated",
+            "The defaults method and the PulseDefaults class have been deprecated",
             "0.38.0",
             "IBM backends no longer support pulse gates and are no longer used to "
             "construct the backend target. ",
