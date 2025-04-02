@@ -28,8 +28,8 @@ New Features
   a ``backend()`` method that returns the backend that the class is configured with. (`1995 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1995>`__)
 
 
-Other Notes
------------
+Upgrade Notes
+-------------
 
 - Deprecations from the ``0.25.0`` release have been removed. 
 
