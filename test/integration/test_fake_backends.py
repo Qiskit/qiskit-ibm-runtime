@@ -150,6 +150,11 @@ class TestFakeBackends(IBMTestCase):
         backend = FakeSherbrooke()
         self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
 
+    def test_backend_configuration_attributes(self):
+        backend = FakeMumbaiV2()
+        self.assertTrue(backend.dynamic_reprate_enabled)
+        self.assertTrue(backend.rep_delay_range)
+
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
 

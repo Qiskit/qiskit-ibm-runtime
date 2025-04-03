@@ -1,0 +1,2 @@
+Attributes from the configuration of fake backends can now be retrieved directly 
+with ``backend.<attribute_name>``.
