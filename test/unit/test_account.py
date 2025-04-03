@@ -622,10 +622,12 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_token_url(self):
         """Test initializing account by token or url."""
         token = uuid.uuid4().hex
+        cloud_access_token = uuid.uuid4().hex
         subtests = [
             {"token": token},
             {"url": "some_url"},
             {"token": token, "url": "some_url"},
+            {"token": token, "cloud_access_token": cloud_access_token},
         ]
         for param in subtests:
             with self.subTest(param=param):
@@ -637,8 +639,10 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"channel": "ibm_cloud"},
             {"token": "some_token"},
+            {"cloud_access_token": "some_cloud_access_token"},
             {"url": "some_url"},
             {"channel": "ibm_cloud", "token": "some_token", "url": "some_url"},
+            {"channel": "ibm_cloud", "cloud_access_token": "some_token", "url": "some_url"},
         ]
 
         name = "foo"
@@ -881,6 +885,18 @@ class TestEnableAccount(IBMTestCase):
             service = FakeRuntimeService(channel="ibm_cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
+
+    def test_cloud_access_token(self):
+        """Test initializing account with cloud access token."""
+        with self.subTest(channel="ibm_cloud"), no_envs(["QISKIT_IBM_TOKEN"]):
+            token = uuid.uuid4().hex
+            cloud_access_token = uuid.uuid4().hex
+            with temporary_account_config_file(
+                channel="ibm_cloud", token=token, cloud_access_token=cloud_access_token
+            ):
+                service = FakeRuntimeService(channel="ibm_cloud")
+            self.assertTrue(service._account)
+            self.assertEqual(service._account.cloud_access_token, cloud_access_token)
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:
