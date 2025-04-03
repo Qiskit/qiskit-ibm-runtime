@@ -116,7 +116,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
 
         issue_deprecation_msg(
             msg="The RuntimeJob class is deprecated",
-            version="0.37.0",
+            version="0.38.0",
             stacklevel=4,
             remedy="All primitives now return the RuntimeJobV2 class. The major difference between "
             "the two classes is that `Job.status()` is returned as a string in RuntimeJobV2.",
