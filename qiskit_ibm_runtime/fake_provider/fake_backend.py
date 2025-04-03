@@ -168,7 +168,7 @@ class FakeBackendV2(BackendV2):
         return BackendProperties.from_dict(self._props_dict)
 
     def defaults(self, refresh: bool = False) -> PulseDefaults:
-        """Return the pulse defaults for the backend
+        """(DEPRECATED)Return the pulse defaults for the backend
 
         Args:
             refresh: If ``True``, re-retrieve the backend defaults from the local file.
@@ -176,6 +176,14 @@ class FakeBackendV2(BackendV2):
         Returns:
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
+
+        issue_deprecation_msg(
+            "The defaults method and the PulseDefaults class have been deprecated",
+            "0.38.0",
+            "IBM backends no longer support pulse gates and are no longer used to "
+            "construct the backend target. ",
+        )
+
         if refresh or self._defs_dict is None:
             self._set_defs_dict_from_json()
         if self._defs_dict:

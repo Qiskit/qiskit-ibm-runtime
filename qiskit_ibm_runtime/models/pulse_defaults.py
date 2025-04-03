@@ -158,9 +158,9 @@ class Command:
 
 
 class PulseDefaults:
-    """Description of default settings for Pulse systems. These are instructions or settings that
-    may be good starting points for the Pulse user. The user may modify these defaults for custom
-    scheduling.
+    """(DEPRECATED) Description of default settings for Pulse systems.
+    These are instructions or settings that may be good starting points for the Pulse user.
+    The user may modify these defaults for custom scheduling.
     """
 
     _data: Dict[Any, Any] = {}
