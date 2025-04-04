@@ -794,7 +794,7 @@ class QiskitRuntimeService:
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
-            A ``RuntimeJob`` instance representing the execution.
+            A ``RuntimeJobV2`` instance representing the execution.
 
         Raises:
             IBMInputValueError: If input is invalid.
