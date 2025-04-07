@@ -15,7 +15,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Tuple
 import logging
-import warnings
 from concurrent import futures
 import queue
 from datetime import datetime
@@ -36,6 +35,7 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
+from .utils.deprecation import issue_deprecation_msg
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -56,10 +56,10 @@ class BaseRuntimeJob(ABC):
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
+        client_params: ClientParameters = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -109,12 +109,11 @@ class BaseRuntimeJob(ABC):
             self._final_result_decoder = decoder
 
         if user_callback or client_params:
-            warnings.warn(
-                "Interim results streaming was deprecated and removed in previous releases "
-                "so passing in 'user_callback' or 'client_params' will have no effect. "
-                "These parameters will be removed in a future release.",
-                category=FutureWarning,
-                stacklevel=2,
+            issue_deprecation_msg(
+                msg="The job class parameters 'user_callback' and 'client_params' are deprecated",
+                version="0.38.0",
+                remedy="These parameters will have no effect since interim "
+                "results streaming was removed in a previous release.",
             )
 
     def job_id(self) -> str:
