@@ -155,6 +155,12 @@ class QiskitRuntimeService:
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
         else:
+            warnings.warn(
+                "The ibm_quantum channel will be sunset on {date}. "
+                "For information on migrating to the new IBM Quantum Platform on the "
+                "ibm_cloud channel, please see our migration guide "
+                "https://ibm.biz/classic-iqp-to-cloud-iqp."
+            )
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
