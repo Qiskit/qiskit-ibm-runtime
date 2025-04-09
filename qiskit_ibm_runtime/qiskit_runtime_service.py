@@ -157,6 +157,7 @@ class QiskitRuntimeService:
         else:
             warnings.warn(
                 "The ibm_quantum channel will be sunset on {date}. "
+                "After this date, ibm_cloud will be the only valid channel. "
                 "For information on migrating to the new IBM Quantum Platform on the "
                 "ibm_cloud channel, please see our migration guide "
                 "https://ibm.biz/classic-iqp-to-cloud-iqp."
