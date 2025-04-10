@@ -673,7 +673,7 @@ class QiskitRuntimeService:
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
                 The ``ibm_quantum`` channel is deprecated.  For help migrating to the "ibm_cloud" channel, review the 
-                `migration guide <https://ibm.biz/classic-iqp-to-cloud-iqp>__`.
+                `migration guide. <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>__`
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
