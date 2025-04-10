@@ -474,7 +474,7 @@ class QiskitRuntimeService:
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://docs.quantum.ibm.com/api/qiskit/providers_models>
+                <https://docs.quantum.ibm.com/api/qiskit/1.4/providers_models>
 
         Returns:
             The list of available backends that match the filter.
@@ -794,7 +794,7 @@ class QiskitRuntimeService:
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
-            A ``RuntimeJob`` instance representing the execution.
+            A ``RuntimeJobV2`` instance representing the execution.
 
         Raises:
             IBMInputValueError: If input is invalid.
@@ -1086,7 +1086,7 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        version = 1
+        version = 2
         params = raw_data.get("params", {})
         if isinstance(params, list):
             if len(params) > 0:
@@ -1097,8 +1097,8 @@ class QiskitRuntimeService:
             if params:
                 version = params.get("version", 1)
 
-        if version == 2:
-            return RuntimeJobV2(
+        if version == 1:
+            return RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,
                 client_params=self._client_params,
@@ -1106,11 +1106,10 @@ class QiskitRuntimeService:
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
                 creation_date=raw_data.get("created", None),
-                image=raw_data.get("runtime"),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
             )
-        return RuntimeJob(
+        return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
@@ -1118,6 +1117,7 @@ class QiskitRuntimeService:
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             creation_date=raw_data.get("created", None),
+            image=raw_data.get("runtime"),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
         )

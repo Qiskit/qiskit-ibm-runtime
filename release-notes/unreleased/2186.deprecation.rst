@@ -1,0 +1,2 @@
+Since pulse gates are no longer supported, the :class:`IBMBackend` and :class:`FakeBackendV2` ``defaults()`` 
+method has been deprecated. Backend defaults are also no longer used to construct the backend target.

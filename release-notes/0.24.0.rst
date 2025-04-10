@@ -110,5 +110,5 @@ Bug Fixes
 - Fixed measurement twirling docstring which incorrectly indicated it's enabled by default for Sampler. (`1722 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1722>`__)
 - Fixed nested experimental suboptions override non-experimental suboptions. (`1731 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1731>`__)
 - The backend utils method ``convert_to_target`` has been replaced with the 
-  `convert_to_target <https://docs.quantum.ibm.com/api/qiskit/qiskit.providers.convert_to_target>`__ method from Qiskit.
+  `convert_to_target <https://docs.quantum.ibm.com/api/qiskit/1.4/qiskit.providers.convert_to_target>`__ method from Qiskit.
   This fixes some issues related to target generation and calibration data. (`1600 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1600>`__)

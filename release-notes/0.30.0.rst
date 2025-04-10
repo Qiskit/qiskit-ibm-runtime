@@ -49,15 +49,8 @@ New Features
   no instruction filtering is done, and the returned backend target may contain
   both fractional gates and control flow operations. (`1938 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1938>`__)
 
-
-Bug Fixes
----------
-
-- Fixed a bug where primitives could not be run in the session context with fractional gates. (`1922 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1922>`__)
-
-
-Other Notes
------------
+Upgrade Notes
+-------------
 
 - Deprecations from the ``0.24.0`` release have been removed. The following changes have beend made.
 
@@ -68,3 +61,8 @@ Other Notes
   - ``Service.run()`` and ``Session.run()`` have been replaced with a private method, ``_run()``
   - In ``Service.backend()``, "name" is now a required parameter 
   - ``Service.get_backend()`` has been removed and replaced with ``backend()`` (`1907 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1907>`__)
+
+Bug Fixes
+---------
+
+- Fixed a bug where primitives could not be run in the session context with fractional gates. (`1922 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1922>`__)

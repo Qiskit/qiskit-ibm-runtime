@@ -40,6 +40,7 @@ issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{iss
 
 [tool.setuptools.packages.find]
 exclude = ["test*"]
+namespaces = false
 
 [tool.setuptools]
 include-package-data = true
@@ -49,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.35.0"
+fallback_version = "0.37.0"
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -89,7 +90,8 @@ dependencies = [
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
     "pydantic>=2.5.0,<2.10",
-    "qiskit>=1.1.0",
+    "qiskit>=1.4.1",
+    "packaging"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
@@ -115,14 +117,13 @@ common = [
     "scipy>=1.0",
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
-    "qiskit-aer>=0.14.2",
+    "qiskit-aer>=0.17.0",
     "websockets>=8",
     "black~=24.1",
     "coverage>=6.3",
     "pylatexenc",
     "scikit-learn",
     "setuptools",
-    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
 ]
 
 documentation = [
@@ -136,8 +137,10 @@ documentation = [
 ]
 
 visualization = ["plotly>=5.23.0"]
+test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
 
 dev = [
+    "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",

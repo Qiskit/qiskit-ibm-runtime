@@ -19,23 +19,23 @@ To install from source download this repository and follow the next steps.
 
 - Create a virtual environment
 ``` {.bash}
-$ python3 -m venv .venv
+python3 -m venv .venv
 ```
 - Activate your virtual environment
 ``` {.bash}
-$ source .venv/bin/activate
+source .venv/bin/activate
 ```
 - Install the dependencies
 ``` {.bash}
-$ pip install -e .
+pip install -e .
 ```
 - Install the visualization dependencies
 ``` {.bash}
-$ pip install -e ".[visualization]"
+pip install -e ".[visualization]"
 ```
 - Install the development dependencies
 ``` {.bash}
-$ pip install -e ".[dev]"
+pip install -e ".[dev]"
 ```
 
 ### Open an issue
@@ -197,7 +197,7 @@ stable and give a basic level of confidence during development.
 
 To execute all unit tests, run:
 ``` {.bash}
-$ make unit-test
+make unit-test
 ```
 
 ##### 2. Integration tests
@@ -208,28 +208,17 @@ client and APIs work well together.
 
 To execute all integration tests, run
 ``` {.bash}
-$ make integration-test
-```
-
-##### 3. E2E tests
-
-Executed against an external system configured via a (token, instance, url) 
-tuple. Basic coverage of most important user-facing happy paths. Test suite runs
-faster than integration but slower than unit tests and is stable.
-
-To execute all e2e tests, run
-``` {.bash}
-$ make e2e-test
+make integration-test
 ```
 
 ###### Configuration
 
-Integration and E2E tests require an environment configuration and can be run agains both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
+Integration tests require an environment configuration and can be run against both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
 
 Sample configuration for IBM Quantum
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
-QISKIT_IBM_URL=https://auth.quantum.ibm.com/api       # IBM Quantum API URL
+QISKIT_IBM_URL=https://auth.quantum.ibm.com/api                 # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
 QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
 ```
