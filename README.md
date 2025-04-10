@@ -101,7 +101,7 @@ ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOU
 ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
-| :warning: The ibm_quantum channel will be sunset on {date}. For migrating to the ibm_cloud channel, please see our migration guide https://ibm.biz/classic-iqp-to-cloud-iqp |
+| :warning: The ibm_quantum channel option is deprecated and will be sunset on July 1st. For migrating to the ibm_cloud channel, read our migration guide https://ibm.biz/classic-iqp-to-cloud-iqp. |
 |:---------------------------|
 
 ## Primitives
