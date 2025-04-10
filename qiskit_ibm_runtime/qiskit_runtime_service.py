@@ -474,7 +474,7 @@ class QiskitRuntimeService:
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://docs.quantum.ibm.com/api/qiskit/providers_models>
+                <https://docs.quantum.ibm.com/api/qiskit/1.4/providers_models>
 
         Returns:
             The list of available backends that match the filter.
@@ -794,7 +794,7 @@ class QiskitRuntimeService:
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
-            A ``RuntimeJob`` instance representing the execution.
+            A ``RuntimeJobV2`` instance representing the execution.
 
         Raises:
             IBMInputValueError: If input is invalid.

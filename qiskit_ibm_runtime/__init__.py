@@ -152,9 +152,9 @@ Runtime Jobs
 
 When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
 to invoke the primitive, a
-:class:`RuntimeJob` instance is returned. This class has all the basic job
-methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
-:meth:`RuntimeJob.cancel`.
+:class:`RuntimeJobV2` instance is returned. This class has all the basic job
+methods, such as :meth:`RuntimeJobV2.status`, :meth:`RuntimeJobV2.result`, and
+:meth:`RuntimeJobV2.cancel`.
 
 Logging
 -------
