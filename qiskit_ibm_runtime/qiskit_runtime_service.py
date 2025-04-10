@@ -158,7 +158,7 @@ class QiskitRuntimeService:
             self._backend_allowed_list = self._discover_cloud_backends()
         else:
             warnings.warn(
-                "The ibm_quantum channel option is deprecated will be sunset on July 1st. "
+                "The "ibm_quantum" channel option is deprecated will be sunset on 1 July. "
                 "After this date, ibm_cloud will be the only valid channel. "
                 "For information on migrating to the new IBM Quantum Platform on the "
                 "ibm_cloud channel, read our migration guide "
