@@ -714,7 +714,7 @@ class QiskitRuntimeService:
         Args:
             default: If set to True, only default accounts are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
-                The ``ibm_quantum`` channel is deprecated. For more details, read our
+                The ``ibm_quantum`` channel is deprecated. For help migrating to the "ibm_cloud" channel, review the 
                 `migration guide <https://ibm.biz/classic-iqp-to-cloud-iqp>__`.
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
