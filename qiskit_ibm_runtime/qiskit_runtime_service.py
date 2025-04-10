@@ -95,7 +95,7 @@ class QiskitRuntimeService:
              the local testing mode will be used, and primitive queries will run on a local simulator.
              For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
-             The ``ibm_quantum`` channel is deprecated. For more details, read our
+             The ``ibm_quantum`` channel is deprecated and the "ibm_cloud" channel should be used instead.  For help, review the 
              `migration guide <https://ibm.biz/classic-iqp-to-cloud-iqp>__`.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
