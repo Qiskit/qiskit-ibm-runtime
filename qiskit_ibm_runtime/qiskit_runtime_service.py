@@ -672,7 +672,7 @@ class QiskitRuntimeService:
                 https://auth.quantum.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
-                The ``ibm_quantum`` channel is deprecated. For more details, read our
+                The ``ibm_quantum`` channel is deprecated.  For help migrating to the "ibm_cloud" channel, review the 
                 `migration guide <https://ibm.biz/classic-iqp-to-cloud-iqp>__`.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
