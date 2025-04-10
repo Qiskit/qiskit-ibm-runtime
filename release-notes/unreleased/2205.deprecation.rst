@@ -1,4 +1,4 @@
 The ``ibm_quantum`` channel option is deprecated will be sunset on July 1st. 
 After this date, ``ibm_cloud`` will be the only valid channel. 
 For help migrating to the new IBM Quantum Platform on the 
-``ibm_cloud`` channel, read our `migration guide <https://ibm.biz/classic-iqp-to-cloud-iqp>__`.
+``ibm_cloud`` channel, read the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>__`.
