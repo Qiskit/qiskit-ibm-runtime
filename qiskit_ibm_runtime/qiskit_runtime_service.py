@@ -885,7 +885,6 @@ class QiskitRuntimeService:
         return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
-            client_params=self._client_params,
             job_id=response["id"],
             program_id=program_id,
             user_callback=callback,
@@ -1119,7 +1118,6 @@ class QiskitRuntimeService:
             return RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,
-                client_params=self._client_params,
                 service=self,
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
@@ -1130,7 +1128,6 @@ class QiskitRuntimeService:
         return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
-            client_params=self._client_params,
             service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
