@@ -35,6 +35,7 @@ from .exceptions import (
 )
 from .utils.result_decoder import ResultDecoder
 from .utils.queueinfo import QueueInfo
+from .utils.deprecation import issue_deprecation_msg
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -88,7 +89,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
         tags: Optional[List] = None,
         version: Optional[int] = None,
     ) -> None:
-        """RuntimeJob constructor.
+        """(DEPRECATED) RuntimeJob constructor.
 
         Args:
             backend: The backend instance used to run this job.
@@ -105,6 +106,15 @@ class RuntimeJob(Job, BaseRuntimeJob):
             tags: Tags assigned to the job.
             version: Primitive version.
         """
+
+        issue_deprecation_msg(
+            msg="The RuntimeJob class is deprecated",
+            version="0.38.0",
+            stacklevel=4,
+            remedy="All primitives now return the RuntimeJobV2 class. The major difference between "
+            "the two classes is that `Job.status()` is returned as a string in RuntimeJobV2.",
+        )
+
         Job.__init__(self, backend=backend, job_id=job_id)
         BaseRuntimeJob.__init__(
             self,
