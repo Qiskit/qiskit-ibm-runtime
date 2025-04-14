@@ -1,0 +1,7 @@
+The Session and Batch global class variable ``_create_new_session`` has been removed. ``_create_new_session`` was 
+used to control whether or not the POST session API endpoint should be called when initializing a session. 
+For example, when ``Session.from_id()`` is called, we do not want to create a new session. 
+This caused issues when there were multiple sessions or batches open. 
+
+A new parameter ``new_session``, which defaults to ``True``, has been added as a replacement. Initializing a session
+and using ``from_id()`` still work in the same way. 

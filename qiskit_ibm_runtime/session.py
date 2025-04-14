@@ -99,6 +99,8 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+            new_session: If True, the POST session API endpoint will be called to create a new session.
+                Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
         """
