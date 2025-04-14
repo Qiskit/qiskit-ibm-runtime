@@ -14,6 +14,7 @@
 """
 Base class for dummy backends.
 """
+from typing import Any
 import logging
 import warnings
 import json
@@ -89,6 +90,26 @@ class FakeBackendV2(BackendV2):
         )
         self._target = None
         self.sim = None
+
+    def __getattr__(self, name: str) -> Any:
+        """Gets attribute from self or configuration
+
+        This magic method executes when user accesses an attribute that
+        does not yet exist on the class.
+        """
+        # Prevent recursion since these properties are accessed within __getattr__
+        if name in ["_target", "_conf_dict", "_props_dict", "_defs_dict"]:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
+            )
+
+        # Check if the attribute now is available in backend configuration
+        try:
+            return self.configuration().__getattribute__(name)
+        except AttributeError:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
+            )
 
     def _setup_sim(self) -> None:
         if _optionals.HAS_AER:
