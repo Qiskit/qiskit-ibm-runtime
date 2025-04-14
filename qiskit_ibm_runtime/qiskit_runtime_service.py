@@ -157,6 +157,9 @@ class QiskitRuntimeService:
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
+        elif self._channel == "generic":
+            self._api_client = RuntimeClient(self._client_params)
+            self._backend_allowed_list = self._discover_cloud_backends() # same way as in ibm_cloud
         else:
             warnings.warn(
                 'The "ibm_quantum" channel option is deprecated and will be sunset on 1 July. '
@@ -215,8 +218,8 @@ class QiskitRuntimeService:
                     )
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
-            if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
-                raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
+            if channel and channel not in ["ibm_cloud", "ibm_quantum", "generic"]:
+                raise ValueError("'channel' can only be 'ibm_cloud', 'ibm_quantum' or 'generic'")
             if token:
                 account = Account.create_account(
                     channel=channel,
@@ -248,7 +251,8 @@ class QiskitRuntimeService:
             account.verify = verify
 
         # resolve CRN if needed
-        self._resolve_crn(account)
+        if(not channel == 'generic'):
+            self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
