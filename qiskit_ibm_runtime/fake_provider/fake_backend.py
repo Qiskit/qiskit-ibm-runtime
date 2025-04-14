@@ -95,7 +95,7 @@ class FakeBackendV2(BackendV2):
         """Gets attribute from self or configuration
 
         This magic method executes when user accesses an attribute that
-        does not yet exist on IBMBackend class.
+        does not yet exist on the class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_target", "_conf_dict", "_props_dict", "_defs_dict"]:
