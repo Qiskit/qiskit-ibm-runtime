@@ -36,7 +36,7 @@ class EnvironmentOptions:
         Default: ``WARNING``.
     """
     callback: Optional[Callable] = None
-    r"""Callback function to be invoked for any interim results and final result.
+    r"""(DEPRECATED) Callback function to be invoked for any interim results and final result.
         The callback function will receive 2 positional parameters:
 
             1. Job ID

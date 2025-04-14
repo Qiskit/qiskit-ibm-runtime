@@ -95,6 +95,9 @@ class QiskitRuntimeService:
              the local testing mode will be used, and primitive queries will run on a local simulator.
              For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
+             The ``ibm_quantum`` channel is deprecated and the ``ibm_cloud``
+             channel should be used instead. For help, review the `migration guide
+             <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
@@ -155,6 +158,15 @@ class QiskitRuntimeService:
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
         else:
+            warnings.warn(
+                'The "ibm_quantum" channel option is deprecated and will be sunset on 1 July. '
+                "After this date, ibm_cloud will be the only valid channel. "
+                "For information on migrating to the new IBM Quantum Platform on the "
+                '"ibm_cloud" channel, review the migration guide '
+                "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
@@ -661,6 +673,9 @@ class QiskitRuntimeService:
                 https://auth.quantum.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+                The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
+                channel, review the `migration guide.
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
@@ -701,6 +716,9 @@ class QiskitRuntimeService:
         Args:
             default: If set to True, only default accounts are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+                The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
+                channel, review the `migration guide
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__.
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
@@ -794,7 +812,7 @@ class QiskitRuntimeService:
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
-            A ``RuntimeJob`` instance representing the execution.
+            A ``RuntimeJobV2`` instance representing the execution.
 
         Raises:
             IBMInputValueError: If input is invalid.
@@ -867,7 +885,6 @@ class QiskitRuntimeService:
         return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
-            client_params=self._client_params,
             job_id=response["id"],
             program_id=program_id,
             user_callback=callback,
@@ -1101,7 +1118,6 @@ class QiskitRuntimeService:
             return RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,
-                client_params=self._client_params,
                 service=self,
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
@@ -1112,7 +1128,6 @@ class QiskitRuntimeService:
         return RuntimeJobV2(
             backend=backend,
             api_client=self._api_client,
-            client_params=self._client_params,
             service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),

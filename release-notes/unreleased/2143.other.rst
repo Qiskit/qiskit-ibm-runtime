@@ -1,0 +1,4 @@
+Since support for streaming results was removed in ``0.32.0``, the remaining related
+websocket code has been removed. As a part of this process, the ``EnvironmentOption`` 
+``callback`` is deprecated, as well has the parameters ``client_params`` and ``user_callback`` 
+in ``BaseRuntimeJob``. 

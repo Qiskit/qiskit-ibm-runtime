@@ -101,6 +101,9 @@ ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOU
 ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
+| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
+|:---------------------------|
+
 ## Primitives
 
 All quantum applications and algorithms level are fundamentally built using these steps:
