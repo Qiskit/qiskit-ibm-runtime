@@ -34,5 +34,5 @@ Upgrade Notes
 
 - Since support for streaming results was removed in ``0.32.0``, the remaining related
   websocket code has been removed. As a part of this process, the environment option
-  ``callback`` is deprecated, as well has the parameters ``client_params`` and ``user_callback`` 
+  ``callback`` is deprecated, as well as the parameters ``client_params`` and ``user_callback`` 
   in ``BaseRuntimeJob``. (`2143 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2143>`__)
