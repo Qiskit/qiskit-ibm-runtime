@@ -1,2 +1,0 @@
-Fixed a bug where :meth:`~.DoubleSliceSpan.mask` and :meth:`~TwirledSliceSpan.mask` error
-when they contain a one-dimensional slice.
