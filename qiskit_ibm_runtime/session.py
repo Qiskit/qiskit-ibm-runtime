@@ -86,7 +86,7 @@ class Session:
         backend: Optional[BackendV2] = None,
         max_time: Optional[Union[int, str]] = None,
         *,
-        new_session: Optional[bool] = True,
+        create_new: Optional[bool] = True,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -99,7 +99,7 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
-            new_session: If True, the POST session API endpoint will be called to create a new session.
+            create_new: If True, the POST session API endpoint will be called to create a new session.
                 Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
@@ -128,11 +128,11 @@ class Session:
         if isinstance(self._backend, IBMBackend):
             self._instance = self._backend._instance
             if not self._backend.configuration().simulator:
-                self._session_id = self._create_session(new_session=new_session)
+                self._session_id = self._create_session(create_new=create_new)
 
-    def _create_session(self, *, new_session: Optional[bool] = True) -> Optional[str]:
+    def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService) and new_session:
+        if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
@@ -343,7 +343,7 @@ class Session:
                 f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
-        session = cls(backend, new_session=False)
+        session = cls(backend, create_new=False)
         if state == "closed":
             session._active = False
         session._session_id = session_id

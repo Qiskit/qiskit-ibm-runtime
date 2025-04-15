@@ -87,7 +87,7 @@ class Batch(Session):
         backend: Optional[BackendV2] = None,
         max_time: Optional[Union[int, str]] = None,
         *,
-        new_session: Optional[bool] = True,
+        create_new: Optional[bool] = True,
     ):
         """Batch constructor.
 
@@ -100,17 +100,17 @@ class Batch(Session):
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
-            new_session: If True, the POST session API endpoint will be called to create a new session.
+            create_new: If True, the POST session API endpoint will be called to create a new session.
                 Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
         """
 
-        super().__init__(backend=backend, max_time=max_time, new_session=new_session)
+        super().__init__(backend=backend, max_time=max_time, create_new=create_new)
 
-    def _create_session(self, *, new_session: Optional[bool] = True) -> Optional[str]:
+    def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService) and new_session:
+        if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "batch"
             )
