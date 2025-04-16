@@ -1,0 +1,37 @@
+0.38.0 (2025-04-15)
+===================
+
+Deprecation Notes
+-----------------
+
+- :class:`~.RuntimeJob` is now deprecated and will be removed no sooner than three months from this release. :class:`~.RuntimeJob` was superseded by :class:`~.RuntimeJobV2` in all primitive implementations, so the deprecation should not have any user impact. The major difference between the two classes is that 
+  :meth:`~.RuntimeJobV2.status` returns a string instead of Qiskit's ``JobStatus`` enum. (`2170 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2170>`__)
+- Since pulse gates are no longer supported, the :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` 
+  method has been deprecated and will be removed no sooner than three months from this release. While the method still exists, these pulse defaults are no longer used to construct the backend target. (`2186 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2186>`__)
+- The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July. 
+  After this date, ``ibm_cloud`` will be the only valid channel. 
+  For help migrating to the new IBM Quantum Platform on the 
+  ``ibm_cloud`` channel, read the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
+
+
+New Features
+------------
+
+- Attributes from the configuration of fake backends can now be retrieved directly 
+  with ``backend.<attribute_name>``. (`2202 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2202>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed a bug where :meth:`DoubleSliceSpan.mask` and :meth:`TwirledSliceSpan.mask` error
+  when they contain a one-dimensional slice. (`2184 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2184>`__)
+
+
+Upgrade Notes
+-------------
+
+- Since support for streaming results was removed in ``0.32.0``, the remaining related
+  websocket code has been removed. As a part of this process, the environment option
+  ``callback`` is deprecated, as well as the parameters ``client_params`` and ``user_callback`` 
+  in ``BaseRuntimeJob``. (`2143 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2143>`__)
