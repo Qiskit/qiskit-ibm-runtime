@@ -12,7 +12,7 @@
 
 """Integration tests for Session."""
 
-from unittest import SkipTest
+from unittest import SkipTest, mock
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
@@ -76,9 +76,8 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_session_from_id(self, service):
         """Test creating a session from a given id"""
-        try:
-            backend = service.backend("fake_backend1")
-        except:
+        backend = service.backend(self.dependencies.qpu)
+        if backend.configuration().simulator:
             raise SkipTest("No proper backends available")
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run([bell()])
@@ -86,7 +85,10 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             sampler = SamplerV2(mode=session)
             sampler.run(isa_circuit)
 
-        new_session = Session.from_id(session_id=session._session_id, service=service)
+        with mock.patch.object(service._api_client, "create_session") as mock_create_session:
+            new_session = Session.from_id(session_id=session._session_id, service=service)
+            mock_create_session.assert_not_called()
+
         self.assertEqual(session._session_id, new_session._session_id)
         self.assertTrue(new_session._active)
         new_session.close()
