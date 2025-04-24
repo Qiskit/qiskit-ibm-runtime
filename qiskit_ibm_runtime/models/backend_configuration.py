@@ -201,7 +201,6 @@ class QasmBackendConfiguration:
         conditional: backend supports conditional operations.
         open_pulse: backend supports open pulse.
         memory: backend supports memory.
-        max_shots: maximum number of shots supported.
     """
 
     _data: Dict[Any, Any] = {}
@@ -218,7 +217,6 @@ class QasmBackendConfiguration:
         conditional: bool,
         open_pulse: bool,
         memory: bool,
-        max_shots: int,
         coupling_map: list,
         meas_levels: List[int] = None,
         meas_kernels: List[str] = None,
@@ -228,7 +226,6 @@ class QasmBackendConfiguration:
         dynamic_reprate_enabled: bool = False,
         rep_delay_range: List[float] = None,
         default_rep_delay: float = None,
-        max_experiments: int = None,
         sample_name: str = None,
         n_registers: int = None,
         register_map: list = None,
@@ -260,7 +257,6 @@ class QasmBackendConfiguration:
                 operations
             open_pulse (bool): True if the backend supports OpenPulse
             memory (bool): True if the backend supports memory
-            max_shots (DEPRECATED) (int): The maximum number of shots allowed on the backend
             coupling_map (list): The coupling map for the device
             meas_levels: Supported measurement levels.
             meas_kernels: Supported measurement kernels.
@@ -275,7 +271,6 @@ class QasmBackendConfiguration:
                 ``dynamic_reprate_enabled=True``.
             default_rep_delay (float): Value of ``rep_delay`` if not specified by user and
                 ``dynamic_reprate_enabled=True``.
-            max_experiments (DEPRECATED) (int): The maximum number of experiments per job
             sample_name (str): Sample name for the backend
             n_registers (int): Number of register slots available for feedback
                 (if conditional is True)
@@ -316,7 +311,6 @@ class QasmBackendConfiguration:
         self.conditional = conditional
         self.open_pulse = open_pulse
         self.memory = memory
-        self.max_shots = max_shots
         self.coupling_map = coupling_map
         self.meas_levels = meas_levels
         self.meas_kernels = meas_kernels
@@ -332,9 +326,6 @@ class QasmBackendConfiguration:
         if default_rep_delay is not None:
             self.default_rep_delay = default_rep_delay * 1e-6  # convert to sec
 
-        # max_experiments must be >=1
-        if max_experiments:
-            self.max_experiments = max_experiments
         if sample_name is not None:
             self.sample_name = sample_name
         # n_registers must be >=1
@@ -426,7 +417,6 @@ class QasmBackendConfiguration:
             "conditional": self.conditional,
             "open_pulse": self.open_pulse,
             "memory": self.memory,
-            "max_shots": self.max_shots,
             "coupling_map": self.coupling_map,
             "dynamic_reprate_enabled": self.dynamic_reprate_enabled,
             "meas_levels": self.meas_levels,
@@ -445,7 +435,6 @@ class QasmBackendConfiguration:
             out_dict["default_rep_delay"] = self.default_rep_delay * 1e6
 
         for kwarg in [
-            "max_experiments",
             "sample_name",
             "n_registers",
             "register_map",
