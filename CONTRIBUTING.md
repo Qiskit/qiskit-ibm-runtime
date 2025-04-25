@@ -213,17 +213,9 @@ make integration-test
 
 ###### Configuration
 
-Integration tests require an environment configuration and can be run against both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
+Integration tests require an environment configuration and can be run against both IBM Quantum Platform API.
 
-Sample configuration for IBM Quantum
-```bash
-QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
-QISKIT_IBM_URL=https://auth.quantum.ibm.com/api                 # IBM Quantum API URL
-QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
-QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
-```
-
-Sample configuration for IBM Cloud
+Sample configuration
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL

@@ -57,11 +57,8 @@ them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json`
  ```python
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-# Save an IBM Cloud account.
-QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
-
-# Save an IBM Quantum account.
-QiskitRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+# Save an IBM Quantum Platform account.
+QiskitRuntimeService.save_account(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
 
 Once the account is saved on disk, you can instantiate the service without any arguments:
@@ -77,7 +74,7 @@ Alternatively, the service can discover credentials from environment variables:
 ```bash
 export QISKIT_IBM_TOKEN="MY_IBM_CLOUD_API_KEY"
 export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
-export QISKIT_IBM_CHANNEL="ibm_cloud"
+export QISKIT_IBM_CHANNEL="ibm_quantum_platform"
 ```
 
 Then instantiate the service without any arguments:
@@ -95,10 +92,7 @@ service with your credentials.
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 # For an IBM Cloud account.
-ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
-
-# For an IBM Quantum account.
-ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+ibm_cloud_service = QiskitRuntimeService(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
 
 | :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)

@@ -26,7 +26,14 @@ from ..api.auth import QuantumAuth, CloudAuth
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
-ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum", "local"]]
+ChannelType = Optional[
+    Literal[
+        "ibm_quantum_platform",
+        "ibm_cloud",
+        "ibm_quantum",
+        "local",
+    ]
+]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
@@ -46,7 +53,7 @@ class Account:
         """Account constructor.
 
         Args:
-            channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
+            channel: Channel type, ``ibm_cloud``, ``ibm_quantum``, ``ibm_quantum_platform``.
             token: Account token to use.
             url: Authentication URL.
             instance: Service instance to use.
@@ -111,7 +118,7 @@ class Account:
                 proxies=proxies,
                 verify=verify,
             )
-        elif channel == "ibm_cloud":
+        elif channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAccount(
                 url=url,
                 token=token,
@@ -123,7 +130,7 @@ class Account:
         else:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"{['ibm_cloud', 'ibm_quantum']}, got '{channel}'."
+                f"{['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform']}, got '{channel}'."
             )
 
     def resolve_crn(self) -> None:
@@ -166,10 +173,10 @@ class Account:
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum"]):
+        if not (channel in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]):
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"['ibm_cloud', 'ibm_quantum'], got '{channel}'."
+                f"['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform], got '{channel}'."
             )
 
     @staticmethod
@@ -266,7 +273,7 @@ class CloudAccount(Account):
         """
         super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_cloud"
+        self.channel = "ibm_quantum_platform"
         self.url = resolved_url
         self.private_endpoint = private_endpoint
 
@@ -284,7 +291,7 @@ class CloudAccount(Account):
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
         crn = resolve_crn(
-            channel="ibm_cloud",
+            channel="ibm_quantum_platform",
             url=self.url,
             token=self.token,
             instance=self.instance,

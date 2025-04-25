@@ -88,7 +88,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_cloud":
+        if cls.dependencies.channel == "ibm_quantum_platform":
             cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
         if cls.dependencies.channel == "ibm_quantum":
             cls.dependencies.service._account.instance = (
@@ -240,14 +240,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
-        if self.dependencies.channel == "ibm_cloud":
+        if self.dependencies.channel == "ibm_quantum_platform":
             raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
         self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
-        if self.dependencies.channel == "ibm_cloud":
+        if self.dependencies.channel == "ibm_quantum_platform":
             raise SkipTest("Cloud channel does not have instance.")
         if not self.backend.properties():
             raise SkipTest("Simulators and fake backends do not have qubit properties.")
@@ -282,7 +282,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
-        if self.dependencies.channel == "ibm_cloud":
+        if self.dependencies.channel == "ibm_quantum_platform":
             raise SkipTest("Cloud channel does not have instance.")
 
         backends = self.service.backends()
@@ -306,7 +306,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_too_many_qubits_in_circuit(self):
         """Check error message if circuit contains more qubits than supported on the backend."""
-        if self.dependencies.channel == "ibm_cloud":
+        if self.dependencies.channel == "ibm_quantum_platform":
             raise SkipTest("Cloud channel does not have instance.")
         if not self.backend.properties():
             raise SkipTest("Simulators and fake backends do not have qubit properties.")

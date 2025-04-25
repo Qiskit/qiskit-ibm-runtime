@@ -54,35 +54,35 @@ class TestClientParameters(IBMTestCase):
         """Test resolution of runtime API base URL."""
         test_specs = [
             (
-                "ibm_cloud",
+                "ibm_quantum_platform",
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
                 "https://us-east.quantum-computing.cloud.ibm.com",
             ),
             (
-                "ibm_cloud",
+                "ibm_quantum_platform",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
-                "ibm_cloud",
+                "ibm_quantum_platform",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
                 None,
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
             ),
             (
-                "ibm_quantum",
+                "ibm_quantum_platform",
                 "h/g/p",
                 "https://auth.quantum.ibm.com/api",
                 None,
                 "https://auth.quantum.ibm.com/api",
             ),
             (
-                "ibm_cloud",
+                "ibm_quantum_platform",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
                 lambda a, b, c: f"{a}:{b}:{c}",
@@ -90,7 +90,7 @@ class TestClientParameters(IBMTestCase):
                 + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
             ),
             (
-                "ibm_quantum",
+                "ibm_quantum_platform",
                 "h/g/p",
                 "https://auth.quantum.ibm.com/api",
                 lambda a, b, c: f"{a}:{b}:{c}",
@@ -160,7 +160,9 @@ class TestClientParameters(IBMTestCase):
         """Test getting cloud auth handler."""
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
-        params = self._get_client_params(channel="ibm_cloud", token=token, instance=instance)
+        params = self._get_client_params(
+            channel="ibm_quantum_platform", token=token, instance=instance
+        )
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
         self.assertIn(f"apikey {token}", handler.get_headers().values())

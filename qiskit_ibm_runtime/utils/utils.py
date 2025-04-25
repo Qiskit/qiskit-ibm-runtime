@@ -267,7 +267,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
 
 def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
-    if channel != "ibm_cloud":
+    if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
     if is_crn(instance):

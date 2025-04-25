@@ -56,7 +56,7 @@ class TestProxies(IBMTestCase):
             # wait for the process to terminate
             self.proxy_process.wait()
 
-    @integration_test_setup(supported_channel=["ibm_cloud"])
+    @integration_test_setup(supported_channel=["ibm_quantum_platform"])
     def test_proxies_cloud_runtime_client(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument

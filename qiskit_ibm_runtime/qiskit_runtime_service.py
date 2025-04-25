@@ -84,30 +84,30 @@ class QiskitRuntimeService:
             - Account defined by the input `channel` and `token`, if specified.
             - Account defined by the `default_channel` if defined in filename
             - Account defined by the environment variables, if defined.
-            - Default account for the ``ibm_cloud`` account, if one is available.
+            - Default account for the ``ibm_quantum_platform`` account, if one is available.
             - Default account for the ``ibm_quantum`` account, if one is available.
 
         `instance`, `proxies`, and `verify` can be used to overwrite corresponding
         values in the loaded account.
 
         Args:
-            channel: Channel type. ``ibm_cloud``, ``ibm_quantum`` or ``local``. If ``local`` is selected,
-             the local testing mode will be used, and primitive queries will run on a local simulator.
-             For more details, check the `Qiskit Runtime local testing mode
+            channel: Channel type. ``ibm_cloud``, ``ibm_quantum_platform`` or ``local``. If ``local`` is
+             selected, the local testing mode will be used, and primitive queries will run on a local
+             simulator. For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
-             The ``ibm_quantum`` channel is deprecated and the ``ibm_cloud``
-             channel should be used instead. For help, review the `migration guide
+             The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
+            should be used instead. For help, review the `migration guide
              <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_cloud) or
+                Defaults to https://cloud.ibm.com (ibm_quantum_platform) or
                 https://auth.quantum.ibm.com/api (ibm_quantum).
             filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
             instance: The service instance to use.
-                For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
-                For ``ibm_quantum`` runtime, this is the hub/group/project in that format.
+                For ``ibm_quantum_platform`` runtime, this is the Cloud Resource
+                Name (CRN) or the service name.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -154,7 +154,17 @@ class QiskitRuntimeService:
         self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
 
-        if self._channel == "ibm_cloud":
+        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
+            if self._channel == "ibm_cloud":
+                warnings.warn(
+                    'The "ibm_cloud" channel option is deprecated and will be replaced with '
+                    '"ibm_quantum_platform". For more information on the new IBM Quantum Platform, '
+                    "review the migration guide "
+                    "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
         else:
@@ -215,8 +225,10 @@ class QiskitRuntimeService:
                     )
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
-            if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
-                raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
+            if channel and channel not in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]:
+                raise ValueError(
+                    "'channel' can only be 'ibm_cloud', 'ibm_quantum', or 'ibm_quantum_platform"
+                )
             if token:
                 account = Account.create_account(
                     channel=channel,
@@ -669,10 +681,9 @@ class QiskitRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum.ibm.com/api (ibm_quantum).
-            instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
-            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+                Defaults to https://cloud.ibm.com (ibm_quantum_platform) or
+            instance: The CRN (ibm_quantum_platform).
+            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide.
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
@@ -715,7 +726,7 @@ class QiskitRuntimeService:
 
         Args:
             default: If set to True, only default accounts are returned.
-            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__.
@@ -772,7 +783,7 @@ class QiskitRuntimeService:
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
-            if self._channel == "ibm_cloud":
+            if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
                     "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend"
@@ -990,7 +1001,7 @@ class QiskitRuntimeService:
         """
         hub = group = project = None
         if instance:
-            if self._channel == "ibm_cloud":
+            if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 raise IBMInputValueError(
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
@@ -1069,7 +1080,7 @@ class QiskitRuntimeService:
         Raises:
             IBMInputValueError: If method is called when using the ibm_cloud channel
         """
-        if self._channel == "ibm_cloud":
+        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             raise IBMInputValueError(
                 "Usage is only available for the ``ibm_quantum`` channel open plan."
             )

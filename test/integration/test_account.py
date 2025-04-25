@@ -73,7 +73,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = QiskitRuntimeService(
-                channel="ibm_cloud",
+                channel="ibm_quantum_platform",
                 url=self.dependencies.url,
                 token=self.dependencies.token,
                 instance=self.dependencies.instance,
@@ -91,7 +91,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
             self.assertRaises(CloudResourceNameResolutionError),
         ):
             QiskitRuntimeService(
-                channel="ibm_cloud",
+                channel="ibm_quantum_platform",
                 url=self.dependencies.url,
                 token=self.dependencies.token,
                 instance=service_instance_name,
@@ -99,8 +99,8 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_logging_instance_at_init(self):
         """Test instance is logged at initialization if instance not passed in."""
-        if self.dependencies.channel == "ibm_cloud":
-            self.skipTest("Not supported on ibm_cloud")
+        if self.dependencies.channel == "ibm_quantum_platform":
+            self.skipTest("Not supported on ibm_quantum_platform")
 
         with self.assertLogs("qiskit_ibm_runtime", "INFO") as logs:
             QiskitRuntimeService(

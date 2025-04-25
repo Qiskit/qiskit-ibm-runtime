@@ -167,7 +167,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
     @production_only
     def test_refresh_method(self):
         """Test refresh method"""
-        if self.dependencies.channel == "ibm_cloud":
+        if self.dependencies.channel == "ibm_quantum_platform":
             raise SkipTest("Cloud account does not have real backends.")
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()

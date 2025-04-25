@@ -39,7 +39,7 @@ class ClientParameters:
         """ClientParameters constructor.
 
         Args:
-            channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
+            channel: Channel type. ``ibm_cloud``, ``ibm_quantum``, or ``ibm_quantum_platform``.
             token: IBM Quantum API token.
             url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
             instance: Service instance to use.
@@ -61,7 +61,7 @@ class ClientParameters:
 
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
-        if self.channel == "ibm_cloud":
+        if self.channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAuth(api_key=self.token, crn=self.instance)
 
         return QuantumAuth(access_token=self.token)
