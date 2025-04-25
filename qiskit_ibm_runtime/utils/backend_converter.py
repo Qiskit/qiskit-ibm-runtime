@@ -48,7 +48,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     *,
     include_control_flow: bool = True,
     include_fractional_gates: bool = True,
-    **kwargs,
+    **kwargs,  # pylint: disable=unused-argument
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -66,11 +66,6 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     """
     add_delay = True
     filter_faulty = True
-
-    if "defaults" in kwargs:
-        warnings.warn(
-            "Backend defaults are no longer necessary for creating a target. Defaults will be ignored."
-        )
 
     required = ["measure", "delay", "reset"]
 

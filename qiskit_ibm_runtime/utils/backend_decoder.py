@@ -26,7 +26,6 @@ except ImportError:  # Remove when dropping support for Qiskit < 1.3
 
 from ..models import (
     BackendProperties,
-    PulseDefaults,
     QasmBackendConfiguration,
 )
 
@@ -118,26 +117,6 @@ def filter_raw_configuration(
                 for i in raw_config["supported_instructions"]
                 if i not in gate_map or not is_fractional_gate(gate_map[i])
             ]
-
-
-def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
-    """Decode pulse defaults data.
-
-    Args:
-        defaults: Raw pulse defaults data.
-
-    Returns:
-        A ``PulseDefaults`` instance.
-    """
-    for item in defaults["pulse_library"]:
-        _decode_pulse_library_item(item)
-
-    for cmd in defaults["cmd_def"]:
-        if "sequence" in cmd:
-            for instr in cmd["sequence"]:
-                _decode_pulse_qobj_instr(instr)
-
-    return PulseDefaults.from_dict(defaults)
 
 
 def properties_from_server_data(
