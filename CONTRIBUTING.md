@@ -144,7 +144,7 @@ When a single backend is retrieved with the `instance` parameter,
   service.backend('ibm_torino', instance='ibm-q/open/main')
   # raises error if torino is not in ibm-q/open/main but in a different instance
   # the user has access to
-  service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")
+  service = QiskitRuntimeService(channel="ibm_quantum_platform", instance="IBM_CLOUD_INSTANCE")
   service.backend('ibm_torino') # raises the same error
 
 if the backend is not in the instance, but in a different one the user

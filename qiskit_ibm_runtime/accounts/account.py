@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
@@ -26,6 +26,9 @@ from ..api.auth import QuantumAuth, CloudAuth
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
+RegionType = Optional[Literal["us-east", "eu-de"]]
+PlanType = Optional[List[Literal["open", "standard"]]]
+
 ChannelType = Optional[
     Literal[
         "ibm_quantum_platform",
@@ -318,6 +321,6 @@ class CloudAccount(Account):
         if not (isinstance(instance, str) and len(instance) > 0):
             raise InvalidAccountError(
                 f"Invalid `instance` value. Expected a non-empty string, got '{instance}'. "
-                "If using the ibm_quantum channel,",
-                "please specify the channel when saving your account with `channel = 'ibm_quantum'`.",
+                "Either pass in an instance or set a default instance with "
+                "QiskitRuntimeService.save_account(default_instance='...')."
             )

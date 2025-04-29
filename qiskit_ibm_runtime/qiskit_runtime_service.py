@@ -28,7 +28,7 @@ from .proxies import ProxyConfiguration
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
-from .accounts import AccountManager, Account, ChannelType
+from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -96,7 +96,7 @@ class QiskitRuntimeService:
              simulator. For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
              The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
-            should be used instead. For help, review the `migration guide
+             should be used instead. For help, review the `migration guide
              <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
@@ -675,6 +675,9 @@ class QiskitRuntimeService:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
+        default_instance: Optional[str] = None,
+        region: Optional[RegionType] = None,
+        plans_preference: Optional[PlanType] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -699,6 +702,12 @@ class QiskitRuntimeService:
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
+            default_instance: Set a default instance. This will be the instance used if one is not
+                passed in during account initialization.
+            region: Set a region preference. `us-east` or `eu-de`. An instance with this region
+                will be prioritized if an instance is not passed in.
+            plans_preference: A list of account types, ordered by preference. An instance with the first
+                value in the list will be prioritized if an instance is not passed in.
         """
 
         AccountManager.save(
@@ -713,6 +722,9 @@ class QiskitRuntimeService:
             overwrite=overwrite,
             set_as_default=set_as_default,
             private_endpoint=private_endpoint,
+            default_instance=default_instance,
+            region=region,
+            plans_preference=plans_preference,
         )
 
     @staticmethod
