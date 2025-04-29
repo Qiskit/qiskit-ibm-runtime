@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.37.0"
+fallback_version = "0.38.0"
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -88,7 +88,7 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
-    "pydantic>=2.5.0,<2.10",
+    "pydantic>=2.5.0",
     "qiskit>=1.4.1",
     "packaging"
 ]

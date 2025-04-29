@@ -1,0 +1,2 @@
+Removed the incorrect ``Optional`` type hint for the ``backend`` 
+parameter in :class:`~.Session` and :class:`~.Batch`.

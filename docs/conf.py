@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.37.0'
+release = '0.38.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -70,7 +70,7 @@ nbsphinx_prolog += link_str + "{{ docname }}"
 
 intersphinx_mapping = {
     "rustworkx": ("https://www.rustworkx.org/", None),
-    "qiskit": ("https://docs.quantum.ibm.com/api/qiskit/", None),
+    "qiskit": ("https://quantum.cloud.ibm.com/docs/api/qiskit/", None),
     "qiskit-aer": ("https://qiskit.github.io/qiskit-aer/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
