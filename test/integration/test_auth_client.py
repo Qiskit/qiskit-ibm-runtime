@@ -12,6 +12,7 @@
 
 """Tests for the AccountClient class."""
 
+import time
 import re
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
@@ -39,6 +40,7 @@ class TestAuthClient(IBMTestCase):
         )
         cloud_auth = params.get_auth_handler()
         self.assertTrue(cloud_auth.access_token)
+        self.assertTrue(cloud_auth.access_token_expiry >= time.time())
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_url_404(self, dependencies: IntegrationTestDependencies) -> None:

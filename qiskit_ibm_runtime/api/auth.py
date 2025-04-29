@@ -12,6 +12,7 @@
 
 """Authentication helpers."""
 
+import time
 from typing import Dict
 
 import warnings
@@ -29,7 +30,7 @@ class CloudAuth(AuthBase):
         self.api_key = api_key
         self.crn = crn
         self.url = url
-        self.access_token = self._get_access_token()
+        self._get_access_token()
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):
@@ -45,8 +46,10 @@ class CloudAuth(AuthBase):
         r.headers.update(self.get_headers())
         return r
 
-    def _get_access_token(self) -> str:
+    def _get_access_token(self) -> None:
         """Return IBM Cloud access token."""
+        self.access_token = None
+        self.access_token_expiry = None
         try:
             url = CLOUD_IAM_URL
             if "test" in self.url:
@@ -54,14 +57,16 @@ class CloudAuth(AuthBase):
             headers = {"Content-Type": "application/x-www-form-urlencoded"}
             data = f"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={self.api_key}"
             response = post(url, headers=headers, data=data, timeout=10).json()
-            return response["access_token"]
+            self.access_token = response.get("access_token")
+            self.access_token_expiry = response.get("expiration") - 60  # 60 second buffer
         except Exception:  # pylint: disable=broad-except
             warnings.warn("Unable to retrieve IBM Cloud access token. API Key will be used instead")
-            return None
 
     def get_headers(self) -> Dict:
         """Return authorization information to be stored in header."""
         if self.access_token:
+            if time.time() >= self.access_token_expiry:
+                self._get_access_token()  # refresh expired token
             return {"Service-CRN": self.crn, "Authorization": f"Bearer {self.access_token}"}
         return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
 
