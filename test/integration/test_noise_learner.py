@@ -137,7 +137,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                 match_found = False
                 for nm1 in noise_model_metadata:
                     if nm0.circuit == nm1.circuit:
-                        self.assertEqual(nm0.circuit, nm1.circuit)
                         self.assertEqual(nm0.qubits, nm1.qubits)
                         self.assertEqual(nm0.error.generators, nm1.error.generators)
                         self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
