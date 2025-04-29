@@ -47,7 +47,7 @@ class CloudAuth(AuthBase):
         return r
 
     def _get_access_token(self) -> None:
-        """Return IBM Cloud access token."""
+        """Retrieve IBM Cloud bearer token and expiry."""
         self.access_token = None
         self.access_token_expiry = None
         try:
