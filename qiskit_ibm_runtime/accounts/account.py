@@ -272,7 +272,7 @@ class CloudAccount(Account):
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
-        return CloudAuth(api_key=self.token, crn=self.instance, url=self.url)
+        return CloudAuth(api_key=self.token, crn=self.instance)
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service

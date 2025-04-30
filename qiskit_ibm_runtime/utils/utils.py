@@ -356,6 +356,19 @@ def _location_from_crn(crn: str) -> str:
     return re.search(pattern, crn).group(6)
 
 
+def cname_from_crn(crn: str) -> str:
+    """Computes the CNAME ('bluemix' or 'staging') from a given CRN.
+
+    Args:
+        crn: A CRN (format: https://cloud.ibm.com/docs/account?topic=account-crn#format-crn)
+
+    Returns:
+        The location.
+    """
+    pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
+    return re.search(pattern, crn).group(3)
+
+
 def to_python_identifier(name: str) -> str:
     """Convert a name to a valid Python identifier.
 

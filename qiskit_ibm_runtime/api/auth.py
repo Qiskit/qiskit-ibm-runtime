@@ -16,8 +16,11 @@ import time
 from typing import Dict
 
 import warnings
-from requests import PreparedRequest, post
+from requests import PreparedRequest
 from requests.auth import AuthBase
+
+from ibm_cloud_sdk_core import IAMTokenManager
+from ..utils.utils import cname_from_crn
 
 CLOUD_IAM_URL = "https://iam.cloud.ibm.com/identity/token"
 STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
@@ -26,10 +29,13 @@ STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
 class CloudAuth(AuthBase):
     """Attaches IBM Cloud Authentication to the given Request object."""
 
-    def __init__(self, api_key: str, crn: str, url: str):
+    def __init__(self, api_key: str, crn: str):
         self.api_key = api_key
         self.crn = crn
-        self.url = url
+        if cname_from_crn(crn) == "staging":
+            self.iam_url = STAGING_CLOUD_IAM_URL
+        else:
+            self.iam_url = CLOUD_IAM_URL
         self._get_access_token()
 
     def __eq__(self, other: object) -> bool:
@@ -51,14 +57,10 @@ class CloudAuth(AuthBase):
         self.access_token = None
         self.access_token_expiry = None
         try:
-            url = CLOUD_IAM_URL
-            if "test" in self.url:
-                url = STAGING_CLOUD_IAM_URL
-            headers = {"Content-Type": "application/x-www-form-urlencoded"}
-            data = f"grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey={self.api_key}"
-            response = post(url, headers=headers, data=data, timeout=10).json()
+            start_time = time.time() - 60  # 60 second buffer
+            response = IAMTokenManager(self.api_key, url=self.iam_url).request_token()
             self.access_token = response.get("access_token")
-            self.access_token_expiry = response.get("expiration") - 60  # 60 second buffer
+            self.access_token_expiry = start_time + response.get("expires_in")
         except Exception:  # pylint: disable=broad-except
             warnings.warn("Unable to retrieve IBM Cloud access token. API Key will be used instead")
 
