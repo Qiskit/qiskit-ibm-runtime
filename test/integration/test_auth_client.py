@@ -42,7 +42,7 @@ class TestAuthClient(IBMTestCase):
         )
         cloud_auth = params.get_auth_handler()
         self.assertTrue(cloud_auth.tm)
-        self.assertTrue(cloud_auth.tm.access_token())
+        self.assertTrue(cloud_auth.tm.get_token())
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_url_404(self, dependencies: IntegrationTestDependencies) -> None:
