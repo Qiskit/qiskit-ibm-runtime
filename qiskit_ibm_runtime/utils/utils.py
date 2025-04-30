@@ -365,8 +365,10 @@ def cname_from_crn(crn: str) -> str:
     Returns:
         The location.
     """
-    pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
-    return re.search(pattern, crn).group(3)
+    if is_crn(crn):
+        pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
+        return re.search(pattern, crn).group(3)
+    return None
 
 
 def to_python_identifier(name: str) -> str:

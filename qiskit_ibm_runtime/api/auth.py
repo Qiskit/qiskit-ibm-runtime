@@ -12,7 +12,6 @@
 
 """Authentication helpers."""
 
-import time
 from typing import Dict
 
 import warnings
@@ -22,21 +21,21 @@ from requests.auth import AuthBase
 from ibm_cloud_sdk_core import IAMTokenManager
 from ..utils.utils import cname_from_crn
 
-CLOUD_IAM_URL = "https://iam.cloud.ibm.com/identity/token"
-STAGING_CLOUD_IAM_URL = "https://iam.test.cloud.ibm.com/identity/token"
+CLOUD_IAM_URL = "iam.cloud.ibm.com"
+STAGING_CLOUD_IAM_URL = "iam.test.cloud.ibm.com"
 
 
 class CloudAuth(AuthBase):
     """Attaches IBM Cloud Authentication to the given Request object."""
 
-    def __init__(self, api_key: str, crn: str):
-        self.api_key = api_key
+    def __init__(self, api_key: str, crn: str, private: bool = False):
         self.crn = crn
-        if cname_from_crn(crn) == "staging":
-            self.iam_url = STAGING_CLOUD_IAM_URL
-        else:
-            self.iam_url = CLOUD_IAM_URL
-        self._get_access_token()
+        self.api_key = api_key
+        iam_url = (
+            f"https://{"private." if private else ""}"
+            f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == "staging" else CLOUD_IAM_URL}"
+        )
+        self.tm = IAMTokenManager(api_key, url=iam_url)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):
@@ -52,25 +51,16 @@ class CloudAuth(AuthBase):
         r.headers.update(self.get_headers())
         return r
 
-    def _get_access_token(self) -> None:
-        """Retrieve IBM Cloud bearer token and expiry."""
-        self.access_token = None
-        self.access_token_expiry = None
-        try:
-            start_time = time.time() - 60  # 60 second buffer
-            response = IAMTokenManager(self.api_key, url=self.iam_url).request_token()
-            self.access_token = response.get("access_token")
-            self.access_token_expiry = start_time + response.get("expires_in")
-        except Exception:  # pylint: disable=broad-except
-            warnings.warn("Unable to retrieve IBM Cloud access token. API Key will be used instead")
-
     def get_headers(self) -> Dict:
         """Return authorization information to be stored in header."""
-        if self.access_token:
-            if time.time() >= self.access_token_expiry:
-                self._get_access_token()  # refresh expired token
-            return {"Service-CRN": self.crn, "Authorization": f"Bearer {self.access_token}"}
-        return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
+        try:
+            access_token = self.tm.get_token()
+            return {"Service-CRN": self.crn, "Authorization": f"Bearer {access_token}"}
+        except Exception as ex:  # pylint: disable=broad-except
+            warnings.warn(
+                f"Unable to retrieve IBM Cloud access token. API Key will be used instead. {ex}"
+            )
+            return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
 
 
 class QuantumAuth(AuthBase):
