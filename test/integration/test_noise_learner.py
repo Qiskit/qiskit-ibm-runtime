@@ -133,11 +133,15 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             result = estimator_job.result()
 
             noise_model_metadata = result.metadata["resilience"]["layer_noise_model"]
-            for x, y in zip(noise_model, noise_model_metadata):
-                self.assertEqual(x.circuit, y.circuit)
-                self.assertEqual(x.qubits, y.qubits)
-                self.assertEqual(x.error.generators, y.error.generators)
-                self.assertEqual(x.error.rates.tolist(), y.error.rates.tolist())
+            for nm0 in noise_model:
+                match_found = False
+                for nm1 in noise_model_metadata:
+                    if nm0.circuit == nm1.circuit:
+                        self.assertEqual(nm0.qubits, nm1.qubits)
+                        self.assertEqual(nm0.error.generators, nm1.error.generators)
+                        self.assertEqual(nm0.error.rates.tolist(), nm1.error.rates.tolist())
+                        match_found = True
+                self.assertTrue(match_found)
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
