@@ -83,7 +83,8 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         isa_circuit = pm.run([bell()])
         with Session(backend=backend) as session:
             sampler = SamplerV2(mode=session)
-            sampler.run(isa_circuit)
+            job = sampler.run(isa_circuit)
+            job.result()
 
         with mock.patch.object(service._api_client, "create_session") as mock_create_session:
             new_session = Session.from_id(session_id=session._session_id, service=service)
