@@ -32,8 +32,8 @@ class CloudAuth(AuthBase):
         self.crn = crn
         self.api_key = api_key
         iam_url = (
-            f"https://{"private." if private else ""}"
-            f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == "staging" else CLOUD_IAM_URL}"
+            f"https://{"private." if private else ''}"
+            f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == 'staging' else CLOUD_IAM_URL}"
         )
         self.tm = IAMTokenManager(api_key, url=iam_url)
 
