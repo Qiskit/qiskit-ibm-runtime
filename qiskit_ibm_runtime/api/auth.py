@@ -51,6 +51,13 @@ class CloudAuth(AuthBase):
         r.headers.update(self.get_headers())
         return r
 
+    def __deepcopy__(self, _memo: dict = None) -> "CloudAuth":
+        cpy = CloudAuth(
+            api_key=self.api_key,
+            crn=self.crn,
+        )
+        return cpy
+
     def get_headers(self) -> Dict:
         """Return authorization information to be stored in header."""
         try:
