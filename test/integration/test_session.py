@@ -21,7 +21,7 @@ from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
 from ..utils import bell
 from ..decorators import run_integration_test, quantum_only
@@ -83,7 +83,8 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         isa_circuit = pm.run([bell()])
         with Session(backend=backend) as session:
             sampler = SamplerV2(mode=session)
-            sampler.run(isa_circuit)
+            job = sampler.run(isa_circuit)
+            job.result()
 
         with mock.patch.object(service._api_client, "create_session") as mock_create_session:
             new_session = Session.from_id(session_id=session._session_id, service=service)
@@ -96,3 +97,17 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
+
+    @run_integration_test
+    def test_session_from_id_no_backend(self, service):
+        """Test error is raised if session has no backend."""
+        backend = service.backend(self.dependencies.qpu)
+        if backend.configuration().simulator:
+            raise SkipTest("No proper backends available")
+
+        with Session(backend=backend) as session:
+            _ = SamplerV2(mode=session)
+
+        if session.details().get("backend_name") == "":
+            with self.assertRaises(IBMRuntimeError):
+                Session.from_id(session_id=session._session_id, service=service)
