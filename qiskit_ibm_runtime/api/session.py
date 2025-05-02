@@ -35,6 +35,7 @@ from ..version import __version__ as ibm_runtime_version
 STATUS_FORCELIST = (
     500,  # General server error
     502,  # Bad Gateway
+    503,  # Service Unavailable
     504,  # Gateway Timeout
     520,  # Cloudflare general error
     521,  # Cloudflare web server is down
