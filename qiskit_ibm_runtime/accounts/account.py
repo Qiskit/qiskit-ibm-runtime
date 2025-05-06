@@ -145,10 +145,6 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    # def list_instances(self) -> None:
-    #     """"""
-    #     pass
-
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Account):
             return False

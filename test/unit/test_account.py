@@ -387,10 +387,10 @@ class TestAccountManager(IBMTestCase):
         # unset default_channel in the environment
         with temporary_account_config_file(token=token), no_envs("QISKIT_IBM_CHANNEL"):
             service = FakeRuntimeService()
-        self.assertEqual(service.channel, "ibm_cloud")
+        self.assertEqual(service.channel, "ibm_quantum_platform")
 
         # set channel to default channel in the environment
-        subtests = ["ibm_quantum", "ibm_cloud"]
+        subtests = ["ibm_quantum", "ibm_quantum_platform"]
         for channel in subtests:
             channel_env = {"QISKIT_IBM_CHANNEL": channel}
             with (
@@ -586,7 +586,7 @@ class TestAccountManager(IBMTestCase):
         # default channel
         with temporary_account_config_file(contents=contents), no_envs("QISKIT_IBM_CHANNEL"):
             service = FakeRuntimeService()
-            self.assertEqual(service.channel, "ibm_cloud")
+            self.assertEqual(service.channel, "ibm_quantum_platform")
 
     def tearDown(self) -> None:
         """Test level tear down."""
