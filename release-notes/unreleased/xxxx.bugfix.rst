@@ -1,0 +1,1 @@
+Fixed an ``ImportError``/``FileNotFoundError`` when importing ``qiskit_ibm_runtime`` after pip installation due to incorrect path resolution for ``VERSION.txt``. Uses ``importlib.resources`` now. (:pr:`xxxx`)
