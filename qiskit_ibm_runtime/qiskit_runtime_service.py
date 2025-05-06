@@ -43,6 +43,8 @@ from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .accounts.storage import read_config
+from .accounts.management import _DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -155,24 +157,18 @@ class QiskitRuntimeService:
         self._url_resolver = url_resolver
 
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            if self._channel == "ibm_cloud":
-                warnings.warn(
-                    'The "ibm_cloud" channel option is deprecated and will be replaced with '
-                    '"ibm_quantum_platform". For more information on the new IBM Quantum Platform, '
-                    "review the migration guide "
-                    "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
+            self._get_account_defaults()
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
+            self._all_instances = None
+            self._backend_instance_groups: Dict[str, List[str]] = {}
+
         else:
             warnings.warn(
                 'The "ibm_quantum" channel option is deprecated and will be sunset on 1 July. '
-                'After this date, "ibm_cloud" and "local" will be the only valid channels. '
-                "For information on migrating to the new IBM Quantum Platform on the "
-                '"ibm_cloud" channel, review the migration guide '
+                'After this date, "ibm_cloud", "ibm_quantum_platform", and "local" will be the '
+                "only valid channels. For information on migrating to the new IBM Quantum Platform, "
+                "review the migration guide "
                 "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
                 DeprecationWarning,
                 stacklevel=2,
@@ -191,6 +187,54 @@ class QiskitRuntimeService:
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
+
+    def _discover_backends_from_instance(self, instance: str) -> None:
+        """Retrieve all backends from the given instance."""
+
+        # refactor this, is there an easier way to fetch all backends
+        # ntc 5779 would make things a lot faster - get list of backends
+        # from global search API call
+        params = ClientParameters(
+            channel=self._account.channel,
+            token=self._account.token,
+            url=self._account.url,
+            instance=instance,
+            proxies=self._account.proxies,
+            verify=self._account.verify,
+            private_endpoint=self._account.private_endpoint,
+            url_resolver=self._url_resolver,
+        )
+
+        self._backend_instance_groups[instance] = RuntimeClient(params).list_backends()
+
+    def _get_instance_from_grouping(self, backend_name: str) -> str:
+        """Return an instance that has the given backend available."""
+        if self._default_region:
+            filtered_dict = {
+                key: value
+                for key, value in self._backend_instance_groups.items()
+                if self._default_region in key
+            }
+        # TODO filter by plan preference
+        for instance, backends in filtered_dict.items():
+            if backend_name in backends:
+                return instance
+
+        # check all instances if backend is not in default region
+        for instance, backends in self._backend_instance_groups.items():
+            if backend_name in backends:
+                return instance
+        raise QiskitBackendNotFoundError("No backend matches the criteria.")
+
+    def _get_account_defaults(self) -> None:
+        """Get saved account defaults: default_instance, plans_preference, and region."""
+        saved_defaults = read_config(_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS)
+        if saved_defaults.get("default_instance"):
+            self._default_instance = True
+        else:
+            self._default_instance = False
+        self._default_region = saved_defaults.get("region")
+        self._preferred_plans = saved_defaults.get("plans_preference")
 
     def _discover_account(
         self,
@@ -460,8 +504,8 @@ class QiskitRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: In hub/group/project format if on the ``ibm_quantum`` channel.
+                IBM Cloud account crn if on the ``ibm_quantum_platform`` channel.
             dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -533,10 +577,17 @@ class QiskitRuntimeService:
                 ):
                     backends.append(backend)
         else:
-            if instance:
-                raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
-                )
+            if self._client_params.instance != self._account.instance:
+                # reset api client
+                self._client_params.instance = self._account.instance
+                self._api_client = RuntimeClient(self._client_params)
+            # do we want backends from all instances in service.backends()?
+            if not self._all_instances:
+                # fetch all instances and all backends in each instance. Save in dict
+                self._all_instances = self._account.list_instances()  # type: ignore[attr-defined]
+                for inst in self._all_instances:
+                    self._discover_backends_from_instance(inst)
+
             for backend_name in self._backend_allowed_list:
                 if backend := self._create_backend_obj(
                     backend_name,
@@ -544,6 +595,37 @@ class QiskitRuntimeService:
                     use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
+
+            if name and name not in self._backend_allowed_list:
+                instance_with_backend = None
+                # if instance is explicity passed in
+                if instance:
+                    if instance not in self._all_instances:
+                        raise IBMInputValueError(f"{instance} is not a valid instance.")
+                    if name not in self._backend_instance_groups.get(instance, []):
+                        raise IBMInputValueError(
+                            f"Backend {name} is not available in instance {instance}."
+                        )
+                    instance_with_backend = instance
+                else:  # if no instance passed in, check for default instance
+                    if not self._default_instance:
+                        # if no default instance set, check all instances and
+                        # fetch one that has the backend
+                        instance_with_backend = self._get_instance_from_grouping(name)
+
+                if instance_with_backend:
+                    # TODO how do we handle this logic here?
+                    # fetching a backend not in the current account instance requires a
+                    # different api client - this api client is tied to everything
+                    self._client_params.instance = instance_with_backend
+                    self._api_client = RuntimeClient(self._client_params)
+                    backend = self._create_backend_obj(
+                        name,
+                        instance=instance_with_backend,
+                        use_fractional_gates=use_fractional_gates,
+                    )
+                    if backend:
+                        backends.append(backend)
 
         if name:
             kwargs["backend_name"] = name
@@ -595,7 +677,7 @@ class QiskitRuntimeService:
                 use_fractional_gates=use_fractional_gates,
             )
         except Exception as ex:  # pylint: disable=broad-except
-            logger.warning("Unable to create retrieve configuration for %s. %s ", backend_name, ex)
+            logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
 
         if config:
@@ -709,6 +791,8 @@ class QiskitRuntimeService:
             plans_preference: A list of account types, ordered by preference. An instance with the first
                 value in the list will be prioritized if an instance is not passed in.
         """
+
+        # TODO validate account defaults
 
         AccountManager.save(
             token=token,
@@ -1205,7 +1289,7 @@ class QiskitRuntimeService:
         """
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
-        return []
+        return self._all_instances
 
     @property
     def channel(self) -> str:

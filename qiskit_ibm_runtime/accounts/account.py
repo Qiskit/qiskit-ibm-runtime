@@ -17,17 +17,20 @@ import logging
 from typing import Optional, Literal, List
 from urllib.parse import urlparse
 
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+
+from ibm_platform_services import GlobalSearchV2
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn
+from ..utils import resolve_crn, cname_from_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[Literal["open", "standard"]]]
+PlanType = Optional[List[Literal["Dedicated", "Premium", "Flex", "Open", "Standard"]]]
 
 ChannelType = Optional[
     Literal[
@@ -141,6 +144,10 @@ class Account:
         instance name and updates the ``instance`` attribute accordingly.
         Relevant for "ibm_cloud" channel only."""
         pass
+
+    # def list_instances(self) -> None:
+    #     """"""
+    #     pass
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Account):
@@ -314,6 +321,31 @@ class CloudAccount(Account):
 
         # overwrite with CRN value
         self.instance = crn[0]
+
+    def list_instances(self) -> List[str]:
+        """Retrieve all crns with the IBM Cloud Global Search API."""
+        url = None
+        if cname_from_crn(self.instance) == "staging":
+            url = "https://iam.test.cloud.ibm.com"
+        authenticator = IAMAuthenticator(self.token, url=url)
+        client = GlobalSearchV2(authenticator=authenticator)
+        if cname_from_crn(self.instance) == "staging":
+            client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
+        search_cursor = None
+        all_crns = []
+        while True:
+            result = client.search(
+                query="service_name:quantum-computing",
+                fields=["crn"],
+                search_cursor=search_cursor,
+                limit=100,
+            ).get_result()
+            crns = [item.get("crn") for item in result.get("items", [])]
+            all_crns.extend(crns)
+            search_cursor = result.get("search_cursor")
+            if not search_cursor:
+                break
+        return all_crns
 
     @staticmethod
     def _assert_valid_instance(instance: str) -> None:

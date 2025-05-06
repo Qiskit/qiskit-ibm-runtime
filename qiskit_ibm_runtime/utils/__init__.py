@@ -25,6 +25,7 @@ from .utils import (
     default_runtime_url_resolver,
     resolve_crn,
     are_circuits_dynamic,
+    cname_from_crn,
 )
 from .validations import (
     validate_estimator_pubs,

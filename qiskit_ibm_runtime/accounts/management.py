@@ -13,6 +13,7 @@
 """Account management related classes and functions."""
 
 import os
+import logging
 from typing import Optional, Dict, List
 
 from ..proxies import ProxyConfiguration
@@ -31,6 +32,8 @@ _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
 _DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_cloud"
 _CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_quantum"]
+
+logger = logging.getLogger(__name__)
 
 
 class AccountManager:
@@ -73,7 +76,8 @@ class AccountManager:
 
         if channel != "ibm_quantum" and not instance:
             saved_defaults = read_config(_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS)
-            instance = saved_defaults.get("default_instance")
+            if instance := saved_defaults.get("default_instance"):
+                logger.warning("Instance was not passed in. Default instance will be used.")
 
         config = Account.create_account(
             channel=channel,
