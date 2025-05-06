@@ -31,6 +31,19 @@ class TestAuthClient(IBMTestCase):
         client = self._init_auth_client(dependencies.token, dependencies.url)
         self.assertTrue(client.access_token)
 
+    @integration_test_setup(supported_channel=["ibm_cloud"], init_service=False)
+    def test_cloud_access_token(self, dependencies: IntegrationTestDependencies) -> None:
+        """Test valid cloud authentication."""
+        params = ClientParameters(
+            channel="ibm_cloud",
+            token=dependencies.token,
+            url=dependencies.url,
+            instance=dependencies.instance,
+        )
+        cloud_auth = params.get_auth_handler()
+        self.assertTrue(cloud_auth.tm)
+        self.assertTrue(cloud_auth.tm.get_token())
+
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_url_404(self, dependencies: IntegrationTestDependencies) -> None:
         """Test login against a 404 URL"""
