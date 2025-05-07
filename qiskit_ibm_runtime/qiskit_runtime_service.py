@@ -94,32 +94,33 @@ class QiskitRuntimeService:
         values in the loaded account.
 
         Args:
-            channel: Channel type. ``ibm_cloud``, ``ibm_quantum_platform`` or ``local``. If ``local`` is
-             selected, the local testing mode will be used, and primitive queries will run on a local
-             simulator. For more details, check the `Qiskit Runtime local testing mode
-             <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
-             The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
-             should be used instead. Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to
-             the same channel. For more information, review the `migration guide
-             <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
-            token: IBM Cloud API key or IBM Quantum API token.
-            url: The API URL.
+            Optional[ChannelType] channel: Channel type. ``ibm_cloud``, ``ibm_quantum_platform``
+                or ``local``. If ``local`` is selected, the local testing mode will be used, and
+                primitive queries will run on a local simulator. For more details, check the
+                `Qiskit Runtime local testing mode
+                <https://docs.quantum.ibm.com/guides/local-testing-mode>`_  documentation.
+                The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
+                should be used instead. Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to
+                the same channel. For more information, review the `migration guide
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
+            Optional[str] token: IBM Cloud API key or IBM Quantum API token.
+            Optional[str] url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum.ibm.com/api (ibm_quantum).
-            filename: Full path of the file where the account is created.
+            Optional[str] filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
-            name: Name of the account to load.
-            instance: The service instance to use.
+            Optional[str] name: Name of the account to load.
+            Optional[str] instance: The service instance to use.
                 For ``ibm_cloud`` runtime, this is the Cloud Resource
                 Name (CRN) or the service name.
-            proxies: Proxy configuration. Supported optional keys are
+            Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
-            verify: Whether to verify the server's TLS certificate.
-            private_endpoint: Connect to private API URL.
-            url_resolver: Function used to resolve the runtime url.
+            Optional[bool] verify: Whether to verify the server's TLS certificate.
+            Optional[bool] private_endpoint: Connect to private API URL.
+            Optional[Callable] url_resolver: Function used to resolve the runtime url.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
