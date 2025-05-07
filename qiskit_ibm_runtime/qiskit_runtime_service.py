@@ -25,6 +25,7 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
+from .utils import is_crn
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -98,7 +99,8 @@ class QiskitRuntimeService:
              simulator. For more details, check the `Qiskit Runtime local testing mode
              <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
              The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
-             should be used instead. For help, review the `migration guide
+             should be used instead. Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to
+             the same channel. For more information, review the `migration guide
              <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
@@ -160,8 +162,8 @@ class QiskitRuntimeService:
             self._get_account_defaults()
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
-            self._all_instances = None
-            self._backend_instance_groups: Dict[str, List[str]] = {}
+            self._all_instances: List[str] = []
+            self._backend_instance_groups: List[Dict[str, Any]] = []
 
         else:
             warnings.warn(
@@ -209,21 +211,24 @@ class QiskitRuntimeService:
 
     def _get_instance_from_grouping(self, backend_name: str) -> str:
         """Return an instance that has the given backend available."""
+        filtered_instances = self._backend_instance_groups
         if self._default_region:
-            filtered_dict = {
-                key: value
-                for key, value in self._backend_instance_groups.items()
-                if self._default_region in key
-            }
-        # TODO filter by plan preference
-        for instance, backends in filtered_dict.items():
-            if backend_name in backends:
-                return instance
+            filtered_instances = [d for d in filtered_instances if self._default_region in d["crn"]]
 
-        # check all instances if backend is not in default region
-        for instance, backends in self._backend_instance_groups.items():
-            if backend_name in backends:
-                return instance
+        if self._preferred_plans:
+            filtered_instances = sorted(
+                filtered_instances,
+                key=lambda d: (
+                    self._preferred_plans.index(d["plan"])
+                    if d["plan"] in self._preferred_plans
+                    else len(self._preferred_plans)
+                ),
+            )
+
+        for instance_dict in filtered_instances:
+            if backend_name in instance_dict["backends"]:
+                return instance_dict["crn"]
+
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def _get_account_defaults(self) -> None:
@@ -584,16 +589,25 @@ class QiskitRuntimeService:
 
             if instance:
                 # passing in instance explicity takes precendence
-                instance_backends = self._discover_backends_from_instance(instance)
-                self._client_params.instance = instance
-                self._api_client = RuntimeClient(self._client_params)
-                for backend_name in instance_backends:
-                    if backend := self._create_backend_obj(
-                        backend_name,
-                        instance=instance,
-                        use_fractional_gates=use_fractional_gates,
-                    ):
-                        backends.append(backend)
+                if not self._all_instances:
+                    self._all_instances = [t[0] for t in self._account.list_instances()]  # type: ignore
+                if not is_crn(instance):
+                    raise IBMInputValueError(f"{instance} is not a valid instance.")
+                if instance not in self._all_instances:
+                    # my personal test instance isn't returned in the global search API but
+                    # still accessible with same API token
+                    logger.warning("Instance given is not in list of available instances.")
+                if not name:
+                    instance_backends = self._discover_backends_from_instance(instance)
+                    self._client_params.instance = instance
+                    self._api_client = RuntimeClient(self._client_params)
+                    for backend_name in instance_backends:
+                        if backend := self._create_backend_obj(
+                            backend_name,
+                            instance=instance,
+                            use_fractional_gates=use_fractional_gates,
+                        ):
+                            backends.append(backend)
             else:
                 for backend_name in self._backend_allowed_list:
                     if backend := self._create_backend_obj(
@@ -607,27 +621,32 @@ class QiskitRuntimeService:
                 instance_with_backend = None
                 # if instance is explicity passed in, it takes precendence
                 if instance:
-                    # if instance not in self._all_instances:
-                    #     raise IBMInputValueError(f"{instance} is not a valid instance.")
-                    if (
-                        self._backend_instance_groups
-                        and name not in self._backend_instance_groups.get(instance, [])
-                    ):
-                        raise IBMInputValueError(
-                            f"Backend {name} is not available in instance {instance}."
+                    if self._backend_instance_groups:
+                        instance_data: Dict[str, Any] = next(
+                            (d for d in self._backend_instance_groups if d["crn"] == instance), {}
                         )
+                        if instance_data and name not in instance_data["backends"]:
+                            raise IBMInputValueError(
+                                f"Backend {name} is not available in instance {instance}."
+                            )
                     instance_with_backend = instance
                 else:  # if no instance passed in, check for default instance
                     if not self._default_instance:
                         if not self._all_instances:
+                            logger.warning(
+                                "Backend not available in "
+                                "current instance. Searching other available instances."
+                            )
                             # fetch all instances and all backends in each instance. Save in dict
-                            self._all_instances = self._account.list_instances()  # type: ignore
-                            for inst in self._all_instances:
-                                print(
-                                    "fetching all instances and backends"
-                                )  # maybe raise a warning here bc this is slow
-                                self._backend_instance_groups[inst] = (
-                                    self._discover_backends_from_instance(inst)
+                            instance_data = self._account.list_instances()  # type: ignore
+                            self._all_instances = [t[0] for t in instance_data]
+                            for inst in instance_data:
+                                self._backend_instance_groups.append(
+                                    {
+                                        "crn": inst[0],
+                                        "plan": inst[1],
+                                        "backends": self._discover_backends_from_instance(inst[0]),
+                                    }
                                 )
                         # if no default instance set, check all instances and
                         # fetch one that has the backend

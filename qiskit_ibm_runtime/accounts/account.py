@@ -14,12 +14,12 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List
+from typing import Optional, Literal, List, Tuple
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
-from ibm_platform_services import GlobalSearchV2
+from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
@@ -30,7 +30,7 @@ from ..utils import resolve_crn, cname_from_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[Literal["Dedicated", "Premium", "Flex", "Open", "Standard"]]]
+PlanType = Optional[List[str]]
 
 ChannelType = Optional[
     Literal[
@@ -318,13 +318,14 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[str]:
+    def list_instances(self) -> List[Tuple[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
         if cname_from_crn(self.instance) == "staging":
             url = "https://iam.test.cloud.ibm.com"
         authenticator = IAMAuthenticator(self.token, url=url)
         client = GlobalSearchV2(authenticator=authenticator)
+        catalog = GlobalCatalogV1(authenticator=authenticator)
         if cname_from_crn(self.instance) == "staging":
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
         search_cursor = None
@@ -332,11 +333,16 @@ class CloudAccount(Account):
         while True:
             result = client.search(
                 query="service_name:quantum-computing",
-                fields=["crn"],
+                fields=["crn", "service_plan_unique_id"],
                 search_cursor=search_cursor,
                 limit=100,
             ).get_result()
-            crns = [item.get("crn") for item in result.get("items", [])]
+            crns = []
+            for item in result.get("items", []):
+                plan_name = catalog.get_catalog_entry(
+                    id=item.get("service_plan_unique_id")
+                ).get_result()
+                crns.append((item.get("crn"), plan_name.get("name")))
             all_crns.extend(crns)
             search_cursor = result.get("search_cursor")
             if not search_cursor:
