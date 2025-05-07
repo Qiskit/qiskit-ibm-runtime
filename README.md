@@ -30,11 +30,14 @@ pip install qiskit-ibm-runtime
 
 ### Qiskit Runtime service on IBM Quantum Platform
 
+| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
+|:---------------------------|
+
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
 1. Create an IBM Quantum account or log in to your existing account by visiting the [IBM Quantum login page].
 
-1. Copy (and optionally regenerate) your API token from your
+2. Copy (and optionally regenerate) your API token from your
    [IBM Quantum account page].
 
 ### Qiskit Runtime service on IBM Cloud
@@ -57,7 +60,11 @@ them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json`
  ```python
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-# Save an IBM Quantum Platform account.
+# Save an IBM Cloud account.
+QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+
+# 'ibm_quantum_platform' and 'ibm_cloud' point to the same channel so they can be used interchangeably
+# In a future releases 'ibm_cloud' will be deprecated and removed in favor of 'ibm_quantum_platform'
 QiskitRuntimeService.save_account(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
 
@@ -74,7 +81,7 @@ Alternatively, the service can discover credentials from environment variables:
 ```bash
 export QISKIT_IBM_TOKEN="MY_IBM_CLOUD_API_KEY"
 export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
-export QISKIT_IBM_CHANNEL="ibm_quantum_platform"
+export QISKIT_IBM_CHANNEL="ibm_cloud"
 ```
 
 Then instantiate the service without any arguments:
@@ -92,11 +99,8 @@ service with your credentials.
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 # For an IBM Cloud account.
-ibm_cloud_service = QiskitRuntimeService(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
-
-| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
-|:---------------------------|
 
 ## Primitives
 
@@ -283,15 +287,15 @@ You can specify an instance when initializing the service or provider, or when p
 
 ```python
 # Optional: List all the instances you can access.
-service = QiskitRuntimeService(channel='ibm_quantum_platform')
+service = QiskitRuntimeService(channel='ibm_cloud')
 print(service.instances())
 
 # Optional: Specify the instance at service level. This becomes the default unless overwritten.
-service = QiskitRuntimeService(channel='ibm_quantum_platform', instance="IBM_CLOUD_INSTANCE")
+service = QiskitRuntimeService(channel='ibm_cloud', instance="IBM_CLOUD_INSTANCE")
 backend1 = service.backend("ibmq_manila")
 
 # Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
-backend2 = service.backend("ibmq_manila", instance="hub2/group2/project2")
+backend2 = service.backend("ibmq_manila", instance="IBM_CLOUD_INSTANCE")
 
 sampler1 = Sampler(mode=backend1)    # this will use hub1/group1/project1
 sampler2 = Sampler(mode=backend2)    # this will use hub2/group2/project2

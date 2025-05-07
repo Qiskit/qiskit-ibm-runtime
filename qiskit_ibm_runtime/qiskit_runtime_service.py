@@ -87,7 +87,7 @@ class QiskitRuntimeService:
             - Account defined by the input `channel` and `token`, if specified.
             - Account defined by the `default_channel` if defined in filename
             - Account defined by the environment variables, if defined.
-            - Default account for the ``ibm_quantum_platform`` account, if one is available.
+            - Default account for the ``ibm_cloud`` account, if one is available.
             - Default account for the ``ibm_quantum`` account, if one is available.
 
         `instance`, `proxies`, and `verify` can be used to overwrite corresponding
@@ -104,13 +104,13 @@ class QiskitRuntimeService:
              <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_quantum_platform) or
+                Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum.ibm.com/api (ibm_quantum).
             filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
             instance: The service instance to use.
-                For ``ibm_quantum_platform`` runtime, this is the Cloud Resource
+                For ``ibm_cloud`` runtime, this is the Cloud Resource
                 Name (CRN) or the service name.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
@@ -510,7 +510,7 @@ class QiskitRuntimeService:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: In hub/group/project format if on the ``ibm_quantum`` channel.
-                IBM Cloud account crn if on the ``ibm_quantum_platform`` channel.
+                IBM Cloud account crn if on the ``ibm_cloud`` channel.
             dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -805,8 +805,8 @@ class QiskitRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_quantum_platform) or
-            instance: The CRN (ibm_quantum_platform).
+                Defaults to https://cloud.ibm.com (ibm_cloud) or
+            instance: The CRN (ibm_cloud).
             channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide.

@@ -279,7 +279,7 @@ class CloudAccount(Account):
         """
         super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_quantum_platform"
+        self.channel = "ibm_cloud"
         self.url = resolved_url
         self.private_endpoint = private_endpoint
 
@@ -297,7 +297,7 @@ class CloudAccount(Account):
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
         crn = resolve_crn(
-            channel="ibm_quantum_platform",
+            channel="ibm_cloud",
             url=self.url,
             token=self.token,
             instance=self.instance,

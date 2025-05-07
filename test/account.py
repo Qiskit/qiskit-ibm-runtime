@@ -123,7 +123,7 @@ class temporary_account_config_file(ContextDecorator):
 
 def get_account_config_contents(
     name=None,
-    channel="ibm_quantum_platform",
+    channel="ibm_cloud",
     token=None,
     url=None,
     instance=None,

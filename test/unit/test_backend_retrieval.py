@@ -207,7 +207,7 @@ class TestBackendFilters(IBMTestCase):
             backend_specs=fake_backend_specs,
         )
         cloud_service = FakeRuntimeService(
-            channel="ibm_quantum_platform",
+            channel="ibm_cloud",
             token="my_token",
             instance="my_instance",
             backend_specs=fake_backend_specs,

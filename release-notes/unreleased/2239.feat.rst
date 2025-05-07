@@ -2,13 +2,15 @@ The following changes were made to support the upcoming
 `IBM Quantum platform migration <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__:
 
     - When initializing the service, there is a new channel type, ``ibm_quantum_platform``, which replaces ``ibm_cloud``. 
-      ``ibm_cloud`` as a channel input will be deprecated and removed in future releases. 
+      ``ibm_quantum_platform`` and ``ibm_cloud`` point to the same channel but  
+      ``ibm_cloud`` will be deprecated and removed in future releases. 
 
     - When saving an account on the new platform, an instance is no longer required if 
       there is a default instance set. To set the default instance, pass in an instance for ``default_instance`` 
       when saving an account. Optionally, it is also possible to set region and plan order preferences. These
-      preferences are taken into account when the selected backend is not available in the current account instance,
-      and an instance that has the selected backend available needs to be choosen.
+      preferences are taken into account when the selected backend (``service.backend()``) is not available in the current account instance,
+      but a different available instance. If ``region`` and ``plans_preference`` are not set, the first instance that has 
+      the backend available will be used.
 
         .. code-block:: python
             QiskitRuntimeService.save_account(
@@ -18,13 +20,15 @@ The following changes were made to support the upcoming
                 plans_preference=['Open',...], #Optional
             )
 
+      These account values will be stored in an ``account-defaults.json`` file.
+
     - When selecting a backend with :meth:`~.QiskitRuntimeService.backend`, one of the following cases will happen: 
         - If there is a default instance set and ``instance`` is NOT passed in as a parameter, 
         the backend will be returned if it is available in the default instance. An error is raised
         if the backend is not in the default instance 
         - If there is a default instance set and ``instance`` is passed in as a parameter, 
         the backend will be returned if it is in the passed instance. An error is raised if the backend is 
-        not in the passed instance. The instanced passed as a parameter will always take priority.
+        not in the passed instance. The instanced passed as a parameter will always take precendence.
         - If there is no default instance, and the backend selected is NOT in the current account instance,
         all available instances will be searched and the first suitable instance will be used. As mentioned, 
         a ``region`` and ``plans_preference`` can be saved so instances of that region and preferred plan 
@@ -38,6 +42,10 @@ The following changes were made to support the upcoming
             # No default instance set
             backend = service.backend('...') # selects an instance which access to this backend
             backend = service.backend('...', instance="...") # uses the instance specified, if backend not available
+
+        - The same logic applies to :meth:`~.QiskitRuntimeService.backends` where only backends 
+          in the default instance will be returned unless an instance is explicity passed in as a parameter.
+          If there is no default instance, all accessible backends will be returned.
 
     - It is possible to view all instances on the new platform with :meth:`~.QiskitRuntimeService.instances`
 

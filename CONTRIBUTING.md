@@ -144,7 +144,7 @@ When a single backend is retrieved with the `instance` parameter,
   service.backend('ibm_torino', instance='IBM_CLOUD_INSTANCE')
   # raises error if torino is not in given instance but in a different instance
   # the user has access to
-  service = QiskitRuntimeService(channel="ibm_quantum_platform", instance="IBM_CLOUD_INSTANCE")
+  service = QiskitRuntimeService(channel="ibm_cloud", instance="IBM_CLOUD_INSTANCE")
   service.backend('ibm_torino') # raises the same error
 
 if the backend is not in the instance, but in a different one the user
@@ -216,7 +216,7 @@ make integration-test
 Integration tests require an environment configuration and can be run against the IBM Quantum Platform API
 (`ibm_quantum_platform` channel).
 
-Sample configuration
+Sample configuration for IBM Cloud (ibm_quantum_platform)
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
