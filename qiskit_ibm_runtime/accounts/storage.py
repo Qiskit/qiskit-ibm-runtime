@@ -21,15 +21,6 @@ from .exceptions import AccountAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-def save_account_defaults(filename: str, data: dict) -> None:
-    """Save IBM Quantum Platform account defaults: instance, region,
-    and plan preferences.
-    """
-    _ensure_file_exists(filename)
-    with open(filename, mode="w", encoding="utf-8") as json_out:
-        json.dump(data, json_out, sort_keys=True, indent=4)
-
-
 def save_config(
     filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = None
 ) -> None:

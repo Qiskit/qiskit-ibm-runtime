@@ -19,14 +19,12 @@ from typing import Optional, Dict, List
 from ..proxies import ProxyConfiguration
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
-from .storage import save_config, read_config, delete_config, save_account_defaults
+from .storage import save_config, read_config, delete_config
 
 _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
-_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS = os.path.join(
-    os.path.expanduser("~"), ".qiskit", "account-defaults.json"
-)
+
 _DEFAULT_ACCOUNT_NAME = "default"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
@@ -53,7 +51,7 @@ class AccountManager:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
-        default_instance: Optional[str] = None,
+        account_id: Optional[str] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> None:
@@ -63,22 +61,6 @@ class AccountManager:
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
 
-        if default_instance or region or plans_preference:
-            account_filename = os.path.expanduser(_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS)
-            save_account_defaults(
-                account_filename,
-                {
-                    "default_instance": default_instance or "",
-                    "region": region or "",
-                    "plans_preference": plans_preference or [],
-                },
-            )
-
-        if channel != "ibm_quantum" and not instance:
-            saved_defaults = read_config(_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS)
-            if instance := saved_defaults.get("default_instance"):
-                logger.warning("Instance was not passed in. Default instance will be used.")
-
         config = Account.create_account(
             channel=channel,
             token=token,
@@ -87,7 +69,11 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
+            account_id=account_id,
+            region=region,
+            plans_preference=plans_preference,
         )
+        print(config.__dict__)
         return save_config(
             filename=filename,
             name=name,

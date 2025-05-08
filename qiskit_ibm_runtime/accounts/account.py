@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Tuple
+from typing import Optional, Literal, List, Dict
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -26,7 +26,7 @@ from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn, cname_from_crn
+from ..utils import resolve_crn, cname_from_crn, is_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
@@ -73,6 +73,9 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.private_endpoint: bool = False
+        self.account_id: str = None
+        self.region: str = None
+        self.plans_preference: List[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -94,6 +97,9 @@ class Account:
         instance = data.get("instance")
         verify = data.get("verify", True)
         private_endpoint = data.get("private_endpoint", False)
+        account_id = data.get("account_id")
+        region = data.get("region")
+        plans_preference = data.get("plans_preference")
         return cls.create_account(
             channel=channel,
             url=url,
@@ -102,6 +108,9 @@ class Account:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
+            account_id=account_id,
+            region=region,
+            plans_preference=plans_preference,
         )
 
     @classmethod
@@ -114,6 +123,9 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel == "ibm_quantum":
@@ -132,6 +144,9 @@ class Account:
                 proxies=proxies,
                 verify=verify,
                 private_endpoint=private_endpoint,
+                account_id=account_id,
+                region=region,
+                plans_preference=plans_preference,
             )
         else:
             raise InvalidAccountError(
@@ -143,6 +158,10 @@ class Account:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
         Relevant for "ibm_cloud" channel only."""
+        pass
+
+    def list_instances(self, account_id: Optional[str] = None):  # type: ignore
+        """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
     def __eq__(self, other: object) -> bool:
@@ -266,6 +285,9 @@ class CloudAccount(Account):
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ):
         """Account constructor.
 
@@ -279,9 +301,12 @@ class CloudAccount(Account):
         """
         super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_cloud"
+        self.channel = "ibm_quantum_platform"
         self.url = resolved_url
         self.private_endpoint = private_endpoint
+        self.account_id = account_id
+        self.region = region
+        self.plans_preference = plans_preference
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
@@ -309,16 +334,14 @@ class CloudAccount(Account):
         if len(crn) > 1:
             # handle edge-case where multiple service instances with the same name exist
             logger.warning(
-                "Multiple CRN values found for service name %s: %s. Using %s.",
-                self.instance,
-                crn,
+                "Multiple CRN values found for service name %s:",
                 crn[0],
             )
 
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Tuple[str, str]]:
+    def list_instances(self, account_id: Optional[str] = None) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
         if cname_from_crn(self.instance) == "staging":
@@ -330,10 +353,13 @@ class CloudAccount(Account):
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
         search_cursor = None
         all_crns = []
+        query = "service_name:quantum-computing"
+        if account_id:
+            query += f" AND account_id:{account_id}"
         while True:
             result = client.search(
-                query="service_name:quantum-computing",
-                fields=["crn", "service_plan_unique_id"],
+                query=query,
+                fields=["crn", "service_plan_unique_id", "account_id"],
                 search_cursor=search_cursor,
                 limit=100,
             ).get_result()
@@ -342,19 +368,25 @@ class CloudAccount(Account):
                 plan_name = catalog.get_catalog_entry(
                     id=item.get("service_plan_unique_id")
                 ).get_result()
-                crns.append((item.get("crn"), plan_name.get("name")))
+                crns.append(
+                    {
+                        "crn": item.get("crn"),
+                        "plan": plan_name.get("name"),
+                        "account_id": item.get("account_id"),
+                    }
+                )
             all_crns.extend(crns)
             search_cursor = result.get("search_cursor")
             if not search_cursor:
                 break
+        if not account_id:  # only return instances from first account
+            return [d for d in all_crns if d.get("account_id") == all_crns[0].get("account_id")]
         return all_crns
 
     @staticmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
-        if not (isinstance(instance, str) and len(instance) > 0):
+        if instance and not is_crn(instance):
             raise InvalidAccountError(
-                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'. "
-                "Either pass in an instance or set a default instance with "
-                "QiskitRuntimeService.save_account(default_instance='...')."
+                f"Invalid `instance` value. Expected an IBM Cloud crn, got '{instance}' instead. "
             )

@@ -44,8 +44,6 @@ from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .accounts.storage import read_config
-from .accounts.management import _DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +75,9 @@ class QiskitRuntimeService:
         verify: Optional[bool] = None,
         private_endpoint: Optional[bool] = None,
         url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -112,7 +113,9 @@ class QiskitRuntimeService:
             Optional[str] name: Name of the account to load.
             Optional[str] instance: The service instance to use.
                 For ``ibm_cloud`` runtime, this is the Cloud Resource
-                Name (CRN) or the service name.
+                Name (CRN) or the service name. If set, it will define a default instance for
+                service instantiation, if not set, the service will fetch all instances accessible
+                within the account.
             Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -121,6 +124,13 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
+            Optional[str] account_id: If your IBM cloud token has access to multiple accounts, specify
+                an account with its account_id. Defaults to the first account available.
+            Optional[str] region: Set a region preference. `us-east` or `eu-de`. An instance with
+                this region will be prioritized if an instance is not passed in.
+            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
+                An instance with the first value in the list will be prioritized if an instance
+                is not passed in.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -129,7 +139,6 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -160,11 +169,13 @@ class QiskitRuntimeService:
         self._url_resolver = url_resolver
 
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            self._get_account_defaults()
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
-            self._all_instances: List[str] = []
+            self._all_instances: List[Dict[str, str]] = []
             self._backend_instance_groups: List[Dict[str, Any]] = []
+            self._region = region or self._account.region
+            self._plans_preference = plans_preference or self._account.plans_preference
+            self._account_id = account_id or self._account.account_id
 
         else:
             warnings.warn(
@@ -213,16 +224,16 @@ class QiskitRuntimeService:
     def _get_instance_from_grouping(self, backend_name: str) -> str:
         """Return an instance that has the given backend available."""
         filtered_instances = self._backend_instance_groups
-        if self._default_region:
-            filtered_instances = [d for d in filtered_instances if self._default_region in d["crn"]]
+        if self._region:
+            filtered_instances = [d for d in filtered_instances if self._region in d["crn"]]
 
-        if self._preferred_plans:
+        if self._plans_preference:
             filtered_instances = sorted(
                 filtered_instances,
                 key=lambda d: (
-                    self._preferred_plans.index(d["plan"])
-                    if d["plan"] in self._preferred_plans
-                    else len(self._preferred_plans)
+                    self._plans_preference.index(d["plan"])
+                    if d["plan"] in self._plans_preference
+                    else len(self._plans_preference)
                 ),
             )
 
@@ -231,16 +242,6 @@ class QiskitRuntimeService:
                 return instance_dict["crn"]
 
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
-
-    def _get_account_defaults(self) -> None:
-        """Get saved account defaults: default_instance, plans_preference, and region."""
-        saved_defaults = read_config(_DEFAULT_ACCOUNT_CONFIG_ACCOUNT_DEFAULTS)
-        if saved_defaults.get("default_instance"):
-            self._default_instance = True
-        else:
-            self._default_instance = False
-        self._default_region = saved_defaults.get("region")
-        self._preferred_plans = saved_defaults.get("plans_preference")
 
     def _discover_account(
         self,
@@ -301,13 +302,16 @@ class QiskitRuntimeService:
         # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
-
         if instance:
             account.instance = instance
         if proxies:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        self._default_instance = True
+        if not account.instance:
+            self._default_instance = False
 
         # resolve CRN if needed
         self._resolve_crn(account)
@@ -582,90 +586,106 @@ class QiskitRuntimeService:
                     backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
                 ):
                     backends.append(backend)
-        else:
-            if self._client_params.instance != self._account.instance:
-                # reset api client
-                self._client_params.instance = self._account.instance
-                self._api_client = RuntimeClient(self._client_params)
-
-            if instance:
-                # passing in instance explicity takes precendence
-                if not self._all_instances:
-                    self._all_instances = [t[0] for t in self._account.list_instances()]  # type: ignore
-                if not is_crn(instance):
-                    raise IBMInputValueError(f"{instance} is not a valid instance.")
-                if instance not in self._all_instances:
-                    # my personal test instance isn't returned in the global search API but
-                    # still accessible with same API token
-                    logger.warning("Instance given is not in list of available instances.")
-                if not name:
-                    instance_backends = self._discover_backends_from_instance(instance)
-                    self._client_params.instance = instance
+        else:  # cloud channel
+            if not name:
+                if self._client_params.instance != self._account.instance:
+                    # reset api client
+                    self._client_params.instance = self._account.instance
                     self._api_client = RuntimeClient(self._client_params)
-                    for backend_name in instance_backends:
+
+                if instance:
+                    # passing in instance explicity takes precendence
+                    if not self._all_instances:
+                        self._all_instances = self._account.list_instances(self._account_id)
+                    if not is_crn(instance):
+                        raise IBMInputValueError(f"{instance} is not a valid instance.")
+                    if instance not in [t["crn"] for t in self._all_instances]:
+                        # my personal test instance isn't returned in the global search API but
+                        # still accessible with same API token
+                        logger.warning("Instance given is not in list of available instances.")
+                    if not name:
+                        instance_backends = self._discover_backends_from_instance(instance)
+                        self._client_params.instance = instance
+                        self._api_client = RuntimeClient(self._client_params)
+                        for backend_name in instance_backends:
+                            if backend := self._create_backend_obj(
+                                backend_name,
+                                instance=instance,
+                                use_fractional_gates=use_fractional_gates,
+                            ):
+                                backends.append(backend)
+                elif self._default_instance:
+                    for backend_name in self._backend_allowed_list:
                         if backend := self._create_backend_obj(
                             backend_name,
-                            instance=instance,
+                            instance=self._account.instance,
                             use_fractional_gates=use_fractional_gates,
                         ):
                             backends.append(backend)
-            else:
-                for backend_name in self._backend_allowed_list:
-                    if backend := self._create_backend_obj(
-                        backend_name,
-                        instance=self._account.instance,
-                        use_fractional_gates=use_fractional_gates,
-                    ):
-                        backends.append(backend)
+                else:
+                    if not self._all_instances:
+                        self._all_instances = self._account.list_instances()
+                    # include current instance backends too
+                    for backend_name in self._backend_allowed_list:
+                        if backend := self._create_backend_obj(
+                            backend_name,
+                            instance=self._account.instance,
+                            use_fractional_gates=use_fractional_gates,
+                        ):
+                            backends.append(backend)
+                    for inst in [t["crn"] for t in self._all_instances]:
+                        backends_list = self._discover_backends_from_instance(inst)
+                        for backend_name in backends_list:
+                            if backend_name not in self._backend_allowed_list:
+                                self._client_params.instance = inst
+                                self._api_client = RuntimeClient(self._client_params)
+                                self._backend_allowed_list.append(backend_name)
+                                if backend := self._create_backend_obj(
+                                    backend_name,
+                                    instance=inst,
+                                    use_fractional_gates=use_fractional_gates,
+                                ):
+                                    backends.append(backend)
 
-            if name and name not in self._backend_allowed_list:
+            if name:
                 instance_with_backend = None
                 # if instance is explicity passed in, it takes precendence
                 if instance:
-                    if self._backend_instance_groups:
-                        instance_data: Dict[str, Any] = next(
-                            (d for d in self._backend_instance_groups if d["crn"] == instance), {}
-                        )
-                        if instance_data and name not in instance_data["backends"]:
-                            raise IBMInputValueError(
-                                f"Backend {name} is not available in instance {instance}."
-                            )
                     instance_with_backend = instance
-                else:  # if no instance passed in, check for default instance
-                    if not self._default_instance:
-                        if not self._all_instances:
-                            logger.warning(
-                                "Backend not available in "
-                                "current instance. Searching other available instances."
-                            )
-                            # fetch all instances and all backends in each instance. Save in dict
-                            instance_data = self._account.list_instances()  # type: ignore
-                            self._all_instances = [t[0] for t in instance_data]
-                            for inst in instance_data:
-                                self._backend_instance_groups.append(
-                                    {
-                                        "crn": inst[0],
-                                        "plan": inst[1],
-                                        "backends": self._discover_backends_from_instance(inst[0]),
-                                    }
-                                )
-                        # if no default instance set, check all instances and
-                        # fetch one that has the backend
-                        instance_with_backend = self._get_instance_from_grouping(name)
-
-                if instance_with_backend:
-                    # TODO how do we handle this logic here?
-                    # fetching a backend not in the current account instance requires a
-                    # different api client - this api client is tied to everything
-                    self._client_params.instance = instance_with_backend
-                    self._api_client = RuntimeClient(self._client_params)
-                    backend = self._create_backend_obj(
-                        name,
-                        instance=instance_with_backend,
-                        use_fractional_gates=use_fractional_gates,
+                elif self._default_instance:
+                    instance_with_backend = self._account.instance
+                else:  # if no instance passed in, no default, check all instances
+                    logger.warning(
+                        "Backend not available in "
+                        "current instance. Searching other available instances."
                     )
-                    if backend:
-                        backends.append(backend)
+                    if not self._all_instances:
+                        # fetch all instances and all backends in each instance. Save in dict
+                        self._all_instances = self._account.list_instances(self._account_id)
+                    for instance_dict in self._all_instances:
+                        self._backend_instance_groups.append(
+                            {
+                                "crn": instance_dict["crn"],
+                                "plan": instance_dict["plan"],
+                                "backends": self._discover_backends_from_instance(
+                                    instance_dict["crn"]
+                                ),
+                            }
+                        )
+                    instance_with_backend = self._get_instance_from_grouping(name)
+
+                # TODO how do we handle this logic here?
+                # fetching a backend not in the current account instance requires a
+                # different api client - this api client is tied to everything
+                self._client_params.instance = instance_with_backend
+                self._api_client = RuntimeClient(self._client_params)
+                backend = self._create_backend_obj(
+                    name,
+                    instance=instance_with_backend,
+                    use_fractional_gates=use_fractional_gates,
+                )
+                if backend:
+                    backends.append(backend)
 
         if name:
             kwargs["backend_name"] = name
@@ -797,7 +817,7 @@ class QiskitRuntimeService:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
-        default_instance: Optional[str] = None,
+        account_id: Optional[str] = None,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
     ) -> None:
@@ -807,7 +827,9 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-            instance: The CRN (ibm_cloud).
+            instance: The CRN (ibm_cloud). This is an optional parameter.
+                If set, it will define a default instance for service instantiation,
+                if not set, the service will fetch all instances accessible within the account.
             channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide.
@@ -824,8 +846,8 @@ class QiskitRuntimeService:
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
-            default_instance: Set a default instance. This will be the instance used if one is not
-                passed in during account initialization.
+            account_id: If your IBM cloud token has access to multiple accounts, specify
+                an account with its account_id. Defaults to the first account available.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
             plans_preference: A list of account types, ordered by preference. An instance with the first
@@ -846,7 +868,7 @@ class QiskitRuntimeService:
             overwrite=overwrite,
             set_as_default=set_as_default,
             private_endpoint=private_endpoint,
-            default_instance=default_instance,
+            account_id=account_id,
             region=region,
             plans_preference=plans_preference,
         )
@@ -1329,7 +1351,7 @@ class QiskitRuntimeService:
         """
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
-        return self._all_instances
+        return [t["crn"] for t in self._all_instances]
 
     @property
     def channel(self) -> str:
