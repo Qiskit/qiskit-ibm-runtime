@@ -26,7 +26,7 @@ from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn, cname_from_crn, is_crn
+from ..utils import resolve_crn, cname_from_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
@@ -160,7 +160,9 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(self, account_id: Optional[str] = None):  # type: ignore
+    def list_instances(  # type: ignore
+        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
+    ):
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -342,7 +344,9 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self, account_id: Optional[str] = None) -> List[Dict[str, str]]:
+    def list_instances(
+        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
+    ) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
         is_staging = cname_from_crn(self.instance) == "staging"
@@ -353,6 +357,7 @@ class CloudAccount(Account):
         catalog = GlobalCatalogV1(authenticator=authenticator)
         if is_staging:
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
+            catalog.set_service_url("https://globalcatalog.test.cloud.ibm.com/api/v1")
         search_cursor = None
         all_crns = []
         query = "service_name:quantum-computing"
@@ -361,23 +366,30 @@ class CloudAccount(Account):
         while True:
             result = client.search(
                 query=query,
-                fields=["crn", "service_plan_unique_id", "account_id"],
+                fields=["crn", "service_plan_unique_id", "account_id", "name", "doc"],
                 search_cursor=search_cursor,
                 limit=100,
             ).get_result()
             crns = []
             items = result.get("items", [])
             for item in items:
-                plan_name = catalog.get_catalog_entry(
-                    id=item.get("service_plan_unique_id")
-                ).get_result()
-                crns.append(
-                    {
-                        "crn": item.get("crn"),
-                        "plan": plan_name.get("name"),
-                        "account_id": item.get("account_id"),
-                    }
-                )
+                # don't add instances without backend allocation
+                allocations = item.get("doc", {}).get("extensions")
+                if allocations:
+                    plan_name = {}
+                    if include_plan_name:
+                        plan_name = catalog.get_catalog_entry(
+                            id=item.get("service_plan_unique_id")
+                        ).get_result()
+                    crns.append(
+                        {
+                            "crn": item.get("crn"),
+                            "plan": plan_name.get("name"),
+                            "account_id": item.get("account_id"),
+                            "name": item.get("name"),
+                        }
+                    )
+
             all_crns.extend(crns)
             search_cursor = result.get("search_cursor")
             if not search_cursor:
@@ -390,7 +402,7 @@ class CloudAccount(Account):
     @staticmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
-        if instance and not is_crn(instance):
+        if instance and not isinstance(instance, str):
             raise InvalidAccountError(
                 f"Invalid `instance` value. Expected an IBM Cloud crn, got '{instance}' instead. "
             )

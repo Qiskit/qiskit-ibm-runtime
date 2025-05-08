@@ -18,10 +18,11 @@ The following changes were made to support the upcoming
     the instances will be prioritized in the order given so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
     premium plan instances, and then the rest.
 
-    - If an instance is passed into ``save_account()``, or passed in during initialization (``QiskitRuntimeService()``), 
+    - The IBM Cloud Resource Name (crn) or the actual service name can be passed in as the instance. 
+    If an instance is passed into ``save_account()``, or passed in during initialization (``QiskitRuntimeService()``), 
     it will be used as the default instance when retrieving backends. The instance passed in at initialization will take 
     precendence over the one saved in the account. The instance can also be passed in explicity when 
-    retrieving backends (``backend()`` or ``backends()``).
+    retrieving backends (``backend()`` or ``backends()``). 
 
       .. code-block:: python
 

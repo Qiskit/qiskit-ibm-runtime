@@ -148,6 +148,7 @@ class QiskitRuntimeService:
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            account_id=account_id,
         )
 
         if private_endpoint is not None:
@@ -252,6 +253,7 @@ class QiskitRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
+        account_id: Optional[str] = None,
     ) -> Account:
         """Discover account."""
         account = None
@@ -307,6 +309,28 @@ class QiskitRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # if instance is a name, change it to crn format
+        if (
+            account.channel in ["ibm_cloud", "ibm_quantum_platform"]
+            and account.instance
+            and not is_crn(account.instance)
+        ):
+            self._all_instances = account.list_instances(account_id or account.account_id)
+            matching_instances = [
+                item for item in self._all_instances if item["name"] == account.instance
+            ]
+            if matching_instances:
+                if len(matching_instances) > 1:
+                    logger.warning(
+                        "Multiple instances found. Using %s.", matching_instances[0]["crn"]
+                    )
+                account.instance = matching_instances[0]["crn"]
+            else:
+                raise IBMInputValueError(
+                    f"The instance specified ({account.instance}) is not a valid "
+                    "IBM Cloud crn or service name."
+                )
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -637,11 +661,15 @@ class QiskitRuntimeService:
                     instance_with_backend = self._account.instance
                 else:  # if no instance passed in, no default, check all instances
                     logger.warning("Default instance not set. Searching other available instances.")
-                    if not self._all_instances:
+                    if not self._all_instances or not self._all_instances[0].get("plan"):
                         # fetch all instances and all backends in each instance. Save in dict
-                        self._all_instances = self._account.list_instances(self._account_id)
+                        # getting plan names is an extra api call
+                        self._all_instances = self._account.list_instances(
+                            self._account_id, include_plan_name=True
+                        )
                     if not self._backend_instance_groups:
                         for instance_dict in self._all_instances:
+                            print(instance_dict["plan"])
                             self._backend_instance_groups.append(
                                 {
                                     "crn": instance_dict["crn"],
@@ -806,7 +834,7 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-            instance: The CRN (ibm_cloud). This is an optional parameter.
+            instance: The CRN (ibm_cloud) or the service name. This is an optional parameter.
                 If set, it will define a default instance for service instantiation,
                 if not set, the service will fetch all instances accessible within the account.
             channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
