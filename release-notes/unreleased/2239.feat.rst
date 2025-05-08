@@ -5,47 +5,68 @@ The following changes were made to support the upcoming
       ``ibm_quantum_platform`` and ``ibm_cloud`` point to the same channel but  
       ``ibm_cloud`` will be deprecated and removed in future releases. 
 
-    - When saving an account on the new platform, an instance is no longer required if 
-      there is a default instance set. To set the default instance, pass in an instance for ``default_instance`` 
-      when saving an account. Optionally, it is also possible to set region and plan order preferences. These
-      preferences are taken into account when the selected backend (``service.backend()``) is not available in the current account instance,
-      but a different available instance. If ``region`` and ``plans_preference`` are not set, the first instance that has 
-      the backend available will be used.
+    - When saving and initializing an account on the new platform, an instance is no longer required. If an instance
+    is not passed in, all instances will be checked when a backend is retrieved, (``service.backend()``). 
+    There are new parameters ``account_id``, ``region``, and ``plans_preference``, that can be used to set prioritize certain instances. 
+  
+      - ``account_id``: If your IBM cloud token has access to multiple accounts, specify an account with its account_id (found in IBM Cloud account settings). 
+      Defaults to the first account available.
+      - ``region``: Set a region preference. ``us-east`` or ``eu-de``.
+      - ``plans_preference``: A list of account types, ordered by preference. An instance with the first value in the list will be prioritized
 
-        .. code-block:: python
-            QiskitRuntimeService.save_account(
-                token=token,
-                default_instance="CRN/NAME", #Optional
-                region="us-east|eu-de", # Optional
-                plans_preference=['Open',...], #Optional
-            )
+    For example, if ``region`` is saved as ``us-east``, only instances from ``us-east`` will be checked. If ``plans_preference`` is set, 
+    the instances will be prioritized in the order given so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
+    premium plan instances, and then the rest.
 
-      These account values will be stored in an ``account-defaults.json`` file.
+    - If an instance is passed into ``save_account()``, or passed in during initialization (``QiskitRuntimeService()``), 
+    it will be used as the default instance when retrieving backends. The instance passed in at initialization will take 
+    precendence over the one saved in the account. The instance can also be passed in explicity when 
+    retrieving backends (``backend()`` or ``backends()``).
 
-    - When selecting a backend with :meth:`~.QiskitRuntimeService.backend`, one of the following cases will happen: 
-        - If there is a default instance set and ``instance`` is NOT passed in as a parameter, 
-        the backend will be returned if it is available in the default instance. An error is raised
-        if the backend is not in the default instance 
-        - If there is a default instance set and ``instance`` is passed in as a parameter, 
-        the backend will be returned if it is in the passed instance. An error is raised if the backend is 
-        not in the passed instance. The instanced passed as a parameter will always take precendence.
-        - If there is no default instance, and the backend selected is NOT in the current account instance,
-        all available instances will be searched and the first suitable instance will be used. As mentioned, 
-        a ``region`` and ``plans_preference`` can be saved so instances of that region and preferred plan 
-        ``[Dedicated, Premium, Flex, Open, Standard]``, can be proioritized.
+      .. code-block:: python
 
-        .. code-block:: python
-            # Default instance set
-            backend = service.backend('...') # Only checks default instance, errors if backend not available
-            backend = service.backend('...', instance="...") # uses the instance specified, errors if backend not available
+        # save account
+        service = QiskitRuntimeService.save_account(
+          # No channel needs to be specified, ibm_quantum_platform is the default
+          token=token,
+          account_id="...", # Optional
+          region="us-east|eu-de", # Optional
+          plans_preference=['Open',...], #Optional
+          set_as_default=True  #Optional
+          ) 
+    
+        # initialize account
+        service = QiskitRuntimeService() # defaults to ibm_quantum_platform account
+        service.backend(name="...") # picks instance based on saved preferences 
+        service.backend(name="...", instance="...") # can also explicity pass in an instance to use
 
-            # No default instance set
-            backend = service.backend('...') # selects an instance which access to this backend
-            backend = service.backend('...', instance="...") # uses the instance specified, if backend not available
+        # initialize account with instance
+        service = QiskitRuntimeService(instance = "...") # sets instance as default instance
+        service.backend(name="...") # only checks default instance, fails if the backend not in the instance
+        service.backend(name="...", instance="...") # can still explicity pass in a different instance
 
-        - The same logic applies to :meth:`~.QiskitRuntimeService.backends` where only backends 
-          in the default instance will be returned unless an instance is explicity passed in as a parameter.
-          If there is no default instance, all accessible backends will be returned.
+        # OR
+
+        # save account with instance 
+        service = QiskitRuntimeService.save_account(
+          # No channel needs to be specified, ibm_quantum_platform is the default
+          token=token,
+          instance="..." # This will be the default instance 
+          account_id="...", # Optional
+          region="us-east|eu-de", # Optional
+          plans_preference=['Open',...], #Optional
+          set_as_default=True  #Optional
+          ) 
+
+        # initialize account
+        service = QiskitRuntimeService() # defaults to ibm_quantum_platform account
+        service.backend(name="...") # only checks saved default instance from save_account
+        service.backend(name="...", instance="...") # can also explicity pass in an instance which takes precendence
+
+        # initializing account with instance works the same way 
+        service = QiskitRuntimeService(instance = "...") # sets instance as default instance, overrides instance from save_account
+        service.backend(name="...") # only checks default instance, fails if the backend not in the instance
+        service.backend(name="...", instance="...") # can still explicity pass in a different instance
 
     - It is possible to view all instances on the new platform with :meth:`~.QiskitRuntimeService.instances`
 
