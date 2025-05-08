@@ -1,0 +1,1 @@
+:class:`.IBMInputValueError` now inherits from ``ValueError``, in addition to the existing parent class :class:`.IBMError`. Some validation functions, which previously raised ``ValueError`` exceptions, now raise :class:`.IBMInputValueError` exceptions.
