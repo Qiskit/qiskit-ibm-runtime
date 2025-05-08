@@ -382,8 +382,8 @@ class CloudAccount(Account):
             search_cursor = result.get("search_cursor")
             if not search_cursor:
                 break
-        if not account_id and all_crns:  
-            first_account_id = all_crns[0]["account_id"]# only return instances from first account
+        if not account_id and all_crns:
+            first_account_id = all_crns[0]["account_id"]  # only return instances from first account
             return [d for d in all_crns if d.get("account_id") == first_account_id]
         return all_crns
 

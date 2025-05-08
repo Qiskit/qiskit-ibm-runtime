@@ -171,6 +171,7 @@ class QiskitRuntimeService:
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._api_client = RuntimeClient(self._client_params)
             self._default_instance = False
+            self._cached_backend_objs: List[IBMBackend] = []
             if self._account.instance:
                 self._default_instance = True
                 self._backend_allowed_list = self._discover_cloud_backends()
@@ -211,10 +212,13 @@ class QiskitRuntimeService:
         # refactor this, is there an easier way to fetch all backends
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
-        
-        temp_client_params = self._client_params
-        temp_client_params.instance = instance
-        return RuntimeClient(temp_client_params).list_backends()
+
+        # I don't think we should overwrite the api client like this
+        # but we can't access the backend config without the right instance
+        if self._account.instance != instance:
+            self._client_params.instance = instance
+            self._api_client = RuntimeClient(self._client_params)
+        return self._api_client.list_backends()
 
     def _get_instance_from_grouping(self, backend_name: str) -> str:
         """Return an instance that has the given backend available."""
@@ -574,28 +578,27 @@ class QiskitRuntimeService:
                     backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
                 ):
                     backends.append(backend)
-        else:  # cloud channel
+        else:
             if not name:
                 if self._client_params.instance != self._account.instance:
                     # reset api client
                     self._client_params.instance = self._account.instance
                     self._api_client = RuntimeClient(self._client_params)
 
+                # passing in instance explicity takes precendence
                 if instance:
-                    # passing in instance explicity takes precendence
                     if not is_crn(instance):
                         raise IBMInputValueError(f"{instance} is not a valid instance.")
-                    if not name:
-                        instance_backends = self._discover_backends_from_instance(instance)
-                        self._client_params.instance = instance
-                        self._api_client = RuntimeClient(self._client_params)
-                        for backend_name in instance_backends:
-                            if backend := self._create_backend_obj(
-                                backend_name,
-                                instance=instance,
-                                use_fractional_gates=use_fractional_gates,
-                            ):
-                                backends.append(backend)
+
+                    instance_backends = self._discover_backends_from_instance(instance)
+                    for backend_name in instance_backends:
+                        if backend := self._create_backend_obj(
+                            backend_name,
+                            instance=instance,
+                            use_fractional_gates=use_fractional_gates,
+                        ):
+                            backends.append(backend)
+
                 elif self._default_instance:
                     for backend_name in self._backend_allowed_list:
                         if backend := self._create_backend_obj(
@@ -608,30 +611,22 @@ class QiskitRuntimeService:
                     if not self._all_instances:
                         self._all_instances = self._account.list_instances(self._account_id)
                     # include current instance backends too
-                    logger.warning(
-                        "Default instance not set. "
-                        "Searching other available instances."
-                    )
-                    for backend_name in self._backend_allowed_list:
-                        if backend := self._create_backend_obj(
-                            backend_name,
-                            instance=self._account.instance,
-                            use_fractional_gates=use_fractional_gates,
-                        ):
-                            backends.append(backend)
-                    for inst in [t["crn"] for t in self._all_instances]:
-                        backends_list = self._discover_backends_from_instance(inst)
-                        for backend_name in backends_list:
-                            if backend_name not in self._backend_allowed_list:
-                                self._client_params.instance = inst
-                                self._api_client = RuntimeClient(self._client_params)
-                                self._backend_allowed_list.append(backend_name)
-                                if backend := self._create_backend_obj(
-                                    backend_name,
-                                    instance=inst,
-                                    use_fractional_gates=use_fractional_gates,
-                                ):
-                                    backends.append(backend)
+                    logger.warning("Default instance not set. Searching other available instances.")
+                    if not self._backend_allowed_list:
+                        for inst in [t["crn"] for t in self._all_instances]:
+                            backends_list = self._discover_backends_from_instance(inst)
+                            for backend_name in backends_list:
+                                if backend_name not in self._backend_allowed_list:
+                                    self._backend_allowed_list.append(backend_name)
+                                    if backend := self._create_backend_obj(
+                                        backend_name,
+                                        instance=inst,
+                                        use_fractional_gates=use_fractional_gates,
+                                    ):
+                                        backends.append(backend)
+                        self._cached_backend_objs = backends
+                    else:  # cache backend configs
+                        backends = self._cached_backend_objs
 
             if name:
                 instance_with_backend = None
@@ -641,23 +636,21 @@ class QiskitRuntimeService:
                 elif self._default_instance:
                     instance_with_backend = self._account.instance
                 else:  # if no instance passed in, no default, check all instances
-                    logger.warning(
-                        "Default instance not set. "
-                        "Searching other available instances."
-                    )
+                    logger.warning("Default instance not set. Searching other available instances.")
                     if not self._all_instances:
                         # fetch all instances and all backends in each instance. Save in dict
                         self._all_instances = self._account.list_instances(self._account_id)
-                    for instance_dict in self._all_instances:
-                        self._backend_instance_groups.append(
-                            {
-                                "crn": instance_dict["crn"],
-                                "plan": instance_dict["plan"],
-                                "backends": self._discover_backends_from_instance(
-                                    instance_dict["crn"]
-                                ),
-                            }
-                        )
+                    if not self._backend_instance_groups:
+                        for instance_dict in self._all_instances:
+                            self._backend_instance_groups.append(
+                                {
+                                    "crn": instance_dict["crn"],
+                                    "plan": instance_dict["plan"],
+                                    "backends": self._discover_backends_from_instance(
+                                        instance_dict["crn"]
+                                    ),
+                                }
+                            )
                     instance_with_backend = self._get_instance_from_grouping(name)
 
                 # TODO how do we handle this logic here?
