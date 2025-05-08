@@ -170,7 +170,10 @@ class QiskitRuntimeService:
 
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._api_client = RuntimeClient(self._client_params)
-            self._backend_allowed_list = self._discover_cloud_backends()
+            self._default_instance = False
+            if self._account.instance:
+                self._default_instance = True
+                self._backend_allowed_list = self._discover_cloud_backends()
             self._all_instances: List[Dict[str, str]] = []
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
@@ -208,18 +211,10 @@ class QiskitRuntimeService:
         # refactor this, is there an easier way to fetch all backends
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
-        params = ClientParameters(
-            channel=self._account.channel,
-            token=self._account.token,
-            url=self._account.url,
-            instance=instance,
-            proxies=self._account.proxies,
-            verify=self._account.verify,
-            private_endpoint=self._account.private_endpoint,
-            url_resolver=self._url_resolver,
-        )
-
-        return RuntimeClient(params).list_backends()
+        
+        temp_client_params = self._client_params
+        temp_client_params.instance = instance
+        return RuntimeClient(temp_client_params).list_backends()
 
     def _get_instance_from_grouping(self, backend_name: str) -> str:
         """Return an instance that has the given backend available."""
@@ -308,13 +303,6 @@ class QiskitRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
-
-        self._default_instance = True
-        if not account.instance:
-            self._default_instance = False
-
-        # resolve CRN if needed
-        self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -595,14 +583,8 @@ class QiskitRuntimeService:
 
                 if instance:
                     # passing in instance explicity takes precendence
-                    if not self._all_instances:
-                        self._all_instances = self._account.list_instances(self._account_id)
                     if not is_crn(instance):
                         raise IBMInputValueError(f"{instance} is not a valid instance.")
-                    if instance not in [t["crn"] for t in self._all_instances]:
-                        # my personal test instance isn't returned in the global search API but
-                        # still accessible with same API token
-                        logger.warning("Instance given is not in list of available instances.")
                     if not name:
                         instance_backends = self._discover_backends_from_instance(instance)
                         self._client_params.instance = instance
@@ -624,8 +606,12 @@ class QiskitRuntimeService:
                             backends.append(backend)
                 else:
                     if not self._all_instances:
-                        self._all_instances = self._account.list_instances()
+                        self._all_instances = self._account.list_instances(self._account_id)
                     # include current instance backends too
+                    logger.warning(
+                        "Default instance not set. "
+                        "Searching other available instances."
+                    )
                     for backend_name in self._backend_allowed_list:
                         if backend := self._create_backend_obj(
                             backend_name,
@@ -656,8 +642,8 @@ class QiskitRuntimeService:
                     instance_with_backend = self._account.instance
                 else:  # if no instance passed in, no default, check all instances
                     logger.warning(
-                        "Backend not available in "
-                        "current instance. Searching other available instances."
+                        "Default instance not set. "
+                        "Searching other available instances."
                     )
                     if not self._all_instances:
                         # fetch all instances and all backends in each instance. Save in dict

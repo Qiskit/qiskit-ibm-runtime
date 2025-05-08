@@ -331,6 +331,7 @@ class CloudAccount(Account):
             raise CloudResourceNameResolutionError(
                 f"Failed to resolve CRN value for the provided service name {self.instance}."
             )
+
         if len(crn) > 1:
             # handle edge-case where multiple service instances with the same name exist
             logger.warning(
@@ -344,12 +345,13 @@ class CloudAccount(Account):
     def list_instances(self, account_id: Optional[str] = None) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
-        if cname_from_crn(self.instance) == "staging":
+        is_staging = cname_from_crn(self.instance) == "staging"
+        if is_staging:
             url = "https://iam.test.cloud.ibm.com"
         authenticator = IAMAuthenticator(self.token, url=url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
-        if cname_from_crn(self.instance) == "staging":
+        if is_staging:
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
         search_cursor = None
         all_crns = []
@@ -364,7 +366,8 @@ class CloudAccount(Account):
                 limit=100,
             ).get_result()
             crns = []
-            for item in result.get("items", []):
+            items = result.get("items", [])
+            for item in items:
                 plan_name = catalog.get_catalog_entry(
                     id=item.get("service_plan_unique_id")
                 ).get_result()
@@ -379,8 +382,9 @@ class CloudAccount(Account):
             search_cursor = result.get("search_cursor")
             if not search_cursor:
                 break
-        if not account_id:  # only return instances from first account
-            return [d for d in all_crns if d.get("account_id") == all_crns[0].get("account_id")]
+        if not account_id and all_crns:  
+            first_account_id = all_crns[0]["account_id"]# only return instances from first account
+            return [d for d in all_crns if d.get("account_id") == first_account_id]
         return all_crns
 
     @staticmethod
