@@ -75,7 +75,7 @@ class TestClientParameters(IBMTestCase):
                 "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
             ),
             (
-                "ibm_quantum",
+                "ibm_cloud",
                 "h/g/p",
                 "https://auth.quantum.ibm.com/api",
                 None,
@@ -90,7 +90,7 @@ class TestClientParameters(IBMTestCase):
                 + "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...:::False",
             ),
             (
-                "ibm_quantum",
+                "ibm_cloud",
                 "h/g/p",
                 "https://auth.quantum.ibm.com/api",
                 lambda a, b, c: f"{a}:{b}:{c}",

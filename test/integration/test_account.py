@@ -18,7 +18,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.utils import (
@@ -43,6 +43,64 @@ def _get_service_instance_name_for_crn(
         client.set_service_url(get_resource_controller_api_url(dependencies.url))
         client.set_http_client(session)
         return client.get_resource_instance(id=dependencies.instance).get_result()["name"]
+
+
+class TestQuantumPlatform(IBMIntegrationTestCase):
+    """Integration tests for account management."""
+
+    def _skip_on_ibm_quantum(self):
+        if self.dependencies.channel == "ibm_quantum":
+            self.skipTest("Not supported on ibm_quantum")
+
+    def test_initializing_service_no_instance(self):
+        """Test initializing without an instance"""
+        self._skip_on_ibm_quantum()
+        service = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform"
+        )
+        self.assertTrue(service)
+
+    def test_backends_default_instance(self):
+        """Test that default instance returns the correct backends."""
+        self._skip_on_ibm_quantum()
+        service_with_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            instance=self.dependencies.instance,
+            channel="ibm_quantum_platform",
+        )
+        backends = service_with_instance.backends()
+        backend = service_with_instance.backend(name=self.dependencies.qpu)
+
+        service_no_instance = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform"
+        )
+        backends_with_instance = service_no_instance.backends(instance=self.dependencies.instance)
+        backend_with_instance = service_no_instance.backend(
+            name=self.dependencies.qpu, instance=self.dependencies.instance
+        )
+        self.assertEqual(
+            [backend.name for backend in backends],
+            [backend.name for backend in backends_with_instance],
+        )
+        self.assertEqual(backend.name, backend_with_instance.name)
+
+    def test_passing_name_as_instance(self):
+        """Test passing in a name as the instance."""
+        self._skip_on_ibm_quantum()
+        with self.assertRaises(IBMInputValueError):
+            QiskitRuntimeService(
+                token=self.dependencies.token,
+                instance="test_name",
+                channel="ibm_quantum_platform",
+            )
+
+        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            instance=service_instance_name,
+            channel="ibm_quantum_platform",
+        )
+        self.assertEqual(service._account.instance, self.dependencies.instance)
 
 
 class TestIntegrationAccount(IBMIntegrationTestCase):

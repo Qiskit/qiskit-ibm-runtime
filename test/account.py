@@ -133,16 +133,24 @@ def get_account_config_contents(
 ):
     """Generate account config file content"""
     if instance is None:
-        instance = "some_instance" if channel == "ibm_cloud" else "hub/group/project"
+        instance = (
+            "some_instance"
+            if channel in ["ibm_cloud", "ibm_quantum_platform"]
+            else "hub/group/project"
+        )
     token = token or uuid.uuid4().hex
     if name is None:
         name = (
             management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD
-            if channel == "ibm_cloud"
+            if channel in ["ibm_cloud", "ibm_quantum_platform"]
             else management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
         )
     if url is None:
-        url = IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_API_URL
+        url = (
+            IBM_CLOUD_API_URL
+            if channel in ["ibm_cloud", "ibm_quantum_platform"]
+            else IBM_QUANTUM_API_URL
+        )
     out = {
         name: {
             "channel": channel,

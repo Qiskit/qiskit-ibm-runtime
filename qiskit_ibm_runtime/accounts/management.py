@@ -13,7 +13,8 @@
 """Account management related classes and functions."""
 
 import os
-from typing import Optional, Dict
+import logging
+from typing import Optional, Dict, List
 
 from ..proxies import ProxyConfiguration
 from .exceptions import AccountNotFoundError
@@ -23,11 +24,14 @@ from .storage import save_config, read_config, delete_config
 _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
+
 _DEFAULT_ACCOUNT_NAME = "default"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
 _DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_cloud"
 _CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_quantum"]
+
+logger = logging.getLogger(__name__)
 
 
 class AccountManager:
@@ -47,12 +51,16 @@ class AccountManager:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ) -> None:
         """Save account on disk."""
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
+
         config = Account.create_account(
             channel=channel,
             token=token,
@@ -61,7 +69,11 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
+            account_id=account_id,
+            region=region,
+            plans_preference=plans_preference,
         )
+        print(config.__dict__)
         return save_config(
             filename=filename,
             name=name,

@@ -14,19 +14,32 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal
+from typing import Optional, Literal, List, Dict
 from urllib.parse import urlparse
 
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+
+from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn
+from ..utils import resolve_crn, cname_from_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
-ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum", "local"]]
+RegionType = Optional[Literal["us-east", "eu-de"]]
+PlanType = Optional[List[str]]
+
+ChannelType = Optional[
+    Literal[
+        "ibm_quantum_platform",
+        "ibm_cloud",
+        "ibm_quantum",
+        "local",
+    ]
+]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
@@ -46,7 +59,7 @@ class Account:
         """Account constructor.
 
         Args:
-            channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
+            channel: Channel type, ``ibm_cloud``, ``ibm_quantum``, ``ibm_quantum_platform``.
             token: Account token to use.
             url: Authentication URL.
             instance: Service instance to use.
@@ -60,6 +73,9 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.private_endpoint: bool = False
+        self.account_id: str = None
+        self.region: str = None
+        self.plans_preference: List[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -81,6 +97,9 @@ class Account:
         instance = data.get("instance")
         verify = data.get("verify", True)
         private_endpoint = data.get("private_endpoint", False)
+        account_id = data.get("account_id")
+        region = data.get("region")
+        plans_preference = data.get("plans_preference")
         return cls.create_account(
             channel=channel,
             url=url,
@@ -89,6 +108,9 @@ class Account:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
+            account_id=account_id,
+            region=region,
+            plans_preference=plans_preference,
         )
 
     @classmethod
@@ -101,6 +123,9 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel == "ibm_quantum":
@@ -111,7 +136,7 @@ class Account:
                 proxies=proxies,
                 verify=verify,
             )
-        elif channel == "ibm_cloud":
+        elif channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAccount(
                 url=url,
                 token=token,
@@ -119,17 +144,26 @@ class Account:
                 proxies=proxies,
                 verify=verify,
                 private_endpoint=private_endpoint,
+                account_id=account_id,
+                region=region,
+                plans_preference=plans_preference,
             )
         else:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"{['ibm_cloud', 'ibm_quantum']}, got '{channel}'."
+                f"{['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform']}, got '{channel}'."
             )
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
         Relevant for "ibm_cloud" channel only."""
+        pass
+
+    def list_instances(  # type: ignore
+        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
+    ):
+        """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
     def __eq__(self, other: object) -> bool:
@@ -166,10 +200,10 @@ class Account:
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum"]):
+        if not (channel in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]):
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"['ibm_cloud', 'ibm_quantum'], got '{channel}'."
+                f"['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform], got '{channel}'."
             )
 
     @staticmethod
@@ -253,6 +287,9 @@ class CloudAccount(Account):
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
+        account_id: Optional[str] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ):
         """Account constructor.
 
@@ -266,9 +303,12 @@ class CloudAccount(Account):
         """
         super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_cloud"
+        self.channel = "ibm_cloud"  # should this be ibm_quantum_platform?
         self.url = resolved_url
         self.private_endpoint = private_endpoint
+        self.account_id = account_id
+        self.region = region
+        self.plans_preference = plans_preference
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
@@ -293,24 +333,76 @@ class CloudAccount(Account):
             raise CloudResourceNameResolutionError(
                 f"Failed to resolve CRN value for the provided service name {self.instance}."
             )
+
         if len(crn) > 1:
             # handle edge-case where multiple service instances with the same name exist
             logger.warning(
-                "Multiple CRN values found for service name %s: %s. Using %s.",
-                self.instance,
-                crn,
+                "Multiple CRN values found for service name %s:",
                 crn[0],
             )
 
         # overwrite with CRN value
         self.instance = crn[0]
 
+    def list_instances(
+        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
+    ) -> List[Dict[str, str]]:
+        """Retrieve all crns with the IBM Cloud Global Search API."""
+        url = None
+        is_staging = cname_from_crn(self.instance) == "staging"
+        if is_staging:
+            url = "https://iam.test.cloud.ibm.com"
+        authenticator = IAMAuthenticator(self.token, url=url)
+        client = GlobalSearchV2(authenticator=authenticator)
+        catalog = GlobalCatalogV1(authenticator=authenticator)
+        if is_staging:
+            client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
+            catalog.set_service_url("https://globalcatalog.test.cloud.ibm.com/api/v1")
+        search_cursor = None
+        all_crns = []
+        query = "service_name:quantum-computing"
+        if account_id:
+            query += f" AND account_id:{account_id}"
+        while True:
+            result = client.search(
+                query=query,
+                fields=["crn", "service_plan_unique_id", "account_id", "name", "doc"],
+                search_cursor=search_cursor,
+                limit=100,
+            ).get_result()
+            crns = []
+            items = result.get("items", [])
+            for item in items:
+                # don't add instances without backend allocation
+                allocations = item.get("doc", {}).get("extensions")
+                if allocations:
+                    plan_name = {}
+                    if include_plan_name:
+                        plan_name = catalog.get_catalog_entry(
+                            id=item.get("service_plan_unique_id")
+                        ).get_result()
+                    crns.append(
+                        {
+                            "crn": item.get("crn"),
+                            "plan": plan_name.get("name"),
+                            "account_id": item.get("account_id"),
+                            "name": item.get("name"),
+                        }
+                    )
+
+            all_crns.extend(crns)
+            search_cursor = result.get("search_cursor")
+            if not search_cursor:
+                break
+        if not account_id and all_crns:
+            first_account_id = all_crns[0]["account_id"]  # only return instances from first account
+            return [d for d in all_crns if d.get("account_id") == first_account_id]
+        return all_crns
+
     @staticmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
-        if not (isinstance(instance, str) and len(instance) > 0):
+        if instance and not isinstance(instance, str):
             raise InvalidAccountError(
-                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'. "
-                "If using the ibm_quantum channel,",
-                "please specify the channel when saving your account with `channel = 'ibm_quantum'`.",
+                f"Invalid `instance` value. Expected an IBM Cloud crn, got '{instance}' instead. "
             )
