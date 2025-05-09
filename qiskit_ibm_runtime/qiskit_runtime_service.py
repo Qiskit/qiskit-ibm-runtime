@@ -316,26 +316,32 @@ class QiskitRuntimeService:
             and account.instance
             and not is_crn(account.instance)
         ):
-            self._all_instances = account.list_instances(account_id or account.account_id)
-            matching_instances = [
-                item for item in self._all_instances if item["name"] == account.instance
-            ]
-            if matching_instances:
-                if len(matching_instances) > 1:
-                    logger.warning(
-                        "Multiple instances found. Using %s.", matching_instances[0]["crn"]
-                    )
-                account.instance = matching_instances[0]["crn"]
-            else:
-                raise IBMInputValueError(
-                    f"The instance specified ({account.instance}) is not a valid "
-                    "IBM Cloud crn or service name."
-                )
+            account.instance = self._get_crn_from_instance_name(
+                account=account, account_id=account_id
+            )
 
         # ensure account is valid, fail early if not
         account.validate()
 
         return account
+
+    def _get_crn_from_instance_name(
+        self, account: Account, account_id: Optional[str] = None
+    ) -> str:
+        """Get the crn from the instance service name."""
+        self._all_instances = account.list_instances(account_id or account.account_id)
+        matching_instances = [
+            item for item in self._all_instances if item["name"] == account.instance
+        ]
+        if matching_instances:
+            if len(matching_instances) > 1:
+                logger.warning("Multiple instances found. Using %s.", matching_instances[0]["crn"])
+            return matching_instances[0]["crn"]
+        else:
+            raise IBMInputValueError(
+                f"The instance specified ({account.instance}) is not a valid "
+                "IBM Cloud crn or service name."
+            )
 
     def _discover_cloud_backends(self) -> List[str]:
         """Return the remote backends available for this service instance.
@@ -669,7 +675,6 @@ class QiskitRuntimeService:
                         )
                     if not self._backend_instance_groups:
                         for instance_dict in self._all_instances:
-                            print(instance_dict["plan"])
                             self._backend_instance_groups.append(
                                 {
                                     "crn": instance_dict["crn"],
