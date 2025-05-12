@@ -312,6 +312,16 @@ class QiskitRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+        if account_id:
+            account.account_id = account_id
+
+        if not account.account_id and not is_crn(account.instance):
+            logger.warning(
+                "The account_id was not given. If an instance crn is passed in, "
+                "the account with that instance will be used. If a particular instance "
+                "is required, please specify the account_id of the account with "
+                "that instance. Otherwise, the first account available is selected."
+            )
 
         # if instance is a name, change it to crn format
         if (
@@ -319,20 +329,16 @@ class QiskitRuntimeService:
             and account.instance
             and not is_crn(account.instance)
         ):
-            account.instance = self._get_crn_from_instance_name(
-                account=account, account_id=account_id
-            )
+            account.instance = self._get_crn_from_instance_name(account=account)
 
         # ensure account is valid, fail early if not
         account.validate()
 
         return account
 
-    def _get_crn_from_instance_name(
-        self, account: Account, account_id: Optional[str] = None
-    ) -> str:
+    def _get_crn_from_instance_name(self, account: Account) -> str:
         """Get the crn from the instance service name."""
-        self._all_instances = account.list_instances(account_id or account.account_id)
+        self._all_instances = account.list_instances(account.account_id)
         matching_instances = [
             item for item in self._all_instances if item["name"] == account.instance
         ]
@@ -343,7 +349,8 @@ class QiskitRuntimeService:
         else:
             raise IBMInputValueError(
                 f"The instance specified ({account.instance}) is not a valid "
-                "IBM Cloud crn or service name."
+                "instance name. If you have access to multiple IBM Cloud accounts "
+                "please try passing in an account_id."
             )
 
     def _discover_cloud_backends(self) -> List[str]:

@@ -9,8 +9,10 @@ The following changes were made to support the upcoming
     is not passed in, all instances will be checked when a backend is retrieved, (``service.backend()``). 
     There are new parameters ``account_id``, ``region``, and ``plans_preference``, that can be used to set prioritize certain instances. 
   
-      - ``account_id``: If your IBM cloud token has access to multiple accounts, specify an account with its account_id (found in IBM Cloud account settings). 
-      Defaults to the first account available.
+      - ``account_id``: If your IBM cloud token has access to multiple accounts, specify an account with its account_id 
+      (found in IBM Cloud account settings - Manage Tab -> Account -> Account Settings -> ID value under "Account"). 
+      If an instance is also passed in, the account the instance is in will have precendence. Otherwise, there will be a warning 
+      and the first account available will be returned. 
       - ``region``: Set a region preference. ``us-east`` or ``eu-de``.
       - ``plans_preference``: A list of account types, ordered by preference. An instance with the first value in the list will be prioritized
 
@@ -18,11 +20,12 @@ The following changes were made to support the upcoming
     the instances will be prioritized in the order given so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
     premium plan instances, and then the rest.
 
-    - The IBM Cloud Resource Name (crn) or the actual service name can be passed in as the instance. 
+    - The IBM Cloud Resource Name (crn) or the actual instance name can be passed in as the instance. 
     If an instance is passed into ``save_account()``, or passed in during initialization (``QiskitRuntimeService()``), 
-    it will be used as the default instance when retrieving backends. The instance passed in at initialization will take 
-    precendence over the one saved in the account. The instance can also be passed in explicity when 
-    retrieving backends (``backend()`` or ``backends()``). 
+    it will be used as the default instance when retrieving backends. Note that if the instance name is passed in
+    instead of the crn, the account_id must also be saved or passed in if the instance is not in the default account.
+    The instance passed in at initialization will take precendence over the one saved in the account. 
+    The instance can also be passed in explicity when retrieving backends (``backend()`` or ``backends()``). 
 
       .. code-block:: python
 

@@ -360,12 +360,10 @@ class CloudAccount(Account):
             catalog.set_service_url("https://globalcatalog.test.cloud.ibm.com/api/v1")
         search_cursor = None
         all_crns = []
-        query = "service_name:quantum-computing"
-        if account_id:
-            query += f" AND account_id:{account_id}"
         while True:
             result = client.search(
-                query=query,
+                query="service_name:quantum-computing",
+                account_id=account_id,
                 fields=["crn", "service_plan_unique_id", "account_id", "name", "doc"],
                 search_cursor=search_cursor,
                 limit=100,
