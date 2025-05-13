@@ -91,9 +91,9 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             mock_create_session.assert_not_called()
 
         self.assertEqual(session._session_id, new_session._session_id)
-        self.assertTrue(new_session._active)
         new_session.close()
         self.assertFalse(new_session._active)
+        self.assertFalse(new_session.details()["accepting_jobs"])
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
