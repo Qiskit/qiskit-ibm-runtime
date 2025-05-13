@@ -27,5 +27,5 @@ Other Notes
 - IBM Cloud accounts will now use an access token to call the Qiskit Runtime API instead of the 
   token provided by the user. (`2102 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2102>`__)
 - :class:`.IBMInputValueError` now inherits from ``ValueError``, in addition to the existing parent class :class:`.IBMError`. 
-  Some validation functions, which previously raised ``ValueError`` exceptions, 
+  Some validation functions that previously raised ``ValueError`` exceptions 
   now raise :class:`.IBMInputValueError` exceptions. (`2250 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2250>`__)
