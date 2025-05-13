@@ -349,8 +349,8 @@ class QiskitRuntimeService:
         else:
             raise IBMInputValueError(
                 f"The instance specified ({account.instance}) is not a valid "
-                "instance name. If you have access to multiple IBM Cloud accounts "
-                "please try passing in an account_id."
+                "instance name, or you are using the incorrect account. If you have access to "
+                "multiple IBM Cloud accounts please try passing in an account_id."
             )
 
     def _discover_cloud_backends(self) -> List[str]:
@@ -656,7 +656,11 @@ class QiskitRuntimeService:
                             )
                         else:
                             self._all_instances = self._account.list_instances(self._account_id)
-                    logger.warning("Default instance not set. Searching all available instances.")
+                    # it would be nice if we could log the account name instea of the id here.
+                    logger.warning(
+                        "Default instance not set. Searching all available instances in %s account.",
+                        self._account_id or "default",
+                    )
                     unique_backends = []
                     if not self._backend_instance_groups:
                         for instance_dict in self._all_instances:

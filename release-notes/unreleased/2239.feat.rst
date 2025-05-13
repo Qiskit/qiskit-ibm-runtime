@@ -33,7 +33,9 @@ The following changes were made to support the upcoming
         service = QiskitRuntimeService.save_account(
           # No channel needs to be specified, ibm_quantum_platform is the default
           token=token,
-          account_id="...", # Optional
+          # Note that if you have access to multiple accounts, it is recommended to specify the 
+          # account you want to use with account_id. Otherwise the provider will default to the first account found.
+          account_id="...", # Optional               
           region="us-east|eu-de", # Optional
           plans_preference=['Open',...], #Optional
           set_as_default=True  #Optional

@@ -12,6 +12,7 @@
 
 """Integration tests for account management."""
 
+import logging
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
@@ -59,6 +60,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             token=self.dependencies.token, channel="ibm_quantum_platform"
         )
         self.assertTrue(service)
+        self.assertTrue(service.backends())
 
     def test_backends_default_instance(self):
         """Test that default instance returns the correct backends."""
@@ -101,6 +103,24 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             channel="ibm_quantum_platform",
         )
         self.assertEqual(service._account.instance, self.dependencies.instance)
+        self.assertTrue(service.backends())
+
+    def test_account_id_logic(self):
+        """Test passing in an account id."""
+        self._skip_on_ibm_quantum()
+        account_id = "test_account_id"
+        with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as warn:
+            QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+            )
+            self.assertIn("account_id", warn.output[0])
+
+        service = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform", account_id=account_id
+        )
+
+        self.assertEqual(account_id, service._account.account_id)
 
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
