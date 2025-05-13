@@ -1,1 +1,0 @@
-The maximum supported QPY service version is now 14. 

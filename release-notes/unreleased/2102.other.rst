@@ -1,2 +1,0 @@
-IBM Cloud accounts will now use an access token to call the Qiskit Runtime API instead of the 
-token provided by the user. 
