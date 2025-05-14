@@ -229,14 +229,17 @@ class QiskitRuntimeService:
             ]
 
         if self._plans_preference:
-            self._backend_instance_groups = sorted(
-                self._backend_instance_groups,
-                key=lambda d: (
-                    self._plans_preference.index(d["plan"])
-                    if d["plan"] in self._plans_preference
-                    else len(self._plans_preference)
-                ),
-            )
+            plans = [plan.lower() for plan in self._plans_preference]
+            # We should filter out the other instances, minimize api calls
+            filtered_groups = [
+                group for group in self._backend_instance_groups if group["plan"] in plans
+            ]
+            if filtered_groups:
+                self._backend_instance_groups = sorted(
+                    filtered_groups, key=lambda d: plans.index(d["plan"])
+                )
+            else:
+                logger.warning("No matching plans found.")
 
     def _get_instance_from_grouping(self, backend_name: str) -> str:
         """Return an instance that has the given backend available."""
@@ -315,7 +318,11 @@ class QiskitRuntimeService:
         if account_id:
             account.account_id = account_id
 
-        if not account.account_id and not is_crn(account.instance):
+        if (
+            not account.account_id
+            and not is_crn(account.instance)
+            and account.channel in ["ibm_cloud", "ibm_quantum_platform"]
+        ):
             logger.warning(
                 "The account_id was not given. If an instance crn is passed in, "
                 "the account with that instance will be used. If a particular instance "

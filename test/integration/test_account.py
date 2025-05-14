@@ -122,6 +122,22 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
         self.assertEqual(account_id, service._account.account_id)
 
+    def test_account_preferences(self):
+        """Test account preferences region and plans_preference."""
+        region = "us-east"
+        plans_preference = ["standard"]
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            region=region,
+            plans_preference=plans_preference,
+        )
+
+        service.backends()
+        first_instance = service._backend_instance_groups[0]
+        self.assertIn(region, first_instance.get("crn"))
+        self.assertEqual(plans_preference[0], first_instance.get("plan"))
+
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""

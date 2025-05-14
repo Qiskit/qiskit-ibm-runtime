@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
-from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
+from ibm_platform_services import GlobalSearchV2
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
@@ -43,6 +43,16 @@ ChannelType = Optional[
 
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
+
+# Pulled from IQP - does this apply to all accounts?
+PlanIdsByName = {
+    "7f666d17-7893-47d8-bf9d-2b2389fc4dfc": "premium",
+    "c8122eb7-fdb1-4746-841d-45bbc7678195": "dedicated",
+    "91b2c828-2952-4f05-aed8-bedf92c6c480": "internal",
+    "850b21a7-71de-4e53-9441-1abdd202f35d": "open",
+    "53bde9d3-cdbb-46f5-a98f-60ebcadf7260": "flex",
+    "5304b575-3cff-4455-90dc-ae4367762093": "standard",
+}
 logger = logging.getLogger(__name__)
 
 
@@ -354,17 +364,15 @@ class CloudAccount(Account):
             url = "https://iam.test.cloud.ibm.com"
         authenticator = IAMAuthenticator(self.token, url=url)
         client = GlobalSearchV2(authenticator=authenticator)
-        catalog = GlobalCatalogV1(authenticator=authenticator)
         if is_staging:
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
-            catalog.set_service_url("https://globalcatalog.test.cloud.ibm.com/api/v1")
         search_cursor = None
         all_crns = []
         while True:
             result = client.search(
                 query="service_name:quantum-computing",
                 account_id=account_id,
-                fields=["crn", "service_plan_unique_id", "account_id", "name", "doc"],
+                fields=["crn", "service_plan_unique_id", "name", "doc"],
                 search_cursor=search_cursor,
                 limit=100,
             ).get_result()
@@ -374,15 +382,13 @@ class CloudAccount(Account):
                 # don't add instances without backend allocation
                 allocations = item.get("doc", {}).get("extensions")
                 if allocations:
-                    plan_name = {}
+                    plan_name = None
                     if include_plan_name:
-                        plan_name = catalog.get_catalog_entry(
-                            id=item.get("service_plan_unique_id")
-                        ).get_result()
+                        plan_name = PlanIdsByName.get(item.get("service_plan_unique_id"))
                     crns.append(
                         {
                             "crn": item.get("crn"),
-                            "plan": plan_name.get("name"),
+                            "plan": plan_name,
                             "account_id": item.get("account_id"),
                             "name": item.get("name"),
                         }
@@ -392,9 +398,6 @@ class CloudAccount(Account):
             search_cursor = result.get("search_cursor")
             if not search_cursor:
                 break
-        if not account_id and all_crns:
-            first_account_id = all_crns[0]["account_id"]  # only return instances from first account
-            return [d for d in all_crns if d.get("account_id") == first_account_id]
         return all_crns
 
     @staticmethod
