@@ -44,7 +44,8 @@ ChannelType = Optional[
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
-# Pulled from IQP - does this apply to all accounts?
+# TODO fetch plan names instead of using this
+# Pulled from IQP - I don't think this should be hard coded
 PlanIdsByName = {
     "7f666d17-7893-47d8-bf9d-2b2389fc4dfc": "premium",
     "c8122eb7-fdb1-4746-841d-45bbc7678195": "dedicated",

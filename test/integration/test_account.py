@@ -103,7 +103,17 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             channel="ibm_quantum_platform",
         )
         self.assertEqual(service._account.instance, self.dependencies.instance)
-        self.assertTrue(service.backends())
+        service_no_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+        )
+
+        backends = service.backends()
+        backends_instance_param = service_no_instance.backends(instance=service_instance_name)
+        self.assertEqual(
+            [backend.name for backend in backends],
+            [backend.name for backend in backends_instance_param],
+        )
 
     def test_account_id_logic(self):
         """Test passing in an account id."""
