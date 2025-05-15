@@ -390,7 +390,6 @@ class CloudAccount(Account):
                         {
                             "crn": item.get("crn"),
                             "plan": plan_name,
-                            "account_id": item.get("account_id"),
                             "name": item.get("name"),
                         }
                     )

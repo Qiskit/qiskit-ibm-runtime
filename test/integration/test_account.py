@@ -148,6 +148,17 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertIn(region, first_instance.get("crn"))
         self.assertEqual(plans_preference[0], first_instance.get("plan"))
 
+    def test_instances(self):
+        """Test instances method."""
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+        )
+        instances = service.instances()
+        self.assertTrue(instances)
+        self.assertTrue(instances[0]["crn"])
+        self.assertTrue(instances[0]["name"])
+
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""

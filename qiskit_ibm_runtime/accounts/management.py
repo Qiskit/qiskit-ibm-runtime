@@ -73,7 +73,6 @@ class AccountManager:
             region=region,
             plans_preference=plans_preference,
         )
-        print(config.__dict__)
         return save_config(
             filename=filename,
             name=name,

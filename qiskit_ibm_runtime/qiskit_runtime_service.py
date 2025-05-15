@@ -171,6 +171,7 @@ class QiskitRuntimeService:
         self._channel = self._account.channel
         self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
+        self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._api_client = RuntimeClient(self._client_params)
@@ -182,7 +183,6 @@ class QiskitRuntimeService:
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
             self._account_id = account_id or self._account.account_id
-            self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         else:
             warnings.warn(
@@ -772,7 +772,10 @@ class QiskitRuntimeService:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
         try:
-            if backend_name in self._backend_configs:
+            if backend_name in self._backend_configs and self._channel in [
+                "ibm_cloud",
+                "ibm_quantum_platform",
+            ]:
                 config = self._backend_configs[backend_name]
             else:
                 config = configuration_from_server_data(
@@ -782,7 +785,8 @@ class QiskitRuntimeService:
                 )
                 # I know we have a configuration_registry in the api client
                 # but that doesn't work with new IQP since we different api clients are being used
-                self._backend_configs[backend_name] = config
+                if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
+                    self._backend_configs[backend_name] = config
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
@@ -1390,7 +1394,7 @@ class QiskitRuntimeService:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
 
-    def instances(self) -> List[str]:
+    def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
         """Return the IBM Quantum instances list currently in use for the session.
 
         Returns:
@@ -1398,7 +1402,11 @@ class QiskitRuntimeService:
         """
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
-        return [t["crn"] for t in self._all_instances]
+        elif not self._all_instances:
+            self._all_instances = self._account.list_instances(
+                self._account_id, include_plan_name=True
+            )
+        return self._all_instances
 
     @property
     def channel(self) -> str:
