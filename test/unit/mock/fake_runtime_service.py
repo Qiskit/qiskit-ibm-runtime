@@ -13,7 +13,7 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict, Optional
+from typing import Dict, List
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -103,10 +103,21 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._set_api_client(hgps=[None] * self._test_num_hgps)
         return super()._discover_cloud_backends()
 
-    def _get_crn_from_instance_name(
-        self, account: Account, account_id: Optional[str] = None
-    ) -> None:
+    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+        """Mock discovery cloud backends."""
+        job_class = self._api_client._job_classes  # type: ignore
+        self._api_client = self._fake_runtime_client
+        self._set_api_client(hgps=[None] * self._test_num_hgps)
+        self._api_client._job_classes = job_class  # type: ignore
+        return super()._discover_cloud_backends()
+
+    def _create_new_cloud_api_client(self, instance: str) -> None:
+        """Create new api client."""
         pass
+
+    def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
+        # return dummy crn
+        return instance
 
     def _set_api_client(self, hgps):
         """Set api client to be the fake runtime client."""
