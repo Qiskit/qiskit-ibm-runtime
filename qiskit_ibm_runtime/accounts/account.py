@@ -314,7 +314,7 @@ class CloudAccount(Account):
         """
         super().__init__(token, instance, proxies, verify)
         resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_cloud"  # should this be ibm_quantum_platform?
+        self.channel = "ibm_quantum_platform"  # should this be ibm_quantum_platform?
         self.url = resolved_url
         self.private_endpoint = private_endpoint
         self.account_id = account_id

@@ -44,6 +44,7 @@ from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .models import QasmBackendConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -177,11 +178,11 @@ class QiskitRuntimeService:
             self._cached_backend_objs: List[IBMBackend] = []
             if self._account.instance:
                 self._default_instance = True
-                # self._backend_allowed_list = self._discover_cloud_backends()
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
             self._account_id = account_id or self._account.account_id
+            self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         else:
             warnings.warn(
@@ -211,7 +212,7 @@ class QiskitRuntimeService:
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Retrieve all backends from the given instance."""
 
-        # refactor this, is there an easier way to fetch all backends
+        # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
 
@@ -253,14 +254,6 @@ class QiskitRuntimeService:
                 )
             else:
                 logger.warning("No matching plans found.")
-
-    def _get_instance_from_grouping(self, backend_name: str) -> str:
-        """Return an instance that has the given backend available."""
-        for instance_dict in self._backend_instance_groups:
-            if backend_name in instance_dict["backends"]:
-                return instance_dict["crn"]
-
-        raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def _discover_account(
         self,
@@ -642,7 +635,7 @@ class QiskitRuntimeService:
                 ):
                     backends.append(backend)
         else:
-            current_instances = []
+            current_instances: List[str] = []
             unique_backends = []
             if instance:
                 if not is_crn(instance):
@@ -669,7 +662,7 @@ class QiskitRuntimeService:
                         )
                     else:
                         self._all_instances = self._account.list_instances(self._account_id)
-                # it would be nice if we could log the account name instea of the id here.
+                # it would be nice if we could log the account name instead of the id here.
                 logger.warning(
                     "Default instance not set. Searching all available instances in %s account.",
                     self._account_id or "default",
@@ -680,27 +673,55 @@ class QiskitRuntimeService:
                             {
                                 "crn": instance_dict["crn"],
                                 "plan": instance_dict["plan"],
+                                "backends": self._discover_backends_from_instance(
+                                    instance_dict["crn"]
+                                ),
                             }
                         )
                     self._filter_instances_by_saved_preferences()
-                current_instances = [inst["crn"] for inst in self._backend_instance_groups]
+
+                for inst_dict in self._backend_instance_groups:
+                    if name:
+                        if name in inst_dict["backends"]:
+                            self._create_new_cloud_api_client(inst_dict["crn"])
+                            if backend := self._create_backend_obj(
+                                name,
+                                instance=inst_dict["crn"],
+                                use_fractional_gates=use_fractional_gates,
+                            ):
+                                backends.append(backend)
+                                break
+
+                    else:
+                        for backend_name in inst_dict["backends"]:
+                            if backend_name not in unique_backends:
+                                unique_backends.append(backend_name)
+                                self._create_new_cloud_api_client(inst_dict["crn"])
+                                if backend := self._create_backend_obj(
+                                    backend_name,
+                                    instance=inst_dict["crn"],
+                                    use_fractional_gates=use_fractional_gates,
+                                ):
+                                    backends.append(backend)
+
             for inst in current_instances:
                 backends_available = self._discover_backends_from_instance(inst)
-                if name and name in backends_available:
-                    if backend := self._create_backend_obj(
-                        name,
-                        instance=inst,
-                        use_fractional_gates=use_fractional_gates,
-                    ):
-                        backends.append(backend)
-                        break
+                if name:
+                    if name in backends_available:
+                        self._create_new_cloud_api_client(inst)
+                        if backend := self._create_backend_obj(
+                            name,
+                            instance=inst,
+                            use_fractional_gates=use_fractional_gates,
+                        ):
+                            backends.append(backend)
+                            break
+
                 else:
                     for backend_name in backends_available:
                         if backend_name not in unique_backends:
                             unique_backends.append(backend_name)
-
-                            self._client_params.instance = inst
-                            self._api_client = RuntimeClient(self._client_params)
+                            self._create_new_cloud_api_client(inst)
                             if backend := self._create_backend_obj(
                                 backend_name,
                                 instance=inst,
@@ -751,11 +772,17 @@ class QiskitRuntimeService:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
         try:
-            config = configuration_from_server_data(
-                raw_config=self._api_client.backend_configuration(backend_name),
-                instance=instance,
-                use_fractional_gates=use_fractional_gates,
-            )
+            if backend_name in self._backend_configs:
+                config = self._backend_configs[backend_name]
+            else:
+                config = configuration_from_server_data(
+                    raw_config=self._api_client.backend_configuration(backend_name),
+                    instance=instance,
+                    use_fractional_gates=use_fractional_gates,
+                )
+                # I know we have a configuration_registry in the api client
+                # but that doesn't work with new IQP since we different api clients are being used
+                self._backend_configs[backend_name] = config
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None

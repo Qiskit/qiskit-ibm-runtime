@@ -28,7 +28,7 @@ _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
 _DEFAULT_ACCOUNT_NAME = "default"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
-_DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_cloud"
+_DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_quantum_platform"
 _CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_quantum"]
 
 logger = logging.getLogger(__name__)
