@@ -1,3 +1,0 @@
-A new parameter ``create_new`` has been added to the :class:`.Batch` and :class:`.Session` classes. This parameter allows to control whether the POST session API endpoint should be called when initializing the class. 
-
-It defaults to ``True`` as this is the case for most user-facing workflows. However, methods such as :meth:`.Session.from_id` set it to ``False`` to avoid generating a new session when the original session is still active. This fixed issues where multiple sessions were generated simultaneously when calling ``.from_id()``.

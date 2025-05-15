@@ -1,2 +1,0 @@
-:meth:`.Session.from_id` now raises an error if the session does not have a known backend.
-This is usually the case if there haven't been any jobs run in the session yet.
