@@ -218,8 +218,13 @@ class QiskitRuntimeService:
 
         # I don't think we should overwrite the api client like this
         # but we can't access the backend config without the right instance
-        self._create_new_cloud_api_client(instance)
-        return self._api_client.list_backends()
+        try:
+            self._create_new_cloud_api_client(instance)
+            return self._api_client.list_backends()
+        # On staging there some invalid instances returned that 403 when retrieving backends
+        except Exception:  # pylint: disable=broad-except
+            logger.warning("Invalind instance %s", instance)
+            return []
 
     def _create_new_cloud_api_client(self, instance: str) -> None:
         """Create a new api_client given an instance."""
