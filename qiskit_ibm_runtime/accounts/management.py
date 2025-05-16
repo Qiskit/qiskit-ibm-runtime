@@ -51,7 +51,6 @@ class AccountManager:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
-        account_id: Optional[str] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> None:
@@ -69,7 +68,6 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
-            account_id=account_id,
             region=region,
             plans_preference=plans_preference,
         )

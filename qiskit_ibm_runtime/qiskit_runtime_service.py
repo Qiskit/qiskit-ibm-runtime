@@ -76,7 +76,6 @@ class QiskitRuntimeService:
         verify: Optional[bool] = None,
         private_endpoint: Optional[bool] = None,
         url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
-        account_id: Optional[str] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> None:
@@ -125,8 +124,6 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
-            Optional[str] account_id: If your IBM cloud token has access to multiple accounts, specify
-                an account with its account_id. Defaults to the first account available.
             Optional[str] region: Set a region preference. `us-east` or `eu-de`. An instance with
                 this region will be prioritized if an instance is not passed in.
             Optional[List[str]] plans_preference: A list of account types, ordered by preference.
@@ -151,7 +148,6 @@ class QiskitRuntimeService:
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
-            account_id=account_id,
         )
 
         if private_endpoint is not None:
@@ -182,7 +178,6 @@ class QiskitRuntimeService:
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
-            self._account_id = account_id or self._account.account_id
 
         else:
             warnings.warn(
@@ -270,7 +265,6 @@ class QiskitRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
-        account_id: Optional[str] = None,
     ) -> Account:
         """Discover account."""
         account = None
@@ -326,20 +320,6 @@ class QiskitRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
-        if account_id:
-            account.account_id = account_id
-
-        if (
-            not account.account_id
-            and not is_crn(account.instance)
-            and account.channel in ["ibm_cloud", "ibm_quantum_platform"]
-        ):
-            logger.warning(
-                "The account_id was not given. If an instance crn is passed in, "
-                "the account with that instance will be used. If a particular instance "
-                "is required, please specify the account_id of the account with "
-                "that instance. Otherwise, the first account available is selected."
-            )
 
         # if instance is a name, change it to crn format
         if (
@@ -359,7 +339,7 @@ class QiskitRuntimeService:
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         """Get the crn from the instance service name."""
         if not self._all_instances:
-            self._all_instances = account.list_instances(account.account_id)
+            self._all_instances = account.list_instances()
         matching_instances = [item for item in self._all_instances if item["name"] == instance]
         if matching_instances:
             if len(matching_instances) > 1:
@@ -369,9 +349,7 @@ class QiskitRuntimeService:
             return matching_instances[0]["crn"]
         else:
             raise IBMInputValueError(
-                f"The instance specified ({instance}) is not a valid "
-                "instance name, or you are using the incorrect account. If you have access to "
-                "multiple IBM Cloud accounts please try passing in an account_id."
+                f"The instance specified ({instance}) is not a valid " "instance name."
             )
 
     def _discover_cloud_backends(self) -> List[str]:
@@ -660,17 +638,10 @@ class QiskitRuntimeService:
                 else:
                     current_instances = [self._account.instance]
             else:
-                if not self._all_instances or not self._all_instances[0].get("plan"):
-                    if self._region or self._plans_preference:
-                        self._all_instances = self._account.list_instances(
-                            self._account_id, include_plan_name=True
-                        )
-                    else:
-                        self._all_instances = self._account.list_instances(self._account_id)
-                # it would be nice if we could log the account name instead of the id here.
+                if not self._all_instances:
+                    self._all_instances = self._account.list_instances()
                 logger.warning(
-                    "Default instance not set. Searching all available instances in %s account.",
-                    self._account_id or "default",
+                    "Default instance not set. Searching all available instances.",
                 )
                 if not self._backend_instance_groups:
                     for instance_dict in self._all_instances:
@@ -873,7 +844,6 @@ class QiskitRuntimeService:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
-        account_id: Optional[str] = None,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
     ) -> None:
@@ -902,8 +872,6 @@ class QiskitRuntimeService:
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
-            account_id: If your IBM cloud token has access to multiple accounts, specify
-                an account with its account_id. Defaults to the first account available.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
             plans_preference: A list of account types, ordered by preference. An instance with the first
@@ -924,7 +892,6 @@ class QiskitRuntimeService:
             overwrite=overwrite,
             set_as_default=set_as_default,
             private_endpoint=private_endpoint,
-            account_id=account_id,
             region=region,
             plans_preference=plans_preference,
         )
@@ -1408,9 +1375,7 @@ class QiskitRuntimeService:
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
         elif not self._all_instances:
-            self._all_instances = self._account.list_instances(
-                self._account_id, include_plan_name=True
-            )
+            self._all_instances = self._account.list_instances()
         return self._all_instances
 
     @property

@@ -13,7 +13,6 @@
 """Integration tests for account management."""
 
 from typing import Dict
-import logging
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
@@ -21,7 +20,6 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
 from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
-from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
@@ -44,8 +42,7 @@ def _get_service_instance_name_for_crn(
     with requests.Session() as session:
         client.set_service_url(get_resource_controller_api_url(dependencies.url))
         client.set_http_client(session)
-        result = client.get_resource_instance(id=dependencies.instance).get_result()
-        return {"name": result["name"], "account_id": result["account_id"]}
+        return client.get_resource_instance(id=dependencies.instance).get_result()["name"]
 
 
 class TestQuantumPlatform(IBMIntegrationTestCase):
@@ -54,34 +51,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
     def _skip_on_ibm_quantum(self):
         if self.dependencies.channel == "ibm_quantum":
             self.skipTest("Not supported on ibm_quantum")
-
-    def test_account_id(self):
-        """Test account_id."""
-        account_id = _get_service_instance_name_for_crn(self.dependencies)["account_id"]
-        service = QiskitRuntimeService(
-            token=self.dependencies.token, channel="ibm_quantum_platform", account_id=account_id
-        )
-        self.assertTrue(service)
-        self.assertEqual(service._account.account_id, account_id)
-        self.assertTrue(service.backend(self.dependencies.qpu))
-
-        # test invalid account_id
-        with self.assertRaises(InvalidAccountError):
-            service = QiskitRuntimeService(
-                token=self.dependencies.token,
-                channel="ibm_quantum_platform",
-                account_id="invalid_id",
-            )
-            service.backend(self.dependencies.qpu)
-
-        # invalid account_id works if instance is also passed in
-        service = QiskitRuntimeService(
-            token=self.dependencies.token,
-            channel="ibm_quantum_platform",
-            account_id="invalid_id",
-            instance=self.dependencies.instance,
-        )
-        self.assertTrue(service.backend(self.dependencies.qpu))
 
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
@@ -126,7 +95,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
                 channel="ibm_quantum_platform",
             )
 
-        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)["name"]
+        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         service = QiskitRuntimeService(
             token=self.dependencies.token,
             instance=service_instance_name,
@@ -144,23 +113,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             [backend.name for backend in backends],
             [backend.name for backend in backends_instance_param],
         )
-
-    def test_account_id_logic(self):
-        """Test passing in an account id."""
-        self._skip_on_ibm_quantum()
-        account_id = "test_account_id"
-        with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as warn:
-            QiskitRuntimeService(
-                token=self.dependencies.token,
-                channel="ibm_quantum_platform",
-            )
-            self.assertIn("account_id", warn.output[0])
-
-        service = QiskitRuntimeService(
-            token=self.dependencies.token, channel="ibm_quantum_platform", account_id=account_id
-        )
-
-        self.assertEqual(account_id, service._account.account_id)
 
     def test_account_preferences(self):
         """Test account preferences region and plans_preference."""
@@ -215,7 +167,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
         self._skip_on_ibm_quantum()
 
-        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)["name"]
+        service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = QiskitRuntimeService(
                 channel="ibm_cloud",

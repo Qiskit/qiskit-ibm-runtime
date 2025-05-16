@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
-from ibm_platform_services import GlobalSearchV2
+from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
@@ -44,16 +44,6 @@ ChannelType = Optional[
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
-# TODO fetch plan names instead of using this
-# Pulled from IQP - I don't think this should be hard coded
-PlanIdsByName = {
-    "7f666d17-7893-47d8-bf9d-2b2389fc4dfc": "premium",
-    "c8122eb7-fdb1-4746-841d-45bbc7678195": "dedicated",
-    "91b2c828-2952-4f05-aed8-bedf92c6c480": "internal",
-    "850b21a7-71de-4e53-9441-1abdd202f35d": "open",
-    "53bde9d3-cdbb-46f5-a98f-60ebcadf7260": "flex",
-    "5304b575-3cff-4455-90dc-ae4367762093": "standard",
-}
 logger = logging.getLogger(__name__)
 
 
@@ -84,7 +74,6 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.private_endpoint: bool = False
-        self.account_id: str = None
         self.region: str = None
         self.plans_preference: List[str] = None
 
@@ -108,7 +97,6 @@ class Account:
         instance = data.get("instance")
         verify = data.get("verify", True)
         private_endpoint = data.get("private_endpoint", False)
-        account_id = data.get("account_id")
         region = data.get("region")
         plans_preference = data.get("plans_preference")
         return cls.create_account(
@@ -119,7 +107,6 @@ class Account:
             proxies=proxies,
             verify=verify,
             private_endpoint=private_endpoint,
-            account_id=account_id,
             region=region,
             plans_preference=plans_preference,
         )
@@ -134,7 +121,6 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
-        account_id: Optional[str] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> "Account":
@@ -155,7 +141,6 @@ class Account:
                 proxies=proxies,
                 verify=verify,
                 private_endpoint=private_endpoint,
-                account_id=account_id,
                 region=region,
                 plans_preference=plans_preference,
             )
@@ -171,9 +156,7 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(  # type: ignore
-        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
-    ):
+    def list_instances(self) -> List[Dict[str, str]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -298,7 +281,6 @@ class CloudAccount(Account):
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
-        account_id: Optional[str] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ):
@@ -317,7 +299,6 @@ class CloudAccount(Account):
         self.channel = "ibm_quantum_platform"  # should this be ibm_quantum_platform?
         self.url = resolved_url
         self.private_endpoint = private_endpoint
-        self.account_id = account_id
         self.region = region
         self.plans_preference = plans_preference
 
@@ -355,9 +336,7 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(
-        self, account_id: Optional[str] = None, include_plan_name: Optional[bool] = False
-    ) -> List[Dict[str, str]]:
+    def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
         is_staging = "test" in self.url
@@ -365,6 +344,7 @@ class CloudAccount(Account):
             url = "https://iam.test.cloud.ibm.com"
         authenticator = IAMAuthenticator(self.token, url=url)
         client = GlobalSearchV2(authenticator=authenticator)
+        catalog = GlobalCatalogV1(authenticator=authenticator)
         if is_staging:
             client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
         search_cursor = None
@@ -373,7 +353,6 @@ class CloudAccount(Account):
             try:
                 result = client.search(
                     query="service_name:quantum-computing",
-                    account_id=account_id,
                     fields=["crn", "service_plan_unique_id", "name", "doc"],
                     search_cursor=search_cursor,
                     limit=100,
@@ -386,13 +365,16 @@ class CloudAccount(Account):
                 # don't add instances without backend allocation
                 allocations = item.get("doc", {}).get("extensions")
                 if allocations:
-                    plan_name = None
-                    if include_plan_name:
-                        plan_name = PlanIdsByName.get(item.get("service_plan_unique_id"))
+                    catalog_result = catalog.get_catalog_entry(
+                        id=item.get("service_plan_unique_id")
+                    ).get_result()
+                    plan_name = (
+                        catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
+                    )
                     crns.append(
                         {
                             "crn": item.get("crn"),
-                            "plan": plan_name,
+                            "plan": plan_name.lower(),
                             "name": item.get("name"),
                         }
                     )

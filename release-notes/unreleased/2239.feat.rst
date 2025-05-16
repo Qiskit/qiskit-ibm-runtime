@@ -7,12 +7,11 @@ The following changes were made to support the upcoming
 
     - When saving and initializing an account on the new platform, an instance is no longer required. If an instance
     is not passed in, all instances will be checked when a backend is retrieved, (``service.backend()``). 
-    There are new parameters ``account_id``, ``region``, and ``plans_preference``, that can be used to set prioritize certain instances. 
+    There are new parameters ``region``, and ``plans_preference``, that can be used to set prioritize certain instances. Note that 
+    the IBM Cloud API Token used will only work with the account the token was created in. A list of tokens per account can be found 
+    `here <https://cloud.ibm.com/iam/apikeys>`__. Only one account per API Token can be used. If you want to use multiple accounts, 
+    multiple API Keys will have to be used/saved.  
   
-      - ``account_id``: If your IBM cloud token has access to multiple accounts, specify an account with its account_id 
-      (found in IBM Cloud account settings - Manage Tab -> Account -> Account Settings -> ID value under "Account"). 
-      If an instance is also passed in, the account the instance is in will have precendence. Otherwise, there will be a warning 
-      and the first account available will be returned. 
       - ``region``: Set a region preference. ``us-east`` or ``eu-de``.
       - ``plans_preference``: A list of account types, ordered by preference. An instance with the first value in the list will be prioritized
 
@@ -22,8 +21,7 @@ The following changes were made to support the upcoming
 
     - The IBM Cloud Resource Name (crn) or the actual instance name can be passed in as the instance. 
     If an instance is passed into ``save_account()``, or passed in during initialization (``QiskitRuntimeService()``), 
-    it will be used as the default instance when retrieving backends. Note that if the instance name is passed in
-    instead of the crn, the account_id must also be saved or passed in if the instance is not in the default account.
+    it will be used as the default instance when retrieving backends.
     The instance passed in at initialization will take precendence over the one saved in the account. 
     The instance can also be passed in explicity when retrieving backends (``backend()`` or ``backends()``). 
 
@@ -32,10 +30,7 @@ The following changes were made to support the upcoming
         # save account
         service = QiskitRuntimeService.save_account(
           # No channel needs to be specified, ibm_quantum_platform is the default
-          token=token,
-          # Note that if you have access to multiple accounts, it is recommended to specify the 
-          # account you want to use with account_id. Otherwise the provider will default to the first account found.
-          account_id="...", # Optional               
+          token=token,         
           region="us-east|eu-de", # Optional
           plans_preference=['Open',...], #Optional
           set_as_default=True  #Optional
@@ -58,7 +53,6 @@ The following changes were made to support the upcoming
           # No channel needs to be specified, ibm_quantum_platform is the default
           token=token,
           instance="..." # This will be the default instance 
-          account_id="...", # Optional
           region="us-east|eu-de", # Optional
           plans_preference=['Open',...], #Optional
           set_as_default=True  #Optional

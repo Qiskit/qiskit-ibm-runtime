@@ -415,31 +415,6 @@ class TestAccountManager(IBMTestCase):
         account = AccountManager.get(filename=_TEST_FILENAME)
         self.assertTrue(account.private_endpoint)
 
-    def test_save_account_preferences(self):
-        """Test saving account preferences."""
-        account_id = "test_account_id"
-        region = "us-east"
-        plans_preference = ["open"]
-
-        AccountManager.save(
-            filename=_TEST_FILENAME,
-            name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
-            token=_TEST_IBM_CLOUD_ACCOUNT.token,
-            instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
-            channel="ibm_cloud",
-            overwrite=True,
-            set_as_default=True,
-            private_endpoint=True,
-            account_id=account_id,
-            region=region,
-            plans_preference=plans_preference,
-        )
-
-        account = AccountManager.get(filename=_TEST_FILENAME)
-        self.assertEqual(account_id, account.account_id)
-        self.assertEqual(region, account.region)
-        self.assertEqual(plans_preference, account.plans_preference)
-
     def test_save_default_account(self):
         """Test that if a default_account is defined in the qiskit-ibm.json file,
         this account will be used"""
