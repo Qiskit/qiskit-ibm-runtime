@@ -26,7 +26,7 @@ from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn, cname_from_crn
+from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
@@ -360,7 +360,7 @@ class CloudAccount(Account):
     ) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         url = None
-        is_staging = cname_from_crn(self.instance) == "staging"
+        is_staging = "test" in self.url
         if is_staging:
             url = "https://iam.test.cloud.ibm.com"
         authenticator = IAMAuthenticator(self.token, url=url)
