@@ -370,13 +370,16 @@ class CloudAccount(Account):
         search_cursor = None
         all_crns = []
         while True:
-            result = client.search(
-                query="service_name:quantum-computing",
-                account_id=account_id,
-                fields=["crn", "service_plan_unique_id", "name", "doc"],
-                search_cursor=search_cursor,
-                limit=100,
-            ).get_result()
+            try:
+                result = client.search(
+                    query="service_name:quantum-computing",
+                    account_id=account_id,
+                    fields=["crn", "service_plan_unique_id", "name", "doc"],
+                    search_cursor=search_cursor,
+                    limit=100,
+                ).get_result()
+            except:
+                raise InvalidAccountError("Unable to retrieve instances.")
             crns = []
             items = result.get("items", [])
             for item in items:
