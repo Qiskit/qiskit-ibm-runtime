@@ -26,7 +26,12 @@ from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..utils import resolve_crn
+from ..utils import (
+    resolve_crn,
+    get_iam_api_url,
+    get_global_search_api_url,
+    get_global_catalog_api_url,
+)
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
@@ -338,15 +343,12 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        url = None
-        is_staging = "test" in self.url
-        if is_staging:
-            url = "https://iam.test.cloud.ibm.com"
-        authenticator = IAMAuthenticator(self.token, url=url)
+        iam_url = get_iam_api_url(self.url)
+        authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
-        if is_staging:
-            client.set_service_url("https://api.global-search-tagging.test.cloud.ibm.com")
+        client.set_service_url(get_global_search_api_url(self.url))
+        catalog.set_service_url(get_global_catalog_api_url(self.url))
         search_cursor = None
         all_crns = []
         while True:

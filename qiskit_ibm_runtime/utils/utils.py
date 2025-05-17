@@ -259,6 +259,18 @@ def get_iam_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
+def get_global_search_api_url(cloud_url: str) -> str:
+    """Compute the GlobalSearchV2 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://api.global-search-tagging.{parsed_url.hostname}"
+
+
+def get_global_catalog_api_url(cloud_url: str) -> str:
+    """Compute the GlobalCatalogV1 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://globalcatalog.{parsed_url.hostname}/api/v1"
+
+
 def get_resource_controller_api_url(cloud_url: str) -> str:
     """Computes the Resource Controller API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
