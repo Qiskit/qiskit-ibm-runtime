@@ -36,7 +36,7 @@ class EnvironmentOptions:
         Default: ``WARNING``.
     """
     callback: Optional[Callable] = None
-    r"""Callback function to be invoked for any interim results and final result.
+    r"""(DEPRECATED) Callback function to be invoked for any interim results and final result.
         The callback function will receive 2 positional parameters:
 
             1. Job ID
@@ -52,4 +52,12 @@ class EnvironmentOptions:
         Default: ``None``.
     """
     private: Optional[bool] = False
-    r"""Boolean value for marking jobs as private."""
+    r"""Boolean that indicates whether the job is marked as private. This is only
+        supported for ``ibm_quantum`` channel. When set to true, input parameters are not
+        returned, and the results can only be read once. After the results are read or after
+        a specified time after the job is completed, the results are deleted from the service.
+        When set to false, the input parameters and results follow the standard retention
+        behavior.
+
+        Default: False.
+    """

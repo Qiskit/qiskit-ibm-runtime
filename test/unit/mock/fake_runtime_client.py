@@ -42,7 +42,6 @@ class BaseFakeProgram:
         backend_requirements=None,
         parameters=None,
         return_values=None,
-        interim_results=None,
         is_public=False,
     ):
         """Initialize a fake program."""
@@ -54,7 +53,6 @@ class BaseFakeProgram:
         self._backend_requirements = backend_requirements
         self._parameters = parameters
         self._return_values = return_values
-        self._interim_results = interim_results
         self._is_public = is_public
 
     def to_dict(self, include_data=False):
@@ -77,8 +75,6 @@ class BaseFakeProgram:
             out["spec"]["parameters"] = self._parameters
         if self._return_values:
             out["spec"]["return_values"] = self._return_values
-        if self._interim_results:
-            out["spec"]["interim_results"] = self._interim_results
 
         return out
 
@@ -117,7 +113,6 @@ class BaseFakeRuntimeJob:
         self._project = project
         self._backend_name = backend_name
         self._image = image
-        self._interim_results = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._job_tags = job_tags
         self.log_level = log_level
         self._session_id = session_id
@@ -163,10 +158,6 @@ class BaseFakeRuntimeJob:
     def result(self):
         """Return job result."""
         return self._result
-
-    def interim_results(self):
-        """Return job interim results."""
-        return self._interim_results
 
     def status(self):
         """Return job status."""
@@ -404,10 +395,6 @@ class BaseFakeRuntimeClient:
     def job_results(self, job_id):
         """Get the results of a program job."""
         return self._get_job(job_id).result()
-
-    def job_interim_results(self, job_id):
-        """Get the interim results of a program job."""
-        return self._get_job(job_id).interim_results()
 
     def job_cancel(self, job_id):
         """Cancel the job."""

@@ -16,7 +16,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Tuple
 import logging
 from concurrent import futures
-import traceback
 import queue
 from datetime import datetime
 
@@ -29,7 +28,6 @@ from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
 from .utils.queueinfo import QueueInfo
-from .utils.deprecation import issue_deprecation_msg
 from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
 from .exceptions import (
     IBMError,
@@ -37,8 +35,9 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
+from .utils.deprecation import issue_deprecation_msg
 from .models import BackendProperties
-from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
+from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
 
@@ -47,9 +46,6 @@ logger = logging.getLogger(__name__)
 
 class BaseRuntimeJob(ABC):
     """Base Runtime Job class."""
-
-    _POISON_PILL = "_poison_pill"
-    """Used to inform streaming to stop."""
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
@@ -60,10 +56,10 @@ class BaseRuntimeJob(ABC):
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
+        client_params: ClientParameters = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -77,11 +73,11 @@ class BaseRuntimeJob(ABC):
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            client_params: Parameters used for server connection.
+            client_params: (DEPRECATED) Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             creation_date: Job creation date, in UTC.
-            user_callback: User callback function.
+            user_callback: (DEPRECATED) User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
             service: Runtime service.
@@ -92,48 +88,37 @@ class BaseRuntimeJob(ABC):
         self._backend = backend
         self._job_id = job_id
         self._api_client = api_client
-        self._interim_results: Optional[Any] = None
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
         self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
-        self._final_interim_results = False
         self._service = service
         self._session_id = session_id
         self._tags = tags
         self._usage_estimation: Dict[str, Any] = {}
         self._version = version
         self._queue_info: QueueInfo = None
-        self._user_callback = user_callback
         self._status: Union[RuntimeJobStatus, str] = None
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
-            self._interim_result_decoder, self._final_result_decoder = decoder
+            _, self._final_result_decoder = decoder
         else:
-            self._interim_result_decoder = self._final_result_decoder = decoder
+            self._final_result_decoder = decoder
 
-        # Used for streaming
-        self._ws_client_future = None  # type: Optional[futures.Future]
-        self._result_queue = queue.Queue()  # type: queue.Queue
-        self._ws_client = RuntimeWebsocketClient(
-            websocket_url=client_params.get_runtime_api_base_url().replace("https", "wss"),
-            client_params=client_params,
-            job_id=job_id,
-            message_queue=self._result_queue,
-        )
+        if user_callback or client_params:
+            issue_deprecation_msg(
+                msg="The job class parameters 'user_callback' and 'client_params' are deprecated",
+                version="0.38.0",
+                remedy="These parameters will have no effect since interim "
+                "results streaming was removed in a previous release.",
+            )
 
     def job_id(self) -> str:
         """Return a unique id identifying the job."""
         return self._job_id
-
-    def cancel_result_streaming(self) -> None:
-        """Cancel result streaming."""
-        if not self._is_streaming():
-            return
-        self._ws_client.disconnect(WebsocketClientCloseCode.CANCEL)
 
     def usage(self) -> float:
         """Return job usage in seconds."""
@@ -282,64 +267,6 @@ class BaseRuntimeJob(ABC):
         else:
             error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
             return error_msg.format(self.job_id(), self._reason or job_result_raw)
-
-    def _is_streaming(self) -> bool:
-        """Return whether job results are being streamed.
-
-        Returns:
-            Whether job results are being streamed.
-        """
-        if self._ws_client_future is None:
-            return False
-
-        if self._ws_client_future.done():
-            return False
-
-        return True
-
-    def _start_websocket_client(self) -> None:
-        """Start websocket client to stream results."""
-        try:
-            logger.debug("Start websocket client for job %s", self.job_id())
-            self._ws_client.job_results()
-        except Exception:  # pylint: disable=broad-except
-            logger.warning(
-                "An error occurred while streaming results from the server for job %s:\n%s",
-                self.job_id(),
-                traceback.format_exc(),
-            )
-        finally:
-            self._result_queue.put_nowait(self._POISON_PILL)
-
-    def _stream_results(
-        self,
-        result_queue: queue.Queue,
-        user_callback: Callable,
-        decoder: Optional[Type[ResultDecoder]] = None,
-    ) -> None:
-        """Stream results.
-
-        Args:
-            result_queue: Queue used to pass websocket messages.
-            user_callback: User callback function.
-            decoder: A :class:`ResultDecoder` (sub)class used to decode job results.
-        """
-        logger.debug("Start result streaming for job %s", self.job_id())
-        _decoder = decoder or self._interim_result_decoder
-        while True:
-            try:
-                response = result_queue.get()
-                if response == self._POISON_PILL:
-                    self._empty_result_queue(result_queue)
-                    return
-
-                user_callback(self.job_id(), _decoder.decode(response))
-            except Exception:  # pylint: disable=broad-except
-                logger.warning(
-                    "An error occurred while streaming results for job %s:\n%s",
-                    self.job_id(),
-                    traceback.format_exc(),
-                )
 
     @staticmethod
     def _empty_result_queue(result_queue: queue.Queue) -> None:

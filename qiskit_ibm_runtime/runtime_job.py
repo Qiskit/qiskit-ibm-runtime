@@ -35,7 +35,7 @@ from .exceptions import (
 )
 from .utils.result_decoder import ResultDecoder
 from .utils.queueinfo import QueueInfo
-from .utils.deprecation import deprecate_function, issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -68,13 +68,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             print("The job finished with result {}".format(job_result))
         except RuntimeJobFailureError as ex:
             print("Job failed!: {}".format(ex))
-
-    If the primitive has any interim results, you can use the ``callback``
-    parameter of the
-    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
-    method to stream the interim results along with the final result.
-    Alternatively, you can use the :meth:`stream_results` method to stream
-    the results at a later time, but before the job finishes.
     """
 
     JOB_FINAL_STATES = JOB_FINAL_STATES
@@ -84,10 +77,10 @@ class RuntimeJob(Job, BaseRuntimeJob):
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
+        client_params: Optional[ClientParameters] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -96,16 +89,16 @@ class RuntimeJob(Job, BaseRuntimeJob):
         tags: Optional[List] = None,
         version: Optional[int] = None,
     ) -> None:
-        """RuntimeJob constructor.
+        """(DEPRECATED) RuntimeJob constructor.
 
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            client_params: Parameters used for server connection.
+            client_params: (DEPRECATED) Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             creation_date: Job creation date, in UTC.
-            user_callback: User callback function.
+            user_callback: (DEPRECATED) User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
             service: Runtime service.
@@ -113,6 +106,15 @@ class RuntimeJob(Job, BaseRuntimeJob):
             tags: Tags assigned to the job.
             version: Primitive version.
         """
+
+        issue_deprecation_msg(
+            msg="The RuntimeJob class is deprecated",
+            version="0.38.0",
+            stacklevel=4,
+            remedy="All primitives now return the RuntimeJobV2 class. The major difference between "
+            "the two classes is that `Job.status()` is returned as a string in RuntimeJobV2.",
+        )
+
         Job.__init__(self, backend=backend, job_id=job_id)
         BaseRuntimeJob.__init__(
             self,
@@ -131,8 +133,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             version=version,
         )
         self._status = JobStatus.INITIALIZING
-        if user_callback is not None:
-            self.stream_results(user_callback)
 
     def result(  # pylint: disable=arguments-differ
         self,
@@ -182,7 +182,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             if ex.status_code == 409:
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
-        self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
     def status(self) -> JobStatus:

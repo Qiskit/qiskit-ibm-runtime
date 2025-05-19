@@ -35,36 +35,6 @@ class RequestsApiError(ApiError):
         self.status_code = status_code
 
 
-class WebsocketError(ApiError):
-    """Exceptions related to websockets."""
-
-    pass
-
-
-class WebsocketIBMProtocolError(WebsocketError):
-    """Exceptions related to IBM Quantum protocol error."""
-
-    pass
-
-
-class WebsocketAuthenticationError(WebsocketError):
-    """Exception caused during websocket authentication."""
-
-    pass
-
-
-class WebsocketTimeoutError(WebsocketError):
-    """Timeout during websocket communication."""
-
-    pass
-
-
-class WebsocketRetryableError(WebsocketError):
-    """A websocket error that can be retried."""
-
-    pass
-
-
 class AuthenticationLicenseError(ApiError):
     """Exception due to user not having accepted the license agreement."""
 

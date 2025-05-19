@@ -31,14 +31,15 @@ class TwirlingOptions:
 
     enable_gates: Union[UnsetType, bool] = Unset
     r"""Whether to apply 2-qubit Clifford gate twirling.
-      Default: False.
+    
+    Default: ``False``.
     """
 
     enable_measure: Union[UnsetType, bool] = Unset
-    r"""Whether to enable twirling of measurements.
+    r"""Whether to enable twirling to measurement instructions, as long as the measurement is not 
+    involved within a conditional block.
 
-    Twirling will only be applied to those measurement registers not involved within a
-    conditional logic. Default: True for Estimator, false for Sampler.
+    Default: ``True`` for ``Estimator``, ``False`` for ``Sampler``.
     """
 
     num_randomizations: Union[UnsetType, int, Literal["auto"]] = Unset
@@ -51,7 +52,7 @@ class TwirlingOptions:
         ``ceil(shots/shots_per_randomization)``, where ``ceil`` is the ceiling function.
       * Otherwise, the value is set to ``ceil(shots/shots_per_randomization)``.
 
-      Default: "auto".
+      Default: ``"auto"``.
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
@@ -70,7 +71,7 @@ class TwirlingOptions:
         function.
       * Otherwise, the value is set to ``ceil(shots/num_randomizations)``.
 
-      Default: "auto".
+      Default: ``"auto"``.
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
@@ -93,7 +94,7 @@ class TwirlingOptions:
       * If ``"all"`` all qubits in the input circuit will be twirled in each
         twirled layer.
 
-      Default: "active-accum".
+      Default: ``"active-accum"``.
 
     .. image:: /source_images/twirling_strategy_options.png
       :alt: Image illustrating the differences among twirling strategies. If "active", only

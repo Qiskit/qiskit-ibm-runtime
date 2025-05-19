@@ -12,17 +12,24 @@
 
 """Plugin for IBM provider backend transpiler stages."""
 
+import re
 from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.transpiler.preset_passmanagers import common
-from qiskit.transpiler.passes import ConvertConditionsToIfOps
+from qiskit.transpiler import passes
+
+from qiskit.version import __version__ as _terra_version_string
 
 from qiskit_ibm_runtime.transpiler.passes.basis import (
     ConvertIdToDelay,
     FoldRzzAngle,
+)
+
+_TERRA_VERSION = tuple(
+    int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
 
 
@@ -37,16 +44,21 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
             qubits_initially_zero=pass_manager_config.qubits_initially_zero,
+            **legacy_options,
         )
 
         plugin_passes = []
@@ -68,15 +80,20 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
+            **legacy_options,
         )
 
         instruction_durations = pass_manager_config.instruction_durations
@@ -89,13 +106,9 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
         if instruction_durations and not id_supported:
             plugin_passes.append(ConvertIdToDelay(instruction_durations))
 
-        # Only inject control-flow conversion pass at level 0 and level 1. As of
-        # qiskit 0.22.x transpile() with level 2 and 3 does not support
-        # control flow instructions (including if_else). This can be
-        # removed when higher optimization levels support control flow
-        # instructions.
-        if optimization_level in {0, 1}:
-            plugin_passes += [ConvertConditionsToIfOps()]
+        if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
+            # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
+            plugin_passes += [convert_pass()]  # pylint: disable=not-callable
 
         return PassManager(plugin_passes) + translator_pm
 
@@ -115,15 +128,20 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
         translator_pm = common.generate_translation_passmanager(
             target=pass_manager_config.target,
             basis_gates=pass_manager_config.basis_gates,
             approximation_degree=pass_manager_config.approximation_degree,
             coupling_map=pass_manager_config.coupling_map,
-            backend_props=pass_manager_config.backend_properties,
             unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
             unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
             hls_config=pass_manager_config.hls_config,
+            **legacy_options,
         )
 
         instruction_durations = pass_manager_config.instruction_durations

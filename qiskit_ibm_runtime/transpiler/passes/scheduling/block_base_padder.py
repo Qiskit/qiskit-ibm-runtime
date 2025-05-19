@@ -23,7 +23,8 @@ from qiskit.circuit import (
     Instruction,
     Measure,
 )
-from qiskit.circuit.bit import Bit
+
+from qiskit.circuit import Bit
 from qiskit.circuit.library import Barrier
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameterexpression import ParameterExpression
@@ -31,6 +32,7 @@ from qiskit.converters import dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.circuit.controlflow import condition_resources
 
 from .utils import block_order_op_nodes, BlockOrderingCallableType
 
@@ -204,7 +206,6 @@ class BlockBasePadder(TransformationPass):
                 "Please run TimeUnitConversion pass prior to padding."
             )
 
-        new_dag.calibrations = dag.calibrations
         new_dag.global_phase = dag.global_phase
         return new_dag
 
@@ -262,19 +263,14 @@ class BlockBasePadder(TransformationPass):
 
     def _get_node_duration(self, node: DAGNode) -> int:
         """Get the duration of a node."""
-        if node.op.condition_bits or isinstance(node.op, ControlFlowOp):
+        if isinstance(node.op, ControlFlowOp):
             # As we cannot currently schedule through conditionals model
             # as zero duration to avoid padding.
             return 0
 
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
-        if self._block_dag.has_calibration_for(node):
-            # If node has calibration, this value should be the highest priority
-            cal_key = tuple(indices), tuple(float(p) for p in node.op.params)
-            duration = self._block_dag.calibrations[node.op.name][cal_key].duration
-        else:
-            duration = self._durations.get(node.op, indices, unit="dt")
+        duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
@@ -422,7 +418,8 @@ class BlockBasePadder(TransformationPass):
         2. The operation only operates on the qubit that is measured.
         """
         # Verify IfElseOp has a direct measurement predecessor
-        condition_bits = node.op.condition_bits
+        condition_bits = list(condition_resources(node.op.condition).clbits)
+
         # Fast-path valid only with a single bit.
         if not condition_bits or len(condition_bits) > 1:
             return False
@@ -517,8 +514,6 @@ class BlockBasePadder(TransformationPass):
             self._terminate_block(self._block_duration, self._current_block_idx)
             self._add_block_terminating_barrier(block_idx, t0, node)
 
-        self._conditional_block = bool(node.op.condition_bits)
-
         self._current_block_idx = block_idx
 
         t1 = t0 + self._get_node_duration(node)  # pylint: disable=invalid-name
@@ -534,10 +529,6 @@ class BlockBasePadder(TransformationPass):
         if block_idx > self._current_block_idx:
             self._terminate_block(self._block_duration, self._current_block_idx)
             self._add_block_terminating_barrier(block_idx, t0, node)
-
-        # This block will not be padded as it is conditional.
-        # See TODO below.
-        self._conditional_block = bool(node.op.condition_bits)
 
         # Now set the current block index.
         self._current_block_idx = block_idx

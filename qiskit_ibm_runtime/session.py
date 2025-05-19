@@ -18,7 +18,7 @@ from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 
-from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .exceptions import IBMInputValueError, IBMRuntimeError
@@ -81,12 +81,12 @@ class Session:
             print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
-    _create_new_session = True
-
     def __init__(
         self,
-        backend: Optional[Union[BackendV1, BackendV2]] = None,
+        backend: BackendV2,
         max_time: Optional[Union[int, str]] = None,
+        *,
+        create_new: Optional[bool] = True,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -99,11 +99,13 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+            create_new: If True, the POST session API endpoint will be called to create a new session.
+                Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
         """
         self._service: Optional[QiskitRuntimeService | QiskitRuntimeLocalService] = None
-        self._backend: Optional[BackendV1 | BackendV2] = None
+        self._backend: Optional[BackendV2] = None
         self._instance = None
         self._active = True
         self._session_id = None
@@ -111,7 +113,7 @@ class Session:
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
-        elif isinstance(backend, (BackendV1, BackendV2)):
+        elif isinstance(backend, (BackendV2)):
             self._service = QiskitRuntimeLocalService()
             self._backend = backend
         else:
@@ -126,11 +128,11 @@ class Session:
         if isinstance(self._backend, IBMBackend):
             self._instance = self._backend._instance
             if not self._backend.configuration().simulator:
-                self._session_id = self._create_session()
+                self._session_id = self._create_session(create_new=create_new)
 
-    def _create_session(self) -> Optional[str]:
+    def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
-        if isinstance(self._service, QiskitRuntimeService) and Session._create_new_session:
+        if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._api_client.create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
@@ -325,6 +327,7 @@ class Session:
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist.
+            IBMRuntimeError: If the backend of the session is unknown.
 
         Returns:
             A new Session with the given ``session_id``
@@ -332,7 +335,12 @@ class Session:
         """
 
         response = service._api_client.session_details(session_id)
-        backend = service.backend(response.get("backend_name"))
+        backend_name = response.get("backend_name")
+        if not backend_name:
+            raise IBMRuntimeError(
+                "The backend of this session is unknown. Try running a job first."
+            )
+        backend = service.backend(backend_name)
         mode = response.get("mode")
         state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
@@ -341,9 +349,7 @@ class Session:
                 f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
-        cls._create_new_session = False
-        session = cls(backend)
-        cls._create_new_session = True
+        session = cls(backend, create_new=False)
         if state == "closed":
             session._active = False
         session._session_id = session_id

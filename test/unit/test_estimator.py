@@ -59,7 +59,6 @@ class TestEstimatorV2(IBMTestCase):
             # Check circuit
             self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check observables
-            a_pub_obs = a_pub_param.observables.tolist()
             for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
                 self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
             # Check parameter values
@@ -223,13 +222,13 @@ class TestEstimatorV2(IBMTestCase):
     def test_invalid_basis(self):
         """Test observable containing invalid basis."""
         all_obs = [
-            ["JJ"],
-            {"JJ": 1 + 2j},
-            [["0J", "YY"]],
+            ["Y0"],
+            {"1X": 2},
+            [["rZ", "YY"]],
             [
                 [
-                    {"XX": 1 + 2j},
-                    {"JJ": 1 + 2j},
+                    {"XX": 3},
+                    {"++": 4},
                 ]
             ],
         ]
@@ -238,8 +237,8 @@ class TestEstimatorV2(IBMTestCase):
         estimator = EstimatorV2(mode=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
-                with self.assertRaises(ValueError):
-                    estimator.run((circuit, obs))
+                with self.assertRaisesRegex(ValueError, "Observable"):
+                    estimator.run([(circuit, obs)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
         """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
@@ -266,7 +265,7 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend)
         circ = QuantumCircuit(2)
         obs = []
-        with self.assertRaisesRegex(ValueError, "Empty observables array is not allowed"):
+        with self.assertRaisesRegex(IBMInputValueError, "Empty observables array is not allowed"):
             inst.run(pubs=[(circ, obs)])
 
     def test_gate_not_in_target(self):

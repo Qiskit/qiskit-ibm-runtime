@@ -101,6 +101,9 @@ ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOU
 ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
+| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
+|:---------------------------|
+
 ## Primitives
 
 All quantum applications and algorithms level are fundamentally built using these steps:
@@ -308,7 +311,7 @@ If you do not specify an instance, then the code will select one in the followin
 
 ## Access your IBM Quantum backends
 
-A **backend** is a quantum device or simulator capable of running quantum circuits or pulse schedules.
+A **backend** is a quantum device or simulator capable of running quantum circuits.
 
 You can query for the backends you have access to. Attributes and methods of the returned instances
 provide information, such as qubit counts, error rates, and statuses, of the backends.
