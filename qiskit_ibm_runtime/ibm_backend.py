@@ -317,7 +317,6 @@ class IBMBackend(Backend):
             Target
         """
         self.properties()
-        self.defaults()
         self._convert_to_target()
         return self._target
 
