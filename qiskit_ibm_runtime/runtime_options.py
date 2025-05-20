@@ -70,12 +70,11 @@ class RuntimeOptions:
                 this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
                 clock time.
             session_time: Length of session in seconds.
-            private: Boolean that indicates whether the job is marked as private. This is only
-                supported for ``ibm_quantum`` channel. When set to true, input parameters are not
-                returned, and the results can only be read once. After the results are read or after
-                a specified time after the job is completed, the results are deleted from the service.
-                When set to false, the input parameters and results follow the standard retention
-                behavior.
+            private: Boolean that indicates whether the job is marked as private. When set to true,
+                input parameters are not returned, and the results can only be read once.
+                After the results are read or after a specified time after the job is completed,
+                the results are deleted from the service. When set to false, the input parameters
+                and results follow the standard retention behavior.
         """
         self.backend = backend
         self.image = image
