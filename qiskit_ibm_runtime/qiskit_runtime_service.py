@@ -25,10 +25,11 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
+from .utils import is_crn
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
-from .accounts import AccountManager, Account, ChannelType
+from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -43,6 +44,7 @@ from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .models import QasmBackendConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +76,8 @@ class QiskitRuntimeService:
         verify: Optional[bool] = None,
         private_endpoint: Optional[bool] = None,
         url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
+        region: Optional[str] = None,
+        plans_preference: Optional[List[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -91,14 +95,15 @@ class QiskitRuntimeService:
         values in the loaded account.
 
         Args:
-            Optional[ChannelType] channel: Channel type. ``ibm_cloud``, ``ibm_quantum`` or
-             ``local``. If ``local`` is selected, the local testing mode will be used, and
-             primitive queries will run on a local simulator.
-             For more details, check the `Qiskit Runtime local testing mode
-             <https://docs.quantum.ibm.com/guides/local-testing-mode>`_ documentation.
-             The ``ibm_quantum`` channel is deprecated and the ``ibm_cloud``
-             channel should be used instead. For help, review the `migration guide
-             <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
+            Optional[ChannelType] channel: Channel type. ``ibm_cloud``, ``ibm_quantum_platform``
+                or ``local``. If ``local`` is selected, the local testing mode will be used, and
+                primitive queries will run on a local simulator. For more details, check the
+                `Qiskit Runtime local testing mode
+                <https://docs.quantum.ibm.com/guides/local-testing-mode>`_  documentation.
+                The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
+                should be used instead. Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to
+                the same channel. For more information, review the `migration guide
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             Optional[str] token: IBM Cloud API key or IBM Quantum API token.
             Optional[str] url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
@@ -107,8 +112,10 @@ class QiskitRuntimeService:
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             Optional[str] name: Name of the account to load.
             Optional[str] instance: The service instance to use.
-                For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
-                For ``ibm_quantum`` runtime, this is the hub/group/project in that format.
+                For ``ibm_cloud`` runtime, this is the Cloud Resource
+                Name (CRN) or the service name. If set, it will define a default instance for
+                service instantiation, if not set, the service will fetch all instances accessible
+                within the account.
             Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -117,6 +124,11 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
+            Optional[str] region: Set a region preference. `us-east` or `eu-de`. An instance with
+                this region will be prioritized if an instance is not passed in.
+            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
+                An instance with the first value in the list will be prioritized if an instance
+                is not passed in.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -125,7 +137,8 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-
+        self._all_instances: List[Dict[str, str]] = []
+        self._saved_instances: List[str] = []
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -154,16 +167,24 @@ class QiskitRuntimeService:
         self._channel = self._account.channel
         self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
+        self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
-        if self._channel == "ibm_cloud":
+        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._api_client = RuntimeClient(self._client_params)
-            self._backend_allowed_list = self._discover_cloud_backends()
+            self._default_instance = False
+            self._cached_backend_objs: List[IBMBackend] = []
+            if self._account.instance:
+                self._default_instance = True
+            self._backend_instance_groups: List[Dict[str, Any]] = []
+            self._region = region or self._account.region
+            self._plans_preference = plans_preference or self._account.plans_preference
+
         else:
             warnings.warn(
                 'The "ibm_quantum" channel option is deprecated and will be sunset on 1 July. '
-                'After this date, "ibm_cloud" and "local" will be the only valid channels. '
-                "For information on migrating to the new IBM Quantum Platform on the "
-                '"ibm_cloud" channel, review the migration guide '
+                'After this date, "ibm_cloud", "ibm_quantum_platform", and "local" will be the '
+                "only valid channels. For information on migrating to the new IBM Quantum Platform, "
+                "review the migration guide "
                 "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
                 DeprecationWarning,
                 stacklevel=2,
@@ -182,6 +203,57 @@ class QiskitRuntimeService:
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
+
+    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+        """Retrieve all backends from the given instance."""
+
+        # TODO refactor this, this is the slowest part
+        # ntc 5779 would make things a lot faster - get list of backends
+        # from global search API call
+
+        # I don't think we should overwrite the api client like this
+        # but we can't access the backend config without the right instance
+        try:
+            self._create_new_cloud_api_client(instance)
+            return self._api_client.list_backends()
+        # On staging there some invalid instances returned that 403 when retrieving backends
+        except Exception:  # pylint: disable=broad-except
+            logger.warning("Invalind instance %s", instance)
+            return []
+
+    def _create_new_cloud_api_client(self, instance: str) -> None:
+        """Create a new api_client given an instance."""
+        self._client_params = ClientParameters(
+            channel=self._account.channel,
+            token=self._account.token,
+            url=self._account.url,
+            instance=instance,
+            proxies=self._account.proxies,
+            verify=self._account.verify,
+            private_endpoint=self._account.private_endpoint,
+            url_resolver=self._url_resolver,
+        )
+        self._api_client = RuntimeClient(self._client_params)
+
+    def _filter_instances_by_saved_preferences(self) -> None:
+        """Filter instances by saved region and plan preferences."""
+        if self._region:
+            self._backend_instance_groups = [
+                d for d in self._backend_instance_groups if self._region in d["crn"]
+            ]
+
+        if self._plans_preference:
+            plans = [plan.lower() for plan in self._plans_preference]
+            # We should filter out the other instances, minimize api calls
+            filtered_groups = [
+                group for group in self._backend_instance_groups if group["plan"] in plans
+            ]
+            if filtered_groups:
+                self._backend_instance_groups = sorted(
+                    filtered_groups, key=lambda d: plans.index(d["plan"])
+                )
+            else:
+                logger.warning("No matching plans found.")
 
     def _discover_account(
         self,
@@ -216,8 +288,10 @@ class QiskitRuntimeService:
                     )
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
-            if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
-                raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
+            if channel and channel not in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]:
+                raise ValueError(
+                    "'channel' can only be 'ibm_cloud', 'ibm_quantum', or 'ibm_quantum_platform"
+                )
             if token:
                 account = Account.create_account(
                     channel=channel,
@@ -240,7 +314,6 @@ class QiskitRuntimeService:
         # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
-
         if instance:
             account.instance = instance
         if proxies:
@@ -248,13 +321,36 @@ class QiskitRuntimeService:
         if verify is not None:
             account.verify = verify
 
-        # resolve CRN if needed
-        self._resolve_crn(account)
+        # if instance is a name, change it to crn format
+        if (
+            account.channel in ["ibm_cloud", "ibm_quantum_platform"]
+            and account.instance
+            and not is_crn(account.instance)
+        ):
+            account.instance = self._get_crn_from_instance_name(
+                account=account, instance=account.instance
+            )
 
         # ensure account is valid, fail early if not
         account.validate()
 
         return account
+
+    def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
+        """Get the crn from the instance service name."""
+        if not self._all_instances:
+            self._all_instances = account.list_instances()
+        matching_instances = [item for item in self._all_instances if item["name"] == instance]
+        if matching_instances:
+            if len(matching_instances) > 1:
+                logger.warning("Multiple instances found. Using all matching instances.")
+                # If there are multiple instances, save them
+                self._saved_instances = [inst["crn"] for inst in matching_instances]
+            return matching_instances[0]["crn"]
+        else:
+            raise IBMInputValueError(
+                f"The instance specified ({instance}) is not a valid " "instance name."
+            )
 
     def _discover_cloud_backends(self) -> List[str]:
         """Return the remote backends available for this service instance.
@@ -449,8 +545,8 @@ class QiskitRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: In hub/group/project format if on the ``ibm_quantum`` channel.
+                IBM Cloud account crn if on the ``ibm_cloud`` channel.
             dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -522,18 +618,92 @@ class QiskitRuntimeService:
                 ):
                     backends.append(backend)
         else:
+            current_instances: List[str] = []
+            unique_backends = []
             if instance:
-                raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
-                )
-            for backend_name in self._backend_allowed_list:
-                if backend := self._create_backend_obj(
-                    backend_name,
-                    instance=self._account.instance,
-                    use_fractional_gates=use_fractional_gates,
-                ):
-                    backends.append(backend)
+                if not is_crn(instance):
+                    instance = self._get_crn_from_instance_name(self._account, instance)
+                    if not instance:
+                        raise IBMInputValueError(f"{instance} is not a valid instance.")
+                # if an instance name is passed in and there are multiple crns
+                if self._saved_instances:
+                    current_instances = self._saved_instances
+                else:
+                    current_instances = [instance]
 
+            elif self._default_instance:
+                # handle if the instance name passed in at init has multiple matching crns
+                if self._saved_instances:
+                    current_instances = self._saved_instances
+                else:
+                    current_instances = [self._account.instance]
+            else:
+                if not self._all_instances:
+                    self._all_instances = self._account.list_instances()
+                logger.warning(
+                    "Default instance not set. Searching all available instances.",
+                )
+                if not self._backend_instance_groups:
+                    for instance_dict in self._all_instances:
+                        self._backend_instance_groups.append(
+                            {
+                                "crn": instance_dict["crn"],
+                                "plan": instance_dict["plan"],
+                                "backends": self._discover_backends_from_instance(
+                                    instance_dict["crn"]
+                                ),
+                            }
+                        )
+                    self._filter_instances_by_saved_preferences()
+
+                for inst_dict in self._backend_instance_groups:
+                    if name:
+                        if name in inst_dict["backends"]:
+                            self._create_new_cloud_api_client(inst_dict["crn"])
+                            if backend := self._create_backend_obj(
+                                name,
+                                instance=inst_dict["crn"],
+                                use_fractional_gates=use_fractional_gates,
+                            ):
+                                backends.append(backend)
+                                break
+
+                    else:
+                        for backend_name in inst_dict["backends"]:
+                            if backend_name not in unique_backends:
+                                unique_backends.append(backend_name)
+                                self._create_new_cloud_api_client(inst_dict["crn"])
+                                if backend := self._create_backend_obj(
+                                    backend_name,
+                                    instance=inst_dict["crn"],
+                                    use_fractional_gates=use_fractional_gates,
+                                ):
+                                    backends.append(backend)
+
+            for inst in current_instances:
+                backends_available = self._discover_backends_from_instance(inst)
+                if name:
+                    if name in backends_available:
+                        self._create_new_cloud_api_client(inst)
+                        if backend := self._create_backend_obj(
+                            name,
+                            instance=inst,
+                            use_fractional_gates=use_fractional_gates,
+                        ):
+                            backends.append(backend)
+                            break
+
+                else:
+                    for backend_name in backends_available:
+                        if backend_name not in unique_backends:
+                            unique_backends.append(backend_name)
+                            self._create_new_cloud_api_client(inst)
+                            if backend := self._create_backend_obj(
+                                backend_name,
+                                instance=inst,
+                                use_fractional_gates=use_fractional_gates,
+                            ):
+                                backends.append(backend)
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -578,13 +748,23 @@ class QiskitRuntimeService:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
         try:
-            config = configuration_from_server_data(
-                raw_config=self._api_client.backend_configuration(backend_name),
-                instance=instance,
-                use_fractional_gates=use_fractional_gates,
-            )
+            if backend_name in self._backend_configs and self._channel in [
+                "ibm_cloud",
+                "ibm_quantum_platform",
+            ]:
+                config = self._backend_configs[backend_name]
+            else:
+                config = configuration_from_server_data(
+                    raw_config=self._api_client.backend_configuration(backend_name),
+                    instance=instance,
+                    use_fractional_gates=use_fractional_gates,
+                )
+                # I know we have a configuration_registry in the api client
+                # but that doesn't work with new IQP since we different api clients are being used
+                if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
+                    self._backend_configs[backend_name] = config
         except Exception as ex:  # pylint: disable=broad-except
-            logger.warning("Unable to create retrieve configuration for %s. %s ", backend_name, ex)
+            logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
 
         if config:
@@ -664,6 +844,8 @@ class QiskitRuntimeService:
         overwrite: Optional[bool] = False,
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
+        region: Optional[RegionType] = None,
+        plans_preference: Optional[PlanType] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -671,9 +853,10 @@ class QiskitRuntimeService:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum.ibm.com/api (ibm_quantum).
-            instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
-            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            instance: The CRN (ibm_cloud) or the service name. This is an optional parameter.
+                If set, it will define a default instance for service instantiation,
+                if not set, the service will fetch all instances accessible within the account.
+            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide.
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
@@ -689,7 +872,13 @@ class QiskitRuntimeService:
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
             private_endpoint: Connect to private API URL.
+            region: Set a region preference. `us-east` or `eu-de`. An instance with this region
+                will be prioritized if an instance is not passed in.
+            plans_preference: A list of account types, ordered by preference. An instance with the first
+                value in the list will be prioritized if an instance is not passed in.
         """
+
+        # TODO validate account defaults
 
         AccountManager.save(
             token=token,
@@ -703,6 +892,8 @@ class QiskitRuntimeService:
             overwrite=overwrite,
             set_as_default=set_as_default,
             private_endpoint=private_endpoint,
+            region=region,
+            plans_preference=plans_preference,
         )
 
     @staticmethod
@@ -716,7 +907,7 @@ class QiskitRuntimeService:
 
         Args:
             default: If set to True, only default accounts are returned.
-            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
                 The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
                 channel, review the `migration guide
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__.
@@ -773,7 +964,7 @@ class QiskitRuntimeService:
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
-            if self._channel == "ibm_cloud":
+            if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
                     "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend"
@@ -991,7 +1182,7 @@ class QiskitRuntimeService:
         """
         hub = group = project = None
         if instance:
-            if self._channel == "ibm_cloud":
+            if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 raise IBMInputValueError(
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
@@ -1070,7 +1261,7 @@ class QiskitRuntimeService:
         Raises:
             IBMInputValueError: If method is called when using the ibm_cloud channel
         """
-        if self._channel == "ibm_cloud":
+        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             raise IBMInputValueError(
                 "Usage is only available for the ``ibm_quantum`` channel open plan."
             )
@@ -1175,7 +1366,7 @@ class QiskitRuntimeService:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
 
-    def instances(self) -> List[str]:
+    def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
         """Return the IBM Quantum instances list currently in use for the session.
 
         Returns:
@@ -1183,7 +1374,9 @@ class QiskitRuntimeService:
         """
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
-        return []
+        elif not self._all_instances:
+            self._all_instances = self._account.list_instances()
+        return self._all_instances
 
     @property
     def channel(self) -> str:
