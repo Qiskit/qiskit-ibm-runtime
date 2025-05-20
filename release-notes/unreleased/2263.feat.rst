@@ -1,0 +1,7 @@
+The ``private`` option under :class:`EnvironmentOptions` is now supported on the 
+``ibm_cloud`` channel (new IBM Quantum Platform). When this option
+is set to ``True``, the job will be returned without params and results can only
+be retrieved once. 
+
+There is also a new :meth:`~.RuntimeJobV2.private` property that returns whether
+or not a job is private.
