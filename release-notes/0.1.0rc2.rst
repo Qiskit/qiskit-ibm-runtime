@@ -14,14 +14,14 @@ New Features
 Bug Fixes
 ---------
 
--  `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
+-  `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-encoder>`__
    and
-   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
+   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-decoder>`__
    have been updated to handle instances of the Instruction class.
 
 -  Fixed an issue where numpy ndarrays with object types could not be
    serialized.
-   `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
+   `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-encoder>`__
    and
-   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
+   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-decoder>`__
    have been updated to handle these ndarrays.

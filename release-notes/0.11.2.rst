@@ -8,7 +8,7 @@ New Features
    exception rather than returning None.
 
 -  A new method,
-   `qiskit_ibm_runtime.options.SimulatorOptions.set_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.SimulatorOptions#set_backend>`__,
+   `qiskit_ibm_runtime.options.SimulatorOptions.set_backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/options-simulator-options#set_backend>`__,
    allows users to more easily set simulator options for a backend.
 
    .. code:: python
