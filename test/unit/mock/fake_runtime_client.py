@@ -256,6 +256,7 @@ class BaseFakeRuntimeClient:
         channel="ibm_quantum",
         num_backends=2,
         backend_specs=None,
+        instance=None,
     ):
         """Initialize a fake runtime client."""
         # pylint: disable=unused-argument
@@ -267,6 +268,13 @@ class BaseFakeRuntimeClient:
         self.session_time = 0
         self._sessions = set()
         self._params = {}
+        if instance is not None:
+            self._instance = instance
+        else:
+            if channel == "ibm_quantum":
+                self._instance = "hub0/group0/project0"
+            else:
+                self._instance = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
         # Setup the available backends
         if not backend_specs:

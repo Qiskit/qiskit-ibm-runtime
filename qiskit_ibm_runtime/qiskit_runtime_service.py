@@ -79,43 +79,54 @@ class QiskitRuntimeService:
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> None:
-        """QiskitRuntimeService constructor
+        """QiskitRuntimeService constructor.
 
         An account is selected in the following order:
+            - If a ``filename`` is specified, account details will be loaded from ``filename``,
+                else they will be loaded from the default configuration file.
+            - If ``name`` is specified, the corresponding account details will be loaded from
+                the configuration file, including ``channel``, ``token``, ``instance``, ``region``
+                (only ``"ibm_cloud"`` and ``"ibm_quantum_platform"``),
+                ``plans_preference` (only ``"ibm_cloud"`` and ``"ibm_quantum_platform"``),
+                and the advanced configuration parameters: ``url``, ``url_resolver``,
+                ``private_endpoint``,  ``verify``, and  ``proxies``.
+            - If ``channel`` is specified, the default account details for that channel will be
+                loaded from the configuration file, else, the account details will be loaded
+                from the ``default_channel`` defined in the configuration file.
+            - Any loaded details will be overwritten by the corresponding parameter in the
+                service constructor.
 
-            - Account with the input `name`, if specified.
-            - Default account for the `channel` type, if `channel` is specified but `token` is not.
-            - Account defined by the input `channel` and `token`, if specified.
-            - Account defined by the `default_channel` if defined in filename
-            - Account defined by the environment variables, if defined.
-            - Default account for the ``ibm_cloud`` account, if one is available.
-            - Default account for the ``ibm_quantum`` account, if one is available.
-
-        `instance`, `proxies`, and `verify` can be used to overwrite corresponding
-        values in the loaded account.
+        The minimum required information for service authentication to a non-local channel is the
+        ``token``. The ``local`` channel doesn't require authentication.
+        For the ``"ibm_cloud"`` and ``"ibm_quantum_platform"`` channels it is recommended
+        to provide the relevant ``instance`` to minimize API calls. If an ``instance`` is not defined,
+        the service will fetch all instances accessible within the account, filtered by
+        ``region`` and ``plans_preference``.
 
         Args:
-            Optional[ChannelType] channel: Channel type. ``ibm_cloud``, ``ibm_quantum_platform``
-                or ``local``. If ``local`` is selected, the local testing mode will be used, and
+            Optional[ChannelType] channel: Channel type. ``ibm_quantum``, ``ibm_cloud``,
+                ``ibm_quantum_platform`` or ``local``.
+                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
+                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
+                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
+                For help migrating to the alternative channels, review the `migration guide.
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
+                If ``local`` is selected, the local testing mode will be used, and
                 primitive queries will run on a local simulator. For more details, check the
                 `Qiskit Runtime local testing mode
                 <https://docs.quantum.ibm.com/guides/local-testing-mode>`_  documentation.
-                The ``ibm_quantum`` channel is deprecated and ``ibm_cloud`` or ``ibm_quantum_platform``
-                should be used instead. Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to
-                the same channel. For more information, review the `migration guide
-                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_.
             Optional[str] token: IBM Cloud API key or IBM Quantum API token.
             Optional[str] url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_cloud) or
-                https://auth.quantum.ibm.com/api (ibm_quantum).
+                Defaults to https://cloud.ibm.com (``ibm_cloud``, ``ibm_quantum_platform``) or
+                https://auth.quantum.ibm.com/api (``ibm_quantum``).
             Optional[str] filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             Optional[str] name: Name of the account to load.
             Optional[str] instance: The service instance to use.
-                For ``ibm_cloud`` runtime, this is the Cloud Resource
+                For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
                 Name (CRN) or the service name. If set, it will define a default instance for
                 service instantiation, if not set, the service will fetch all instances accessible
-                within the account.
+                within the account. For ``ibm_quantum``, this is the hub/group/project specification.
             Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -124,9 +135,12 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
-            Optional[str] region: Set a region preference. `us-east` or `eu-de`. An instance with
+            Optional[str] region: Set a region preference for the ``ibm_cloud`` or
+                ``ibm_quantum_platform`` channel. Accepted values are ``us-east`` or ``eu-de``.
+                An instance with
                 this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
+            Optional[List[str]] plans_preference: A list of account types, ordered by preference,
+                for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
                 An instance with the first value in the list will be prioritized if an instance
                 is not passed in.
 
@@ -170,8 +184,12 @@ class QiskitRuntimeService:
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            self._api_client = RuntimeClient(self._client_params)
             self._default_instance = False
+            self._active_api_client = RuntimeClient(self._client_params)
+            if instance is not None:
+                self._api_clients = {instance: RuntimeClient(self._client_params)}
+            else:
+                self._api_clients = {}
             self._cached_backend_objs: List[IBMBackend] = []
             if self._account.instance:
                 self._default_instance = True
@@ -193,36 +211,40 @@ class QiskitRuntimeService:
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
             self._client_params.token = auth_client.current_access_token()
-            self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
-
             self._backend_allowed_list = sorted(
                 set(sum([hgp.backends for hgp in self._hgps.values()], []))
             )
+            self._active_api_client = RuntimeClient(self._client_params)
+            self._api_clients = {}
+            for hgp in self._hgps:
+                self._api_clients.update({hgp: self._active_api_client})
+
             self._current_instance = self._account.instance
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
-        """Retrieve all backends from the given instance."""
-
+        """Retrieve all backends from the given instance for
+        ibm_cloud and ibm_quantum_platform channels."""
         # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
-
-        # I don't think we should overwrite the api client like this
-        # but we can't access the backend config without the right instance
         try:
-            self._create_new_cloud_api_client(instance)
-            return self._api_client.list_backends()
+            if instance not in self._api_clients:
+                new_client = self._create_new_cloud_api_client(instance)
+                self._api_clients.update({instance: new_client})
+                self._active_api_client = new_client
+            return self._active_api_client.list_backends()
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
             logger.warning("Invalind instance %s", instance)
             return []
 
-    def _create_new_cloud_api_client(self, instance: str) -> None:
-        """Create a new api_client given an instance."""
+    def _create_new_cloud_api_client(self, instance: str) -> RuntimeClient:
+        """Create a new api_client given an instance for
+        ibm_cloud and ibm_quantum_platform channels."""
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
@@ -233,10 +255,11 @@ class QiskitRuntimeService:
             private_endpoint=self._account.private_endpoint,
             url_resolver=self._url_resolver,
         )
-        self._api_client = RuntimeClient(self._client_params)
+        return RuntimeClient(self._client_params)
 
     def _filter_instances_by_saved_preferences(self) -> None:
-        """Filter instances by saved region and plan preferences."""
+        """Filter instances by saved region and plan preferences
+        for ibm_cloud and ibm_quantum_platform channels."""
         if self._region:
             self._backend_instance_groups = [
                 d for d in self._backend_instance_groups if self._region in d["crn"]
@@ -266,7 +289,7 @@ class QiskitRuntimeService:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
-        """Discover account."""
+        """Discover account for ibm_quantum, ibm_cloud and ibm_quantum_platform channels."""
         account = None
         verify_ = verify or True
 
@@ -337,7 +360,8 @@ class QiskitRuntimeService:
         return account
 
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
-        """Get the crn from the instance service name."""
+        """Get the crn from the instance service name for ibm_cloud and ibm_quantum_platform channels."""
+
         if not self._all_instances:
             self._all_instances = account.list_instances()
         matching_instances = [item for item in self._all_instances if item["name"] == instance]
@@ -352,19 +376,13 @@ class QiskitRuntimeService:
                 f"The instance specified ({instance}) is not a valid " "instance name."
             )
 
-    def _discover_cloud_backends(self) -> List[str]:
-        """Return the remote backends available for this service instance.
-
-        Returns:
-            A list of the remote backend names.
-        """
-        return self._api_client.list_backends()
-
+    # TODO: I think we can remove it
     def _resolve_crn(self, account: Account) -> None:
+        """Resolve CRN value for local channel."""
         account.resolve_crn()
 
     def _authenticate_ibm_quantum_account(self, client_params: ClientParameters) -> AuthClient:
-        """Authenticate against IBM Quantum and populate the hub/group/projects.
+        """Authenticate against IBM Quantum and populate the hub/group/projects for ibm_quantum channel.
 
         Args:
             client_params: Parameters used for server connection.
@@ -398,7 +416,7 @@ class QiskitRuntimeService:
         self,
         auth_client: AuthClient,
     ) -> Dict:
-        """Authenticate against IBM Quantum and populate the hub/group/projects.
+        """Authenticate against IBM Quantum and populate the hub/group/projects for ibm_quantum channel.
 
         Args:
             auth_client: Authentication data.
@@ -465,7 +483,7 @@ class QiskitRuntimeService:
 
     @staticmethod
     def _check_api_version(params: ClientParameters) -> Dict[str, Union[bool, str]]:
-        """Check the version of the remote server in a set of client parameters.
+        """Check the version of the remote server in a set of client parameters for all channels.
 
         Args:
             params: Parameters used for server connection.
@@ -481,7 +499,7 @@ class QiskitRuntimeService:
         instance: Optional[str] = None,
         backend_name: Optional[Any] = None,
     ) -> HubGroupProject:
-        """Return an instance of `HubGroupProject`.
+        """Return an instance of `HubGroupProject` for ibm_quantum channel.
 
         This function also allows to find the `HubGroupProject` that contains a backend
         `backend_name`.
@@ -528,6 +546,37 @@ class QiskitRuntimeService:
 
         raise QiskitBackendNotFoundError(error_message)
 
+    def _get_api_client(self, instance=None) -> RuntimeClient:
+        """Return the saved api client for a given instance for all channels.
+        If no instance is provided, return the current active api client.
+
+        Args:
+            instance: The hub/group/project to use ("ibm_quantum") or CRN ("ibm_cloud",
+                "ibm_quantum_platform")
+
+        Returns:
+            An instance of ``RuntimeClient`` that matches the specified instance.
+
+        Raises:
+            IBMInputValueError: If no saved api client matches the given instance.
+        """
+        if instance is None:
+            return self._active_api_client
+        else:
+            client = self._api_clients.get(instance, None)
+            if client is None:
+                raise IBMInputValueError(f"No API client found for given instance: {instance}")
+            return client
+
+    def _get_api_clients(self) -> dict[str, RuntimeClient]:
+        """Return dictionary of saved api clients identified by their corresponding instance
+        for all channels.
+
+        Returns:
+            An dictionary of {instance: RuntimeClient}
+        """
+        return self._api_clients
+
     # pylint: disable=arguments-differ
     def backends(
         self,
@@ -546,7 +595,8 @@ class QiskitRuntimeService:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: In hub/group/project format if on the ``ibm_quantum`` channel.
-                IBM Cloud account crn if on the ``ibm_cloud`` channel.
+                IBM Cloud account CRN if on the ``ibm_cloud`` and
+                ``ibm_quantum_platform`` channels
             dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -619,7 +669,7 @@ class QiskitRuntimeService:
                     backends.append(backend)
         else:
             current_instances: List[str] = []
-            unique_backends = []
+            unique_backends = set()
             if instance:
                 if not is_crn(instance):
                     instance = self._get_crn_from_instance_name(self._account, instance)
@@ -659,7 +709,8 @@ class QiskitRuntimeService:
                 for inst_dict in self._backend_instance_groups:
                     if name:
                         if name in inst_dict["backends"]:
-                            self._create_new_cloud_api_client(inst_dict["crn"])
+                            self._get_or_create_cloud_client(inst_dict["crn"])
+
                             if backend := self._create_backend_obj(
                                 name,
                                 instance=inst_dict["crn"],
@@ -671,8 +722,8 @@ class QiskitRuntimeService:
                     else:
                         for backend_name in inst_dict["backends"]:
                             if backend_name not in unique_backends:
-                                unique_backends.append(backend_name)
-                                self._create_new_cloud_api_client(inst_dict["crn"])
+                                unique_backends.add(backend_name)
+                                self._get_or_create_cloud_client(inst_dict["crn"])
                                 if backend := self._create_backend_obj(
                                     backend_name,
                                     instance=inst_dict["crn"],
@@ -684,7 +735,7 @@ class QiskitRuntimeService:
                 backends_available = self._discover_backends_from_instance(inst)
                 if name:
                     if name in backends_available:
-                        self._create_new_cloud_api_client(inst)
+                        self._get_or_create_cloud_client(inst)
                         if backend := self._create_backend_obj(
                             name,
                             instance=inst,
@@ -696,8 +747,8 @@ class QiskitRuntimeService:
                 else:
                     for backend_name in backends_available:
                         if backend_name not in unique_backends:
-                            unique_backends.append(backend_name)
-                            self._create_new_cloud_api_client(inst)
+                            unique_backends.add(backend_name)
+                            self._get_or_create_cloud_client(inst)
                             if backend := self._create_backend_obj(
                                 backend_name,
                                 instance=inst,
@@ -724,6 +775,15 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
+    def _get_or_create_cloud_client(self, instance: str):
+        """Find relevant cloud client for a given instance and set active api client."""
+        if instance != self._active_api_client._instance:
+            client = self._api_clients.get(instance)
+            if client is None:
+                client = self._create_new_cloud_api_client(instance)
+                self._api_clients[instance] = client
+            self._active_api_client = client
+
     def _create_backend_obj(
         self,
         backend_name: str,
@@ -734,7 +794,7 @@ class QiskitRuntimeService:
 
         Args:
             backend_name: Name of backend to instantiate.
-            instance: the current h/g/p.
+            instance: the current h/g/p (ibm_quantum) or CRN (ibm_cloud, ibm_quantum_platform).
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates, False to include control flow operations, and
                 None to include both fractional gates and control flow
@@ -755,7 +815,7 @@ class QiskitRuntimeService:
                 config = self._backend_configs[backend_name]
             else:
                 config = configuration_from_server_data(
-                    raw_config=self._api_client.backend_configuration(backend_name),
+                    raw_config=self._active_api_client.backend_configuration(backend_name),
                     instance=instance,
                     use_fractional_gates=use_fractional_gates,
                 )
@@ -792,14 +852,14 @@ class QiskitRuntimeService:
                     instance=instance,
                     configuration=config,
                     service=self,
-                    api_client=self._api_client,
+                    api_client=self._active_api_client,
                 )
             else:
                 # cloud backend doesn't set hgp instance
                 return ibm_backend.IBMBackend(
                     configuration=config,
                     service=self,
-                    api_client=self._api_client,
+                    api_client=self._active_api_client,
                 )
         return None
 
@@ -852,13 +912,18 @@ class QiskitRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (ibm_cloud) or
-            instance: The CRN (ibm_cloud) or the service name. This is an optional parameter.
+                Defaults to https://cloud.ibm.com (``ibm_cloud``, ``ibm_quantum_platform``) or
+                https://auth.quantum.ibm.com/api (``ibm_quantum``).
+            instance: This is an optional parameter to specify the CRN  or service name
+                for ``ibm_cloud`` and ``ibm_quantum_platform``, and the hub/group/project for
+                ``ibm_quantum``.
                 If set, it will define a default instance for service instantiation,
                 if not set, the service will fetch all instances accessible within the account.
-            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
-                The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
-                channel, review the `migration guide.
+            channel: Channel type. ``ibm_quantum``, ``ibm_cloud`` or ``ibm_quantum_platform``.
+                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
+                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
+                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
+                For help migrating to the alternative channels, review the `migration guide.
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
@@ -907,10 +972,12 @@ class QiskitRuntimeService:
 
         Args:
             default: If set to True, only default accounts are returned.
-            channel: Channel type. `ibm_cloud` or `ibm_quantum_platform`.
-                The ``ibm_quantum`` channel is deprecated. For help migrating to the ``ibm_cloud``
-                channel, review the `migration guide
-                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__.
+            channel: Channel type. ``ibm_quantum``, ``ibm_cloud`` or ``ibm_quantum_platform``.
+                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
+                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
+                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
+                For help migrating to the alternative channels, review the `migration guide.
+                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
@@ -1046,7 +1113,7 @@ class QiskitRuntimeService:
 
         version = inputs.get("version", 1) if inputs else 1
         try:
-            response = self._api_client.program_run(
+            response = self._active_api_client.program_run(
                 program_id=program_id,
                 backend_name=qrt_options.get_backend_name(),
                 params=inputs,
@@ -1076,7 +1143,7 @@ class QiskitRuntimeService:
 
         return RuntimeJobV2(
             backend=backend,
-            api_client=self._api_client,
+            api_client=self._active_api_client,
             job_id=response["id"],
             program_id=program_id,
             user_callback=callback,
@@ -1129,9 +1196,26 @@ class QiskitRuntimeService:
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._api_client.job_get(job_id, exclude_params=False)
+            response = self._active_api_client.job_get(job_id, exclude_params=False)
         except RequestsApiError as ex:
             if ex.status_code == 404:
+                response = None
+                for instance, client in self._api_clients.items():
+                    if instance is not None and instance != self._active_api_client._instance:
+                        try:
+                            self._active_api_client = client
+                            response = self._active_api_client.job_get(job_id, exclude_params=False)
+                            break
+                        except RequestsApiError as ex:
+                            continue
+                    else:
+                        try:
+                            response = self._active_api_client.job_get(job_id, exclude_params=False)
+                            break
+                        except RequestsApiError as ex:
+                            raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
+                if response is not None:
+                    return self._decode_job(response)
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
         return self._decode_job(response)
@@ -1195,7 +1279,7 @@ class QiskitRuntimeService:
         offset = skip
 
         while True:
-            jobs_response = self._api_client.jobs_get(
+            jobs_response = self._active_api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
                 backend_name=backend_name,
@@ -1246,7 +1330,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: If the request failed.
         """
         try:
-            self._api_client.job_delete(job_id)
+            self._active_api_client.job_delete(job_id)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
@@ -1265,7 +1349,7 @@ class QiskitRuntimeService:
             raise IBMInputValueError(
                 "Usage is only available for the ``ibm_quantum`` channel open plan."
             )
-        return self._api_client.usage()
+        return self._active_api_client.usage()
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
@@ -1309,7 +1393,7 @@ class QiskitRuntimeService:
         if version == 1:
             return RuntimeJob(
                 backend=backend,
-                api_client=self._api_client,
+                api_client=self._active_api_client,
                 service=self,
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
@@ -1319,7 +1403,7 @@ class QiskitRuntimeService:
             )
         return RuntimeJobV2(
             backend=backend,
-            api_client=self._api_client,
+            api_client=self._active_api_client,
             service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),

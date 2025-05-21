@@ -209,7 +209,7 @@ class TestBackendFilters(IBMTestCase):
         cloud_service = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
-            instance="my_instance",
+            instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             backend_specs=fake_backend_specs,
         )
         return [ibm_quantum_service, cloud_service]
