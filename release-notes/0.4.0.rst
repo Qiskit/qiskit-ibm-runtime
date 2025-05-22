@@ -25,7 +25,7 @@ Upgrade Notes
       service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
 
 -  ``IBMEstimator`` class is now deprecated and will be removed in a
-   future release. Use `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   future release. Use `Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__
    class going forward.
 
    Example:
@@ -59,7 +59,7 @@ Upgrade Notes
           result = estimator(circuit_indices=[0], ...)
 
 -  ``IBMSampler`` class is now deprecated and will be removed in a
-   future release. Use `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__
+   future release. Use `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__
    class going forward.
 
    Example:
@@ -96,7 +96,7 @@ Deprecation Notes
 
 -  ``IBMRuntimeService``, ``IBMEstimator`` and ``IBMSampler`` classes
    have been deprecated and will be removed in a future release. Use
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
-   `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
-   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ classes instead. See
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__,
+   `Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__ and
+   `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__ classes instead. See
    upgrade notes section for a detailed explanation with examples.

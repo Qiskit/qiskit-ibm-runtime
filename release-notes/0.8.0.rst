@@ -8,12 +8,12 @@ New Features
 
 -  Advanced resilience options can now be set under
    ``options.resilience``. See
-   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.27/qiskit_ibm_runtime.options.ResilienceOptions>`__
+   `qiskit_ibm_runtime.options.ResilienceOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.27/options-resilience-options>`__
    for all available options.
 
 -  You can now specify a pair of result decoders for the
    ``result_decoder`` parameter of
-   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__
    method. If a pair is specified, the first one is used to decode
    interim results and the second the final results.
 
@@ -34,9 +34,9 @@ Bug Fixes
 ---------
 
 -  If a
-   `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+   `qiskit_ibm_runtime.IBMBackend <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend>`__
    instance is passed to the
-   `qiskit_ibm_runtime.Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
+   `qiskit_ibm_runtime.Session <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session>`__
    constructor, the service used to initialize the ``IBMBackend``
    instance is used for the session instead of the default account
    service.

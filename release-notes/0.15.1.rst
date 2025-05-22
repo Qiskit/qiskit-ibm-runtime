@@ -5,5 +5,5 @@ Bug Fixes
 ---------
 
 -  Reverting 0.15.0 changes to
-   `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ because it was
+   `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__ because it was
    a breaking change without proper deprecation.
