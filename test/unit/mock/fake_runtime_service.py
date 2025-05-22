@@ -19,6 +19,7 @@ from unittest import mock
 from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_runtime_client import BaseFakeRuntimeClient
@@ -52,10 +53,12 @@ class FakeRuntimeService(QiskitRuntimeService):
                 "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
             )
         mock_runtime_client._instance = instance
+        mock_runtime_client.job_get = mock.MagicMock()
+        mock_runtime_client.job_get.side_effect = RequestsApiError("Job not found", status_code=404)
 
         with mock.patch(
             "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
-            new=mock_runtime_client,
+            return_value=mock_runtime_client,
         ):
             super().__init__(*args, **kwargs)
 

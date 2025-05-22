@@ -1171,26 +1171,21 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.job_get(job_id, exclude_params=False)
         except RequestsApiError as ex:
-            if ex.status_code == 404:
-                response = None
-                for instance, client in self._api_clients.items():
-                    if instance is not None and instance != self._active_api_client._instance:
-                        try:
-                            self._active_api_client = client
-                            response = self._active_api_client.job_get(job_id, exclude_params=False)
-                            break
-                        except RequestsApiError as ex:
-                            continue
-                    else:
-                        try:
-                            response = self._active_api_client.job_get(job_id, exclude_params=False)
-                            break
-                        except RequestsApiError as ex:
-                            raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
-                if response is not None:
-                    return self._decode_job(response)
-                raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
+            if ex.status_code != 404:
+                raise IBMRuntimeError(f"Failed to retrieve job: {ex}") from None
+            response = None
+            for instance, client in self._api_clients.items():
+                if instance is not None and instance != self._active_api_client._instance:
+                    try:
+                        self._active_api_client = client
+                        response = self._active_api_client.job_get(job_id, exclude_params=False)
+                        break
+                    except RequestsApiError:
+                        continue
+            if response is not None:
+                return self._decode_job(response)
+            raise RuntimeJobNotFound(f"Job not found: {job_id}") from None
+
         return self._decode_job(response)
 
     def jobs(

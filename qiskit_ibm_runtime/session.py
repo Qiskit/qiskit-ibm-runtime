@@ -350,7 +350,7 @@ class Session:
                             service._active_api_client = client
                             response = client.session_details(session_id)
                             break
-                        except RequestsApiError as ex:
+                        except RequestsApiError as _:
                             continue
                 if response is None:
                     raise IBMInputValueError(f"Session not found: {ex.message}") from None
