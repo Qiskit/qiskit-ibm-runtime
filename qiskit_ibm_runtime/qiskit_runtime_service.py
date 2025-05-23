@@ -668,93 +668,24 @@ class QiskitRuntimeService:
                 ):
                     backends.append(backend)
         else:
-            current_instances: List[str] = []
             unique_backends = set()
-            if instance:
-                if not is_crn(instance):
-                    instance = self._get_crn_from_instance_name(self._account, instance)
-                    if not instance:
-                        raise IBMInputValueError(f"{instance} is not a valid instance.")
-                # if an instance name is passed in and there are multiple crns
-                if self._saved_instances:
-                    current_instances = self._saved_instances
-                else:
-                    current_instances = [instance]
-
-            elif self._default_instance:
-                # handle if the instance name passed in at init has multiple matching crns
-                if self._saved_instances:
-                    current_instances = self._saved_instances
-                else:
-                    current_instances = [self._account.instance]
-            else:
-                if not self._all_instances:
-                    self._all_instances = self._account.list_instances()
-                logger.warning(
-                    "Default instance not set. Searching all available instances.",
-                )
-                if not self._backend_instance_groups:
-                    for instance_dict in self._all_instances:
-                        self._backend_instance_groups.append(
-                            {
-                                "crn": instance_dict["crn"],
-                                "plan": instance_dict["plan"],
-                                "backends": self._discover_backends_from_instance(
-                                    instance_dict["crn"]
-                                ),
-                            }
-                        )
-                    self._filter_instances_by_saved_preferences()
-
-                for inst_dict in self._backend_instance_groups:
-                    if name:
-                        if name in inst_dict["backends"]:
-                            self._get_or_create_cloud_client(inst_dict["crn"])
-
-                            if backend := self._create_backend_obj(
-                                name,
-                                instance=inst_dict["crn"],
-                                use_fractional_gates=use_fractional_gates,
-                            ):
-                                backends.append(backend)
-                                break
-
-                    else:
-                        for backend_name in inst_dict["backends"]:
-                            if backend_name not in unique_backends:
-                                unique_backends.add(backend_name)
-                                self._get_or_create_cloud_client(inst_dict["crn"])
-                                if backend := self._create_backend_obj(
-                                    backend_name,
-                                    instance=inst_dict["crn"],
-                                    use_fractional_gates=use_fractional_gates,
-                                ):
-                                    backends.append(backend)
-
-            for inst in current_instances:
-                backends_available = self._discover_backends_from_instance(inst)
+            instance_backends = self._resolve_cloud_instances(instance)
+            for inst, backends_available in instance_backends:
                 if name:
-                    if name in backends_available:
-                        self._get_or_create_cloud_client(inst)
-                        if backend := self._create_backend_obj(
-                            name,
-                            instance=inst,
-                            use_fractional_gates=use_fractional_gates,
-                        ):
-                            backends.append(backend)
-                            break
-
-                else:
-                    for backend_name in backends_available:
-                        if backend_name not in unique_backends:
-                            unique_backends.add(backend_name)
-                            self._get_or_create_cloud_client(inst)
-                            if backend := self._create_backend_obj(
-                                backend_name,
-                                instance=inst,
-                                use_fractional_gates=use_fractional_gates,
-                            ):
-                                backends.append(backend)
+                    if name not in backends_available:
+                        continue
+                    backends_available = [name]
+                for backend_name in backends_available:
+                    if backend_name in unique_backends:
+                        continue
+                    unique_backends.add(backend_name)
+                    self._get_or_create_cloud_client(inst)
+                    if backend := self._create_backend_obj(
+                        backend_name,
+                        instance=inst,
+                        use_fractional_gates=use_fractional_gates,
+                    ):
+                        backends.append(backend)
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -774,6 +705,48 @@ class QiskitRuntimeService:
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
+
+    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[str]:
+        if instance:
+            if not is_crn(instance):
+                instance = self._get_crn_from_instance_name(self._account, instance)
+                if not instance:
+                    raise IBMInputValueError(f"{instance} is not a valid instance.")
+            # if an instance name is passed in and there are multiple crns,
+            # return all matching crns (stored in self._saved_instances)
+            if self._saved_instances:
+                return [
+                    (inst, self._discover_backends_from_instance(inst))
+                    for inst in self._saved_instances
+                ]
+
+            return [(instance, self._discover_backends_from_instance(instance))]
+        if self._default_instance:
+            # if an instance name is passed in and there are multiple crns,
+            # return all matching crns (stored in self._saved_instances)
+            default_crn = self._account.instance
+            if self._saved_instances:
+                return [
+                    (inst, self._discover_backends_from_instance(inst))
+                    for inst in self._saved_instances
+                ]
+            return [(default_crn, self._discover_backends_from_instance(default_crn))]
+        if not self._all_instances:
+            self._all_instances = self._account.list_instances()
+            logger.warning(
+                "Default instance not set. Searching all available instances.",
+            )
+        if not self._backend_instance_groups:
+            self._backend_instance_groups = [
+                {
+                    "crn": inst["crn"],
+                    "plan": inst["plan"],
+                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                }
+                for inst in self._all_instances
+            ]
+            self._filter_instances_by_saved_preferences()
+        return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
     def _get_or_create_cloud_client(self, instance: str):
         """Find relevant cloud client for a given instance and set active api client."""
