@@ -107,8 +107,8 @@ class QiskitRuntimeService:
             Optional[ChannelType] channel: Channel type. ``ibm_quantum``, ``ibm_cloud``,
                 ``ibm_quantum_platform`` or ``local``.
                 The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
-                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
-                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
+                July 1st 2025, ``ibm_quantum_platform``, which points to the new Quantum Platform
+                cloud API (https://quantum.cloud.ibm.com) should be used instead.
                 For help migrating to the alternative channels, review the `migration guide.
                 <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
                 If ``local`` is selected, the local testing mode will be used, and
@@ -117,7 +117,8 @@ class QiskitRuntimeService:
                 <https://docs.quantum.ibm.com/guides/local-testing-mode>`_  documentation.
             Optional[str] token: IBM Cloud API key or IBM Quantum API token.
             Optional[str] url: The API URL.
-                Defaults to https://cloud.ibm.com (``ibm_cloud``, ``ibm_quantum_platform``) or
+                Defaults to https://cloud.ibm.com (``ibm_cloud``),
+                https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
                 https://auth.quantum.ibm.com/api (``ibm_quantum``).
             Optional[str] filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
@@ -239,7 +240,7 @@ class QiskitRuntimeService:
             return self._active_api_client.list_backends()
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
-            logger.warning("Invalind instance %s", instance)
+            logger.warning("Invalid instance %s", instance)
             return []
 
     def _create_new_cloud_api_client(self, instance: str) -> RuntimeClient:
@@ -292,7 +293,6 @@ class QiskitRuntimeService:
         """Discover account for ibm_quantum, ibm_cloud and ibm_quantum_platform channels."""
         account = None
         verify_ = verify or True
-
         if name:
             if filename:
                 if any([channel, token, url]):
@@ -719,7 +719,6 @@ class QiskitRuntimeService:
                     (inst, self._discover_backends_from_instance(inst))
                     for inst in self._saved_instances
                 ]
-
             return [(instance, self._discover_backends_from_instance(instance))]
         if self._default_instance:
             # if an instance name is passed in and there are multiple crns,
@@ -885,7 +884,8 @@ class QiskitRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (``ibm_cloud``, ``ibm_quantum_platform``) or
+                Defaults to https://cloud.ibm.com (``ibm_cloud``),
+                https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
                 https://auth.quantum.ibm.com/api (``ibm_quantum``).
             instance: This is an optional parameter to specify the CRN  or service name
                 for ``ibm_cloud`` and ``ibm_quantum_platform``, and the hub/group/project for
@@ -1335,6 +1335,8 @@ class QiskitRuntimeService:
             project = raw_data.get("project")
             if all([hub, group, project]):
                 instance = to_instance_format(hub, group, project)
+        else:
+            instance = self._active_api_client._instance
         # Try to find the right backend
         try:
             if "backend" in raw_data:

@@ -336,7 +336,11 @@ def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool
                 f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"
             )
+        elif "quantum" in url:
+            # ibm_quantum_platform url
+            api_host = f"{parsed_url.scheme}://{parsed_url.hostname}/api/v1"
         else:
+            # ibm_cloud url
             api_host = (
                 f"{parsed_url.scheme}://{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"

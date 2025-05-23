@@ -46,8 +46,9 @@ ChannelType = Optional[
     ]
 ]
 
-IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
+IBM_QUANTUM_PLATFORM_API_URL = "https://quantum.cloud.ibm.com"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
+IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +149,7 @@ class Account:
                 private_endpoint=private_endpoint,
                 region=region,
                 plans_preference=plans_preference,
+                channel=channel,
             )
         else:
             raise InvalidAccountError(
@@ -276,7 +278,7 @@ class QuantumAccount(Account):
 
 
 class CloudAccount(Account):
-    """Class that represents an account with channel 'ibm_cloud'."""
+    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'."""
 
     def __init__(
         self,
@@ -288,6 +290,7 @@ class CloudAccount(Account):
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        channel: Optional[str] = "ibm_quantum_platform",
     ):
         """Account constructor.
 
@@ -298,10 +301,16 @@ class CloudAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
             private_endpoint: Connect to private API URL.
+            region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+            plans_preference: A list of account types, ordered by preference.
+            channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
+                Defaults to ``ibm_quantum_platform``.
         """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_quantum_platform"  # should this be ibm_quantum_platform?
+        resolved_url = url or (
+            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
+        )
+        self.channel = channel
         self.url = resolved_url
         self.private_endpoint = private_endpoint
         self.region = region
@@ -321,7 +330,7 @@ class CloudAccount(Account):
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
         crn = resolve_crn(
-            channel="ibm_cloud",
+            channel=self.channel,
             url=self.url,
             token=self.token,
             instance=self.instance,

@@ -28,8 +28,9 @@ _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
 _DEFAULT_ACCOUNT_NAME = "default"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
+_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM = "default-ibm-quantum-platform"
 _DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_quantum_platform"
-_CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_quantum"]
+_CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_cloud", "ibm_quantum"]
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,7 @@ class AccountManager:
             default_accounts = [
                 _DEFAULT_ACCOUNT_NAME,
                 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
                 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
             ]
             if default is None:
@@ -119,7 +121,6 @@ class AccountManager:
             ),
             read_config(filename=filename).items(),
         )
-
         # filter based on input parameters
         filtered_accounts = dict(
             list(
@@ -131,7 +132,6 @@ class AccountManager:
                 )
             )
         )
-
         return filtered_accounts
 
     @classmethod
@@ -266,5 +266,9 @@ class AccountManager:
         return (
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
             if channel == "ibm_quantum"
-            else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
+            else (
+                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
+                if channel == "ibm_cloud"
+                else _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM
+            )
         )

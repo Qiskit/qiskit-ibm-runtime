@@ -279,7 +279,7 @@ This code returns `Job result is [4.] at theta = 1.575674623307102` using only n
 
 Access to IBM Quantum Platform channel is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
 
-> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
+> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform classic instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
 
 To view a list of your instances, visit your [account settings page](https://www.quantum.ibm.com/account) or use the `instances()` method.
 
