@@ -95,7 +95,7 @@ class FakeBackendV2(BackendV2):
         does not yet exist on the class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
-        if name in ["_target", "_conf_dict", "_props_dict", "_defs_dict"]:
+        if name in ["_target", "_conf_dict", "_props_dict"]:
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
