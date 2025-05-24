@@ -25,5 +25,4 @@ class FakeGeneva(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_geneva.json"  # type: ignore
     props_filename = "props_geneva.json"  # type: ignore
-    defs_filename = "defs_geneva.json"  # type: ignore
     backend_name = "fake_geneva"  # type: ignore

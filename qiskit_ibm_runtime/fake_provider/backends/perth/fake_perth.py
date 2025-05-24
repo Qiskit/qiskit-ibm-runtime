@@ -25,5 +25,4 @@ class FakePerth(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_perth.json"  # type: ignore
     props_filename = "props_perth.json"  # type: ignore
-    defs_filename = "defs_perth.json"  # type: ignore
     backend_name = "fake_perth"  # type: ignore

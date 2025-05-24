@@ -24,5 +24,4 @@ class FakeAthensV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_athens.json"  # type: ignore
     props_filename = "props_athens.json"  # type: ignore
-    defs_filename = "defs_athens.json"  # type: ignore
     backend_name = "fake_athens"  # type: ignore

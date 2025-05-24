@@ -24,5 +24,4 @@ class FakeJakartaV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_jakarta.json"  # type: ignore
     props_filename = "props_jakarta.json"  # type: ignore
-    defs_filename = "defs_jakarta.json"  # type: ignore
     backend_name = "fake_jakarta"  # type: ignore
