@@ -24,5 +24,4 @@ class FakeFez(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_fez.json"  # type: ignore
     props_filename = "props_fez.json"  # type: ignore
-    defs_filename = "defs_fez.json"  # type: ignore
     backend_name = "fake_fez"  # type: ignore

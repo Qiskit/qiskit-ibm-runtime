@@ -71,7 +71,6 @@ class FakeBackendV2(BackendV2):
     dirname = None
     conf_filename = None
     props_filename = None
-    defs_filename = None
     backend_name = None
 
     def __init__(self) -> None:

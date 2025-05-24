@@ -24,5 +24,4 @@ class FakeValenciaV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_valencia.json"  # type: ignore
     props_filename = "props_valencia.json"  # type: ignore
-    defs_filename = "defs_valencia.json"  # type: ignore
     backend_name = "fake_valencia"  # type: ignore

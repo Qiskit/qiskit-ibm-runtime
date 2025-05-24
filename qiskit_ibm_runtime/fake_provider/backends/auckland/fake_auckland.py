@@ -25,5 +25,4 @@ class FakeAuckland(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_auckland.json"  # type: ignore
     props_filename = "props_auckland.json"  # type: ignore
-    defs_filename = "defs_auckland.json"  # type: ignore
     backend_name = "fake_auckland"  # type: ignore

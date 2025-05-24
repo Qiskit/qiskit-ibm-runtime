@@ -24,5 +24,4 @@ class FakeCusco(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_cusco.json"  # type: ignore
     props_filename = "props_cusco.json"  # type: ignore
-    defs_filename = "defs_cusco.json"  # type: ignore
     backend_name = "fake_cusco"  # type: ignore

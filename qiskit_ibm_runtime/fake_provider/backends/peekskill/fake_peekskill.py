@@ -24,5 +24,4 @@ class FakePeekskill(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_peekskill.json"  # type: ignore
     props_filename = "props_peekskill.json"  # type: ignore
-    defs_filename = "defs_peekskill.json"  # type: ignore
     backend_name = "fake_peekskill"  # type: ignore
