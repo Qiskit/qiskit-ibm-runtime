@@ -5,12 +5,12 @@ New Features
 ------------
 
 -  Added a new method,
-   `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ that returns
+   `details() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#details>`__ that returns
    information about a session, including: maximum session time, active
    time remaining, the current state, and whether or not the session is
    accepting jobs.
 
-   Also added `status() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#status>`__,
+   Also added `status() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#status>`__,
    which returns the current status of the session.
 
 -  At initialization, if not passed in directly, the default
@@ -22,7 +22,7 @@ New Features
 Upgrade Notes
 -------------
 
--  `qiskit_ibm_runtime.Session.close() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#close>`__
+-  `qiskit_ibm_runtime.Session.close() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#close>`__
    has been updated to mark a ``Session`` as no longer accepting new
    jobs. The session won’t accept more jobs but it will continue to run
    any queued jobs until they are done or the max time expires. This
@@ -32,7 +32,7 @@ Upgrade Notes
    jobs rather than wait for the interactive timeout.
 
    The old close method behavior has been moved to a new method,
-   `qiskit_ibm_runtime.Session.cancel() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#cancel>`__,
+   `qiskit_ibm_runtime.Session.cancel() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#cancel>`__,
    where all queued jobs within a session are cancelled and terminated.
 
 Bug Fixes
@@ -42,6 +42,6 @@ Bug Fixes
    serialized correctly.
 
 -  Fixed a bug in
-   `target_history() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target_history>`__
+   `target_history() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#target_history>`__
    where the datetime parameter was not being used to retrieve backend
    properties from the specified date.

@@ -27,7 +27,7 @@ New Features
 
 - Added new methods ``Session.usage()``, ``Batch.usage()``, and ``Job.usage()`` that
   all return information regarding job and session usage.
-  Please find more information `here <https://docs.quantum.ibm.com/guides/choose-execution-mode>`__. (`1827 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1827>`__)
+  Please find more information `here <https://quantum.cloud.ibm.com/docs/guides/choose-execution-mode>`__. (`1827 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1827>`__)
 - Added ``ConvertISAToClifford`` transpilation pass to convert the gates of a circuit to Clifford gates. (`1887 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1887>`__)
 - Added ``url_resolver`` optional input to :class:`.QiskitRuntimeService`
   constructor to enable custom generation of the Qiskit Runtime API URL
