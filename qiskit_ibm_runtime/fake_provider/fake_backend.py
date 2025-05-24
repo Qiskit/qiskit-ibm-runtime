@@ -77,7 +77,6 @@ class FakeBackendV2(BackendV2):
         """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict = None
-        self._defs_dict = None
         super().__init__(
             provider=None,
             name=self._conf_dict.get("backend_name"),
@@ -227,8 +226,6 @@ class FakeBackendV2(BackendV2):
             self._get_conf_dict_from_json()
             if self._props_dict is None:
                 self._set_props_dict_from_json()
-            if self._defs_dict is None:
-                self._set_defs_dict_from_json()
             conf = BackendConfiguration.from_dict(self._conf_dict)
             props = None
             if self._props_dict is not None:
@@ -463,7 +460,6 @@ class FakeBackendV2(BackendV2):
             if self._target is not None:
                 self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
                 self._set_props_dict_from_json()
-                self._set_defs_dict_from_json()
 
                 updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
                 updated_properties = BackendProperties.from_dict(self._props_dict)
