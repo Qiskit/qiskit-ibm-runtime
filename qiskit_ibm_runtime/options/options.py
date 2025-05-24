@@ -126,7 +126,7 @@ class OptionsV2(BaseOptions):
 
             Refer to the
             `Max execution time documentation
-            <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
             for more information.
 
         environment: Options related to the execution environment. See

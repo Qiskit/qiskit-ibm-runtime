@@ -297,7 +297,6 @@ class IBMBackend(Backend):
             Target
         """
         self.properties()
-        self.defaults()
         self._convert_to_target()
         return self._target
 
@@ -448,7 +447,7 @@ class IBMBackend(Backend):
         <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
 
         More details about backend configuration properties can be found here `QasmBackendConfiguration
-        <https://docs.quantum.ibm.com/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
+        <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
             * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
@@ -527,7 +526,7 @@ class IBMBackend(Backend):
         """
         raise IBMBackendError(
             "Support for backend.run() has been removed. Please see our migration guide "
-            "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime for instructions "
+            "https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime for instructions "
             "on how to migrate to the primitives interface."
         )
 

@@ -98,7 +98,7 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+                <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
             create_new: If True, the POST session API endpoint will be called to create a new session.
                 Prevents creating a new session when ``from_id()`` is called.
         Raises:
@@ -327,6 +327,7 @@ class Session:
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist.
+            IBMRuntimeError: If the backend of the session is unknown.
 
         Returns:
             A new Session with the given ``session_id``
@@ -334,7 +335,12 @@ class Session:
         """
 
         response = service._api_client.session_details(session_id)
-        backend = service.backend(response.get("backend_name"))
+        backend_name = response.get("backend_name")
+        if not backend_name:
+            raise IBMRuntimeError(
+                "The backend of this session is unknown. Try running a job first."
+            )
+        backend = service.backend(backend_name)
         mode = response.get("mode")
         state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()

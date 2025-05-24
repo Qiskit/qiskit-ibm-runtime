@@ -73,7 +73,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 * A :class:`Batch` if you are using batch execution mode.
 
                 Refer to the
-                `Qiskit Runtime documentation <https://docs.quantum.ibm.com/guides/execution-modes>`_.
+                `Qiskit Runtime documentation
+                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_.
                 for more information about the ``Execution modes``.
 
             options: Sampler options, see :class:`SamplerOptions` for detailed description.

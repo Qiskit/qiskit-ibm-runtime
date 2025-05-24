@@ -5,7 +5,7 @@ Deprecation Notes
 -----------------
 
 - ``name`` will now be a required parameter in 
-  `backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend>`__.
+  `backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#backend>`__.
   ``backend()`` will no longer return the first backend out of all backends if ``name`` is not provided. (`1147 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1147>`__)
 - After the removal of custom programs, the following methods are being deprecated and renamed.
   :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` is deprecated and will be replaced by a private method
@@ -16,11 +16,11 @@ Deprecation Notes
 
   :meth:`qiskit_ibm_runtime.RuntimeJob.program_id` is deprecated and will be replaced by
   :meth:`qiskit_ibm_runtime.RuntimeJob.primitive_id`. (`1238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1238>`__)
-- The ``backend`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
-  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has been deprecated. 
+- The ``backend`` argument in `Sampler <https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has been deprecated. 
   Please use ``mode`` instead.
-  The ``session`` argument in `Sampler <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
-  and `Estimator <https://docs.quantum.ibm.com/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
+  The ``session`` argument in `Sampler <https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives#3-initialize-the-qiskit-runtime-sampler>`__ 
+  and `Estimator <https://quantum.cloud.ibm.com/docs/guides/get-started-with-primitives#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
   Please use ``mode`` instead. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
 - :meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
   :meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.
@@ -97,8 +97,8 @@ Bug Fixes
 ---------
 
 - Fixed an issue where retrieving jobs with 
-  `job() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#job>`__
-  and `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+  `job() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#job>`__
+  and `jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__
   would only return ``RuntimeJob`` instances, even if the job was run with a V2 primitive. Now, 
   V2 primitive jobs will be returned correctly as ``RuntimeJobV2`` instances. (`1471 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1471>`__)
 - To avoid network disruptions during long job processes, websocket errors will no longer be raised. (`1518 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1518>`__)
@@ -110,5 +110,5 @@ Bug Fixes
 - Fixed measurement twirling docstring which incorrectly indicated it's enabled by default for Sampler. (`1722 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1722>`__)
 - Fixed nested experimental suboptions override non-experimental suboptions. (`1731 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1731>`__)
 - The backend utils method ``convert_to_target`` has been replaced with the 
-  `convert_to_target <https://docs.quantum.ibm.com/api/qiskit/1.4/qiskit.providers.convert_to_target>`__ method from Qiskit.
+  `convert_to_target <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.convert_to_target>`__ method from Qiskit.
   This fixes some issues related to target generation and calibration data. (`1600 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1600>`__)
