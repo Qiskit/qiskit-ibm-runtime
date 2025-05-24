@@ -122,7 +122,7 @@ jobs:
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
-        environment: [ "ibm-quantum-production", "ibm-cloud-production" ]
+        environment: ["ibm-cloud-production" ]
     environment: ${{ matrix.environment }}
     env:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
