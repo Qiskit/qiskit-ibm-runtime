@@ -120,7 +120,7 @@ class BaseRuntimeJob(ABC):
             )
 
     @property
-    def private(self) -> str:
+    def private(self) -> bool:
         """Returns a boolean indicating whether or not the job is private."""
         return self._private
 

@@ -893,6 +893,7 @@ class QiskitRuntimeService:
             image=qrt_options.image,
             service=self,
             version=version,
+            private=qrt_options.private,
         )
 
     def check_pending_jobs(self) -> None:
@@ -1115,6 +1116,8 @@ class QiskitRuntimeService:
             if params:
                 version = params.get("version", 1)
 
+        print(raw_data)
+
         if version == 1:
             return RuntimeJob(
                 backend=backend,
@@ -1136,6 +1139,7 @@ class QiskitRuntimeService:
             image=raw_data.get("runtime"),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
+            private=raw_data.get("private"),
         )
 
     def least_busy(
