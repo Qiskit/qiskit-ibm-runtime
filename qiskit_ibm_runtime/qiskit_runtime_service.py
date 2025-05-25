@@ -1116,8 +1116,6 @@ class QiskitRuntimeService:
             if params:
                 version = params.get("version", 1)
 
-        print(raw_data)
-
         if version == 1:
             return RuntimeJob(
                 backend=backend,
