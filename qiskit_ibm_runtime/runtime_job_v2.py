@@ -70,7 +70,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
         version: Optional[int] = None,
-        private: Optional[int] = False,
+        private: Optional[bool] = False,
     ) -> None:
         """RuntimeJob constructor.
 

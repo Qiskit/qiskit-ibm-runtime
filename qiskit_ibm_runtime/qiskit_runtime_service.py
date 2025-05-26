@@ -1137,7 +1137,7 @@ class QiskitRuntimeService:
             image=raw_data.get("runtime"),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),
-            private=raw_data.get("private"),
+            private=raw_data.get("private", False),
         )
 
     def least_busy(
