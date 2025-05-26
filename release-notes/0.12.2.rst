@@ -24,4 +24,4 @@ Upgrade Notes
 -------------
 
 -  Job error messages now include the error code. Error codes can be
-   found in `errors <https://docs.quantum.ibm.com/errors>`__.
+   found in `errors <https://quantum.cloud.ibm.com/docs/errors>`__.
