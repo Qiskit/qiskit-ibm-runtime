@@ -376,11 +376,6 @@ class QiskitRuntimeService:
                 f"The instance specified ({instance}) is not a valid " "instance name."
             )
 
-    # TODO: I think we can remove it
-    def _resolve_crn(self, account: Account) -> None:
-        """Resolve CRN value for local channel."""
-        account.resolve_crn()
-
     def _authenticate_ibm_quantum_account(self, client_params: ClientParameters) -> AuthClient:
         """Authenticate against IBM Quantum and populate the hub/group/projects for ibm_quantum channel.
 
