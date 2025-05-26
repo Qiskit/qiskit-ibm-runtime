@@ -46,7 +46,6 @@ class FakeApiBackend:
             model_backend = getattr(backends, specs.backend_name)()
             if isinstance(model_backend, FakeBackendV2):
                 model_backend._set_props_dict_from_json()
-                model_backend._set_defs_dict_from_json()
                 self.configuration = model_backend._conf_dict
                 self.properties = model_backend._props_dict
 
