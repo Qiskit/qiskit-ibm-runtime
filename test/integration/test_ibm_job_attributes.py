@@ -163,10 +163,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_private_option(self):
         """Test private option."""
-        try:
-            backend = self.service.backend("test_eagle")
-        except:
-            raise SkipTest("test_eagle not available in this environment")
+        backend = self.dependencies.service.backend(self.dependencies.qpu)
 
         sampler = Sampler(mode=backend)
         sampler.options.environment.private = True
