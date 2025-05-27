@@ -117,7 +117,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
     def test_account_preferences(self):
         """Test account preferences region and plans_preference."""
         region = "us-east"
-        plans_preference = ["standard"]
+        plans_preference = ["internal"]
         service = QiskitRuntimeService(
             token=self.dependencies.token,
             channel="ibm_quantum_platform",

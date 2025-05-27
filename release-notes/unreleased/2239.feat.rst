@@ -1,13 +1,13 @@
 The following changes were made to support the upcoming 
 `IBM Quantum platform migration <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__:
 
-    - When initializing the service, there is a new channel type, ``ibm_quantum_platform``, which replaces ``ibm_cloud``. 
+    - When initializing the service, there is a new channel type, ``ibm_quantum_platform``, which will replace ``ibm_cloud``. 
       ``ibm_quantum_platform`` and ``ibm_cloud`` point to the same channel but  
       ``ibm_cloud`` will be deprecated and removed in future releases. 
 
     - When saving and initializing an account on the new platform, an instance is no longer required. If an instance
     is not passed in, all instances will be checked when a backend is retrieved, (``service.backend()``). 
-    There are new parameters ``region``, and ``plans_preference``, that can be used to set prioritize certain instances. Note that 
+    There are new parameters ``region``, and ``plans_preference``, that can be used to prioritize certain instances. Note that 
     the IBM Cloud API Token used will only work with the account the token was created in. A list of tokens per account can be found 
     `here <https://cloud.ibm.com/iam/apikeys>`__. Only one account per API Token can be used. If you want to use multiple accounts, 
     multiple API Keys will have to be used/saved.  
@@ -16,7 +16,7 @@ The following changes were made to support the upcoming
       - ``plans_preference``: A list of account types, ordered by preference. An instance with the first value in the list will be prioritized
 
     For example, if ``region`` is saved as ``us-east``, only instances from ``us-east`` will be checked. If ``plans_preference`` is set, 
-    the instances will be prioritized in the order given so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
+    the instances will be prioritized in the order given, so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
     premium plan instances, and then the rest.
 
     - The IBM Cloud Resource Name (crn) or the actual instance name can be passed in as the instance. 
