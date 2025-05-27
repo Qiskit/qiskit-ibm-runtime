@@ -99,7 +99,7 @@ ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslati
 ibm_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMFractionalTranslationPlugin"
 
 [project.urls]
-documentation = "https://docs.quantum.ibm.com/"
+documentation = "https://quantum.cloud.ibm.com/docs/"
 repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
 issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 

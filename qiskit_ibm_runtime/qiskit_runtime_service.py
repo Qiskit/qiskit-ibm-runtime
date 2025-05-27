@@ -114,7 +114,7 @@ class QiskitRuntimeService:
                 If ``local`` is selected, the local testing mode will be used, and
                 primitive queries will run on a local simulator. For more details, check the
                 `Qiskit Runtime local testing mode
-                <https://docs.quantum.ibm.com/guides/local-testing-mode>`_  documentation.
+                <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
             Optional[str] token: IBM Cloud API key or IBM Quantum API token.
             Optional[str] url: The API URL.
                 Defaults to https://cloud.ibm.com (``ibm_cloud``),
@@ -631,7 +631,7 @@ class QiskitRuntimeService:
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://docs.quantum.ibm.com/api/qiskit/1.4/providers_models>
+                <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/providers_models>
 
         Returns:
             The list of available backends that match the filter.

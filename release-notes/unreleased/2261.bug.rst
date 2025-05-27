@@ -1,0 +1,2 @@
+The call to :meth:`~.IBMBackend.defaults` in :meth:`~.IBMBackend.target` was removed
+because backend defaults are no longer used in the target generation.

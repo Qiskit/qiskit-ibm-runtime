@@ -113,15 +113,15 @@ All quantum applications and algorithms level are fundamentally built using thes
 **Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications.
 Primitives accept vectorized inputs, where single circuits can be grouped with array-valued specifications. That is, one circuit can be executed for arrays of n parameter sets, n observables, or both (in the case of the estimator). Each group is called a Primitive Unified Bloc (PUB), and can be represented as a tuple.
 
-The [primitive interfaces](https://docs.quantum.ibm.com/api/qiskit/primitives) are defined in Qiskit.
+The [primitive interfaces](https://quantum.cloud.ibm.com/docs/api/qiskit/primitives) are defined in Qiskit.
 
 The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
-There are several different options you can specify when calling the primitives. See [Primitive options](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/options) for more information.
+There are several different options you can specify when calling the primitives. See [Primitive options](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/options) for more information.
 
 ### Primitive versions
 
-Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://docs.quantum.ibm.com/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
+Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://quantum.cloud.ibm.com/docs/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
 
 ### Sampler
 

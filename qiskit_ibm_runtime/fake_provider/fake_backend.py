@@ -289,7 +289,7 @@ class FakeBackendV2(BackendV2):
             "max_circuits is deprecated",
             "0.37.0",
             "Please see our documentation on job limits "
-            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+            "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
         )
         return self.configuration().max_experiments
 
