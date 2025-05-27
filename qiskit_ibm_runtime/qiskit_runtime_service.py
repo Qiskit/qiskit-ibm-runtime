@@ -277,7 +277,10 @@ class QiskitRuntimeService:
                     filtered_groups, key=lambda d: plans.index(d["plan"])
                 )
             else:
-                logger.warning("No matching plans found.")
+                raise ValueError(
+                    f"No matching plans found for the plans listed in the",
+                    "preference list self._plans_preference}",
+                )
 
     def _discover_account(
         self,
