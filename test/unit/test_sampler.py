@@ -241,7 +241,7 @@ class TestSamplerV2(IBMTestCase):
         circ.measure(0, 0)
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
-            sampler.run(pubs=[(circ)])
+            sampler.run(pubs=[circ])
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block(self, backend):
@@ -257,10 +257,10 @@ class TestSamplerV2(IBMTestCase):
             circ.ecr(1, 2)
 
         if backend.name == "fake_sherbrooke":
-            SamplerV2(backend).run(pubs=[(circ)])
+            SamplerV2(backend).run(pubs=[circ])
         else:
             with self.assertRaises(IBMInputValueError):
-                SamplerV2(backend).run(pubs=[(circ)])
+                SamplerV2(backend).run(pubs=[circ])
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block_body_in_separate_circuit(self, backend):
@@ -280,10 +280,10 @@ class TestSamplerV2(IBMTestCase):
         circ.if_test((circ.clbits[0], True), body, [1, 2], [])
 
         if backend.name == "fake_sherbrooke":
-            SamplerV2(backend).run(pubs=[(circ)])
+            SamplerV2(backend).run(pubs=[circ])
         else:
             with self.assertRaises(IBMInputValueError):
-                SamplerV2(backend).run(pubs=[(circ)])
+                SamplerV2(backend).run(pubs=[circ])
 
     @data(-1, 1, 2)
     def test_rzz_fixed_angle_validation(self, angle):
@@ -294,10 +294,10 @@ class TestSamplerV2(IBMTestCase):
         circ.rzz(angle, 0, 1)
 
         if angle == 1:
-            SamplerV2(backend).run(pubs=[(circ)])
+            SamplerV2(backend).run(pubs=[circ])
         else:
             with self.assertRaisesRegex(IBMInputValueError, f"{angle}"):
-                SamplerV2(backend).run(pubs=[(circ)])
+                SamplerV2(backend).run(pubs=[circ])
 
     @data(-1, 1, 2)
     def test_rzz_parametrized_angle_validation(self, angle):

@@ -75,7 +75,7 @@ class EstimatorOptions(OptionsV2):
 
         Refer to the
         `Configure error mitigation for Qiskit Runtime
-        <https://docs.quantum.ibm.com/guides/configure-error-mitigation>`_ guide
+        <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
         for more information about the error mitigation methods used at each level.
 
         Default: 1.

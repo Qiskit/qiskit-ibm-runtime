@@ -21,6 +21,7 @@ from functools import wraps
 from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
@@ -98,7 +99,7 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+                <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
             create_new: If True, the POST session API endpoint will be called to create a new session.
                 Prevents creating a new session when ``from_id()`` is called.
         Raises:
@@ -133,7 +134,7 @@ class Session:
     def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
-            session = self._service._api_client.create_session(
+            session = self._service._get_api_client(self._instance).create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
             return session.get("id")
@@ -193,7 +194,7 @@ class Session:
         """Cancel all pending jobs in a session."""
         self._active = False
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
-            self._service._api_client.cancel_session(self._session_id)
+            self._service._get_api_client(self._instance).cancel_session(self._session_id)
 
     def close(self) -> None:
         """Close the session so new jobs will no longer be accepted, but existing
@@ -201,7 +202,7 @@ class Session:
         are no more pending jobs."""
         self._active = False
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
-            self._service._api_client.close_session(self._session_id)
+            self._service._get_api_client(self._instance).close_session(self._session_id)
 
     def backend(self) -> Optional[str]:
         """Return backend for this session.
@@ -249,7 +250,9 @@ class Session:
         Batch usage is the amount of time all jobs spend on the QPU.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
-            response = self._service._api_client.session_details(self._session_id)
+            response = self._service._get_api_client(self._instance).session_details(
+                self._session_id
+            )
             if response:
                 return response.get("elapsed_time")
         return None
@@ -278,7 +281,9 @@ class Session:
               Usage is defined as the time a quantum system is committed to complete a job.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
-            response = self._service._api_client.session_details(self._session_id)
+            response = self._service._get_api_client(self._instance).session_details(
+                self._session_id
+            )
             if response:
                 return {
                     "id": response.get("id"),
@@ -333,8 +338,24 @@ class Session:
             A new Session with the given ``session_id``
 
         """
+        current_client = service._get_api_client()
+        try:
+            response = current_client.session_details(session_id)
+        except RequestsApiError as ex:
+            if ex.status_code == 404:
+                response = None
+                for instance, client in service._get_api_clients().items():
+                    if client != current_client and instance is not None:
+                        try:
+                            service._active_api_client = client
+                            response = client.session_details(session_id)
+                            break
+                        except RequestsApiError as _:
+                            continue
+                if response is None:
+                    raise IBMInputValueError(f"Session not found: {ex.message}") from None
 
-        response = service._api_client.session_details(session_id)
+        response = service._get_api_client().session_details(session_id)
         backend_name = response.get("backend_name")
         if not backend_name:
             raise IBMRuntimeError(

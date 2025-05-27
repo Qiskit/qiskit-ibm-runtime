@@ -8,7 +8,7 @@ Upgrade Notes
    channel credentials will get automatically copied over from the
    qiskitrc file and a qiskit-ibm.json file will get created if one
    doesn’t exist. You have to just initialize
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    class without passing any parameters to use this copied over default
    ``ibm_quantum`` account.
 
@@ -20,10 +20,10 @@ Upgrade Notes
       service = QiskitRuntimeService()
 
 -  ``IBMEstimator`` class which was deprecated earlier is now removed.
-   Use `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ class going
+   Use `Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__ class going
    forward.
 
 -  ``IBMRuntimeService`` class which was deprecated earlier is now
    removed. Use
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    class going forward.

@@ -46,8 +46,9 @@ ChannelType = Optional[
     ]
 ]
 
-IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
+IBM_QUANTUM_PLATFORM_API_URL = "https://quantum.cloud.ibm.com"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
+IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +66,8 @@ class Account:
         """Account constructor.
 
         Args:
-            channel: Channel type, ``ibm_cloud``, ``ibm_quantum``, ``ibm_quantum_platform``.
+            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``, ``ibm_quantum``,.
             token: Account token to use.
-            url: Authentication URL.
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
@@ -148,6 +148,7 @@ class Account:
                 private_endpoint=private_endpoint,
                 region=region,
                 plans_preference=plans_preference,
+                channel=channel,
             )
         else:
             raise InvalidAccountError(
@@ -276,7 +277,7 @@ class QuantumAccount(Account):
 
 
 class CloudAccount(Account):
-    """Class that represents an account with channel 'ibm_cloud'."""
+    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'."""
 
     def __init__(
         self,
@@ -288,6 +289,7 @@ class CloudAccount(Account):
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        channel: Optional[str] = "ibm_quantum_platform",
     ):
         """Account constructor.
 
@@ -298,10 +300,16 @@ class CloudAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
             private_endpoint: Connect to private API URL.
+            region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+            plans_preference: A list of account types, ordered by preference.
+            channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
+                Defaults to ``ibm_quantum_platform``.
         """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or IBM_CLOUD_API_URL
-        self.channel = "ibm_quantum_platform"  # should this be ibm_quantum_platform?
+        resolved_url = url or (
+            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
+        )
+        self.channel = channel
         self.url = resolved_url
         self.private_endpoint = private_endpoint
         self.region = region
@@ -320,9 +328,10 @@ class CloudAccount(Account):
         Raises:
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
+        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
         crn = resolve_crn(
-            channel="ibm_cloud",
-            url=self.url,
+            channel=self.channel,
+            url=cloud_url,
             token=self.token,
             instance=self.instance,
         )
@@ -343,12 +352,13 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        iam_url = get_iam_api_url(self.url)
+        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
+        iam_url = get_iam_api_url(cloud_url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
-        client.set_service_url(get_global_search_api_url(self.url))
-        catalog.set_service_url(get_global_catalog_api_url(self.url))
+        client.set_service_url(get_global_search_api_url(cloud_url))
+        catalog.set_service_url(get_global_catalog_api_url(cloud_url))
         search_cursor = None
         all_crns = []
         while True:

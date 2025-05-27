@@ -215,7 +215,7 @@ class IBMBackend(Backend):
                 f"{name} is deprecated",
                 "0.37.0",
                 "Please see our documentation on job limits "
-                "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+                "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
             )
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
@@ -293,7 +293,7 @@ class IBMBackend(Backend):
             "max_circuits is deprecated",
             "0.37.0",
             "Please see our documentation on job limits "
-            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+            "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
         )
         return self._max_circuits
 
@@ -317,7 +317,6 @@ class IBMBackend(Backend):
             Target
         """
         self.properties()
-        self.defaults()
         self._convert_to_target()
         return self._target
 
@@ -336,7 +335,9 @@ class IBMBackend(Backend):
     def refresh(self) -> None:
         """Retrieve the newest backend configuration and refresh the current backend target."""
         if config := configuration_from_server_data(
-            raw_config=self._service._api_client.backend_configuration(self.name, refresh=True),
+            raw_config=self._service._get_api_client(self._instance).backend_configuration(
+                self.name, refresh=True
+            ),
             instance=self._instance,
             use_fractional_gates=self.options.use_fractional_gates,
         ):
@@ -468,7 +469,7 @@ class IBMBackend(Backend):
         <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
 
         More details about backend configuration properties can be found here `QasmBackendConfiguration
-        <https://docs.quantum.ibm.com/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
+        <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
             * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
@@ -568,7 +569,7 @@ class IBMBackend(Backend):
         """
         raise IBMBackendError(
             "Support for backend.run() has been removed. Please see our migration guide "
-            "https://docs.quantum.ibm.com/migration-guides/qiskit-runtime for instructions "
+            "https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime for instructions "
             "on how to migrate to the primitives interface."
         )
 
