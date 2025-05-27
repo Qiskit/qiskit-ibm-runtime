@@ -352,12 +352,13 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        iam_url = get_iam_api_url(self.url)
+        cloud_url = self.url if "quantum" not in self.url else "https://cloud.ibm.com"
+        iam_url = get_iam_api_url(cloud_url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
-        client.set_service_url(get_global_search_api_url(self.url))
-        catalog.set_service_url(get_global_catalog_api_url(self.url))
+        client.set_service_url(get_global_search_api_url(cloud_url))
+        catalog.set_service_url(get_global_catalog_api_url(cloud_url))
         search_cursor = None
         all_crns = []
         while True:

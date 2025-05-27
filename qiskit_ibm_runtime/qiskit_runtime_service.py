@@ -278,7 +278,7 @@ class QiskitRuntimeService:
                 )
             else:
                 raise IBMRuntimeError(
-                    "No matching plans found for any of the plans listed in the",
+                    "No matching plan found for any of the plans listed in the",
                     f"preference list: {self._plans_preference}",
                 )
 
