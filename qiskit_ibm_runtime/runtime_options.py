@@ -73,11 +73,9 @@ class RuntimeOptions:
             private: Boolean that indicates whether the job is marked as private. When set to true,
                 input parameters are not returned, and the results can only be read once.
                 After the job is completed, input parameters are deleted from the service.
-                After the results are read, they are deleted from the service.
+                After the results are read, these are also deleted from the service.
                 When set to false, the input parameters and results follow the
                 standard retention behavior of the API.
-                Only returned in the job response if the value is true,
-                otherwise it is omitted.
         """
         self.backend = backend
         self.image = image

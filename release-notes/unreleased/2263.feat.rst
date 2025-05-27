@@ -1,5 +1,5 @@
 The ``private`` option under :class:`EnvironmentOptions` is now supported on the 
-``ibm_cloud`` channel (new IBM Quantum Platform). When this option
+``ibm_cloud`` and ``ibm_quantum_platform`` channels (new IBM Quantum Platform). When this option
 is set to ``True``, the job will be returned without params and results can only
 be retrieved once. 
 
