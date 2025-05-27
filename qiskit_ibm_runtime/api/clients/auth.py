@@ -53,6 +53,7 @@ class AuthClient:
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
+        del request_kwargs["auth"]
         base_api = Api(
             RetrySession(
                 self._service_urls["http"],
