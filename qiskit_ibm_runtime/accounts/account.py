@@ -66,9 +66,8 @@ class Account:
         """Account constructor.
 
         Args:
-            channel: Channel type, ``ibm_cloud``, ``ibm_quantum``, ``ibm_quantum_platform``.
+            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``, ``ibm_quantum``,.
             token: Account token to use.
-            url: Authentication URL.
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
@@ -329,9 +328,10 @@ class CloudAccount(Account):
         Raises:
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
+        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
         crn = resolve_crn(
             channel=self.channel,
-            url=self.url,
+            url=cloud_url,
             token=self.token,
             instance=self.instance,
         )
@@ -352,7 +352,7 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        cloud_url = self.url if "quantum" not in self.url else "https://cloud.ibm.com"
+        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
         iam_url = get_iam_api_url(cloud_url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
