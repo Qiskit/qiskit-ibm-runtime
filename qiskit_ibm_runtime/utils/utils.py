@@ -340,10 +340,7 @@ def default_runtime_url_resolver(
             )
         elif channel == "ibm_quantum_platform":
             # ibm_quantum_platform url
-            api_host = (
-                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-                f".quantum.{parsed_url.hostname}/api/v1"
-            )
+            api_host = f"{parsed_url.scheme}://" f"quantum.{parsed_url.hostname}/api/v1"
         else:
             # ibm_cloud url
             api_host = (

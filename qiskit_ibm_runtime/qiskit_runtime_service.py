@@ -233,7 +233,7 @@ class QiskitRuntimeService:
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
         try:
-            if instance not in self._api_clients:
+            if instance != self._active_api_client._instance:
                 new_client = self._create_new_cloud_api_client(instance)
                 self._api_clients.update({instance: new_client})
                 self._active_api_client = new_client
