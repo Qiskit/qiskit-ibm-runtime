@@ -34,7 +34,7 @@ class ClientParameters:
         proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
         private_endpoint: Optional[bool] = False,
-        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
+        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
     ) -> None:
         """ClientParameters constructor.
 

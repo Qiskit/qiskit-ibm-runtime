@@ -17,7 +17,7 @@ import traceback
 import warnings
 from datetime import datetime
 from collections import OrderedDict
-from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
+from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence, Tuple
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -75,7 +75,7 @@ class QiskitRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         private_endpoint: Optional[bool] = None,
-        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
+        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
     ) -> None:
@@ -544,7 +544,10 @@ class QiskitRuntimeService:
 
         raise QiskitBackendNotFoundError(error_message)
 
-    def _get_api_client(self, instance=None) -> RuntimeClient:
+    def _get_api_client(
+        self,
+        instance: Optional[str] = None,
+    ) -> RuntimeClient:
         """Return the saved api client for a given instance for all channels.
         If no instance is provided, return the current active api client.
 
@@ -704,7 +707,7 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[str]:
+    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
         if instance:
             if not is_crn(instance):
                 instance = self._get_crn_from_instance_name(self._account, instance)
@@ -745,7 +748,7 @@ class QiskitRuntimeService:
             self._filter_instances_by_saved_preferences()
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
-    def _get_or_create_cloud_client(self, instance: str):
+    def _get_or_create_cloud_client(self, instance: str) -> None:
         """Find relevant cloud client for a given instance and set active api client."""
         if instance != self._active_api_client._instance:
             client = self._api_clients.get(instance)

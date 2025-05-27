@@ -18,7 +18,7 @@ import os
 import uuid
 from typing import Any
 from unittest import skipIf
-from ddt import ddt, data, idata, unpack
+from ddt import ddt, data
 
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
@@ -393,6 +393,7 @@ class TestAccountManager(IBMTestCase):
             "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: _TEST_IBM_QUANTUM_ACCOUNT.to_saved_format(),
             _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
+            # pylint: disable=line-too-long
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
         }
     )
