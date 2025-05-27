@@ -277,9 +277,9 @@ class QiskitRuntimeService:
                     filtered_groups, key=lambda d: plans.index(d["plan"])
                 )
             else:
-                raise ValueError(
-                    f"No matching plans found for the plans listed in the",
-                    "preference list self._plans_preference}",
+                raise IBMRuntimeError(
+                    "No matching plans found for any of the plans listed in the",
+                    f"preference list: {self._plans_preference}",
                 )
 
     def _discover_account(
