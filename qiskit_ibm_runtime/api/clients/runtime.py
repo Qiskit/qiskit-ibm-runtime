@@ -39,10 +39,12 @@ class RuntimeClient(BaseBackendClient):
         Args:
             params: Connection parameters.
         """
+        cp = params.connection_parameters()
+        del cp["auth"]  # Remove possible auth from connection parameters, as it is handled separately.
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
-            **params.connection_parameters(),
+            **cp,
         )
         self._api = Runtime(self._session)
         self._configuration_registry: Dict[str, Dict[str, Any]] = {}
