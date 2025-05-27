@@ -117,7 +117,7 @@ class QiskitRuntimeService:
                 <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
             Optional[str] token: IBM Cloud API key or IBM Quantum API token.
             Optional[str] url: The API URL.
-                Defaults to https://cloud.ibm.com (``ibm_cloud``),
+                Defaults to https://quantum-computing.cloud.ibm.com (``ibm_cloud``),
                 https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
                 https://auth.quantum.ibm.com/api (``ibm_quantum``).
             Optional[str] filename: Full path of the file where the account is created.

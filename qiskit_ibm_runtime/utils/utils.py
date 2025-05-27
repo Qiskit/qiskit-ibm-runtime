@@ -313,7 +313,9 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
+def default_runtime_url_resolver(
+    url: str, instance: str, private_endpoint: bool = False, channel: str = "ibm_quantum_platform"
+) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
@@ -336,9 +338,12 @@ def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool
                 f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"
             )
-        elif "quantum" in url:
+        elif channel == "ibm_quantum_platform":
             # ibm_quantum_platform url
-            api_host = f"{parsed_url.scheme}://{parsed_url.hostname}/api/v1"
+            api_host = (
+                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
+                f".quantum.{parsed_url.hostname}/api/v1"
+            )
         else:
             # ibm_cloud url
             api_host = (

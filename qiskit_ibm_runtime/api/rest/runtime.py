@@ -228,7 +228,6 @@ class Runtime(RestAdapterBase):
         params = {}
         if hgp:
             params["provider"] = hgp
-
         return self.session.get(
             url, params=params, timeout=timeout, headers=self._HEADER_JSON_ACCEPT
         ).json()

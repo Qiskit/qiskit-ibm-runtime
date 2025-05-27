@@ -46,7 +46,7 @@ ChannelType = Optional[
     ]
 ]
 
-IBM_QUANTUM_PLATFORM_API_URL = "https://quantum.cloud.ibm.com"
+IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 
@@ -328,10 +328,9 @@ class CloudAccount(Account):
         Raises:
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
-        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
         crn = resolve_crn(
             channel=self.channel,
-            url=cloud_url,
+            url=self.url,
             token=self.token,
             instance=self.instance,
         )
@@ -352,13 +351,12 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, str]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        cloud_url = self.url if "quantum" not in self.url else IBM_CLOUD_API_URL
-        iam_url = get_iam_api_url(cloud_url)
+        iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
-        client.set_service_url(get_global_search_api_url(cloud_url))
-        catalog.set_service_url(get_global_catalog_api_url(cloud_url))
+        client.set_service_url(get_global_search_api_url(self.url))
+        catalog.set_service_url(get_global_catalog_api_url(self.url))
         search_cursor = None
         all_crns = []
         while True:
