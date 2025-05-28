@@ -1,0 +1,114 @@
+0.40.0 (2025-05-28)
+===================
+
+New Features
+------------
+
+- The following changes were made to support the upcoming 
+  `IBM Quantum platform migration <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__:
+
+  - A new channel type, ``ibm_quantum_platform``, has been introduced for service initialization  (``QiskitRuntimeService()``). 
+    It joins the existing ``ibm_quantum`` (now deprecated) and ``ibm_cloud`` channels. By **default**, 
+    ``ibm_quantum_platform`` is selected when no channel is specified. This new channel connects to the 
+    new IBM Quantum Platform API and is intended to replace ``ibm_cloud``. In the meantime, the ``ibm_cloud`` channel will redirect to the new 
+    API, but its continued use is discouraged. 
+
+  - An ``instance`` value is **no longer required** for saving (:meth:`.QiskitRuntimeService.save_account`) or 
+    initializing (``QiskitRuntimeService()``) an account on the new platform (``ibm_quantum_platform``, and temporarily, ``ibm_cloud``
+    channels). If an instance is not passed in, all instances will be checked when a backend is retrieved, 
+    (``service.backend("backend_name")``).  If an instance is passed 
+    into :meth:`.QiskitRuntimeService.save_account`, or passed in 
+    during initialization, it will be used as the **default instance** when retrieving backends.
+    The instance passed in at initialization will take **precedence** over the one saved in the account. 
+  
+  - Note that the IBM Cloud API Token (``token``) is required for saving 
+    (:meth:`.QiskitRuntimeService.save_account`) or 
+    initializing (``QiskitRuntimeService()``) an account on the new platform. It's treated as the account identifier 
+    and will unlock the resources associated with the account the token was created in. A list of tokens per account can be found `here <https://cloud.ibm.com/iam/apikeys>`__. 
+    Only one account per API token can be used. If you want to use multiple accounts, you must create multiple API tokens.
+
+  - The :meth:`.QiskitRuntimeService.backend` and :meth:`.QiskitRuntimeService.backends` methods have been 
+    updated to accept an ``instance`` passed in explicitly when retrieving backends: 
+    ``service.backend(name="...", instance="...")``.
+
+  - New parameters, ``region``, and ``plans_preference``, have been added to the 
+    :class:`.QiskitRuntimeService`   initializer and :meth:`.QiskitRuntimeService.save_account` method. 
+    These can be used to **prioritize** certain instances on the new platform 
+    (``ibm_quantum_platform``, and temporarily, ``ibm_cloud`` channels) without explicitly providing the CRN. In more detail:
+
+    - ``region``: Sets a region preference. ``us-east`` or ``eu-de``.
+    - ``plans_preference``: Is a list of account types, ordered by preference. An instance of the first type in the list will be prioritized.
+
+    For example, if ``region`` is saved as ``us-east``, only instances from ``us-east`` will be checked. If ``plans_preference`` is set, 
+    the instances will be prioritized in the order given, so ``['Open', 'Premium']`` would prioritize all Open Plan instances, then all
+    Premium Plan instances, and then the rest. Note that the plan names in ``plans_preference`` must exactly match the API names (case insensitive).
+
+  - The ``instance`` input parameter of :class:`.QiskitRuntimeService` has been extended to accept  
+    new input types for the  ``ibm_quantum_platform`` and ``ibm_cloud`` channels. 
+    In addition to the IBM Cloud Resource Name (CRN), the instance **name** can now
+    be passed in as the instance value. 
+
+  - The :meth:`~.QiskitRuntimeService.instances` method has been extended to show all 
+    available instances associated to an account for the ``ibm_quantum_platform`` and ``ibm_cloud`` 
+    channels, in addition to the already enabled ``ibm_quantum`` channel.
+
+    The following code snippets show the new usage patterns enabled by the changes described above 
+    (`2239 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2239>`__):
+
+    .. code-block:: python
+
+      # save account
+      service = QiskitRuntimeService.save_account(
+        # No channel needs to be specified, ibm_quantum_platform is the default
+        token=token,         
+        region="eu-de", # Optional
+        plans_preference=['Open',...], #Optional
+        set_as_default=True  #Optional
+        ) 
+
+      # initialize account
+      service = QiskitRuntimeService() # defaults to ibm_quantum_platform account
+      service.backend(name="...") # picks instance based on saved preferences 
+      service.backend(name="...", instance="...") # can also explicity pass in an instance to use
+
+      # initialize account with instance
+      service = QiskitRuntimeService(instance = "...") # sets instance as default instance
+      service.backend(name="...") # only checks default instance, fails if the backend not in the instance
+      service.backend(name="...", instance="...") # can still explicity pass in a different instance
+
+      # OR
+
+      # save account with instance 
+      service = QiskitRuntimeService.save_account(
+        # No channel needs to be specified, ibm_quantum_platform is the default
+        token=token,
+        instance="..." # This will be the default instance 
+        region="us-east", # Optional
+        plans_preference=['Open',...], #Optional
+        set_as_default=True  #Optional
+        ) 
+
+      # initialize account
+      service = QiskitRuntimeService() # defaults to ibm_quantum_platform account
+      service.backend(name="...") # only checks saved default instance from save_account
+      service.backend(name="...", instance="...") # can also explicity pass in an instance which takes precendence
+
+      # initializing account with instance works the same way 
+      service = QiskitRuntimeService(instance = "...") # sets instance as default instance, overrides instance from save_account
+      service.backend(name="...") # only checks default instance, fails if the backend not in the instance
+      service.backend(name="...", instance="...") # can still explicity pass in a different instance 
+
+- The ``private`` option under :class:`EnvironmentOptions` is now supported on the 
+  ``ibm_cloud`` and ``ibm_quantum_platform`` channels (new IBM Quantum Platform). When this option
+  is set to ``True``, the job will be returned without parameters, and results can only
+  be retrieved once. 
+
+  There is also a new :meth:`~.RuntimeJobV2.private` property that returns whether
+  or not a job is private. (`2263 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2263>`__)
+
+
+Bug Fixes
+---------
+
+- The call to :meth:`~.IBMBackend.defaults` in :meth:`~.IBMBackend.target` was removed
+  because backend defaults are no longer used in the target generation. (`2261 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2261>`__)
