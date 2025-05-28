@@ -1424,10 +1424,13 @@ class QiskitRuntimeService:
         return min(candidates, key=lambda b: b.status().pending_jobs)
 
     def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
-        """Return the IBM Quantum instances list currently in use for the session.
+        """Return the instance list associated to the active account. For the "ibm_quantum" channel,
+            the list elements will be in the hub/group/project format. For the "ibm_cloud" and
+            "ibm_quantum_platform" channels, this list will contain a series of dictionaries with the
+            following instance identifiers per instance: "crn", "plan", "name".
 
         Returns:
-            A list with instances currently in the session.
+            A list with instances available for the active account.
         """
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
