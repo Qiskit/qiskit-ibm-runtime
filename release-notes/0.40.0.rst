@@ -19,7 +19,7 @@ New Features
     (``service.backend("backend_name")``).  If an instance is passed 
     into :meth:`.QiskitRuntimeService.save_account`, or passed in 
     during initialization, it will be used as the **default instance** when retrieving backends.
-    The instance passed in at initialization will take **precendence** over the one saved in the account. 
+    The instance passed in at initialization will take **precedence** over the one saved in the account. 
   
   - Note that the IBM Cloud API Token (``token``) is required for saving 
     (:meth:`.QiskitRuntimeService.save_account`) or 
