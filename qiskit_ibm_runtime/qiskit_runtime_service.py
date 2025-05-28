@@ -187,16 +187,19 @@ class QiskitRuntimeService:
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._default_instance = False
             self._active_api_client = RuntimeClient(self._client_params)
+            self._backend_instance_groups: List[Dict[str, Any]] = []
+            self._region = region or self._account.region
+            self._plans_preference = plans_preference or self._account.plans_preference
+            self._cached_backend_objs: List[IBMBackend] = []
+            if self._account.instance:
+                self._default_instance = True
             if instance is not None:
                 self._api_clients = {instance: RuntimeClient(self._client_params)}
             else:
                 self._api_clients = {}
-            self._cached_backend_objs: List[IBMBackend] = []
-            if self._account.instance:
-                self._default_instance = True
-            self._backend_instance_groups: List[Dict[str, Any]] = []
-            self._region = region or self._account.region
-            self._plans_preference = plans_preference or self._account.plans_preference
+                instance_backends = self._resolve_cloud_instances(instance)
+                for inst, _ in instance_backends:
+                    self._get_or_create_cloud_client(inst)
 
         else:
             warnings.warn(
@@ -1250,8 +1253,8 @@ class QiskitRuntimeService:
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20
         offset = skip
-
         while True:
+            print(self._active_api_client._instance)
             jobs_response = self._active_api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
