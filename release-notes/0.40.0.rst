@@ -40,7 +40,7 @@ New Features
     - ``plans_preference``: is a list of account types, ordered by preference. An instance with the first value in the list will be prioritized
 
     For example, if ``region`` is saved as ``us-east``, only instances from ``us-east`` will be checked. If ``plans_preference`` is set, 
-    the instances will be prioritized in the order given, so ``['Open', 'Premium']`` would prioritize all open plan instances, then all
+    the instances will be prioritized in the order given, so ``['Open', 'Premium']`` would prioritize all Open Plan instances, then all
     premium plan instances, and then the rest. Note that the plan names in ``plans_preference`` must match exactly the API names (case insensitive).
 
   - The ``instance`` input parameter of :class:`.QiskitRuntimeService` has been extended to accept  
