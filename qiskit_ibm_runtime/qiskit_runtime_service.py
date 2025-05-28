@@ -234,9 +234,12 @@ class QiskitRuntimeService:
         # from global search API call
         try:
             if instance != self._active_api_client._instance:
-                new_client = self._create_new_cloud_api_client(instance)
-                self._api_clients.update({instance: new_client})
-                self._active_api_client = new_client
+                if instance in self._api_clients:
+                    self._active_api_client = self._api_clients[instance]
+                else:
+                    new_client = self._create_new_cloud_api_client(instance)
+                    self._api_clients.update({instance: new_client})
+                    self._active_api_client = new_client
             return self._active_api_client.list_backends()
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
