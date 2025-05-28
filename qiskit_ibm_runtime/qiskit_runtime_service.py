@@ -1254,7 +1254,6 @@ class QiskitRuntimeService:
         current_page_limit = limit or 20
         offset = skip
         while True:
-            print(self._active_api_client._instance)
             jobs_response = self._active_api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
