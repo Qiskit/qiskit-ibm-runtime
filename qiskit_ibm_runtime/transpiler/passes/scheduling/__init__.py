@@ -340,7 +340,7 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
             PadDynamicalDecoupling(durations, dd_sequence),
         ]
     )
-    
+
     qc_dd = pm.run(qc)
     qc_dd.draw(output="mpl", style="iqp")
 

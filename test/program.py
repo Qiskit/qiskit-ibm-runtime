@@ -42,9 +42,9 @@ def run_program(
         "session_time": None,
     }
     if final_status is not None:
-        service._api_client.set_final_status(final_status)
+        service._get_api_client(instance).set_final_status(final_status)
     elif job_classes:
-        service._api_client.set_job_classes(job_classes)
+        service._get_api_client(instance).set_job_classes(job_classes)
     if not program_id:
         program_id = "sampler"
     job = service._run(

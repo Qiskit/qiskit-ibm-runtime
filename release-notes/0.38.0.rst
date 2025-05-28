@@ -9,7 +9,7 @@ Deprecation Notes
 - Since pulse gates are no longer supported, the :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` 
   method has been deprecated and will be removed no sooner than three months from this release. While the method still exists, these pulse defaults are no longer used to construct the backend target. (`2186 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2186>`__)
 - The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July. 
-  After this date, ``ibm_cloud`` and ``local`` will be the only valid channels. 
+  After this date, ``ibm_cloud``, ``ibm_quantum_platform``, and ``local`` will be the only valid channels. 
   For help migrating to the new IBM Quantum Platform on the 
   ``ibm_cloud`` channel, read the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
 

@@ -132,7 +132,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_with_custom_log_level(self, service):
         """Test running program with a custom image."""
         job = run_program(service=service, log_level="DEBUG")
-        job_raw = service._api_client._get_job(job.job_id())
+        job_raw = service._get_api_client()._get_job(job.job_id())
         self.assertEqual(job_raw.log_level, "DEBUG")
 
     @run_quantum_and_cloud_fake
@@ -141,7 +141,7 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service=service, job_classes=FailedRuntimeJob)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-            job_result_raw = service._api_client.job_results(job.job_id())
+            job_result_raw = service._get_api_client().job_results(job.job_id())
             self.assertEqual("ERROR", job.status())
             self.assertEqual(
                 API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
@@ -156,7 +156,7 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-            job_result_raw = service._api_client.job_results(job.job_id())
+            job_result_raw = service._get_api_client().job_results(job.job_id())
             self.assertEqual("ERROR", job.status())
             self.assertEqual(
                 API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(

@@ -13,12 +13,13 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict
+from typing import Dict, List
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_runtime_client import BaseFakeRuntimeClient
@@ -44,16 +45,27 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._fake_runtime_client = runtime_client
         self._backend_specs = backend_specs
 
+        mock_runtime_client = mock.MagicMock()
+        if kwargs.get("channel", "ibm_quantum") == "ibm_quantum":
+            instance = kwargs.get("instance", "hub0/group0/project0")
+        else:
+            instance = kwargs.get(
+                "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+            )
+        mock_runtime_client._instance = instance
+        mock_runtime_client.job_get = mock.MagicMock()
+        mock_runtime_client.job_get.side_effect = RequestsApiError("Job not found", status_code=404)
+
         with mock.patch(
             "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
-            new=mock.MagicMock,
+            return_value=mock_runtime_client,
         ):
             super().__init__(*args, **kwargs)
 
         # Use default if api client is somehow not set.
-        if not isinstance(self._api_client, BaseFakeRuntimeClient):
-            self._api_client = self._fake_runtime_client or BaseFakeRuntimeClient(
-                backend_specs=self._backend_specs
+        if not isinstance(self._active_api_client, BaseFakeRuntimeClient):
+            self._active_api_client = self._fake_runtime_client or BaseFakeRuntimeClient(
+                backend_specs=self._backend_specs, instance=instance
             )
 
     def _authenticate_ibm_quantum_account(
@@ -93,17 +105,27 @@ class FakeRuntimeService(QiskitRuntimeService):
         # Set fake runtime clients
         self._set_api_client(hgps=list(hgps.keys()))
         for hgp in hgps.values():
-            hgp._runtime_client = self._api_client
+            hgp._runtime_client = self._active_api_client
 
         return hgps
 
-    def _discover_cloud_backends(self):
+    def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Mock discovery cloud backends."""
-        self._api_client = self._fake_runtime_client
-        self._set_api_client(hgps=[None] * self._test_num_hgps)
-        return super()._discover_cloud_backends()
+        job_class = self._active_api_client._job_classes  # type: ignore
+        self._active_api_client = self._fake_runtime_client
+        self._set_api_client(hgps=[None] * self._test_num_hgps, channel="ibm_quantum_platform")
+        self._active_api_client._job_classes = job_class  # type: ignore
+        return self._active_api_client.list_backends()
 
-    def _set_api_client(self, hgps):
+    def _create_new_cloud_api_client(self, instance: str) -> None:
+        """Create new api client."""
+        pass
+
+    def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
+        # return dummy crn
+        return instance
+
+    def _set_api_client(self, hgps, channel="ibm_quantum"):
         """Set api client to be the fake runtime client."""
         if not self._fake_runtime_client:
             if not self._backend_specs:
@@ -118,11 +140,11 @@ class FakeRuntimeService(QiskitRuntimeService):
                         )
                     )
             self._fake_runtime_client = BaseFakeRuntimeClient(
-                backend_specs=self._backend_specs, channel="ibm_quantum"
+                backend_specs=self._backend_specs, channel=channel
             )
 
         # Set fake runtime clients
-        self._api_client = self._fake_runtime_client
+        self._active_api_client = self._fake_runtime_client
 
 
 class FakeAuthClient(AuthClient):
