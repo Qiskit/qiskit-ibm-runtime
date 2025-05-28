@@ -33,7 +33,7 @@ New Features
 
   - New parameters, ``region``, and ``plans_preference``, have been added to the 
     :class:`.QiskitRuntimeService`   initializer and :meth:`.QiskitRuntimeService.save_account` method. 
-    hese can be used to **prioritize** certain instances on the new platform 
+    These can be used to **prioritize** certain instances on the new platform 
     (``ibm_quantum_platform``, and temporarily, ``ibm_cloud`` channels) without explicitly providing the CRN. In more detail:
 
     - ``region``: Sets a region preference. ``us-east`` or ``eu-de``.
