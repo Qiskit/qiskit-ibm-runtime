@@ -37,7 +37,7 @@ New Features
     (``ibm_quantum_platform``, and temporarily, ``ibm_cloud`` channels) without explicitly providing the CRN. In more detail:
 
     - ``region``: Sets a region preference. ``us-east`` or ``eu-de``.
-    - ``plans_preference``: is a list of account types, ordered by preference. An instance with the first value in the list will be prioritized
+    - ``plans_preference``: Is a list of account types, ordered by preference. An instance of the first type in the list will be prioritized.
 
     For example, if ``region`` is saved as ``us-east``, only instances from ``us-east`` will be checked. If ``plans_preference`` is set, 
     the instances will be prioritized in the order given, so ``['Open', 'Premium']`` would prioritize all Open Plan instances, then all
