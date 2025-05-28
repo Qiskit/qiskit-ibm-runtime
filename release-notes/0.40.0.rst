@@ -28,7 +28,7 @@ New Features
     Only one account per API token can be used. If you want to use multiple accounts, you must create multiple API tokens.
 
   - The :meth:`.QiskitRuntimeService.backend` and :meth:`.QiskitRuntimeService.backends` methods have been 
-    updated to accept an ``instance`` passed in explicity when retrieving backends: 
+    updated to accept an ``instance`` passed in explicitly when retrieving backends: 
     ``service.backend(name="...", instance="...")``.
 
   - New parameters, ``region``, and ``plans_preference``, have been added to the 
