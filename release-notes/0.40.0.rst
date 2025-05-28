@@ -50,7 +50,7 @@ New Features
 
   - The :meth:`~.QiskitRuntimeService.instances` method has been extended to show all 
     available instances associated to an account for the ``ibm_quantum_platform`` and ``ibm_cloud`` 
-    channels, on top of the already enabled ``ibm_quantum`` channel.
+    channels, in addition to the already enabled ``ibm_quantum`` channel.
 
     The following code snippets show the new usage patterns enabled by the changes described above 
     (`2239 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2239>`__):
