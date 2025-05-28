@@ -111,7 +111,7 @@ class Batch(Session):
     def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
-            session = self._service._api_client.create_session(
+            session = self._service._get_api_client(self._instance).create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "batch"
             )
             return session.get("id")

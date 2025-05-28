@@ -86,7 +86,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job = sampler.run(isa_circuit)
             job.result()
 
-        with mock.patch.object(service._api_client, "create_session") as mock_create_session:
+        with mock.patch.object(service._get_api_client(), "create_session") as mock_create_session:
             new_session = Session.from_id(session_id=session._session_id, service=service)
             mock_create_session.assert_not_called()
 
