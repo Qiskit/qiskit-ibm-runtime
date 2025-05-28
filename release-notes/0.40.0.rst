@@ -24,7 +24,7 @@ New Features
   - Note that the IBM Cloud API Token (``token``) is required for saving 
     (:meth:`.QiskitRuntimeService.save_account`) or 
     initializing (``QiskitRuntimeService()``) an account on the new platform. It's treated as the account identifier 
-    and will unlock the resources associated to the account the token was created in. A list of tokens per account can be found `here <https://cloud.ibm.com/iam/apikeys>`__. 
+    and will unlock the resources associated with the account the token was created in. A list of tokens per account can be found `here <https://cloud.ibm.com/iam/apikeys>`__. 
     Only one account per API Token can be used. If you want to use multiple accounts, multiple API Keys will have to be used/saved.   
 
   - The :meth:`.QiskitRuntimeService.backend` and :meth:`.QiskitRuntimeService.backends` methods have been 
