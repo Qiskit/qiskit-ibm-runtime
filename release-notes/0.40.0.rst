@@ -45,7 +45,7 @@ New Features
 
   - The ``instance`` input parameter of :class:`.QiskitRuntimeService` has been extended to accept  
     new input types for the  ``ibm_quantum_platform`` and ``ibm_cloud`` channels. 
-    On top of the IBM Cloud Resource Name (CRN), now the instance **name** can 
+    In addition to the IBM Cloud Resource Name (CRN), the instance **name** can now
     be passed in as the instance value. 
 
   - The :meth:`~.QiskitRuntimeService.instances` method has been extended to show all 
