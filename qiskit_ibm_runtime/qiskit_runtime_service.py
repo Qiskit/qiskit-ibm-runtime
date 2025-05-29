@@ -792,6 +792,20 @@ class QiskitRuntimeService:
                 "ibm_quantum_platform",
             ]:
                 config = self._backend_configs[backend_name]
+                # if cached config does not match use_fractional_gates
+                if (
+                    use_fractional_gates
+                    and "rzz" not in config.basis_gates
+                    or not use_fractional_gates
+                    and "rzz" in config.basis_gates
+                ):
+                    config = configuration_from_server_data(
+                        raw_config=self._active_api_client.backend_configuration(backend_name),
+                        instance=instance,
+                        use_fractional_gates=use_fractional_gates,
+                    )
+                    self._backend_configs[backend_name] = config
+
             else:
                 config = configuration_from_server_data(
                     raw_config=self._active_api_client.backend_configuration(backend_name),
