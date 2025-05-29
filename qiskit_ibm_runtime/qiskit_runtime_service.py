@@ -187,16 +187,19 @@ class QiskitRuntimeService:
         if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
             self._default_instance = False
             self._active_api_client = RuntimeClient(self._client_params)
+            self._backend_instance_groups: List[Dict[str, Any]] = []
+            self._region = region or self._account.region
+            self._plans_preference = plans_preference or self._account.plans_preference
+            self._cached_backend_objs: List[IBMBackend] = []
+            if self._account.instance:
+                self._default_instance = True
             if instance is not None:
                 self._api_clients = {instance: RuntimeClient(self._client_params)}
             else:
                 self._api_clients = {}
-            self._cached_backend_objs: List[IBMBackend] = []
-            if self._account.instance:
-                self._default_instance = True
-            self._backend_instance_groups: List[Dict[str, Any]] = []
-            self._region = region or self._account.region
-            self._plans_preference = plans_preference or self._account.plans_preference
+                instance_backends = self._resolve_cloud_instances(instance)
+                for inst, _ in instance_backends:
+                    self._get_or_create_cloud_client(inst)
 
         else:
             warnings.warn(
@@ -790,6 +793,20 @@ class QiskitRuntimeService:
                 "ibm_quantum_platform",
             ]:
                 config = self._backend_configs[backend_name]
+                # if cached config does not match use_fractional_gates
+                if (
+                    use_fractional_gates
+                    and "rzz" not in config.basis_gates
+                    or not use_fractional_gates
+                    and "rzz" in config.basis_gates
+                ):
+                    config = configuration_from_server_data(
+                        raw_config=self._active_api_client.backend_configuration(backend_name),
+                        instance=instance,
+                        use_fractional_gates=use_fractional_gates,
+                    )
+                    self._backend_configs[backend_name] = config
+
             else:
                 config = configuration_from_server_data(
                     raw_config=self._active_api_client.backend_configuration(backend_name),
@@ -1251,7 +1268,6 @@ class QiskitRuntimeService:
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20
         offset = skip
-
         while True:
             jobs_response = self._active_api_client.jobs_get(
                 limit=current_page_limit,
