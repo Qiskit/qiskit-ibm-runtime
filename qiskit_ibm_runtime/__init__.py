@@ -143,9 +143,8 @@ account credentials. If you don't want to pass in the credentials each time, you
 can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
 on disk.
 
-Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
-``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
-is IBM Cloud.
+Qiskit Runtime is available on IBM Cloud, and you can specify the channel with
+``channel="ibm_cloud"`` or ``channel="ibm_quantum_platform"``.
 
 Runtime Jobs
 ------------

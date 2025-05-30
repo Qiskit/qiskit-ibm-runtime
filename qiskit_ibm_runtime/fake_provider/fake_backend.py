@@ -469,7 +469,7 @@ class FakeBackendV2(BackendV2):
 
             real_props = real_backend.properties(refresh=True)
             real_config = configuration_from_server_data(
-                raw_config=service._api_client.backend_configuration(prod_name, refresh=True)
+                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True)
             )
             real_defs = real_backend.defaults(refresh=True)
 

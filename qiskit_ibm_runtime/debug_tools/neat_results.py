@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-""" A class to store Neat results."""
+"""A class to store Neat results."""
 
 from __future__ import annotations
 

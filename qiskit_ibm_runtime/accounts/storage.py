@@ -64,7 +64,6 @@ def read_config(
     """Read configuration data from a JSON file."""
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
     _ensure_file_exists(filename)
-
     with open(filename, encoding="utf-8") as json_file:
         data = json.load(json_file)
         if name is None:
