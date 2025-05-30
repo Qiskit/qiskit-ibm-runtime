@@ -259,6 +259,18 @@ def get_iam_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
+def get_global_search_api_url(cloud_url: str) -> str:
+    """Compute the GlobalSearchV2 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://api.global-search-tagging.{parsed_url.hostname}"
+
+
+def get_global_catalog_api_url(cloud_url: str) -> str:
+    """Compute the GlobalCatalogV1 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://globalcatalog.{parsed_url.hostname}/api/v1"
+
+
 def get_resource_controller_api_url(cloud_url: str) -> str:
     """Computes the Resource Controller API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
@@ -267,7 +279,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
 
 def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
-    if channel != "ibm_cloud":
+    if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
     if is_crn(instance):
@@ -301,7 +313,9 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
+def default_runtime_url_resolver(
+    url: str, instance: str, private_endpoint: bool = False, channel: str = "ibm_quantum_platform"
+) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
@@ -324,7 +338,17 @@ def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool
                 f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"
             )
+        elif channel == "ibm_quantum_platform":
+            # ibm_quantum_platform url
+            region = _location_from_crn(instance)
+            if region == "eu-de":
+                api_host = (
+                    f"{parsed_url.scheme}://{region}" f".quantum.{parsed_url.hostname}/api/v1"
+                )
+            else:
+                api_host = f"{parsed_url.scheme}://" f"quantum.{parsed_url.hostname}/api/v1"
         else:
+            # ibm_cloud url
             api_host = (
                 f"{parsed_url.scheme}://{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"

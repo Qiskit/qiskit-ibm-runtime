@@ -163,12 +163,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_private_option(self):
         """Test private option."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel does not support private jobs")
-        try:
-            backend = self.service.backend("test_eagle")
-        except:
-            raise SkipTest("test_eagle not available in this environment")
+        backend = self.dependencies.service.backend(self.dependencies.qpu)
 
         sampler = Sampler(mode=backend)
         sampler.options.environment.private = True
@@ -177,3 +172,4 @@ class TestIBMJobAttributes(IBMTestCase):
         self.assertFalse(job.inputs)
         self.assertTrue(job.result())
         self.assertFalse(job.result())  # private job results can only be retrieved once
+        self.assertTrue(job.private)

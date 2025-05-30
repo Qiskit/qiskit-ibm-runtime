@@ -58,7 +58,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    :include-source:
    :context: close-figs
 
-   # Transpile the ideal circuit to a circuit that can be 
+   # Transpile the ideal circuit to a circuit that can be
    # directly executed by the backend
    transpiled_circuit = transpile(circuit, backend)
    transpiled_circuit.draw('mpl', style="iqp")
@@ -67,7 +67,7 @@ Here is an example of using a fake backend for transpilation and simulation.
    :alt: Histogram output by the previous code.
    :include-source:
    :context: close-figs
-   
+
    # Run the transpiled circuit using the simulated fake backend
    sampler = SamplerV2(backend)
    job = sampler.run([transpiled_circuit])
@@ -79,14 +79,14 @@ Here is an example of using a fake backend for transpilation and simulation.
 
     Please note that the simulation is done using a noise model generated from system snapshots
     obtained in the past (sometimes a few years ago) and the results are not representative of the
-    latest behaviors of the real quantum system that the fake backend is mimicking. If you want 
+    latest behaviors of the real quantum system that the fake backend is mimicking. If you want
     to run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
 
     .. code-block:: python
 
         from qiskit_ibm_runtime import QiskitRuntimeService
         from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
-        
+
         # initialize service to access real backends
         service = QiskitRuntimeService()
 

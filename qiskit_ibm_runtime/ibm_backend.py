@@ -331,7 +331,9 @@ class IBMBackend(Backend):
     def refresh(self) -> None:
         """Retrieve the newest backend configuration and refresh the current backend target."""
         if config := configuration_from_server_data(
-            raw_config=self._service._api_client.backend_configuration(self.name, refresh=True),
+            raw_config=self._service._get_api_client(self._instance).backend_configuration(
+                self.name, refresh=True
+            ),
             instance=self._instance,
             use_fractional_gates=self.options.use_fractional_gates,
         ):
