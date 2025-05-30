@@ -11,7 +11,7 @@ New Features
 
 -  Users can now pass in a value of ``default`` to the
    ``channel_strategy`` parameter in
-   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__.
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__.
    Now, if an account is configured with a certain channel strategy, the
    user can override it by passing in ``default``.
 
@@ -26,12 +26,12 @@ Bug Fixes
 ---------
 
 -  Retrieving backend properties with
-   `properties() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#properties>`__ now
+   `properties() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#properties>`__ now
    supports passing a ``datetime`` parameter to retrieve properties from
    a past date.
 
 -  The ``noise_factors`` and ``extrapolator`` options in
-   `qiskit_ibm_runtime.options.ResilienceOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.27/qiskit_ibm_runtime.options.ResilienceOptions>`__
+   `qiskit_ibm_runtime.options.ResilienceOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.27/options-resilience-options>`__
    will now default to ``None`` unless ``resilience_level`` is set to 2.
    Only options relevant to the resilience level will be set, so when
    using ``resilience_level`` 2, ``noise_factors`` will still default to

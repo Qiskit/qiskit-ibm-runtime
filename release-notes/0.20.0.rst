@@ -5,7 +5,7 @@ New Features
 ------------
 
 -  Add ``dd_barrier`` optional input to
-   `PadDynamicalDecoupling <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
+   `PadDynamicalDecoupling <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/transpiler-passes-scheduling-pad-dynamical-decoupling>`__
    constructor to identify portions of the circuit to apply dynamical
    decoupling (dd) on selectively. If this string is contained in the
    label of a barrier in the circuit, dd is applied on the delays ending
@@ -15,9 +15,9 @@ New Features
 
 -  Sessions will now be started with a new ``/sessions`` endpoint that
    allows for different execution modes. Batch mode is now supported
-   through ``Batch``, and `Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
+   through ``Batch``, and `Session <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session>`__
    will work the same as way as before. Please see
-   `run/sessions <https://docs.quantum.ibm.com/guides/execution-modes#session-mode>`__ for more information.
+   `run/sessions <https://quantum.cloud.ibm.com/docs/guides/execution-modes#session-mode>`__ for more information.
 
    Note that ``Session`` and ``Batch`` created from
    ``qiskit-ibm-runtime`` prior to this release will no longer be
@@ -29,7 +29,7 @@ New Features
    a session will not actually be created. There will be no session ID.
 
 -  Sessions started with
-   `qiskit_ibm_runtime.IBMBackend.open_session() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.34/qiskit_ibm_runtime.IBMBackend#open_session>`__
+   `qiskit_ibm_runtime.IBMBackend.open_session() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.34/ibm-backend#open_session>`__
    will use the new ``/sessions`` endpoint.
 
    The sessions functionality will not change but note that
@@ -42,9 +42,9 @@ Deprecation Notes
 
 -  Circuits that do not match the target hardware definition will no
    longer be supported after March 1, 2024. See the transpilation
-   documentation (`transpile <https://docs.quantum.ibm.com/guides/transpile>`__) for instructions to
+   documentation (`transpile <https://quantum.cloud.ibm.com/docs/guides/transpile>`__) for instructions to
    transform circuits and the primitive examples
-   (`run/primitives-examples <https://docs.quantum.ibm.com/guides/primitives-examples>`__) to see this
+   (`run/primitives-examples <https://quantum.cloud.ibm.com/docs/guides/primitives-examples>`__) to see this
    coupled with operator transformations.
 
 Bug Fixes

@@ -86,14 +86,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job = sampler.run(isa_circuit)
             job.result()
 
-        with mock.patch.object(service._api_client, "create_session") as mock_create_session:
+        with mock.patch.object(service._get_api_client(), "create_session") as mock_create_session:
             new_session = Session.from_id(session_id=session._session_id, service=service)
             mock_create_session.assert_not_called()
 
         self.assertEqual(session._session_id, new_session._session_id)
-        self.assertTrue(new_session._active)
         new_session.close()
         self.assertFalse(new_session._active)
+        self.assertFalse(new_session.details()["accepting_jobs"])
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)

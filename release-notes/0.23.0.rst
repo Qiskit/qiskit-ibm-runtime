@@ -4,9 +4,9 @@
 Deprecation Notes
 -----------------
 
-- `backend.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#run>`__ has been deprecated. Please use the primitives instead. More details
-  can be found in the `migration guide <https://docs.quantum.ibm.com/migration-guides/qiskit-runtime>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
-- In a future release, the ``service`` parameter in `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ 
+- `backend.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#run>`__ has been deprecated. Please use the primitives instead. More details
+  can be found in the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
+- In a future release, the ``service`` parameter in `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__ 
   will be required. (`1311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1311>`__)
 
 New Features
@@ -24,7 +24,7 @@ New Features
   inadvertently disabling Q-CTRL's performance enhancements. (`1550 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1550>`__)
 - :class:`.SamplerV2` now supports twirling.
   Twirling will only be applied to those measurement registers not involved within a conditional logic. (`1557 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1557>`__)
-- Session `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ 
+- Session `details() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#details>`__ 
   now includes a new field, ``usage_time``. Usage is defined as the time a quantum system 
   is committed to complete a job. (`1567 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1567>`__)
 
@@ -37,6 +37,6 @@ Bug Fixes
   from the API will directly be returned. (`1476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1476>`__)
 - Fixed a bug where custom headers were not being sent in the ``/jobs`` request. (`1508 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1508>`__)
 - Fixed a bug with encoding/decoding ``ParameterExpression``. (`1521 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1521>`__)
-- Fixed an issue where the `in_final_state() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJobV2#in_final_state>`__ 
+- Fixed an issue where the `in_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job-v2#in_final_state>`__ 
   method in :class:`.RuntimeJobV2` would not
   update the status when called. (`1547 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1547>`__)

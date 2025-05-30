@@ -52,7 +52,7 @@ class IBMBackendApiError(IBMBackendError):
     pass
 
 
-class IBMInputValueError(IBMError):
+class IBMInputValueError(IBMError, ValueError):
     """Error raised due to invalid input value."""
 
     pass

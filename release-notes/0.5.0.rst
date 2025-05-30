@@ -14,9 +14,9 @@ New Features
 ------------
 
 -  The ``service`` object which is an instance of
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    class can now be accessed from
-   `IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__ class using the
+   `IBMBackend <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend>`__ class using the
    ``service`` property.
 
    Ex:
@@ -29,7 +29,7 @@ New Features
 Upgrade Notes
 -------------
 
--  `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has two
+-  `jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__ has two
    new parameters, ``created_after`` and ``created_before``. These can
    be used to filter jobs by creation date in local time.
 
@@ -76,38 +76,38 @@ Upgrade Notes
 
 -  The ``session_id``, which is the Job ID of the first job in a runtime
    session can now be used as a filter in
-   `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ with
+   `jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__ with
    the parameter ``session_id``.
 
--  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  `run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__ now
    supports a new parameter, ``job_tags``. These tags can be used when
    filtering jobs with
-   `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__.
+   `jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__.
 
--  `run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  `run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__ now
    supports a new parameter, ``max_execution_time``, which can be used
    to override the default program maximum execution time. It should be
    less than or equal to the program maximum execution time.
 
--  `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has a
+-  `jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__ has a
    new parameter, ``descending``. This parameter defaults to ``True``,
    where jobs will be returned in descending order based on creation
    date.
 
 -  ``RuntimeJobTimeoutError`` is now raised when the ``timeout`` set in
-   `result() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#result>`__ or
-   `wait_for_final_state() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
+   `result() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#result>`__ or
+   `wait_for_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#wait_for_final_state>`__
    expires.
 
 -  When initializing
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    and an invalid token is used, ``IBMNotAuthorizedError`` will be
    raised instead of ``RequestsApiError``.
 
 -  ``IBMSampler`` class which was deprecated earlier is now removed. Use
-   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ class going forward.
+   `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__ class going forward.
 
--  `qubit_properties() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#qubit_properties>`__
+-  `qubit_properties() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#qubit_properties>`__
    will now return a sub class of ``QubitProperties`` called
    ``IBMQubitProperties`` and will expose anharmonicity in addition to
    the t1, t2 and frequency already exposed by the ``QubitProperties``

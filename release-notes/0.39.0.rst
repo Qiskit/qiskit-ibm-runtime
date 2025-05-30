@@ -1,0 +1,31 @@
+0.39.0 (2025-05-13)
+===================
+
+New Features
+------------
+
+- The maximum supported QPY service version is now 14. (`2231 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2231>`__)
+- Pub inputs to :class:`~.EstimatorV2` are now subject to a new validation step that checks that observables consist of Pauli operations 
+  that only contain {I, X, Y, Z}. (`2254 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2254>`__)
+
+
+Bug Fixes
+---------
+
+- A new parameter ``create_new`` has been added to the :class:`.Batch` and :class:`.Session` classes. This parameter allows users to control whether the POST session API endpoint should be called when initializing the class. 
+  It defaults to ``True`` as this is the case for most user-facing workflows. However, methods such as :meth:`.Session.from_id` set it to ``False`` to avoid generating a new session when the original session is still active. 
+  This fixed issues where multiple sessions were generated simultaneously when calling ``.from_id()``. (`2195 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2195>`__)
+- Removed the incorrect ``Optional`` type hint for the ``backend`` 
+  parameter in :class:`~.Session` and :class:`~.Batch`. (`2222 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2222>`__)
+- :meth:`.Session.from_id` now raises an error if the session does not have a known backend.
+  This is usually the case if there haven't been any jobs run in the session yet. (`2226 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2226>`__)
+
+
+Other Notes
+-----------
+
+- IBM Cloud accounts will now use an access token to call the Qiskit Runtime API instead of the 
+  token provided by the user. (`2102 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2102>`__)
+- :class:`.IBMInputValueError` now inherits from ``ValueError``, in addition to the existing parent class :class:`.IBMError`. 
+  Some validation functions that previously raised ``ValueError`` exceptions 
+  now raise :class:`.IBMInputValueError` exceptions. (`2250 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2250>`__)

@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.38.0'
+release = '0.40.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -131,7 +131,7 @@ modindex_common_prefix = ['qiskit.']
 # Even though alabaster isn't very pretty, we use it
 # over the normal qiskit-ecosystem theme because it's
 # faster to build and these docs are only necessary
-# so the API docs can be integrated into docs.quantum.ibm.com.
+# so the API docs can be integrated into quantum.cloud.ibm.com/docs.
 html_theme = "alabaster"
 html_title = f"{project} {release}"
 

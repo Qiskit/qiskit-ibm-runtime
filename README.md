@@ -30,11 +30,14 @@ pip install qiskit-ibm-runtime
 
 ### Qiskit Runtime service on IBM Quantum Platform
 
+| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
+|:---------------------------|
+
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
 1. Create an IBM Quantum account or log in to your existing account by visiting the [IBM Quantum login page].
 
-1. Copy (and optionally regenerate) your API token from your
+2. Copy (and optionally regenerate) your API token from your
    [IBM Quantum account page].
 
 ### Qiskit Runtime service on IBM Cloud
@@ -60,8 +63,9 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 # Save an IBM Cloud account.
 QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
-# Save an IBM Quantum account.
-QiskitRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+# 'ibm_quantum_platform' and 'ibm_cloud' point to the same channel so they can be used interchangeably
+# In a future releases 'ibm_cloud' will be deprecated and removed in favor of 'ibm_quantum_platform'
+QiskitRuntimeService.save_account(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
 
 Once the account is saved on disk, you can instantiate the service without any arguments:
@@ -96,13 +100,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 
 # For an IBM Cloud account.
 ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
-
-# For an IBM Quantum account.
-ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
-
-| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
-|:---------------------------|
 
 ## Primitives
 
@@ -115,15 +113,15 @@ All quantum applications and algorithms level are fundamentally built using thes
 **Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications.
 Primitives accept vectorized inputs, where single circuits can be grouped with array-valued specifications. That is, one circuit can be executed for arrays of n parameter sets, n observables, or both (in the case of the estimator). Each group is called a Primitive Unified Bloc (PUB), and can be represented as a tuple.
 
-The [primitive interfaces](https://docs.quantum.ibm.com/api/qiskit/primitives) are defined in Qiskit.
+The [primitive interfaces](https://quantum.cloud.ibm.com/docs/api/qiskit/primitives) are defined in Qiskit.
 
 The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
-There are several different options you can specify when calling the primitives. See [Primitive options](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/options) for more information.
+There are several different options you can specify when calling the primitives. See [Primitive options](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/options) for more information.
 
 ### Primitive versions
 
-Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://docs.quantum.ibm.com/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
+Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://quantum.cloud.ibm.com/docs/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
 
 ### Sampler
 
@@ -281,7 +279,7 @@ This code returns `Job result is [4.] at theta = 1.575674623307102` using only n
 
 Access to IBM Quantum Platform channel is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
 
-> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
+> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform classic instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
 
 To view a list of your instances, visit your [account settings page](https://www.quantum.ibm.com/account) or use the `instances()` method.
 
@@ -289,15 +287,15 @@ You can specify an instance when initializing the service or provider, or when p
 
 ```python
 # Optional: List all the instances you can access.
-service = QiskitRuntimeService(channel='ibm_quantum')
+service = QiskitRuntimeService(channel='ibm_cloud')
 print(service.instances())
 
 # Optional: Specify the instance at service level. This becomes the default unless overwritten.
-service = QiskitRuntimeService(channel='ibm_quantum', instance="hub1/group1/project1")
+service = QiskitRuntimeService(channel='ibm_cloud', instance="IBM_CLOUD_INSTANCE")
 backend1 = service.backend("ibmq_manila")
 
 # Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
-backend2 = service.backend("ibmq_manila", instance="hub2/group2/project2")
+backend2 = service.backend("ibmq_manila", instance="IBM_CLOUD_INSTANCE")
 
 sampler1 = Sampler(mode=backend1)    # this will use hub1/group1/project1
 sampler2 = Sampler(mode=backend2)    # this will use hub2/group2/project2

@@ -289,7 +289,7 @@ class FakeBackendV2(BackendV2):
             "max_circuits is deprecated",
             "0.37.0",
             "Please see our documentation on job limits "
-            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
+            "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
         )
         return self.configuration().max_experiments
 
@@ -476,7 +476,7 @@ class FakeBackendV2(BackendV2):
 
             real_props = real_backend.properties(refresh=True)
             real_config = configuration_from_server_data(
-                raw_config=service._api_client.backend_configuration(prod_name, refresh=True)
+                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True)
             )
             real_defs = real_backend.defaults(refresh=True)
 

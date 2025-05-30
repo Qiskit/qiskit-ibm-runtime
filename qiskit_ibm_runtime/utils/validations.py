@@ -14,6 +14,7 @@
 from typing import List, Sequence, Optional, Any, Union
 import warnings
 import keyword
+import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.transpiler import Target
@@ -30,9 +31,9 @@ def validate_classical_registers(pubs: List[SamplerPub]) -> None:
         pubs: The list of pubs to validate
 
     Raises:
-        ValueError: If any circuit has a size-0 creg.
-        ValueError: If any circuit has a creg whose name is not a valid identifier.
-        ValueError: If any circuit has a creg whose name is a Python keyword.
+        IBMInputValueError: If any circuit has a size-0 creg.
+        IBMInputValueError: If any circuit has a creg whose name is not a valid identifier.
+        IBMInputValueError: If any circuit has a creg whose name is a Python keyword.
     """
 
     for index, pub in enumerate(pubs):
@@ -46,17 +47,17 @@ def validate_classical_registers(pubs: List[SamplerPub]) -> None:
         for reg in pub.circuit.cregs:
             # size 0 classical register will crash the server-side sampler
             if reg.size == 0:
-                raise ValueError(
+                raise IBMInputValueError(
                     f"Classical register {reg.name} is of size 0, which is not allowed"
                 )
             if not reg.name.isidentifier():
-                raise ValueError(
+                raise IBMInputValueError(
                     f"Classical register names must be valid identifiers, but {reg.name} "
                     f"is not. Valid identifiers contain only alphanumeric letters "
                     f"(a-z and A-Z), decimal digits (0-9), or underscores (_)"
                 )
             if keyword.iskeyword(reg.name):
-                raise ValueError(
+                raise IBMInputValueError(
                     f"Classical register names cannot be Python keywords, but {reg.name} "
                     f"is such a keyword. You can see the Python keyword list here: "
                     f"https://docs.python.org/3/reference/lexical_analysis.html#keywords"
@@ -70,11 +71,16 @@ def validate_estimator_pubs(pubs: List[EstimatorPub]) -> None:
         pubs: The list of pubs to validate
 
     Raises:
-        ValueError: If any observable array is of size 0
+        IBMInputValueError: If any observable array is of size 0
     """
     for pub in pubs:
         if pub.observables.shape == (0,):
-            raise ValueError("Empty observables array is not allowed")
+            raise IBMInputValueError("Empty observables array is not allowed")
+
+        for obs in np.array(pub.observables.ravel()):
+            for pauli in obs:
+                if any(single_pauli not in ["I", "X", "Y", "Z"] for single_pauli in pauli):
+                    raise IBMInputValueError("Observables alphabet is limited to I, X, Y, Z")
 
 
 def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
@@ -91,9 +97,9 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
                 message
                 + " Circuits that do not match the target hardware definition are no longer "
                 "supported after March 4, 2024. See the transpilation documentation "
-                "(https://docs.quantum.ibm.com/guides/transpile) for instructions "
+                "(https://quantum.cloud.ibm.com/docs/guides/transpile) for instructions "
                 "to transform circuits and the primitive examples "
-                "(https://docs.quantum.ibm.com/guides/primitives-examples) to see "
+                "(https://quantum.cloud.ibm.com/docs/guides/primitives-examples) to see "
                 "this coupled with operator transformations."
             )
 

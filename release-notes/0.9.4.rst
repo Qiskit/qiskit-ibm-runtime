@@ -18,22 +18,22 @@ Deprecation Notes
 
 -  The deprecated arguments ``circuits``, ``parameters``, ``service``,
    and ``skip_transpilation`` have been removed from
-   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__.
+   `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__.
 
    Similarly, the deprecated arguments ``circuits``, ``observables``,
    ``parameters``, ``service``, and ``skip_transpilation`` have been
-   removed from `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__.
+   removed from `Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__.
 
    In
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__,
    the ``auth`` parameter has been removed. Additionally, the
    ``instance``, ``job_tags``, and ``max_execution_time`` paramters have
    been removed from
-   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__.
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__.
    They can be passed in through
-   `RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__ instead.
+   `RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__ instead.
 
-   Within `RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__,
+   Within `RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__,
    ``backend_name`` is no longer supported. Please use ``backend``
    instead.
 

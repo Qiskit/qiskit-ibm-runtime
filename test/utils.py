@@ -182,7 +182,7 @@ def mock_wait_for_final_state(service, job):
     return mock.patch.object(
         RuntimeJob,
         "wait_for_final_state",
-        side_effect=service._api_client.wait_for_final_state(job.job_id()),
+        side_effect=service._get_api_client().wait_for_final_state(job.job_id()),
     )
 
 
@@ -315,7 +315,8 @@ def get_mocked_backend(
 
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
     mock_api_client = mock.MagicMock()
-    mock_service._api_client = mock_api_client
+    mock_api_client._instance = "mock_instance"
+    mock_service._active_api_client = mock_api_client
 
     configuration = (
         FakeManilaV2().configuration()  # type: ignore[assignment]
@@ -325,7 +326,7 @@ def get_mocked_backend(
 
     mock_api_client.backend_properties = lambda *args, **kwargs: properties
     mock_api_client.backend_pulse_defaults = lambda *args, **kwargs: defaults
-    mock_api_client.session_details = lambda *args, **kwargs: {"mode": "dedicated"}
+    mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
     mock_backend = IBMBackend(
         configuration=configuration, service=mock_service, api_client=mock_api_client
     )
@@ -334,6 +335,7 @@ def get_mocked_backend(
     mock_service.backend = lambda name, **kwargs: (
         mock_backend if name == mock_backend.name else None
     )
+    mock_service._get_api_client = mock.MagicMock(return_value=mock_api_client)
 
     return mock_backend
 

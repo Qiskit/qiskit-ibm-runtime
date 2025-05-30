@@ -67,13 +67,13 @@ Bug Fixes
    being used since not all features are supported there.
 
 -  The ``backend`` parameter in
-   `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ is being
+   `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__ is being
    deprecated because sessions do not support multiple backends.
    Additionally, the ``service`` parameter is no longer optional.
 
 -  The ``circuit_indices`` and ``observable_indices`` run inputs for
-   `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
-   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ have been completely
+   `Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__ and
+   `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__ have been completely
    removed.
 
 Other Notes

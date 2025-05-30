@@ -65,14 +65,14 @@ New Features
         # Or at job level.
         job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
 
--  `qiskit_ibm_runtime.RuntimeJob <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
+-  `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
    has a new method
-   `metrics() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#metrics>`__. This
+   `metrics() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#metrics>`__. This
    method returns the metrics of a job, which includes timestamp
    information.
 
 -  The
-   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    ``channel`` can now be stored as an environment variable,
    ``QISKIT_IBM_CHANNEL``. This way, when using Runtime Primitives, the
    service does not have to be instantiated manually and can instead be
@@ -87,7 +87,7 @@ Upgrade Notes
 -  The experimental parameters ``transpilation_settings``,
    ``resilience_settings``, and ``max_time`` to the
    :class:\`qiskit_ibm_runtime.Sampler and
-   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   `qiskit_ibm_runtime.Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__
    constructors have been removed. You can instead use the
    ``qiskit_ibm_runtime.Options`` class to specify the settings, and
    ``max_time`` can be specified when starting a new session. For
@@ -115,8 +115,8 @@ Deprecation Notes
 -----------------
 
 -  Invoking
-   `qiskit_ibm_runtime.Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ and
-   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   `qiskit_ibm_runtime.Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__ and
+   `qiskit_ibm_runtime.Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__
    as context managers has been deprecated. You can instead use the
    qiskit_ibm_runtime.Session class to create a new session and invoke
    one or more primitives within the session.
@@ -126,12 +126,12 @@ Deprecation Notes
    the constructors of ``Sampler`` and ``Estimator`` has also been
    deprecated. The inputs can now be passed to the ``run()`` method of
    the primitive classes, and ``service`` can be passed to
-   `qiskit_ibm_runtime.Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__ when
+   `qiskit_ibm_runtime.Session <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session>`__ when
    starting a new session.
 
 -  Passing ``skip_transpilation`` to the
    :class:\`qiskit_ibm_runtime.Sampler and
-   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   `qiskit_ibm_runtime.Estimator <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/estimator>`__
    constructors has been deprecated. You can instead use the
    ``qiskit_ibm_runtime.Options`` class to specify this option. For
    example:
