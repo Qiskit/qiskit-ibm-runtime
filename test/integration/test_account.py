@@ -93,6 +93,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
                 token=self.dependencies.token,
                 instance="test_name",
                 channel="ibm_quantum_platform",
+                url=self.dependencies.url
             )
 
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
@@ -100,11 +101,13 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             token=self.dependencies.token,
             instance=service_instance_name,
             channel="ibm_quantum_platform",
+            url=self.dependencies.url
         )
         self.assertEqual(service._account.instance, self.dependencies.instance)
         service_no_instance = QiskitRuntimeService(
             token=self.dependencies.token,
             channel="ibm_quantum_platform",
+            url=self.dependencies.url
         )
 
         backends = service.backends()
