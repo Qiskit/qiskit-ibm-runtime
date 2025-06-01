@@ -205,9 +205,10 @@ class QiskitRuntimeService:
             warnings.warn(
                 'The "ibm_quantum" channel option is deprecated and will be sunset on 1 July. '
                 'After this date, "ibm_cloud", "ibm_quantum_platform", and "local" will be the '
-                "only valid channels. For information on migrating to the new IBM Quantum Platform, "
-                "review the migration guide "
-                "https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp .",
+                "only valid channels. Open Plan users should migrate now.  All other users "
+                "should review the migration guide "
+                "(https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)"
+                "to learn when to migrate.",
                 DeprecationWarning,
                 stacklevel=2,
             )
