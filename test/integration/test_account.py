@@ -141,6 +141,15 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertTrue(instances[0]["crn"])
         self.assertTrue(instances[0]["name"])
 
+    def test_jobs_before_backend(self):
+        """Test retrieving jobs before backends call."""
+        service = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
+        )
+        self.assertTrue(service._all_instances)
+        jobs = service.jobs()
+        self.assertTrue(jobs)
+
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
