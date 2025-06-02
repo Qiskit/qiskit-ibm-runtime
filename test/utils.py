@@ -309,7 +309,6 @@ def get_mocked_backend(
     name: str = "ibm_gotham",
     configuration: Optional[Dict] = None,
     properties: Optional[Dict] = None,
-    defaults: Optional[Dict] = None,
 ) -> IBMBackend:
     """Return a mock backend."""
 
@@ -325,7 +324,6 @@ def get_mocked_backend(
     )
 
     mock_api_client.backend_properties = lambda *args, **kwargs: properties
-    mock_api_client.backend_pulse_defaults = lambda *args, **kwargs: defaults
     mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
     mock_backend = IBMBackend(
         configuration=configuration, service=mock_service, api_client=mock_api_client

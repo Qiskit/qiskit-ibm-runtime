@@ -214,7 +214,7 @@ class IBMBackend(Backend):
                 "Please see our documentation on job limits "
                 "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
             )
-        # Lazy load properties and pulse defaults and construct the target object.
+        # Lazy load properties and construct the target object.
         self.properties()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps

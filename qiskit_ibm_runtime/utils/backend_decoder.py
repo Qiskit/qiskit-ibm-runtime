@@ -194,26 +194,3 @@ def _to_complex(value: Union[List[float], complex]) -> complex:
         return value
 
     raise TypeError("{} is not in a valid complex number format.".format(value))
-
-
-def _decode_pulse_library_item(pulse_library_item: Dict) -> None:
-    """Decode a pulse library item.
-
-    Args:
-        pulse_library_item: A ``PulseLibraryItem`` in dictionary format.
-    """
-    pulse_library_item["samples"] = [
-        _to_complex(sample) for sample in pulse_library_item["samples"]
-    ]
-
-
-def _decode_pulse_qobj_instr(pulse_qobj_instr: Dict) -> None:
-    """Decode a pulse Qobj instruction.
-
-    Args:
-        pulse_qobj_instr: A ``PulseQobjInstruction`` in dictionary format.
-    """
-    if "val" in pulse_qobj_instr:
-        pulse_qobj_instr["val"] = _to_complex(pulse_qobj_instr["val"])
-    if "parameters" in pulse_qobj_instr and "amp" in pulse_qobj_instr["parameters"]:
-        pulse_qobj_instr["parameters"]["amp"] = _to_complex(pulse_qobj_instr["parameters"]["amp"])
