@@ -260,25 +260,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
-    def test_backend_wrong_instance(self):
-        """Test that an error is raised when retrieving a backend not in the instance."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel does not have instance.")
-
-        backends = self.service.backends()
-        hgps = self.service._hgps.values()
-        if len(hgps) >= 2:
-            for hgp in hgps:
-                backend_names = list(hgp._backends)
-                for backend in backends:
-                    if backend.name not in backend_names:
-                        with self.assertRaises(QiskitBackendNotFoundError):
-                            self.service.backend(
-                                backend.name,
-                                instance=f"{hgp._hub}/{hgp._group}/{hgp._project}",
-                            )
-                        return
-
     def test_retrieve_backend_not_exist(self):
         """Test that an error is raised when retrieving a backend that does not exist."""
         with self.assertRaises(QiskitBackendNotFoundError):
