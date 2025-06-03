@@ -26,7 +26,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
-from ..utils import bell, get_real_device
+from ..utils import bell
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -324,8 +324,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_use_fractional_gates_flag(self):
         """Test use_fractional_gates returns correct backend config."""
-        real_device_name = get_real_device(self.service)
-        real_device_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
-        real_device_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+        try:
+            real_device_name = "alt_fez"
+            real_device_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
+            real_device_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+        except QiskitBackendNotFoundError:
+            self.skipTest("Real backend not available.")
         self.assertIn("rzz", real_device_fg.basis_gates)
-        self.assertNotIn("rzz", real_device_no_fg)
+        self.assertNotIn("rzz", real_device_no_fg.basis_gates)
