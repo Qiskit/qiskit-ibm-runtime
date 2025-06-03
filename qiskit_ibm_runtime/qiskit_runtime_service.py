@@ -78,6 +78,8 @@ class QiskitRuntimeService:
         url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        resource_group: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor.
 
@@ -101,7 +103,7 @@ class QiskitRuntimeService:
         For the ``"ibm_cloud"`` and ``"ibm_quantum_platform"`` channels it is recommended
         to provide the relevant ``instance`` to minimize API calls. If an ``instance`` is not defined,
         the service will fetch all instances accessible within the account, filtered by
-        ``region`` and ``plans_preference``.
+        ``region``, ``plans_preference``, ``resource_groups``, and ``tags``.
 
         Args:
             Optional[ChannelType] channel: Channel type. ``ibm_quantum``, ``ibm_cloud``,
@@ -144,6 +146,10 @@ class QiskitRuntimeService:
                 for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
                 An instance with the first value in the list will be prioritized if an instance
                 is not passed in.
+            Optional[str] resource_group: Set a Resource Group to filter available instances
+                for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
+            Optional[List[str]] tags: Set a list of tags to filter available instances
+                for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -197,6 +203,8 @@ class QiskitRuntimeService:
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
+            self._resource_group = resource_group or self._account.resource_group
+            self._tags = tags or self._account.resource_group
 
         else:
             warnings.warn(
@@ -265,6 +273,12 @@ class QiskitRuntimeService:
     def _filter_instances_by_saved_preferences(self) -> None:
         """Filter instances by saved region and plan preferences
         for ibm_cloud and ibm_quantum_platform channels."""
+        if self._tags:
+            self._backend_instance_groups = [
+                d
+                for d in self._backend_instance_groups
+                if all(tag in d["tags"] for tag in self._tags)
+            ]
         if self._region:
             self._backend_instance_groups = [
                 d for d in self._backend_instance_groups if self._region in d["crn"]
@@ -746,6 +760,7 @@ class QiskitRuntimeService:
                     "crn": inst["crn"],
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "tags": inst["tags"],
                 }
                 for inst in self._all_instances
             ]
@@ -883,6 +898,8 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = False,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
+        resource_group: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -919,6 +936,11 @@ class QiskitRuntimeService:
                 will be prioritized if an instance is not passed in.
             plans_preference: A list of account types, ordered by preference. An instance with the first
                 value in the list will be prioritized if an instance is not passed in.
+            resource_group: Set a Resource Group to filter available instances.
+                An instance with this resource group will be prioritized if an instance is not passed in.
+            tags: Set a list of tags to filter available instances. An instance with this resource group
+                will be prioritized if an instance is not passed in.
+
         """
 
         # TODO validate account defaults
@@ -937,6 +959,8 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
+            resource_group=resource_group,
+            tags=tags,
         )
 
     @staticmethod
