@@ -84,7 +84,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         ):
             return (
                 f"The instruction {name} on qubits {qargs} is supported only for angles in the "
-                f"range [0, pi/2], but an angle of {param} has been provided."
+                f"range [0, pi/2], but an angle ({param}) outside of this range has been requested."
             )
 
         if isinstance(operation, ControlFlowOp):
@@ -151,7 +151,8 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
             elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
-                    f"range [0, pi/2], but an angle of {angle} has been provided."
+                    f"range [0, pi/2], but an angle ({angle}) outside of this "
+                    "range has been requested."
                 )
 
         if isinstance(operation, ControlFlowOp):
@@ -207,9 +208,9 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
                 )
                 return (
                     "The instruction rzz is supported only for angles in the "
-                    f"range [0, pi/2], but an angle of {angle} has been provided; "
-                    f"via parameter value(s) {vals_msg}, substituted in parameter expression "
-                    f"{param_exp}."
+                    f"range [0, pi/2], but an angle ({angle}) outside of this range has been "
+                    f"requested; via parameter value(s) {vals_msg}, substituted in parameter "
+                    f"expression {param_exp}."
                 )
 
     return ""
