@@ -149,6 +149,26 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertTrue(service._all_instances)
         jobs = service.jobs()
         self.assertTrue(jobs)
+        job = jobs[0]
+        self.assertTrue(job.result())
+
+    def test_jobs_different_instances(self):
+        """Test retrieving jobs from different instances."""
+        service = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
+        )
+        instances = service.instances()
+        for instance in instances:
+            instance_service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                instance=instance["crn"],
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+            )
+            jobs = instance_service.jobs()
+            if jobs:
+                instance_job = jobs[0].job_id()
+                self.assertTrue(service.job(instance_job))
 
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
