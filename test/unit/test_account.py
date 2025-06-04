@@ -18,6 +18,7 @@ import os
 import uuid
 from typing import Any
 from unittest import skipIf
+from unittest.mock import patch
 from ddt import ddt, data
 
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
@@ -730,7 +731,8 @@ class TestEnableAccount(IBMTestCase):
         for url in urls:
             with self.subTest(url=url), no_envs(["QISKIT_IBM_TOKEN"]):
                 token = uuid.uuid4().hex
-                service = FakeRuntimeService(channel="ibm_cloud", token=token, url=url)
+                with patch.object(FakeRuntimeService, "_resolve_cloud_instances", return_value=[]):
+                    service = FakeRuntimeService(channel="ibm_cloud", token=token, url=url)
                 self.assertTrue(service)
 
     def test_enable_ibm_quantum_account_by_channel_token_url(self):
