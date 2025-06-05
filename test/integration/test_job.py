@@ -90,6 +90,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
         sub_tests = ["DONE"]
         for status in sub_tests:
             with self.subTest(status=status):
@@ -103,6 +104,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @production_only
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
         real_device_name = get_real_device(service)
         real_device = service.backend(real_device_name)
         pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
