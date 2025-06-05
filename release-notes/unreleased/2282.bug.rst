@@ -1,0 +1,4 @@
+Running jobs in a :class:`~.Session` or :class:`~.Batch` with
+a context manager and initializing a primitive without any parameters will reinitialize the
+Session/Batch backend. This could cause issues if the backend target has been modified so instead,
+the actual backend object is now used. 
