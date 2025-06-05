@@ -17,4 +17,4 @@ Other Notes
 - Error messages related to ``rzz`` gate angles being outside of the allowed
   range of 0 to :math:`\pi/2` during circuit validation have been updated to
   clarify that the angle value requested in the circuit was the problem and not
-  an angle value provided by the backend. (`todo <https://github.com/Qiskit/qiskit-ibm-runtime/pull/todo>`__)
+  an angle value provided by the backend. (`2276 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2276>`__)
