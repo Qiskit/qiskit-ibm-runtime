@@ -713,7 +713,12 @@ class QiskitRuntimeService:
         # Set fractional gate flag for use when loading properties or refreshing backend.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
-        backends = deepcopy(backends)
+        try:
+            backends = deepcopy(backends)
+        except TypeError:
+            # local simulator cannot be deepcopied due to
+            # `TypeError: cannot pickle '_thread.RLock' object`
+            pass
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
