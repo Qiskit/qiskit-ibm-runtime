@@ -263,7 +263,6 @@ class TestBackend(IBMTestCase):
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
         backend._set_props_dict_from_json()
-        backend._set_defs_dict_from_json()
         target = convert_to_target(
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),
@@ -282,7 +281,6 @@ class TestBackend(IBMTestCase):
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
         backend._set_props_dict_from_json()
-        backend._set_defs_dict_from_json()
         target = convert_to_target(
             BackendConfiguration.from_dict(backend._conf_dict),
             BackendProperties.from_dict(backend._props_dict),

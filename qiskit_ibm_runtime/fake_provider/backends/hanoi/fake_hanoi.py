@@ -24,5 +24,4 @@ class FakeHanoiV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_hanoi.json"  # type: ignore
     props_filename = "props_hanoi.json"  # type: ignore
-    defs_filename = "defs_hanoi.json"  # type: ignore
     backend_name = "fake_hanoi"  # type: ignore
