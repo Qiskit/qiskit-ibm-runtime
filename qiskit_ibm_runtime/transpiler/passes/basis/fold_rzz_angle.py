@@ -12,14 +12,16 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple
+from typing import Tuple, Optional, Union, List
 from math import pi
+from operator import mod
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
+from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
+from qiskit.transpiler import Target
 from qiskit.transpiler.basepasses import TransformationPass
 
 import numpy as np
@@ -42,14 +44,20 @@ class FoldRzzAngle(TransformationPass):
 
     This pass allows the Qiskit users to naively use the Rzz gates
     with angle of arbitrary real numbers.
-
-    .. note::
-        This pass doesn't transform the circuit when the
-        Rzz gate angle is an unbound parameter.
-        In this case, the user must assign a gate angle before
-        transpilation, or be responsible for choosing parameters
-        from the calibrated range of [0, pi/2].
     """
+
+    def __init__(self, target: Optional[Union[Target, List[str]]] = None):
+        """
+        Args:
+            target - either a target or only a list of basis gates, either way it can be checked
+            if an instruction is supported using the `in` operator, for example `"rx" in target`.
+            If None then we assume that there is no limit on the gates in the transpiled circuit.
+        """
+        super().__init__()
+        if target is None:
+            self._target = ["rz", "x", "rx", "rzz"]
+        else:
+            self._target = target
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         self._run_inner(dag)
@@ -85,34 +93,101 @@ class FoldRzzAngle(TransformationPass):
                 continue
 
             angle = node.op.params[0]
-            if isinstance(angle, ParameterExpression) or 0 <= angle <= pi / 2:
+
+            if not isinstance(angle, ParameterExpression) and 0 <= angle <= pi / 2:
                 # Angle is an unbound parameter or a calibrated value.
                 continue
 
             # Modify circuit around Rzz gate to address non-ISA angles.
-            modified = True
-            wrap_angle = np.angle(np.exp(1j * angle))
-            if 0 <= wrap_angle <= pi / 2:
-                # In the first quadrant.
-                replace = self._quad1(wrap_angle, node.qargs)
-            elif pi / 2 < wrap_angle <= pi:
-                # In the second quadrant.
-                replace = self._quad2(wrap_angle, node.qargs)
-            elif -pi <= wrap_angle <= -pi / 2:
-                # In the third quadrant.
-                replace = self._quad3(wrap_angle, node.qargs)
-            elif -pi / 2 < wrap_angle < 0:
-                # In the forth quadrant.
-                replace = self._quad4(wrap_angle, node.qargs)
+            if isinstance(angle, ParameterExpression):
+                replace = self._unbounded_parameter(angle, node.qargs)
             else:
-                raise RuntimeError("Unreacheable.")
-            if pi < angle % (4 * pi) < 3 * pi:
-                replace.apply_operation_back(GlobalPhaseGate(pi))
-            dag.substitute_node_with_dag(node, replace)
+                replace = self._numeric_parameter(angle, node.qargs)
+
+            if replace is not None:
+                dag.substitute_node_with_dag(node, replace)
+                modified = True
+
         return modified
 
-    @staticmethod
-    def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    # The next function is required because sympy doesn't convert Boolean values to integers.
+    # symengine maybe does but I failed to find it in its documentation.
+    def gteq_op(self, exp1: ParameterExpression, exp2: ParameterExpression) -> ParameterExpression:
+        """Return an expression which, after substitution, will be equal to 1 if `exp1` is
+        greater or equal than `exp2`, and 0 otherwise"""
+        tmp = (exp1 - exp2).sign()
+
+        # We want to return 1 if tmp is 1 or 0, and 0 otherwise
+        return ((tmp + 0.1).sign() + 1) / 2
+
+    def _unbounded_parameter(
+        self, angle: ParameterExpression, qubits: Tuple[Qubit, ...]
+    ) -> DAGCircuit:
+        if "rz" not in self._target or "rx" not in self._target or "rzz" not in self._target:
+            return None
+
+        global_phase = (
+            (-pi / 2) * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi)
+            + pi * self.gteq_op(angle._apply_operation(mod, 2 * pi), 3 * pi / 2)
+            + pi * self.gteq_op((angle + pi)._apply_operation(mod, 4 * pi), 2 * pi)
+        )
+        rz_angle = pi * self.gteq_op((angle + pi / 2)._apply_operation(mod, 2 * pi), pi)
+        rx_angle = pi * self.gteq_op(angle._apply_operation(mod, pi), pi / 2)
+        rzz_angle = pi / 2 - (angle._apply_operation(mod, pi) - pi / 2).abs()
+
+        new_dag = DAGCircuit()
+        new_dag.add_qubits(qubits=qubits)
+        new_dag.apply_operation_back(GlobalPhaseGate(global_phase))
+        new_dag.apply_operation_back(
+            RZGate(rz_angle),
+            qargs=(qubits[0],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZGate(rz_angle),
+            qargs=(qubits[1],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RXGate(rx_angle),
+            qargs=(qubits[0],),
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RZZGate(rzz_angle),
+            qargs=qubits,
+            check=False,
+        )
+        new_dag.apply_operation_back(
+            RXGate(rx_angle),
+            qargs=(qubits[0],),
+            check=False,
+        )
+
+        return new_dag
+
+    def _numeric_parameter(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+        wrap_angle = np.angle(np.exp(1j * angle))
+        if 0 <= wrap_angle <= pi / 2:
+            # In the first quadrant.
+            replace = self._quad1(wrap_angle, qubits)
+        elif pi / 2 < wrap_angle <= pi:
+            # In the second quadrant.
+            replace = self._quad2(wrap_angle, qubits)
+        elif -pi <= wrap_angle <= -pi / 2:
+            # In the third quadrant.
+            replace = self._quad3(wrap_angle, qubits)
+        elif -pi / 2 < wrap_angle < 0:
+            # In the forth quadrant.
+            replace = self._quad4(wrap_angle, qubits)
+        else:
+            raise RuntimeError("Unreacheable.")
+        if pi < angle % (4 * pi) < 3 * pi:
+            replace.apply_operation_back(GlobalPhaseGate(pi))
+
+        return replace
+
+    def _quad1(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [0, pi/2].
 
         Circuit is not transformed - the Rzz gate is calibrated for the angle.
@@ -120,6 +195,9 @@ class FoldRzzAngle(TransformationPass):
         Returns:
             A new dag with the same Rzz gate.
         """
+        if "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(
@@ -129,21 +207,23 @@ class FoldRzzAngle(TransformationPass):
         )
         return new_dag
 
-    @staticmethod
-    def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad2(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (pi/2, pi].
 
         Circuit is transformed into the following form:
 
-                ┌───────┐┌───┐            ┌───┐
+                 ┌───────┐┌───┐            ┌───┐
             q_0: ┤ Rz(π) ├┤ X ├─■──────────┤ X ├
-                ├───────┤└───┘ │ZZ(π - θ) └───┘
+                 ├───────┤└───┘ │ZZ(π - θ) └───┘
             q_1: ┤ Rz(π) ├──────■───────────────
-                └───────┘
+                 └───────┘
 
         Returns:
             New dag to replace Rzz gate.
         """
+        if "rz" not in self._target or "x" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(GlobalPhaseGate(pi / 2))
@@ -176,21 +256,23 @@ class FoldRzzAngle(TransformationPass):
             )
         return new_dag
 
-    @staticmethod
-    def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad3(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [-pi, -pi/2].
 
         Circuit is transformed into following form:
 
-                ┌───────┐
+                 ┌───────┐
             q_0: ┤ Rz(π) ├─■───────────────
-                ├───────┤ │ZZ(π - Abs(θ))
+                 ├───────┤ │ZZ(π - Abs(θ))
             q_1: ┤ Rz(π) ├─■───────────────
-                └───────┘
+                 └───────┘
 
         Returns:
             New dag to replace Rzz gate.
         """
+        if "rz" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(GlobalPhaseGate(-pi / 2))
@@ -212,20 +294,22 @@ class FoldRzzAngle(TransformationPass):
             )
         return new_dag
 
-    @staticmethod
-    def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad4(self, angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (-pi/2, 0).
 
         Circuit is transformed into following form:
 
-                ┌───┐             ┌───┐
+                 ┌───┐             ┌───┐
             q_0: ┤ X ├─■───────────┤ X ├
-                └───┘ │ZZ(Abs(θ)) └───┘
+                 └───┘ │ZZ(Abs(θ)) └───┘
             q_1: ──────■────────────────
 
         Returns:
             New dag to replace Rzz gate.
         """
+        if "x" not in self._target or "rzz" not in self._target:
+            return None
+
         new_dag = DAGCircuit()
         new_dag.add_qubits(qubits=qubits)
         new_dag.apply_operation_back(
