@@ -305,7 +305,7 @@ If you do not specify an instance, then the code will select one in the followin
 
 1. If your account only has access to one instance, it is selected by default.
 2. If your account has access to multiple instances, but only one can access the requested backend, the instance with access is selected.
-3. In all other cases, the code selects the first instance other  that has access to the backend.
+3. In all other cases, the code selects the first instance that has access to the backend.
 
 Priority of instance order can also be set with the ``region`` and ``plans_preference`` parameters. The official [release notes](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/release-notes#0400-2025-05-28) have examples on how these values can be used. 
 
