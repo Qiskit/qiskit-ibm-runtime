@@ -315,3 +315,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             f"circuit has {num_qubits} qubits but the target system requires {num}",
             str(err.exception),
         )
+
+    def test_use_fractional_gates_flag(self):
+        """Test use_fractional_gates returns correct backend config."""
+        try:
+            real_device_name = "alt_fez"
+            real_device_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
+            real_device_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+        except QiskitBackendNotFoundError:
+            self.skipTest("Real backend not available.")
+        self.assertIn("rzz", real_device_fg.basis_gates)
+        self.assertNotIn("rzz", real_device_no_fg.basis_gates)
