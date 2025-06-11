@@ -342,12 +342,10 @@ def default_runtime_url_resolver(
         elif channel == "ibm_quantum_platform":
             # ibm_quantum_platform url
             region = _location_from_crn(instance)
-            if region == "eu-de":
-                api_host = (
-                    f"{parsed_url.scheme}://{region}" f".quantum.{parsed_url.hostname}/api/v1"
-                )
-            else:
-                api_host = f"{parsed_url.scheme}://" f"quantum.{parsed_url.hostname}/api/v1"
+            region_prefix = "" if region == "us-east" else f"{region}."
+            api_host = (
+                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
+            )
         else:
             # ibm_cloud url
             api_host = (
