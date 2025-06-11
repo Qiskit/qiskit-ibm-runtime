@@ -196,6 +196,8 @@ class QiskitRuntimeService:
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
+            self._resource_group = resource_group or self._account.resource_group
+            self._tags = tags or self._account.tags
             self._cached_backend_objs: List[IBMBackend] = []
             if self._account.instance:
                 self._default_instance = True
@@ -278,7 +280,14 @@ class QiskitRuntimeService:
             self._backend_instance_groups = [
                 d
                 for d in self._backend_instance_groups
-                if all(tag in d["tags"] for tag in self._tags)
+                if all(tag.lower() in d["tags"] for tag in self._tags)
+            ]
+
+        if self._resource_group:
+            self._backend_instance_groups = [
+                d
+                for d in self._backend_instance_groups
+                if self._resource_group == d["resource_group"]
             ]
         if self._region:
             self._backend_instance_groups = [
@@ -762,6 +771,7 @@ class QiskitRuntimeService:
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst["tags"],
+                    "resource_group": inst["resource_group"],
                 }
                 for inst in self._all_instances
             ]
@@ -1469,7 +1479,7 @@ class QiskitRuntimeService:
         """Return the instance list associated to the active account. For the "ibm_quantum" channel,
             the list elements will be in the hub/group/project format. For the "ibm_cloud" and
             "ibm_quantum_platform" channels, this list will contain a series of dictionaries with the
-            following instance identifiers per instance: "crn", "plan", "name".
+            following instance identifiers per instance: "crn", "plan", "name", "tags", "resource_group".
 
         Returns:
             A list with instances available for the active account.

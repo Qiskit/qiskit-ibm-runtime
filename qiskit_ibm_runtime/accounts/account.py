@@ -379,7 +379,14 @@ class CloudAccount(Account):
             try:
                 result = client.search(
                     query="service_name:quantum-computing",
-                    fields=["crn", "service_plan_unique_id", "name", "doc", "tags"],
+                    fields=[
+                        "crn",
+                        "service_plan_unique_id",
+                        "name",
+                        "doc",
+                        "tags",
+                        "resource_group_id",
+                    ],
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
@@ -403,6 +410,7 @@ class CloudAccount(Account):
                             "plan": plan_name.lower(),
                             "name": item.get("name"),
                             "tags": item.get("tags"),
+                            "resource_group": item.get("resource_group_id"),
                         }
                     )
 
