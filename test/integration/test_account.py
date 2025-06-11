@@ -133,6 +133,21 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertIn(region, first_instance.get("crn"))
         self.assertEqual(plans_preference[0], first_instance.get("plan"))
 
+    def test_account_preferences_tags(self):
+        """Test tags account preference."""
+        tags = ["services"]
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            url=self.dependencies.url,
+            channel="ibm_quantum_platform",
+            tags=tags,
+        )
+
+        instances = service.instances()
+        if instances:
+            for instance in instances:
+                self.assertEqual(instance["tags"], tags)
+
     def test_instances(self):
         """Test instances method."""
         service = QiskitRuntimeService(
