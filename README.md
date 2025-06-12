@@ -301,11 +301,11 @@ You can specify an instance when initializing the service or provider, or when p
 
 ```python
 # Optional: List all the instances you can access.
-service = QiskitRuntimeService(channel='ibm_cloud')
+service = QiskitRuntimeService(channel='ibm_quantum_platform')
 print(service.instances())
 
 # Optional: Specify the instance at service level. This becomes the default unless overwritten.
-service = QiskitRuntimeService(channel='ibm_cloud', instance="IBM_CLOUD_INSTANCE_1")
+service = QiskitRuntimeService(channel='ibm_quantum_platform', instance="IBM_CLOUD_INSTANCE_1")
 backend1 = service.backend("ibmq_manila")
 
 # Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
