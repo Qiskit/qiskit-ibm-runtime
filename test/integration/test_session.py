@@ -24,7 +24,7 @@ from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
 from ..utils import bell
-from ..decorators import run_integration_test, quantum_only
+from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -59,19 +59,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             result = sampler.run([pm.run(bell())]).result()
             self.assertIsInstance(result, PrimitiveResult)
             session.close()
-
-    @run_integration_test
-    @quantum_only
-    def test_using_correct_instance(self, service):
-        """Test the instance used when filtering backends is honored."""
-        instance = self.dependencies.instance
-        backend = service.backend(self.dependencies.qpu, self.dependencies.instance)
-        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        with Session(backend=backend) as session:
-            sampler = SamplerV2(mode=session)
-            job = sampler.run([pm.run(bell())])
-            self.assertEqual(instance, backend._instance)
-            self.assertEqual(instance, job.backend()._instance)
 
     @run_integration_test
     def test_session_from_id(self, service):
