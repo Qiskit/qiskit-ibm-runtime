@@ -230,7 +230,7 @@ To enable test cases against external system in your private fork, make sure to 
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
 upon. 
 
-For example, in your github fork settings, add the environment you want to run tests on (ibm-quantum-production, ibm-quantum-staging, ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
+For example, in your github fork settings, add the environment you want to run tests on (ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 
 ### Style guide
 
