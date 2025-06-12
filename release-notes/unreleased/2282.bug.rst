@@ -1,4 +1,5 @@
-Running jobs in a :class:`~.Session` or :class:`~.Batch` with
-a context manager and initializing a primitive without any parameters will reinitialize the
-Session/Batch backend. This could cause issues if the backend target has been modified so instead,
-the actual backend object is now used. 
+Fixed a bug in :class:`.BasePrimitive` where primitives instantiated inside a :class:`~.Session` or :class:`~.Batch` context manager would fetch the backend
+from the service (by name) instead of using the backend passed to the :class:`~.Session` or :class:`~.Batch`. This could cause issues when the :class:`~.Session`/:class:`~.Batch`
+backend was modified by users (for example, by removing a gate), because the primitives 
+would instead fetch the unmodified backend object from the service. After the fix, the
+:class:`~.Session`/:class:`~.Batch` backend object is used directly. 
