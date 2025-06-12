@@ -43,7 +43,7 @@ You will need your IBM Quantum API token to authenticate with the runtime servic
    [IBM Quantum account page].
 
 
-### Qiskit Runtime service on IBM Cloud (IBM Quantum Platform)
+### Qiskit Runtime service on the new IBM Quantum Platform (IBM Cloud)
 
 You will need your IBM Quantum Platform API token to authenticate with the runtime service:
 
@@ -289,11 +289,11 @@ This code returns `Job result is [4.] at theta = 1.575674623307102` using only n
 
 For the now deprecated `ibm_quantum` channel, access is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
 
-> **_NOTE:_** IBM Cloud (IBM Quantum Platform) instances are different from IBM Quantum classic instances. IBM Cloud does not use the hub/group/project structure for user management. 
+> **_NOTE:_** the new IBM Quantum Platform (IBM Cloud) instances are different from IBM Quantum classic instances. IBM Cloud does not use the hub/group/project structure for user management. 
 
 On the new IBM Quantum platform, instances are virtual servers that manage your workload execution, including executing quantum programs and classical compute tasks (such as processing error mitigation). Instances are specified by their Cloud Resource Name (CRN).
 
-You can see the instances you have access to on the [dashboard](https://quantum.cloud.ibm.com/) or by clicking the [Instances tab](https://quantum.cloud.ibm.com/instances) from the dashboard. Each instance is listed with its CRN identifier. You can include this identifier or the name of the instance when initializing the QiskitRuntimeService or saving your account. When an instance is passed in, only backends and jobs from that instance are available. Alternatively, if an instance is not included, then all backends and jobs across all instances in your account are available. In this case, when a backend is specified, an instance with the backend available will be used.
+You can see the instances you have access to on the [dashboard](https://quantum.cloud.ibm.com/) or by clicking the [Instances tab](https://quantum.cloud.ibm.com/instances) from the dashboard. Each instance is listed with its CRN identifier. You can include this identifier or the name of the instance when initializing the `QiskitRuntimeService` or saving your account. When an instance is passed in, only backends and jobs from that instance are available. Alternatively, if an instance is not included, then all backends and jobs across all instances in your account are available. In this case, when a backend is specified, an instance with the backend available will be used.
 
 To view a list of your instances, you can also use the `instances()` method.
 
@@ -371,8 +371,8 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 
 [IBM Quantum login page]:  https://quantum.ibm.com/login
 [IBM Quantum account page]: https://quantum.ibm.com/account
-[IBM Quantum]: https://www.ibm.com/quantum/
-[IBM Quantum Platform login page]:  https://quantum.cloud.ibm.com/
+[IBM Quantum classic]: https://www.ibm.com/quantum/
+[New IBM Quantum Platform login page]:  https://quantum.cloud.ibm.com/
 [IBM Cloud account page]: https://cloud.ibm.com/iam/apikeys
 [contribution guidelines]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CONTRIBUTING.md
 [code of conduct]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CODE_OF_CONDUCT.md
