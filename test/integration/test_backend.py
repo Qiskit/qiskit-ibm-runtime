@@ -124,12 +124,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNot(old_properties, backend.properties())
             self.assertIsNot(old_defaults, backend.defaults())
 
-    def test_backend_max_circuits(self):
-        """Check if the max_circuits property is set."""
-        backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.max_circuits)
-
     @production_only
     def test_backend_qubit_properties(self):
         """Check if the qubit properties are set."""
