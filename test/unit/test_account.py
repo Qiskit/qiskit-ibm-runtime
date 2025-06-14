@@ -131,20 +131,6 @@ class TestAccount(IBMTestCase):
                     Account.create_account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
-    def test_invalid_instance(self):
-        """Test invalid values for instance parameter."""
-
-        subtests = [
-            {"channel": "ibm_quantum", "instance": "no-hgp-format"},
-        ]
-        for params in subtests:
-            with self.subTest(params=params):
-                with self.assertRaises(InvalidAccountError) as err:
-                    Account.create_account(
-                        **params, token=self.dummy_token, url=self.dummy_ibm_cloud_url
-                    ).validate()
-                self.assertIn("Invalid `instance` value.", str(err.exception))
-
     def test_invalid_proxy_config(self):
         """Test invalid values for proxy configuration."""
 

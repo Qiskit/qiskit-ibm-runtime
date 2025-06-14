@@ -22,7 +22,6 @@ from qiskit_ibm_runtime.api.session import RetrySession
 from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 from ..client_parameters import ClientParameters
-from ...utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +53,6 @@ class RuntimeClient(BaseBackendClient):
         backend_name: Optional[str],
         params: Dict,
         image: Optional[str],
-        hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str],
         job_tags: Optional[List[str]] = None,
@@ -70,7 +68,6 @@ class RuntimeClient(BaseBackendClient):
             backend_name: Name of the backend to run the program.
             params: Parameters to use.
             image: The runtime image to use.
-            hgp: Hub/group/project to use.
             log_level: Log level to use.
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
@@ -82,10 +79,6 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             JSON response.
         """
-        hgp_dict = {}
-        if hgp:
-            hub, group, project = from_instance_format(hgp)
-            hgp_dict = {"hub": hub, "group": group, "project": project}
         return self._api.program_run(
             program_id=program_id,
             backend_name=backend_name,
@@ -98,7 +91,6 @@ class RuntimeClient(BaseBackendClient):
             start_session=start_session,
             session_time=session_time,
             private=private,
-            **hgp_dict,
         )
 
     def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
@@ -121,9 +113,6 @@ class RuntimeClient(BaseBackendClient):
         backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
-        hub: str = None,
-        group: str = None,
-        project: str = None,
         job_tags: Optional[List[str]] = None,
         session_id: Optional[str] = None,
         created_after: Optional[python_datetime] = None,
@@ -139,9 +128,6 @@ class RuntimeClient(BaseBackendClient):
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
-            hub: Filter by hub - hub, group, and project must all be specified.
-            group: Filter by group - hub, group, and project must all be specified.
-            project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Job ID of the first job in a runtime session.
             created_after: Filter by the given start date, in local time. This is used to
@@ -162,9 +148,6 @@ class RuntimeClient(BaseBackendClient):
             backend_name=backend_name,
             pending=pending,
             program_id=program_id,
-            hub=hub,
-            group=group,
-            project=project,
             job_tags=job_tags,
             session_id=session_id,
             created_after=created_after,
