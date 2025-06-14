@@ -21,20 +21,20 @@ from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_quantum_and_cloud_fake
+from ..decorators import run_cloud_fake
 
 
 class TestBackendFilters(IBMTestCase):
     """Qiskit Backend Filtering Tests."""
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_no_filter(self, service):
         """Test no filtering."""
         # FakeRuntimeService by default creates 3 backends.
         backend_name = [back.name for back in service.backends()]
         self.assertEqual(len(backend_name), 3)
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_filter_by_name(self, service):
         """Test filtering by name."""
         for name in [
@@ -219,52 +219,16 @@ class TestBackendFilters(IBMTestCase):
 class TestGetBackend(IBMTestCase):
     """Test getting a backend via ibm_quantum api."""
 
-    def test_get_common_backend(self):
-        """Test getting a backend that is in default and non-default hgp."""
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        backend = service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
-        self.assertEqual(backend._instance, list(service._hgps.keys())[0])
-
-    def test_get_unique_backend_default_hgp(self):
-        """Test getting a backend in the default hgp."""
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
-        backend = service.backend(backend_name)
-        self.assertEqual(backend._instance, list(service._hgps.keys())[0])
-
-    def test_get_unique_backend_non_default_hgp(self):
-        """Test getting a backend in the non default hgp."""
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
-        backend = service.backend(backend_name)
-        self.assertEqual(backend._instance, list(service._hgps.keys())[1])
-
     def test_get_phantom_backend(self):
         """Test getting a phantom backend."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
             service.backend("phantom")
 
-    def test_get_backend_by_hgp(self):
-        """Test getting a backend by hgp."""
-        hgp = FakeRuntimeService.DEFAULT_HGPS[1]
-        backend_name = FakeRuntimeService.DEFAULT_COMMON_BACKEND
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        backend = service.backend(backend_name, instance=hgp)
-        self.assertEqual(backend._instance, hgp)
-
-    def test_get_backend_by_bad_hgp(self):
-        """Test getting a backend not in hgp."""
-        hgp = FakeRuntimeService.DEFAULT_HGPS[1]
-        backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        with self.assertRaises(QiskitBackendNotFoundError):
-            _ = service.backend(backend_name, instance=hgp)
-
     def test_get_backend_properties(self):
         """Test that a backend's properties are loaded into its target"""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeTorino")],
         )
@@ -301,7 +265,7 @@ class TestGetBackend(IBMTestCase):
         This test is originally written in 2024.05.31
         """
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -332,7 +296,7 @@ class TestGetBackend(IBMTestCase):
         Backend with and without opt-in must be different object.
         """
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )

@@ -12,15 +12,11 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from collections import OrderedDict
-from typing import Dict, List
+from typing import List
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
-from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_runtime_client import BaseFakeRuntimeClient
 from .fake_api_backend import FakeApiBackendSpecs
@@ -46,12 +42,10 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._backend_specs = backend_specs
 
         mock_runtime_client = mock.MagicMock()
-        if kwargs.get("channel", "ibm_quantum") == "ibm_quantum":
-            instance = kwargs.get("instance", "hub0/group0/project0")
-        else:
-            instance = kwargs.get(
-                "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
-            )
+
+        instance = kwargs.get(
+            "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+        )
         mock_runtime_client._instance = instance
         mock_runtime_client.job_get = mock.MagicMock()
         mock_runtime_client.job_get.side_effect = RequestsApiError("Job not found", status_code=404)
@@ -68,46 +62,8 @@ class FakeRuntimeService(QiskitRuntimeService):
                 backend_specs=self._backend_specs, instance=instance
             )
 
-    def _authenticate_ibm_quantum_account(
-        self, client_params: ClientParameters
-    ) -> "FakeAuthClient":
-        """Mock authentication."""
-        return FakeAuthClient()
-
     def _resolve_crn(self, account: Account) -> None:
         pass
-
-    def _initialize_hgps(
-        self,
-        auth_client: AuthClient,
-    ) -> Dict:
-        """Mock hgp initialization.
-
-        By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
-        Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
-        """
-
-        hgps = OrderedDict()
-
-        for idx in range(self._test_num_hgps):
-            hgp_name = self.DEFAULT_HGPS[idx]
-
-            hgp_params = ClientParameters(
-                channel="ibm_quantum",
-                token="some_token",
-                url="some_url",
-                instance=hgp_name,
-            )
-            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name, service=self)
-
-            hgps[hgp_name] = hgp
-
-        # Set fake runtime clients
-        self._set_api_client(hgps=list(hgps.keys()))
-        for hgp in hgps.values():
-            hgp._runtime_client = self._active_api_client
-
-        return hgps
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Mock discovery cloud backends."""
@@ -125,7 +81,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         # return dummy crn
         return instance
 
-    def _set_api_client(self, hgps, channel="ibm_quantum"):
+    def _set_api_client(self, hgps, channel="ibm_quantum_platform"):
         """Set api client to be the fake runtime client."""
         if not self._fake_runtime_client:
             if not self._backend_specs:
@@ -145,22 +101,3 @@ class FakeRuntimeService(QiskitRuntimeService):
 
         # Set fake runtime clients
         self._active_api_client = self._fake_runtime_client
-
-
-class FakeAuthClient(AuthClient):
-    """Fake auth client."""
-
-    def __init__(self):  # pylint: disable=super-init-not-called
-        # Avoid calling parent __init__ method. It has side-effects that are not supported in unit tests.
-        pass
-
-    def current_service_urls(self):
-        """Return service urls."""
-        return {
-            "http": "IBM_QUANTUM_API_URL",
-            "services": {"runtime": "ibm_quantum_runtime_url"},
-        }
-
-    def current_access_token(self):
-        """Return access token."""
-        return "some_token"

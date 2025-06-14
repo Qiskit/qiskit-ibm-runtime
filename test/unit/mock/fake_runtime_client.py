@@ -21,8 +21,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict, Any, List
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-
-from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -253,7 +251,7 @@ class BaseFakeRuntimeClient:
         final_status=None,
         job_kwargs=None,
         backend_client=None,
-        channel="ibm_quantum",
+        channel="ibm_quantum_platform",
         num_backends=2,
         backend_specs=None,
         instance=None,
@@ -271,10 +269,7 @@ class BaseFakeRuntimeClient:
         if instance is not None:
             self._instance = instance
         else:
-            if channel == "ibm_quantum":
-                self._instance = "hub0/group0/project0"
-            else:
-                self._instance = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+            self._instance = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
         # Setup the available backends
         if not backend_specs:
@@ -299,7 +294,6 @@ class BaseFakeRuntimeClient:
         backend_name: Optional[str],
         params: dict,
         image: str,
-        hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
@@ -311,10 +305,8 @@ class BaseFakeRuntimeClient:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
-        if hgp:
-            hub, group, project = from_instance_format(hgp)
-        else:
-            hub = group = project = None
+
+        hub = group = project = None
 
         if backend_name is None:
             backend_name = self.list_backends()[0]

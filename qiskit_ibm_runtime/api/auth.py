@@ -68,24 +68,3 @@ class CloudAuth(AuthBase):
                 f"Unable to retrieve IBM Cloud access token. API Key will be used instead. {ex}"
             )
             return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
-
-
-class QuantumAuth(AuthBase):
-    """Attaches IBM Quantum Authentication to the given Request object."""
-
-    def __init__(self, access_token: str):
-        self.access_token = access_token
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, QuantumAuth):
-            return self.access_token == other.access_token
-
-        return False
-
-    def __call__(self, r: PreparedRequest) -> PreparedRequest:
-        r.headers.update(self.get_headers())
-        return r
-
-    def get_headers(self) -> Dict:
-        """Return authorization information to be stored in header."""
-        return {"X-Access-Token": self.access_token}

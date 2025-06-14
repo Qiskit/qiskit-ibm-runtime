@@ -137,9 +137,6 @@ class Runtime(RestAdapterBase):
         backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
-        hub: str = None,
-        group: str = None,
-        project: str = None,
         job_tags: Optional[List[str]] = None,
         session_id: Optional[str] = None,
         created_after: Optional[datetime] = None,
@@ -155,9 +152,6 @@ class Runtime(RestAdapterBase):
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
-            hub: Filter by hub - hub, group, and project must all be specified.
-            group: Filter by group - hub, group, and project must all be specified.
-            project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Job ID of the first job in a runtime session.
             created_after: Filter by the given start date, in local time. This is used to
@@ -195,8 +189,6 @@ class Runtime(RestAdapterBase):
             payload["created_before"] = local_to_utc(created_before).isoformat()
         if descending is False:
             payload["sort"] = "ASC"
-        if all([hub, group, project]):
-            payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload, headers=self._HEADER_JSON_ACCEPT).json()
 
     def backend(self, backend_name: str) -> CloudBackend:

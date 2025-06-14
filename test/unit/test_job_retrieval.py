@@ -15,7 +15,7 @@
 from datetime import datetime, timedelta, timezone
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_quantum_and_cloud_fake
+from ..decorators import run_cloud_fake
 from ..program import run_program
 from ..utils import mock_wait_for_final_state
 
@@ -28,7 +28,7 @@ class TestRetrieveJobs(IBMTestCase):
         super().setUp()
         self._ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_retrieve_job(self, service):
         """Test retrieving a job."""
         program_id = "sampler"
@@ -38,7 +38,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(program_id, rjob.primitive_id)
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_no_limit(self, service):
         """Test retrieving jobs without limit."""
         program_id = "sampler"
@@ -49,7 +49,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
         program_id = "sampler"
@@ -65,7 +65,7 @@ class TestRetrieveJobs(IBMTestCase):
                 rjobs = service.jobs(limit=limit)
                 self.assertEqual(min(limit, job_count), len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_skip(self, service):
         """Test retrieving jobs with skip."""
         program_id = "sampler"
@@ -87,7 +87,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         program_id = "sampler"
