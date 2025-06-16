@@ -14,7 +14,7 @@
 
 from unittest import SkipTest, mock
 
-from qiskit.circuit.library import RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit.primitives import PrimitiveResult
@@ -37,7 +37,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend(self.dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        psi1 = pm.run(RealAmplitudes(num_qubits=2, reps=2))
+        psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
 
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
