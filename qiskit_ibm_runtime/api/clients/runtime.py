@@ -209,7 +209,6 @@ class RuntimeClient(BaseBackendClient):
         backend: Optional[str] = None,
         instance: Optional[str] = None,
         max_time: Optional[int] = None,
-        channel: Optional[str] = None,
         mode: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Create a session.
@@ -217,9 +216,7 @@ class RuntimeClient(BaseBackendClient):
         Args:
             mode: Execution mode.
         """
-        return self._api.runtime_session(session_id=None).create(
-            backend, instance, max_time, channel, mode
-        )
+        return self._api.runtime_session(session_id=None).create(backend, instance, max_time, mode)
 
     def cancel_session(self, session_id: str) -> None:
         """Close all jobs in the runtime session.
@@ -244,17 +241,14 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def list_backends(self) -> List[str]:
         """Return IBM backends available for this service instance.
-
-        Args:
-            hgp: Filter by hub/group/project.
 
         Returns:
             IBM backends available for this service instance.
         """
 
-        return self._api.backends(hgp=hgp)["devices"]
+        return self._api.backends()["devices"]
 
     def backend_configuration(self, backend_name: str, refresh: bool = False) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.

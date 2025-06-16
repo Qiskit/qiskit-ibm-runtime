@@ -80,11 +80,9 @@ class QiskitRuntimeService:
             - If a ``filename`` is specified, account details will be loaded from ``filename``,
                 else they will be loaded from the default configuration file.
             - If ``name`` is specified, the corresponding account details will be loaded from
-                the configuration file, including ``channel``, ``token``, ``instance``, ``region``
-                (only ``"ibm_cloud"`` and ``"ibm_quantum_platform"``),
-                ``plans_preference` (only ``"ibm_cloud"`` and ``"ibm_quantum_platform"``),
-                and the advanced configuration parameters: ``url``, ``url_resolver``,
-                ``private_endpoint``,  ``verify``, and  ``proxies``.
+                the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
+                ``plans_preference`, and the advanced configuration parameters: ``url``,
+                ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
             - If ``channel`` is specified, the default account details for that channel will be
                 loaded from the configuration file, else, the account details will be loaded
                 from the ``default_channel`` defined in the configuration file.
@@ -99,13 +97,8 @@ class QiskitRuntimeService:
         ``region`` and ``plans_preference``.
 
         Args:
-            Optional[ChannelType] channel: Channel type. ``ibm_quantum``, ``ibm_cloud``,
+            Optional[ChannelType] channel: Channel type. ``ibm_cloud``,
                 ``ibm_quantum_platform`` or ``local``.
-                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
-                July 1st 2025, ``ibm_quantum_platform``, which points to the new Quantum Platform
-                cloud API (https://quantum.cloud.ibm.com) should be used instead.
-                For help migrating to the alternative channels, review the `migration guide.
-                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
                 If ``local`` is selected, the local testing mode will be used, and
                 primitive queries will run on a local simulator. For more details, check the
                 `Qiskit Runtime local testing mode
@@ -114,7 +107,6 @@ class QiskitRuntimeService:
             Optional[str] url: The API URL.
                 Defaults to https://quantum-computing.cloud.ibm.com (``ibm_cloud``),
                 https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
-                https://auth.quantum.ibm.com/api (``ibm_quantum``).
             Optional[str] filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             Optional[str] name: Name of the account to load.
@@ -122,7 +114,7 @@ class QiskitRuntimeService:
                 For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
                 Name (CRN) or the service name. If set, it will define a default instance for
                 service instantiation, if not set, the service will fetch all instances accessible
-                within the account. For ``ibm_quantum``, this is the hub/group/project specification.
+                within the account.
             Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -131,12 +123,9 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
-            Optional[str] region: Set a region preference for the ``ibm_cloud`` or
-                ``ibm_quantum_platform`` channel. Accepted values are ``us-east`` or ``eu-de``.
-                An instance with
-                this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account types, ordered by preference,
-                for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
+            Optional[str] region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+                An instance with this region will be prioritized if an instance is not passed in.
+            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
                 An instance with the first value in the list will be prioritized if an instance
                 is not passed in.
 
@@ -196,8 +185,7 @@ class QiskitRuntimeService:
                 self._get_or_create_cloud_client(inst)
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
-        """Retrieve all backends from the given instance for
-        ibm_cloud and ibm_quantum_platform channels."""
+        """Retrieve all backends from the given instance."""
         # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
         # from global search API call
@@ -216,8 +204,7 @@ class QiskitRuntimeService:
             return []
 
     def _create_new_cloud_api_client(self, instance: str) -> RuntimeClient:
-        """Create a new api_client given an instance for
-        ibm_cloud and ibm_quantum_platform channels."""
+        """Create a new api_client given an instance."""
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
@@ -231,8 +218,7 @@ class QiskitRuntimeService:
         return RuntimeClient(self._client_params)
 
     def _filter_instances_by_saved_preferences(self) -> None:
-        """Filter instances by saved region and plan preferences
-        for ibm_cloud and ibm_quantum_platform channels."""
+        """Filter instances by saved region and plan preferences."""
         if self._region:
             self._backend_instance_groups = [
                 d for d in self._backend_instance_groups if self._region in d["crn"]
@@ -265,7 +251,7 @@ class QiskitRuntimeService:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
-        """Discover account for ibm_quantum, ibm_cloud and ibm_quantum_platform channels."""
+        """Discover account for ibm_cloud and ibm_quantum_platform channels."""
         account = None
         verify_ = verify or True
         if name:
@@ -286,10 +272,8 @@ class QiskitRuntimeService:
                     )
             account = AccountManager.get(filename=filename, name=name)
         elif channel:
-            if channel and channel not in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]:
-                raise ValueError(
-                    "'channel' can only be 'ibm_cloud', 'ibm_quantum', or 'ibm_quantum_platform"
-                )
+            if channel and channel not in ["ibm_cloud", "ibm_quantum_platform"]:
+                raise ValueError("'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform")
             if token:
                 account = Account.create_account(
                     channel=channel,
@@ -335,7 +319,7 @@ class QiskitRuntimeService:
         return account
 
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
-        """Get the crn from the instance service name for ibm_cloud and ibm_quantum_platform channels."""
+        """Get the crn from the instance service name."""
 
         if not self._all_instances:
             self._all_instances = account.list_instances()
@@ -415,9 +399,7 @@ class QiskitRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: In hub/group/project format if on the ``ibm_quantum`` channel.
-                IBM Cloud account CRN if on the ``ibm_cloud`` and
-                ``ibm_quantum_platform`` channels
+            instance: IBM Cloud account CRN
             dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -569,7 +551,7 @@ class QiskitRuntimeService:
 
         Args:
             backend_name: Name of backend to instantiate.
-            instance: the current h/g/p (ibm_quantum) or CRN (ibm_cloud, ibm_quantum_platform).
+            instance: the current CRN.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates, False to include control flow operations, and
                 None to include both fractional gates and control flow
@@ -666,21 +648,11 @@ class QiskitRuntimeService:
 
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
-            url: The API URL.
-                Defaults to https://cloud.ibm.com (``ibm_cloud``),
-                https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
-                https://auth.quantum.ibm.com/api (``ibm_quantum``).
-            instance: This is an optional parameter to specify the CRN  or service name
-                for ``ibm_cloud`` and ``ibm_quantum_platform``, and the hub/group/project for
-                ``ibm_quantum``.
+            url: The API URL. Defaults to https://cloud.ibm.com.
+            instance: This is an optional parameter to specify the CRN  or service name.
                 If set, it will define a default instance for service instantiation,
                 if not set, the service will fetch all instances accessible within the account.
-            channel: Channel type. ``ibm_quantum``, ``ibm_cloud`` or ``ibm_quantum_platform``.
-                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
-                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
-                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
-                For help migrating to the alternative channels, review the `migration guide.
-                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
+            channel: Channel type. ``ibm_cloud`` or ``ibm_quantum_platform``.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
@@ -728,12 +700,7 @@ class QiskitRuntimeService:
 
         Args:
             default: If set to True, only default accounts are returned.
-            channel: Channel type. ``ibm_quantum``, ``ibm_cloud`` or ``ibm_quantum_platform``.
-                The ``ibm_quantum`` channel is deprecated and will be removed no earlier than
-                July 1st 2025. ``ibm_quantum_platform`` should be used instead.
-                Note that ``ibm_cloud`` and ``ibm_quantum_platform`` point to the same url.
-                For help migrating to the alternative channels, review the `migration guide.
-                <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`_
+            channel: Channel type.``ibm_cloud`` or ``ibm_quantum_platform``.
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
@@ -762,10 +729,7 @@ class QiskitRuntimeService:
 
         Args:
             name: Name of the backend.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format. If an instance is not given, among the providers
-                with access to the backend, a premium provider will be prioritized.
-                For users without access to a premium provider, the default open provider will be used.
+            instance: Specify the IBM Cloud account CRN.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Currently this feature cannot be used
                 simultaneously with dynamic circuits, PEC, PEA, or gate
@@ -868,11 +832,6 @@ class QiskitRuntimeService:
                 session_time=qrt_options.session_time,
                 private=qrt_options.private,
             )
-            if self._channel == "ibm_quantum":
-                messages = response.get("messages")
-                if messages:
-                    warning_message = messages[0].get("data")
-                    warnings.warn(warning_message)
 
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -952,8 +911,7 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: This is parameter is no longer supported on the new IBM Quantum Platform.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
@@ -1120,8 +1078,7 @@ class QiskitRuntimeService:
 
         Args:
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: IBM Cloud account CRN.
             filters: Filters can be defined as for the :meth:`backends` method.
                 An example to get the operational backends with 5 qubits::
 

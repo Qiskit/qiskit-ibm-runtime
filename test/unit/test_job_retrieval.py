@@ -26,7 +26,9 @@ class TestRetrieveJobs(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self._ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
+        self._ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum_platform", token="my_token"
+        )
 
     @run_cloud_fake
     def test_retrieve_job(self, service):

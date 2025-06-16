@@ -23,7 +23,6 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,
     RuntimeJobMaxTimeoutError,
-    IBMInputValueError,
     RuntimeInvalidStateError,
 )
 from .mock.fake_runtime_client import (
@@ -31,7 +30,6 @@ from .mock.fake_runtime_client import (
     FailedRanTooLongRuntimeJob,
     CancelableRuntimeJob,
 )
-from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_cloud_fake
 from ..program import run_program
@@ -58,12 +56,6 @@ class TestRuntimeJob(IBMTestCase):
         """Test running on a phantom backend."""
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = run_program(service=service, backend_name="phantom_backend")
-
-    def test_run_program_missing_backend_ibm_quantum(self):
-        """Test running an ibm_quantum program with no backend."""
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        with self.assertRaises(IBMInputValueError):
-            _ = run_program(service=service, backend_name="")
 
     @run_cloud_fake
     def test_run_program_with_custom_runtime_image(self, service):

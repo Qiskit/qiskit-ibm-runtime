@@ -59,7 +59,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("QISKIT_IBM_QPU"),
     )
-    channel: str = "ibm_cloud" if url.find("cloud") >= 0 else "ibm_quantum"
+    channel: str = "ibm_quantum_platform"
     return channel, token, url, instance, qpu
 
 
@@ -97,7 +97,9 @@ def integration_test_setup(
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
             _supported_channel = (
-                ["ibm_cloud", "ibm_quantum"] if supported_channel is None else supported_channel
+                ["ibm_cloud", "ibm_quantum_platform"]
+                if supported_channel is None
+                else supported_channel
             )
 
             channel, token, url, instance, qpu = _get_integration_test_config()

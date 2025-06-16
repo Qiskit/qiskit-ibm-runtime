@@ -30,7 +30,7 @@ pip install qiskit-ibm-runtime
 
 ### Qiskit Runtime service on IBM Quantum Platform
 
-| :warning: IBM Quantum Platform Classic was sunset on July 1st, 2025. The ibm_quantum channel option is no longer supported. Only the ibm_cloud and ibm_quantum_platform channels are now the only valid channels. See the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) for more information.
+| :warning: IBM Quantum Platform Classic was sunset on July 1st, 2025. The ibm_quantum channel option is no longer supported. The ibm_cloud and ibm_quantum_platform channels are now the only valid channels. See the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) for more information.
 |:---------------------------|
 
 

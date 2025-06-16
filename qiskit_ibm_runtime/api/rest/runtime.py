@@ -204,25 +204,18 @@ class Runtime(RestAdapterBase):
 
     def backends(
         self,
-        hgp: Optional[str] = None,
         timeout: Optional[float] = None,
     ) -> Dict[str, List[str]]:
         """Return a list of IBM backends.
 
         Args:
-            hgp: The service instance to use, only for ``ibm_quantum`` channel, in h/g/p format.
             timeout: Number of seconds to wait for the request.
 
         Returns:
             JSON response.
         """
         url = self.get_url("backends")
-        params = {}
-        if hgp:
-            params["provider"] = hgp
-        return self.session.get(
-            url, params=params, timeout=timeout, headers=self._HEADER_JSON_ACCEPT
-        ).json()
+        return self.session.get(url, timeout=timeout, headers=self._HEADER_JSON_ACCEPT).json()
 
     def usage(self) -> Dict[str, Any]:
         """Return monthly open plan usage information.

@@ -39,7 +39,7 @@ class ClientParameters:
         """ClientParameters constructor.
 
         Args:
-            channel: Channel type. ``ibm_cloud``, ``ibm_quantum``, or ``ibm_quantum_platform``.
+            channel: Channel type. ``ibm_cloud``, or ``ibm_quantum_platform``.
             token: IBM Quantum API token.
             url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
             instance: Service instance to use.
