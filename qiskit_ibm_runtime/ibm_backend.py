@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Union, Optional, Any, List
+from typing import Optional, Any, List
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version
@@ -35,7 +35,6 @@ from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-imp
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
-    IBMBackendValueError,
     IBMBackendError,
 )
 from .utils.backend_converter import convert_to_target
@@ -92,7 +91,6 @@ class IBMBackend(Backend):
         * conditional: backend supports conditional operations.
         * open_pulse: backend supports open pulse.
         * memory: backend supports memory.
-        * max_shots: (DEPRECATED) maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
         * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
@@ -123,7 +121,6 @@ class IBMBackend(Backend):
           [d->u->m] x n_registers. Latency (in units of dt) to do a
           conditional operation on channel n from register slot m
         * meas_map (list): Grouping of measurement which are multiplexed
-        * max_circuits (int): (DEPRECATED) The maximum number of experiments per job
         * sample_name (str): Sample name for the backend
         * n_registers (int): Number of register slots available for feedback
           (if conditional is True)
@@ -179,7 +176,6 @@ class IBMBackend(Backend):
         self._configuration = configuration
         self._properties: Any = None
         self._target: Any = None
-        self._max_circuits = configuration.max_experiments
         if (
             not self._configuration.simulator
             and hasattr(self.options, "noise_model")
@@ -187,8 +183,6 @@ class IBMBackend(Backend):
         ):
             self.options.set_validator("noise_model", type(None))
             self.options.set_validator("seed_simulator", type(None))
-        if hasattr(configuration, "max_shots"):
-            self.options.set_validator("shots", (1, configuration.max_shots))
         if hasattr(configuration, "rep_delay_range"):
             self.options.set_validator(
                 "rep_delay",
@@ -207,14 +201,7 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
-        if name in ["max_experiments", "max_shots"]:
-            issue_deprecation_msg(
-                f"{name} is deprecated",
-                "0.37.0",
-                "Please see our documentation on job limits "
-                "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
-            )
-        # Lazy load properties and construct the target object.
+        # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
         self._convert_to_target()
         # Check if the attribute now is available on IBMBackend class due to above steps
@@ -278,20 +265,13 @@ class IBMBackend(Backend):
         return self._configuration.dtm
 
     @property
-    def max_circuits(self) -> int:
-        """(DEPRECATED) The maximum number of circuits
-
-        The maximum number of circuits that can be
-        run in a single job. If there is no limit this will return None.
+    def max_circuits(self) -> None:
+        """This property used to return the `max_experiments` value from the
+        backend configuration but this value is no longer an accurate representation
+        of backend circuit limits. New fields will be added to indicate new limits.
         """
 
-        issue_deprecation_msg(
-            "max_circuits is deprecated",
-            "0.37.0",
-            "Please see our documentation on job limits "
-            "https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits.",
-        )
-        return self._max_circuits
+        return None
 
     @property
     def meas_map(self) -> List[List[int]]:
@@ -453,26 +433,6 @@ class IBMBackend(Backend):
         # For backward compatibility only, can be removed later.
         return self
 
-    def _check_circuits_attributes(self, circuits: List[Union[QuantumCircuit, str]]) -> None:
-        """Check that circuits can be executed on backend.
-        Raises:
-            IBMBackendValueError:
-                - If one of the circuits contains more qubits than on the backend."""
-
-        if len(circuits) > self._max_circuits:
-            raise IBMBackendValueError(
-                f"Number of circuits, {len(circuits)} exceeds the "
-                f"maximum for this backend, {self._max_circuits})"
-            )
-        for circ in circuits:
-            if isinstance(circ, QuantumCircuit):
-                if circ.num_qubits > self._configuration.num_qubits:
-                    raise IBMBackendValueError(
-                        f"Circuit contains {circ.num_qubits} qubits, "
-                        f"but backend has only {self.num_qubits}."
-                    )
-                self.check_faulty(circ)
-
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
 
@@ -520,7 +480,6 @@ class IBMBackend(Backend):
         cpy.backend_version = self.backend_version
         cpy._coupling_map = self._coupling_map
         cpy._target = deepcopy(self._target, _memo)
-        cpy._max_circuits = self._max_circuits
         cpy._options = deepcopy(self._options, _memo)
         return cpy
 
@@ -599,9 +558,7 @@ class IBMRetiredBackend(IBMBackend):
             conditional=False,
             open_pulse=False,
             memory=False,
-            max_shots=1,
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
-            max_experiments=300,
         )
         return cls(configuration, api)

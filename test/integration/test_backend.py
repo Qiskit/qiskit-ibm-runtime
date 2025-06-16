@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test, production_only, quantum_only
+from ..decorators import run_integration_test, production_only
 from ..utils import bell
 
 
@@ -43,26 +43,6 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             len(set(backend_names)),
             f"backend_names={backend_names}",
         )
-
-    @run_integration_test
-    @quantum_only
-    def test_backend_wrong_instance(self, service):
-        """Test getting a backend with wrong instance."""
-        hgps = list(service._hgps.keys())
-        if len(hgps) < 2:
-            raise SkipTest("Skipping test, not enough instances")
-
-        hgp_1 = hgps[0]
-        hgp_2 = hgps[1]
-        hgp_1_backends = [backend.name for backend in service.backends(instance=hgp_1)]
-        hgp_2_backends = [backend.name for backend in service.backends(instance=hgp_2)]
-        unique_backends_list = list(
-            set(hgp_2_backends) - set(hgp_1_backends)
-        )  # get differences between the two lists
-        if unique_backends_list:
-            unique_backend = unique_backends_list[0]
-            with self.assertRaises(QiskitBackendNotFoundError):
-                service.backend(unique_backend, instance=hgp_1)
 
     @run_integration_test
     def test_get_backend(self, service):
@@ -141,12 +121,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertNotEqual(old_target, new_target)
             self.assertIsNot(old_configuration, backend.configuration())
             self.assertIsNot(old_properties, backend.properties())
-
-    def test_backend_max_circuits(self):
-        """Check if the max_circuits property is set."""
-        backend = self.backend
-        with self.subTest(backend=backend.name):
-            self.assertIsNotNone(backend.max_circuits)
 
     @production_only
     def test_backend_qubit_properties(self):
@@ -266,25 +240,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             sampler = Sampler(mode=backend)
             sampler.run([isa_circuit])
 
-    def test_backend_wrong_instance(self):
-        """Test that an error is raised when retrieving a backend not in the instance."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel does not have instance.")
-
-        backends = self.service.backends()
-        hgps = self.service._hgps.values()
-        if len(hgps) >= 2:
-            for hgp in hgps:
-                backend_names = list(hgp._backends)
-                for backend in backends:
-                    if backend.name not in backend_names:
-                        with self.assertRaises(QiskitBackendNotFoundError):
-                            self.service.backend(
-                                backend.name,
-                                instance=f"{hgp._hub}/{hgp._group}/{hgp._project}",
-                            )
-                        return
-
     def test_retrieve_backend_not_exist(self):
         """Test that an error is raised when retrieving a backend that does not exist."""
         with self.assertRaises(QiskitBackendNotFoundError):
@@ -307,3 +262,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             f"circuit has {num_qubits} qubits but the target system requires {num}",
             str(err.exception),
         )
+
+    def test_use_fractional_gates_flag(self):
+        """Test use_fractional_gates returns correct backend config."""
+        try:
+            real_device_name = "alt_fez"
+            real_device_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
+            real_device_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+        except QiskitBackendNotFoundError:
+            self.skipTest("Real backend not available.")
+        self.assertIn("rzz", real_device_fg.basis_gates)
+        self.assertNotIn("rzz", real_device_no_fg.basis_gates)

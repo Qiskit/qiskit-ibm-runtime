@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.exceptions import (
 )
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only, quantum_only
+from ..decorators import run_integration_test, production_only
 from ..serialization import (
     SerializableClass,
 )
@@ -51,18 +51,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             self.assertTrue(job.result())
         except ImportError:
             self.assertRaises(ImportError)
-
-    @run_integration_test
-    @quantum_only
-    def test_run_program_log_level(self, service):
-        """Test running with a custom log level."""
-        levels = ["INFO", "ERROR"]
-        for level in levels:
-            with self.subTest(level=level):
-                job = self._run_program(service, log_level=level)
-                job.wait_for_final_state()
-                if job.logs():
-                    self.assertIn("Completed", job.logs())
 
     @run_integration_test
     @production_only
@@ -102,6 +90,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
         sub_tests = ["DONE"]
         for status in sub_tests:
             with self.subTest(status=status):
@@ -115,6 +104,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @production_only
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
         real_device_name = get_real_device(service)
         real_device = service.backend(real_device_name)
         pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
@@ -156,8 +146,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @production_only
     def test_run_program_missing_backend_ibm_cloud(self, service):
         """Test running an ibm_cloud program with no backend."""
-        if self.dependencies.channel == "ibm_quantum":
-            self.skipTest("Not supported on ibm_quantum")
         with self.subTest():
             job = self._run_program(service=service, backend="")
             _ = job.status()

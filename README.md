@@ -33,6 +33,8 @@ pip install qiskit-ibm-runtime
 | :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
 |:---------------------------|
 
+### Qiskit Runtime service on IBM Quantum Platform Classic (deprecated)
+
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
 1. Create an IBM Quantum account or log in to your existing account by visiting the [IBM Quantum login page].
@@ -40,11 +42,19 @@ You will need your IBM Quantum API token to authenticate with the runtime servic
 2. Copy (and optionally regenerate) your API token from your
    [IBM Quantum account page].
 
-### Qiskit Runtime service on IBM Cloud
+
+### Qiskit Runtime service on the new IBM Quantum Platform (IBM Cloud)
+
+You will need your IBM Quantum Platform API token to authenticate with the runtime service:
+
+1. Create an IBM Quantum Platform account or log in to your existing account by visiting the [IBM Quantum Platform login page].
+
+2. Copy (and optionally regenerate) your API token from your
+   [IBM Cloud account page].
 
 The runtime service is now part of the IBM Quantum Services on IBM Cloud. To use this service, you'll
 need to create an IBM Cloud account and a quantum service instance.
-[This guide](https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-get-started)
+[This guide](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
 contains step-by-step instructions, including how to find your
 IBM Cloud API key and Cloud Resource Name (CRN), which you will need for authentication.
 
@@ -81,7 +91,7 @@ Alternatively, the service can discover credentials from environment variables:
 ```bash
 export QISKIT_IBM_TOKEN="MY_IBM_CLOUD_API_KEY"
 export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
-export QISKIT_IBM_CHANNEL="ibm_cloud"
+export QISKIT_IBM_CHANNEL="ibm_quantum_platform"
 ```
 
 Then instantiate the service without any arguments:
@@ -99,7 +109,7 @@ service with your credentials.
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 # For an IBM Cloud account.
-ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+ibm_cloud_service = QiskitRuntimeService(channel="ibm_quantum_platform", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 ```
 
 ## Primitives
@@ -277,35 +287,41 @@ This code returns `Job result is [4.] at theta = 1.575674623307102` using only n
 
 ## Instances
 
-Access to IBM Quantum Platform channel is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
+For the now deprecated `ibm_quantum` channel, access is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
 
-> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform classic instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
+> **_NOTE:_** the new IBM Quantum Platform (IBM Cloud) instances are different from IBM Quantum classic instances. IBM Cloud does not use the hub/group/project structure for user management. 
 
-To view a list of your instances, visit your [account settings page](https://www.quantum.ibm.com/account) or use the `instances()` method.
+On the new IBM Quantum platform, instances are virtual servers that manage your workload execution, including executing quantum programs and classical compute tasks (such as processing error mitigation). Instances are specified by their Cloud Resource Name (CRN).
+
+You can see the instances you have access to on the [dashboard](https://quantum.cloud.ibm.com/) or by clicking the [Instances tab](https://quantum.cloud.ibm.com/instances) from the dashboard. Each instance is listed with its CRN identifier. You can include this identifier or the name of the instance when initializing the `QiskitRuntimeService` or saving your account. When an instance is passed in, only backends and jobs from that instance are available. Alternatively, if an instance is not included, then all backends and jobs across all instances in your account are available. In this case, when a backend is specified, an instance with the backend available will be used.
+
+To view a list of your instances, you can also use the `instances()` method.
 
 You can specify an instance when initializing the service or provider, or when picking a backend:
 
 ```python
 # Optional: List all the instances you can access.
-service = QiskitRuntimeService(channel='ibm_cloud')
+service = QiskitRuntimeService(channel='ibm_quantum_platform')
 print(service.instances())
 
 # Optional: Specify the instance at service level. This becomes the default unless overwritten.
-service = QiskitRuntimeService(channel='ibm_cloud', instance="IBM_CLOUD_INSTANCE")
+service = QiskitRuntimeService(channel='ibm_quantum_platform', instance="IBM_CLOUD_INSTANCE_1")
 backend1 = service.backend("ibmq_manila")
 
 # Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
-backend2 = service.backend("ibmq_manila", instance="IBM_CLOUD_INSTANCE")
+backend2 = service.backend("ibmq_manila", instance="IBM_CLOUD_INSTANCE_2")
 
-sampler1 = Sampler(mode=backend1)    # this will use hub1/group1/project1
-sampler2 = Sampler(mode=backend2)    # this will use hub2/group2/project2
+sampler1 = Sampler(mode=backend1)    # IBM_CLOUD_INSTANCE_1
+sampler2 = Sampler(mode=backend2)    # IBM_CLOUD_INSTANCE_2
 ```
 
 If you do not specify an instance, then the code will select one in the following order:
 
 1. If your account only has access to one instance, it is selected by default.
 2. If your account has access to multiple instances, but only one can access the requested backend, the instance with access is selected.
-3. In all other cases, the code selects the first instance other than ibm-q/open/main that has access to the backend.
+3. In all other cases, the code selects the first instance that has access to the backend.
+
+Priority of instance order can also be set with the ``region`` and ``plans_preference`` parameters. The official [release notes](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/release-notes#0400-2025-05-28) have examples on how these values can be used. 
 
 ## Access your IBM Quantum backends
 
@@ -353,9 +369,11 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 [Apache License 2.0].
 
 
-[IBM Quantum]: https://www.ibm.com/quantum/
 [IBM Quantum login page]:  https://quantum.ibm.com/login
 [IBM Quantum account page]: https://quantum.ibm.com/account
+[IBM Quantum classic]: https://www.ibm.com/quantum/
+[New IBM Quantum Platform login page]:  https://quantum.cloud.ibm.com/
+[IBM Cloud account page]: https://cloud.ibm.com/iam/apikeys
 [contribution guidelines]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CONTRIBUTING.md
 [code of conduct]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CODE_OF_CONDUCT.md
 [GitHub issues]: https://github.com/Qiskit/qiskit-ibm-runtime/issues

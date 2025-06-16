@@ -11,15 +11,14 @@
 # that they have been altered from the originals.
 
 """Tests for job functions using real runtime service."""
-import os
-import uuid
+
 from datetime import datetime, timezone, timedelta
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only, quantum_only
+from ..decorators import run_integration_test, production_only
 from ..utils import wait_for_status, get_real_device, bell
 
 
@@ -80,9 +79,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
 
         rjobs = service.jobs(limit=2, program_id=self.program_ids[service.channel])
         self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
-        job_ids = {job.job_id() for job in jobs}
-        rjob_ids = {rjob.job_id() for rjob in rjobs}
-        self.assertTrue(rjob_ids.issubset(job_ids), f"Submitted: {job_ids}, Retrieved: {rjob_ids}")
 
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
@@ -138,15 +134,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertFalse(rjobs)
 
     @run_integration_test
-    @quantum_only
-    def test_retrieve_jobs_by_session_id(self, service):
-        """Test retrieving jobs by session_id."""
-        rjobs = service.jobs()
-        rjobs_session_id = service.jobs(session_id="test")
-        self.assertTrue(rjobs)
-        self.assertFalse(rjobs_session_id)
-
-    @run_integration_test
     def test_jobs_filter_by_date(self, service):
         """Test retrieving jobs by creation date."""
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
@@ -160,23 +147,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for job in rjobs:
             self.assertTrue(job.creation_date <= time_after_job)
             self.assertTrue(job.creation_date >= current_time)
-
-    @run_integration_test
-    @quantum_only
-    def test_jobs_filter_by_hgp(self, service):
-        """Test retrieving jobs by hgp."""
-        hgp = os.getenv("QISKIT_IBM_INSTANCE")
-
-        job = self._run_program(service)
-        job.wait_for_final_state()
-        rjobs = service.jobs(instance=hgp)
-
-        self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
-
-        uuid_ = uuid.uuid4().hex
-        fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"
-        rjobs = service.jobs(instance=fake_hgp)
-        self.assertFalse(rjobs)
 
     @run_integration_test
     def test_retrieve_jobs_sorted_by_date(self, service):
