@@ -44,7 +44,6 @@ from .utils.backend_decoder import (
     configuration_from_server_data,
 )
 from .utils import local_to_utc
-from .utils.deprecation import issue_deprecation_msg
 
 if Version(qiskit_version).major >= 2:
     from qiskit.result import MeasLevel, MeasReturnType
