@@ -15,7 +15,7 @@
 from unittest import skip
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.circuit.library import RealAmplitudes, IQP
+from qiskit.circuit.library import real_amplitudes, IQP
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
@@ -36,8 +36,8 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         """Verify correct results are returned"""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
-        psi1 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=2))
-        psi2 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=3))
+        psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
+        psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
 
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)

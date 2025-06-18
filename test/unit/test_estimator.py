@@ -16,7 +16,7 @@ import numpy as np
 from ddt import data, ddt
 
 from qiskit import QuantumCircuit, transpile
-from qiskit.circuit.library import RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
@@ -39,10 +39,10 @@ class TestEstimatorV2(IBMTestCase):
     """Class for testing the Estimator class."""
 
     @data(
-        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ"], [[1, 2, 3, 4]])],
-        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [[1, 2, 3, 4]])],
+        [(real_amplitudes(num_qubits=2, reps=1), ["ZZ"], [[1, 2, 3, 4]])],
+        [(real_amplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [[1, 2, 3, 4]])],
         [(QuantumCircuit(2), ["XX"])],
-        [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [[1, 2]]), (QuantumCircuit(3), ["YYY"])],
+        [(real_amplitudes(num_qubits=1, reps=1), ["I"], [[1, 2]]), (QuantumCircuit(3), ["YYY"])],
     )
     def test_run_program_inputs(self, abs_pubs):
         """Verify program inputs are correct."""
