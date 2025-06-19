@@ -50,21 +50,6 @@ class TestSerialization(IBMIntegrationTestCase):
                 self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
     @run_integration_test
-    def test_pulse_defaults(self, service):
-        """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
-        backends = service.backends(operational=True, open_pulse=True, instance=instance)
-        if not backends:
-            self.skipTest("Need pulse backends.")
-
-        # Known keys that look like a serialized complex number.
-        good_keys = ("cmd_def.qubits", "cmd_def.sequence.ch")
-
-        for backend in backends:
-            with self.subTest(backend=backend):
-                self._verify_data(backend.defaults().to_dict(), good_keys)
-
-    @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
         instance = self.dependencies.instance if service.channel == "ibm_quantum" else None

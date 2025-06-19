@@ -17,7 +17,7 @@ from unittest import SkipTest
 from qiskit import QuantumCircuit
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.circuit.library import real_amplitudes as RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import SamplerV2, EstimatorV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
@@ -40,7 +40,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
         bell.measure_all()
         self._isa_bell = pm.run(bell)
         # estimator circuit
-        self._psi1 = pm.run(RealAmplitudes(num_qubits=2, reps=2))
+        self._psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
         # noise learner circuit
         c1 = QuantumCircuit(2)
         c1.ecr(0, 1)

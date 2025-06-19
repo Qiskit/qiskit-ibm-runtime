@@ -20,7 +20,7 @@ import numpy as np
 
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Session, Batch
@@ -258,7 +258,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single cirucit."""
 
-        circ = RealAmplitudes(num_qubits=2, reps=1)
+        circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
 
@@ -290,7 +290,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_nd_parameters(self, primitive):
         """Test with parameters of different dimensions."""
-        circ = RealAmplitudes(num_qubits=2, reps=1)
+        circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
         inst = primitive(mode=backend)
@@ -312,8 +312,8 @@ class TestPrimitivesV2(IBMTestCase):
         backend = get_mocked_backend()
         circuits = [
             transpile(QuantumCircuit(2), backend=backend),
-            transpile(RealAmplitudes(num_qubits=2, reps=1), backend=backend),
-            transpile(RealAmplitudes(num_qubits=3, reps=1), backend=backend),
+            transpile(real_amplitudes(num_qubits=2, reps=1), backend=backend),
+            transpile(real_amplitudes(num_qubits=3, reps=1), backend=backend),
         ]
 
         param_vals = [

@@ -191,10 +191,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
-    def _skip_on_ibm_quantum(self):
-        if self.dependencies.channel == "ibm_quantum":
-            self.skipTest("Not supported on ibm_quantum")
-
     def test_local_channel(self):
         """Test local channel mode"""
         local_service = QiskitRuntimeService(
@@ -211,7 +207,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-        self._skip_on_ibm_quantum()
 
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
@@ -226,7 +221,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
-        self._skip_on_ibm_quantum()
 
         service_instance_name = "-non-existing-service-name-"
         with (
@@ -239,16 +233,3 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
                 token=self.dependencies.token,
                 instance=service_instance_name,
             )
-
-    def test_logging_instance_at_init(self):
-        """Test instance is logged at initialization if instance not passed in."""
-        if self.dependencies.channel == "ibm_cloud":
-            self.skipTest("Not supported on ibm_cloud")
-
-        with self.assertLogs("qiskit_ibm_runtime", "INFO") as logs:
-            QiskitRuntimeService(
-                channel="ibm_quantum",
-                url=self.dependencies.url,
-                token=self.dependencies.token,
-            )
-        self.assertIn("instance", logs.output[0])
