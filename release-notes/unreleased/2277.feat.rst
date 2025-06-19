@@ -4,4 +4,4 @@ A new parameter ``tags``, has been added to the
 returned.
 
 Additionally, if using the filters  ``tags``, ``region``, or ``plans_preference`` returns no valid instances, 
-an error will now be raised instead of just return an empty list of backends. 
+an error will now be raised at initialization.
