@@ -49,15 +49,3 @@ class BaseBackendClient(ABC):
             Backend properties.
         """
         pass
-
-    @abstractmethod
-    def backend_pulse_defaults(self, backend_name: str) -> Dict:
-        """Return the pulse defaults of the backend.
-
-        Args:
-            backend_name: The name of the backend.
-
-        Returns:
-            Backend pulse defaults.
-        """
-        pass
