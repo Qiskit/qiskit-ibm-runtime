@@ -54,7 +54,6 @@ class AccountManager:
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
-        resource_group: Optional[str] = None,
         tags: Optional[str] = None,
     ) -> None:
         """Save account on disk."""
@@ -73,7 +72,6 @@ class AccountManager:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            resource_group=resource_group,
             tags=tags,
         )
         return save_config(

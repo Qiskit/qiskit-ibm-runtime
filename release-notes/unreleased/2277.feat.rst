@@ -1,8 +1,7 @@
-New parameters, ``tags``, and ``resource_group``, have been added to the 
-:class:`.QiskitRuntimeService`   initializer and :meth:`.QiskitRuntimeService.save_account` method. 
-These can be used to **prioritize** certain instances on the new platform 
-(``ibm_quantum_platform``, and temporarily, ``ibm_cloud`` channels) 
-without explicitly providing the CRN. In more detail:
+A new parameter ``tags``, has been added to the 
+:class:`.QiskitRuntimeService` initializer and :meth:`.QiskitRuntimeService.save_account` method. 
+``tags`` can be used to **filter** instances so only instances with the given tags are 
+returned.
 
-    - ``tags``: Filter by a list of instance tags. 
-    - ``resource_group``: Filter by instance resource group id.
+Additionally, if using the filters  ``tags``, ``region``, or ``plans_preference`` returns no valid instances, 
+an error will now be raised instead of just return an empty list of backends. 

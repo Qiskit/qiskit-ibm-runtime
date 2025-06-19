@@ -81,7 +81,6 @@ class Account:
         self.private_endpoint: bool = False
         self.region: str = None
         self.plans_preference: List[str] = None
-        self.resource_group: str = None
         self.tags: List[str] = None
 
     def to_saved_format(self) -> dict:
@@ -106,7 +105,6 @@ class Account:
         private_endpoint = data.get("private_endpoint", False)
         region = data.get("region")
         plans_preference = data.get("plans_preference")
-        resource_group = data.get("resource_group")
         tags = data.get("tags")
         return cls.create_account(
             channel=channel,
@@ -118,7 +116,6 @@ class Account:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            resource_group=resource_group,
             tags=tags,
         )
 
@@ -134,7 +131,6 @@ class Account:
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
-        resource_group: Optional[str] = None,
         tags: Optional[List[str]] = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
@@ -157,7 +153,6 @@ class Account:
                 region=region,
                 plans_preference=plans_preference,
                 channel=channel,
-                resource_group=resource_group,
                 tags=tags,
             )
         else:
@@ -300,7 +295,6 @@ class CloudAccount(Account):
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
         channel: Optional[str] = "ibm_quantum_platform",
-        resource_group: Optional[str] = None,
         tags: Optional[str] = None,
     ):
         """Account constructor.
@@ -316,7 +310,6 @@ class CloudAccount(Account):
             plans_preference: A list of account types, ordered by preference.
             channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
                 Defaults to ``ibm_quantum_platform``.
-            resource_group: Resource group preference.
             tags: List of instance tags.
         """
         super().__init__(token, instance, proxies, verify)
@@ -328,7 +321,6 @@ class CloudAccount(Account):
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
-        self.resource_group = resource_group
         self.tags = tags
 
     def get_auth_handler(self) -> AuthBase:
@@ -385,7 +377,6 @@ class CloudAccount(Account):
                         "name",
                         "doc",
                         "tags",
-                        "resource_group_id",
                     ],
                     search_cursor=search_cursor,
                     limit=100,
@@ -410,7 +401,6 @@ class CloudAccount(Account):
                             "plan": plan_name.lower(),
                             "name": item.get("name"),
                             "tags": item.get("tags"),
-                            "resource_group": item.get("resource_group_id"),
                         }
                     )
 
