@@ -17,7 +17,6 @@ import traceback
 import warnings
 from datetime import datetime
 from collections import OrderedDict
-from copy import deepcopy
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence, Tuple
 
 from qiskit.providers.backend import BackendV2 as Backend
@@ -711,16 +710,9 @@ class QiskitRuntimeService:
             )
 
         # Set fractional gate flag for use when loading properties or refreshing backend.
-        return_backends = []
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
-            try:
-                return_backends.append(deepcopy(backend))
-            except TypeError:
-                # local simulator cannot be deepcopied due to
-                # `TypeError: cannot pickle '_thread.RLock' object`
-                return_backends.append(backend)
-        return filter_backends(return_backends, filters=filters, **kwargs)
+        return filter_backends(backends, filters=filters, **kwargs)
 
     def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
         if instance:
