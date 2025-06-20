@@ -378,9 +378,7 @@ class BaseRuntimeJob(ABC):
 
     @property
     def instance(self) -> Optional[str]:
-        """For ibm_quantum channel jobs, return the instance where the job was run.
-        For ibm_cloud and ibm_quantum_platform, `None` is returned.
-        """
+        """For ibm_cloud and ibm_quantum_platform, `None` is returned."""
         return self._backend._instance
 
     @abstractmethod
