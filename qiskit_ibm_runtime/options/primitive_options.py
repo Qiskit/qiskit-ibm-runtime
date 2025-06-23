@@ -23,4 +23,5 @@ class PrimitiveOptions:
 
     @property
     def seed(self):
+        """Return the seed"""
         return self._model.seed
