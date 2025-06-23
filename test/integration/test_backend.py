@@ -287,3 +287,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.skipTest("Real backend not available.")
         self.assertIn("rzz", real_device_fg.basis_gates)
         self.assertNotIn("rzz", real_device_no_fg.basis_gates)
+
+    def test_renew_backend_properties(self):
+        """Test renewed backend property"""
+        name = self.backend.name
+        backend = self.service.backend(name)
+        basis_gates = backend.basis_gates
+        # modify a property
+        backend.basis_gates.remove(basis_gates[0])
+        # renew backend
+        backend = self.service.backend(name)
+        self.assertEqual(backend.basis_gates, basis_gates)
