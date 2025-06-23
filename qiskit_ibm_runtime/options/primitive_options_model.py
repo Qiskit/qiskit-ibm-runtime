@@ -12,11 +12,23 @@
 
 """Pydantic model of Primitive options."""
 
+import numpy as np
 
 from pydantic import BaseModel
+
+
+class Distribute(list):
+    def __init__(self, *args):
+        super().__init__(args)
+
+    def __repr__(self):
+        return f"Distribute({', '.join(map(str, self))})"
+
+
+SeedType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
 
 
 class PrimitiveOptionsModel(BaseModel):
     """Pydantic model of Primitive options."""
 
-    seed: int
+    seed: SeedType | Distribute[SeedType]
