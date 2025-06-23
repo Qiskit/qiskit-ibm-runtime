@@ -33,6 +33,7 @@ from qiskit.transpiler.target import InstructionProperties, Target
 
 from ..models import BackendConfiguration, BackendProperties
 from ..models.exceptions import BackendPropertyError
+from ..circuit import MidCircuitMeasure
 
 # is_fractional_gate used to be defined in this module and might be referenced
 # from here externally
@@ -95,11 +96,22 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
-    gate_configs = {gate.name: gate for gate in configuration.gates}
-    all_instructions = set.union(
-        basis_gates, set(required), supported_instructions.intersection(CONTROL_FLOW_OP_NAMES)
+    print("SUPPORTED INSTRUCTIONS", supported_instructions)
+
+    supported_measurements = set(
+        [name for name in supported_instructions if name.startswith("measure_")]
     )
 
+    print("SUPPORTED MEASUREMENTS", supported_measurements)
+    gate_configs = {gate.name: gate for gate in configuration.gates}
+    all_instructions = set.union(
+        basis_gates,
+        set(required),
+        supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
+        supported_measurements,
+    )
+
+    print("ALL INSTRUCTIONS", all_instructions)
     inst_name_map = {}
 
     faulty_ops = set()
@@ -138,11 +150,16 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             this_config = gate_configs[name]
             params = list(map(Parameter, getattr(this_config, "parameters", [])))
             coupling_map = getattr(this_config, "coupling_map", [])
-            inst_name_map[name] = Gate(
-                name=name,
-                num_qubits=len(coupling_map[0]) if coupling_map else 0,
-                params=params,
-            )
+            if name.startswith("measure_"):
+                inst_name_map[name] = MidCircuitMeasure(
+                    label=name,
+                )
+            else:
+                inst_name_map[name] = Gate(
+                    name=name,
+                    num_qubits=len(coupling_map[0]) if coupling_map else 0,
+                    params=params,
+                )
         else:
             warnings.warn(
                 f"No gate definition for {name} can be found and is being excluded "
@@ -242,17 +259,17 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 # This gate doesn't report any property
                 continue
 
-        # Measure instruction property is stored in qubit property
-        prop_name_map["measure"] = {}
+        # # Measure instruction property is stored in qubit property
+        # prop_name_map["measure"] = {}
 
-        for qubit_idx in range(configuration.num_qubits):
-            if filter_faulty and (qubit_idx in faulty_qubits):
-                continue
-            qubit_prop = properties.qubit_property(qubit_idx)
-            prop_name_map["measure"][(qubit_idx,)] = InstructionProperties(
-                error=_get_value(qubit_prop, "readout_error"),  # type: ignore[arg-type]
-                duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
-            )
+        # for qubit_idx in range(configuration.num_qubits):
+        #     if filter_faulty and (qubit_idx in faulty_qubits):
+        #         continue
+        #     qubit_prop = properties.qubit_property(qubit_idx)
+        #     prop_name_map["measure"][(qubit_idx,)] = InstructionProperties(
+        #         error=_get_value(qubit_prop, "readout_error"),  # type: ignore[arg-type]
+        #         duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
+        # )
 
     for op in required:
         # Map required ops to each operational qubit
