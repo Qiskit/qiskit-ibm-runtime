@@ -14,26 +14,20 @@
 
 from datetime import datetime, timezone, timedelta
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
-from ..utils import wait_for_status, get_real_device, bell
+from ..decorators import run_integration_test
+from ..utils import wait_for_status
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     """Integration tests for job retrieval functions."""
 
     @run_integration_test
-    @production_only
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
-        real_device_name = get_real_device(service)
-        real_device = service.backend(real_device_name)
-        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
-        _ = self._run_program(service, circuits=pm.run(bell()), backend=real_device_name)
-        job = self._run_program(service, circuits=pm.run(bell()), backend=real_device_name)
+        _ = self._run_program(service)
+        job = self._run_program(service)
         wait_for_status(job, JobStatus.QUEUED)
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
