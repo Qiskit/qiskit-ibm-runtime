@@ -97,6 +97,7 @@ dependencies = [
 ibm_backend = "qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin"
 ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin"
 ibm_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMFractionalTranslationPlugin"
+fake_backend = "qiskit_ibm_runtime.transpiler.plugin:FakeTranslationPlugin"
 
 [project.urls]
 documentation = "https://quantum.cloud.ibm.com/docs/"

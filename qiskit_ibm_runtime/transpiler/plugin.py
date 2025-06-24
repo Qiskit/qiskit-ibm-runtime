@@ -26,13 +26,45 @@ from qiskit.version import __version__ as _terra_version_string
 from qiskit_ibm_runtime.transpiler.passes.basis import (
     ConvertIdToDelay,
     FoldRzzAngle,
+    ConvertToMidCircuitMeasure
 )
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
 
+class FakeTranslationPlugin(PassManagerStagePlugin):
+    """A translation stage plugin for targeting Qiskit circuits
+    to IBM Quantum systems."""
 
+    def pass_manager(
+        self,
+        pass_manager_config: PassManagerConfig,
+        optimization_level: Optional[int] = None,
+    ) -> PassManager:
+        """Build IBMTranslationPlugin PassManager."""
+
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
+        translator_pm = common.generate_translation_passmanager(
+            target=pass_manager_config.target,
+            basis_gates=pass_manager_config.basis_gates,
+            approximation_degree=pass_manager_config.approximation_degree,
+            coupling_map=pass_manager_config.coupling_map,
+            unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
+            unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
+            hls_config=pass_manager_config.hls_config,
+            qubits_initially_zero=pass_manager_config.qubits_initially_zero,
+            **legacy_options,
+        )
+
+        plugin_passes = []
+        plugin_passes.append(ConvertToMidCircuitMeasure(pass_manager_config.target))
+        return translator_pm + PassManager(plugin_passes)
+    
 class IBMTranslationPlugin(PassManagerStagePlugin):
     """A translation stage plugin for targeting Qiskit circuits
     to IBM Quantum systems."""
@@ -66,6 +98,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
         if instruction_durations:
             plugin_passes.append(ConvertIdToDelay(instruction_durations))
 
+        plugin_passes.append(ConvertToMidCircuitMeasure(pass_manager_config.target))
         return PassManager(plugin_passes) + translator_pm
 
 
@@ -105,6 +138,9 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
         if instruction_durations and not id_supported:
             plugin_passes.append(ConvertIdToDelay(instruction_durations))
+
+        print("ADDING CONVERT TO MIDCIRC")
+        plugin_passes.append(ConvertToMidCircuitMeasure(pass_manager_config.target))
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
@@ -153,4 +189,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
             post_passes.append(FoldRzzAngle())
+        
+        post_passes.append(ConvertToMidCircuitMeasure(pass_manager_config.target))
+
         return PassManager(pre_passes) + translator_pm + PassManager(post_passes)

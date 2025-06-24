@@ -262,10 +262,12 @@ class FakeBackendV2(BackendV2):
             if self._defs_dict is None:
                 self._set_defs_dict_from_json()
             conf = BackendConfiguration.from_dict(self._conf_dict)
+            # print("CONFIG", conf.supported_instructions)
             props = None
             if self._props_dict is not None:
                 props = BackendProperties.from_dict(self._props_dict)  # type: ignore
 
+            # print("CONVERT")
             self._target = convert_to_target(
                 configuration=conf,
                 properties=props,
@@ -513,3 +515,7 @@ class FakeBackendV2(BackendV2):
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))
+
+    def get_translation_stage_plugin(self) -> str:
+        """Return the default translation stage plugin name for IBM backends."""
+        return "fake_backend"

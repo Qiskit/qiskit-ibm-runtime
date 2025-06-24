@@ -96,13 +96,13 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
-    print("SUPPORTED INSTRUCTIONS", supported_instructions)
+    # print("SUPPORTED INSTRUCTIONS", supported_instructions)
 
     supported_measurements = set(
         [name for name in supported_instructions if name.startswith("measure_")]
     )
 
-    print("SUPPORTED MEASUREMENTS", supported_measurements)
+    # print("SUPPORTED MEASUREMENTS", supported_measurements)
     gate_configs = {gate.name: gate for gate in configuration.gates}
     all_instructions = set.union(
         basis_gates,
@@ -111,7 +111,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
         supported_measurements,
     )
 
-    print("ALL INSTRUCTIONS", all_instructions)
+    # print("ALL INSTRUCTIONS", all_instructions)
     inst_name_map = {}
 
     faulty_ops = set()
