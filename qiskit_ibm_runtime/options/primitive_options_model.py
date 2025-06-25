@@ -12,11 +12,11 @@
 
 """Pydantic model of Primitive options."""
 
+from typing import Union
+
 import numpy as np
 
 from pydantic import BaseModel, ConfigDict
-
-from typing import Union
 
 
 class Distribute(list):
@@ -30,7 +30,7 @@ class Distribute(list):
 
 
 NumArrayType = Union[int, np.ndarray[tuple[int, ...], np.dtype[np.uint64]]]
-DistributableNumType = NumArrayType | Distribute[NumArrayType]
+DistributableNumType = Union[NumArrayType, Distribute[NumArrayType]]
 
 
 def get_value_for_pub_and_param(
