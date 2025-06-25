@@ -12,16 +12,16 @@
 
 """Primitive options."""
 
-from .primitive_options_model import PrimitiveOptionsModel, SeedType, Distribute
+from .primitive_options_model import PrimitiveOptionsModel, SeedType, DistributableNumType
 
 
 class PrimitiveOptions:
     """Primitive options."""
 
-    def __init__(self, seed: SeedType | Distribute[SeedType]):
+    def __init__(self, seed: DistributableNumType):
         self._model = PrimitiveOptionsModel(seed=seed)
 
     @property
-    def seed(self) -> SeedType | Distribute[SeedType]:
+    def seed(self) -> DistributableNumType]:
         """Return the seed"""
         return self._model.seed
