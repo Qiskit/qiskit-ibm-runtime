@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from .primitive_options_model import PrimitiveOptionsModel, SeedType, DistributableNumType
+from .primitive_options_model import PrimitiveOptionsModel, DistributableNumType
 
 
 class PrimitiveOptions:

@@ -12,12 +12,16 @@
 
 """Pydantic model of Primitive options."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from pydantic import BaseModel, ConfigDict
 
 
 class Distribute(list):
+    """Define a distribution of options values across PUBs."""
+
     def __init__(self, *args):
         super().__init__(args)
 
@@ -32,6 +36,7 @@ DistributableNumType = NumArrayType | Distribute[NumArrayType]
 def get_value_for_pub_and_param(
     pub_index: int, param_index: NumArrayType, values_structure: DistributableNumType
 ) -> int:
+    """Get the option value for the given PUB and parameter values"""
     internal_structure = values_structure
     if isinstance(internal_structure, Distribute):
         internal_structure = internal_structure[pub_index]
