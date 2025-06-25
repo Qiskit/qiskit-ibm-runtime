@@ -22,6 +22,6 @@ class PrimitiveOptions:
         self._model = PrimitiveOptionsModel(seed=seed)
 
     @property
-    def seed(self) -> DistributableNumType]:
+    def seed(self) -> DistributableNumType:
         """Return the seed"""
         return self._model.seed
