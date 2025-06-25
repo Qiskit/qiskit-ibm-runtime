@@ -136,7 +136,7 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-        self._all_instances: List[Dict[str, str]] = []
+        self._all_instances: List[Dict[str, Any]] = []
         self._saved_instances: List[str] = []
         self._account = self._discover_account(
             token=token,

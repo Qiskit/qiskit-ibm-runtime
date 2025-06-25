@@ -12,7 +12,7 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from typing import List
+from typing import List, Optional, Tuple
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -32,6 +32,13 @@ class FakeRuntimeService(QiskitRuntimeService):
     DEFAULT_HGPS = ["hub0/group0/project0", "hub1/group1/project1"]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
+
+    DEFAULT_INSTANCES = [
+        {
+            "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "tags": ["services"],
+        }
+    ]
 
     def __new__(cls, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
         return super().__new__(cls, *args, **kwargs)
@@ -80,6 +87,24 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         # return dummy crn
         return instance
+
+    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
+        if instance:
+            return [(instance, self._discover_backends_from_instance(instance))]
+        if not self._all_instances:
+            self._all_instances = self.DEFAULT_INSTANCES
+        if not self._backend_instance_groups:
+            self._backend_instance_groups = [
+                {
+                    "crn": inst["crn"],
+                    "plan": inst.get("plan"),
+                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "tags": inst.get("tags"),
+                }
+                for inst in self._all_instances
+            ]
+            self._filter_instances_by_saved_preferences()
+        return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
     def _set_api_client(self, hgps, channel="ibm_quantum_platform"):
         """Set api client to be the fake runtime client."""

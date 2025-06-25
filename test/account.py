@@ -135,12 +135,6 @@ def get_account_config_contents(
     set_default=None,
 ):
     """Generate account config file content"""
-    if instance is None:
-        instance = (
-            "some_instance"
-            if channel in ["ibm_cloud", "ibm_quantum_platform"]
-            else "hub/group/project"
-        )
     token = token or uuid.uuid4().hex
     if name is None:
         name = (

@@ -177,22 +177,6 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_filter_by_instance(self):
-        """Test retrieving jobs by instance."""
-        service = self._ibm_quantum_service
-        program_id = "sampler"
-        instance = FakeRuntimeService.DEFAULT_HGPS[1]
-
-        job = run_program(service=service, program_id=program_id, instance=instance)
-        with mock_wait_for_final_state(service, job):
-            job.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id, instance=instance)
-        self.assertTrue(rjobs)
-        self.assertEqual(program_id, rjobs[0].primitive_id)
-        self.assertEqual(1, len(rjobs))
-        rjobs = service.jobs(program_id=program_id, instance="nohub1/nogroup1/noproject1")
-        self.assertFalse(rjobs)
-
     def test_jobs_filter_by_job_tags(self):
         """Test retrieving jobs by job tags."""
         service = self._ibm_quantum_service
@@ -263,17 +247,17 @@ class TestRetrieveJobs(IBMTestCase):
         with self.assertRaises(Exception):
             _ = service.jobs(instance="foo")
 
-    def test_different_hgps(self):
-        """Test retrieving job submitted with different hgp."""
-        # Initialize with hgp0
+    def test_different_instance(self):
+        """Test retrieving job submitted with different instance."""
+        # Initialize with first instance
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="some_token",
             instance=FakeRuntimeService.DEFAULT_HGPS[0],
         )
         program_id = "sampler"
 
-        # Run with hgp1 backend.
+        # Run with different instance
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         job = run_program(service, program_id=program_id, backend_name=backend_name)
 
