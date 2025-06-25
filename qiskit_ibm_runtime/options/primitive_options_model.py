@@ -17,15 +17,27 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 
+NumArrayType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
+DistributableNumType = NumArrayType | Distribute[NumArrayType]
+
+
 class Distribute(list):
     def __init__(self, *args):
         super().__init__(args)
 
     def __repr__(self):
         return f"Distribute({', '.join(map(str, self))})"
-
-
-SeedType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
+    
+    @staticmethod
+    def get_value_for_pub_and_param(pub_index: int, param_index: NumArrayType, values_structure: DistributableNumType) -> int:
+        internal_structure = values_structure
+        if isinstance(internal_structure, Distribute):
+            internal_structure = internal_structure[pub_index]
+        if isinstance(internal_structure, np.ndarray):
+            internal_structure = internal_structure[param_index]
+        
+        # internal_structure is certainly an integer now
+        return internal_structure
 
 
 class PrimitiveOptionsModel(BaseModel):
@@ -33,4 +45,4 @@ class PrimitiveOptionsModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    seed: SeedType | Distribute[SeedType]
+    seed: DistributableNumType
