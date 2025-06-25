@@ -12,11 +12,11 @@
 
 """Pydantic model of Primitive options."""
 
-from __future__ import annotations
-
 import numpy as np
 
 from pydantic import BaseModel, ConfigDict
+
+from typing import Union
 
 
 class Distribute(list):
@@ -29,7 +29,7 @@ class Distribute(list):
         return f"Distribute({', '.join(map(str, self))})"
 
 
-NumArrayType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
+NumArrayType = Union[int, np.ndarray[tuple[int, ...], np.dtype[np.uint64]]]
 DistributableNumType = NumArrayType | Distribute[NumArrayType]
 
 
