@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict
+from typing import Optional, Literal, List, Dict, Any
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -167,7 +167,7 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(self) -> List[Dict[str, str]]:  # type: ignore
+    def list_instances(self) -> List[Dict[str, Any]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -357,7 +357,7 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Dict[str, str]]:
+    def list_instances(self) -> List[Dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
