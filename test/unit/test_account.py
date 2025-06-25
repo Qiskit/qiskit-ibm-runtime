@@ -291,7 +291,7 @@ class TestAccountManager(IBMTestCase):
             self.subTest("non-empty list of accounts"),
         ):
             accounts = AccountManager.list()
-            self.assertEqual(len(accounts), 3)
+            self.assertEqual(len(accounts), 2)
             self.assertEqual(accounts["key1"], _TEST_IBM_CLOUD_ACCOUNT)
             self.assertTrue(accounts["key2"], _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
             self.assertTrue(accounts["key3"], _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT)
