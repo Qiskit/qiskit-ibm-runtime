@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class Distribute(list):
@@ -30,5 +30,7 @@ SeedType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
 
 class PrimitiveOptionsModel(BaseModel):
     """Pydantic model of Primitive options."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     seed: SeedType | Distribute[SeedType]
