@@ -29,13 +29,15 @@ NumArrayType = int | np.ndarray[tuple[int, ...], np.dtype[np.uint64]]
 DistributableNumType = NumArrayType | Distribute[NumArrayType]
 
 
-def get_value_for_pub_and_param(pub_index: int, param_index: NumArrayType, values_structure: DistributableNumType) -> int:
+def get_value_for_pub_and_param(
+    pub_index: int, param_index: NumArrayType, values_structure: DistributableNumType
+) -> int:
     internal_structure = values_structure
     if isinstance(internal_structure, Distribute):
         internal_structure = internal_structure[pub_index]
     if isinstance(internal_structure, np.ndarray):
         internal_structure = internal_structure[param_index]
-    
+
     # internal_structure is certainly an integer now
     return internal_structure
 
