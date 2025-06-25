@@ -22,7 +22,7 @@ from qiskit.version import get_version_info as get_qiskit_version_info
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit import Parameter
-from qiskit.circuit.library import RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.providers import BackendV2, Options
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
@@ -45,9 +45,9 @@ class TestSamplerV2(IBMTestCase):
         self.circuit = QuantumCircuit(1, 1)
 
     @data(
-        [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
+        [(real_amplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
         [(QuantumCircuit(2),)],
-        [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
+        [(real_amplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
     )
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""

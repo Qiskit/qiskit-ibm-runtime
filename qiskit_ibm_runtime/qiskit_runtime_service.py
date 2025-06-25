@@ -117,7 +117,7 @@ class QiskitRuntimeService:
                 within the account.
             Optional[dict] proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             Optional[bool] verify: Whether to verify the server's TLS certificate.
@@ -657,7 +657,7 @@ class QiskitRuntimeService:
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.

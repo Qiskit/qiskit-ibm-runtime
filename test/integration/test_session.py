@@ -14,9 +14,10 @@
 
 from unittest import SkipTest, mock
 
-from qiskit.circuit.library import RealAmplitudes
+from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
+from qiskit.circuit import IfElseOp
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
@@ -37,7 +38,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend(self.dependencies.qpu)
 
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
-        psi1 = pm.run(RealAmplitudes(num_qubits=2, reps=2))
+        psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
 
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
@@ -98,3 +99,21 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         if session.details().get("backend_name") == "":
             with self.assertRaises(IBMRuntimeError):
                 Session.from_id(session_id=session._session_id, service=service)
+
+    @run_integration_test
+    def test_session_backend(self, service):
+        """Test session backend is the correct backend."""
+        backend = service.backend(self.dependencies.qpu)
+
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+        instruction_name = "test_name"
+        backend.target.add_instruction(IfElseOp, name=instruction_name)
+
+        with Session(backend=backend) as session:
+            sampler = SamplerV2(mode=session)
+            job = sampler.run([pm.run(bell())])
+            self.assertIn(instruction_name, job.backend().target.operation_names)
+
+            sampler2 = SamplerV2()
+            job2 = sampler2.run([pm.run(bell())])
+            self.assertIn(instruction_name, job2.backend().target.operation_names)

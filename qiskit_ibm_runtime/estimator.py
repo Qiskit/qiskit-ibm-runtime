@@ -69,7 +69,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     .. code-block:: python
 
-        from qiskit.circuit.library import RealAmplitudes
+        from qiskit.circuit.library import real_amplitudes
         from qiskit.quantum_info import SparsePauliOp
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
@@ -77,7 +77,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False)
 
-        psi = RealAmplitudes(num_qubits=2, reps=2)
+        psi = real_amplitudes(num_qubits=2, reps=2)
         hamiltonian = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
