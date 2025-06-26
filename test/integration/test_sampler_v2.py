@@ -31,7 +31,6 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -472,7 +471,6 @@ class TestSampler(IBMIntegrationTestCase):
         result = job.result()
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @run_integration_test
     def test_sampler_v2_dd(self):
         """Test SamplerV2 DD options."""
         sampler = Sampler(mode=self._backend)
