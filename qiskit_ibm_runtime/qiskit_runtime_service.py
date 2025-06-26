@@ -103,7 +103,7 @@ class QiskitRuntimeService:
                 primitive queries will run on a local simulator. For more details, check the
                 `Qiskit Runtime local testing mode
                 <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
-            Optional[str] token: IBM Cloud API key or IBM Quantum API token.
+            Optional[str] token: IBM Cloud API key.
             Optional[str] url: The API URL.
                 Defaults to https://quantum-computing.cloud.ibm.com (``ibm_cloud``),
                 https://quantum.cloud.ibm.com  (``ibm_quantum_platform``) or
@@ -356,8 +356,7 @@ class QiskitRuntimeService:
         If no instance is provided, return the current active api client.
 
         Args:
-            instance: The hub/group/project to use ("ibm_quantum") or CRN ("ibm_cloud",
-                "ibm_quantum_platform")
+            instance: The CRN
 
         Returns:
             An instance of ``RuntimeClient`` that matches the specified instance.
@@ -647,7 +646,7 @@ class QiskitRuntimeService:
         """Save the account to disk for future use.
 
         Args:
-            token: IBM Cloud API key or IBM Quantum API token.
+            token: IBM Cloud API key.
             url: The API URL. Defaults to https://cloud.ibm.com.
             instance: This is an optional parameter to specify the CRN  or service name.
                 If set, it will define a default instance for service instantiation,

@@ -67,9 +67,6 @@ class Runtime(RestAdapterBase):
         backend_name: Optional[str],
         params: Dict,
         image: Optional[str] = None,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
@@ -85,9 +82,6 @@ class Runtime(RestAdapterBase):
             backend_name: Name of the backend.
             params: Program parameters.
             image: Runtime image.
-            hub: Hub to be used.
-            group: Group to be used.
-            project: Project to be used.
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
@@ -119,10 +113,6 @@ class Runtime(RestAdapterBase):
         if start_session:
             payload["start_session"] = start_session
             payload["session_time"] = session_time
-        if all([hub, group, project]):
-            payload["hub"] = hub
-            payload["group"] = group
-            payload["project"] = project
         if private:
             payload["private"] = True
         data = json.dumps(payload, cls=RuntimeEncoder)

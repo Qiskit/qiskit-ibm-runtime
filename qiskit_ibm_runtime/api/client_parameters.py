@@ -18,9 +18,6 @@ from ..proxies import ProxyConfiguration
 from ..utils import default_runtime_url_resolver
 from ..api.auth import CloudAuth
 
-TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
-"""str: Template for creating an IBM Quantum URL with hub/group/project information."""
-
 
 class ClientParameters:
     """IBM Quantum account client parameters."""
@@ -40,8 +37,8 @@ class ClientParameters:
 
         Args:
             channel: Channel type. ``ibm_cloud``, or ``ibm_quantum_platform``.
-            token: IBM Quantum API token.
-            url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
+            token: IBM Quantum Platform API token.
+            url: IBM Quantum Platform URL.
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: If ``False``, ignores SSL certificates errors.

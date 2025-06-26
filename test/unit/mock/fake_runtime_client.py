@@ -88,9 +88,6 @@ class BaseFakeRuntimeJob:
         self,
         job_id,
         program_id,
-        hub,
-        group,
-        project,
         backend_name,
         final_status,
         image,
@@ -106,9 +103,6 @@ class BaseFakeRuntimeJob:
         self._reason: Optional[str] = None
         self._reason_code: Optional[int] = None
         self._program_id = program_id
-        self._hub = hub
-        self._group = group
-        self._project = project
         self._backend_name = backend_name
         self._image = image
         self._job_tags = job_tags
@@ -137,9 +131,6 @@ class BaseFakeRuntimeJob:
         """Convert to dictionary format."""
         return {
             "id": self._job_id,
-            "hub": self._hub,
-            "group": self._group,
-            "project": self._project,
             "backend": self._backend_name,
             "state": {
                 "status": self._status,
@@ -306,8 +297,6 @@ class BaseFakeRuntimeClient:
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
 
-        hub = group = project = None
-
         if backend_name is None:
             backend_name = self.list_backends()[0]
 
@@ -317,9 +306,6 @@ class BaseFakeRuntimeClient:
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
-            hub=hub,
-            group=group,
-            project=project,
             backend_name=backend_name,
             final_status=self._final_status,
             image=image,
@@ -348,9 +334,6 @@ class BaseFakeRuntimeClient:
         backend_name=None,
         pending=None,
         program_id=None,
-        hub=None,
-        group=None,
-        project=None,
         job_tags=None,
         session_id=None,
         created_after=None,
@@ -371,12 +354,6 @@ class BaseFakeRuntimeClient:
             jobs = [job for job in jobs if job._status in job_status_list]
         if program_id:
             jobs = [job for job in jobs if job._program_id == program_id]
-        if all([hub, group, project]):
-            jobs = [
-                job
-                for job in jobs
-                if job._hub == hub and job._group == group and job._project == project
-            ]
         if job_tags:
             jobs = [job for job in jobs if job._job_tags == job_tags]
         if session_id:

@@ -13,7 +13,7 @@
 """Root REST adapter."""
 
 import logging
-from typing import Dict, List, Any, Union
+from typing import Dict, Any, Union
 import json
 
 from .base import RestAdapterBase
@@ -28,7 +28,6 @@ class Api(RestAdapterBase):
     URL_MAP = {
         "login": "/users/loginWithToken",
         "user_info": "/users/me",
-        "hubs": "/Network",
         "version": "/version",
         "bookings": "/Network/bookings/v2",
     }
@@ -45,16 +44,6 @@ class Api(RestAdapterBase):
         return ProgramJob(self.session, job_id)
 
     # Client functions.
-
-    def hubs(self) -> List[Dict[str, Any]]:
-        """Return the list of hub/group/project sets available to the user.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("hubs")
-
-        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def version(self) -> Dict[str, Union[str, bool]]:
         """Return the version information.
