@@ -18,10 +18,15 @@ from .primitive_options_model import PrimitiveOptionsModel, DistributableNumType
 class PrimitiveOptions:
     """Primitive options."""
 
-    def __init__(self, seed: DistributableNumType):
-        self._model = PrimitiveOptionsModel(seed=seed)
+    def __init__(self, seed: DistributableNumType, experimental: dict = None):
+        self._model = PrimitiveOptionsModel(seed=seed, experimental=experimental)
 
     @property
     def seed(self) -> DistributableNumType:
         """Return the seed"""
         return self._model.seed
+
+    @property
+    def experimental(self) -> DistributableNumType:
+        """Return the experimental options"""
+        return self._model.experimental
