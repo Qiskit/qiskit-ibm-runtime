@@ -36,7 +36,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "cloud_instance": "/instance",
-        "usage": "/usage",
+        "usage": "/instances/usage",
     }
 
     def program_job(self, job_id: str) -> "ProgramJob":
