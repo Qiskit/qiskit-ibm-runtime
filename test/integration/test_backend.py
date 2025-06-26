@@ -292,7 +292,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Test renewed backend property"""
         name = self.backend.name
         backend = self.service.backend(name)
-        basis_gates = backend.basis_gates
+        basis_gates = copy.copy(backend.basis_gates)
         # modify a property
         backend.basis_gates.remove(basis_gates[0])
         # renew backend
