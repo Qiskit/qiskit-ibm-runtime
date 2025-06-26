@@ -39,7 +39,7 @@ class TestAccountClient(IBMTestCase):
         """Helper for instantiating an RuntimeClient."""
         # pylint: disable=no-value-for-parameter
         params = ClientParameters(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             url=SimpleServer.URL,
             token="foo",
             instance="h/g/p",

@@ -35,21 +35,19 @@ def production_only(func):
     return _wrapper
 
 
-def run_quantum_and_cloud_fake(func):
-    """Decorator that runs a test using both quantum and cloud fake services."""
+def run_cloud_fake(func):
+    """Decorator that runs a test using fake cloud services."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         cloud_service = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
-        for service in [ibm_quantum_service, cloud_service]:
-            with self.subTest(service=service.channel):
-                kwargs["service"] = service
-                func(self, *args, **kwargs)
+        with self.subTest(service=cloud_service.channel):
+            kwargs["service"] = cloud_service
+            func(self, *args, **kwargs)
 
     return _wrapper
 
@@ -61,7 +59,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("QISKIT_IBM_QPU"),
     )
-    channel: str = "ibm_cloud" if url.find("cloud") >= 0 else "ibm_quantum"
+    channel: str = "ibm_quantum_platform"
     return channel, token, url, instance, qpu
 
 
@@ -99,7 +97,9 @@ def integration_test_setup(
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
             _supported_channel = (
-                ["ibm_cloud", "ibm_quantum"] if supported_channel is None else supported_channel
+                ["ibm_cloud", "ibm_quantum_platform"]
+                if supported_channel is None
+                else supported_channel
             )
 
             channel, token, url, instance, qpu = _get_integration_test_config()

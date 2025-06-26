@@ -18,7 +18,7 @@ from requests_ntlm import HttpNtlmAuth
 
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
+from qiskit_ibm_runtime.api.auth import CloudAuth
 
 from ..ibm_test_case import IBMTestCase
 
@@ -148,14 +148,6 @@ class TestClientParameters(IBMTestCase):
         with self.assertRaises(AttributeError):
             _ = malformed_ntlm_credentials.connection_parameters()
 
-    def test_auth_handler_quantum(self):
-        """Test getting quantum auth handler."""
-        token = uuid.uuid4().hex
-        params = self._get_client_params(channel="ibm_quantum", token=token)
-        handler = params.get_auth_handler()
-        self.assertIsInstance(handler, QuantumAuth)
-        self.assertIn(token, handler.get_headers().values())
-
     def test_auth_handler_cloud(self):
         """Test getting cloud auth handler."""
         token = uuid.uuid4().hex
@@ -168,7 +160,7 @@ class TestClientParameters(IBMTestCase):
 
     def _get_client_params(
         self,
-        channel="ibm_quantum",
+        channel="ibm_quantum_platform",
         token="dummy_token",
         url="https://dummy_url",
         instance=None,
