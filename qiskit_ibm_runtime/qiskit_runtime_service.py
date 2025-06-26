@@ -851,6 +851,7 @@ class QiskitRuntimeService:
             else:
                 # cloud backend doesn't set hgp instance
                 return ibm_backend.IBMBackend(
+                    instance=instance,
                     configuration=config,
                     service=self,
                     api_client=self._active_api_client,
@@ -1235,8 +1236,9 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
+                hub/group/project format. Since this parameter is not supported on ``ibm_cloud``
+                and ``ibm_quantum`` channels, it will be removed in a future release.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
@@ -1259,7 +1261,8 @@ class QiskitRuntimeService:
         if instance:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
+                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
+                    "This parameter will be removed in a future release."
                 )
             hub, group, project = from_instance_format(instance)
         if job_tags:
@@ -1316,29 +1319,19 @@ class QiskitRuntimeService:
             job_id: ID of the job to delete.
 
         Raises:
-            RuntimeJobNotFound: If the job doesn't exist.
-            IBMRuntimeError: If the request failed.
+            IBMInputValueError: Method is not supported.
         """
-        try:
-            self._active_api_client.job_delete(job_id)
-        except RequestsApiError as ex:
-            if ex.status_code == 404:
-                raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
+        raise IBMInputValueError(
+            "This method is not supported on the new IBM Quantum Platform. "
+            "It will be deprecated and removed in a future release."
+        )
 
     def usage(self) -> Dict[str, Any]:
-        """Return monthly open plan usage information.
+        """Return usage information for the current active instance.
 
         Returns:
             Dict with usage details.
-
-        Raises:
-            IBMInputValueError: If method is called when using the ibm_cloud channel
         """
-        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            raise IBMInputValueError(
-                "Usage is only available for the ``ibm_quantum`` channel open plan."
-            )
         return self._active_api_client.usage()
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
