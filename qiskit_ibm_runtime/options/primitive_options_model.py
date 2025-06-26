@@ -34,7 +34,7 @@ DistributableNumType = Union[NumArrayType, Distribute[NumArrayType]]
 
 
 def get_value_for_pub_and_param(
-    pub_index: int, param_index: NumArrayType, values_structure: DistributableNumType
+    pub_index: int, param_index: Union[int, tuple], values_structure: DistributableNumType
 ) -> int:
     """Get the option value for the given PUB and parameter values"""
     internal_structure = values_structure
@@ -50,6 +50,7 @@ def get_value_for_pub_and_param(
 class PrimitiveOptionsModel(BaseModel):
     """Pydantic model of Primitive options."""
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
     seed: DistributableNumType
+    experimental: dict
