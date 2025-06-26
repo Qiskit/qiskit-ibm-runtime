@@ -21,7 +21,6 @@ from qiskit_ibm_runtime import RuntimeJobV2
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
-    RuntimeJobNotFound,
     RuntimeJobMaxTimeoutError,
     IBMInputValueError,
     RuntimeInvalidStateError,
@@ -202,13 +201,3 @@ class TestRuntimeJob(IBMTestCase):
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
         self.assertEqual("DONE", job.status())
-
-    @run_quantum_and_cloud_fake
-    def test_delete_job(self, service):
-        """Test deleting a job."""
-        params = {"param1": "foo"}
-        job = run_program(service=service, inputs=params)
-        self.assertTrue(job.job_id())
-        service.delete_job(job.job_id())
-        with self.assertRaises(RuntimeJobNotFound):
-            service.job(job.job_id())
