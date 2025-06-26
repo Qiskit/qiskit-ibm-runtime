@@ -178,7 +178,7 @@ class IBMBackend(Backend):
         self._instance = instance
         self._service = service
         self._api_client = api_client
-        self._configuration = configuration
+        self._configuration = deepcopy(configuration)
         self._properties: Any = None
         self._defaults: Any = None
         self._target: Any = None
