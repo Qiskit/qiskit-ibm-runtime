@@ -136,22 +136,59 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             [backend.name for backend in backends_instance_param],
         )
 
-    def test_account_preferences(self):
-        """Test account preferences region and plans_preference."""
-        region = "us-east"
+    def test_account_plans_preference(self):
+        """Test one valid and one invalid plans_preference."""
         plans_preference = ["internal"]
         service = QiskitRuntimeService(
             token=self.dependencies.token,
             url=self.dependencies.url,
             channel="ibm_quantum_platform",
-            region=region,
             plans_preference=plans_preference,
+        )
+
+        first_instance = service._backend_instance_groups[0]
+        self.assertEqual(plans_preference[0], first_instance.get("plan"))
+
+        plans_preference_one_invalid = ["internal", "invalid_plan"]
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            url=self.dependencies.url,
+            channel="ibm_quantum_platform",
+            plans_preference=plans_preference_one_invalid,
+        )
+
+        first_instance = service._backend_instance_groups[0]
+        self.assertEqual(plans_preference_one_invalid[0], first_instance.get("plan"))
+
+        with self.assertRaises(IBMInputValueError):
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                plans_preference=["invalid_plan"],
+            )
+
+    def test_account_region_preference(self):
+        """Test account preferences region and plans_preference."""
+        region = "us-east"
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            url=self.dependencies.url,
+            channel="ibm_quantum_platform",
+            region=region,
         )
 
         service.backends()
         first_instance = service._backend_instance_groups[0]
         self.assertIn(region, first_instance.get("crn"))
-        self.assertEqual(plans_preference[0], first_instance.get("plan"))
+
+        with self.assertRaises(IBMInputValueError):
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                region="invalid_region",
+            )
 
     def test_account_preferences_tags(self):
         """Test tags account preference."""
