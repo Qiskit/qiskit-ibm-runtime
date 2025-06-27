@@ -54,6 +54,7 @@ class AccountManager:
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        tags: Optional[str] = None,
     ) -> None:
         """Save account on disk."""
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
@@ -71,6 +72,7 @@ class AccountManager:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
+            tags=tags,
         )
         return save_config(
             filename=filename,
