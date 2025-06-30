@@ -35,7 +35,6 @@ from qiskit_ibm_runtime import (
     Batch,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendStatus,
@@ -112,33 +111,6 @@ def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
     circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
 
     return circuit
-
-
-def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject:
-    """Return a HubGroupProject for the account.
-
-    Args:
-        qe_token: IBM Quantum token.
-        qe_url: IBM Quantum auth URL.
-        default: If `True`, the default open access hgp is returned.
-            Otherwise, a non open access hgp is returned.
-
-    Returns:
-        A HubGroupProject, as specified by `default`.
-    """
-    service = QiskitRuntimeService(
-        channel="ibm_quantum", token=qe_token, url=qe_url
-    )  # Default hub/group/project.
-    open_hgp = service._get_hgp()  # Open access hgp
-    hgp_to_return = open_hgp
-    if not default:
-        # Get a non default hgp (i.e. not the default open access hgp).
-        hgps = service._get_hgps()  # type: ignore
-        for hgp in hgps:
-            if hgp != open_hgp:
-                hgp_to_return = hgp
-                break
-    return hgp_to_return
 
 
 def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:

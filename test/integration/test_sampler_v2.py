@@ -21,7 +21,7 @@ import numpy as np
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
-from qiskit.circuit.library import RealAmplitudes, UnitaryGate
+from qiskit.circuit.library import real_amplitudes, UnitaryGate
 from qiskit.primitives import PrimitiveResult, PubResult
 from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
@@ -31,9 +31,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from ..decorators import run_integration_test, production_only
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import get_real_device
 
 
 class TestSampler(IBMIntegrationTestCase):
@@ -62,7 +60,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._cases.append((bell, None, {0: 5000, 3: 5000}))  # case 1
         self._isa_bell = pm.run(bell)
 
-        pqc = RealAmplitudes(num_qubits=2, reps=2)
+        pqc = real_amplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
         pqc = transpile(circuits=pqc, backend=self.fake_backend)
         self._cases.append((pqc, [0] * 6, {0: 10000}))  # case 2
@@ -70,7 +68,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._cases.append((pqc, [0, 1, 1, 2, 3, 5], {0: 1339, 1: 3534, 2: 912, 3: 4215}))  # case 4
         self._cases.append((pqc, [1, 2, 3, 4, 5, 6], {0: 634, 1: 291, 2: 6039, 3: 3036}))  # case 5
 
-        pqc2 = RealAmplitudes(num_qubits=2, reps=3)
+        pqc2 = real_amplitudes(num_qubits=2, reps=3)
         pqc2.measure_all()
         pqc2 = transpile(circuits=pqc2, backend=self.fake_backend)
         self._cases.append(
@@ -250,7 +248,7 @@ class TestSampler(IBMIntegrationTestCase):
     def test_run_numpy_params(self):
         """Test for numpy array as parameter values"""
         with Session(self._backend) as session:
-            qc = RealAmplitudes(num_qubits=2, reps=2)
+            qc = real_amplitudes(num_qubits=2, reps=2)
             qc.measure_all()
             qc = transpile(circuits=qc, backend=self._backend)
             k = 5
@@ -473,21 +471,16 @@ class TestSampler(IBMIntegrationTestCase):
         result = job.result()
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
-    @production_only
-    @run_integration_test
-    def test_sampler_v2_dd(self, service):
+    def test_sampler_v2_dd(self):
         """Test SamplerV2 DD options."""
-        real_device_name = get_real_device(service)
-        real_device = service.backend(real_device_name)
-        sampler = Sampler(mode=real_device)
+        sampler = Sampler(mode=self._backend)
         sampler.options.dynamical_decoupling.enable = True
         sampler.options.dynamical_decoupling.sequence_type = "XX"
         sampler.options.dynamical_decoupling.extra_slack_distribution = "middle"
         sampler.options.dynamical_decoupling.scheduling_method = "asap"
         sampler.options.dynamical_decoupling.skip_reset_qubits = True
-
         bell, _, _ = self._cases[1]
-        bell = transpile(bell, real_device)
+        bell = transpile(bell, self._backend)
         job = sampler.run([bell])
         result = job.result()
         self._verify_result_type(result, num_pubs=1)
