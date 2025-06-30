@@ -187,7 +187,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 inputs=inputs,
                 options=runtime_options,
-                callback=options_dict.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
@@ -201,7 +200,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                callback=options_dict.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 

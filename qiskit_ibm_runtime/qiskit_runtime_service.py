@@ -38,7 +38,6 @@ from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountErr
 from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
-from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
@@ -1039,11 +1038,10 @@ class QiskitRuntimeService:
         program_id: str,
         inputs: Dict,
         options: Optional[Union[RuntimeOptions, Dict]] = None,
-        callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
-    ) -> Union[RuntimeJob, RuntimeJobV2]:
+    ) -> RuntimeJobV2:
         """Execute the runtime program.
 
         Args:
@@ -1051,13 +1049,6 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-            callback: Callback function to be invoked for any interim results and final result.
-                The callback function will receive 2 positional parameters:
-
-                    1. Job ID
-                    2. Job result.
-
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 If more than one decoder is specified, the first is used for interim results and
                 the second final results. If not specified, a program-specific decoder or the default
@@ -1141,7 +1132,6 @@ class QiskitRuntimeService:
             api_client=self._active_api_client,
             job_id=response["id"],
             program_id=program_id,
-            user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
             service=self,
@@ -1178,7 +1168,7 @@ class QiskitRuntimeService:
         except Exception as ex:  # pylint: disable=broad-except
             logger.warning("Unable to retrieve open plan pending jobs details. %s", ex)
 
-    def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
+    def job(self, job_id: str) -> RuntimeJobV2:
         """Retrieve a runtime job.
 
         Args:
@@ -1224,7 +1214,7 @@ class QiskitRuntimeService:
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> List[Union[RuntimeJob, RuntimeJobV2]]:
+    ) -> List[RuntimeJobV2]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
         Args:
@@ -1341,7 +1331,7 @@ class QiskitRuntimeService:
             )
         return self._active_api_client.usage()
 
-    def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
+    def _decode_job(self, raw_data: Dict) -> RuntimeJobV2:
         """Decode job data received from the server.
 
         Args:
@@ -1371,28 +1361,6 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        version = 2
-        params = raw_data.get("params", {})
-        if isinstance(params, list):
-            if len(params) > 0:
-                params = params[0]
-            else:
-                params = {}
-        if not isinstance(params, str):
-            if params:
-                version = params.get("version", 1)
-
-        if version == 1:
-            return RuntimeJob(
-                backend=backend,
-                api_client=self._active_api_client,
-                service=self,
-                job_id=raw_data["id"],
-                program_id=raw_data.get("program", {}).get("id", ""),
-                creation_date=raw_data.get("created", None),
-                session_id=raw_data.get("session_id"),
-                tags=raw_data.get("tags"),
-            )
         return RuntimeJobV2(
             backend=backend,
             api_client=self._active_api_client,

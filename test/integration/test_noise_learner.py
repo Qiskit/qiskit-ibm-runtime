@@ -17,7 +17,7 @@ from unittest import SkipTest
 
 from qiskit.circuit import QuantumCircuit
 
-from qiskit_ibm_runtime import RuntimeJob, Session, EstimatorV2
+from qiskit_ibm_runtime import RuntimeJobV2, Session, EstimatorV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
@@ -143,7 +143,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
                         match_found = True
                 self.assertTrue(match_found)
 
-    def _verify(self, job: RuntimeJob, expected_input_options: dict, n_results: int) -> None:
+    def _verify(self, job: RuntimeJobV2, expected_input_options: dict, n_results: int) -> None:
         job.wait_for_final_state()
 
         result = job.result()
