@@ -1081,13 +1081,11 @@ class QiskitRuntimeService:
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
 
-        qrt_options.validate(channel=self.channel)
+        qrt_options.validate()
 
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp_name = self._get_hgp(
-                instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
-            ).name
+            hgp_name = self._get_hgp(backend_name=qrt_options.get_backend_name()).name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
                 logger.info("Instance selected: %s", self._current_instance)

@@ -39,7 +39,6 @@ class TestOptionsV2(IBMTestCase):
             backend="ibm_gotham",
             image="foo:bar",
             log_level="DEBUG",
-            instance="h/g/p",
             job_tags=["foo", "bar"],
             max_execution_time=600,
         )

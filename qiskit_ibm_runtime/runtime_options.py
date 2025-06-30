@@ -32,7 +32,6 @@ class RuntimeOptions:
     backend: Optional[str | Backend] = None
     image: Optional[str] = None
     log_level: Optional[str] = None
-    instance: Optional[str] = None
     job_tags: Optional[List[str]] = None
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
@@ -43,7 +42,6 @@ class RuntimeOptions:
         backend: Optional[str | Backend] = None,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
-        instance: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         session_time: Optional[int] = None,
@@ -59,9 +57,6 @@ class RuntimeOptions:
             log_level: logging level to set in the execution environment. The valid
                 log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                 The default level is ``WARNING``.
-            instance: The hub/group/project to use, in that format. This is only supported
-                for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
-                access to the target backend is randomly selected.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
             max_execution_time: Maximum execution time in seconds, which is based
@@ -80,17 +75,13 @@ class RuntimeOptions:
         self.backend = backend
         self.image = image
         self.log_level = log_level
-        self.instance = instance
         self.job_tags = job_tags
         self.max_execution_time = max_execution_time
         self.session_time = session_time
         self.private = private
 
-    def validate(self, channel: str) -> None:
+    def validate(self) -> None:
         """Validate options.
-
-        Args:
-            channel: channel type.
 
         Raises:
             IBMInputValueError: If one or more option is invalid.
@@ -100,14 +91,6 @@ class RuntimeOptions:
             self.image,
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-
-        if channel == "ibm_quantum" and not self.backend:
-            raise IBMInputValueError(
-                '"backend" is required field in "options" for "ibm_quantum" channel.'
-            )
-
-        if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
