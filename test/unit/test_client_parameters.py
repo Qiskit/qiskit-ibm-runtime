@@ -76,7 +76,7 @@ class TestClientParameters(IBMTestCase):
             ),
             (
                 "ibm_cloud",
-                "h/g/p",
+                "crn",
                 "https://auth.quantum.ibm.com/api",
                 None,
                 "https://auth.quantum.ibm.com/api",
@@ -91,10 +91,10 @@ class TestClientParameters(IBMTestCase):
             ),
             (
                 "ibm_cloud",
-                "h/g/p",
+                "crn",
                 "https://auth.quantum.ibm.com/api",
                 lambda a, b, c, _: f"{a}:{b}:{c}",
-                "https://auth.quantum.ibm.com/api:h/g/p:False",
+                "https://auth.quantum.ibm.com/api:crn:False",
             ),
         ]
         for spec in test_specs:

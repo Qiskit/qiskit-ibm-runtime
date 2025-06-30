@@ -42,7 +42,7 @@ class TestAccountClient(IBMTestCase):
             channel="ibm_quantum_platform",
             url=SimpleServer.URL,
             token="foo",
-            instance="h/g/p",
+            instance="crn",
         )
         return RuntimeClient(params)
 

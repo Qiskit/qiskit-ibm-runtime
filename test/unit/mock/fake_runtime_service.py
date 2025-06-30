@@ -23,13 +23,18 @@ from .fake_api_backend import FakeApiBackendSpecs
 
 
 class FakeRuntimeService(QiskitRuntimeService):
-    """Creates an QiskitRuntimeService instance with mocked hub/group/project.
+    """Creates an QiskitRuntimeService instance with mocked instance crn.
 
-    By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
-    Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
+    By default there are 2 instance crns:
+    `crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::`,
+    and `crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::`.
+    Each crn has 2 backends - `common_backend` and `unique_backend_<idx>`.
     """
 
-    DEFAULT_HGPS = ["hub0/group0/project0", "hub1/group1/project1"]
+    DEFAULT_CRNS = [
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::",
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::",
+    ]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
 
@@ -40,11 +45,11 @@ class FakeRuntimeService(QiskitRuntimeService):
         }
     ]
 
-    def __new__(cls, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
+    def __new__(cls, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):
         return super().__new__(cls, *args, **kwargs)
 
-    def __init__(self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
-        self._test_num_hgps = num_hgps
+    def __init__(self, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):
+        self._test_num_crns = num_crns
         self._fake_runtime_client = runtime_client
         self._backend_specs = backend_specs
 
@@ -76,7 +81,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         """Mock discovery cloud backends."""
         job_class = self._active_api_client._job_classes  # type: ignore
         self._active_api_client = self._fake_runtime_client
-        self._set_api_client(hgps=[None] * self._test_num_hgps, channel="ibm_quantum_platform")
+        self._set_api_client(crns=[None] * self._test_num_crns, channel="ibm_quantum_platform")
         self._active_api_client._job_classes = job_class  # type: ignore
         return self._active_api_client.list_backends()
 
@@ -106,18 +111,18 @@ class FakeRuntimeService(QiskitRuntimeService):
             self._filter_instances_by_saved_preferences()
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
-    def _set_api_client(self, hgps, channel="ibm_quantum_platform"):
+    def _set_api_client(self, crns, channel="ibm_quantum_platform"):
         """Set api client to be the fake runtime client."""
         if not self._fake_runtime_client:
             if not self._backend_specs:
                 self._backend_specs = [
-                    FakeApiBackendSpecs(backend_name=self.DEFAULT_COMMON_BACKEND, hgps=hgps)
+                    FakeApiBackendSpecs(backend_name=self.DEFAULT_COMMON_BACKEND, crns=crns)
                 ]
-                for idx, hgp in enumerate(hgps):
+                for idx, crn in enumerate(crns):
                     self._backend_specs.append(
                         FakeApiBackendSpecs(
                             backend_name=self.DEFAULT_UNIQUE_BACKEND_PREFIX + str(idx),
-                            hgps=[hgp],
+                            crns=[crn],
                         )
                     )
             self._fake_runtime_client = BaseFakeRuntimeClient(

@@ -775,8 +775,8 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "h/g/p"},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "h/g/p"},
+            {"instance": "crn"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "crn"},
         ]
         for channel in ["ibm_quantum_platform"]:
             for extra in subtests:

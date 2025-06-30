@@ -136,7 +136,7 @@ class TestBackendFilters(IBMTestCase):
                 for backend in filtered_backends:
                     self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
-    def _get_fake_backend_specs(self, hgps=None, **kwargs):
+    def _get_fake_backend_specs(self, crns=None, **kwargs):
         """Get the backend specs to pass to the fake client."""
         config = {}
         status = {}
@@ -150,7 +150,7 @@ class TestBackendFilters(IBMTestCase):
                 config[key] = val
         name = config.get("backend_name", uuid.uuid4().hex)
         return FakeApiBackendSpecs(
-            backend_name=name, configuration=config, status=status, hgps=hgps
+            backend_name=name, configuration=config, status=status, crns=crns
         )
 
     def _get_services(self, fake_backend_specs):

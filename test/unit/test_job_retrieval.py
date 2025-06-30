@@ -253,7 +253,7 @@ class TestRetrieveJobs(IBMTestCase):
         service = FakeRuntimeService(
             channel="ibm_quantum_platform",
             token="some_token",
-            instance=FakeRuntimeService.DEFAULT_HGPS[0],
+            instance=FakeRuntimeService.DEFAULT_CRNS[0],
         )
         program_id = "sampler"
 

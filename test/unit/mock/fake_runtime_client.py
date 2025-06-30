@@ -396,9 +396,9 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: Optional[str] = None) -> List[str]:
         """Return IBM backends available for this service instance."""
-        return [back.name for back in self._backends if back.has_access(hgp)]
+        return [back.name for back in self._backends if back.has_access(crn)]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration a backend."""
