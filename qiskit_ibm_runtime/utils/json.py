@@ -57,6 +57,7 @@ from qiskit.qpy import (
     load,
     dump,
 )
+from qiskit.quantum_info import PauliLindbladMap
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
@@ -365,6 +366,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ExecutionSpans):
             out_val = {"spans": list(obj)}
             return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
+        if isinstance(obj, PauliLindbladMap):
+            out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
+            return {"__type__": "PauliLindbladMap", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -499,6 +503,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 return SliceSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
                 return ExecutionSpans(**obj_val)
+            if obj_type == "PauliLindbladMap":
+                return PauliLindbladMap.from_sparse_list(
+                    [tuple(pauli) for pauli in obj_val["paulis"]], num_qubits=obj_val["num_qubits"]
+                )
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
