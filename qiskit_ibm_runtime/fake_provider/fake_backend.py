@@ -55,15 +55,6 @@ from ..models.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-class _Credentials:
-    def __init__(self, token: str = "123456", url: str = "https://") -> None:
-        self.token = token
-        self.url = url
-        self.hub = "hub"
-        self.group = "group"
-        self.project = "project"
-
-
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend
     snapshots.

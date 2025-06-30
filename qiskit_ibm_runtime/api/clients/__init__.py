@@ -12,6 +12,5 @@
 
 """IBM Quantum API clients."""
 
-from .auth import AuthClient
 from .version import VersionClient
 from .runtime import RuntimeClient

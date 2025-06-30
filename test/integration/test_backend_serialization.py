@@ -27,7 +27,7 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        instance = None
         backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized complex number.
@@ -52,7 +52,7 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        instance = None
         backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized object.
