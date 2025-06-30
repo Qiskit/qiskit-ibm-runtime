@@ -43,6 +43,13 @@ try:
 except ImportError:
     HAS_AER = False
 
+try:
+    from qiskit.quantum_info import PauliLindbladMap
+
+    HAS_PAULI_LINDBLAD_MAP = True
+except ImportError:
+    HAS_PAULI_LINDBLAD_MAP = False
+
 from qiskit.circuit import (
     Instruction,
     Parameter,
@@ -366,7 +373,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, ExecutionSpans):
             out_val = {"spans": list(obj)}
             return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
-        if isinstance(obj, PauliLindbladMap):
+        if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
             out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
             return {"__type__": "PauliLindbladMap", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
@@ -503,7 +510,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return SliceSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
                 return ExecutionSpans(**obj_val)
-            if obj_type == "PauliLindbladMap":
+            if HAS_PAULI_LINDBLAD_MAP and obj_type == "PauliLindbladMap":
                 return PauliLindbladMap.from_sparse_list(
                     [tuple(pauli) for pauli in obj_val["paulis"]], num_qubits=obj_val["num_qubits"]
                 )
