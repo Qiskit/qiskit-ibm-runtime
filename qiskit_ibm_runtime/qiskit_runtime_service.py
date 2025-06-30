@@ -245,7 +245,9 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            self._backends_list = self._active_api_client.list_backends()
+                self._backends_list = self._active_api_client.list_backends()
+            if not self._backends_list:
+                self._backends_list = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
@@ -659,43 +661,24 @@ class QiskitRuntimeService:
             )
 
         backends: List[IBMBackend] = []
-        if self._channel == "ibm_quantum":
-            instance_filter = instance if instance else self._account.instance
+        unique_backends = set()
+        instance_backends = self._resolve_cloud_instances(instance)
+        for inst, backends_available in instance_backends:
             if name:
-                if name not in self._backend_allowed_list:
-                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
-                backend_names = [name]
-                hgp = instance_filter
-            elif instance_filter:
-                backend_names = self._get_hgp(instance=instance_filter).backends
-                hgp = instance_filter
-            else:
-                backend_names = self._backend_allowed_list
-                hgp = None
-            for backend_name in backend_names:
+                if name not in backends_available:
+                    continue
+                backends_available = [name]
+            for backend_name in backends_available:
+                if backend_name in unique_backends:
+                    continue
+                unique_backends.add(backend_name)
+                self._get_or_create_cloud_client(inst)
                 if backend := self._create_backend_obj(
-                    backend_name, instance=hgp, use_fractional_gates=use_fractional_gates
+                    backend_name,
+                    instance=inst,
+                    use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
-        else:
-            unique_backends = set()
-            instance_backends = self._resolve_cloud_instances(instance)
-            for inst, backends_available in instance_backends:
-                if name:
-                    if name not in backends_available:
-                        continue
-                    backends_available = [name]
-                for backend_name in backends_available:
-                    if backend_name in unique_backends:
-                        continue
-                    unique_backends.add(backend_name)
-                    self._get_or_create_cloud_client(inst)
-                    if backend := self._create_backend_obj(
-                        backend_name,
-                        instance=inst,
-                        use_fractional_gates=use_fractional_gates,
-                    ):
-                        backends.append(backend)
         if name:
             kwargs["backend_name"] = name
         if min_num_qubits:
@@ -1432,43 +1415,33 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
         """
-        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            if not self._backends_list:
-                self._backends_list = self._active_api_client.list_backends()
+        if not self._backends_list:
+            self._backends_list = self._active_api_client.list_backends()
 
-            candidates = []
-            for backend in self._backends_list:
-                if (
-                    backend["status"]["name"] == "online"
-                    and backend["status"]["reason"] == "available"
-                ):
-                    candidates.append(backend)
-            if min_num_qubits:
-                candidates = list(filter(lambda b: b["qubits"] >= min_num_qubits, candidates))
-            if not candidates:
-                raise QiskitBackendNotFoundError("No backend matches the criteria.")
-            sorted_backends = sorted(candidates, key=lambda b: b["queue_length"])
-            for back in sorted_backends:
-                # We don't know whether or not the backend has a valid config
-                try:
-                    return self.backend(back["name"])
-                except Exception: # pylint: disable=broad-except
-                    pass
-                raise QiskitBackendNotFoundError("No backend matches the criteria.")
+        candidates = []
+        for backend in self._backends_list:
+            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+                candidates.append(backend)
+        if filters:
+            # filters will still be slow because we need the backend configs
+            backends = self.backends(filters=filters)
+            filtered_backend_names = [back.name for back in backends]
+            for candidate in candidates:
+                if candidate["name"] not in filtered_backend_names:
+                    candidates.remove(candidate)
 
-        else:
-            backends = self.backends(
-                min_num_qubits=min_num_qubits, instance=instance, filters=filters, **kwargs
-            )
-            candidates = []
-            for back in backends:
-                backend_status = back.status()
-                if not backend_status.operational or backend_status.status_msg != "active":
-                    continue
-                candidates.append(back)
-            if not candidates:
-                raise QiskitBackendNotFoundError("No backend matches the criteria.")
-            return min(candidates, key=lambda b: b.status().pending_jobs)
+        if min_num_qubits:
+            candidates = list(filter(lambda b: b["qubits"] >= min_num_qubits, candidates))
+        if not candidates:
+            raise QiskitBackendNotFoundError("No backend matches the criteria.")
+        sorted_backends = sorted(candidates, key=lambda b: b["queue_length"])
+        for back in sorted_backends:
+            # We don't know whether or not the backend has a valid config
+            try:
+                return self.backend(back["name"])
+            except Exception:  # pylint: disable=broad-except
+                pass
+            raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
         """Return the instance list associated to the active account. For the "ibm_quantum" channel,
