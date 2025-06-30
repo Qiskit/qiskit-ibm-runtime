@@ -64,7 +64,6 @@ from qiskit.qpy import (
     load,
     dump,
 )
-from qiskit.quantum_info import PauliLindbladMap
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
