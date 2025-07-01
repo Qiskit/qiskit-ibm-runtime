@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import re
 import logging
-import warnings
 from dataclasses import dataclass
 from typing import Optional, List
 
@@ -60,7 +59,7 @@ class RuntimeOptions:
             log_level: logging level to set in the execution environment. The valid
                 log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                 The default level is ``WARNING``.
-            instance: (DEPRECATED) The hub/group/project to use, in that format. This is only supported
+            instance: The hub/group/project to use, in that format. This is only supported
                 for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
                 access to the target backend is randomly selected.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
@@ -97,14 +96,6 @@ class RuntimeOptions:
             IBMInputValueError: If one or more option is invalid.
         """
 
-        if self.instance:
-            warnings.warn(
-                "The instance runtime option is deprecated and will be removed in a future release. "
-                "The new IBM Quantum Platform does not support this option.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,
@@ -115,9 +106,6 @@ class RuntimeOptions:
             raise IBMInputValueError(
                 '"backend" is required field in "options" for "ibm_quantum" channel.'
             )
-
-        if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
