@@ -1109,7 +1109,7 @@ class QiskitRuntimeService:
         if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp_name = self._get_hgp(
-                qrt_options.instance, backend_name=qrt_options.get_backend_name()
+                instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
             ).name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
@@ -1348,7 +1348,7 @@ class QiskitRuntimeService:
 
         warnings.warn(
             "The delete_job() method is deprecated and will be removed in a future release. "
-            "The new IBM Quantum Platform does not support this deleting jobs.",
+            "The new IBM Quantum Platform does not support deleting jobs.",
             DeprecationWarning,
             stacklevel=2,
         )
