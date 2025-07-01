@@ -26,7 +26,7 @@ from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
 
 import qiskit.quantum_info as qi
-from qiskit.quantum_info import SparsePauliOp, Pauli, PauliList
+from qiskit.quantum_info import SparsePauliOp, Pauli, PauliList, PauliLindbladMap
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
@@ -651,6 +651,18 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
             self.assertIsInstance(decoded, NoiseLearnerResult)
             self.assert_noise_learner_results_equal(noise_learner_result, decoded)
+
+    @data(
+        PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),
+        PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
+    )
+    def test_pauli_lindblad_map(self, noise_map):
+        """Test enconding and decoding for PauliLindbladMap"""
+        payload = {"map": noise_map}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["map"]
+        self.assertIsInstance(decoded, PauliLindbladMap)
+        self.assertEqual(noise_map, decoded)
 
     def test_unknown_settings(self):
         """Test settings not on whitelisted path."""
