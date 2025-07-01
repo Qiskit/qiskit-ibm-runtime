@@ -29,7 +29,7 @@ class Distribute(list):
         return f"Distribute({', '.join(map(str, self))})"
 
 
-NumArrayType = Union[int, np.ndarray[tuple[int, ...], np.dtype[np.uint64]]]
+NumArrayType = Union[int, list, np.ndarray[tuple[int, ...]]]
 DistributableNumType = Union[NumArrayType, Distribute[NumArrayType]]
 
 
@@ -40,6 +40,8 @@ def get_value_for_pub_and_param(
     internal_structure = values_structure
     if isinstance(internal_structure, Distribute):
         internal_structure = internal_structure[pub_index]
+    if isinstance(internal_structure, list):
+        internal_structure = np.array(internal_structure)
     if isinstance(internal_structure, np.ndarray):
         internal_structure = internal_structure[param_index]
 
