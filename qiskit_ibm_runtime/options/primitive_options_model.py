@@ -16,7 +16,7 @@ from typing import Union
 
 import numpy as np
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Distribute(list):
@@ -52,5 +52,5 @@ class PrimitiveOptionsModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
-    seed: DistributableNumType
-    experimental: dict
+    seed: DistributableNumType | None = None
+    experimental: dict = Field(default_factory=dict)
