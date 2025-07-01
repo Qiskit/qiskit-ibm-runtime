@@ -21,6 +21,7 @@ from unittest import skipIf
 from unittest.mock import patch
 from ddt import ddt, data
 
+from qiskit_ibm_runtime import IBMInputValueError
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
     AccountManager,
@@ -961,6 +962,18 @@ class TestEnableAccount(IBMTestCase):
             service = FakeRuntimeService(channel="ibm_cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
+
+    def test_instance_filter_tags(self):
+        """Test initializing account by channel and input instance."""
+        tags = ["services"]
+        with temporary_account_config_file(channel="ibm_quantum_platform"):
+            service = FakeRuntimeService(channel="ibm_quantum_platform", tags=tags)
+            self.assertTrue(service._account)
+            for inst in service._backend_instance_groups:
+                self.assertEqual(inst["tags"], tags)
+
+            with self.assertRaises(IBMInputValueError):
+                service = FakeRuntimeService(channel="ibm_quantum_platform", tags=["invalid_tags"])
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:
