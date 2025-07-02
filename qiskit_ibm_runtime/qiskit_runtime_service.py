@@ -1096,7 +1096,9 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        backend_name = options["backend"].name
+        backend_name = (
+            options["backend"] if isinstance(options["backend"], str) else options["backend"].name
+        )
 
         if self._channel == "ibm_quantum":
             # Find the right hgp
