@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 from typing import Iterable, Tuple, Union, Any
-from dataclasses import dataclass, fields, asdict, is_dataclass
+from dataclasses import dataclass, asdict, is_dataclass
 import copy
 
 from qiskit.transpiler import CouplingMap
@@ -31,7 +31,6 @@ from .utils import (
 )
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
-from ..runtime_options import RuntimeOptions
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
@@ -93,9 +92,8 @@ class BaseOptions:
         environment = options_copy.get("environment") or {}
         out = {"max_execution_time": options_copy.get("max_execution_time", None)}
 
-        for fld in fields(RuntimeOptions):
-            if fld.name in environment:
-                out[fld.name] = environment[fld.name]
+        for fld in environment:
+            out[fld] = environment[fld]
 
         if "image" in options_copy:
             out["image"] = options_copy["image"]

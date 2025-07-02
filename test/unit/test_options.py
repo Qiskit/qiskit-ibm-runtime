@@ -20,7 +20,6 @@ from pydantic import ValidationError
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
-from qiskit_ibm_runtime import RuntimeOptions
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeNairobiV2
 
@@ -31,26 +30,6 @@ from ..utils import combine
 @ddt
 class TestOptionsV2(IBMTestCase):
     """Class for testing the v2 Options class."""
-
-    @data(EstimatorOptions, SamplerOptions)
-    def test_runtime_options(self, opt_cls):
-        """Test converting runtime options."""
-        full_options = RuntimeOptions(
-            backend="ibm_gotham",
-            image="foo:bar",
-            log_level="DEBUG",
-            instance="h/g/p",
-            job_tags=["foo", "bar"],
-            max_execution_time=600,
-        )
-        partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
-
-        for rt_options in [full_options, partial_options]:
-            with self.subTest(rt_options=rt_options):
-                self.assertGreaterEqual(
-                    vars(rt_options).items(),
-                    opt_cls._get_runtime_options(vars(rt_options)).items(),
-                )
 
     @data(EstimatorOptions, SamplerOptions)
     def test_kwargs_options(self, opt_cls):

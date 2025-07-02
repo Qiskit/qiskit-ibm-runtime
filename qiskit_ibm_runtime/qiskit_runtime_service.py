@@ -42,7 +42,6 @@ from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
-from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
 from .models import QasmBackendConfiguration
 
@@ -1062,7 +1061,7 @@ class QiskitRuntimeService:
         self,
         program_id: str,
         inputs: Dict,
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
+        options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
@@ -1097,30 +1096,23 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
-        qrt_options: RuntimeOptions = options
-        if options is None:
-            qrt_options = RuntimeOptions()
-        elif isinstance(options, Dict):
-            qrt_options = RuntimeOptions(**options)
-
-        qrt_options.validate(channel=self.channel)
+        backend_name = options["backend"].name
 
         if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp_name = self._get_hgp(
-                instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
+                instance=options.get("instance"), backend_name=backend_name
             ).name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
                 logger.info("Instance selected: %s", self._current_instance)
         else:
             hgp_name = None
-        backend = qrt_options.backend
+        backend = options["backend"]
         if isinstance(backend, str) or (
             hgp_name and isinstance(backend, IBMBackend) and backend._instance != hgp_name
         ):
-            backend = self.backend(name=qrt_options.get_backend_name(), instance=hgp_name)
+            backend = self.backend(name=backend_name, instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
@@ -1134,17 +1126,17 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.get_backend_name(),
+                backend_name=backend_name,
                 params=inputs,
-                image=qrt_options.image,
+                image=options.get("image"),
                 hgp=hgp_name,
-                log_level=qrt_options.log_level,
+                log_level=options.get("log_level"),
                 session_id=session_id,
-                job_tags=qrt_options.job_tags,
-                max_execution_time=qrt_options.max_execution_time,
+                job_tags=options.get("job_tags"),
+                max_execution_time=options.get("max_execution_time"),
                 start_session=start_session,
-                session_time=qrt_options.session_time,
-                private=qrt_options.private,
+                session_time=options.get("session_time"),
+                private=options.get("private"),
             )
             if self._channel == "ibm_quantum":
                 messages = response.get("messages")
@@ -1157,7 +1149,7 @@ class QiskitRuntimeService:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if response["backend"] and response["backend"] != qrt_options.get_backend_name():
+        if response["backend"] and response["backend"] != backend_name:
             backend = self.backend(name=response["backend"], instance=hgp_name)
 
         return RuntimeJobV2(
@@ -1167,10 +1159,11 @@ class QiskitRuntimeService:
             program_id=program_id,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=qrt_options.image,
+            image=options.get("image"),
+            tags=options.get("job_tags"),
             service=self,
             version=version,
-            private=qrt_options.private,
+            private=options.get("private"),
         )
 
     def check_pending_jobs(self) -> None:
