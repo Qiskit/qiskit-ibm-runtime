@@ -32,5 +32,4 @@ class FakeFractionalBackend(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_fractional.json"  # type: ignore
     props_filename = "props_fractional.json"  # type: ignore
-    defs_filename = "defs_fractional.json"  # type: ignore
     backend_name = "fake_fractional"  # type: ignore
