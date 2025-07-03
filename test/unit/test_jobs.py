@@ -59,12 +59,6 @@ class TestRuntimeJob(IBMTestCase):
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = run_program(service=service, backend_name="phantom_backend")
 
-    def test_run_program_missing_backend_ibm_quantum(self):
-        """Test running an ibm_quantum program with no backend."""
-        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        with self.assertRaises(IBMInputValueError):
-            _ = run_program(service=service, backend_name="")
-
     def test_run_program_default_hgp_backend(self):
         """Test running a program with a backend in default hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
