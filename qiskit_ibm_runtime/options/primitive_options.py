@@ -30,8 +30,10 @@ class PrimitiveOptions:
     """Primitive options."""
 
     seed: IntType | Distribute[IntType]
+    r"""The seed to use for randomization."""
 
     shots_per_randomization: IntType | Distribute[IntType]
+    r"""The number of shots per randomization."""
 
     noise_models: dict[str, PauliLindbladMap] | None = None
     r"""A map from unique identifiers to noise models to apply to annotated boxes.
@@ -55,4 +57,5 @@ class PrimitiveOptions:
     
     """
 
-    experimental: dict
+    experimental: dict | None = None
+    r"""Experimental options."""
