@@ -210,7 +210,7 @@ class QiskitRuntimeService:
                 'After this date, "ibm_cloud", "ibm_quantum_platform", and "local" will be the '
                 "only valid channels. Open Plan users should migrate now.  All other users "
                 "should review the migration guide "
-                "(https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)"
+                "(https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) "
                 "to learn when to migrate.",
                 DeprecationWarning,
                 stacklevel=2,
