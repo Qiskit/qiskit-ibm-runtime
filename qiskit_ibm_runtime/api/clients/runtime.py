@@ -13,7 +13,7 @@
 """Client for accessing IBM Quantum runtime service."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from datetime import datetime as python_datetime
 from requests import Response
 
@@ -261,7 +261,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def list_backends(self, hgp: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return IBM backends available for this service instance.
 
         Args:

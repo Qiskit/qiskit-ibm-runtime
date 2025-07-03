@@ -214,7 +214,7 @@ class Runtime(RestAdapterBase):
         self,
         hgp: Optional[str] = None,
         timeout: Optional[float] = None,
-    ) -> Dict[str, List[str]]:
+    ) -> List[Dict[str, Any]]:
         """Return a list of IBM backends.
 
         Args:
