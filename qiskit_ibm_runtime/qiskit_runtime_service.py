@@ -73,6 +73,7 @@ class QiskitRuntimeService:
         url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor.
 
@@ -94,7 +95,7 @@ class QiskitRuntimeService:
         For the ``"ibm_cloud"`` and ``"ibm_quantum_platform"`` channels it is recommended
         to provide the relevant ``instance`` to minimize API calls. If an ``instance`` is not defined,
         the service will fetch all instances accessible within the account, filtered by
-        ``region`` and ``plans_preference``.
+        ``region``, ``plans_preference``, and ``tags``.
 
         Args:
             Optional[ChannelType] channel: Channel type. ``ibm_cloud``,
@@ -128,6 +129,7 @@ class QiskitRuntimeService:
             Optional[List[str]] plans_preference: A list of account types, ordered by preference.
                 An instance with the first value in the list will be prioritized if an instance
                 is not passed in.
+            Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -168,11 +170,13 @@ class QiskitRuntimeService:
         self._url_resolver = url_resolver
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
+
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
         self._backend_instance_groups: List[Dict[str, Any]] = []
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
+        self._tags = tags or self._account.tags
         self._cached_backend_objs: List[IBMBackend] = []
         if self._account.instance:
             self._default_instance = True
@@ -219,6 +223,13 @@ class QiskitRuntimeService:
 
     def _filter_instances_by_saved_preferences(self) -> None:
         """Filter instances by saved region and plan preferences."""
+        if self._tags:
+            self._backend_instance_groups = [
+                d
+                for d in self._backend_instance_groups
+                if all(tag.lower() in d["tags"] for tag in self._tags)
+            ]
+
         if self._region:
             self._backend_instance_groups = [
                 d for d in self._backend_instance_groups if self._region in d["crn"]
@@ -230,15 +241,23 @@ class QiskitRuntimeService:
             filtered_groups = [
                 group for group in self._backend_instance_groups if group["plan"] in plans
             ]
-            if filtered_groups:
-                self._backend_instance_groups = sorted(
-                    filtered_groups, key=lambda d: plans.index(d["plan"])
-                )
-            else:
-                raise IBMRuntimeError(
-                    "No matching plan found for any of the plans listed in the",
-                    f"preference list: {self._plans_preference}",
-                )
+
+            self._backend_instance_groups = sorted(
+                filtered_groups, key=lambda d: plans.index(d["plan"])
+            )
+
+        if not self._backend_instance_groups:
+            error_string = ""
+            if self._tags:
+                error_string += f"tags: {self._tags}, "
+            if self._region:
+                error_string += f"region: {self._region}, "
+            if self._plans_preference:
+                error_string += f"plan: {self._plans_preference}"
+            raise IBMInputValueError(
+                "No matching instances found for the following filters:",
+                f"{error_string}.",
+            )
 
     def _discover_account(
         self,
@@ -356,7 +375,7 @@ class QiskitRuntimeService:
         If no instance is provided, return the current active api client.
 
         Args:
-            instance: The CRN
+            instance: IBM Cloud account CRN
 
         Returns:
             An instance of ``RuntimeClient`` that matches the specified instance.
@@ -525,6 +544,7 @@ class QiskitRuntimeService:
                     "crn": inst["crn"],
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "tags": inst["tags"],
                 }
                 for inst in self._all_instances
             ]
@@ -642,6 +662,7 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = False,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -668,6 +689,9 @@ class QiskitRuntimeService:
                 will be prioritized if an instance is not passed in.
             plans_preference: A list of account types, ordered by preference. An instance with the first
                 value in the list will be prioritized if an instance is not passed in.
+            tags: Set a list of tags to filter available instances. Instances with these tags
+                will be prioritized if an instance is not passed in.
+
         """
 
         # TODO validate account defaults
@@ -686,6 +710,7 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
+            tags=tags,
         )
 
     @staticmethod

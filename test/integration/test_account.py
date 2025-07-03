@@ -17,13 +17,17 @@ import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
-from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from ibm_platform_services import (
+    ResourceControllerV2,
+    GlobalSearchV2,
+)  # pylint: disable=import-error
 
 from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
     get_iam_api_url,
+    get_global_search_api_url,
 )
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import IntegrationTestDependencies
@@ -43,6 +47,22 @@ def _get_service_instance_name_for_crn(
         client.set_service_url(get_resource_controller_api_url(dependencies.url))
         client.set_http_client(session)
         return client.get_resource_instance(id=dependencies.instance).get_result()["name"]
+
+
+def _get_instance_tags(
+    dependencies: IntegrationTestDependencies,
+) -> Dict[str, str]:
+    """Retrieves the service instance tags for a given crn."""
+    authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
+    client = GlobalSearchV2(authenticator=authenticator)
+    client.set_service_url(get_global_search_api_url(dependencies.url))
+    items = client.search(query="service_name:quantum-computing", fields=["tags"]).get_result()[
+        "items"
+    ]
+    for item in items:
+        if item.get("tags"):
+            return item["tags"]
+    return None
 
 
 class TestQuantumPlatform(IBMIntegrationTestCase):
@@ -109,22 +129,84 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             [backend.name for backend in backends_instance_param],
         )
 
-    def test_account_preferences(self):
-        """Test account preferences region and plans_preference."""
-        region = "us-east"
+    def test_account_plans_preference(self):
+        """Test one valid and one invalid plans_preference."""
         plans_preference = ["internal"]
         service = QiskitRuntimeService(
             token=self.dependencies.token,
             url=self.dependencies.url,
             channel="ibm_quantum_platform",
-            region=region,
             plans_preference=plans_preference,
+        )
+
+        first_instance = service._backend_instance_groups[0]
+        self.assertEqual(plans_preference[0], first_instance.get("plan"))
+
+        plans_preference_one_invalid = ["internal", "invalid_plan"]
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            url=self.dependencies.url,
+            channel="ibm_quantum_platform",
+            plans_preference=plans_preference_one_invalid,
+        )
+
+        first_instance = service._backend_instance_groups[0]
+        self.assertEqual(plans_preference_one_invalid[0], first_instance.get("plan"))
+
+        with self.assertRaises(IBMInputValueError):
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                plans_preference=["invalid_plan"],
+            )
+
+    def test_account_region_preference(self):
+        """Test account preferences region and plans_preference."""
+        region = "us-east"
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            url=self.dependencies.url,
+            channel="ibm_quantum_platform",
+            region=region,
         )
 
         service.backends()
         first_instance = service._backend_instance_groups[0]
         self.assertIn(region, first_instance.get("crn"))
-        self.assertEqual(plans_preference[0], first_instance.get("plan"))
+
+        with self.assertRaises(IBMInputValueError):
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                region="invalid_region",
+            )
+
+    def test_account_preferences_tags(self):
+        """Test tags account preference."""
+        tags = _get_instance_tags(self.dependencies)
+        if tags:
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                tags=tags,
+            )
+
+            instances = service._backend_instance_groups
+            if instances:
+                for instance in instances:
+                    self.assertEqual(instance["tags"], tags)
+
+        invalid_tags = ["invalid_tags"]
+        with self.assertRaises(IBMInputValueError):
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                url=self.dependencies.url,
+                channel="ibm_quantum_platform",
+                tags=invalid_tags,
+            )
 
     def test_instances(self):
         """Test instances method."""

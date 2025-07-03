@@ -37,6 +37,12 @@ class FakeRuntimeService(QiskitRuntimeService):
     ]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
+    DEFAULT_INSTANCES = [
+        {
+            "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "tags": ["services"],
+        }
+    ]
 
     DEFAULT_INSTANCES = [
         {

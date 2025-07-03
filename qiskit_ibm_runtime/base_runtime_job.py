@@ -360,7 +360,7 @@ class BaseRuntimeJob(ABC):
 
     @property
     def usage_estimation(self) -> Dict[str, Any]:
-        """Return the usage estimation infromation for this job.
+        """Return the usage estimation information for this job.
 
         Returns:
             ``quantum_seconds`` which is the estimated system execution time
