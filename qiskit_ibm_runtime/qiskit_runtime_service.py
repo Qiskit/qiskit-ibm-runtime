@@ -1358,10 +1358,7 @@ class QiskitRuntimeService:
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
-            raise IBMRuntimeError(
-                "Failed to delete job. deleting jobs is not supported on the "
-                f"new IBM Quantum Platform: {ex}"
-            ) from None
+            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
     def usage(self) -> Dict[str, Any]:
         """For the ibm_quantum channel return monthly open plan usage information.
