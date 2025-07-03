@@ -88,9 +88,10 @@ from qiskit_ibm_runtime.execution_span import (
 )
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
+from .annotation_qpy_serializer import AnnotationQPYSerializer
 from .noise_learner_result import NoiseLearnerResult
 
-SERVICE_MAX_SUPPORTED_QPY_VERSION = 14
+SERVICE_MAX_SUPPORTED_QPY_VERSION = 15
 
 
 def to_base64_string(data: str) -> str:
@@ -266,7 +267,11 @@ class RuntimeEncoder(json.JSONEncoder):
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder, **kwargs
+                    data,
+                    buff,
+                    RuntimeEncoder,
+                    annotation_factories={"runtime": AnnotationQPYSerializer},
+                    **kwargs,
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
@@ -427,7 +432,12 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "set":
                 return set(obj_val)
             if obj_type == "QuantumCircuit":
-                return _decode_and_deserialize(obj_val, load)[0]
+                return _decode_and_deserialize(
+                    obj_val,
+                    lambda data: load(
+                        data, annotation_factories={"runtime": AnnotationQPYSerializer}
+                    ),
+                )[0]
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":

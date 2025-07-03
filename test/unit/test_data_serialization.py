@@ -47,6 +47,7 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     LayerError,
     NoiseLearnerResult,
 )
+from qiskit_ibm_runtime.annotations import InjectNoise, Twirl
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
@@ -663,6 +664,19 @@ class TestContainerSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)["map"]
         self.assertIsInstance(decoded, PauliLindbladMap)
         self.assertEqual(noise_map, decoded)
+
+    @data([Twirl(dressing="right")], [InjectNoise("my_uid")], [Twirl(), InjectNoise("my_uid")])
+    def test_annotations(self, annotations):
+        """Test encoding and decoding circuits with InjectNoise and Twirl"""
+        circuit = QuantumCircuit(1)
+        with circuit.box(annotations):
+            circuit.x(0)
+
+        payload = {"circuit": circuit}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["circuit"]
+        self.assertIsInstance(decoded, QuantumCircuit)
+        self.assertEqual(circuit, decoded)
 
     def test_unknown_settings(self):
         """Test settings not on whitelisted path."""
