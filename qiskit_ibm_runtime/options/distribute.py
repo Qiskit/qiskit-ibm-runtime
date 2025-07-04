@@ -30,7 +30,7 @@ class Distribute(Generic[T]):
             return False
         if len(self) != len(other):
             return False
-        for self_value, other_value in zip(self, other):
+        for self_value, other_value in zip(self, other): # type: ignore[call-overload]
             if not np.array_equal(self_value, other_value):
                 return False
         return True
