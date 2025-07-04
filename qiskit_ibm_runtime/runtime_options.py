@@ -95,6 +95,7 @@ class RuntimeOptions:
         Raises:
             IBMInputValueError: If one or more option is invalid.
         """
+
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,
@@ -105,9 +106,6 @@ class RuntimeOptions:
             raise IBMInputValueError(
                 '"backend" is required field in "options" for "ibm_quantum" channel.'
             )
-
-        if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(

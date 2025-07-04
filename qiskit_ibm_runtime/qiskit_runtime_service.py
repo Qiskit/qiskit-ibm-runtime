@@ -78,6 +78,7 @@ class QiskitRuntimeService:
         url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
         region: Optional[str] = None,
         plans_preference: Optional[List[str]] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor.
 
@@ -101,7 +102,7 @@ class QiskitRuntimeService:
         For the ``"ibm_cloud"`` and ``"ibm_quantum_platform"`` channels it is recommended
         to provide the relevant ``instance`` to minimize API calls. If an ``instance`` is not defined,
         the service will fetch all instances accessible within the account, filtered by
-        ``region`` and ``plans_preference``.
+        ``region``, ``plans_preference``, and ``tags``.
 
         Args:
             Optional[ChannelType] channel: Channel type. ``ibm_quantum``, ``ibm_cloud``,
@@ -144,6 +145,7 @@ class QiskitRuntimeService:
                 for the ``ibm_cloud`` or ``ibm_quantum_platform`` channel.
                 An instance with the first value in the list will be prioritized if an instance
                 is not passed in.
+            Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
             An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
@@ -152,7 +154,7 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-        self._all_instances: List[Dict[str, str]] = []
+        self._all_instances: List[Dict[str, Any]] = []
         self._saved_instances: List[str] = []
         self._account = self._discover_account(
             token=token,
@@ -190,6 +192,7 @@ class QiskitRuntimeService:
             self._backend_instance_groups: List[Dict[str, Any]] = []
             self._region = region or self._account.region
             self._plans_preference = plans_preference or self._account.plans_preference
+            self._tags = tags or self._account.tags
             self._cached_backend_objs: List[IBMBackend] = []
             if self._account.instance:
                 self._default_instance = True
@@ -207,7 +210,7 @@ class QiskitRuntimeService:
                 'After this date, "ibm_cloud", "ibm_quantum_platform", and "local" will be the '
                 "only valid channels. Open Plan users should migrate now.  All other users "
                 "should review the migration guide "
-                "(https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)"
+                "(https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) "
                 "to learn when to migrate.",
                 DeprecationWarning,
                 stacklevel=2,
@@ -268,6 +271,13 @@ class QiskitRuntimeService:
     def _filter_instances_by_saved_preferences(self) -> None:
         """Filter instances by saved region and plan preferences
         for ibm_cloud and ibm_quantum_platform channels."""
+        if self._tags:
+            self._backend_instance_groups = [
+                d
+                for d in self._backend_instance_groups
+                if all(tag.lower() in d["tags"] for tag in self._tags)
+            ]
+
         if self._region:
             self._backend_instance_groups = [
                 d for d in self._backend_instance_groups if self._region in d["crn"]
@@ -279,15 +289,23 @@ class QiskitRuntimeService:
             filtered_groups = [
                 group for group in self._backend_instance_groups if group["plan"] in plans
             ]
-            if filtered_groups:
-                self._backend_instance_groups = sorted(
-                    filtered_groups, key=lambda d: plans.index(d["plan"])
-                )
-            else:
-                raise IBMRuntimeError(
-                    "No matching plan found for any of the plans listed in the",
-                    f"preference list: {self._plans_preference}",
-                )
+
+            self._backend_instance_groups = sorted(
+                filtered_groups, key=lambda d: plans.index(d["plan"])
+            )
+
+        if not self._backend_instance_groups:
+            error_string = ""
+            if self._tags:
+                error_string += f"tags: {self._tags}, "
+            if self._region:
+                error_string += f"region: {self._region}, "
+            if self._plans_preference:
+                error_string += f"plan: {self._plans_preference}"
+            raise IBMInputValueError(
+                "No matching instances found for the following filters:",
+                f"{error_string}.",
+            )
 
     def _discover_account(
         self,
@@ -749,6 +767,7 @@ class QiskitRuntimeService:
                     "crn": inst["crn"],
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "tags": inst["tags"],
                 }
                 for inst in self._all_instances
             ]
@@ -849,8 +868,8 @@ class QiskitRuntimeService:
                     api_client=self._active_api_client,
                 )
             else:
-                # cloud backend doesn't set hgp instance
                 return ibm_backend.IBMBackend(
+                    instance=instance,
                     configuration=config,
                     service=self,
                     api_client=self._active_api_client,
@@ -900,6 +919,7 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = False,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -936,6 +956,9 @@ class QiskitRuntimeService:
                 will be prioritized if an instance is not passed in.
             plans_preference: A list of account types, ordered by preference. An instance with the first
                 value in the list will be prioritized if an instance is not passed in.
+            tags: Set a list of tags to filter available instances. Instances with these tags
+                will be prioritized if an instance is not passed in.
+
         """
 
         # TODO validate account defaults
@@ -954,6 +977,7 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
+            tags=tags,
         )
 
     @staticmethod
@@ -1235,8 +1259,9 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
+                hub/group/project format. Since this parameter is not supported on ``ibm_cloud``
+                and ``ibm_quantum_platform`` channels, it will be removed in a future release.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
@@ -1259,7 +1284,8 @@ class QiskitRuntimeService:
         if instance:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
+                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
+                    "This parameter is deprecated and will be removed in a future release."
                 )
             hub, group, project = from_instance_format(instance)
         if job_tags:
@@ -1308,7 +1334,7 @@ class QiskitRuntimeService:
         return [self._decode_job(job) for job in job_responses]
 
     def delete_job(self, job_id: str) -> None:
-        """Delete a runtime job.
+        """(DEPRECATED) Delete a runtime job.
 
         Note that this operation cannot be reversed.
 
@@ -1316,9 +1342,17 @@ class QiskitRuntimeService:
             job_id: ID of the job to delete.
 
         Raises:
-            RuntimeJobNotFound: If the job doesn't exist.
-            IBMRuntimeError: If the request failed.
+            RuntimeJobNotFound: The job doesn't exist.
+            IBMRuntimeError: Method is not supported.
         """
+
+        warnings.warn(
+            "The delete_job() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support deleting jobs.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         try:
             self._active_api_client.job_delete(job_id)
         except RequestsApiError as ex:
@@ -1327,18 +1361,15 @@ class QiskitRuntimeService:
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
     def usage(self) -> Dict[str, Any]:
-        """Return monthly open plan usage information.
+        """For the ibm_quantum channel return monthly open plan usage information.
+        For the ibm_cloud and ibm_quantum_platform channels
+        return usage information for the current active instance.
 
         Returns:
             Dict with usage details.
-
-        Raises:
-            IBMInputValueError: If method is called when using the ibm_cloud channel
         """
-        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            raise IBMInputValueError(
-                "Usage is only available for the ``ibm_quantum`` channel open plan."
-            )
+        if self.channel in ["ibm_cloud", "ibm_quantum_platform"]:
+            return self._active_api_client.cloud_usage()
         return self._active_api_client.usage()
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
@@ -1447,7 +1478,7 @@ class QiskitRuntimeService:
         """Return the instance list associated to the active account. For the "ibm_quantum" channel,
             the list elements will be in the hub/group/project format. For the "ibm_cloud" and
             "ibm_quantum_platform" channels, this list will contain a series of dictionaries with the
-            following instance identifiers per instance: "crn", "plan", "name".
+            following instance identifiers per instance: "crn", "plan", "name", "tags".
 
         Returns:
             A list with instances available for the active account.

@@ -15,7 +15,6 @@
 import uuid
 import time
 from datetime import datetime, timedelta
-from unittest import SkipTest
 from pydantic import ValidationError
 
 from dateutil import tz
@@ -66,8 +65,6 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_job_instance(self):
         """Test getting job instance."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel instance is not returned.")
         self.assertEqual(self.dependencies.instance, self.sim_job.instance)
 
     def test_get_backend_name(self):

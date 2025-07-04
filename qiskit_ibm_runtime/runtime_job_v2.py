@@ -50,7 +50,7 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
-    """Representation of a runtime V2 primitive exeuction."""
+    """Representation of a runtime V2 primitive execution."""
 
     JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
