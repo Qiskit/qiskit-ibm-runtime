@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from typing import Literal
+from typing import Literal, Union
 
 import numpy as np
 
@@ -21,7 +21,7 @@ from qiskit.quantum_info import PauliLindbladMap
 from .distribute import Distribute
 from .utils import primitive_dataclass
 
-IntType = int | np.ndarray[tuple[int, ...]] | np.dtype[np.uint64]
+IntType = Union[int, np.ndarray[tuple[int, ...]], np.dtype[np.uint64]]
 NoiseRecordType = Literal["none", "parity", "sparse"]
 
 
@@ -29,20 +29,20 @@ NoiseRecordType = Literal["none", "parity", "sparse"]
 class PrimitiveOptions:
     """Primitive options."""
 
-    seed: IntType | Distribute[IntType]
+    seed: Union[IntType, Distribute[IntType]]
     r"""The seed to use for randomization."""
 
-    shots_per_randomization: IntType | Distribute[IntType]
+    shots_per_randomization: Union[IntType, Distribute[IntType]]
     r"""The number of shots per randomization."""
 
-    noise_models: dict[str, PauliLindbladMap] | None = None
+    noise_models: Union[dict[str, PauliLindbladMap], None] = None
     r"""A map from unique identifiers to noise models to apply to annotated boxes.
 
     Any box with an inject noise annotation with a matching identifier will draw samples from
     the map when generating randomizations for a PUB.
     """
 
-    return_injection_record: NoiseRecordType | Distribute[NoiseRecordType] = "none"
+    return_injection_record: Union[NoiseRecordType, Distribute[NoiseRecordType]] = "none"
     r"""Whether to return sign information when applying noise injection.
     
     The different values correspond to if any or how much information is returned:
