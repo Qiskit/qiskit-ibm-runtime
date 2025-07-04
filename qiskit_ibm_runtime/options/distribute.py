@@ -12,7 +12,7 @@
 
 "Distribute." ""
 
-from typing import Generic, Iterable, TypeVar
+from typing import Any, Generic, Iterable, TypeVar
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class Distribute(Generic[T]):
     def __init__(self, *args: T):
         self.values = list(args)
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Distribute):
             return False
         if len(self) != len(other):
