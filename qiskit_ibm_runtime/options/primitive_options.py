@@ -48,12 +48,13 @@ class PrimitiveOptions:
     The different values correspond to if any or how much information is returned:
 
         * If `"none"`, signs are not returned.
-        * If `"parity"`, one sign is returned per pub element, equal to the parity of all signs
-          computed in that pub element. These signs are placed in an array `pub_result.data.injection_record`.
-        * If `"sparse"`, signs are returned for all Lindblad terms in a sparse format. The `injection_record`
-          entry of `pub_result.data` is a `(num_negative, 3)`-shaped integer array where
-          `pub_idx, lindblad_map_idx, term_idx = injection_record[i]` indicates the location of a negative
-          value, and the rest are assumed to be positive.
+        * If `"parity"`, one sign is returned per pub element, equal to the parity of all signs 
+          computed in that pub element. These signs are placed in an array
+          `pub_result.data.injection_record`.
+        * If `"sparse"`, signs are returned for all Lindblad terms in a sparse format. The 
+          `injection_record` entry of `pub_result.data` is a `(num_negative, 3)`-shaped integer array
+          where `pub_idx, lindblad_map_idx, term_idx = injection_record[i]` indicates the location of a
+          negative value, and the rest are assumed to be positive.
     
     """
 

@@ -659,6 +659,7 @@ class TestContainerSerialization(IBMTestCase):
         Distribute("parity", ["none", "sparse"], np.array(["parity", "sparse"])),
     )
     def test_distribute(self, distribute):
+        """Test encoding and decoding Distribute"""
         payload = {"distribute": distribute}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["distribute"]
