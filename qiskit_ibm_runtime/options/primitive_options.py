@@ -22,7 +22,8 @@ from .distribute import Distribute
 from .utils import primitive_dataclass
 
 IntType = Union[int, np.ndarray[tuple[int, ...]], np.dtype[np.uint64]]
-NoiseRecordType = Literal["none", "parity", "sparse"]
+NoiseRecordLiteral = Literal["none", "parity", "sparse"]
+NoiseRecordType = Union[NoiseRecordLiteral, np.ndarray[tuple[NoiseRecordLiteral, ...]]]
 
 
 @primitive_dataclass

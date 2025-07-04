@@ -12,7 +12,7 @@
 
 "Distribute." ""
 
-from typing import Generic, Sequence, TypeVar
+from typing import Generic, Iterable, Sequence, TypeVar
 
 import numpy as np
 
@@ -22,10 +22,10 @@ T = TypeVar("T")
 class Distribute(Generic[T]):
     """Distribute option values across PUBs."""
 
-    def __init__(self, *args: Sequence[T]):
+    def __init__(self, *args: T):
         self.values = list(args)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Distribute):
             return False
         if len(self) != len(other):
@@ -35,11 +35,11 @@ class Distribute(Generic[T]):
                 return False
         return True
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[T]:
         return iter(self.values)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.values)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Distribute({', '.join(map(str, self.values))})"

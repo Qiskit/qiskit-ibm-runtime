@@ -48,6 +48,7 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     NoiseLearnerResult,
 )
 from qiskit_ibm_runtime.options.distribute import Distribute
+from qiskit_ibm_runtime.options.primitive_options import IntType, NoiseRecordType
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
@@ -654,9 +655,9 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_noise_learner_results_equal(noise_learner_result, decoded)
 
     @data(
-        Distribute(0, 1, 2),
-        Distribute(np.array([0, 1]), 1),
-        Distribute("parity", ["none", "sparse"], np.array(["parity", "sparse"])),
+        Distribute[int](0, 1, 2),
+        Distribute[IntType](np.array([0, 1]), [0, 1], 1),
+        Distribute[NoiseRecordType]("parity", ["none", "sparse"], np.array(["parity", "sparse"])),
     )
     def test_distribute(self, distribute):
         """Test encoding and decoding Distribute"""
