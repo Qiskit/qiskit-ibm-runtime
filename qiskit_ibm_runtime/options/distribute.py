@@ -12,7 +12,7 @@
 
 "Distribute." ""
 
-from typing import Generic, Iterable, Sequence, TypeVar
+from typing import Generic, Iterable, TypeVar
 
 import numpy as np
 
