@@ -36,6 +36,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "cloud_instance": "/instance",
+        "cloud_usage": "/instances/usage",
         "usage": "/usage",
     }
 
@@ -239,4 +240,13 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("usage")
+        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
+
+    def cloud_usage(self) -> Dict[str, Any]:
+        """Return cloud instance usage information.
+
+        Returns:
+            JSON response.
+        """
+        url = self.get_url("cloud_usage")
         return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
