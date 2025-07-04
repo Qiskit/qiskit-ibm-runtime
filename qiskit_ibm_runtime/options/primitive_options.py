@@ -58,5 +58,5 @@ class PrimitiveOptions:
     
     """
 
-    experimental: dict | None = None
+    experimental: Union[dict, None] = None
     r"""Experimental options."""
