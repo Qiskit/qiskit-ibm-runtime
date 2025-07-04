@@ -145,7 +145,7 @@ class NoiseLearner:
         :class:`NoiseLearnerOptions` for more details) and sorting them based on the number of
         times they occur in the various circuits. Then, it runs the noise learning experiment
         for as many layers as specified by the ``max_layers_to_learn`` field in the ``options``,
-        prioritizing layers that occurr more frequently.
+        prioritizing layers that occur more frequently.
 
         Args:
             circuits: An iterable of circuits to run the noise learner program for. Alternatively,
