@@ -12,7 +12,7 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional, Callable, List, Literal
+from typing import Optional, List, Literal
 
 from .utils import primitive_dataclass
 
@@ -34,15 +34,6 @@ class EnvironmentOptions:
         log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
 
         Default: ``WARNING``.
-    """
-    callback: Optional[Callable] = None
-    r"""(DEPRECATED) Callback function to be invoked for any interim results and final result.
-        The callback function will receive 2 positional parameters:
-
-            1. Job ID
-            2. Job result.
-
-        Default: ``None``.
     """
     job_tags: Optional[List] = None
     r"""Tags to be assigned to the job. The tags can subsequently be used
