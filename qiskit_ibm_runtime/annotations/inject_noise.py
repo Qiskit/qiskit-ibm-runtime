@@ -22,7 +22,7 @@ class InjectNoise(Annotation):
     """
     namespace = "runtime.inject_noise"
 
-    __slots__ = "ref"
+    __slots__ = ("ref",)
 
     def __init__(self, ref: str):
         self.ref = ref

@@ -13,7 +13,7 @@
 """DressingMode"""
 
 from enum import StrEnum
-from typing import Literal, TypeAlias
+from typing import Literal, Union, TypeAlias
 
 
 class DressingMode(StrEnum):
@@ -23,7 +23,7 @@ class DressingMode(StrEnum):
     RIGHT = "right"
 
 
-DressingLiteral: TypeAlias = DressingMode | Literal["left", "right"]
+DressingLiteral: TypeAlias = Union[DressingMode, Literal["left", "right"]]
 """Allowed box dressing modes.
 
  * ``left``: Gate collection templates are placed on the left side of boxes.

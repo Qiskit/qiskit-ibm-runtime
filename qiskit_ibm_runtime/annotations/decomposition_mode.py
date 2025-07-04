@@ -13,7 +13,7 @@
 """Decomposition mode."""
 
 from enum import StrEnum
-from typing import Literal, TypeAlias
+from typing import Literal, Union, TypeAlias
 
 
 class DecompositionMode(StrEnum):
@@ -26,7 +26,7 @@ class DecompositionMode(StrEnum):
     """Decompose as rz-rx-rz."""
 
 
-DecompositionLiteral: TypeAlias = DecompositionMode | Literal["rzsx", "rzrx"]
+DecompositionLiteral: TypeAlias = Union[DecompositionMode, Literal["rzsx", "rzrx"]]
 """Allowed box decomposition modes.
 
  * ``rzsx``: Box dressings are of the form
