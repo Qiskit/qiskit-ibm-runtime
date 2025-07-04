@@ -80,6 +80,7 @@ from qiskit.primitives.containers import (
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
 )
+from qiskit_ibm_runtime.options.distribute import Distribute
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     SliceSpan,
@@ -259,6 +260,8 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "Result", "__value__": obj.to_dict()}
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
+        if isinstance(obj, Distribute):
+            return {"__type__": "Distribute", "__value__": obj.values}
         if isinstance(obj, QuantumCircuit):
             kwargs: Dict[str, object] = {
                 "version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)
@@ -426,6 +429,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, np.load)
             if obj_type == "set":
                 return set(obj_val)
+            if obj_type == "Distribute":
+                return Distribute(*obj_val)
             if obj_type == "QuantumCircuit":
                 return _decode_and_deserialize(obj_val, load)[0]
             if obj_type == "Parameter":

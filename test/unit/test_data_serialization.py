@@ -47,6 +47,7 @@ from qiskit_ibm_runtime.utils.noise_learner_result import (
     LayerError,
     NoiseLearnerResult,
 )
+from qiskit_ibm_runtime.options.distribute import Distribute
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
 from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
@@ -651,6 +652,18 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["noise_learner_result"]
             self.assertIsInstance(decoded, NoiseLearnerResult)
             self.assert_noise_learner_results_equal(noise_learner_result, decoded)
+
+    @data(
+        Distribute(0, 1, 2),
+        Distribute(np.array([0, 1]), 1),
+        Distribute("parity", ["none", "sparse"], np.array(["parity", "sparse"])),
+    )
+    def test_distribute(self, distribute):
+        payload = {"distribute": distribute}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["distribute"]
+        self.assertIsInstance(decoded, Distribute)
+        self.assertEqual(distribute, decoded)
 
     @data(
         PauliLindbladMap.from_sparse_list([("XX", (0, 1), 0.5)], num_qubits=5),

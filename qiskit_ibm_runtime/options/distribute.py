@@ -14,14 +14,32 @@
 
 from typing import Generic, Sequence, TypeVar
 
+import numpy as np
+
 T = TypeVar("T")
 
 
-class Distribute(Generic[T], list):
+class Distribute(Generic[T]):
     """Distribute option values across PUBs."""
 
     def __init__(self, *args: Sequence[T]):
-        super().__init__(args)
+        self.values = list(args)
+
+    def __eq__(self, other):
+        if not isinstance(other, Distribute):
+            return False
+        if len(self) != len(other):
+            return False
+        for self_value, other_value in zip(self, other):
+            if not np.array_equal(self_value, other_value):
+                return False
+        return True
+
+    def __iter__(self):
+        return iter(self.values)
+
+    def __len__(self):
+        return len(self.values)
 
     def __repr__(self):
-        return f"Distribute({', '.join(map(str, self))})"
+        return f"Distribute({', '.join(map(str, self.values))})"
