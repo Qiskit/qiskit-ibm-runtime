@@ -12,6 +12,8 @@
 
 """Twirl annotation."""
 
+from typing import Any
+
 from qiskit.circuit import Annotation
 from qiskit.circuit.annotation import QPYSerializer
 
@@ -28,6 +30,7 @@ class Twirl(Annotation):
         dressing: Which side of the box to attached dressing instructions.
         decomposition: How to decompose single-qubit gates.
     """
+
     namespace = "runtime.twirl"
 
     __slots__ = ("group", "dressing", "decomposition")
@@ -45,6 +48,11 @@ class Twirl(Annotation):
         if self.group not in TWIRLING_GROUPS:
             allowed = (f"'{group}'" for group in TWIRLING_GROUPS)
             raise ValueError(f"The group must be one of [{', '.join(allowed)}].")
-        
-    def __eq__(self, other):
-        return isinstance(other, Twirl) and self.group == other.group and self.dressing == other.dressing and self.decomposition == other.decomposition
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, Twirl)
+            and self.group == other.group
+            and self.dressing == other.dressing
+            and self.decomposition == other.decomposition
+        )

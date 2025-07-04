@@ -15,8 +15,9 @@
 import io
 import struct
 from collections import namedtuple
+from typing import Any
 
-from qiskit.circuit.annotation import QPYSerializer
+from qiskit.circuit.annotation import Annotation, QPYSerializer
 
 from qiskit_ibm_runtime.annotations import InjectNoise, Twirl
 
@@ -37,8 +38,8 @@ TWIRL_ANNOTATION = namedtuple(
 
 class AnnotationQPYSerializer(QPYSerializer):
     """Serializer for annotations in the 'runtime' namespace."""
-    
-    def dump_annotation(self, namespace, annotation):
+
+    def dump_annotation(self, namespace: str, annotation: Any) -> bytes:
         annotation_name = type(annotation).__name__.encode()
         runtime_annotation = (
             struct.pack(RUNTIME_ANNOTATION_PACK, len(annotation_name)) + annotation_name
@@ -55,25 +56,26 @@ class AnnotationQPYSerializer(QPYSerializer):
                 TWIRL_ANNOTATION_PACK, len(group), len(dressing), len(decomposition)
             )
             return runtime_annotation + annotation_raw + group + dressing + decomposition
+        return NotImplemented
 
-    def load_annotation(self, payload):
-        payload = io.BytesIO(payload)
+    def load_annotation(self, payload: bytes) -> Annotation:
+        buff = io.BytesIO(payload)
         annotation = RUNTIME_ANNOTATION._make(
-            struct.unpack(RUNTIME_ANNOTATION_PACK, payload.read(RUNTIME_ANNOTATION_SIZE))
+            struct.unpack(RUNTIME_ANNOTATION_PACK, buff.read(RUNTIME_ANNOTATION_SIZE))
         )
-        if (name := payload.read(annotation.name_size).decode()) == "InjectNoise":
+        if (name := buff.read(annotation.name_size).decode()) == "InjectNoise":
             inject_noise = INJECT_NOISE_ANNOTATION._make(
                 struct.unpack(
-                    INJECT_NOISE_ANNOTATION_PACK, payload.read(INJECT_NOISE_ANNOTATION_SIZE)
+                    INJECT_NOISE_ANNOTATION_PACK, buff.read(INJECT_NOISE_ANNOTATION_SIZE)
                 )
             )
-            ref = payload.read(inject_noise.ref_size).decode()
+            ref = buff.read(inject_noise.ref_size).decode()
             return InjectNoise(ref)
         elif name == "Twirl":
             twirl = TWIRL_ANNOTATION._make(
-                struct.unpack(TWIRL_ANNOTATION_PACK, payload.read(TWIRL_ANNOTATION_SIZE))
+                struct.unpack(TWIRL_ANNOTATION_PACK, buff.read(TWIRL_ANNOTATION_SIZE))
             )
-            group = payload.read(twirl.group_size).decode()
-            dressing = payload.read(twirl.dressing_size).decode()
-            decomposition = payload.read(twirl.decomposition_size).decode()
+            group = buff.read(twirl.group_size).decode()
+            dressing = buff.read(twirl.dressing_size).decode()
+            decomposition = buff.read(twirl.decomposition_size).decode()
             return Twirl(group, dressing, decomposition)

@@ -12,7 +12,10 @@
 
 """Inject noise annotation."""
 
+from typing import Any
+
 from qiskit.circuit import Annotation
+
 
 class InjectNoise(Annotation):
     """Directive to inject noise into a ``box`` instruction.
@@ -20,6 +23,7 @@ class InjectNoise(Annotation):
     Args:
         ref: A unique identifier of the map from which to inject noise.
     """
+
     namespace = "runtime.inject_noise"
 
     __slots__ = ("ref",)
@@ -27,5 +31,5 @@ class InjectNoise(Annotation):
     def __init__(self, ref: str):
         self.ref = ref
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return isinstance(other, InjectNoise) and self.ref == other.ref
