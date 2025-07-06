@@ -16,7 +16,7 @@ from typing import Union
 
 import numpy as np
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Distribute(list):
@@ -29,7 +29,7 @@ class Distribute(list):
         return f"Distribute({', '.join(map(str, self))})"
 
 
-NumArrayType = Union[int, np.ndarray[tuple[int, ...], np.dtype[np.uint64]]]
+NumArrayType = Union[int, list, np.ndarray[tuple[int, ...]]]
 DistributableNumType = Union[NumArrayType, Distribute[NumArrayType]]
 
 
@@ -40,6 +40,8 @@ def get_value_for_pub_and_param(
     internal_structure = values_structure
     if isinstance(internal_structure, Distribute):
         internal_structure = internal_structure[pub_index]
+    if isinstance(internal_structure, list):
+        internal_structure = np.array(internal_structure)
     if isinstance(internal_structure, np.ndarray):
         internal_structure = internal_structure[param_index]
 
@@ -52,5 +54,5 @@ class PrimitiveOptionsModel(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid")
 
-    seed: DistributableNumType
-    experimental: dict
+    seed: DistributableNumType | None = None
+    experimental: dict = Field(default_factory=dict)
