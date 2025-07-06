@@ -239,6 +239,24 @@ class RuntimeJob(Job, BaseRuntimeJob):
             "QiskitRuntimeService.run() to submit a job."
         )
 
+    def queue_position(self, refresh: bool = False) -> None:  # pylint: disable=unused-argument
+        """(DEPRECATED) Return the position of the job in the server queue."""
+        warnings.warn(
+            "The queue_position() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support this functionality.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    def queue_info(self) -> None:
+        """(DEPRECATED) Return queue information for this job."""
+        warnings.warn(
+            "The queue_info() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support this functionality.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     def logs(self) -> str:
         """Return job logs.
 
