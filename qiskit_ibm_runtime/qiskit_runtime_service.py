@@ -170,7 +170,6 @@ class QiskitRuntimeService:
         self._url_resolver = url_resolver
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
-
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
         self._backend_instance_groups: List[Dict[str, Any]] = []
@@ -613,6 +612,7 @@ class QiskitRuntimeService:
 
         if config:
             return ibm_backend.IBMBackend(
+                instance=instance,
                 configuration=config,
                 service=self,
                 api_client=self._active_api_client,
@@ -935,7 +935,8 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: This is parameter is no longer supported on the new IBM Quantum Platform.
+            instance: (DEPRECATED) This is parameter is no longer supported on the new
+                IBM Quantum Platform. It will be removed in a future release.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
@@ -1001,7 +1002,7 @@ class QiskitRuntimeService:
         return [self._decode_job(job) for job in job_responses]
 
     def delete_job(self, job_id: str) -> None:
-        """Delete a runtime job.
+        """(DEPRECATED) Delete a runtime job.
 
         Note that this operation cannot be reversed.
 
@@ -1009,9 +1010,17 @@ class QiskitRuntimeService:
             job_id: ID of the job to delete.
 
         Raises:
-            RuntimeJobNotFound: If the job doesn't exist.
-            IBMRuntimeError: If the request failed.
+            RuntimeJobNotFound: The job doesn't exist.
+            IBMRuntimeError: Method is not supported.
         """
+
+        warnings.warn(
+            "The delete_job() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support deleting jobs.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         try:
             self._active_api_client.job_delete(job_id)
         except RequestsApiError as ex:
@@ -1020,18 +1029,15 @@ class QiskitRuntimeService:
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
     def usage(self) -> Dict[str, Any]:
-        """Return monthly open plan usage information.
+        """For the ibm_quantum channel return monthly open plan usage information.
+        For the ibm_cloud and ibm_quantum_platform channels
+        return usage information for the current active instance.
 
         Returns:
             Dict with usage details.
-
-        Raises:
-            IBMInputValueError: If method is called when using the ibm_cloud channel
         """
-        if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            raise IBMInputValueError(
-                "Usage is only available for the ``ibm_quantum`` channel open plan."
-            )
+        if self.channel in ["ibm_cloud", "ibm_quantum_platform"]:
+            return self._active_api_client.cloud_usage()
         return self._active_api_client.usage()
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:

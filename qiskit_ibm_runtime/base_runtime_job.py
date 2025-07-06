@@ -377,7 +377,7 @@ class BaseRuntimeJob(ABC):
 
     @property
     def instance(self) -> Optional[str]:
-        """For ibm_cloud and ibm_quantum_platform, `None` is returned."""
+        """Return the IBM Cloud instance CRN."""
         return self._backend._instance
 
     @abstractmethod

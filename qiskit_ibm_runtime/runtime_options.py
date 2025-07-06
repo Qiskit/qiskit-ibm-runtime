@@ -84,7 +84,7 @@ class RuntimeOptions:
         self.session_time = session_time
         self.private = private
 
-    def validate(self, channel: str) -> None:
+    def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
         """Validate options.
 
         Args:
@@ -93,14 +93,12 @@ class RuntimeOptions:
         Raises:
             IBMInputValueError: If one or more option is invalid.
         """
+
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-
-        if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
