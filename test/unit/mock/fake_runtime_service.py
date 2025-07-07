@@ -17,7 +17,7 @@ from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService, RuntimeClient
 from .fake_runtime_client import BaseFakeRuntimeClient
 from .fake_api_backend import FakeApiBackendSpecs
 
@@ -98,6 +98,9 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         # return dummy crn
         return instance
+
+    def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
+        return self._active_api_client
 
     def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
         if instance:
