@@ -18,7 +18,7 @@ from operator import mod
 from itertools import chain
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression
+from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, CONTROL_FLOW_OP_NAMES
 from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
@@ -253,7 +253,13 @@ class FoldRzzAngle(TransformationPass):
 def convert_to_rzz_valid_pub(
     program_id: str, pub: Union[SamplerPubLike, EstimatorPubLike]
 ) -> Union[SamplerPub, EstimatorPub]:
-    """Return a pub which is compatible with Rzz constraints"""
+    """
+    Return a pub which is compatible with Rzz constraints.
+
+    Current limitations:
+    1. Does not support dynamic circuits.
+    2. Does not preserve global phase.
+    """
     if program_id == "sampler":
         pub = SamplerPub.coerce(pub)
     elif program_id == "estimator":
@@ -272,6 +278,12 @@ def convert_to_rzz_valid_pub(
 
     for instruction in pub.circuit.data:
         operation = instruction.operation
+
+        if operation.name in CONTROL_FLOW_OP_NAMES:
+            raise ValueError(
+                "The function convert_to_rzz_valid_pub currently does not support dynamic instructions."
+            )
+
         if operation.name != "rzz" or not isinstance(
             (param_exp := instruction.operation.params[0]), ParameterExpression
         ):
