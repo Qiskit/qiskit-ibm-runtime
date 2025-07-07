@@ -65,9 +65,7 @@ class AnnotationQPYSerializer(QPYSerializer):
         )
         if (name := buff.read(annotation.name_size).decode()) == "InjectNoise":
             inject_noise = INJECT_NOISE_ANNOTATION._make(
-                struct.unpack(
-                    INJECT_NOISE_ANNOTATION_PACK, buff.read(INJECT_NOISE_ANNOTATION_SIZE)
-                )
+                struct.unpack(INJECT_NOISE_ANNOTATION_PACK, buff.read(INJECT_NOISE_ANNOTATION_SIZE))
             )
             ref = buff.read(inject_noise.ref_size).decode()
             return InjectNoise(ref)
