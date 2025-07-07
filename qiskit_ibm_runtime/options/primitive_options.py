@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from typing import Literal, Tuple, Union
+from typing import Literal, Union
 
 import numpy as np
 
@@ -21,9 +21,8 @@ from qiskit.quantum_info import PauliLindbladMap
 from .distribute import Distribute
 from .utils import primitive_dataclass
 
-IntType = Union[int, np.ndarray[Tuple[int, ...]], np.dtype[np.uint64]]
-NoiseRecordLiteral = Literal["none", "parity", "sparse"]
-NoiseRecordType = Union[NoiseRecordLiteral, np.ndarray[Tuple[NoiseRecordLiteral, ...]]]
+IntType = Union[int, np.dtype[np.uint64]]
+NoiseRecordType = Literal["none", "parity", "sparse"]
 
 
 @primitive_dataclass
