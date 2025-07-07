@@ -15,7 +15,6 @@
 from typing import Any
 
 from qiskit.circuit import Annotation
-from qiskit.circuit.annotation import QPYSerializer
 
 from .decomposition_mode import DecompositionLiteral, DecompositionMode
 from .dressing_mode import DressingLiteral, DressingMode
@@ -32,8 +31,6 @@ class Twirl(Annotation):
     """
 
     namespace = "runtime.twirl"
-
-    __slots__ = ("group", "dressing", "decomposition")
 
     def __init__(
         self,

@@ -12,11 +12,11 @@
 
 """Virtual type."""
 
-from enum import StrEnum
-from typing import Literal, Union, TypeAlias
+from enum import Enum
+from typing import Literal, Union
 
 
-class VirtualType(StrEnum):
+class VirtualType(str, Enum):
     """Name identifiers for virtual gate types."""
 
     PAULI = "pauli"
@@ -36,7 +36,7 @@ TWIRLING_GROUPS = frozenset([VirtualType.PAULI])
 """The virtual types that represent unitary groups and have twirling support."""
 
 
-GroupLiteral: TypeAlias = Union[VirtualType, Literal["pauli"]]
+GroupLiteral = Union[VirtualType, Literal["pauli"]]
 """The type of group by which to twirl.
 
  * ``pauli``: The projective Pauli group.

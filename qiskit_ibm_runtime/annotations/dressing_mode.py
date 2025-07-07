@@ -12,18 +12,18 @@
 
 """DressingMode"""
 
-from enum import StrEnum
-from typing import Literal, Union, TypeAlias
+from enum import Enum
+from typing import Literal, Union
 
 
-class DressingMode(StrEnum):
+class DressingMode(str, Enum):
     """Which side of a box to anchor the dressing gates to."""
 
     LEFT = "left"
     RIGHT = "right"
 
 
-DressingLiteral: TypeAlias = Union[DressingMode, Literal["left", "right"]]
+DressingLiteral = Union[DressingMode, Literal["left", "right"]]
 """Allowed box dressing modes.
 
  * ``left``: Gate collection templates are placed on the left side of boxes.

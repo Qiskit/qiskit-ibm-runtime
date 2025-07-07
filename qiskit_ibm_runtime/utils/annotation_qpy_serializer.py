@@ -15,11 +15,14 @@
 import io
 import struct
 from collections import namedtuple
-from typing import Any
+from typing import Any, cast
 
 from qiskit.circuit.annotation import Annotation, QPYSerializer
 
 from qiskit_ibm_runtime.annotations import InjectNoise, Twirl
+from qiskit_ibm_runtime.annotations.decomposition_mode import DecompositionLiteral
+from qiskit_ibm_runtime.annotations.dressing_mode import DressingLiteral
+from qiskit_ibm_runtime.annotations.twirl import GroupLiteral
 
 RUNTIME_ANNOTATION_PACK = "!H"
 RUNTIME_ANNOTATION_SIZE = struct.calcsize(RUNTIME_ANNOTATION_PACK)
@@ -73,7 +76,7 @@ class AnnotationQPYSerializer(QPYSerializer):
             twirl = TWIRL_ANNOTATION._make(
                 struct.unpack(TWIRL_ANNOTATION_PACK, buff.read(TWIRL_ANNOTATION_SIZE))
             )
-            group = buff.read(twirl.group_size).decode()
-            dressing = buff.read(twirl.dressing_size).decode()
-            decomposition = buff.read(twirl.decomposition_size).decode()
+            group = cast(GroupLiteral, buff.read(twirl.group_size).decode())
+            dressing = cast(DressingLiteral, buff.read(twirl.dressing_size).decode())
+            decomposition = cast(DecompositionLiteral, buff.read(twirl.decomposition_size).decode())
             return Twirl(group, dressing, decomposition)
