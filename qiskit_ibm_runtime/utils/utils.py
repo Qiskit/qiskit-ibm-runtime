@@ -84,7 +84,7 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
         ):
             return (
                 f"The instruction {name} on qubits {qargs} is supported only for angles in the "
-                f"range [0, pi/2], but an angle of {param} has been provided."
+                f"range [0, pi/2], but an angle ({param}) outside of this range has been requested."
             )
 
         if isinstance(operation, ControlFlowOp):
@@ -151,7 +151,8 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
             elif angle < 0.0 or angle > np.pi / 2 + 1e-10:
                 return (
                     "The instruction rzz is supported only for angles in the "
-                    f"range [0, pi/2], but an angle of {angle} has been provided."
+                    f"range [0, pi/2], but an angle ({angle}) outside of this "
+                    "range has been requested."
                 )
 
         if isinstance(operation, ControlFlowOp):
@@ -207,9 +208,9 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
                 )
                 return (
                     "The instruction rzz is supported only for angles in the "
-                    f"range [0, pi/2], but an angle of {angle} has been provided; "
-                    f"via parameter value(s) {vals_msg}, substituted in parameter expression "
-                    f"{param_exp}."
+                    f"range [0, pi/2], but an angle ({angle}) outside of this range has been "
+                    f"requested; via parameter value(s) {vals_msg}, substituted in parameter "
+                    f"expression {param_exp}."
                 )
 
     return ""
@@ -259,6 +260,18 @@ def get_iam_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
+def get_global_search_api_url(cloud_url: str) -> str:
+    """Compute the GlobalSearchV2 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://api.global-search-tagging.{parsed_url.hostname}"
+
+
+def get_global_catalog_api_url(cloud_url: str) -> str:
+    """Compute the GlobalCatalogV1 API URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://globalcatalog.{parsed_url.hostname}/api/v1"
+
+
 def get_resource_controller_api_url(cloud_url: str) -> str:
     """Computes the Resource Controller API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
@@ -267,7 +280,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
 
 def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
-    if channel != "ibm_cloud":
+    if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
     if is_crn(instance):
@@ -301,7 +314,9 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
+def default_runtime_url_resolver(
+    url: str, instance: str, private_endpoint: bool = False, channel: str = "ibm_quantum_platform"
+) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
@@ -324,7 +339,15 @@ def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool
                 f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"
             )
+        elif channel == "ibm_quantum_platform":
+            # ibm_quantum_platform url
+            region = _location_from_crn(instance)
+            region_prefix = "" if region == "us-east" else f"{region}."
+            api_host = (
+                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
+            )
         else:
+            # ibm_cloud url
             api_host = (
                 f"{parsed_url.scheme}://{_location_from_crn(instance)}"
                 f".quantum-computing.{parsed_url.hostname}"

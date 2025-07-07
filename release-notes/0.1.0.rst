@@ -49,7 +49,7 @@ Upgrade Notes
       from qiskit_ibm_runtime import IBMRuntimeService
       service = IBMRuntimeService(auth="cloud", token="abc", instance="IBM Cloud CRN or Service instance name")
 
--  `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+-  `qiskit_ibm_runtime.IBMBackend <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend>`__
    class now implements the ``qiskit.providers.BackendV2`` interface and
    provides flatter access to the configuration of a backend, for
    example:
@@ -66,7 +66,7 @@ Upgrade Notes
    now an attribute instead of a method.
 
    Refer to the
-   `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+   `qiskit_ibm_runtime.IBMBackend <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend>`__
    class doc string for a list of all available attributes.
 
 -  If you used qiskit.providers.ibmq.AccountProvider.get_backend method
@@ -111,11 +111,11 @@ Upgrade Notes
 
 -  ``qiskit_ibm_runtime.IBMRuntimeService.run()`` method now accepts
    runtime execution options as
-   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__
+   `qiskit_ibm_runtime.RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__
    class in addition to already supported Dict. backend_name, image and
    log_level are the currently available options.
 
 -  Final result is also streamed now after interim results when you
    specify a ``callback`` to
    ``qiskit_ibm_runtime.IBMRuntimeService.run()`` or
-   `qiskit_ibm_runtime.RuntimeJob.stream_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.30/qiskit_ibm_runtime.RuntimeJob#stream_results>`__.
+   `qiskit_ibm_runtime.RuntimeJob.stream_results() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.30/runtime-job#stream_results>`__.

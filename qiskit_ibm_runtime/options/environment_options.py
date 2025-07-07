@@ -52,12 +52,12 @@ class EnvironmentOptions:
         Default: ``None``.
     """
     private: Optional[bool] = False
-    r"""Boolean that indicates whether the job is marked as private. This is only
-        supported for ``ibm_quantum`` channel. When set to true, input parameters are not
-        returned, and the results can only be read once. After the results are read or after
-        a specified time after the job is completed, the results are deleted from the service.
-        When set to false, the input parameters and results follow the standard retention
-        behavior.
+    r"""Boolean that indicates whether the job is marked as private. When set to true, 
+        input parameters are not returned, and the results can only be read once. 
+        After the job is completed, input parameters are deleted from the service. 
+        After the results are read, these are also deleted from the service. 
+        When set to false, the input parameters and results follow the 
+        standard retention behavior of the API.
 
         Default: False.
     """

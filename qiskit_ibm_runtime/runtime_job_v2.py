@@ -50,7 +50,7 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
-    """Representation of a runtime V2 primitive exeuction."""
+    """Representation of a runtime V2 primitive execution."""
 
     JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
@@ -70,6 +70,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
         version: Optional[int] = None,
+        private: Optional[bool] = False,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -87,6 +88,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             session_id: Job ID of the first job in a runtime session.
             tags: Tags assigned to the job.
             version: Primitive version.
+            private: Marks job as private.
         """
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
@@ -104,6 +106,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             session_id=session_id,
             tags=tags,
             version=version,
+            private=private,
         )
         self._status: JobStatus = "INITIALIZING"
 

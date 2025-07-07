@@ -79,7 +79,7 @@ class Batch(Session):
                 jobs.append(job)
 
     For more details, check the "`Run jobs in a batch
-    <https://docs.quantum.ibm.com/guides/run-jobs-batch>`_" page.
+    <https://quantum.cloud.ibm.com/docs/guides/run-jobs-batch>`_" page.
     """
 
     def __init__(
@@ -99,7 +99,7 @@ class Batch(Session):
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://docs.quantum.ibm.com/guides/max-execution-time>`_.
+                <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
             create_new: If True, the POST session API endpoint will be called to create a new session.
                 Prevents creating a new session when ``from_id()`` is called.
         Raises:
@@ -111,7 +111,7 @@ class Batch(Session):
     def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
-            session = self._service._api_client.create_session(
+            session = self._service._get_api_client(self._instance).create_session(
                 self.backend(), self._instance, self._max_time, self._service.channel, "batch"
             )
             return session.get("id")

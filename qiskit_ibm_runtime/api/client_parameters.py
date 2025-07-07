@@ -34,12 +34,12 @@ class ClientParameters:
         proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
         private_endpoint: Optional[bool] = False,
-        url_resolver: Optional[Callable[[str, str, Optional[bool]], str]] = None,
+        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
     ) -> None:
         """ClientParameters constructor.
 
         Args:
-            channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
+            channel: Channel type. ``ibm_cloud``, ``ibm_quantum``, or ``ibm_quantum_platform``.
             token: IBM Quantum API token.
             url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
             instance: Service instance to use.
@@ -61,14 +61,14 @@ class ClientParameters:
 
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
-        if self.channel == "ibm_cloud":
+        if self.channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAuth(api_key=self.token, crn=self.instance, private=self.private_endpoint)
 
         return QuantumAuth(access_token=self.token)
 
     def get_runtime_api_base_url(self) -> str:
         """Returns the Runtime API base url."""
-        return self.url_resolver(self.url, self.instance, self.private_endpoint)
+        return self.url_resolver(self.url, self.instance, self.private_endpoint, self.channel)
 
     def connection_parameters(self) -> Dict[str, Any]:
         """Construct connection related parameters.

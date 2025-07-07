@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.39.0"
+fallback_version = "0.40.1"
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -99,7 +99,7 @@ ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslati
 ibm_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMFractionalTranslationPlugin"
 
 [project.urls]
-documentation = "https://docs.quantum.ibm.com/"
+documentation = "https://quantum.cloud.ibm.com/docs/"
 repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
 issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 

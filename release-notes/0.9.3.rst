@@ -13,12 +13,12 @@ Upgrade Notes
    used to control validation. If set, validation will be skipped.
 
 -  Backend configurations are no longer loaded when
-   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    is initialized. Instead, the configuration is only loaded and cached
    during
-   `get_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   `get_backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#get_backend>`__
    and
-   `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__.
+   `backends() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#backends>`__.
 
 Bug Fixes
 ---------

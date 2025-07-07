@@ -278,20 +278,13 @@ class FakeBackendV2(BackendV2):
         return self._target
 
     @property
-    def max_circuits(self) -> int:
-        """(DEPRECATED) The maximum number of circuits
-
-        The maximum number of circuits that the backend supports in a single execution.
-        Note that the actual number of circuits the service allows may be different.
+    def max_circuits(self) -> None:
+        """This property used to return the `max_experiments` value from the
+        backend configuration but this value is no longer an accurate representation
+        of backend circuit limits. New fields will be added to indicate new limits.
         """
 
-        issue_deprecation_msg(
-            "max_circuits is deprecated",
-            "0.37.0",
-            "Please see our documentation on job limits "
-            "https://docs.quantum.ibm.com/guides/job-limits#job-limits.",
-        )
-        return self.configuration().max_experiments
+        return None
 
     @classmethod
     def _default_options(cls) -> Options:
@@ -476,7 +469,7 @@ class FakeBackendV2(BackendV2):
 
             real_props = real_backend.properties(refresh=True)
             real_config = configuration_from_server_data(
-                raw_config=service._api_client.backend_configuration(prod_name, refresh=True)
+                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True)
             )
             real_defs = real_backend.defaults(refresh=True)
 

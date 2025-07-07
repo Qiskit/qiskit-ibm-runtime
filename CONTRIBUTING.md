@@ -40,7 +40,7 @@ pip install -e ".[dev]"
 
 ### Open an issue
 
-* For documentation issues relating to pages in the Start, Build, Transpile, Verify, Run, and Migration guides sections of https://docs.quantum.ibm.com, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+* For documentation issues relating to pages in the Guides, Tutorials, and Migration guides sections of https://quantum.cloud.ibm.com/docs, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
 * For issues relating to API reference pages (any page that contains /api/ in the url), please open an issue in the repo specific to that API reference.
 
 ### Pull request checklist
@@ -141,10 +141,10 @@ When a single backend is retrieved with the `instance` parameter,
 
 .. code:: python
 
-  service.backend('ibm_torino', instance='ibm-q/open/main')
-  # raises error if torino is not in ibm-q/open/main but in a different instance
+  service.backend('ibm_torino', instance='IBM_CLOUD_INSTANCE')
+  # raises error if torino is not in given instance but in a different instance
   # the user has access to
-  service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")
+  service = QiskitRuntimeService(channel="ibm_cloud", instance="IBM_CLOUD_INSTANCE")
   service.backend('ibm_torino') # raises the same error
 
 if the backend is not in the instance, but in a different one the user
@@ -213,20 +213,13 @@ make integration-test
 
 ###### Configuration
 
-Integration tests require an environment configuration and can be run against both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
+Integration tests require an environment configuration and can be run against the IBM Quantum Platform API
+(`ibm_quantum_platform` channel).
 
-Sample configuration for IBM Quantum
-```bash
-QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
-QISKIT_IBM_URL=https://auth.quantum.ibm.com/api                 # IBM Quantum API URL
-QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
-QISKIT_IBM_QPU=...                                              # IBM Quantum Processing Unit to use
-```
-
-Sample configuration for IBM Cloud
+Sample configuration for IBM Cloud (ibm_quantum_platform)
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
-QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
+QISKIT_IBM_URL=https://quantum.cloud.ibm.com                    # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
 QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
@@ -237,7 +230,7 @@ To enable test cases against external system in your private fork, make sure to 
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
 upon. 
 
-For example, in your github fork settings, add the environment you want to run tests on (ibm-quantum-production, ibm-quantum-staging, ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
+For example, in your github fork settings, add the environment you want to run tests on (ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 
 ### Style guide
 

@@ -30,7 +30,7 @@ Bug Fixes
 ---------
 
 - Fixed support for custom scheduling transpiler stages with Qiskit 2.x. (`2153 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2153>`__)
-- `ConvertConditionsToIfOps <https://docs.quantum.ibm.com/api/qiskit/1.4/qiskit.transpiler.passes.ConvertConditionsToIfOps>`__ now correctly runs at
+- `ConvertConditionsToIfOps <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.transpiler.passes.ConvertConditionsToIfOps>`__ now correctly runs at
   all optimization levels of the scheduling plugins for dynamic circuits, when using Qiskit 1.x. (`2154 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2154>`__)
 - When retrieving jobs with :meth:`~.QiskitRuntimeService.jobs`, there is no way to distinguish 
   between v1 and v2 primitives. Since the v1 primitives were completely removed over 6 months ago 

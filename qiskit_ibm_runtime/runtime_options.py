@@ -70,12 +70,12 @@ class RuntimeOptions:
                 this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
                 clock time.
             session_time: Length of session in seconds.
-            private: Boolean that indicates whether the job is marked as private. This is only
-                supported for ``ibm_quantum`` channel. When set to true, input parameters are not
-                returned, and the results can only be read once. After the results are read or after
-                a specified time after the job is completed, the results are deleted from the service.
-                When set to false, the input parameters and results follow the standard retention
-                behavior.
+            private: Boolean that indicates whether the job is marked as private. When set to true,
+                input parameters are not returned, and the results can only be read once.
+                After the job is completed, input parameters are deleted from the service.
+                After the results are read, these are also deleted from the service.
+                When set to false, the input parameters and results follow the
+                standard retention behavior of the API.
         """
         self.backend = backend
         self.image = image
@@ -95,6 +95,7 @@ class RuntimeOptions:
         Raises:
             IBMInputValueError: If one or more option is invalid.
         """
+
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,
@@ -105,9 +106,6 @@ class RuntimeOptions:
             raise IBMInputValueError(
                 '"backend" is required field in "options" for "ibm_quantum" channel.'
             )
-
-        if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(

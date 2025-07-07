@@ -10,14 +10,14 @@ New Features
    keyword arguments, however, are not validated.
 
 -  The
-   `qiskit_ibm_runtime.options.EnvironmentOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.EnvironmentOptions>`__
+   `qiskit_ibm_runtime.options.EnvironmentOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/options-environment-options>`__
    class now accepts a ``callback`` parameter. This parameter can be
    used to stream the interim and final results of the primitives.
 
 -  The ``qiskit_ibm_runtime.Options`` class now accepts
    ``max_execution_time`` as a first level option and ``job_tags`` as an
    option under ``environment``.
-   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.25/qiskit_ibm_runtime.RuntimeOptions>`__
+   `qiskit_ibm_runtime.RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__
    has also been updated to include these two parameters.
 
 Upgrade Notes
@@ -35,12 +35,12 @@ Deprecation Notes
    ``quantum_kernal_alignment`` have been deprecated due to low usage.
 
 -  Passing ``instance`` parameter to the
-   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__
    has been deprecated. Instead, you can pass the ``instance`` parameter
    inside the ``options`` parameter.
 
 -  Passing ``job_tags`` and ``max_execution_time`` as parameters to
-   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service>`__
    has been deprecated. Please pass them inside ``options``.
 
 Bug Fixes

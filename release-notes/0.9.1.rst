@@ -4,7 +4,7 @@
 Upgrade Notes
 -------------
 
--  `qiskit_ibm_runtime.QiskitRuntimeService.jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+-  `qiskit_ibm_runtime.QiskitRuntimeService.jobs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/qiskit-runtime-service#jobs>`__
    now has a ``backend_name`` parameter that can be used to only return
    jobs run with the specified backend.
 
@@ -26,7 +26,7 @@ Deprecation Notes
 -----------------
 
 -  ``backend`` is no longer a supported option when using
-   `qiskit_ibm_runtime.Session.run() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/0.29/qiskit_ibm_runtime.Session#run>`__.
+   `qiskit_ibm_runtime.Session.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/session#run>`__.
    Sessions do not support multiple cross backends. Additionally, an
    exception will be raised if a backend passed in through options does
    not match the original session backend in an active session.

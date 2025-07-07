@@ -1,0 +1,20 @@
+0.40.1 (2025-06-04)
+===================
+
+Bug Fixes
+---------
+
+- Fixed an issue where if there was no instance saved nor passed in at initialization, the service could not make
+  any API calls until :meth:`.QiskitRuntimeService.backend` or :meth:`.QiskitRuntimeService.backends` is called first.
+
+- Fixed a bug where if ``use_fractional_gates`` is set but the backend configuration was already cached, 
+  the incorrect configuration could be returned. (`2269 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2269>`__)
+
+
+Other Notes
+-----------
+
+- Error messages related to ``rzz`` gate angles being outside of the allowed
+  range of 0 to :math:`\pi/2` during circuit validation have been updated to
+  clarify that the angle value requested in the circuit was the problem and not
+  an angle value provided by the backend. (`2276 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2276>`__)

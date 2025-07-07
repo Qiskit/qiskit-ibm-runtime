@@ -67,6 +67,7 @@ class BaseRuntimeJob(ABC):
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
         version: Optional[int] = None,
+        private: Optional[bool] = False,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -84,6 +85,7 @@ class BaseRuntimeJob(ABC):
             session_id: Job ID of the first job in a runtime session.
             tags: Tags assigned to the job.
             version: Primitive version.
+            private: Marks job as private.
         """
         self._backend = backend
         self._job_id = job_id
@@ -101,6 +103,7 @@ class BaseRuntimeJob(ABC):
         self._version = version
         self._queue_info: QueueInfo = None
         self._status: Union[RuntimeJobStatus, str] = None
+        self._private = private
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
@@ -115,6 +118,11 @@ class BaseRuntimeJob(ABC):
                 remedy="These parameters will have no effect since interim "
                 "results streaming was removed in a previous release.",
             )
+
+    @property
+    def private(self) -> bool:
+        """Returns a boolean indicating whether or not the job is private."""
+        return self._private
 
     def job_id(self) -> str:
         """Return a unique id identifying the job."""
@@ -353,7 +361,7 @@ class BaseRuntimeJob(ABC):
 
     @property
     def usage_estimation(self) -> Dict[str, Any]:
-        """Return the usage estimation infromation for this job.
+        """Return the usage estimation information for this job.
 
         Returns:
             ``quantum_seconds`` which is the estimated system execution time
@@ -371,7 +379,7 @@ class BaseRuntimeJob(ABC):
     @property
     def instance(self) -> Optional[str]:
         """For ibm_quantum channel jobs, return the instance where the job was run.
-        For ibm_cloud, `None` is returned.
+        For ibm_cloud and ibm_quantum_platform, the instance crn is returned.
         """
         return self._backend._instance
 
