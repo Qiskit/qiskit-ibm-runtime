@@ -88,8 +88,10 @@ from qiskit_ibm_runtime.execution_span import (
 )
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
-from .annotation_qpy_serializer import AnnotationQPYSerializer
+from .annotation_serializer import AnnotationSerializer
 from .noise_learner_result import NoiseLearnerResult
+
+ANNOTATION_FACTORIES = {"runtime": AnnotationSerializer}
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 15
 
@@ -270,7 +272,7 @@ class RuntimeEncoder(json.JSONEncoder):
                     data,
                     buff,
                     RuntimeEncoder,
-                    annotation_factories={"runtime": AnnotationQPYSerializer},
+                    annotation_factories=ANNOTATION_FACTORIES,
                     **kwargs,
                 ),  # type: ignore[no-untyped-call]
             )
@@ -434,9 +436,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "QuantumCircuit":
                 return _decode_and_deserialize(
                     obj_val,
-                    lambda data: load(
-                        data, annotation_factories={"runtime": AnnotationQPYSerializer}
-                    ),
+                    lambda data: load(data, annotation_factories=ANNOTATION_FACTORIES),
                 )[0]
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)

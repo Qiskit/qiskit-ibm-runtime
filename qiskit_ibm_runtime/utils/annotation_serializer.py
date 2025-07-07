@@ -39,7 +39,7 @@ TWIRL_ANNOTATION = namedtuple(
 )
 
 
-class AnnotationQPYSerializer(QPYSerializer):
+class AnnotationSerializer(QPYSerializer):
     """Serializer for annotations in the 'runtime' namespace."""
 
     def dump_annotation(self, namespace: str, annotation: Any) -> bytes:
