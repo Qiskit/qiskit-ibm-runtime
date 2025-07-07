@@ -241,7 +241,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
         )
 
     def queue_position(self, refresh: bool = False) -> Optional[int]:
-        """Return the position of the job in the server queue.
+        """(DEPRECATED) Return the position of the job in the server queue.
 
         Note:
             The position returned is within the scope of the provider
@@ -254,6 +254,13 @@ class RuntimeJob(Job, BaseRuntimeJob):
         Returns:
             Position in the queue or ``None`` if position is unknown or not applicable.
         """
+        warnings.warn(
+            "The queue_position() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support this functionality.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         if refresh:
             api_metadata = self._api_client.job_metadata(self.job_id())
             self._queue_info = QueueInfo(

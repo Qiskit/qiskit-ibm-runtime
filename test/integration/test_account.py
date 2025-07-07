@@ -254,6 +254,15 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
                 instance_job = jobs[0].job_id()
                 self.assertTrue(service.job(instance_job))
 
+    def test_service_usage(self):
+        """Test usage method."""
+        service = QiskitRuntimeService(
+            token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
+        )
+        usage = service.usage()
+        self.assertTrue(usage)
+        self.assertIsInstance(usage, dict)
+
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
