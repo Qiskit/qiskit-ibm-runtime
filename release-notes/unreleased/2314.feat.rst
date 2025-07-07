@@ -1,0 +1,4 @@
+Support for running ``qiskit-ibm-runtime`` with Python 3.9 has been deprecated and will
+be removed in a future release. 
+
+Additionally, ``qiskit-ibm-runtime`` now officialy supports Python 3.13.
