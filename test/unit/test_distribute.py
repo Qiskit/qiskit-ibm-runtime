@@ -21,9 +21,11 @@ from qiskit_ibm_runtime.options.distribute import Distribute
 
 from ..ibm_test_case import IBMTestCase
 
+
 @ddt.ddt
 class TestDistribute(IBMTestCase):
     """Class for testing Distribute."""
+
     def setUp(self):
         super().setUp()
         self.distribute = Distribute(1, [[1, 2, 3], [4, 5, 6]], np.array([1, 2, 3]))
@@ -39,8 +41,12 @@ class TestDistribute(IBMTestCase):
         """Test the equality method."""
         self.assertNotEqual(self.distribute, 1)
         self.assertNotEqual(self.distribute, Distribute(1))
-        self.assertNotEqual(self.distribute, Distribute(1, [[1, 2, 3], [4, 5, 6]]), np.array([1, 2, 2]))
-        self.assertEqual(self.distribute, Distribute(1, [[1, 2, 3], [4, 5, 6]], np.array([1, 2, 3])))
+        self.assertNotEqual(
+            self.distribute, Distribute(1, [[1, 2, 3], [4, 5, 6]]), np.array([1, 2, 2])
+        )
+        self.assertEqual(
+            self.distribute, Distribute(1, [[1, 2, 3], [4, 5, 6]], np.array([1, 2, 3]))
+        )
 
     def test_repr(self):
         """Test the repr method."""
