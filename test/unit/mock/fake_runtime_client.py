@@ -297,9 +297,6 @@ class BaseFakeRuntimeClient:
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
 
-        if backend_name is None:
-            backend_name = self.list_backends()[0]
-
         if session_id is None:
             session_id = job_id
 
@@ -396,7 +393,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, crn: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: Optional[str] = None) -> List[Dict[str, Any]]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
