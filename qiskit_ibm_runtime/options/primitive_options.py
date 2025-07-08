@@ -57,6 +57,3 @@ class PrimitiveOptions:
           negative value, and the rest are assumed to be positive.
     
     """
-
-    experimental: Union[dict, None] = None
-    r"""Experimental options."""
