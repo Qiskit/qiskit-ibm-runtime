@@ -301,6 +301,7 @@ def convert_to_rzz_valid_pub(
 
         rz_angles = np.zeros(num_param_sets)
         rx_angles = np.zeros(num_param_sets)
+        rzz_angles = np.zeros(num_param_sets)
 
         for idx, row in enumerate(projected_arr):
             angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
@@ -314,6 +315,8 @@ def convert_to_rzz_valid_pub(
                 rx_angles[idx] = pi
             else:
                 rx_angles[idx] = 0
+
+            rzz_angles[idx] = pi / 2 - abs(mod(angle, pi) - pi / 2)
 
         rzz_count += 1
         param_prefix = f"rzz_{rzz_count}_"
@@ -375,8 +378,11 @@ def convert_to_rzz_valid_pub(
                 val_data[f"{param_prefix}rx"] = rx_angles
 
         if is_rz or is_rx:
-            rzz_angle = pi / 2 - (param_exp._apply_operation(mod, pi) - pi / 2).abs()
-            new_data.append(CircuitInstruction(RZZGate(rzz_angle), qubits))
+            # param_exp * 0 to prevent an error complaining that the original parameters,
+            # still present in the parameter values, are missing from the circuit
+            param_rzz = param_exp * 0 + Parameter(f"{param_prefix}rzz")
+            new_data.append(CircuitInstruction(RZZGate(param_rzz), qubits))
+            val_data[f"{param_prefix}rzz"] = rzz_angles
         else:
             new_data.append(instruction)
 

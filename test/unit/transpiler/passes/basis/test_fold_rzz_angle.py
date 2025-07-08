@@ -127,10 +127,10 @@ class TestFoldRzzAngle(IBMTestCase):
 
     @data(
         [0.2, 0.1, 0.4, 0.3, 2],  # no modification in circuit
-        [0.2, 0.1, 0.3, 0.4, 3],  # rzz_2_rx with values 0 and pi
-        [0.1, 0.2, 0.3, 0.4, 2],  # x
-        [0.2, 0.1, 0.3, 2, 5],  # rzz_1_rx, rzz_1_rz, rzz_2_rz with values 0 and pi
-        [0.3, 2, 0.3, 2, 2],  # circuit changes but no new parameters
+        [0.2, 0.1, 0.3, 0.4, 4],  # rzz_2_rx with values 0 and pi
+        [0.1, 0.2, 0.3, 0.4, 3],  # x
+        [0.2, 0.1, 0.3, 2, 7],  # rzz_1_rx, rzz_1_rz, rzz_2_rz with values 0 and pi
+        [0.3, 2, 0.3, 2, 4],  # circuit changes but no new parameters
     )
     @unpack
     def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2, expected_num_params):
@@ -159,7 +159,7 @@ class TestFoldRzzAngle(IBMTestCase):
                 )
             )
 
-    @unittest.skip("")
+    @unittest.skip("convert_to_rzz_valid_pub does not support dynamic circuits currently")
     def test_rzz_pub_conversion_dynamic(self):
         """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits"""
         p = Parameter("p")
