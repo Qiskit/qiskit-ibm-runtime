@@ -150,16 +150,15 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             this_config = gate_configs[name]
             params = list(map(Parameter, getattr(this_config, "parameters", [])))
             coupling_map = getattr(this_config, "coupling_map", [])
-            if name.startswith("measure_"):
-                inst_name_map[name] = MidCircuitMeasure(
-                    label=name,
-                )
-            else:
-                inst_name_map[name] = Gate(
-                    name=name,
-                    num_qubits=len(coupling_map[0]) if coupling_map else 0,
-                    params=params,
-                )
+            inst_name_map[name] = Gate(
+                name=name,
+                num_qubits=len(coupling_map[0]) if coupling_map else 0,
+                params=params,
+            )
+        elif name.startswith("measure_"):
+            inst_name_map[name] = MidCircuitMeasure(
+                label=name,
+            )
         else:
             warnings.warn(
                 f"No gate definition for {name} can be found and is being excluded "

@@ -13,4 +13,4 @@
 """Module for IBM-specific Gates."""
 
 
-from .mid_circuit_measure import MidCircuitMeasure, MCMSerializer
+from .mid_circuit_measure import MidCircuitMeasure

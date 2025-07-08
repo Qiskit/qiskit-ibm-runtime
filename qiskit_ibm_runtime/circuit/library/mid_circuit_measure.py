@@ -10,35 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from qiskit.circuit import annotation, Measure
+from qiskit.circuit import Instruction
 
-class MidCircMeasurementAnnotation(annotation.Annotation):
-    namespace = "qcf.mid_circ_measure"
-
-class MCMSerializer(annotation.OpenQASM3Serializer):
-
-    def dump(self, annotation):
-        pass
-
-    def load(self, namespace, payload):
-        pass
-
-class MidCircuitMeasure(Measure):
-    """A custom specialized measurement."""
-
-    def __init__(self, annotation_str=None):
-        super().__init__()
-        if annotation_str:
-            if not annotation_str.startswith("measure_"):
-                raise ValueError("Invalid annotation string for mid-circuit measure. It must start with `measure_`")
-            self.name = annotation_str
-        else:
-            self.name = "measure_2"
-        
-        a = MidCircMeasurementAnnotation()
-        a.namespace += "." + str(self.name)
-        self.annotations = [a]
-
-    def qasm3_annotation_handlers():
-        return {"qcf": MCMSerializer()}
-
+class MidCircuitMeasure(Instruction):
+    def __init__(self, name="measure_2", label=None):
+        super().__init__(name, 1, 1, [], label=label)

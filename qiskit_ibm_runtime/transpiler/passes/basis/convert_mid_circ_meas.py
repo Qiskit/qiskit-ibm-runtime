@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to convert Id gate operations to a delay instruction."""
+"""Pass to convert measurements in the middle of the circuit to MidCircuitMeasure instances."""
 
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.circuit.measure import Measure
