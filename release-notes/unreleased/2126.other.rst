@@ -1,0 +1,1 @@
+A new function :func:`.convert_to_rzz_valid_pub`, to transform a PUB into equivalent PUB that is compatible with Rzz constraints. The function currently does not support dynamic circuits and does not preserve global phase.
