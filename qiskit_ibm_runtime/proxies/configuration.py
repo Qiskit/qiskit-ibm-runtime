@@ -26,7 +26,7 @@ class ProxyConfiguration:
 
     Args
         urls: a dictionary mapping protocol or protocol and host to the URL of the proxy. Refer to
-            https://docs.python-requests.org/en/latest/api/#requests.Session.proxies for details.
+            https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies for details.
         username_ntlm: username used to enable NTLM user authentication.
         password_ntlm: password used to enable NTLM user authentication.
     """
