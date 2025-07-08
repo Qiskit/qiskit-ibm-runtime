@@ -30,7 +30,7 @@ class Distribute(Generic[T]):
         self.values = [np.array(val) if isinstance(val, Iterable) else val for val in values]
 
     def shape(self, pub_idx: int) -> Tuple[int, ...]:
-        """Return the shape of the value for the PUB at index `pub_idx`.
+        """Return the shape of the value for the PUB at index ``pub_idx``.
 
         Args:
             pub_idx: The index of the PUB.
