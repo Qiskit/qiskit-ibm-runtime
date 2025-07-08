@@ -72,7 +72,7 @@ class AnnotationSerializer(QPYSerializer):
             )
             ref = buff.read(inject_noise.ref_size).decode()
             return InjectNoise(ref)
-        elif name == "Twirl":
+        if name == "Twirl":
             twirl = TWIRL_ANNOTATION._make(
                 struct.unpack(TWIRL_ANNOTATION_PACK, buff.read(TWIRL_ANNOTATION_SIZE))
             )
