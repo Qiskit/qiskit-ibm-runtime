@@ -10,10 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""MidCircuitMeasure gate."""
+
 from qiskit.circuit import Instruction
 
 
 class MidCircuitMeasure(Instruction):
+    """
+    This instruction implements an alternative 'named' measurement definition
+    (1 classical bit, 1 quantum bit), whose name can be used to map to a corresponding
+    mid-circuit measurement instruction implementation on hardware.
+    """
+
     def __init__(self, name="measure_2", label=None):
         if not name.startswith("measure_"):
             raise ValueError(
