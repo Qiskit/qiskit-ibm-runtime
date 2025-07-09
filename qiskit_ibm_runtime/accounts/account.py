@@ -195,6 +195,7 @@ class Account:
             This Account instance.
         """
 
+        self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
         self._assert_valid_channel(self.channel)
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
@@ -237,6 +238,14 @@ class Account:
     @abstractmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _assert_valid_preferences(
+        region: str, plans_preference: List[str], tags: List[str]
+    ) -> None:
+        """Assert that the account preferences are valid."""
         pass
 
 
@@ -416,4 +425,23 @@ class CloudAccount(Account):
         if instance and not isinstance(instance, str):
             raise InvalidAccountError(
                 f"Invalid `instance` value. Expected an IBM Cloud crn, got '{instance}' instead. "
+            )
+
+    @staticmethod
+    def _assert_valid_preferences(
+        region: str, plans_preference: List[str], tags: List[str]
+    ) -> None:
+        """Assert that the account preferences are valid."""
+        if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):
+            raise InvalidAccountError(
+                f"Invalid `region` value. Expected `us-east` or `eu-de`, got '{region}' instead. "
+            )
+        if plans_preference and not isinstance(plans_preference, list):
+            raise InvalidAccountError(
+                "Invalid `plans_preference` value. Expected a list of strings, "
+                f"got '{plans_preference}' instead."
+            )
+        if tags and not isinstance(tags, list):
+            raise InvalidAccountError(
+                "Invalid `tags` value. Expected a list of strings. " f"got '{tags}' instead."
             )
