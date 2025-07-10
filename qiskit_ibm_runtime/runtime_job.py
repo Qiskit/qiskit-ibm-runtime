@@ -34,7 +34,6 @@ from .exceptions import (
     RuntimeJobTimeoutError,
 )
 from .utils.result_decoder import ResultDecoder
-from .utils.queueinfo import QueueInfo
 from .utils.deprecation import issue_deprecation_msg
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -240,20 +239,8 @@ class RuntimeJob(Job, BaseRuntimeJob):
             "QiskitRuntimeService.run() to submit a job."
         )
 
-    def queue_position(self, refresh: bool = False) -> Optional[int]:
-        """(DEPRECATED) Return the position of the job in the server queue.
-
-        Note:
-            The position returned is within the scope of the provider
-            and may differ from the global queue position.
-
-        Args:
-            refresh: If ``True``, re-query the server to get the latest value.
-                Otherwise return the cached value.
-
-        Returns:
-            Position in the queue or ``None`` if position is unknown or not applicable.
-        """
+    def queue_position(self, refresh: bool = False) -> None:  # pylint: disable=unused-argument
+        """(DEPRECATED) Return the position of the job in the server queue."""
         warnings.warn(
             "The queue_position() method is deprecated and will be removed in a future release. "
             "The new IBM Quantum Platform does not support this functionality.",
@@ -261,52 +248,14 @@ class RuntimeJob(Job, BaseRuntimeJob):
             stacklevel=2,
         )
 
-        if refresh:
-            api_metadata = self._api_client.job_metadata(self.job_id())
-            self._queue_info = QueueInfo(
-                position_in_queue=api_metadata.get("position_in_queue"),
-                status=self.status(),
-                estimated_start_time=api_metadata.get("estimated_start_time"),
-                estimated_completion_time=api_metadata.get("estimated_completion_time"),
-            )
-
-        if self._queue_info:
-            return self._queue_info.position
-        return None
-
-    def queue_info(self) -> Optional[QueueInfo]:
-        """Return queue information for this job.
-
-        The queue information may include queue position, estimated start and
-        end time, and dynamic priorities for the hub, group, and project. See
-        :class:`QueueInfo` for more information.
-
-        Note:
-            The queue information is calculated after the job enters the queue.
-            Therefore, some or all of the information may not be immediately
-            available, and this method may return ``None``.
-
-        Returns:
-            A :class:`QueueInfo` instance that contains queue information for
-            this job, or ``None`` if queue information is unknown or not
-            applicable.
-        """
-        # Get latest queue information.
-        api_metadata = self._api_client.job_metadata(self.job_id())
-        self._queue_info = QueueInfo(
-            position_in_queue=api_metadata.get("position_in_queue"),
-            status=self.status(),
-            estimated_start_time=api_metadata.get("estimated_start_time"),
-            estimated_completion_time=api_metadata.get("estimated_completion_time"),
+    def queue_info(self) -> None:
+        """(DEPRECATED) Return queue information for this job."""
+        warnings.warn(
+            "The queue_info() method is deprecated and will be removed in a future release. "
+            "The new IBM Quantum Platform does not support this functionality.",
+            DeprecationWarning,
+            stacklevel=2,
         )
-        # Return queue information only if it has any useful information.
-        if self._queue_info and any(
-            value is not None
-            for attr, value in self._queue_info.__dict__.items()
-            if not attr.startswith("_") and attr != "job_id"
-        ):
-            return self._queue_info
-        return None
 
     def logs(self) -> str:
         """Return job logs.

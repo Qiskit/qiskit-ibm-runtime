@@ -252,7 +252,7 @@ if __name__ == '__main__':
         custom_result = get_complex_types()
         job_cls = CustomResultRuntimeJob
         job_cls.custom_result = custom_result
-        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="some_token")
+        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum_platform", token="some_token")
 
         sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]
         for result_decoder, decoder in sub_tests:
