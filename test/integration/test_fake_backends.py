@@ -37,7 +37,6 @@ from qiskit_ibm_runtime.fake_provider import (
     FakePrague,
 )
 from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
-from ..decorators import production_only
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -164,7 +163,6 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
 
-    @production_only
     def test_refresh_method(self):
         """Test refresh method"""
         if self.dependencies.channel == "ibm_cloud":

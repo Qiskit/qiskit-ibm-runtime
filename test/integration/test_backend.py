@@ -25,7 +25,7 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test
 from ..utils import bell
 
 
@@ -77,7 +77,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsInstance(backend.service, QiskitRuntimeService)
 
-    @production_only
     def test_backend_target(self):
         """Check if the target property is set."""
         backend = self.backend
@@ -85,7 +84,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target)
             self.assertIsInstance(backend.target, Target)
 
-    @production_only
     def test_backend_target_history(self):
         """Check retrieving backend target_history."""
         backend = self.backend
@@ -93,7 +91,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target_history())
             self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
-    @production_only
     def test_properties_not_cached_target_history(self):
         """Check backend properties is not cached in target_history()."""
         backend = self.backend
@@ -105,8 +102,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_target_refresh(self):
         """Test refreshing the backend target."""
         backend = self.backend
-        if backend.simulator:
-            raise SkipTest("Simulator target is the same.")
         with self.subTest(backend=backend.name):
             old_target = backend.target
             old_configuration = backend.configuration()
@@ -119,16 +114,12 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNot(old_properties, backend.properties())
             self.assertIsNot(old_defaults, backend.defaults())
 
-    @production_only
     def test_backend_qubit_properties(self):
         """Check if the qubit properties are set."""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            if backend.simulator:
-                raise SkipTest("Skip since simulator does not have qubit properties.")
             self.assertIsNotNone(backend.qubit_properties(0))
 
-    @production_only
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         backend = self.backend
@@ -142,20 +133,16 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertTrue(backend.status().operational)
 
-    @production_only
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            if backend.simulator:
-                raise SkipTest("Skip since simulator does not have properties.")
             properties = backend.properties()
             properties_today = backend.properties(datetime=datetime.today())
             self.assertIsNotNone(properties)
             self.assertIsNotNone(properties_today)
             self.assertEqual(properties.backend_version, properties_today.backend_version)
 
-    @production_only
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
         backend = self.backend
@@ -172,7 +159,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.configuration())
 
-    @production_only
     def test_backend_invalid_attribute(self):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
         backend = self.backend
@@ -182,8 +168,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
-        if self.backend.simulator:
-            raise SkipTest("Simulator has no backend defaults.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
@@ -209,17 +193,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
         self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel does not have instance.")
-        if not self.backend.properties():
-            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
@@ -237,7 +215,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         inputs = sampler.run([isa_circuit], shots=1).inputs
         self.assertEqual(inputs["pubs"][0][2], 1)
 
-    @production_only
     def test_paused_backend_warning(self):
         """Test that a warning is given when running jobs on a paused backend."""
         backend = self.backend
@@ -256,10 +233,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_too_many_qubits_in_circuit(self):
         """Check error message if circuit contains more qubits than supported on the backend."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud channel does not have instance.")
-        if not self.backend.properties():
-            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num = len(self.backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
