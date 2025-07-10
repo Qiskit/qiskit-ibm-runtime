@@ -82,7 +82,7 @@ def most_busy_backend(
 
     Args:
         service: Qiskit Runtime Service.
-        instance: The instance in the hub/group/project format.
+        instance: IBM Quantum Platform CRN.
 
     Returns:
         The most busy backend.

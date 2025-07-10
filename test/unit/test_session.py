@@ -106,7 +106,7 @@ class TestSession(IBMTestCase):
 
     def test_session_from_id(self):
         """Create session with given session_id"""
-        service = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
         session._run(program_id="foo", inputs={})
@@ -116,7 +116,7 @@ class TestSession(IBMTestCase):
 
     def test_correct_execution_mode(self):
         """Test that the execution mode is correctly set."""
-        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        _ = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         backend = get_mocked_backend("ibm_gotham")
         session = Session(backend=backend)
         self.assertEqual(session.details()["mode"], "dedicated")
@@ -124,7 +124,7 @@ class TestSession(IBMTestCase):
     def test_cm_session_fractional(self):
         """Test instantiating primitive inside session context manager with the fractional optin."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="abc",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )

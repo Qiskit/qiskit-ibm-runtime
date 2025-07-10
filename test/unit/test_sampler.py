@@ -15,10 +15,8 @@
 from unittest.mock import MagicMock
 
 from ddt import data, ddt, named_data, unpack
-from packaging.version import Version, parse as parse_version
 import numpy as np
 
-from qiskit.version import get_version_info as get_qiskit_version_info
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit import Parameter
@@ -164,7 +162,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -183,7 +181,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -204,7 +202,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -407,9 +405,6 @@ class TestSamplerV2(IBMTestCase):
         # BackendSamplerV2 in local mode. To do this, it creates a dummy
         # backend class that returns a result of the right format so that the
         # sampler execution completes successfully.
-
-        if parse_version(get_qiskit_version_info()) < Version("1.3.0rc1"):
-            self.skipTest("Feature not supported on this version of Qiskit")
 
         class DummyJob:
             """Enough of a job class to return a result"""
