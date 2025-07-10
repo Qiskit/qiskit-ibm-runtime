@@ -52,16 +52,14 @@ class RuntimeOptions:
         """RuntimeOptions constructor.
 
         Args:
-            backend: target backend to run on. This is required for ``ibm_quantum`` channel.
+            backend: target backend to run on.
             image: the runtime image used to execute the primitive, specified in
                 the form of ``image_name:tag``. Not all accounts are
                 authorized to select a different image.
             log_level: logging level to set in the execution environment. The valid
                 log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                 The default level is ``WARNING``.
-            instance: The hub/group/project to use, in that format. This is only supported
-                for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
-                access to the target backend is randomly selected.
+            instance: This is only supported on the new IBM Quantum Platform.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
             max_execution_time: Maximum execution time in seconds, which is based
@@ -86,7 +84,7 @@ class RuntimeOptions:
         self.session_time = session_time
         self.private = private
 
-    def validate(self, channel: str) -> None:
+    def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
         """Validate options.
 
         Args:
@@ -101,11 +99,6 @@ class RuntimeOptions:
             self.image,
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-
-        if channel == "ibm_quantum" and not self.backend:
-            raise IBMInputValueError(
-                '"backend" is required field in "options" for "ibm_quantum" channel.'
-            )
 
         if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
