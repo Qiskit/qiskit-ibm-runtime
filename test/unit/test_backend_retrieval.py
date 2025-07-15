@@ -104,20 +104,34 @@ class TestBackendFilters(IBMTestCase):
     def test_filter_least_busy(self):
         """Test filtering by least busy function."""
         default_stat = {"pending_jobs": 1, "operational": True, "status_msg": "active"}
+        backends_list = [
+            {
+                "name": "test_backend1",
+                "status": {"name": "online", "reason": "available"},
+                "queue_length": 10,
+            },
+            {
+                "name": "test_backend2",
+                "status": {"name": "online", "reason": "available"},
+                "queue_length": 20,
+            },
+            {
+                "name": "test_backend3",
+                "status": {"name": "offline", "reason": "available"},
+                "queue_length": 1,
+            },
+        ]
         fake_backends = [
-            self._get_fake_backend_specs(
-                **{**default_stat, "backend_name": "bingo", "pending_jobs": 5}
-            ),
-            self._get_fake_backend_specs(**{**default_stat, "pending_jobs": 7}),
-            self._get_fake_backend_specs(**{**default_stat, "operational": False}),
-            self._get_fake_backend_specs(**{**default_stat, "status_msg": "internal"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend1"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend2"}),
         ]
 
         services = self._get_services(fake_backends)
         for service in services:
             with self.subTest(service=service.channel):
+                service._backends_list = backends_list
                 backend = service.least_busy()
-                self.assertEqual(backend.name, "bingo")
+                self.assertEqual(backend.name, "test_backend1")
 
     def test_filter_min_num_qubits(self):
         """Test filtering by minimum number of qubits."""
