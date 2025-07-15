@@ -45,7 +45,6 @@ class RuntimeSession(RestAdapterBase):
         backend: Optional[str] = None,
         instance: Optional[str] = None,
         max_time: Optional[int] = None,
-        channel: Optional[str] = None,
         mode: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Create a session"""
@@ -58,10 +57,7 @@ class RuntimeSession(RestAdapterBase):
         if instance:
             payload["instance"] = instance
         if max_time:
-            if channel == "ibm_quantum":
-                payload["max_session_ttl"] = max_time  # type: ignore[assignment]
-            else:
-                payload["max_ttl"] = max_time  # type: ignore[assignment]
+            payload["max_ttl"] = max_time  # type: ignore[assignment]
         return self.session.post(url, json=payload, headers=self._HEADER_JSON_CONTENT).json()
 
     def cancel(self) -> None:

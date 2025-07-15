@@ -164,7 +164,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -183,7 +183,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
@@ -204,7 +204,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
             backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )

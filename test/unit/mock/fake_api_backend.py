@@ -34,8 +34,8 @@ class FakeApiBackendSpecs:
     """Backend configuration to overwrite."""
     status: dict = None
     """Backend status to overwrite."""
-    hgps: list = None
-    """HGPs that can access this backend. None if all can."""
+    crns: list = None
+    """Instances that can access this backend. None if all can."""
 
 
 class FakeApiBackend:
@@ -83,10 +83,10 @@ class FakeApiBackend:
         if specs.status:
             self.status.update(**specs.status)
 
-        self.hgps = specs.hgps
+        self.crns = specs.crns
 
-    def has_access(self, hgp):
-        """Check if hgp is accessible"""
-        if not self.hgps:
+    def has_access(self, crn):
+        """Check if crn is accessible"""
+        if not self.crns:
             return True
-        return hgp in self.hgps
+        return crn in self.crns
