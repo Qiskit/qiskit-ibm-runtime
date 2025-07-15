@@ -10,9 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Fake ibm_quantum AuthClient."""
+"""Fake ibm_quantum_platform AuthClient."""
 
-from typing import Dict, List, Union, Optional
+from typing import Dict, Union, Optional
 
 
 class BaseFakeAuthClient:
@@ -38,14 +38,6 @@ class BaseFakeAuthClient:
             "ws": "ws://127.0.0.1",
             "services": {"runtime": "http://127.0.0.1"},
         }
-
-    def user_hubs(self) -> List[Dict[str, str]]:
-        """Retrieve the hub/group/project sets available to the user."""
-
-        hubs = []
-        for idx in range(2):
-            hubs.append({"hub": f"hub{idx}", "group": f"group{idx}", "project": f"project{idx}"})
-        return hubs
 
     def api_version(self) -> Dict[str, Union[str, bool]]:
         """Return the version of the API.

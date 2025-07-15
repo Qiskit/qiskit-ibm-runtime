@@ -12,28 +12,29 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
-from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService, RuntimeClient
 from .fake_runtime_client import BaseFakeRuntimeClient
 from .fake_api_backend import FakeApiBackendSpecs
 
 
 class FakeRuntimeService(QiskitRuntimeService):
-    """Creates an QiskitRuntimeService instance with mocked hub/group/project.
+    """Creates an QiskitRuntimeService instance with mocked instance crn.
 
-    By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
-    Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
+    By default there are 2 instance crns:
+    `crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::`,
+    and `crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::`.
+    Each crn has 2 backends - `common_backend` and `unique_backend_<idx>`.
     """
 
-    DEFAULT_HGPS = ["hub0/group0/project0", "hub1/group1/project1"]
+    DEFAULT_CRNS = [
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::",
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::",
+    ]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
     DEFAULT_INSTANCES = [
@@ -43,22 +44,26 @@ class FakeRuntimeService(QiskitRuntimeService):
         }
     ]
 
-    def __new__(cls, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
+    DEFAULT_INSTANCES = [
+        {
+            "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+            "tags": ["services"],
+        }
+    ]
+
+    def __new__(cls, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):
         return super().__new__(cls, *args, **kwargs)
 
-    def __init__(self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
-        self._test_num_hgps = num_hgps
+    def __init__(self, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):
+        self._test_num_crns = num_crns
         self._fake_runtime_client = runtime_client
         self._backend_specs = backend_specs
 
         mock_runtime_client = mock.MagicMock()
-        if kwargs.get("channel", "ibm_quantum") == "ibm_quantum":
-            instance = kwargs.get("instance", "hub0/group0/project0")
-        else:
-            instance = kwargs.get(
-                "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
-            )
 
+        instance = kwargs.get(
+            "instance", "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+        )
         mock_runtime_client._instance = instance
         mock_runtime_client.job_get = mock.MagicMock()
         mock_runtime_client.job_get.side_effect = RequestsApiError("Job not found", status_code=404)
@@ -75,52 +80,14 @@ class FakeRuntimeService(QiskitRuntimeService):
                 backend_specs=self._backend_specs, instance=instance
             )
 
-    def _authenticate_ibm_quantum_account(
-        self, client_params: ClientParameters
-    ) -> "FakeAuthClient":
-        """Mock authentication."""
-        return FakeAuthClient()
-
     def _resolve_crn(self, account: Account) -> None:
         pass
-
-    def _initialize_hgps(
-        self,
-        auth_client: AuthClient,
-    ) -> Dict:
-        """Mock hgp initialization.
-
-        By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
-        Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
-        """
-
-        hgps = OrderedDict()
-
-        for idx in range(self._test_num_hgps):
-            hgp_name = self.DEFAULT_HGPS[idx]
-
-            hgp_params = ClientParameters(
-                channel="ibm_quantum",
-                token="some_token",
-                url="some_url",
-                instance=hgp_name,
-            )
-            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name, service=self)
-
-            hgps[hgp_name] = hgp
-
-        # Set fake runtime clients
-        self._set_api_client(hgps=list(hgps.keys()))
-        for hgp in hgps.values():
-            hgp._runtime_client = self._active_api_client
-
-        return hgps
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Mock discovery cloud backends."""
         job_class = self._active_api_client._job_classes  # type: ignore
         self._active_api_client = self._fake_runtime_client
-        self._set_api_client(hgps=[None] * self._test_num_hgps, channel="ibm_quantum_platform")
+        self._set_api_client(crns=[None] * self._test_num_crns, channel="ibm_quantum_platform")
         self._active_api_client._job_classes = job_class  # type: ignore
         return self._active_api_client.list_backends()
 
@@ -131,6 +98,9 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         # return dummy crn
         return instance
+
+    def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
+        return self._active_api_client
 
     def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
         if instance:
@@ -150,18 +120,18 @@ class FakeRuntimeService(QiskitRuntimeService):
             self._filter_instances_by_saved_preferences()
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
-    def _set_api_client(self, hgps, channel="ibm_quantum"):
+    def _set_api_client(self, crns, channel="ibm_quantum_platform"):
         """Set api client to be the fake runtime client."""
         if not self._fake_runtime_client:
             if not self._backend_specs:
                 self._backend_specs = [
-                    FakeApiBackendSpecs(backend_name=self.DEFAULT_COMMON_BACKEND, hgps=hgps)
+                    FakeApiBackendSpecs(backend_name=self.DEFAULT_COMMON_BACKEND, crns=crns)
                 ]
-                for idx, hgp in enumerate(hgps):
+                for idx, crn in enumerate(crns):
                     self._backend_specs.append(
                         FakeApiBackendSpecs(
                             backend_name=self.DEFAULT_UNIQUE_BACKEND_PREFIX + str(idx),
-                            hgps=[hgp],
+                            crns=[crn],
                         )
                     )
             self._fake_runtime_client = BaseFakeRuntimeClient(
@@ -170,22 +140,3 @@ class FakeRuntimeService(QiskitRuntimeService):
 
         # Set fake runtime clients
         self._active_api_client = self._fake_runtime_client
-
-
-class FakeAuthClient(AuthClient):
-    """Fake auth client."""
-
-    def __init__(self):  # pylint: disable=super-init-not-called
-        # Avoid calling parent __init__ method. It has side-effects that are not supported in unit tests.
-        pass
-
-    def current_service_urls(self):
-        """Return service urls."""
-        return {
-            "http": "IBM_QUANTUM_API_URL",
-            "services": {"runtime": "ibm_quantum_runtime_url"},
-        }
-
-    def current_access_token(self):
-        """Return access token."""
-        return "some_token"
