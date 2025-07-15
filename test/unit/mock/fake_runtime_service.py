@@ -89,8 +89,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._active_api_client = self._fake_runtime_client
         self._set_api_client(crns=[None] * self._test_num_crns, channel="ibm_quantum_platform")
         self._active_api_client._job_classes = job_class  # type: ignore
-        self._backends_list = self._active_api_client.list_backends()
-        return [backend["name"] for backend in self._backends_list]
+        return self._active_api_client.list_backends()  # type: ignore
 
     def _create_new_cloud_api_client(self, instance: str) -> None:
         """Create new api client."""
