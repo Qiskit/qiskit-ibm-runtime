@@ -68,12 +68,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_cloud":
-            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
-        if cls.dependencies.channel == "ibm_quantum":
-            cls.dependencies.service._account.instance = (
-                None  # set instance to none to avoid filtering
-            )
+        if cls.dependencies.channel == "ibm_quantum_platform":
             cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
