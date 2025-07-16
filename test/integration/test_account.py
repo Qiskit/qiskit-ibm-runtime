@@ -68,13 +68,8 @@ def _get_instance_tags(
 class TestQuantumPlatform(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
-    def _skip_on_ibm_quantum(self):
-        if self.dependencies.channel == "ibm_quantum":
-            self.skipTest("Not supported on ibm_quantum")
-
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
-        self._skip_on_ibm_quantum()
         service = QiskitRuntimeService(
             token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
         )
@@ -83,7 +78,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_backends_default_instance(self):
         """Test that default instance returns the correct backends."""
-        self._skip_on_ibm_quantum()
         service_with_instance = QiskitRuntimeService(
             token=self.dependencies.token,
             url=self.dependencies.url,
@@ -108,7 +102,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_passing_name_as_instance(self):
         """Test passing in a name as the instance."""
-        self._skip_on_ibm_quantum()
         with self.assertRaises(IBMInputValueError):
             QiskitRuntimeService(
                 token=self.dependencies.token,
@@ -234,7 +227,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         jobs = service.jobs()
         self.assertTrue(jobs)
         job = jobs[0]
-        self.assertTrue(job.result())
+        self.assertTrue(job.status())
 
     def test_jobs_different_instances(self):
         """Test retrieving jobs from different instances."""

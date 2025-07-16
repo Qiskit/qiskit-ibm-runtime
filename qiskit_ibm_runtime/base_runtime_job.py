@@ -27,7 +27,6 @@ from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
-from .utils.queueinfo import QueueInfo
 from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
 from .exceptions import (
     IBMError,
@@ -101,7 +100,7 @@ class BaseRuntimeJob(ABC):
         self._tags = tags
         self._usage_estimation: Dict[str, Any] = {}
         self._version = version
-        self._queue_info: QueueInfo = None
+        self._queue_info = None
         self._status: Union[RuntimeJobStatus, str] = None
         self._private = private
 
@@ -378,9 +377,7 @@ class BaseRuntimeJob(ABC):
 
     @property
     def instance(self) -> Optional[str]:
-        """For ibm_quantum channel jobs, return the instance where the job was run.
-        For ibm_cloud and ibm_quantum_platform, the instance crn is returned.
-        """
+        """Return the IBM Cloud instance CRN."""
         return self._backend._instance
 
     @abstractmethod

@@ -15,7 +15,7 @@
 from datetime import datetime, timedelta, timezone
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_quantum_and_cloud_fake
+from ..decorators import run_cloud_fake
 from ..program import run_program
 from ..utils import mock_wait_for_final_state
 
@@ -26,9 +26,11 @@ class TestRetrieveJobs(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self._ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
+        self._ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum_platform", token="my_token"
+        )
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_retrieve_job(self, service):
         """Test retrieving a job."""
         program_id = "sampler"
@@ -38,7 +40,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(program_id, rjob.primitive_id)
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_no_limit(self, service):
         """Test retrieving jobs without limit."""
         program_id = "sampler"
@@ -49,7 +51,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
         program_id = "sampler"
@@ -65,7 +67,7 @@ class TestRetrieveJobs(IBMTestCase):
                 rjobs = service.jobs(limit=limit)
                 self.assertEqual(min(limit, job_count), len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_skip(self, service):
         """Test retrieving jobs with skip."""
         program_id = "sampler"
@@ -87,7 +89,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
-    @run_quantum_and_cloud_fake
+    @run_cloud_fake
     def test_jobs_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         program_id = "sampler"
@@ -175,22 +177,6 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_filter_by_instance(self):
-        """Test retrieving jobs by instance."""
-        service = self._ibm_quantum_service
-        program_id = "sampler"
-        instance = FakeRuntimeService.DEFAULT_HGPS[1]
-
-        job = run_program(service=service, program_id=program_id, instance=instance)
-        with mock_wait_for_final_state(service, job):
-            job.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id, instance=instance)
-        self.assertTrue(rjobs)
-        self.assertEqual(program_id, rjobs[0].primitive_id)
-        self.assertEqual(1, len(rjobs))
-        rjobs = service.jobs(program_id=program_id, instance="nohub1/nogroup1/noproject1")
-        self.assertFalse(rjobs)
-
     def test_jobs_filter_by_job_tags(self):
         """Test retrieving jobs by job tags."""
         service = self._ibm_quantum_service
@@ -261,17 +247,17 @@ class TestRetrieveJobs(IBMTestCase):
         with self.assertRaises(Exception):
             _ = service.jobs(instance="foo")
 
-    def test_different_hgps(self):
-        """Test retrieving job submitted with different hgp."""
-        # Initialize with hgp0
+    def test_different_instance(self):
+        """Test retrieving job submitted with different instance."""
+        # Initialize with first instance
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="some_token",
-            instance=FakeRuntimeService.DEFAULT_HGPS[0],
+            instance=FakeRuntimeService.DEFAULT_CRNS[0],
         )
         program_id = "sampler"
 
-        # Run with hgp1 backend.
+        # Run with different instance
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         job = run_program(service, program_id=program_id, backend_name=backend_name)
 

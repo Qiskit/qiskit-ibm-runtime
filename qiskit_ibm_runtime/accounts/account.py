@@ -22,10 +22,9 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
 from ..proxies import ProxyConfiguration
-from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
-from ..api.auth import QuantumAuth, CloudAuth
+from ..api.auth import CloudAuth
 from ..utils import (
     resolve_crn,
     get_iam_api_url,
@@ -41,14 +40,12 @@ ChannelType = Optional[
     Literal[
         "ibm_quantum_platform",
         "ibm_cloud",
-        "ibm_quantum",
         "local",
     ]
 ]
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
-IBM_QUANTUM_API_URL = "https://auth.quantum.ibm.com/api"
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +63,7 @@ class Account:
         """Account constructor.
 
         Args:
-            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``, ``ibm_quantum``,.
+            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
             token: Account token to use.
             instance: Service instance to use.
             proxies: Proxy configuration.
@@ -97,8 +94,6 @@ class Account:
         proxies = data.get("proxies")
         proxies = ProxyConfiguration(**proxies) if proxies else None
         url = data.get("url")
-        if channel and url and channel == "ibm_quantum" and "-computing" in url:
-            url = url.replace("-computing", "")
         token = data.get("token")
         instance = data.get("instance")
         verify = data.get("verify", True)
@@ -134,15 +129,7 @@ class Account:
         tags: Optional[List[str]] = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
-        if channel == "ibm_quantum":
-            return QuantumAccount(
-                url=url,
-                token=token,
-                instance=instance,
-                proxies=proxies,
-                verify=verify,
-            )
-        elif channel in ["ibm_cloud", "ibm_quantum_platform"]:
+        if channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAccount(
                 url=url,
                 token=token,
@@ -158,7 +145,7 @@ class Account:
         else:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"{['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform']}, got '{channel}'."
+                f"{['ibm_cloud', 'ibm_quantum_platform']}, got '{channel}'."
             )
 
     def resolve_crn(self) -> None:
@@ -206,10 +193,10 @@ class Account:
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum", "ibm_quantum_platform"]):
+        if not (channel in ["ibm_cloud", "ibm_quantum_platform"]):
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"['ibm_cloud', 'ibm_quantum', 'ibm_quantum_platform], got '{channel}'."
+                f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
             )
 
     @staticmethod
@@ -247,47 +234,6 @@ class Account:
     ) -> None:
         """Assert that the account preferences are valid."""
         pass
-
-
-class QuantumAccount(Account):
-    """Class that represents an account with channel 'ibm_quantum.'"""
-
-    def __init__(
-        self,
-        token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-    ):
-        """Account constructor.
-
-        Args:
-            token: Account token to use.
-            url: Authentication URL.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-        """
-        super().__init__(token, instance, proxies, verify)
-        resolved_url = url or IBM_QUANTUM_API_URL
-        self.channel = "ibm_quantum"
-        self.url = resolved_url
-
-    def get_auth_handler(self) -> AuthBase:
-        """Returns the Quantum authentication handler."""
-        return QuantumAuth(access_token=self.token)
-
-    @staticmethod
-    def _assert_valid_instance(instance: str) -> None:
-        """Assert that the instance name is valid for the given account type."""
-        if instance is not None:
-            try:
-                from_instance_format(instance)
-            except:
-                raise InvalidAccountError(
-                    f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
-                )
 
 
 class CloudAccount(Account):
