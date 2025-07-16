@@ -1,2 +1,3 @@
-The :meth:`.QiskitRuntimeService.least_busy` method now uses the new API ``BackendsResponseV2`` so it is
-significantly faster. 
+The :class:`.QiskitRuntimeService` has been updated to use a new API version. With the new version, 
+the :meth:`.QiskitRuntimeService.least_busy` method has been updated to take advantage of the updated ``BackendsResponseV2`` 
+which makes it significantly faster.
