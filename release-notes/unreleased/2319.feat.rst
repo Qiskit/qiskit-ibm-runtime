@@ -1,0 +1,2 @@
+When saving an account, there is now a validation check to make sure the ``region``, 
+``plans_preference`` and ``tags`` parameters are valid. 
