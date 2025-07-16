@@ -16,7 +16,6 @@
 import itertools
 import operator
 
-from unittest import SkipTest
 from ddt import ddt, data, idata, unpack
 
 from qiskit.circuit import QuantumCircuit
@@ -28,7 +27,7 @@ from qiskit.circuit.library import (
 )
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
 from qiskit_ibm_runtime.fake_provider import (
     FakeProviderForBackendV2,
@@ -167,17 +166,19 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
     @production_only
     def test_refresh_method(self):
         """Test refresh method"""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Cloud account does not have real backends.")
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
         # change some configuration
         old_backend.backend_version = "fake_version"
-        # set instance to none to access real backend
-        self.service._account.instance = None
+
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel=self.dependencies.channel,
+            url=self.dependencies.url,
+        )
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
-            old_backend.refresh(self.service)
+            old_backend.refresh(service)
         self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
 
         # to verify the refresh can't be done
@@ -185,5 +186,5 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         # set a non-existent backend name
         wrong_backend.backend_name = "wrong_fake_sherbrooke"
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
-            wrong_backend.refresh(self.service)
+            wrong_backend.refresh(service)
         self.assertIn("The refreshing of wrong_fake_sherbrooke has failed", logs.output[0])

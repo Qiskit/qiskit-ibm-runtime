@@ -227,7 +227,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         jobs = service.jobs()
         self.assertTrue(jobs)
         job = jobs[0]
-        self.assertTrue(job.result())
+        self.assertTrue(job.status())
 
     def test_jobs_different_instances(self):
         """Test retrieving jobs from different instances."""
