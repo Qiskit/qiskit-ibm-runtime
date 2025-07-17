@@ -1168,7 +1168,8 @@ class QiskitRuntimeService:
         for backend in self._backends_list:
             if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
                 candidates.append(backend)
-        if filters:
+
+        if filters or kwargs:
             # filters will still be slow because we need the backend configs
             backends = self.backends(
                 min_num_qubits=min_num_qubits, filters=filters, instance=instance, **kwargs
