@@ -1027,16 +1027,19 @@ class QiskitRuntimeService:
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
     def usage(self) -> Dict[str, Any]:
-        """For the ibm_quantum channel return monthly open plan usage information.
-        For the ibm_cloud and ibm_quantum_platform channels
-        return usage information for the current active instance.
+        """Return usage information for the current active instance.
 
         Returns:
             Dict with usage details.
         """
-        if self.channel in ["ibm_cloud", "ibm_quantum_platform"]:
-            return self._active_api_client.cloud_usage()
-        return self._active_api_client.usage()
+        usage_dict = self._active_api_client.cloud_usage()
+        usage_remaining = max(
+            usage_dict.get("usage_limit_seconds", usage_dict.get("usage_allocation_seconds"))
+            - usage_dict.get("usage_consumed_seconds", 0),
+            0,
+        )
+        usage_dict["usage_remaining"] = usage_remaining
+        return usage_dict
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
