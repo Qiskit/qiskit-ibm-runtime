@@ -133,6 +133,36 @@ class TestAccount(IBMTestCase):
                     Account.create_account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
+    def test_invalid_account_prefs(self):
+        """Test invalid values for account preferences."""
+
+        with self.assertRaises(InvalidAccountError) as err:
+            Account.create_account(
+                channel="ibm_quantum_platform",
+                token=self.dummy_token,
+                url=self.dummy_ibm_cloud_url,
+                region="invalid-region",
+            ).validate()
+        self.assertIn("Invalid `region` value.", str(err.exception))
+
+        with self.assertRaises(InvalidAccountError) as err:
+            Account.create_account(
+                channel="ibm_quantum_platform",
+                token=self.dummy_token,
+                url=self.dummy_ibm_cloud_url,
+                plans_preference="invalid-plans",
+            ).validate()
+        self.assertIn("Invalid `plans_preference` value.", str(err.exception))
+
+        with self.assertRaises(InvalidAccountError) as err:
+            Account.create_account(
+                channel="ibm_quantum_platform",
+                token=self.dummy_token,
+                url=self.dummy_ibm_cloud_url,
+                tags="invalid-tags",
+            ).validate()
+        self.assertIn("Invalid `tags` value.", str(err.exception))
+
 
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")

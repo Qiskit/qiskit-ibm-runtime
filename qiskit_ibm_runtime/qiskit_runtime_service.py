@@ -694,8 +694,6 @@ class QiskitRuntimeService:
 
         """
 
-        # TODO validate account defaults
-
         AccountManager.save(
             token=token,
             url=url,
