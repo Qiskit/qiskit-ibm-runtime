@@ -241,7 +241,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(self) -> List[str]:
+    def list_backends(self) -> List[Dict[str, Any]]:
         """Return IBM backends available for this service instance.
 
         Returns:

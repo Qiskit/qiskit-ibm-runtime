@@ -196,7 +196,7 @@ class Runtime(RestAdapterBase):
     def backends(
         self,
         timeout: Optional[float] = None,
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, Any]:
         """Return a list of IBM backends.
 
         Args:
