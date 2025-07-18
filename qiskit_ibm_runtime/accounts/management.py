@@ -201,7 +201,10 @@ class AccountManager:
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
 
-        raise AccountNotFoundError("Unable to find account.")
+        raise AccountNotFoundError(
+            "Unable to find account. Please make sure an account with the channel name "
+            f"'{channel_}' is saved."
+        )
 
     @classmethod
     def delete(
