@@ -1033,12 +1033,13 @@ class QiskitRuntimeService:
             Dict with usage details.
         """
         usage_dict = self._active_api_client.cloud_usage()
-        usage_remaining = max(
-            usage_dict.get("usage_limit_seconds", usage_dict.get("usage_allocation_seconds"))
-            - usage_dict.get("usage_consumed_seconds", 0),
-            0,
-        )
-        usage_dict["usage_remaining"] = usage_remaining
+        if usage_dict.get("usage_limit_seconds") or usage_dict.get("usage_allocation_seconds"):
+            usage_remaining = max(
+                usage_dict.get("usage_limit_seconds", usage_dict.get("usage_allocation_seconds"))
+                - usage_dict.get("usage_consumed_seconds", 0),
+                0,
+            )
+            usage_dict["usage_remaining"] = usage_remaining
         return usage_dict
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
