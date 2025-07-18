@@ -254,6 +254,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         )
         usage = service.usage()
         self.assertTrue(usage)
+        self.assertTrue(usage["usage_remaining"])
         self.assertIsInstance(usage, dict)
 
 
