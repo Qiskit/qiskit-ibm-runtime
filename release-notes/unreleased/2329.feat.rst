@@ -1,1 +1,1 @@
-:meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining`` field.
+:meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining`` field. This field includes the difference between the reported ``usage_limit_seconds``/``usage_allocation_seconds`` (whatever is higher) and ``usage_consumed_seconds``.
