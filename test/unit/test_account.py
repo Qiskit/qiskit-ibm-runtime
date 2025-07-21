@@ -57,17 +57,6 @@ _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     ),
 )
 
-# test having an old account saved does not break anything
-_TEST_IBM_QUANTUM_CLASSIC_ACCOUNT = Account.create_account(
-    channel="ibm_quantum_platform",
-    token="token-y",
-    url="https://quantum.cloud.ibm.com/api/v1",
-    instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
-    proxies=ProxyConfiguration(
-        username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
-    ),
-)
-
 _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT = Account.create_account(
     channel="ibm_quantum_platform",
     token="token-y",
@@ -310,21 +299,34 @@ class TestAccountManager(IBMTestCase):
     def test_list(self):
         """Test list."""
 
+        test_ibm_quantum_classic_account = {
+            "channel": "ibm_quantum",
+            "url": "...",
+            "token": "token-y",
+            "instance": "...",
+            "proxies": {
+                "urls": {"https": "127.0.0.1"},
+                "username_ntlm": "bla",
+                "password_ntlm": "blub",
+            },
+            "verify": True,
+            "private_endpoint": False,
+        }
+
         with (
             temporary_account_config_file(
                 contents={
                     "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
                     "key2": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
-                    "key3": _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT.to_saved_format(),
+                    "key3": test_ibm_quantum_classic_account,
                 }
             ),
             self.subTest("non-empty list of accounts"),
         ):
             accounts = AccountManager.list()
-            self.assertEqual(len(accounts), 3)
+            self.assertEqual(len(accounts), 2)
             self.assertEqual(accounts["key1"], _TEST_IBM_CLOUD_ACCOUNT)
             self.assertTrue(accounts["key2"], _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
-            self.assertTrue(accounts["key3"], _TEST_IBM_QUANTUM_CLASSIC_ACCOUNT)
 
         with (
             temporary_account_config_file(
