@@ -1,1 +1,4 @@
-:meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining`` field. This field includes the difference between the reported ``usage_limit_seconds``/``usage_allocation_seconds`` (whatever is higher) and ``usage_consumed_seconds``.
+:meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining_seconds`` field. 
+This field includes the difference between the reported ``usage_limit_seconds`` / ``usage_allocation_seconds`` 
+(depending on how the instance is configured) and ``usage_consumed_seconds``. 
+Learn more about instance allocation limits `here <https://quantum.cloud.ibm.com/docs/en/guides/allocation-limits>`__.

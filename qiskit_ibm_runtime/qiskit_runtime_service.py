@@ -1039,7 +1039,7 @@ class QiskitRuntimeService:
                 - usage_dict.get("usage_consumed_seconds", 0),
                 0,
             )
-            usage_dict["usage_remaining"] = usage_remaining
+            usage_dict["usage_remaining_seconds"] = usage_remaining
         return usage_dict
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
