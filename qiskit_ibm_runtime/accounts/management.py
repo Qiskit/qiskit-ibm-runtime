@@ -113,26 +113,31 @@ class AccountManager:
             else:
                 return account_name in default_accounts
 
-        # load all accounts
-        all_accounts = map(
+        # don't load legacy accounts with "ibm_quantum" as the channel name
+        filter_legacy_accounts_dict = {
+            k: v for k, v in read_config(filename=filename).items() if v["channel"] != "ibm_quantum"
+        }
+
+        # load all account objects
+        all_account_objects = map(
             lambda kv: (
                 kv[0],
                 Account.from_saved_format(kv[1]),
             ),
-            read_config(filename=filename).items(),
+            filter_legacy_accounts_dict.items(),
         )
         # filter based on input parameters
-        filtered_accounts = dict(
+        filtered_account_objects = dict(
             list(
                 filter(
                     lambda kv: _matching_channel(kv[1])
                     and _matching_default(kv[0])
                     and _matching_name(kv[0]),
-                    all_accounts,
+                    all_account_objects,
                 )
             )
         )
-        return filtered_accounts
+        return filtered_account_objects
 
     @classmethod
     def get(
@@ -201,7 +206,10 @@ class AccountManager:
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
 
-        raise AccountNotFoundError("Unable to find account.")
+        raise AccountNotFoundError(
+            "Unable to find account. Please make sure an account with the channel name "
+            f"'{channel_}' is saved."
+        )
 
     @classmethod
     def delete(
