@@ -37,7 +37,6 @@ class Runtime(RestAdapterBase):
         "backends": "/backends",
         "cloud_instance": "/instance",
         "cloud_usage": "/instances/usage",
-        "usage": "/usage",
     }
 
     def program_job(self, job_id: str) -> "ProgramJob":
@@ -207,15 +206,6 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("backends")
         return self.session.get(url, timeout=timeout, headers=self._HEADER_JSON_ACCEPT).json()
-
-    def usage(self) -> Dict[str, Any]:
-        """Return monthly open plan usage information.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("usage")
-        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def cloud_usage(self) -> Dict[str, Any]:
         """Return cloud instance usage information.
