@@ -55,15 +55,6 @@ from ..models.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-class _Credentials:
-    def __init__(self, token: str = "123456", url: str = "https://") -> None:
-        self.token = token
-        self.url = url
-        self.hub = "hub"
-        self.group = "group"
-        self.project = "project"
-
-
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend
     snapshots.
@@ -262,12 +253,10 @@ class FakeBackendV2(BackendV2):
             if self._defs_dict is None:
                 self._set_defs_dict_from_json()
             conf = BackendConfiguration.from_dict(self._conf_dict)
-            # print("CONFIG", conf.supported_instructions)
             props = None
             if self._props_dict is not None:
                 props = BackendProperties.from_dict(self._props_dict)  # type: ignore
 
-            # print("CONVERT")
             self._target = convert_to_target(
                 configuration=conf,
                 properties=props,
