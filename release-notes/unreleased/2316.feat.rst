@@ -14,9 +14,18 @@ This class enables the creation of instructions that follow the naming conventio
 
     measure_2 = MidCircuitMeasure()
     measure_reset = MidCircuitMeasure("measure_3")
-    qc = QuantumCircuit(1, 2)
+    qc = QuantumCircuit(1, 1)
     qc.append(measure_2, [0], [0])
-    qc.append(measure_reset, [0], [1])
+    qc.append(measure_reset, [0], [0])
+    qc.measure([0], [0])
+
+Output::
+
+       ┌────────────┐┌────────────────┐┌─┐
+    q: ┤0           ├┤0               ├┤M├
+       │  Measure_2 ││  Measure_reset │└╥┘
+    c: ╡0           ╞╡0               ╞═╩═
+       └────────────┘└────────────────┘
 
 :class:`.FakeMidcircuit`, a new fake backend, has been added to :mod:`.fake_provider.backends`. This
 backend is based on :class:`.FakeVigoV2` but exposes a `"measure_2"` additional measurement 
