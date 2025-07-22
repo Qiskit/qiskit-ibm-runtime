@@ -1,9 +1,51 @@
-The `qiskit-ibm-runtime` package has been extended with two new modules: :mod:`.circuit` and 
+The :mod:`qiskit_ibm_runtime` package has been extended with two new modules: :mod:`.circuit` and 
 :mod:`.circuit.library`. These modules are designed to mirror the structure of the 
 corresponding `qiskit` SDK modules, while providing vendor-specific implementations of 
-circuit objects and instructions.
+circuit objects and instructions. 
 
 The first addition to this new circuit library is the :class:`.MidCircuitMeasure` class. 
 This class enables the creation of instructions that follow the naming convention 
 `measure_<identifier>`, which are mapped to specific mid-circuit measurement
- hardware instructions matching that pattern.
+ hardware instructions matching that pattern. The default name for this instruction is `"measure_2"`.
+ Example usage::
+
+    from qiskit import QuantumCircuit
+    from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+
+    measure_2 = MidCircuitMeasure()
+    measure_reset = MidCircuitMeasure("measure_3")
+    qc = QuantumCircuit(1, 2)
+    qc.append(measure_2, [0], [0])
+    qc.append(measure_reset, [0], [1])
+
+:class:`.FakeMidcircuit`, a new fake backend, has been added to :mod:`.fake_provider.backends`. This
+backend is based on :class:`.FakeVigoV2` but exposes a `"measure_2"` additional measurement 
+instruction. It was introduced for testing the additional instruction interface. It can be used, 
+for example, to verify the correct behavior of the  transpilation pipeline::
+
+    from qiskit import QuantumCircuit, generate_preset_pass_manager
+    from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+    from qiskit_ibm_runtime.fake_provider import FakeMidcircuit
+
+    measure_2 = MidCircuitMeasure() # 5-qubit backend with measure_2
+    qc = QuantumCircuit(1, 1)
+    qc.append(mcm, [0], [0])
+
+    backend = FakeMidcircuit()
+    pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+    tqc = pm.run(qc)
+
+The :func:`.convert_to_target` utility has been updated to support additional instructions in 
+backend configuration files (`configuration.json`). These are expected to follow a `dict` format where each additional
+instruction name is associated to its corresponding standard instruction through the specified key. 
+
+For example::
+
+    "additional_instructions": {
+        "measure": ["measure_2", "measure_3", "measure_reset"],
+        "reset": ["reset_2", "reset_made_up"]
+    },
+
+
+In addition to this change, the :func:`.convert_to_target` function now accepts a `custom_name_mapping` argument
+and exposes the `add_delay` and `filter_faulty` flags.
