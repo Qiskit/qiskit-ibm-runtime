@@ -933,8 +933,7 @@ class QiskitRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: (DEPRECATED) This is parameter is no longer supported on the new
-                IBM Quantum Platform. It will be removed in a future release.
+            instance: Filter by IBM Cloud instance crn.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Filter by session id. All jobs in the session will be
                 returned in desceding order of the job creation date.
@@ -953,9 +952,13 @@ class QiskitRuntimeService:
         Raises:
             IBMInputValueError: If an input value is invalid.
         """
-        if instance:
-            if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
-                raise IBMInputValueError("The 'instance' keyword is not supported.")
+        if instance and instance != self._active_api_client._instance:
+            if instance in self._api_clients:
+                self._active_api_client = self._api_clients[instance]
+            else:
+                new_client = self._create_new_cloud_api_client(instance)
+                self._api_clients.update({instance: new_client})
+                self._active_api_client = new_client
 
         if job_tags:
             validate_job_tags(job_tags)
@@ -1182,6 +1185,10 @@ class QiskitRuntimeService:
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
         return self._all_instances
+
+    def active_instance(self) -> str:
+        """Return the crn of the current active instance."""
+        return self._active_api_client._instance
 
     @property
     def channel(self) -> str:
