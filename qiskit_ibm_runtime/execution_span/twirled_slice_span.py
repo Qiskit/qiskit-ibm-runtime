@@ -43,9 +43,9 @@ class TwirledSliceSpan(ExecutionSpan):
     ``(twirled_shape, at_front, shape_slice, shots_slice, pub_shots)``, where
 
     * ``pub_shots`` is the number of shots requested for the pub. It can be smaller than
-    ``num_randomizations`` times ``shots_per_randomizations``, and the last axis of
-    :meth:`.TwirledSliceSpan.mask` must be truncated, such that its length becomes
-    equal to ``pub_shots``.
+      ``num_randomizations`` times ``shots_per_randomizations``, and the last axis of
+      :meth:`.TwirledSliceSpan.mask` must be truncated, such that its length becomes
+      equal to ``pub_shots``.
 
     Args:
         start: The start time of the span, in UTC.
