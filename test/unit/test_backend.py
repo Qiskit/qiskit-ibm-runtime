@@ -16,10 +16,15 @@ from unittest import mock
 
 from ddt import named_data, ddt
 from qiskit import QuantumCircuit, qasm3, transpile
-from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
+from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp, Instruction
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke, FakeFractionalBackend
+from qiskit_ibm_runtime.fake_provider import (
+    FakeManilaV2,
+    FakeSherbrooke,
+    FakeFractionalBackend,
+    FakeMidcircuit,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendConfiguration,
@@ -255,6 +260,7 @@ class TestBackend(IBMTestCase):
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
+
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
         backend._set_props_dict_from_json()
@@ -351,3 +357,77 @@ class TestBackend(IBMTestCase):
             "while_loop" in target.operation_names,
             use_dynamic,
         )
+
+    def test_alternative_measures(self):
+        """Test building a target with alternative measures in its configuration."""
+
+        def assert_props(name, ref_error, ref_duration):
+            for _, props in backend.target[name].items():
+                error = props.error if props else None
+                duration = props.duration if props else None
+                self.assertEqual(error, ref_error)
+                self.assertEqual(duration, ref_duration)
+
+        backend = FakeMidcircuit()
+        backend._get_conf_dict_from_json()
+        backend._set_props_dict_from_json()
+        backend._set_defs_dict_from_json()
+        backend._conf_dict["additional_instructions"]["measure"] += ["measure_reset", "measure_mid"]
+        backend._conf_dict["supported_instructions"] += ["measure_reset", "measure_mid"]
+
+        self.assertEqual(set(backend.basis_gates), set(["id", "rz", "sx", "x", "cx"]))
+        self.assertEqual(
+            set(backend.operation_names),
+            set(
+                [
+                    "id",
+                    "cx",
+                    "sx",
+                    "rz",
+                    "delay",
+                    "measure",
+                    "measure_2",
+                    "x",
+                    "reset",
+                    "measure_reset",
+                    "measure_mid",
+                ]
+            ),
+        )
+        assert_props("measure_2", 3.142, 3.142e-08)
+        assert_props("measure_reset", None, None)
+
+    def test_alternative_instr_custom(self):
+        """Test building a target with alternative instructions in its configuration
+        that are provided through custom_name_mapping."""
+
+        class AlternativeReset(Instruction):
+            """
+            This instruction implements an alternative reset
+            """
+
+            def __init__(self, name: str = "reset_2", label: str = None) -> None:
+                if not name.startswith("reset_"):
+                    raise ValueError(
+                        "Invalid name for alternative reset instruction."
+                        "The provided name must start with `reset_`"
+                    )
+                super().__init__(name, 1, 0, [], label=label)
+
+        backend = FakeMidcircuit()
+        backend._get_conf_dict_from_json()
+        backend._set_props_dict_from_json()
+        backend._set_defs_dict_from_json()
+        backend._conf_dict["additional_instructions"]["reset"] = ["reset_1", "reset_2"]
+
+        target = convert_to_target(
+            BackendConfiguration.from_dict(backend._conf_dict),
+            BackendProperties.from_dict(backend._props_dict),
+            custom_name_mapping={
+                "reset_1": AlternativeReset("reset_1"),
+                "reset_2": AlternativeReset(),
+            },
+        )
+        self.assertTrue(target.instruction_supported("reset_1"))
+        self.assertTrue(target.instruction_supported("reset_2"))
+        self.assertTrue(target.instruction_supported(operation_class=AlternativeReset))

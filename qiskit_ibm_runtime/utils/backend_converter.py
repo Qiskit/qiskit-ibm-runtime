@@ -10,13 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Converters for migration from IBM Quantum BackendV1 to BackendV2."""
+"""
+Converters from BackendConfiguration and BackendProperties
+model (BackendV1) to Target model (BackendV2).
+"""
 
 from __future__ import annotations
 
 import logging
 import warnings
-from typing import Any, Dict, List
+from typing import Any
 
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
@@ -31,42 +34,52 @@ from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from ..models import BackendConfiguration, BackendProperties
-from ..models.exceptions import BackendPropertyError
-
-# is_fractional_gate used to be defined in this module and might be referenced
-# from here externally
-from .utils import is_fractional_gate  # See comment above before removing
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
+from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 
 logger = logging.getLogger(__name__)
 
+# Supported additional instructions (non-standard in qiskit but implemented in qiskit-ibm-runtime).
+# These are grouped by categories (measure, reset...).
+# If a corresponding gate constructor doesn't exist in qiskit-ibm-runtime,
+# the category isn't supported.
+ADDITIONAL_INSTR_MAPPING = {"measure": MidCircuitMeasure}
 
-def convert_to_target(  # type: ignore[no-untyped-def]
+
+def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     *,
     include_control_flow: bool = True,
     include_fractional_gates: bool = True,
+    custom_name_mapping: dict[str, Any] | None = None,
+    add_delay: bool = True,
+    filter_faulty: bool = True,
     **kwargs,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
     This function generates :class:`.Target`` instance from intermediate
     legacy objects such as :class:`.BackendProperties` and :class:`.BackendConfiguration`.
+    These objects were components of the legacy :class:`.BackendV1` model.
 
     Args:
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
         include_control_flow: Set True to include control flow instructions.
         include_fractional_gates: Set True to include fractioanl gates.
+        custom_name_mapping: A name mapping must be supplied for the operation
+            not included in Qiskit Standard Gate name mapping, otherwise the operation
+            will be dropped in the resulting ``Target`` object.
+        add_delay: If True, adds delay to the instruction set.
+        filter_faulty: If True, this filters the non-operational qubits.
 
     Returns:
         A ``Target`` instance.
     """
-    add_delay = True
-    filter_faulty = True
-
     if "defaults" in kwargs:
         warnings.warn(
             "Backend defaults are no longer necessary for creating a target. Defaults will be ignored."
@@ -74,8 +87,10 @@ def convert_to_target(  # type: ignore[no-untyped-def]
 
     required = ["measure", "delay", "reset"]
 
-    # Load Qiskit object representation
+    # Load qiskit object representation
     qiskit_inst_mapping = get_standard_gate_name_mapping()
+    if custom_name_mapping:
+        qiskit_inst_mapping.update(custom_name_mapping)
 
     qiskit_control_flow_mapping = {
         "if_else": IfElseOp,
@@ -95,18 +110,21 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
+    additional_instructions = getattr(configuration, "additional_instructions", {})
     gate_configs = {gate.name: gate for gate in configuration.gates}
     all_instructions = set.union(
-        basis_gates, set(required), supported_instructions.intersection(CONTROL_FLOW_OP_NAMES)
+        basis_gates,
+        set(required),
+        supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
 
-    inst_name_map = {}
+    inst_name_map = {}  # type: dict[str, qiskit.circuit.Instruction]
 
     faulty_ops = set()
     faulty_qubits = set()
     unsupported_instructions = []
 
-    # Create name to Qiskit instruction object repr mapping
+    # Create name to qiskit instruction object repr mapping
     for name in all_instructions:
         if name in qiskit_control_flow_mapping:
             if not include_control_flow:
@@ -132,9 +150,9 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             inst_name_map[name] = qiskit_gate
         elif name in gate_configs:
             # GateConfig model is a translator of QASM opcode.
-            # This doesn't have quantum definition, so Qiskit transpiler doesn't perform
+            # This doesn't have quantum definition, so qiskit transpiler doesn't perform
             # any optimization in quantum domain.
-            # Usually GateConfig counterpart should exist in Qiskit namespace so this is rarely called.
+            # Usually GateConfig counterpart should exist in qiskit namespace so this is rarely called.
             this_config = gate_configs[name]
             params = list(map(Parameter, getattr(this_config, "parameters", [])))
             coupling_map = getattr(this_config, "coupling_map", [])
@@ -155,12 +173,32 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     for name in unsupported_instructions:
         all_instructions.remove(name)
 
+    # Create name to qiskit-ibm-runtime instruction object repr mapping
+    for category in additional_instructions:
+        if category in ADDITIONAL_INSTR_MAPPING:
+            for name in additional_instructions[category]:
+                inst_name_map[name] = ADDITIONAL_INSTR_MAPPING[category](name)
+                all_instructions.add(name)
+        else:
+            for name in additional_instructions[category]:
+                if custom_name_mapping and name in custom_name_mapping:
+                    inst_name_map[name] = custom_name_mapping[name]
+                    all_instructions.add(name)
+                else:
+                    warnings.warn(
+                        f"No instruction definition for {name} can be found and is being excluded "
+                        "from the generated target. You can use `custom_name_mapping` to provide "
+                        "a definition for this operation.",
+                        RuntimeWarning,
+                    )
+
     # Create inst properties placeholder
     # Without any assignment, properties value is None,
     # which defines a global instruction that can be applied to any qubit(s).
     # The None value behaves differently from an empty dictionary.
     # See API doc of Target.add_instruction for details.
     prop_name_map = dict.fromkeys(all_instructions)
+
     for name in all_instructions:
         if name in gate_configs:
             if coupling_map := getattr(gate_configs[name], "coupling_map", None):
@@ -173,7 +211,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Populate instruction properties
     if properties:
 
-        def _get_value(prop_dict: Dict, prop_name: str) -> Any:
+        def _get_value(prop_dict: dict, prop_name: str) -> Any:
             if ndval := prop_dict.get(prop_name, None):
                 return ndval[0]
             return None
@@ -285,11 +323,9 @@ def convert_to_target(  # type: ignore[no-untyped-def]
 
 def qubit_props_list_from_props(
     properties: BackendProperties,
-) -> List[QubitProperties]:
-    """Uses BackendProperties to construct
-    and return a list of QubitProperties.
-    """
-    qubit_props: List[QubitProperties] = []
+) -> list[QubitProperties]:
+    """Uses BackendProperties to construct and return a list of QubitProperties."""
+    qubit_props: list[QubitProperties] = []
     for qubit, _ in enumerate(properties.qubits):
         try:
             t_1 = properties.t1(qubit)

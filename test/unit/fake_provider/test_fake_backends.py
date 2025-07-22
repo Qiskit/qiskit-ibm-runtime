@@ -19,6 +19,7 @@ from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
+
 from ...ibm_test_case import IBMTestCase
 
 
