@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 ADDITIONAL_INSTR_MAPPING = {"measure": MidCircuitMeasure}
 
 
-def convert_to_target(
+def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     *,
@@ -118,7 +118,7 @@ def convert_to_target(
         supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
 
-    inst_name_map = {}  # type: dict[str, qiskit.circuit.Instruction]
+    inst_name_map = {}
 
     faulty_ops = set()
     faulty_qubits = set()
