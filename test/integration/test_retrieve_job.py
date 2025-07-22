@@ -128,6 +128,14 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertFalse(rjobs)
 
     @run_integration_test
+    def test_retrieve_jobs_by_instance(self, service):
+        """Test retrieving jobs by instance."""
+        instance = self.dependencies.instance
+        rjobs = service.jobs(instance=instance)
+        for job in rjobs:
+            self.assertEqual(instance, job.instance)
+
+    @run_integration_test
     def test_jobs_filter_by_date(self, service):
         """Test retrieving jobs by creation date."""
         current_time = datetime.now(timezone.utc) - timedelta(minutes=1)
