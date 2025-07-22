@@ -49,16 +49,21 @@ class TwirledSliceSpan(ExecutionSpan):
         self,
         start: datetime,
         stop: datetime,
-        data_slices: dict[int, tuple[ShapeType, bool, slice, slice]],
+        data_slices: dict[
+            int, tuple[ShapeType, bool, slice, slice] | tuple[ShapeType, bool, slice, slice, int]
+        ],
+        data_slice_version: int = 1,
     ):
         super().__init__(start, stop)
         self._data_slices = data_slices
+        self._data_slice_version = data_slice_version
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, TwirledSliceSpan) and (
             self.start == other.start
             and self.stop == other.stop
             and self._data_slices == other._data_slices
+            and self._data_slice_version == other._data_slice_version
         )
 
     @property
@@ -68,12 +73,13 @@ class TwirledSliceSpan(ExecutionSpan):
     @property
     def size(self) -> int:
         size = 0
-        for shape, _, shape_sl, shots_sl in self._data_slices.values():
+        for data_slice in self._data_slices.values():
+            shape, _, shape_sl, shots_sl = data_slice[:4]
             size += len(range(math.prod(shape[:-1]))[shape_sl]) * len(range(shape[-1])[shots_sl])
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
-        shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx]
+        shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx][:4]
         mask = np.zeros(shape, dtype=np.bool_)
         mask.reshape((np.prod(shape[:-1], dtype=int), shape[-1]))[(shape_sl, shots_sl)] = True
 
@@ -84,9 +90,13 @@ class TwirledSliceSpan(ExecutionSpan):
             shape = shape[1:-1] + shape[:1] + shape[-1:]
 
         # merge twirling axis and shots axis before returning
-        return mask.reshape((*shape[:-2], math.prod(shape[-2:])))
+        mask = mask.reshape((*shape[:-2], math.prod(shape[-2:])))
+        if self._data_slice_version == 2:
+            mask = mask[..., : self._data_slices[pub_idx][4]]
+
+        return mask
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "TwirledSliceSpan":
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
-        return TwirledSliceSpan(self.start, self.stop, slices)
+        return TwirledSliceSpan(self.start, self.stop, slices, self._data_slice_version)

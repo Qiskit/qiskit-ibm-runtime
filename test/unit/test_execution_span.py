@@ -309,6 +309,8 @@ class TestTwirledSliceSpan(IBMTestCase):
         ]
         mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))
         npt.assert_array_equal(self.span2.mask(1), mask2)
+        print(mask1)
+        print(mask2)
 
     @ddt.data(
         (0, True, True),
