@@ -353,7 +353,7 @@ class RuntimeEncoder(json.JSONEncoder):
             out_val = {
                 "start": obj.start,
                 "stop": obj.stop,
-                "data_slice_version": obj._data_slice_version
+                "data_slice_version": obj._data_slice_version,
             }
 
             if obj._data_slice_version == 1:
@@ -363,8 +363,22 @@ class RuntimeEncoder(json.JSONEncoder):
                 }
             else:
                 out_val["data_slices"] = {
-                    idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop, pub_shots)
-                    for idx, (shape, at_front, arg_sl, shot_sl, pub_shots) in obj._data_slices.items()
+                    idx: (
+                        shape,
+                        at_front,
+                        arg_sl.start,
+                        arg_sl.stop,
+                        shot_sl.start,
+                        shot_sl.stop,
+                        pub_shots,
+                    )
+                    for idx, (
+                        shape,
+                        at_front,
+                        arg_sl,
+                        shot_sl,
+                        pub_shots,
+                    ) in obj._data_slices.items()
                 }
 
             return {"__type__": "TwirledSliceSpan", "__value__": out_val}
@@ -511,8 +525,22 @@ class RuntimeDecoder(json.JSONDecoder):
                     }
                 else:
                     obj_val["data_slices"] = {
-                        int(idx): (tuple(shape), at_start, slice(arg0, arg1), slice(shot0, shot1), pub_shots)
-                        for idx, (shape, at_start, arg0, arg1, shot0, shot1, pub_shots) in data_slices.items()
+                        int(idx): (
+                            tuple(shape),
+                            at_start,
+                            slice(arg0, arg1),
+                            slice(shot0, shot1),
+                            pub_shots,
+                        )
+                        for idx, (
+                            shape,
+                            at_start,
+                            arg0,
+                            arg1,
+                            shot0,
+                            shot1,
+                            pub_shots,
+                        ) in data_slices.items()
                     }
                 return TwirledSliceSpan(**obj_val)
             if obj_type == "ExecutionSpan":
