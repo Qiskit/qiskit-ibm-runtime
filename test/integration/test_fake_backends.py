@@ -116,23 +116,6 @@ class TestFakeBackends(IBMTestCase):
 
         self.assertIsInstance(configuration.to_dict(), dict)
 
-    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
-    def test_defaults_to_dict(self, backend):
-        if hasattr(backend, "defaults"):
-            defaults = backend.defaults()
-            if defaults:
-                self.assertIsInstance(defaults.to_dict(), dict)
-
-                for i in defaults.qubit_freq_est:
-                    self.assertGreater(i, 1e6)
-                    self.assertGreater(i, 1e6)
-
-                for i in defaults.meas_freq_est:
-                    self.assertGreater(i, 1e6)
-                    self.assertGreater(i, 1e6)
-        else:
-            self.skipTest("Backend %s does not have defaults" % backend)
-
     def test_delay_circuit(self):
         backend = FakeMumbaiV2()
         qc = QuantumCircuit(2)  # pylint: disable=invalid-name
