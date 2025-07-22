@@ -12,7 +12,7 @@
 
 """Exceptions related to the IBM Runtime service."""
 
-from qiskit.exceptions import QiskitError
+from qiskit.exceptions import QiskitError, QiskitWarning
 from qiskit.providers.exceptions import JobTimeoutError, JobError
 
 
@@ -110,3 +110,7 @@ class RuntimeJobMaxTimeoutError(IBMRuntimeError):
     """Error raised when a job times out."""
 
     pass
+
+
+class IBMRuntimeExperimentalWarning(QiskitWarning):
+    """Raised when an experimental feature in qiskit-ibm-runtime is being used."""
