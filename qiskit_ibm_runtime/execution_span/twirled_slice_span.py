@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import math
 import numpy as np
@@ -58,7 +58,7 @@ class TwirledSliceSpan(ExecutionSpan):
         self,
         start: datetime,
         stop: datetime,
-        data_slices: dict[
+        data_slices: Mapping[
             int, tuple[ShapeType, bool, slice, slice] | tuple[ShapeType, bool, slice, slice, int]
         ],
         data_slice_version: int = 1,
