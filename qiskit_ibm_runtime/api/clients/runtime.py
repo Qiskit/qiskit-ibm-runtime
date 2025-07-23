@@ -293,17 +293,6 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.backend(backend_name).properties(datetime=datetime)
 
-    def backend_pulse_defaults(self, backend_name: str) -> Dict:
-        """Return the pulse defaults of the IBM backend.
-
-        Args:
-            backend_name: The name of the IBM backend.
-
-        Returns:
-            Backend pulse defaults.
-        """
-        return self._api.backend(backend_name).pulse_defaults()
-
     def update_tags(self, job_id: str, tags: list) -> Response:
         """Update the tags of the job.
 

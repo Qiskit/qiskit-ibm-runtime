@@ -418,12 +418,6 @@ class BaseFakeRuntimeClient:
             return ret.copy()
         return None
 
-    def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
-        """Return the pulse defaults of a backend."""
-        if ret := self._find_backend(backend_name).defaults:
-            return ret.copy()
-        return None
-
     # pylint: disable=unused-argument
     def create_session(
         self,

@@ -218,6 +218,17 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertTrue(instances[0]["crn"])
         self.assertTrue(instances[0]["name"])
 
+    def test_active_instance(self):
+        """Test active_instance method."""
+        instance = self.dependencies.instance
+        service = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+            instance=instance,
+        )
+        self.assertEqual(instance, service.active_instance())
+
     def test_jobs_before_backend(self):
         """Test retrieving jobs before backends call."""
         service = QiskitRuntimeService(
@@ -254,7 +265,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         )
         usage = service.usage()
         self.assertTrue(usage)
-        self.assertTrue(usage["usage_remaining_seconds"])
+        self.assertIsInstance(usage["usage_remaining_seconds"], int)
         self.assertIsInstance(usage, dict)
 
 
