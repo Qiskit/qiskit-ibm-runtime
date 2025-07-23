@@ -166,7 +166,6 @@ class QiskitRuntimeService:
         )
 
         self._channel = self._account.channel
-        self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
@@ -177,7 +176,6 @@ class QiskitRuntimeService:
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
-        self._cached_backend_objs: List[IBMBackend] = []
         if self._account.instance:
             self._default_instance = True
         if instance is not None:
@@ -201,9 +199,7 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-                self._backends_list = self._active_api_client.list_backends()
-            if not self._backends_list:
-                self._backends_list = self._active_api_client.list_backends()
+            self._backends_list = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
