@@ -1,0 +1,1 @@
+Improved error message when :meth:`.ExecutionSpan.mask` is called for a pub that's not contained in the span.

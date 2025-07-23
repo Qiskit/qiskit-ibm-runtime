@@ -73,6 +73,9 @@ class TwirledSliceSpan(ExecutionSpan):
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
+        if pub_idx not in self._data_slices:
+            raise KeyError(f"Pub {pub_idx} is not included in the span.")
+
         shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx]
         mask = np.zeros(shape, dtype=np.bool_)
         mask.reshape((np.prod(shape[:-1], dtype=int), shape[-1]))[(shape_sl, shots_sl)] = True

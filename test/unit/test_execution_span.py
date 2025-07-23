@@ -310,6 +310,9 @@ class TestTwirledSliceSpan(IBMTestCase):
         mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))
         npt.assert_array_equal(self.span2.mask(1), mask2)
 
+        with self.assertRaisesRegex(KeyError, "Pub 1 is not included in the span."):
+            self.span1.mask(1)
+
     @ddt.data(
         (0, True, True),
         ([0, 1], True, True),
