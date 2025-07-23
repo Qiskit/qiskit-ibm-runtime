@@ -25,5 +25,4 @@ class FakePoughkeepsieV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_poughkeepsie.json"  # type: ignore
     props_filename = "props_poughkeepsie.json"  # type: ignore
-    defs_filename = "defs_poughkeepsie.json"  # type: ignore
     backend_name = "fake_poughkeepsie"  # type: ignore

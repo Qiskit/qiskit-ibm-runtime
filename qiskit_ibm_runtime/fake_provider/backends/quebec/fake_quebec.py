@@ -24,5 +24,4 @@ class FakeQuebec(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_quebec.json"  # type: ignore
     props_filename = "props_quebec.json"  # type: ignore
-    defs_filename = "defs_quebec.json"  # type: ignore
     backend_name = "fake_quebec"  # type: ignore

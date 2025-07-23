@@ -24,5 +24,4 @@ class FakeCairoV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_cairo.json"  # type: ignore
     props_filename = "props_cairo.json"  # type: ignore
-    defs_filename = "defs_cairo.json"  # type: ignore
     backend_name = "fake_cairo"  # type: ignore

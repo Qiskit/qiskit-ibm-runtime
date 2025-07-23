@@ -34,8 +34,8 @@ class FakeApiBackendSpecs:
     """Backend configuration to overwrite."""
     status: dict = None
     """Backend status to overwrite."""
-    hgps: list = None
-    """HGPs that can access this backend. None if all can."""
+    crns: list = None
+    """Instances that can access this backend. None if all can."""
 
 
 class FakeApiBackend:
@@ -46,10 +46,9 @@ class FakeApiBackend:
             model_backend = getattr(backends, specs.backend_name)()
             if isinstance(model_backend, FakeBackendV2):
                 model_backend._set_props_dict_from_json()
-                model_backend._set_defs_dict_from_json()
                 self.configuration = model_backend._conf_dict
                 self.properties = model_backend._props_dict
-                self.defaults = model_backend._defs_dict
+
                 # BackendV2 doesn't implement .status.
                 # This is a copy of default definition in Qiskit.
                 self.status = {
@@ -62,7 +61,6 @@ class FakeApiBackend:
             else:
                 self.configuration = model_backend.configuration().to_dict()
                 self.properties = model_backend.properties().to_dict()
-                self.defaults = model_backend.defaults().to_dict()
                 self.status = model_backend.status().to_dict()
         else:
             model_backend = FakeLimaV2()
@@ -76,7 +74,6 @@ class FakeApiBackend:
             self.configuration["backend_name"] = specs.backend_name
             self.status = model_backend.status().to_dict()
             self.properties = None
-            self.defaults = None
 
         self.configuration["online_date"] = python_datetime.now().isoformat()
         if specs.configuration:
@@ -86,10 +83,10 @@ class FakeApiBackend:
         if specs.status:
             self.status.update(**specs.status)
 
-        self.hgps = specs.hgps
+        self.crns = specs.crns
 
-    def has_access(self, hgp):
-        """Check if hgp is accessible"""
-        if not self.hgps:
+    def has_access(self, crn):
+        """Check if crn is accessible"""
+        if not self.crns:
             return True
-        return hgp in self.hgps
+        return crn in self.crns
