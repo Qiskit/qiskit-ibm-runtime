@@ -357,12 +357,12 @@ class RuntimeEncoder(json.JSONEncoder):
             }
 
             if obj._data_slice_version == 1:
-                out_val["data_slices"] = {
+                out_val["data_slices"] = {  # type: ignore
                     idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
                     for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
                 }
             else:
-                out_val["data_slices"] = {
+                out_val["data_slices"] = {  # type: ignore
                     idx: (
                         shape,
                         at_front,

@@ -101,7 +101,7 @@ class TwirledSliceSpan(ExecutionSpan):
         # merge twirling axis and shots axis before returning
         mask = mask.reshape((*shape[:-2], math.prod(shape[-2:])))
         if self._data_slice_version == 2:
-            mask = mask[..., : self._data_slices[pub_idx][4]]
+            mask = mask[..., : self._data_slices[pub_idx][4]]  # type: ignore
 
         return mask
 
