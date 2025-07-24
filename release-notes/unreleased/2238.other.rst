@@ -1,3 +1,0 @@
-The deprecated :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` methods 
-have been removed. They were deprecated in the 0.38.0 release. 
-Pulse defaults have also been removed from all fake backends. 
