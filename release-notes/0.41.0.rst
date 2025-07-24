@@ -19,32 +19,32 @@ New Features
   ``tags`` can be used to **filter** instances so only instances with the given tags are 
   returned.
 
-  Additionally, if using the filters  ``tags``, ``region``, or ``plans_preference`` returns no valid instances, 
-  an error will now be raised at initialization. Make sure the name of the ``tags`` and ``region`` passed in are 
-  an exact match of the instance ``tags`` or ``region`` (case insensitive). For ``plans_preference``, as long as a matching
+  Additionally, if no valid instances are returned when using the ``tags``, ``region``, or ``plans_preference`` filters,  
+  an error will now be raised at initialization. Make sure the names of the ``tags`` and ``region`` passed in  
+  match the instance ``tags`` or ``region`` exactly (case insensitive). For ``plans_preference``, as long as a matching
   plan name is passed in, instances with the matching plan name will be prioritized. (`2277 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2277>`__)
-- With the migration to the new IBM Quantum Platform, there were a few inconsistencies with the old IBM Quantum 
-  Platform classic that needed to be addressed. 
+- With the migration to the new IBM Quantum Platform, there were a few inconsistencies with IBM Quantum 
+  Platform Classic that needed to be addressed:
 
       - :meth:`.QiskitRuntimeService.usage` now returns usage information for the current active IBM Cloud instance.
-      - :meth:`.QiskitRuntimeService.delete_job` is not supported on the new platform so it has been deprecated.
-      - :meth:`.RuntimeJobV2.instance` will now return the IBM Cloud instance crn. 
-      - :meth:`.RuntimeJob.queue_usage` is also not supported on the new platform so it has been deprecated. (`2296 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2296>`__)
+      - :meth:`.QiskitRuntimeService.delete_job` is not supported on the new platform, so it has been deprecated.
+      - :meth:`.RuntimeJobV2.instance` will now return the IBM Cloud instance CRN. 
+      - :meth:`.RuntimeJob.queue_usage` is not supported on the new platform, so it has been deprecated. (`2296 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2296>`__)
 - Support for running ``qiskit-ibm-runtime`` with Python 3.9 has been deprecated and will
   be removed in a future release. 
 
   Additionally, ``qiskit-ibm-runtime`` now officialy supports Python 3.13. (`2314 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2314>`__)
 - When saving an account, there is now a validation check to make sure the ``region``, 
-  ``plans_preference`` and ``tags`` parameters are valid. (`2319 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2319>`__)
+  ``plans_preference``, and ``tags`` parameters are valid. (`2319 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2319>`__)
 - There is a new method, :meth:`.QiskitRuntimeService.active_instance` which returns the IBM Cloud CRN 
   of the current active instance. 
 
-  The :meth:`.QiskitRuntimeService.jobs` method has also been updated to properly accept the ``instance`` 
+  The :meth:`.QiskitRuntimeService.jobs` method has been updated to properly accept the ``instance`` 
   parameter, which can be used to filter jobs. (`2325 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2325>`__)
 - :meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining_seconds`` field. 
-  This field includes the difference between the reported ``usage_limit_seconds`` / ``usage_allocation_seconds`` 
+  This field includes the difference between the reported ``usage_limit_seconds`` or ``usage_allocation_seconds`` 
   (depending on how the instance is configured) and ``usage_consumed_seconds``. 
-  Learn more about instance allocation limits `here <https://quantum.cloud.ibm.com/docs/en/guides/allocation-limits>`__. (`2329 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2329>`__)
+  Learn more about instance allocation limits `here <https://quantum.cloud.ibm.com/docs/guides/allocation-limits>`__. (`2329 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2329>`__)
 
 
 Bug Fixes
@@ -52,10 +52,10 @@ Bug Fixes
 
 - Fixed a bug in :class:`.BasePrimitive` where primitives instantiated inside a :class:`~.Session` or :class:`~.Batch` context manager without the ``mode`` 
   parameter would fetch the backend from the service (by name) instead of using the backend passed to the :class:`~.Session` or :class:`~.Batch`. 
-  This could cause issues when the :class:`~.Session`/:class:`~.Batch`
+  This could cause issues when the :class:`~.Session` or :class:`~.Batch`
   backend was modified by users (for example, by removing a gate), because the primitives 
   would instead fetch the unmodified backend object from the service. After the fix, the
-  :class:`~.Session`/:class:`~.Batch` backend object is used directly. (`2282 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2282>`__)
+  :class:`~.Session` or :class:`~.Batch` backend object is used directly. (`2282 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2282>`__)
 - Fixed an issue in :class:`.IBMBackend` where property changes, such as modifications to ``basis_gates``, persisted even after the backend object was renewed. (`2283 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2283>`__)
 
 
@@ -68,4 +68,4 @@ Other Notes
 - The deprecated :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` methods 
   have been removed. They were deprecated in the 0.38.0 release. 
   Pulse defaults have also been removed from all fake backends. (`2238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2238>`__)
-- Improved error message when :meth:`.ExecutionSpan.mask` is called for a pub that's not contained in the span. (`2311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2311>`__)
+- Improved the error message returned when :meth:`.ExecutionSpan.mask` is called for a PUB that's not contained in the span. (`2311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2311>`__)
