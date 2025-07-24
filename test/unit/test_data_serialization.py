@@ -487,6 +487,15 @@ class TestContainerSerialization(IBMTestCase):
                                 2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
                             },
                         ),
+                        TwirledSliceSpan(
+                            datetime(2024, 9, 20),
+                            datetime(2024, 3, 21),
+                            {
+                                0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
+                                2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
+                            },
+                            2,
+                        ),
                     ]
                 )
             }
