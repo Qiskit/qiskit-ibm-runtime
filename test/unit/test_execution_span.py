@@ -318,7 +318,7 @@ class TestTwirledSliceSpan(IBMTestCase):
 
         mask3 = [[False, False, True, True]]
         npt.assert_array_equal(self.span3.mask(2), mask3)
-        
+
         with self.assertRaisesRegex(KeyError, "Pub 1 is not included in the span."):
             self.span1.mask(1)
 
