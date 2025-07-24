@@ -296,8 +296,8 @@ def convert_to_rzz_valid_pub(
 
         param_names = [param.name for param in param_exp.parameters]
 
-        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
         # col_indices is the indices of columns in the parameter value array that have to be checked
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
 
         # project only to the parameters that have to be checked
         projected_arr = arr[:, col_indices]
