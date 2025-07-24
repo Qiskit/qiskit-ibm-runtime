@@ -281,8 +281,7 @@ def convert_to_rzz_valid_pub(
     for p_name in pub_params:
         if p_name.startswith("rzz_"):
             raise ValueError(
-                "Original pub is not allowed to contain parameters "
-                "whose names start with rzz_"
+                "Original pub is not allowed to contain parameters whose names start with rzz_"
             )
 
     # first axis will be over flattened shape, second axis over circuit parameters
