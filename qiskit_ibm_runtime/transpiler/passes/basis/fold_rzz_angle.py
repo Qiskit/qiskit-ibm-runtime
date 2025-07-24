@@ -261,6 +261,8 @@ def convert_to_rzz_valid_pub(
     Current limitations:
     1. Does not support dynamic circuits.
     2. Does not preserve global phase.
+    3. This function defines new parameters, whose names start with `rzz_`. We therefore
+       require that the input pub does not contain parameters whose names also start with `rzz_`.
     """
     if isinstance(primitive, SamplerV2):
         is_sampler = True
@@ -273,6 +275,12 @@ def convert_to_rzz_valid_pub(
 
     val_data = pub.parameter_values.data
     pub_params = np.array(list(chain.from_iterable(val_data)))
+    for p_name in pub_params:
+        if p_name.startswith("rzz_"):
+            raise ValueError(
+                "Original pub is not allowed to contain parameters " "whose names start with rzz_"
+            )
+
     # first axis will be over flattened shape, second axis over circuit parameters
     arr = pub.parameter_values.ravel().as_array()
 
