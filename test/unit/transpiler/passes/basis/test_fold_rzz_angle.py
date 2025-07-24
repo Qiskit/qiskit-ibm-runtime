@@ -145,15 +145,18 @@ class TestFoldRzzAngle(IBMTestCase):
         circ.x(0)
         circ.rzz(p1 - p2, 2, 1)
 
-        param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
-        isa_pub = convert_to_rzz_valid_pub(SamplerV2(FakeFractionalBackend()), (circ, param_vals))
+        param_vals_arr = np.array([[[p1_set1, p2_set1]], [[p1_set2, p2_set2]]])
+        isa_pub = convert_to_rzz_valid_pub(
+            SamplerV2(FakeFractionalBackend()), (circ, param_vals_arr)
+        )
 
-        isa_param_vals = isa_pub.parameter_values.ravel().as_array()
-        num_isa_params = len(isa_param_vals[0])
-        self.assertEqual(num_isa_params, expected_num_params)
-
+        isa_param_vals = isa_pub.parameter_values
+        self.assertEqual(isa_param_vals.num_parameters, expected_num_params)
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
-        for param_set_1, param_set_2 in zip(param_vals, isa_param_vals):
+
+        param_flat = param_vals_arr.reshape(-1, param_vals_arr.shape[-1])
+        isa_flat = isa_param_vals.ravel().as_array()
+        for param_set_1, param_set_2 in zip(param_flat, isa_flat):
             self.assertTrue(
                 Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
                     Operator.from_circuit(isa_pub.circuit.assign_parameters(param_set_2))

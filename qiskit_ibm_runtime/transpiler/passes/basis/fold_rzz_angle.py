@@ -273,12 +273,16 @@ def convert_to_rzz_valid_pub(
     else:
         raise ValueError("Unsupported Primitive type")
 
+    original_shape = pub.parameter_values.as_array().shape
+    single_param_shape = original_shape[:-1] + (1,)
+
     val_data = pub.parameter_values.data
     pub_params = np.array(list(chain.from_iterable(val_data)))
     for p_name in pub_params:
         if p_name.startswith("rzz_"):
             raise ValueError(
-                "Original pub is not allowed to contain parameters " "whose names start with rzz_"
+                "Original pub is not allowed to contain parameters "
+                "whose names start with rzz_"
             )
 
     # first axis will be over flattened shape, second axis over circuit parameters
@@ -364,7 +368,7 @@ def convert_to_rzz_valid_pub(
                         (qubits[1],),
                     )
                 )
-                val_data[f"{param_prefix}rz"] = rz_angles
+                val_data[f"{param_prefix}rz"] = rz_angles.reshape(single_param_shape)
 
         is_rx = False
         is_x = False
@@ -387,14 +391,14 @@ def convert_to_rzz_valid_pub(
                         (qubits[0],),
                     )
                 )
-                val_data[f"{param_prefix}rx"] = rx_angles
+                val_data[f"{param_prefix}rx"] = rx_angles.reshape(single_param_shape)
 
         if is_rz or is_rx:
             # param_exp * 0 to prevent an error complaining that the original parameters,
             # still present in the parameter values, are missing from the circuit
             param_rzz = param_exp * 0 + Parameter(f"{param_prefix}rzz")
             new_data.append(CircuitInstruction(RZZGate(param_rzz), qubits))
-            val_data[f"{param_prefix}rzz"] = rzz_angles
+            val_data[f"{param_prefix}rzz"] = rzz_angles.reshape(single_param_shape)
         else:
             new_data.append(instruction)
 
