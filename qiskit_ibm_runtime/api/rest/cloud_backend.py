@@ -25,7 +25,6 @@ class CloudBackend(RestAdapterBase):
     URL_MAP = {
         "configuration": "/configuration",
         "properties": "/properties",
-        "pulse_defaults": "/defaults",
         "status": "/status",
     }
 
@@ -66,15 +65,6 @@ class CloudBackend(RestAdapterBase):
         if response:
             response["backend_name"] = self.backend_name
         return response
-
-    def pulse_defaults(self) -> Dict[str, Any]:
-        """Return backend pulse defaults.
-
-        Returns:
-            JSON response of pulse defaults.
-        """
-        url = self.get_url("pulse_defaults")
-        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
 
     def status(self) -> Dict[str, Any]:
         """Return backend status.

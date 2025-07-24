@@ -314,11 +314,14 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the ALAPSchedule pass on `dag`.
+
         Args:
             dag (DAGCircuit): DAG to schedule.
+
         Raises:
             TranspilerError: if the circuit is not mapped on physical qubits.
             TranspilerError: if conditional bit is added to non-supported instruction.
+
         Returns:
             The scheduled DAGCircuit.
         """
@@ -442,11 +445,14 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
     def run(self, dag: DAGCircuit) -> None:
         """Run the ASAPSchedule pass on `dag`.
+
         Args:
             dag (DAGCircuit): DAG to schedule.
+
         Raises:
             TranspilerError: if the circuit is not mapped on physical qubits.
             TranspilerError: if conditional bit is added to non-supported instruction.
+
         Returns:
             The scheduled DAGCircuit.
         """

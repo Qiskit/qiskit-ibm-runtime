@@ -68,12 +68,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        if cls.dependencies.channel == "ibm_cloud":
-            cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
-        if cls.dependencies.channel == "ibm_quantum":
-            cls.dependencies.service._account.instance = (
-                None  # set instance to none to avoid filtering
-            )
+        if cls.dependencies.channel == "ibm_quantum_platform":
             cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
 
     def test_backend_service(self):
@@ -116,13 +111,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
             old_target = backend.target
             old_configuration = backend.configuration()
             old_properties = backend.properties()
-            old_defaults = backend.defaults()
             backend.refresh()
             new_target = backend.target
             self.assertNotEqual(old_target, new_target)
             self.assertIsNot(old_configuration, backend.configuration())
             self.assertIsNot(old_properties, backend.properties())
-            self.assertIsNot(old_defaults, backend.defaults())
 
     @production_only
     def test_backend_qubit_properties(self):
@@ -160,17 +153,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(properties_today)
             self.assertEqual(properties.backend_version, properties_today.backend_version)
 
-    @production_only
-    def test_backend_pulse_defaults(self):
-        """Check the backend pulse defaults of each backend."""
-        backend = self.backend
-        with self.subTest(backend=backend.name):
-            if backend.simulator:
-                raise SkipTest("Skip since simulator does not have defaults.")
-            if not backend.open_pulse:
-                raise SkipTest("Skip for backends that do not support pulses.")
-            self.assertIsNotNone(backend.defaults())
-
     def test_backend_configuration(self):
         """Check the backend configuration of each backend."""
         backend = self.backend
@@ -206,7 +188,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertEqual(
                 backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
             )
-            self.assertEqual(backend_copy.defaults().to_dict(), backend.defaults().to_dict())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,
