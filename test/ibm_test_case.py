@@ -239,7 +239,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # Simulators or tests backends can be not available
         cls.sim_backends[cls.service.channel] = None
         for backend in backends:
-            if backend.simulator or backend.name.startswith("test_eagle"):
+            if backend.name.startswith("test_eagle"):
                 cls.sim_backends[cls.service.channel] = backend.name
                 break
 
