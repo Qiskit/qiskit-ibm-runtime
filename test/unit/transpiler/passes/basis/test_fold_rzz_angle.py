@@ -24,6 +24,7 @@ from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.quantum_info import Operator, SparsePauliOp
 
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
     FoldRzzAngle,
     convert_to_rzz_valid_pub,
@@ -145,7 +146,7 @@ class TestFoldRzzAngle(IBMTestCase):
         circ.rzz(p1 - p2, 2, 1)
 
         param_vals = [(p1_set1, p2_set1), (p1_set2, p2_set2)]
-        isa_pub = convert_to_rzz_valid_pub("sampler", (circ, param_vals))
+        isa_pub = convert_to_rzz_valid_pub(SamplerV2(FakeFractionalBackend()), (circ, param_vals))
 
         isa_param_vals = isa_pub.parameter_values.ravel().as_array()
         num_isa_params = len(isa_param_vals[0])
@@ -175,7 +176,9 @@ class TestFoldRzzAngle(IBMTestCase):
             circ.rzz(p, 1, 0)
         circ.rzz(p, 0, 1)
 
-        isa_pub = convert_to_rzz_valid_pub("estimator", (circ, observable, [1, -1]))
+        isa_pub = convert_to_rzz_valid_pub(
+            EstimatorV2(FakeFractionalBackend()), (circ, observable, [1, -1])
+        )
         self.assertEqual(is_valid_rzz_pub(isa_pub), "")
         self.assertEqual([observable], isa_pub.observables)
 

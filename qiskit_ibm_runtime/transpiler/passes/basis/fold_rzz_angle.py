@@ -16,6 +16,7 @@ from typing import Tuple, Union
 from math import pi
 from operator import mod
 from itertools import chain
+import numpy as np
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
 from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, CONTROL_FLOW_OP_NAMES
@@ -26,7 +27,8 @@ from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
-import numpy as np
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):
@@ -251,7 +253,7 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    program_id: str, pub: Union[SamplerPubLike, EstimatorPubLike]
+    primitive: BasePrimitiveV2, pub: Union[SamplerPubLike, EstimatorPubLike]
 ) -> Union[SamplerPub, EstimatorPub]:
     """
     Return a pub which is compatible with Rzz constraints.
@@ -260,12 +262,14 @@ def convert_to_rzz_valid_pub(
     1. Does not support dynamic circuits.
     2. Does not preserve global phase.
     """
-    if program_id == "sampler":
+    if isinstance(primitive, SamplerV2):
+        is_sampler = True
         pub = SamplerPub.coerce(pub)
-    elif program_id == "estimator":
+    elif isinstance(primitive, EstimatorV2):
+        is_sampler = False
         pub = EstimatorPub.coerce(pub)
     else:
-        raise ValueError(f"Unknown program id {program_id}")
+        raise ValueError("Unsupported Primitive type")
 
     val_data = pub.parameter_values.data
     pub_params = np.array(list(chain.from_iterable(val_data)))
@@ -404,7 +408,7 @@ def convert_to_rzz_valid_pub(
 
     new_circ.data = new_data
 
-    if program_id == "sampler":
+    if is_sampler:
         return SamplerPub.coerce((new_circ, val_data), pub.shots)
     else:
         return EstimatorPub.coerce((new_circ, pub.observables, val_data), pub.precision)
