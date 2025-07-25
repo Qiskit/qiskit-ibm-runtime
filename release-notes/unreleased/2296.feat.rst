@@ -1,7 +1,0 @@
-With the migration to the new IBM Quantum Platform, there were a few inconsistencies with the old IBM Quantum 
-Platform classic that needed to be addressed. 
-
-    - :meth:`.QiskitRuntimeService.usage` now returns usage information for the current active IBM Cloud instance.
-    - :meth:`.QiskitRuntimeService.delete_job` is not supported on the new platform so it has been deprecated.
-    - :meth:`.RuntimeJobV2.instance` will now return the IBM Cloud instance crn. 
-    - :meth:`.RuntimeJob.queue_usage` is also not supported on the new platform so it has been deprecated.
