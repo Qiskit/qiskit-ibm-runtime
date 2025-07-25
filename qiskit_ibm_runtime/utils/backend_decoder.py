@@ -19,10 +19,7 @@ import traceback
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 
-try:
-    from qiskit.circuit import CONTROL_FLOW_OP_NAMES
-except ImportError:  # Remove when dropping support for Qiskit < 1.3
-    CONTROL_FLOW_OP_NAMES = frozenset(("for_loop", "while_loop", "if_else", "switch_case"))
+from qiskit.circuit import CONTROL_FLOW_OP_NAMES
 
 from ..models import (
     BackendProperties,
