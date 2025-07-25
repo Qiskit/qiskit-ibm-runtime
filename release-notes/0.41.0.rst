@@ -14,14 +14,14 @@ Upgrade Notes
 New Features
 ------------
 
-- A new parameter ``tags``, has been added to the 
+- A new parameter, ``tags``, has been added to the 
   :class:`.QiskitRuntimeService` initializer and :meth:`.QiskitRuntimeService.save_account` method. 
   ``tags`` can be used to **filter** instances so only instances with the given tags are 
   returned.
 
   Additionally, if no valid instances are returned when using the ``tags``, ``region``, or ``plans_preference`` filters,  
   an error will now be raised at initialization. Make sure the names of the ``tags`` and ``region`` passed in  
-  match the instance ``tags`` or ``region`` exactly (case insensitive). For ``plans_preference``, as long as a matching
+  match the instance ``tags`` or ``region`` exactly (case-insensitive). For ``plans_preference``, as long as a matching
   plan name is passed in, instances with the matching plan name will be prioritized. (`2277 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2277>`__)
 - With the migration to the new IBM Quantum Platform, there were a few inconsistencies with IBM Quantum 
   Platform Classic that needed to be addressed:
@@ -62,10 +62,10 @@ Bug Fixes
 Other Notes
 -----------
 
-- The deprecated :class:`.IBMBackend` attributes ``max_shots`` and 
+- The deprecated :class:`.IBMBackend` attributes, ``max_shots`` and 
   ``max_experiments``, have been removed and the :meth:`.IBMBackend.max_circuits` method now
   returns ``None``. See the `job limits guide <https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits>`__ for details. (`2235 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2235>`__)
 - The deprecated :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` methods 
-  have been removed. They were deprecated in the 0.38.0 release. 
+  have been removed. They were deprecated in the v0.38.0 release. 
   Pulse defaults have also been removed from all fake backends. (`2238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2238>`__)
 - Improved the error message returned when :meth:`.ExecutionSpan.mask` is called for a PUB that's not contained in the span. (`2311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2311>`__)
