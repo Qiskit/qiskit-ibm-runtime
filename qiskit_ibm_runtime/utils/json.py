@@ -361,27 +361,27 @@ class RuntimeEncoder(json.JSONEncoder):
                     idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
                     for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
                 }
-            else:
-                out_val["data_slices"] = {  # type: ignore
-                    idx: (
-                        shape,
-                        at_front,
-                        arg_sl.start,
-                        arg_sl.stop,
-                        shot_sl.start,
-                        shot_sl.stop,
-                        pub_shots,
-                    )
-                    for idx, (
-                        shape,
-                        at_front,
-                        arg_sl,
-                        shot_sl,
-                        pub_shots,
-                    ) in obj._data_slices.items()
-                }
+                return {"__type__": "TwirledSliceSpan", "__value__": out_val}
 
-            return {"__type__": "TwirledSliceSpan", "__value__": out_val}
+            out_val["data_slices"] = {  # type: ignore
+                idx: (
+                    shape,
+                    at_front,
+                    arg_sl.start,
+                    arg_sl.stop,
+                    shot_sl.start,
+                    shot_sl.stop,
+                    pub_shots,
+                )
+                for idx, (
+                    shape,
+                    at_front,
+                    arg_sl,
+                    shot_sl,
+                    pub_shots,
+                ) in obj._data_slices.items()
+            }
+            return {"__type__": "TwirledSliceSpan2", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -516,7 +516,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
                 }
                 return DoubleSliceSpan(**obj_val)
-            if obj_type == "TwirledSliceSpan":
+            if obj_type.startswith("TwirledSliceSpan"):
                 data_slices = obj_val["data_slices"]
                 if obj_val["data_slice_version"] == 1:
                     obj_val["data_slices"] = {
