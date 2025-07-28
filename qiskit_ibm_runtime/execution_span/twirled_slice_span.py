@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import math
 import numpy as np
@@ -28,7 +28,7 @@ class TwirledSliceSpan(ExecutionSpan):
     """An :class:`~.ExecutionSpan` for data stored in a sliceable format when twirling.
 
     This type of execution span references pub result data that came from a twirled sampler
-    experiment which was executed by either prepending or appending an axis to paramater values
+    experiment which was executed by either prepending or appending an axis to parameter values
     to account for twirling. Concretely, ``data_slices`` is a map from pub slices to tuples
     ``(twirled_shape, at_front, shape_slice, shots_slice)`` where
 
@@ -39,26 +39,40 @@ class TwirledSliceSpan(ExecutionSpan):
     * ``shape_slice`` is a slice of an array of shape ``twirled_shape[:-1]``, flattened,
     * and ``shots_slice`` is a slice of ``twirled_shape[-1]``.
 
+    When ``data_slice_version`` equals 2, the data slice tuples are of the form
+    ``(twirled_shape, at_front, shape_slice, shots_slice, pub_shots)``, where
+
+    * ``pub_shots`` is the number of shots requested for the pub. It can be smaller than
+      ``num_randomizations`` times ``shots_per_randomizations``, and the last axis of
+      :meth:`.TwirledSliceSpan.mask` must be truncated, such that its length becomes
+      equal to ``pub_shots``.
+
     Args:
         start: The start time of the span, in UTC.
         stop: The stop time of the span, in UTC.
         data_slices: A map from pub indices to length-4 tuples described above.
+        data_slice_version: The format version of the data slice tuples.
     """
 
     def __init__(
         self,
         start: datetime,
         stop: datetime,
-        data_slices: dict[int, tuple[ShapeType, bool, slice, slice]],
+        data_slices: Mapping[
+            int, tuple[ShapeType, bool, slice, slice] | tuple[ShapeType, bool, slice, slice, int]
+        ],
+        data_slice_version: int = 1,
     ):
         super().__init__(start, stop)
         self._data_slices = data_slices
+        self._data_slice_version = data_slice_version
 
     def __eq__(self, other: object) -> bool:
         return isinstance(other, TwirledSliceSpan) and (
             self.start == other.start
             and self.stop == other.stop
             and self._data_slices == other._data_slices
+            and self._data_slice_version == other._data_slice_version
         )
 
     @property
@@ -68,7 +82,8 @@ class TwirledSliceSpan(ExecutionSpan):
     @property
     def size(self) -> int:
         size = 0
-        for shape, _, shape_sl, shots_sl in self._data_slices.values():
+        for data_slice in self._data_slices.values():
+            shape, _, shape_sl, shots_sl = data_slice[:4]
             size += len(range(math.prod(shape[:-1]))[shape_sl]) * len(range(shape[-1])[shots_sl])
         return size
 
@@ -76,7 +91,7 @@ class TwirledSliceSpan(ExecutionSpan):
         if pub_idx not in self._data_slices:
             raise KeyError(f"Pub {pub_idx} is not included in the span.")
 
-        shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx]
+        shape, at_front, shape_sl, shots_sl = self._data_slices[pub_idx][:4]
         mask = np.zeros(shape, dtype=np.bool_)
         mask.reshape((np.prod(shape[:-1], dtype=int), shape[-1]))[(shape_sl, shots_sl)] = True
 
@@ -87,9 +102,13 @@ class TwirledSliceSpan(ExecutionSpan):
             shape = shape[1:-1] + shape[:1] + shape[-1:]
 
         # merge twirling axis and shots axis before returning
-        return mask.reshape((*shape[:-2], math.prod(shape[-2:])))
+        mask = mask.reshape((*shape[:-2], math.prod(shape[-2:])))
+        if self._data_slice_version == 2:
+            mask = mask[..., : self._data_slices[pub_idx][4]]  # type: ignore
+
+        return mask
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "TwirledSliceSpan":
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
-        return TwirledSliceSpan(self.start, self.stop, slices)
+        return TwirledSliceSpan(self.start, self.stop, slices, self._data_slice_version)
