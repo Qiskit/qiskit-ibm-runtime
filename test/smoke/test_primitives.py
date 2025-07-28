@@ -12,8 +12,6 @@
 
 """Testing simple primitive jobs for smoke tests."""
 
-from unittest import SkipTest
-
 from qiskit import QuantumCircuit
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
@@ -73,8 +71,6 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
 
     def test_noise_learner(self):
         """Test noise learner job."""
-        if self._backend.simulator:
-            raise SkipTest("Simulator does not have coupling map")
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=self._backend, options=options)
         job = learner.run(self._circuits)

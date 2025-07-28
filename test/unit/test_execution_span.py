@@ -255,6 +255,12 @@ class TestTwirledSliceSpan(IBMTestCase):
         }
         self.span2 = TwirledSliceSpan(self.start2, self.stop2, self.slices2)
 
+        self.start3 = self.start1
+        self.stop3 = self.stop1
+        # reducing for pub 2 from 15 to 4 shots
+        self.slices3 = {0: self.slices1[0] + (180,), 2: self.slices1[2] + (4,)}
+        self.span3 = TwirledSliceSpan(self.start3, self.stop3, self.slices3, data_slice_version=2)
+
     def test_limits(self):
         """Test the start and stop properties"""
         self.assertEqual(self.span1.start, self.start1)
@@ -309,6 +315,12 @@ class TestTwirledSliceSpan(IBMTestCase):
         ]
         mask2 = np.array(mask2, dtype=bool).reshape((1, 5, 6))
         npt.assert_array_equal(self.span2.mask(1), mask2)
+
+        mask3 = [[False, False, True, True]]
+        npt.assert_array_equal(self.span3.mask(2), mask3)
+
+        with self.assertRaisesRegex(KeyError, "Pub 1 is not included in the span."):
+            self.span1.mask(1)
 
     @ddt.data(
         (0, True, True),

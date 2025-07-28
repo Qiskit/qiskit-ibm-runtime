@@ -1,0 +1,1 @@
+Class :class:`.TwirledSliceSpan` has a new data member ``data_slice_version`` of type integer, with default value 1. When set to 2, the data slice tuples contain information about the pub shots, used in :meth:`.TwirledSliceSpan.mask` to shape the returned array: the last axis will be truncated, such that its length will be shortened to ``pub_shots``.

@@ -107,6 +107,9 @@ class ExecutionSpan(abc.ABC):
 
         Returns:
             An array with the same shape as the pub data.
+
+        Raises:
+            KeyError: if the pub is not included in the span
         """
 
     def contains_pub(self, pub_idx: int | Iterable[int]) -> bool:
