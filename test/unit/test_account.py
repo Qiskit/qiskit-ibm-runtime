@@ -641,8 +641,8 @@ class TestEnableAccount(IBMTestCase):
         ]
         for param in subtests:
             with self.subTest(param=param):
-                with self.assertRaises(ValueError):
-                    _ = FakeRuntimeService(**param)
+                service = FakeRuntimeService(**param)
+                self.assertTrue(service._account)
 
     def test_enable_account_by_name_and_other(self):
         """Test initializing account by name and other."""
@@ -782,9 +782,9 @@ class TestEnableAccount(IBMTestCase):
         subtests = [{"token": token}, {"url": url}, {"token": token, "url": url}]
         for extra in subtests:
             with self.subTest(extra=extra):
-                with custom_envs(envs) as _, self.assertRaises(ValueError) as err:
-                    _ = FakeRuntimeService(**extra)
-                self.assertIn("token", str(err.exception))
+                with custom_envs(envs) as _:
+                    service = FakeRuntimeService(**extra)
+                    self.assertTrue(service._account)
 
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""

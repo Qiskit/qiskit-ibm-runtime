@@ -1,0 +1,2 @@
+When initializing an account with :class:`.QiskitRuntimeService`, if the ``token`` is passed in, 
+the ``channel`` parameter is no longer requried. 
