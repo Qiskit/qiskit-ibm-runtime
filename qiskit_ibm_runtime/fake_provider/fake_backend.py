@@ -416,14 +416,13 @@ class FakeBackendV2(BackendV2):
             f"Backend {backend_name} is not public or no longer exists.",
         )
 
-    def refresh(self, service: QiskitRuntimeService) -> None:
+    def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
         """Update the data files from its real counterpart
 
         This method pulls the latest backend data files from their real counterpart and
         overwrites the corresponding files in the local installation:
 
         *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
-        *  ``../fake_provider/backends/{backend_name}/defs_{backend_name}.json``
         *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
 
         The new data files will persist through sessions so the files will stay updated unless they
@@ -431,6 +430,8 @@ class FakeBackendV2(BackendV2):
 
         Args:
             service: A :class:`QiskitRuntimeService` instance
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates.
 
         Raises:
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
@@ -444,13 +445,13 @@ class FakeBackendV2(BackendV2):
 
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
-            backends = service.backends()
+            backends = service.backends(use_fractional_gates=use_fractional_gates)
             if prod_name in [backend.name for backend in backends]:
                 real_backend = service.backend(prod_name)
                 real_props = real_backend.properties(refresh=True)
                 real_config = configuration_from_server_data(
                     raw_config=service._get_api_client().backend_configuration(
-                        prod_name, refresh=True
+                        prod_name, refresh=True, use_fractional_gates=use_fractional_gates
                     )
                 )
 
@@ -475,19 +476,18 @@ class FakeBackendV2(BackendV2):
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-            if self._target is not None:
-                self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
-                self._set_props_dict_from_json()
+            self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
+            self._set_props_dict_from_json()
 
-                updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
-                updated_properties = BackendProperties.from_dict(self._props_dict)
+            updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
+            updated_properties = BackendProperties.from_dict(self._props_dict)
 
-                self._target = convert_to_target(
-                    configuration=updated_configuration,
-                    properties=updated_properties,
-                    include_control_flow=True,
-                    include_fractional_gates=True,
-                )
+            self._target = convert_to_target(
+                configuration=updated_configuration,
+                properties=updated_properties,
+                include_control_flow=True,
+                include_fractional_gates=True,
+            )
 
             logger.info(
                 "The backend %s has been updated with the latest data from the server.",
