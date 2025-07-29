@@ -724,8 +724,32 @@ class TestExecutionSpansSerialization(IBMTestCase):
 
         return super().setUp()
     
-    def test_twirl1_new_runtime(self):
+    def test_twirl1(self):
         spans = ExecutionSpans([self.slice_span, self.twirl1, self.double_span])
+        encoded = json.dumps(spans, cls=RuntimeEncoder)
+        self.assertFalse("ExecutionSpanCollection2" in encoded)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertEqual(spans, decoded)
+
+    def test_twirl2_new_runtime(self):
+        spans = ExecutionSpans([self.slice_span, self.twirl2, self.double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         self.assertEqual(spans, decoded)
+
+    def test_twirl2_old_runtime(self):
+        spans = ExecutionSpans([self.slice_span, self.twirl2, self.double_span])
+        encoded = json.dumps(spans, cls=RuntimeEncoder)
+        self.assertTrue("ExecutionSpanCollection2" in encoded)
+
+        # to mimic an old qiskit-ibm-runtime version, change types to something unknown
+        encoded = encoded.replace("ExecutionSpanCollection2", "yoohoo")
+        encoded = encoded.replace("TwirledSliceSpan2", "unknown-type")
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+       
+        decoded_spans = decoded["__value__"]["spans"]
+        self.assertEqual(type(decoded_spans), list)
+        self.assertEqual(decoded_spans[0], self.slice_span)
+        self.assertEqual(decoded_spans[2], self.double_span)
+        self.assertEqual(decoded_spans[1]["__value__"]["start"], self.twirl2.start)
+
