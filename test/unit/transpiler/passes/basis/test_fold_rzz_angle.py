@@ -18,12 +18,14 @@ import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
+from qiskit.circuit.library import RZZGate
+from qiskit.transpiler.target import InstructionProperties
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.quantum_info import Operator
 
 from qiskit_ibm_runtime.transpiler.passes.basis import FoldRzzAngle
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke
 from .....ibm_test_case import IBMTestCase
 
 
@@ -63,13 +65,42 @@ class TestFoldRzzAngle(IBMTestCase):
                 self.assertGreaterEqual(fold_angle, 0.0)
                 self.assertLessEqual(fold_angle, pi / 2)
 
-    def test_folding_rzz_angle_unbound(self):
-        """Test skip folding unbound gate angle."""
+    @named_data(
+        ("pi/2_pos", pi / 2),
+        ("pi/2_neg", -pi / 2),
+        ("pi_pos", pi),
+        ("pi_neg", -pi),
+        ("quad1_no_wrap", 0.1),
+        ("quad2_no_wrap", pi / 2 + 0.1),
+        ("quad3_no_wrap", -pi + 0.1),
+        ("quad4_no_wrap", -0.1),
+        ("quad1_2pi_wrap", 2 * pi + 0.1),
+        ("quad2_2pi_wrap", -3 * pi / 2 + 0.1),
+        ("quad3_2pi_wrap", pi + 0.1),
+        ("quad4_2pi_wrap", 2 * pi - 0.1),
+        ("quad1_12pi_wrap", -12 * pi + 0.1),
+        ("quad2_12pi_wrap", 23 * pi / 2 + 0.1),
+        ("quad3_12pi_wrap", 11 * pi + 0.1),
+        ("quad4_12pi_wrap", -12 * pi - 0.1),
+    )
+    def test_folding_rzz_angle_unbound(self, angle):
+        """Test transformation in the case of an unbounded parameter"""
+        param = Parameter("angle")
+
         qc = QuantumCircuit(2)
-        qc.rzz(Parameter("θ"), 0, 1)
+        qc.rzz(param, 0, 1)
         pm = PassManager([FoldRzzAngle()])
         isa = pm.run(qc)
-        self.assertEqual(qc, isa)
+
+        qc.assign_parameters({param: angle}, inplace=True)
+        isa.assign_parameters({param: angle}, inplace=True)
+
+        self.assertEqual(Operator.from_circuit(qc), Operator.from_circuit(isa))
+        for inst_data in isa.data:
+            if inst_data.operation.name == "rzz":
+                fold_angle = inst_data.operation.params[0]
+                self.assertGreaterEqual(fold_angle, 0.0)
+                self.assertLessEqual(fold_angle, pi / 2)
 
     def test_controlflow(self):
         """Test non-ISA Rzz gates inside/outside a control flow branch."""
@@ -115,3 +146,23 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa_circ.data[0].operation.name, "global_phase")
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
         self.assertTrue(np.isclose(isa_circ.data[1].operation.params[0], 7 - 2 * pi))
+
+    def test_unsupported_instructions_skip(self):
+        """Verify that the pass does not output gates that are not in the basis gates"""
+        backend = FakeSherbrooke()
+        backend.target.add_instruction(RZZGate(Parameter("θ")), {(0, 1): InstructionProperties()})
+
+        p = Parameter("p")
+        circ = QuantumCircuit(2)
+        circ.rzz(p, 0, 1)
+
+        pm = generate_preset_pass_manager(
+            optimization_level=0,
+            backend=FakeSherbrooke(),
+            translation_method="ibm_fractional",
+            basis_gates=backend.target.operation_names,
+        )
+        isa_circ = pm.run(circ)
+
+        self.assertEqual(isa_circ.data[0].operation.name, "rzz")
+        self.assertTrue(isinstance(isa_circ.data[0].operation.params[0], Parameter))

@@ -152,5 +152,5 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
-            post_passes.append(FoldRzzAngle())
+            post_passes.append(FoldRzzAngle(target))
         return PassManager(pre_passes) + translator_pm + PassManager(post_passes)
