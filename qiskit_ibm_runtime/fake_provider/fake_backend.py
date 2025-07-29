@@ -451,16 +451,18 @@ class FakeBackendV2(BackendV2):
                 real_props = real_backend.properties(refresh=True)
                 real_config = configuration_from_server_data(
                     raw_config=service._get_api_client().backend_configuration(
-                        prod_name, refresh=True, use_fractional_gates=use_fractional_gates
-                    )
+                        prod_name, refresh=True
+                    ),
+                    use_fractional_gates=use_fractional_gates,
                 )
 
             else:
                 real_props = properties_from_server_data(
-                    self._get_public_backend_properties(prod_name)
+                    self._get_public_backend_properties(prod_name),
                 )
                 real_config = configuration_from_server_data(
-                    raw_config=self._get_public_backend_configuration(prod_name)
+                    raw_config=self._get_public_backend_configuration(prod_name),
+                    use_fractional_gates=use_fractional_gates,
                 )
 
             updated_config = real_config.to_dict()
