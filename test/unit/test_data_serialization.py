@@ -694,7 +694,7 @@ class TestExecutionSpansSerialization(IBMTestCase):
     support twirled slice spans with data slice version 2
     """
 
-    def setUp(self):    
+    def setUp(self):
         self.slice_span = SliceSpan(
             datetime(2022, 1, 1),
             datetime(2023, 1, 1),
@@ -727,7 +727,7 @@ class TestExecutionSpansSerialization(IBMTestCase):
         )
 
         return super().setUp()
-    
+
     def test_twirl1(self):
         """Test the case where twirled slice spans are only with data slice version 1"""
         spans = ExecutionSpans([self.slice_span, self.twirl1, self.double_span])
@@ -755,10 +755,9 @@ class TestExecutionSpansSerialization(IBMTestCase):
         encoded = encoded.replace("ExecutionSpanCollection2", "yoohoo")
         encoded = encoded.replace("TwirledSliceSpan2", "unknown-type")
         decoded = json.loads(encoded, cls=RuntimeDecoder)
-       
+
         decoded_spans = decoded["__value__"]["spans"]
         self.assertEqual(type(decoded_spans), list)
         self.assertEqual(decoded_spans[0], self.slice_span)
         self.assertEqual(decoded_spans[2], self.double_span)
         self.assertEqual(decoded_spans[1]["__value__"]["start"], self.twirl2.start)
-
