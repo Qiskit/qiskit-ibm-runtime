@@ -1,0 +1,9 @@
+The `qiskit-ibm-runtime` package has been extended with two new modules: :mod:`.circuit` and 
+:mod:`.circuit.library`. These modules are designed to mirror the structure of the 
+corresponding `qiskit` SDK modules, while providing vendor-specific implementations of 
+circuit objects and instructions.
+
+The first addition to this new circuit library is the :class:`.MidCircuitMeasure` class. 
+This class enables the creation of instructions that follow the naming convention 
+`measure_<identifier>`, which are mapped to specific mid-circuit measurement
+ hardware instructions matching that pattern.
