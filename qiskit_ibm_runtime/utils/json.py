@@ -393,8 +393,14 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
         if isinstance(obj, ExecutionSpans):
+            obj_type = "ExecutionSpanCollection"
+            for span in obj:
+                if isinstance(span, TwirledSliceSpan) and span._data_slice_version == 2:
+                    obj_type += "2"
+                    break
+
             out_val = {"spans": list(obj)}
-            return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
+            return {"__type__": obj_type, "__value__": out_val}
         if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
             out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
             return {"__type__": "PauliLindbladMap", "__value__": out_val}
@@ -550,7 +556,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 }
                 obj_val["data_slices"] = new_slices
                 return SliceSpan(**obj_val)
-            if obj_type == "ExecutionSpanCollection":
+            if obj_type.startswith("ExecutionSpanCollection"):
                 return ExecutionSpans(**obj_val)
             if HAS_PAULI_LINDBLAD_MAP and obj_type == "PauliLindbladMap":
                 return PauliLindbladMap.from_sparse_list(
