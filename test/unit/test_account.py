@@ -641,8 +641,9 @@ class TestEnableAccount(IBMTestCase):
         ]
         for param in subtests:
             with self.subTest(param=param):
-                service = FakeRuntimeService(**param)
-                self.assertTrue(service._account)
+                with temporary_account_config_file(channel="ibm_quantum_platform", token=token):
+                    service = FakeRuntimeService(**param)
+                    self.assertTrue(service._account)
 
     def test_enable_account_by_name_and_other(self):
         """Test initializing account by name and other."""
