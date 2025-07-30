@@ -1,0 +1,3 @@
+:meth:`~.FakeBackendV2.refresh` has a new parameter, ``use_fractional_gates``, that can be set to ``True``
+to allow the fake backend to include fractional gates. Note that this method only works if you have access
+to the real backend.
