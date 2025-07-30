@@ -7,7 +7,7 @@ Upgrade Notes
 - Because of the sunset of IBM Quantum Platform Classic, the ``ibm_quantum`` channel is no
   longer supported from ``qiskit-ibm-runtime``. Saved ``ibm_quantum`` channel accounts and 
   data will not be accessible. Use the ``ibm_quantum_platform`` channel instead. See our 
-  [migration guide](https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp) 
+  `migration guide <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__
   for more details. (`2289 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2289>`__)
 
 
@@ -46,6 +46,22 @@ New Features
   (depending on how the instance is configured) and ``usage_consumed_seconds``. 
   Learn more about instance allocation limits `here <https://quantum.cloud.ibm.com/docs/guides/allocation-limits>`__. (`2329 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2329>`__)
 
+- :meth:`~.FakeBackendV2.refresh` has a new parameter, ``use_fractional_gates``, that can be set to ``True``
+  to allow the fake backend to include fractional gates. Note that this method only works if you have access
+  to the real backend. (`2342 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2342>`__)
+
+- The :class:`.QiskitRuntimeService` has been updated to use a new API version. With the new version, 
+  the :meth:`.QiskitRuntimeService.least_busy` method has been updated to take advantage of the updated ``BackendsResponseV2`` 
+  which makes it significantly faster. (`2323 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2323>`__)
+
+- Class :class:`.TwirledSliceSpan` has a new data member ``data_slice_version`` of type integer, with default value 1. 
+  When set to 2, the data slice tuples contain information about the pub shots, used in :meth:`.TwirledSliceSpan.mask` 
+  to shape the returned array. The last axis will be truncated, such that its length will be shortened to ``pub_shots``. (`2312 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2312>`__)
+
+- Added serialization for :class:`qiskit.quantum_info.PauliLindbladMap`. (`2297 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2297>`__)
+
+- There is a new method :meth:`.convert_to_rzz_valid_pub`, which can be used to transform a PUB into an equivalent PUB that is compatible with Rzz constraints. 
+  The method currently does not support dynamic circuits and does not preserve global phase. (`2126 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2126>`__)
 
 Bug Fixes
 ---------
