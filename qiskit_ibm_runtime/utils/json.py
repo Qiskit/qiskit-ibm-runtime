@@ -361,27 +361,27 @@ class RuntimeEncoder(json.JSONEncoder):
                     idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
                     for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
                 }
-            else:
-                out_val["data_slices"] = {  # type: ignore
-                    idx: (
-                        shape,
-                        at_front,
-                        arg_sl.start,
-                        arg_sl.stop,
-                        shot_sl.start,
-                        shot_sl.stop,
-                        pub_shots,
-                    )
-                    for idx, (
-                        shape,
-                        at_front,
-                        arg_sl,
-                        shot_sl,
-                        pub_shots,
-                    ) in obj._data_slices.items()
-                }
+                return {"__type__": "TwirledSliceSpan", "__value__": out_val}
 
-            return {"__type__": "TwirledSliceSpan", "__value__": out_val}
+            out_val["data_slices"] = {  # type: ignore
+                idx: (
+                    shape,
+                    at_front,
+                    arg_sl.start,
+                    arg_sl.stop,
+                    shot_sl.start,
+                    shot_sl.stop,
+                    pub_shots,
+                )
+                for idx, (
+                    shape,
+                    at_front,
+                    arg_sl,
+                    shot_sl,
+                    pub_shots,
+                ) in obj._data_slices.items()
+            }
+            return {"__type__": "TwirledSliceSpan2", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -393,8 +393,14 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
         if isinstance(obj, ExecutionSpans):
+            obj_type = "ExecutionSpanCollection"
+            for span in obj:
+                if isinstance(span, TwirledSliceSpan) and span._data_slice_version == 2:
+                    obj_type += "2"
+                    break
+
             out_val = {"spans": list(obj)}
-            return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
+            return {"__type__": obj_type, "__value__": out_val}
         if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
             out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
             return {"__type__": "PauliLindbladMap", "__value__": out_val}
@@ -516,7 +522,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
                 }
                 return DoubleSliceSpan(**obj_val)
-            if obj_type == "TwirledSliceSpan":
+            if obj_type.startswith("TwirledSliceSpan"):
                 data_slices = obj_val["data_slices"]
                 if obj_val["data_slice_version"] == 1:
                     obj_val["data_slices"] = {
@@ -550,7 +556,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 }
                 obj_val["data_slices"] = new_slices
                 return SliceSpan(**obj_val)
-            if obj_type == "ExecutionSpanCollection":
+            if obj_type.startswith("ExecutionSpanCollection"):
                 return ExecutionSpans(**obj_val)
             if HAS_PAULI_LINDBLAD_MAP and obj_type == "PauliLindbladMap":
                 return PauliLindbladMap.from_sparse_list(
