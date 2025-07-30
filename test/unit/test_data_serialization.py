@@ -53,6 +53,7 @@ from qiskit_ibm_runtime.execution_span import (
     SliceSpan,
     ExecutionSpans,
     TwirledSliceSpan,
+    TwirledSliceSpanV2,
 )
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -487,14 +488,13 @@ class TestContainerSerialization(IBMTestCase):
                                 2: ((18, 14, 19), False, slice(2, 3), slice(1, 9)),
                             },
                         ),
-                        TwirledSliceSpan(
+                        TwirledSliceSpanV2(
                             datetime(2024, 9, 20),
                             datetime(2024, 3, 21),
                             {
                                 0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
                                 2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
                             },
-                            2,
                         ),
                     ]
                 )
@@ -716,14 +716,13 @@ class TestExecutionSpansSerialization(IBMTestCase):
             },
         )
 
-        self.twirl2 = TwirledSliceSpan(
+        self.twirl2 = TwirledSliceSpanV2(
             datetime(2024, 9, 20),
             datetime(2024, 3, 21),
             {
                 0: ((14, 18, 21), True, slice(2, 3), slice(1, 9), 200),
                 2: ((18, 14, 19), False, slice(2, 3), slice(1, 9), 200),
             },
-            2,
         )
 
         return super().setUp()
@@ -732,7 +731,6 @@ class TestExecutionSpansSerialization(IBMTestCase):
         """Test the case where twirled slice spans are only with data slice version 1"""
         spans = ExecutionSpans([self.slice_span, self.twirl1, self.double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
-        self.assertFalse("ExecutionSpanCollection2" in encoded)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         self.assertEqual(spans, decoded)
 
@@ -745,17 +743,18 @@ class TestExecutionSpansSerialization(IBMTestCase):
         self.assertEqual(spans, decoded)
 
     def test_twirl2_old_runtime(self):
-        """Test the case of data slice version 2, when deserialization is done with an old
-        qiskit-ibm-runtime version that does not support data slice version 2"""
+        """Test the case of TwirledSliceSpanV2, when deserialization is done with an old
+        qiskit-ibm-runtime version that does not support it."""
         spans = ExecutionSpans([self.slice_span, self.twirl2, self.double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
-        self.assertTrue("ExecutionSpanCollection2" in encoded)
+        self.assertTrue("ExecutionSpans" in encoded)
 
         # to mimic an old qiskit-ibm-runtime version, change types to something unknown
-        encoded = encoded.replace("ExecutionSpanCollection2", "yoohoo")
-        encoded = encoded.replace("TwirledSliceSpan2", "unknown-type")
+        encoded = encoded.replace("ExecutionSpans", "yoohoo")
+        encoded = encoded.replace("TwirledSliceSpanV2", "unknown-type")
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
+        self.assertEqual(decoded["__type__"], "yoohoo")
         decoded_spans = decoded["__value__"]["spans"]
         self.assertEqual(type(decoded_spans), list)
         self.assertEqual(decoded_spans[0], self.slice_span)
