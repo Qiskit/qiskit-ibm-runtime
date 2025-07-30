@@ -1,2 +1,3 @@
-When initializing an account with :class:`.QiskitRuntimeService`, if the ``token`` is passed in, 
-the ``channel`` parameter is no longer requried. 
+When initializing an account with :class:`.QiskitRuntimeService`, if either ``token`` or ``url`` is passed in, 
+the ``channel`` parameter is no longer required. Note that in this scenario where either of these parameters are passed in by themselves, 
+they will be ignored and the saved default account will be used instead.

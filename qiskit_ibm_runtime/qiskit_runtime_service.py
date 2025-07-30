@@ -305,6 +305,10 @@ class QiskitRuntimeService:
                 if url:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
                 account = AccountManager.get(filename=filename, name=name, channel=channel)
+        elif any([token, url]):
+            warnings.warn(
+                "Parameters 'token' and 'url' will be ignored. The default saved account will be used."
+            )
 
         # channel is not defined yet, get it from the AccountManager
         if account is None:
