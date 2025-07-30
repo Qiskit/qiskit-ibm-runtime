@@ -166,17 +166,16 @@ class QiskitRuntimeService:
         )
 
         self._channel = self._account.channel
-        self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
+        self._backends_list: List[Dict[str, Any]] = []
         self._backend_instance_groups: List[Dict[str, Any]] = []
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
-        self._cached_backend_objs: List[IBMBackend] = []
         if self._account.instance:
             self._default_instance = True
         if instance is not None:
@@ -200,7 +199,8 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            return self._active_api_client.list_backends()
+            self._backends_list = self._active_api_client.list_backends()
+            return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
             logger.warning("Invalid instance %s", instance)
@@ -1162,18 +1162,36 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
         """
-        backends = self.backends(
-            min_num_qubits=min_num_qubits, instance=instance, filters=filters, **kwargs
-        )
+        if not self._backends_list:
+            self._backends_list = self._active_api_client.list_backends()
+
         candidates = []
-        for back in backends:
-            backend_status = back.status()
-            if not backend_status.operational or backend_status.status_msg != "active":
-                continue
-            candidates.append(back)
+        for backend in self._backends_list:
+            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+                candidates.append(backend)
+
+        if filters or kwargs:
+            # filters will still be slow because we need the backend configs
+            backends = self.backends(
+                min_num_qubits=min_num_qubits, filters=filters, instance=instance, **kwargs
+            )
+            filtered_backend_names = [back.name for back in backends]
+            for candidate in candidates.copy():
+                if candidate["name"] not in filtered_backend_names:
+                    candidates.remove(candidate)
+
+        if min_num_qubits:
+            candidates = list(filter(lambda b: b["qubits"] >= min_num_qubits, candidates))
         if not candidates:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
-        return min(candidates, key=lambda b: b.status().pending_jobs)
+        sorted_backends = sorted(candidates, key=lambda b: b["queue_length"])
+        for back in sorted_backends:
+            # We don't know whether or not the backend has a valid config
+            try:
+                return self.backend(name=back["name"])
+            except Exception:  # pylint: disable=broad-except
+                pass
+        raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
         """Return a list that contains a series of dictionaries with the
