@@ -55,7 +55,7 @@ New Features
   which makes it significantly faster. (`2323 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2323>`__)
 
 - Class :class:`.TwirledSliceSpan` has a new data member ``data_slice_version`` of type integer, with default value 1. 
-  When set to 2, the data slice tuples contain information about the pub shots, used in :meth:`.TwirledSliceSpan.mask` 
+  When set to 2, the data slice tuples contain information about the PUB shots, used in :meth:`.TwirledSliceSpan.mask` 
   to shape the returned array. The last axis will be truncated, such that its length will be shortened to ``pub_shots``. (`2312 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2312>`__)
 
 - Added serialization for :class:`qiskit.quantum_info.PauliLindbladMap`. (`2297 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2297>`__)
