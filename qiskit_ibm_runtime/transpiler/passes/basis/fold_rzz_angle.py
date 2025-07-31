@@ -12,17 +12,23 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple
+from typing import Tuple, Union
 from math import pi
+from operator import mod
+from itertools import chain
+import numpy as np
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate
-from qiskit.circuit.parameterexpression import ParameterExpression
+from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, CONTROL_FLOW_OP_NAMES
+from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
 from qiskit.circuit import Qubit, ControlFlowOp
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
+from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
+from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
-import numpy as np
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):
@@ -244,3 +250,176 @@ class FoldRzzAngle(TransformationPass):
             check=False,
         )
         return new_dag
+
+
+def convert_to_rzz_valid_pub(
+    primitive: BasePrimitiveV2, pub: Union[SamplerPubLike, EstimatorPubLike]
+) -> Union[SamplerPub, EstimatorPub]:
+    """
+    Return a pub which is compatible with Rzz constraints.
+
+    Current limitations:
+    1. Does not support dynamic circuits.
+    2. Does not preserve global phase.
+    3. This function defines new parameters, whose names start with `rzz_`. We therefore
+       require that the input pub does not contain parameters whose names also start with `rzz_`.
+    """
+    if isinstance(primitive, SamplerV2):
+        is_sampler = True
+        pub = SamplerPub.coerce(pub)
+    elif isinstance(primitive, EstimatorV2):
+        is_sampler = False
+        pub = EstimatorPub.coerce(pub)
+    else:
+        raise ValueError("Unsupported Primitive type")
+
+    original_shape = pub.parameter_values.as_array().shape
+    single_param_shape = original_shape[:-1] + (1,)
+
+    val_data = pub.parameter_values.data
+    pub_params = np.array(list(chain.from_iterable(val_data)))
+    for p_name in pub_params:
+        if p_name.startswith("rzz_"):
+            raise ValueError(
+                "Original pub is not allowed to contain parameters whose names start with rzz_"
+            )
+
+    # first axis will be over flattened shape, second axis over circuit parameters
+    arr = pub.parameter_values.ravel().as_array()
+
+    new_circ = pub.circuit.copy_empty_like()
+    new_data = []
+    rzz_count = 0
+
+    for instruction in pub.circuit.data:
+        operation = instruction.operation
+
+        if operation.name in CONTROL_FLOW_OP_NAMES:
+            raise ValueError(
+                "The function convert_to_rzz_valid_pub currently does not support dynamic instructions."
+            )
+
+        if operation.name != "rzz" or not isinstance(
+            (param_exp := instruction.operation.params[0]), ParameterExpression
+        ):
+            new_data.append(instruction)
+            continue
+
+        param_names = [param.name for param in param_exp.parameters]
+
+        # col_indices is the indices of columns in the parameter value array that have to be checked
+        col_indices = [np.where(pub_params == param_name)[0][0] for param_name in param_names]
+
+        # project only to the parameters that have to be checked
+        projected_arr = arr[:, col_indices]
+        num_param_sets = len(projected_arr)
+
+        rz_angles = np.zeros(num_param_sets)
+        rx_angles = np.zeros(num_param_sets)
+        rzz_angles = np.zeros(num_param_sets)
+
+        for idx, row in enumerate(projected_arr):
+            angle = float(param_exp.bind(dict(zip(param_exp.parameters, row))))
+
+            if (angle + pi / 2) % (2 * pi) >= pi:
+                rz_angles[idx] = pi
+            else:
+                rz_angles[idx] = 0
+
+            if angle % pi >= pi / 2:
+                rx_angles[idx] = pi
+            else:
+                rx_angles[idx] = 0
+
+            rzz_angles[idx] = pi / 2 - abs(mod(angle, pi) - pi / 2)
+
+        rzz_count += 1
+        param_prefix = f"rzz_{rzz_count}_"
+        qubits = instruction.qubits
+
+        is_rz = False
+        if any(not np.isclose(rz_angle, 0) for rz_angle in rz_angles):
+            is_rz = True
+            if all(np.isclose(rz_angle, pi) for rz_angle in rz_angles):
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(pi),
+                        (qubits[0],),
+                    )
+                )
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(pi),
+                        (qubits[1],),
+                    )
+                )
+            else:
+                param_rz = Parameter(f"{param_prefix}rz")
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(param_rz),
+                        (qubits[0],),
+                    )
+                )
+                new_data.append(
+                    CircuitInstruction(
+                        RZGate(param_rz),
+                        (qubits[1],),
+                    )
+                )
+                val_data[f"{param_prefix}rz"] = rz_angles.reshape(single_param_shape)
+
+        is_rx = False
+        is_x = False
+        if any(not np.isclose(rx_angle, 0) for rx_angle in rx_angles):
+            is_rx = True
+            if all(np.isclose(rx_angle, pi) for rx_angle in rx_angles):
+                is_x = True
+                new_data.append(
+                    CircuitInstruction(
+                        XGate(),
+                        (qubits[0],),
+                    )
+                )
+            else:
+                is_x = False
+                param_rx = Parameter(f"{param_prefix}rx")
+                new_data.append(
+                    CircuitInstruction(
+                        RXGate(param_rx),
+                        (qubits[0],),
+                    )
+                )
+                val_data[f"{param_prefix}rx"] = rx_angles.reshape(single_param_shape)
+
+        if is_rz or is_rx:
+            # param_exp * 0 to prevent an error complaining that the original parameters,
+            # still present in the parameter values, are missing from the circuit
+            param_rzz = param_exp * 0 + Parameter(f"{param_prefix}rzz")
+            new_data.append(CircuitInstruction(RZZGate(param_rzz), qubits))
+            val_data[f"{param_prefix}rzz"] = rzz_angles.reshape(single_param_shape)
+        else:
+            new_data.append(instruction)
+
+        if is_rx:
+            if is_x:
+                new_data.append(
+                    CircuitInstruction(
+                        XGate(),
+                        (qubits[0],),
+                    )
+                )
+            else:
+                new_data.append(
+                    CircuitInstruction(
+                        RXGate(param_rx),
+                        (qubits[0],),
+                    )
+                )
+
+    new_circ.data = new_data
+
+    if is_sampler:
+        return SamplerPub.coerce((new_circ, val_data), pub.shots)
+    else:
+        return EstimatorPub.coerce((new_circ, pub.observables, val_data), pub.precision)
