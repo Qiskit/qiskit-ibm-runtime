@@ -1,6 +1,19 @@
 0.41.0 (2025-07-24)
 ===================
 
+Prelude
+-------
+
+The qiskit-ibm-runtime ``v0.41.0`` release focuses on the removal of IBM Quantum Platform Classic and improving 
+the user experience for the new IBM Quantum Platform. Among new features, improvements, and minor bug fixes, 
+the release highlights are:
+
+  - The ``ibm_quantum`` channel and IQP Classic are no longer supported. 
+  - :meth:`.QiskitRuntimeService.least_busy` is significantly faster. 
+  - :meth:`.QiskitRuntimeService.usage` has been updated to return information regarding the current 
+    instance usage limit, consumption, and time remaining. 
+
+
 Upgrade Notes
 -------------
 
