@@ -1,0 +1,100 @@
+0.41.0 (2025-07-24)
+===================
+
+Prelude
+-------
+
+The qiskit-ibm-runtime ``v0.41.0`` release focuses on the removal of IBM Quantum Platform Classic and improving 
+the user experience for the new IBM Quantum Platform. Among new features, improvements, and minor bug fixes, 
+the release highlights are:
+
+  - The ``ibm_quantum`` channel and IQP Classic are no longer supported. 
+  - :meth:`.QiskitRuntimeService.least_busy` is significantly faster. 
+  - :meth:`.QiskitRuntimeService.usage` has been updated to return information regarding the current 
+    instance usage limit, consumption, and time remaining. 
+
+
+Upgrade Notes
+-------------
+
+- Because of the sunset of IBM Quantum Platform Classic, the ``ibm_quantum`` channel is no
+  longer supported from ``qiskit-ibm-runtime``. Saved ``ibm_quantum`` channel accounts and 
+  data will not be accessible. Use the ``ibm_quantum_platform`` channel instead. See our 
+  `migration guide <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__
+  for more details. (`2289 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2289>`__)
+
+
+New Features
+------------
+
+- A new parameter, ``tags``, has been added to the 
+  :class:`.QiskitRuntimeService` initializer and :meth:`.QiskitRuntimeService.save_account` method. 
+  ``tags`` can be used to **filter** instances so only instances with the given tags are 
+  returned.
+
+  Additionally, if no valid instances are returned when using the ``tags``, ``region``, or ``plans_preference`` filters,  
+  an error will now be raised at initialization. Make sure the names of the ``tags`` and ``region`` passed in  
+  match the instance ``tags`` or ``region`` exactly (case-insensitive). For ``plans_preference``, as long as a matching
+  plan name is passed in, instances with the matching plan name will be prioritized. (`2277 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2277>`__)
+- With the migration to the new IBM Quantum Platform, there were a few inconsistencies with IBM Quantum 
+  Platform Classic that needed to be addressed:
+
+      - :meth:`.QiskitRuntimeService.usage` now returns usage information for the current active IBM Cloud instance.
+      - :meth:`.QiskitRuntimeService.delete_job` is not supported on the new platform, so it has been deprecated.
+      - :meth:`.RuntimeJobV2.instance` will now return the IBM Cloud instance CRN. 
+      - :meth:`.RuntimeJob.queue_usage` is not supported on the new platform, so it has been deprecated. (`2296 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2296>`__)
+- Support for running ``qiskit-ibm-runtime`` with Python 3.9 has been deprecated and will
+  be removed in a future release. 
+
+  Additionally, ``qiskit-ibm-runtime`` now officialy supports Python 3.13. (`2314 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2314>`__)
+- When saving an account, there is now a validation check to make sure the ``region``, 
+  ``plans_preference``, and ``tags`` parameters are valid. (`2319 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2319>`__)
+- There is a new method, :meth:`.QiskitRuntimeService.active_instance` which returns the IBM Cloud CRN 
+  of the current active instance. 
+
+  The :meth:`.QiskitRuntimeService.jobs` method has been updated to properly accept the ``instance`` 
+  parameter, which can be used to filter jobs. (`2325 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2325>`__)
+- :meth:`.QiskitRuntimeService.usage` has been updated to include a ``usage_remaining_seconds`` field. 
+  This field includes the difference between the reported ``usage_limit_seconds`` or ``usage_allocation_seconds`` 
+  (depending on how the instance is configured) and ``usage_consumed_seconds``. 
+  Learn more about instance allocation limits `here <https://quantum.cloud.ibm.com/docs/guides/allocation-limits>`__. (`2329 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2329>`__)
+
+- :meth:`~.FakeBackendV2.refresh` has a new parameter, ``use_fractional_gates``, that can be set to ``True``
+  to allow the fake backend to include fractional gates. Note that this method only works if you have access
+  to the real backend. (`2342 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2342>`__)
+
+- The :class:`.QiskitRuntimeService` has been updated to use a new API version. With the new version, 
+  the :meth:`.QiskitRuntimeService.least_busy` method has been updated to take advantage of the updated ``BackendsResponseV2`` 
+  which makes it significantly faster. (`2323 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2323>`__)
+
+- Class :class:`.TwirledSliceSpan` has a new data member ``data_slice_version`` of type integer, with default value 1. 
+  When set to 2, the data slice tuples contain information about the PUB shots, used in :meth:`.TwirledSliceSpan.mask` 
+  to shape the returned array. The last axis will be truncated, such that its length will be shortened to ``pub_shots``. (`2312 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2312>`__)
+
+- Added serialization for :class:`qiskit.quantum_info.PauliLindbladMap`. (`2297 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2297>`__)
+
+- There is a new method :meth:`.convert_to_rzz_valid_pub`, which can be used to transform a PUB into an equivalent PUB that is compatible with Rzz constraints. 
+  The method currently does not support dynamic circuits and does not preserve global phase. (`2126 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2126>`__)
+
+Bug Fixes
+---------
+
+- Fixed a bug in :class:`.BasePrimitive` where primitives instantiated inside a :class:`~.Session` or :class:`~.Batch` context manager without the ``mode`` 
+  parameter would fetch the backend from the service (by name) instead of using the backend passed to the :class:`~.Session` or :class:`~.Batch`. 
+  This could cause issues when the :class:`~.Session` or :class:`~.Batch`
+  backend was modified by users (for example, by removing a gate), because the primitives 
+  would instead fetch the unmodified backend object from the service. After the fix, the
+  :class:`~.Session` or :class:`~.Batch` backend object is used directly. (`2282 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2282>`__)
+- Fixed an issue in :class:`.IBMBackend` where property changes, such as modifications to ``basis_gates``, persisted even after the backend object was renewed. (`2283 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2283>`__)
+
+
+Other Notes
+-----------
+
+- The deprecated :class:`.IBMBackend` attributes, ``max_shots`` and 
+  ``max_experiments``, have been removed and the :meth:`.IBMBackend.max_circuits` method now
+  returns ``None``. See the `job limits guide <https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits>`__ for details. (`2235 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2235>`__)
+- The deprecated :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` methods 
+  have been removed. They were deprecated in the v0.38.0 release. 
+  Pulse defaults have also been removed from all fake backends. (`2238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2238>`__)
+- Improved the error message returned when :meth:`.ExecutionSpan.mask` is called for a PUB that's not contained in the span. (`2311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2311>`__)

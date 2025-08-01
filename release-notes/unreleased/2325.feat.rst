@@ -1,5 +1,0 @@
-There is a new method, :meth:`.QiskitRuntimeService.active_instance` which returns the IBM Cloud CRN 
-of the current active instance. 
-
-The :meth:`.QiskitRuntimeService.jobs` method has also been updated to properly accept the ``instance`` 
-parameter, which can be used to filter jobs.

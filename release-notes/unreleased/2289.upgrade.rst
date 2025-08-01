@@ -1,5 +1,0 @@
-Since the sunset of IBM Quantum Platform Classic, the ``ibm_quantum`` channel is no
-longer supported from ``qiskit-ibm-runtime``. Saved ``ibm_quantum`` channel accounts and data will not be accessible. 
-Use the ``ibm_quantum_platform`` channel instead. See our 
-[migration guide](https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp) 
-for more details. 

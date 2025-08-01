@@ -1,9 +1,0 @@
-A new parameter ``tags``, has been added to the 
-:class:`.QiskitRuntimeService` initializer and :meth:`.QiskitRuntimeService.save_account` method. 
-``tags`` can be used to **filter** instances so only instances with the given tags are 
-returned.
-
-Additionally, if using the filters  ``tags``, ``region``, or ``plans_preference`` returns no valid instances, 
-an error will now be raised at initialization. Make sure the name of the ``tags`` and ``region`` passed in are 
-an exact match of the instance ``tags`` or ``region`` (case insensitive). For ``plans_preference``, as long as a matching
-plan name is passed in, instances with the matching plan name will be prioritized.
