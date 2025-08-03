@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable, Mapping
+from typing import Iterable, Mapping, Union
 
 import math
 import numpy as np
@@ -49,7 +49,10 @@ class TwirledSliceSpan(ExecutionSpan):
         self,
         start: datetime,
         stop: datetime,
-        data_slices: Mapping[int, tuple[ShapeType, bool, slice, slice]],
+        data_slices: Mapping[
+            int,
+            Union[tuple[ShapeType, bool, slice, slice], tuple[ShapeType, bool, slice, slice, int]],
+        ],
     ):
         super().__init__(start, stop)
         self._data_slices = data_slices
@@ -74,6 +77,8 @@ class TwirledSliceSpan(ExecutionSpan):
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
+        """This function assumes that the data slices don't contain information
+        about pub shots, therefore `TwirledSliceSpanV2` must override it"""
         if pub_idx not in self._data_slices:
             raise KeyError(f"Pub {pub_idx} is not included in the span.")
 
@@ -125,4 +130,4 @@ class TwirledSliceSpanV2(TwirledSliceSpan):
         super().__init__(start, stop, data_slices)
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
-        return super().mask(pub_idx)[..., : self._data_slices[pub_idx][4]]
+        return super().mask(pub_idx)[..., : self._data_slices[pub_idx][4]]  # type: ignore

@@ -355,7 +355,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 "start": obj.start,
                 "stop": obj.stop,
                 "data_slices": {
-                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop, x[4])
+                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop, x[4])  # type: ignore
                     for idx, x in obj._data_slices.items()
                 },
             }
