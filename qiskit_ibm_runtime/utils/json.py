@@ -85,6 +85,7 @@ from qiskit_ibm_runtime.execution_span import (
     SliceSpan,
     ExecutionSpans,
     TwirledSliceSpan,
+    TwirledSliceSpanV2,
 )
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
@@ -349,39 +350,29 @@ class RuntimeEncoder(json.JSONEncoder):
                 },
             }
             return {"__type__": "DoubleSliceSpan", "__value__": out_val}
+        if isinstance(obj, TwirledSliceSpanV2):
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop, x[4])
+                    for idx, x in obj._data_slices.items()
+                },
+            }
+
+            return {"__type__": "TwirledSliceSpanV2", "__value__": out_val}
         if isinstance(obj, TwirledSliceSpan):
             out_val = {
                 "start": obj.start,
                 "stop": obj.stop,
-                "data_slice_version": obj._data_slice_version,
+                "data_slices": {
+                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop)
+                    for idx, x in obj._data_slices.items()
+                },
             }
 
-            if obj._data_slice_version == 1:
-                out_val["data_slices"] = {  # type: ignore
-                    idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
-                    for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
-                }
-                return {"__type__": "TwirledSliceSpan", "__value__": out_val}
+            return {"__type__": "TwirledSliceSpan", "__value__": out_val}
 
-            out_val["data_slices"] = {  # type: ignore
-                idx: (
-                    shape,
-                    at_front,
-                    arg_sl.start,
-                    arg_sl.stop,
-                    shot_sl.start,
-                    shot_sl.stop,
-                    pub_shots,
-                )
-                for idx, (
-                    shape,
-                    at_front,
-                    arg_sl,
-                    shot_sl,
-                    pub_shots,
-                ) in obj._data_slices.items()
-            }
-            return {"__type__": "TwirledSliceSpan2", "__value__": out_val}
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -393,12 +384,7 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
         if isinstance(obj, ExecutionSpans):
-            obj_type = "ExecutionSpanCollection"
-            for span in obj:
-                if isinstance(span, TwirledSliceSpan) and span._data_slice_version == 2:
-                    obj_type += "2"
-                    break
-
+            obj_type = "ExecutionSpans"
             out_val = {"spans": list(obj)}
             return {"__type__": obj_type, "__value__": out_val}
         if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
@@ -522,32 +508,27 @@ class RuntimeDecoder(json.JSONDecoder):
                     for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
                 }
                 return DoubleSliceSpan(**obj_val)
-            if obj_type.startswith("TwirledSliceSpan"):
-                data_slices = obj_val["data_slices"]
-                if obj_val["data_slice_version"] == 1:
-                    obj_val["data_slices"] = {
-                        int(idx): (tuple(shape), at_start, slice(arg0, arg1), slice(shot0, shot1))
-                        for idx, (shape, at_start, arg0, arg1, shot0, shot1) in data_slices.items()
-                    }
-                else:
-                    obj_val["data_slices"] = {
-                        int(idx): (
-                            tuple(shape),
-                            at_start,
-                            slice(arg0, arg1),
-                            slice(shot0, shot1),
-                            pub_shots,
-                        )
-                        for idx, (
-                            shape,
-                            at_start,
-                            arg0,
-                            arg1,
-                            shot0,
-                            shot1,
-                            pub_shots,
-                        ) in data_slices.items()
-                    }
+            if obj_type == "TwirledSliceSpanV2":
+                obj_val["data_slices"] = {
+                    int(idx): (
+                        tuple(shape),
+                        at_start,
+                        slice(arg0, arg1),
+                        slice(shot0, shot1),
+                        pub_shots,
+                    )
+                    for idx, (shape, at_start, arg0, arg1, shot0, shot1, pub_shots) in obj_val[
+                        "data_slices"
+                    ].items()
+                }
+                return TwirledSliceSpanV2(**obj_val)
+            if obj_type == "TwirledSliceSpan":
+                obj_val["data_slices"] = {
+                    int(idx): (tuple(shape), at_start, slice(arg0, arg1), slice(shot0, shot1))
+                    for idx, (shape, at_start, arg0, arg1, shot0, shot1) in obj_val[
+                        "data_slices"
+                    ].items()
+                }
                 return TwirledSliceSpan(**obj_val)
             if obj_type == "ExecutionSpan":
                 new_slices = {
@@ -556,7 +537,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 }
                 obj_val["data_slices"] = new_slices
                 return SliceSpan(**obj_val)
-            if obj_type.startswith("ExecutionSpanCollection"):
+            if obj_type == "ExecutionSpanCollection":
+                # this is the old name of the class that we still maintain support for
+                return ExecutionSpans(**obj_val)
+            if obj_type == "ExecutionSpans":
                 return ExecutionSpans(**obj_val)
             if HAS_PAULI_LINDBLAD_MAP and obj_type == "PauliLindbladMap":
                 return PauliLindbladMap.from_sparse_list(
