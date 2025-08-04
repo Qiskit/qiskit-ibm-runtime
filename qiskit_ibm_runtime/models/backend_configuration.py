@@ -188,20 +188,7 @@ class UchannelLO:
 
 
 class QasmBackendConfiguration:
-    """Class representing an OpenQASM 2.0 Backend Configuration.
-
-    Attributes:
-        backend_name: backend name.
-        backend_version: backend version in the form X.Y.Z.
-        n_qubits: number of qubits.
-        basis_gates: list of basis gates names on the backend.
-        gates: list of basis gates on the backend.
-        local: backend is local or remote.
-        simulator: backend is a simulator.
-        conditional: backend supports conditional operations.
-        open_pulse: backend supports open pulse.
-        memory: backend supports memory.
-    """
+    """Class representing an OpenQASM 2.0 Backend Configuration."""
 
     _data: Dict[Any, Any] = {}
 
@@ -212,12 +199,12 @@ class QasmBackendConfiguration:
         n_qubits: int,
         basis_gates: list,
         gates: list,
-        local: bool,
-        simulator: bool,
-        conditional: bool,
-        open_pulse: bool,
-        memory: bool,
         coupling_map: list,
+        memory: bool = True,
+        open_pulse: bool = False,
+        conditional: bool = False,
+        simulator: bool = False,
+        local: bool = False,
         meas_levels: List[int] = None,
         meas_kernels: List[str] = None,
         discriminators: List[str] = None,
@@ -256,7 +243,7 @@ class QasmBackendConfiguration:
             conditional (bool): True if the backend supports conditional
                 operations
             open_pulse (bool): True if the backend supports OpenPulse
-            memory (bool): True if the backend supports memory
+            memory (bool): True if the is able to retrieve measurement results from individual shots.
             coupling_map (list): The coupling map for the device
             meas_levels: Supported measurement levels.
             meas_kernels: Supported measurement kernels.

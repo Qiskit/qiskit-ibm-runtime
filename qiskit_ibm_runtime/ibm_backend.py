@@ -85,11 +85,6 @@ class IBMBackend(Backend):
         * target: A :class:`qiskit.transpiler.Target` object for the backend.
         * basis_gates: list of basis gates names on the backend.
         * gates: list of basis gates on the backend.
-        * local: backend is local or remote.
-        * simulator: backend is a simulator.
-        * conditional: backend supports conditional operations.
-        * open_pulse: backend supports open pulse.
-        * memory: backend supports memory.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
         * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
@@ -133,12 +128,9 @@ class IBMBackend(Backend):
         * online_date (datetime): The date that the device went online
         * display_name (str): Alternate name field for the backend
         * description (str): A description for the backend
-        * tags (list): A list of string tags to describe the backend
         * version: version of ``Backend`` class (Ex: 1, 2)
         * channels: An optional dictionary containing information of each channel -- their
           purpose, type, and qubits operated on.
-        * parametric_pulses (list): A list of pulse shapes which are supported on the backend.
-          For example: ``['gaussian', 'constant']``
         * processor_type (dict): Processor type for this backend. A dictionary of the
           form ``{"family": <str>, "revision": <str>, segment: <str>}`` such as
           ``{"family": "Canary", "revision": "1.0", segment: "A"}``.
@@ -409,9 +401,6 @@ class IBMBackend(Backend):
         The schema for backend configuration can be found in
         `Qiskit/ibm-quantum-schemas/backend_configuration
         <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
-
-        More details about backend configuration properties can be found here `QasmBackendConfiguration
-        <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
             * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
