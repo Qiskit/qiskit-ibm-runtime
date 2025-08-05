@@ -130,7 +130,7 @@ class QiskitRuntimeService:
                 (``open``, ``premium``, etc.), ordered by preference. An instance with the first
                 value in the list will be prioritized if an instance is not passed in. Only instances
                 with the given plan names will be available. For example, if you want to avoid
-                using your premium accounts you can just pass in open to only use your open plan
+                using your premium accounts you can just pass in "open" to only use your open plan
                 instances.
             Optional[List[str]] tags: Set a list of tags to filter available instances.
 
@@ -694,7 +694,7 @@ class QiskitRuntimeService:
                 ordered by preference. An instance with the first value in the list
                 will be prioritized if an instance is not passed in. Only instances with the
                 given plan names will be available. For example, if you want to avoid
-                using your premium accounts you can just pass in open to only use your
+                using your premium accounts you can just pass in "open" to only use your
                 open plan instances.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
