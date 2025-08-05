@@ -23,6 +23,7 @@ from qiskit_ibm_runtime.execution_span import (
     DoubleSliceSpan,
     ExecutionSpans,
     TwirledSliceSpan,
+    TwirledSliceSpanV2,
 )
 
 from ..ibm_test_case import IBMTestCase
@@ -259,7 +260,7 @@ class TestTwirledSliceSpan(IBMTestCase):
         self.stop3 = self.stop1
         # reducing for pub 2 from 15 to 4 shots
         self.slices3 = {0: self.slices1[0] + (180,), 2: self.slices1[2] + (4,)}
-        self.span3 = TwirledSliceSpan(self.start3, self.stop3, self.slices3, data_slice_version=2)
+        self.span3 = TwirledSliceSpanV2(self.start3, self.stop3, self.slices3)
 
     def test_limits(self):
         """Test the start and stop properties"""
