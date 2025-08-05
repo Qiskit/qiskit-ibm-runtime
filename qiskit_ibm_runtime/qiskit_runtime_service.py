@@ -126,9 +126,12 @@ class QiskitRuntimeService:
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
             Optional[str] region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
                 An instance with this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
-                An instance with the first value in the list will be prioritized if an instance
-                is not passed in.
+            Optional[List[str]] plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized if an instance is not passed in. Only instances
+                with the given plan names will be available. For example, if you want to avoid
+                using your premium accounts you can just pass in open to only use your open plan
+                instances.
             Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
@@ -687,8 +690,12 @@ class QiskitRuntimeService:
             private_endpoint: Connect to private API URL.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
-            plans_preference: A list of account types, ordered by preference. An instance with the first
-                value in the list will be prioritized if an instance is not passed in.
+            plans_preference: A list of account plan names (``open``, ``premium``, etc.),
+                ordered by preference. An instance with the first value in the list
+                will be prioritized if an instance is not passed in. Only instances with the
+                given plan names will be available. For example, if you want to avoid
+                using your premium accounts you can just pass in open to only use your
+                open plan instances.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
