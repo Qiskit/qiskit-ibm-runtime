@@ -1,3 +1,0 @@
-The deprecated :class:`.IBMBackend` attributes ``max_shots`` and 
-``max_experiments``, have been removed and the :meth:`.IBMBackend.max_circuits` method now
-returns ``None``. See the `job limits guide <https://quantum.cloud.ibm.com/docs/guides/job-limits#job-limits>`__ for details.
