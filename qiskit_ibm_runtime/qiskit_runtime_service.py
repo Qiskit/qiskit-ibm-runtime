@@ -128,10 +128,10 @@ class QiskitRuntimeService:
                 An instance with this region will be prioritized if an instance is not passed in.
             Optional[List[str]] plans_preference: A list of account plan names
                 (``open``, ``premium``, etc.), ordered by preference. An instance with the first
-                value in the list will be prioritized if an instance is not passed in. Only instances
+                value in the list will be prioritized and only instances
                 with the given plan names will be available. For example, if you want to avoid
                 using your premium accounts you can just pass in "open" to only use your open plan
-                instances.
+                instances. ``plans_preference`` is ignored if the instance is specified.
             Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
@@ -690,12 +690,12 @@ class QiskitRuntimeService:
             private_endpoint: Connect to private API URL.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
-            plans_preference: A list of account plan names (``open``, ``premium``, etc.),
-                ordered by preference. An instance with the first value in the list
-                will be prioritized if an instance is not passed in. Only instances with the
-                given plan names will be available. For example, if you want to avoid
-                using your premium accounts you can just pass in "open" to only use your
-                open plan instances.
+            plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized and only instances
+                with the given plan names will be available. For example, if you want to avoid
+                using your premium accounts you can just pass in "open" to only use your open plan
+                instances. ``plans_preference`` is ignored if the instance is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
