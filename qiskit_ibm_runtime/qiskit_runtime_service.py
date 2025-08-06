@@ -693,9 +693,9 @@ class QiskitRuntimeService:
             plans_preference: A list of account plan names
                 (``open``, ``premium``, etc.), ordered by preference. An instance with the first
                 value in the list will be prioritized and only instances
-                with the given plan names will be available. For example, if you want to avoid
+                with the given plan names will be considered. For example, if you want to avoid
                 using your premium accounts you can just pass in "open" to only use your open plan
-                instances. ``plans_preference`` is ignored if the instance is specified.
+                instances. ``plans_preference`` is ignored if an instance is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
