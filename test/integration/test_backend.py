@@ -23,6 +23,7 @@ from qiskit.providers.backend import QubitProperties
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from .test_account import _get_service_instance_name_for_crn
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only
@@ -31,6 +32,28 @@ from ..utils import bell
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
+
+    @run_integration_test
+    def test_least_busy(self, service):
+        """Test least busy method."""
+        instance = self.dependencies.instance
+        backend = service.least_busy()
+        self.assertTrue(backend)
+
+        # test passing in instance
+        backend = service.least_busy(instance=instance)
+        self.assertEqual(instance, backend._instance)
+
+        # test when instance name is used at service init
+        instance_name = _get_service_instance_name_for_crn(self.dependencies)
+        service_with_instance_name = QiskitRuntimeService(
+            token=self.dependencies.token,
+            instance=instance_name,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+        backend = service_with_instance_name.least_busy()
+        self.assertTrue(backend)
 
     @run_integration_test
     def test_backends(self, service):
