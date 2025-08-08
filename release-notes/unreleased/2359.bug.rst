@@ -1,0 +1,3 @@
+Fixed multiple bugs where instances were not being handled correctly so :meth:`.QiskitRuntimeService.least_busy` would result in a 
+``IBMInputValueError``. Additionally, :meth:`.QiskitRuntimeService.least_busy` now correctly returns the least busy 
+backend in the cases where the ``instance`` parameter is passed in and when there is no default instance. 
