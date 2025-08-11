@@ -118,7 +118,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             url=self.dependencies.url,
         )
         self.assertEqual(service._account.instance, self.dependencies.instance)
-        self.assertTrue(service._api_clients)
         service_no_instance = QiskitRuntimeService(
             token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
         )

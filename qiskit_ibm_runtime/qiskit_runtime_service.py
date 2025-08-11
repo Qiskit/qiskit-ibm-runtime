@@ -1169,7 +1169,8 @@ class QiskitRuntimeService:
             for client in self._api_clients.values():
                 try:
                     client_backends = client.list_backends()
-                    all_backends += client_backends
+                    if client_backends:
+                        all_backends += client_backends
                 except RequestsApiError:
                     continue
         else:

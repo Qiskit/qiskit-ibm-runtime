@@ -22,7 +22,7 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import QubitProperties
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from qiskit_ibm_runtime import Session, QiskitRuntimeService, SamplerV2 as Sampler
 from .test_account import _get_service_instance_name_for_crn
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -35,14 +35,21 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_least_busy(self, service):
-        """Test least busy method."""
-        instance = self.dependencies.instance
+        """Test the least busy method and starting a session."""
+
+        # test default saved instance
         backend = service.least_busy()
-        self.assertTrue(backend)
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
 
         # test passing in instance
+        instance = self.dependencies.instance
         backend = service.least_busy(instance=instance)
         self.assertEqual(instance, backend._instance)
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
 
         # test when instance name is used at service init
         instance_name = _get_service_instance_name_for_crn(self.dependencies)
@@ -52,8 +59,22 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             channel="ibm_quantum_platform",
             url=self.dependencies.url,
         )
+
         backend = service_with_instance_name.least_busy()
-        self.assertTrue(backend)
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
+
+        # test when there is no default instance
+        service_with_no_default_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+        backend = service_with_no_default_instance.least_busy()
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
 
     @run_integration_test
     def test_backends(self, service):
