@@ -534,10 +534,10 @@ class QiskitRuntimeService:
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
-            instance_names = [instance.get('name') for instance in self._all_instances]
+            instance_names = [instance.get("name") for instance in self._all_instances]
             logger.warning(
                 "Default instance is not set. All account instances are available: %s.",
-                ', '.join(instance_names)
+                ", ".join(instance_names),
             )
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
