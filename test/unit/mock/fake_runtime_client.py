@@ -21,8 +21,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict, Any, List
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-
-from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -90,9 +88,6 @@ class BaseFakeRuntimeJob:
         self,
         job_id,
         program_id,
-        hub,
-        group,
-        project,
         backend_name,
         final_status,
         image,
@@ -108,9 +103,6 @@ class BaseFakeRuntimeJob:
         self._reason: Optional[str] = None
         self._reason_code: Optional[int] = None
         self._program_id = program_id
-        self._hub = hub
-        self._group = group
-        self._project = project
         self._backend_name = backend_name
         self._image = image
         self._job_tags = job_tags
@@ -139,9 +131,6 @@ class BaseFakeRuntimeJob:
         """Convert to dictionary format."""
         return {
             "id": self._job_id,
-            "hub": self._hub,
-            "group": self._group,
-            "project": self._project,
             "backend": self._backend_name,
             "state": {
                 "status": self._status,
@@ -253,7 +242,7 @@ class BaseFakeRuntimeClient:
         final_status=None,
         job_kwargs=None,
         backend_client=None,
-        channel="ibm_quantum",
+        channel="ibm_quantum_platform",
         num_backends=2,
         backend_specs=None,
         instance=None,
@@ -271,10 +260,7 @@ class BaseFakeRuntimeClient:
         if instance is not None:
             self._instance = instance
         else:
-            if channel == "ibm_quantum":
-                self._instance = "hub0/group0/project0"
-            else:
-                self._instance = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+            self._instance = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
 
         # Setup the available backends
         if not backend_specs:
@@ -299,7 +285,6 @@ class BaseFakeRuntimeClient:
         backend_name: Optional[str],
         params: dict,
         image: str,
-        hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
@@ -311,10 +296,6 @@ class BaseFakeRuntimeClient:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
-        if hgp:
-            hub, group, project = from_instance_format(hgp)
-        else:
-            hub = group = project = None
 
         if backend_name is None:
             backend_name = self.list_backends()[0]
@@ -325,9 +306,6 @@ class BaseFakeRuntimeClient:
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
-            hub=hub,
-            group=group,
-            project=project,
             backend_name=backend_name,
             final_status=self._final_status,
             image=image,
@@ -356,9 +334,6 @@ class BaseFakeRuntimeClient:
         backend_name=None,
         pending=None,
         program_id=None,
-        hub=None,
-        group=None,
-        project=None,
         job_tags=None,
         session_id=None,
         created_after=None,
@@ -379,12 +354,6 @@ class BaseFakeRuntimeClient:
             jobs = [job for job in jobs if job._status in job_status_list]
         if program_id:
             jobs = [job for job in jobs if job._program_id == program_id]
-        if all([hub, group, project]):
-            jobs = [
-                job
-                for job in jobs
-                if job._hub == hub and job._group == group and job._project == project
-            ]
         if job_tags:
             jobs = [job for job in jobs if job._job_tags == job_tags]
         if session_id:
@@ -427,9 +396,9 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: Optional[str] = None) -> List[str]:
         """Return IBM backends available for this service instance."""
-        return [back.name for back in self._backends if back.has_access(hgp)]
+        return [back.name for back in self._backends if back.has_access(crn)]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration a backend."""
@@ -446,12 +415,6 @@ class BaseFakeRuntimeClient:
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
         if ret := self._find_backend(backend_name).properties:
-            return ret.copy()
-        return None
-
-    def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
-        """Return the pulse defaults of a backend."""
-        if ret := self._find_backend(backend_name).defaults:
             return ret.copy()
         return None
 

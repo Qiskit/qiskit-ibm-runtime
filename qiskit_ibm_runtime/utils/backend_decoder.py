@@ -19,14 +19,10 @@ import traceback
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 
-try:
-    from qiskit.circuit import CONTROL_FLOW_OP_NAMES
-except ImportError:  # Remove when dropping support for Qiskit < 1.3
-    CONTROL_FLOW_OP_NAMES = frozenset(("for_loop", "while_loop", "if_else", "switch_case"))
+from qiskit.circuit import CONTROL_FLOW_OP_NAMES
 
 from ..models import (
     BackendProperties,
-    PulseDefaults,
     QasmBackendConfiguration,
 )
 
@@ -120,26 +116,6 @@ def filter_raw_configuration(
             ]
 
 
-def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
-    """Decode pulse defaults data.
-
-    Args:
-        defaults: Raw pulse defaults data.
-
-    Returns:
-        A ``PulseDefaults`` instance.
-    """
-    for item in defaults["pulse_library"]:
-        _decode_pulse_library_item(item)
-
-    for cmd in defaults["cmd_def"]:
-        if "sequence" in cmd:
-            for instr in cmd["sequence"]:
-                _decode_pulse_qobj_instr(instr)
-
-    return PulseDefaults.from_dict(defaults)
-
-
 def properties_from_server_data(
     properties: Dict, use_fractional_gates: Optional[bool] = False
 ) -> BackendProperties:
@@ -215,26 +191,3 @@ def _to_complex(value: Union[List[float], complex]) -> complex:
         return value
 
     raise TypeError("{} is not in a valid complex number format.".format(value))
-
-
-def _decode_pulse_library_item(pulse_library_item: Dict) -> None:
-    """Decode a pulse library item.
-
-    Args:
-        pulse_library_item: A ``PulseLibraryItem`` in dictionary format.
-    """
-    pulse_library_item["samples"] = [
-        _to_complex(sample) for sample in pulse_library_item["samples"]
-    ]
-
-
-def _decode_pulse_qobj_instr(pulse_qobj_instr: Dict) -> None:
-    """Decode a pulse Qobj instruction.
-
-    Args:
-        pulse_qobj_instr: A ``PulseQobjInstruction`` in dictionary format.
-    """
-    if "val" in pulse_qobj_instr:
-        pulse_qobj_instr["val"] = _to_complex(pulse_qobj_instr["val"])
-    if "parameters" in pulse_qobj_instr and "amp" in pulse_qobj_instr["parameters"]:
-        pulse_qobj_instr["parameters"]["amp"] = _to_complex(pulse_qobj_instr["parameters"]["amp"])

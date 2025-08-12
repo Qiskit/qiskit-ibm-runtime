@@ -24,5 +24,4 @@ class FakeBogotaV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_bogota.json"  # type: ignore
     props_filename = "props_bogota.json"  # type: ignore
-    defs_filename = "defs_bogota.json"  # type: ignore
     backend_name = "fake_bogota"  # type: ignore

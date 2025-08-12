@@ -33,18 +33,15 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from qiskit_ibm_runtime.utils.backend_decoder import (
     decode_backend_configuration,
     properties_from_server_data,
-    defaults_from_server_data,
 )
 
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 from ..utils.backend_decoder import configuration_from_server_data
-from ..utils.deprecation import issue_deprecation_msg
 
 from ..models import (
     BackendProperties,
     BackendConfiguration,
-    PulseDefaults,
     BackendStatus,
     QasmBackendConfiguration,
 )
@@ -53,15 +50,6 @@ from ..models.exceptions import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-class _Credentials:
-    def __init__(self, token: str = "123456", url: str = "https://") -> None:
-        self.token = token
-        self.url = url
-        self.hub = "hub"
-        self.group = "group"
-        self.project = "project"
 
 
 class FakeBackendV2(BackendV2):
@@ -73,14 +61,12 @@ class FakeBackendV2(BackendV2):
     dirname = None
     conf_filename = None
     props_filename = None
-    defs_filename = None
     backend_name = None
 
     def __init__(self) -> None:
         """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict = None
-        self._defs_dict = None
         super().__init__(
             provider=None,
             name=self._conf_dict.get("backend_name"),
@@ -98,7 +84,7 @@ class FakeBackendV2(BackendV2):
         does not yet exist on the class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
-        if name in ["_target", "_conf_dict", "_props_dict", "_defs_dict"]:
+        if name in ["_target", "_conf_dict", "_props_dict"]:
             raise AttributeError(
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
@@ -139,12 +125,6 @@ class FakeBackendV2(BackendV2):
             props_dict = self._load_json(self.props_filename)  # type: ignore
             properties_from_server_data(props_dict)
             self._props_dict = props_dict
-
-    def _set_defs_dict_from_json(self) -> None:
-        if self.defs_filename:
-            defs_dict = self._load_json(self.defs_filename)  # type: ignore
-            defaults_from_server_data(defs_dict)
-            self._defs_dict = defs_dict
 
     def _supports_dynamic_circuits(self) -> bool:
         supported_features = self._conf_dict.get("supported_features") or []
@@ -187,29 +167,6 @@ class FakeBackendV2(BackendV2):
         if refresh or (self._props_dict is None):
             self._set_props_dict_from_json()
         return BackendProperties.from_dict(self._props_dict)
-
-    def defaults(self, refresh: bool = False) -> PulseDefaults:
-        """(DEPRECATED)Return the pulse defaults for the backend
-
-        Args:
-            refresh: If ``True``, re-retrieve the backend defaults from the local file.
-
-        Returns:
-            The backend pulse defaults or ``None`` if the backend does not support pulse.
-        """
-
-        issue_deprecation_msg(
-            "The defaults method and the PulseDefaults class have been deprecated",
-            "0.38.0",
-            "IBM backends no longer support pulse gates and are no longer used to "
-            "construct the backend target. ",
-        )
-
-        if refresh or self._defs_dict is None:
-            self._set_defs_dict_from_json()
-        if self._defs_dict:
-            return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
-        return None
 
     def configuration(self) -> QasmBackendConfiguration:
         """Return the backend configuration."""
@@ -259,8 +216,6 @@ class FakeBackendV2(BackendV2):
             self._get_conf_dict_from_json()
             if self._props_dict is None:
                 self._set_props_dict_from_json()
-            if self._defs_dict is None:
-                self._set_defs_dict_from_json()
             conf = BackendConfiguration.from_dict(self._conf_dict)
             props = None
             if self._props_dict is not None:
@@ -436,7 +391,7 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
-    def refresh(self, service: QiskitRuntimeService) -> None:
+    def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
         """Update the data files from its real counterpart
 
         This method pulls the latest backend data files from their real counterpart and
@@ -451,6 +406,8 @@ class FakeBackendV2(BackendV2):
 
         Args:
             service: A :class:`QiskitRuntimeService` instance
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates.
 
         Raises:
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
@@ -464,14 +421,14 @@ class FakeBackendV2(BackendV2):
 
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
-            backends = service.backends(prod_name)
+            backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
             real_backend = backends[0]
 
             real_props = real_backend.properties(refresh=True)
             real_config = configuration_from_server_data(
-                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True)
+                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True),
+                use_fractional_gates=use_fractional_gates,
             )
-            real_defs = real_backend.defaults(refresh=True)
 
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
@@ -486,25 +443,18 @@ class FakeBackendV2(BackendV2):
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-            if real_defs:
-                defs_path = os.path.join(self.dirname, self.defs_filename)
-                with open(defs_path, "w", encoding="utf-8") as fd:
-                    fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+            self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
+            self._set_props_dict_from_json()
 
-            if self._target is not None:
-                self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
-                self._set_props_dict_from_json()
-                self._set_defs_dict_from_json()
+            updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
+            updated_properties = BackendProperties.from_dict(self._props_dict)
 
-                updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
-                updated_properties = BackendProperties.from_dict(self._props_dict)
-
-                self._target = convert_to_target(
-                    configuration=updated_configuration,
-                    properties=updated_properties,
-                    include_control_flow=True,
-                    include_fractional_gates=True,
-                )
+            self._target = convert_to_target(
+                configuration=updated_configuration,
+                properties=updated_properties,
+                include_control_flow=True,
+                include_fractional_gates=True,
+            )
 
             logger.info(
                 "The backend %s has been updated with the latest data from the server.",
