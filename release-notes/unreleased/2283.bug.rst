@@ -1,1 +1,0 @@
-Fixed an issue in :class:`.IBMBackend` where property changes, such as modifications to ``basis_gates``, persisted even after the backend object was renewed.

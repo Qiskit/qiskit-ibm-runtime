@@ -134,7 +134,7 @@ class Session:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._get_api_client(self._instance).create_session(
-                self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
+                self.backend(), self._instance, self._max_time, "dedicated"
             )
             return session.get("id")
         return None

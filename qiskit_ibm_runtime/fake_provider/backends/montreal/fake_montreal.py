@@ -24,5 +24,4 @@ class FakeMontrealV2(fake_backend.FakeBackendV2):
     dirname = os.path.dirname(__file__)  # type: ignore
     conf_filename = "conf_montreal.json"  # type: ignore
     props_filename = "props_montreal.json"  # type: ignore
-    defs_filename = "defs_montreal.json"  # type: ignore
     backend_name = "fake_montreal"  # type: ignore

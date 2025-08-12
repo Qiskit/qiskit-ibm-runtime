@@ -69,7 +69,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
 
     if "defaults" in kwargs:
         warnings.warn(
-            "Backend defaults are no longer necessary for creating a target. Defaults will be ignored."
+            "Backend defaults have been completely from removed IBM Backends. They will be ignored."
         )
 
     required = ["measure", "delay", "reset"]

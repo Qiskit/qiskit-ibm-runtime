@@ -43,6 +43,13 @@ try:
 except ImportError:
     HAS_AER = False
 
+try:
+    from qiskit.quantum_info import PauliLindbladMap
+
+    HAS_PAULI_LINDBLAD_MAP = True
+except ImportError:
+    HAS_PAULI_LINDBLAD_MAP = False
+
 from qiskit.circuit import (
     Instruction,
     Parameter,
@@ -78,6 +85,7 @@ from qiskit_ibm_runtime.execution_span import (
     SliceSpan,
     ExecutionSpans,
     TwirledSliceSpan,
+    TwirledSliceSpanV2,
 )
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
@@ -342,16 +350,31 @@ class RuntimeEncoder(json.JSONEncoder):
                 },
             }
             return {"__type__": "DoubleSliceSpan", "__value__": out_val}
+        if isinstance(obj, TwirledSliceSpanV2):
+            out_val = {
+                "start": obj.start,
+                "stop": obj.stop,
+                "data_slices": {
+                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop, y)
+                    for idx, x, y in zip(
+                        obj._data_slices.keys(), obj._data_slices.values(), obj._pub_shots.values()
+                    )
+                },
+            }
+
+            return {"__type__": "TwirledSliceSpanV2", "__value__": out_val}
         if isinstance(obj, TwirledSliceSpan):
             out_val = {
                 "start": obj.start,
                 "stop": obj.stop,
                 "data_slices": {
-                    idx: (shape, at_front, arg_sl.start, arg_sl.stop, shot_sl.start, shot_sl.stop)
-                    for idx, (shape, at_front, arg_sl, shot_sl) in obj._data_slices.items()
+                    idx: (x[0], x[1], x[2].start, x[2].stop, x[3].start, x[3].stop)
+                    for idx, x in obj._data_slices.items()
                 },
             }
+
             return {"__type__": "TwirledSliceSpan", "__value__": out_val}
+
         if isinstance(obj, SliceSpan):
             out_val = {
                 "start": obj.start,
@@ -363,8 +386,12 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "ExecutionSpan", "__value__": out_val}
         if isinstance(obj, ExecutionSpans):
+            obj_type = "ExecutionSpans"
             out_val = {"spans": list(obj)}
-            return {"__type__": "ExecutionSpanCollection", "__value__": out_val}
+            return {"__type__": obj_type, "__value__": out_val}
+        if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
+            out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
+            return {"__type__": "PauliLindbladMap", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -483,11 +510,26 @@ class RuntimeDecoder(json.JSONDecoder):
                     for idx, (shape, arg0, arg1, shot0, shot1) in obj_val["data_slices"].items()
                 }
                 return DoubleSliceSpan(**obj_val)
+            if obj_type == "TwirledSliceSpanV2":
+                obj_val["data_slices"] = {
+                    int(idx): (
+                        tuple(shape),
+                        at_start,
+                        slice(arg0, arg1),
+                        slice(shot0, shot1),
+                        pub_shots,
+                    )
+                    for idx, (shape, at_start, arg0, arg1, shot0, shot1, pub_shots) in obj_val[
+                        "data_slices"
+                    ].items()
+                }
+                return TwirledSliceSpanV2(**obj_val)
             if obj_type == "TwirledSliceSpan":
-                data_slices = obj_val["data_slices"]
                 obj_val["data_slices"] = {
                     int(idx): (tuple(shape), at_start, slice(arg0, arg1), slice(shot0, shot1))
-                    for idx, (shape, at_start, arg0, arg1, shot0, shot1) in data_slices.items()
+                    for idx, (shape, at_start, arg0, arg1, shot0, shot1) in obj_val[
+                        "data_slices"
+                    ].items()
                 }
                 return TwirledSliceSpan(**obj_val)
             if obj_type == "ExecutionSpan":
@@ -498,7 +540,14 @@ class RuntimeDecoder(json.JSONDecoder):
                 obj_val["data_slices"] = new_slices
                 return SliceSpan(**obj_val)
             if obj_type == "ExecutionSpanCollection":
+                # this is the old name of the class that we still maintain support for
                 return ExecutionSpans(**obj_val)
+            if obj_type == "ExecutionSpans":
+                return ExecutionSpans(**obj_val)
+            if HAS_PAULI_LINDBLAD_MAP and obj_type == "PauliLindbladMap":
+                return PauliLindbladMap.from_sparse_list(
+                    [tuple(pauli) for pauli in obj_val["paulis"]], num_qubits=obj_val["num_qubits"]
+                )
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

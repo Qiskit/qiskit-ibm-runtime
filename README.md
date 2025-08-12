@@ -30,17 +30,8 @@ pip install qiskit-ibm-runtime
 
 ### Qiskit Runtime service on IBM Quantum Platform
 
-| :warning: The ibm_quantum channel option is deprecated and will be sunset on 1 July. For help migrating to the ibm_cloud channel, read the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp)
+| :warning: After the sunset of IBM Quantum Platform Classic the `ibm_quantum` channel option is no longer supported. The `ibm_cloud` and `ibm_quantum_platform` channels are now the only valid channels. See the [migration guide.](https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp) for more information.
 |:---------------------------|
-
-### Qiskit Runtime service on IBM Quantum Platform Classic (deprecated)
-
-You will need your IBM Quantum API token to authenticate with the runtime service:
-
-1. Create an IBM Quantum account or log in to your existing account by visiting the [IBM Quantum login page].
-
-2. Copy (and optionally regenerate) your API token from your
-   [IBM Quantum account page].
 
 
 ### Qiskit Runtime service on the new IBM Quantum Platform (IBM Cloud)
@@ -287,11 +278,7 @@ This code returns `Job result is [4.] at theta = 1.575674623307102` using only n
 
 ## Instances
 
-For the now deprecated `ibm_quantum` channel, access is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
-
-> **_NOTE:_** the new IBM Quantum Platform (IBM Cloud) instances are different from IBM Quantum classic instances. IBM Cloud does not use the hub/group/project structure for user management. 
-
-On the new IBM Quantum platform, instances are virtual servers that manage your workload execution, including executing quantum programs and classical compute tasks (such as processing error mitigation). Instances are specified by their Cloud Resource Name (CRN).
+Instances are virtual servers that manage your workload execution, including executing quantum programs and classical compute tasks (such as processing error mitigation). Instances are specified by their Cloud Resource Name (CRN).
 
 You can see the instances you have access to on the [dashboard](https://quantum.cloud.ibm.com/) or by clicking the [Instances tab](https://quantum.cloud.ibm.com/instances) from the dashboard. Each instance is listed with its CRN identifier. You can include this identifier or the name of the instance when initializing the `QiskitRuntimeService` or saving your account. When an instance is passed in, only backends and jobs from that instance are available. Alternatively, if an instance is not included, then all backends and jobs across all instances in your account are available. In this case, when a backend is specified, an instance with the backend available will be used.
 
@@ -369,9 +356,6 @@ If you use Qiskit, please cite as per the included [BibTeX file](https://github.
 [Apache License 2.0].
 
 
-[IBM Quantum login page]:  https://quantum.ibm.com/login
-[IBM Quantum account page]: https://quantum.ibm.com/account
-[IBM Quantum classic]: https://www.ibm.com/quantum/
 [New IBM Quantum Platform login page]:  https://quantum.cloud.ibm.com/
 [IBM Cloud account page]: https://cloud.ibm.com/iam/apikeys
 [contribution guidelines]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CONTRIBUTING.md
