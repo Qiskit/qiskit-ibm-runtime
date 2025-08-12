@@ -824,7 +824,7 @@ class QiskitRuntimeService:
         )
 
         backend = options["backend"]
-        
+
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
@@ -838,7 +838,6 @@ class QiskitRuntimeService:
                 backend_name=backend_name,
                 params=inputs,
                 image=options.get("image"),
-                hgp=hgp_name,
                 log_level=options.get("log_level"),
                 session_id=session_id,
                 job_tags=options.get("job_tags"),
@@ -854,7 +853,7 @@ class QiskitRuntimeService:
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
         if response["backend"] and response["backend"] != backend_name:
-            backend = self.backend(name=response["backend"], instance=hgp_name)
+            backend = self.backend(name=response["backend"])
 
         return RuntimeJobV2(
             backend=backend,
