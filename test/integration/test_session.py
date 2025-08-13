@@ -21,9 +21,10 @@ from qiskit.circuit import IfElseOp
 from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2
+from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2, QiskitRuntimeService
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
+from .test_account import _get_service_instance_name_for_crn
 from ..utils import bell
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -117,3 +118,31 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             sampler2 = SamplerV2()
             job2 = sampler2.run([pm.run(bell())])
             self.assertIn(instruction_name, job2.backend().target.operation_names)
+
+    def test_session_instance_logic(self):
+        """Test creating a session with different service configurations."""
+        # test with no instances passed in
+        service_no_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+
+        backend = service_no_instance.backend(self.dependencies.qpu)
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
+
+        # test when instance name is used at service init
+        instance_name = _get_service_instance_name_for_crn(self.dependencies)
+        service_with_instance_name = QiskitRuntimeService(
+            token=self.dependencies.token,
+            instance=instance_name,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+
+        backend = service_with_instance_name.backend(self.dependencies.qpu)
+        session = Session(backend=backend)
+        self.assertTrue(session)
+        session.close()
