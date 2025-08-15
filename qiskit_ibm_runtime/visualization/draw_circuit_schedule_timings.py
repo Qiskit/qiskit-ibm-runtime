@@ -1,6 +1,13 @@
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
+from typing import Dict, Tuple, List, TYPE_CHECKING
+
+
+from plotly.graph_objects import Figure as PlotlyFigure
+
+
 import pandas as pd
+
 import plotly.graph_objs as go
 
 plotly_colors = [
@@ -29,7 +36,7 @@ plotly_colors = [
 READOUT_CHANNEL_PREFIX = "AWGR"
 
 
-class Schedule:
+class CircuitSchedule:
     """
     TODO: Add docs.
     The Schedule class encapsulates the data of a Qiskit circuit schedule and contains the functionality
@@ -413,3 +420,20 @@ class Schedule:
 
         return self.finalize_figure()
 
+
+def draw_circuit_schedule_timing(
+        schedule_file_path: str,
+        included_channels: list = None,
+        filter_readout_channels: bool = False,
+        filter_barriers: bool = False,
+) -> PlotlyFigure:
+    
+    schedule = CircuitSchedule(
+        file_name=schedule_file_path,
+        included_channels=included_channels,
+        filter_awgr=filter_readout_channels,
+        filter_barriers=filter_barriers,
+    )
+
+    fig = schedule.create_figure()
+    return fig
