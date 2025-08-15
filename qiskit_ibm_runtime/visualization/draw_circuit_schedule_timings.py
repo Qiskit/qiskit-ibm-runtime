@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2025.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -14,6 +14,7 @@
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
 from typing import Dict, Tuple, List, TYPE_CHECKING
+from itertools import cycle
 
 import plotly.graph_objects as go
 from plotly.graph_objects import Figure as PlotlyFigure
@@ -286,11 +287,11 @@ class CircuitSchedule:
             name=gate_name,
             text="<br>".join(
                 [
-                    "Instruction: " + instruction,
-                    "Pulse: " + pulse,
-                    "Start: " + str(t_i),
-                    "Finish: " + str(t_f),
-                    "Duration: " + str(t_f - t_i),
+                    f"Instruction: {instruction}",
+                    f"Pulse: {pulse}",
+                    f"Start: {t_i}",
+                    f"Finish: {t_f}",
+                    f"Duration: {t_f - t_i}",
                 ]
             ),
             legendgroup=gate_name,
@@ -315,7 +316,7 @@ class CircuitSchedule:
         """
         TODO: Add docs
         """
-        self.color_map = dict(zip(self.instruction_set, colors))
+        self.color_map = dict(zip(self.instruction_set, cycle(colors)))
 
         # Process instructions
         shift_phase_instructions = []
