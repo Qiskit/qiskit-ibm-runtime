@@ -1,14 +1,26 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2024.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
 from typing import Dict, Tuple, List, TYPE_CHECKING
 
-
+import plotly.graph_objects as go
 from plotly.graph_objects import Figure as PlotlyFigure
 
 
-import pandas as pd
+import pandas as pd  # TODO: remove use of pandas
 
-import plotly.graph_objs as go
 
 colors = [
     "rgb(141,211,199)",
@@ -102,9 +114,10 @@ class CircuitSchedule:
             )
         return circuit_scheduling
 
-    def preprocess(self, 
-            filter_awgr: bool = False,
-            filter_barriers: bool = False,
+    def preprocess(
+            self, 
+            filter_awgr: bool = False, 
+            filter_barriers: bool = False, 
             included_channels: list = None,
             ):
         """
@@ -331,14 +344,24 @@ class CircuitSchedule:
 
 
 def draw_circuit_schedule_timing(
-        schedule_file_path: str,
+        schedule_file_path: str, # TODO: this should be optional since the data may come directly from a result object
         included_channels: list = None,
         filter_readout_channels: bool = False,
         filter_barriers: bool = False,
         width: int = 1400,
 ) -> PlotlyFigure:
-    """
-    TODO: Add docs
+    r"""
+    Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
+
+    Args:
+        schedule_file_path: The path to the schedule file.
+        included_channels: A list of channels to include in the plot.
+        filter_readout_channels: If ``True``, remove all readout channels.
+        filter_barriers: If ``True``, remove all barriers.
+        width: The width of the returned figure.
+
+    Returns:
+        A plotly figure.
     """
     fig = go.Figure(layout=go.Layout(width=width))
 
