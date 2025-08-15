@@ -115,11 +115,11 @@ class CircuitSchedule:
         return circuit_scheduling
 
     def preprocess(
-            self, 
-            filter_awgr: bool = False, 
-            filter_barriers: bool = False, 
-            included_channels: list = None,
-            ):
+        self,
+        filter_awgr: bool = False,
+        filter_barriers: bool = False,
+        included_channels: list = None,
+    ):
         """
         TODO: Add checks and docs
         """
@@ -254,15 +254,14 @@ class CircuitSchedule:
         # hide text if drawing a barrier
         text = "" if gate_name == "barrier" else f"{gate_name}_{pulse}"
         annotation = dict(
-                x=((t_i + t_f) / 2),
-                y=channel_y_loc + annotation_y,
-                showarrow=False,
-                font={"color": "black", "size": 10},
-                text=text,
-                textangle=0,
-            )
+            x=((t_i + t_f) / 2),
+            y=channel_y_loc + annotation_y,
+            showarrow=False,
+            font={"color": "black", "size": 10},
+            text=text,
+            textangle=0,
+        )
         return (trace, annotation)
-        
 
     def trace_zero_duration_instruction(self, row: pd.core.series.Series):
         """
@@ -303,13 +302,13 @@ class CircuitSchedule:
 
         # Get trace annotation
         annotation = dict(
-                x=((t_i + t_f) / 2),
-                y=y_mid,
-                showarrow=True,
-                font={"color": "black", "size": 10},
-                text=f"{gate_name}_{pulse}",
-                textangle=0,
-            )
+            x=((t_i + t_f) / 2),
+            y=y_mid,
+            showarrow=True,
+            font={"color": "black", "size": 10},
+            text=f"{gate_name}_{pulse}",
+            textangle=0,
+        )
         return (trace, annotation)
 
     def populate_figure(self, fig: PlotlyFigure) -> PlotlyFigure:
@@ -342,13 +341,12 @@ class CircuitSchedule:
         return fig
 
 
-
 def draw_circuit_schedule_timing(
-        schedule_file_path: str, # TODO: this should be optional since the data may come directly from a result object
-        included_channels: list = None,
-        filter_readout_channels: bool = False,
-        filter_barriers: bool = False,
-        width: int = 1400,
+    schedule_file_path: str,  # TODO: this should be optional since the data may come directly from a result object
+    included_channels: list = None,
+    filter_readout_channels: bool = False,
+    filter_barriers: bool = False,
+    width: int = 1400,
 ) -> PlotlyFigure:
     r"""
     Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
@@ -368,7 +366,6 @@ def draw_circuit_schedule_timing(
     # Get the scheduling data
     schedule = CircuitSchedule(
         file_name=schedule_file_path,
-        
     )
 
     # Process and filter
@@ -380,42 +377,42 @@ def draw_circuit_schedule_timing(
 
     # Setup the figure
     fig.update_layout(
-            title_text="Payload Schedule",
-            paper_bgcolor="rgba(255,255,255,1)",
-            plot_bgcolor="rgba(255,255,255,1)",
-            title_font_size=20,
-            title_x=0.5,
-            )
+        title_text="Payload Schedule",
+        paper_bgcolor="rgba(255,255,255,1)",
+        plot_bgcolor="rgba(255,255,255,1)",
+        title_font_size=20,
+        title_x=0.5,
+    )
     fig.update_xaxes(
         range=(0, schedule.max_time + 1),  # TODO: Add X% padding if requested
         showline=True,
         linewidth=1,
         linecolor="black",
         mirror=True,
-        )
+    )
     fig.update_yaxes(
         showline=True,
         linewidth=1,
         linecolor="black",
         mirror=True,
         gridcolor="rgba(38,38,38,0.15)",
-        )
+    )
     fig.update_layout(
         xaxis_type="linear",
         xaxis_title="Cycles",  # TODO: convert to time if requested
         yaxis_title="Channel",
         height=200 + 60 * len(schedule.channels),
-        )
+    )
     fig.update_layout(
         xaxis={
             "rangeselector": {"buttons": list([])},
             "rangeslider": {"visible": True},
-            }
-        )
+        }
+    )
 
     # Populate the figure with traces
     fig = schedule.populate_figure(fig=fig)
-    
+
     # Add annotations
     fig["layout"]["annotations"] = schedule.annotations
 
@@ -455,8 +452,8 @@ def draw_circuit_schedule_timing(
             "tickmode": "array",
             "tickvals": list(range(0, len(schedule.channels))),
             "ticktext": schedule.channels,
-            }
-        )
+        }
+    )
 
     # update annotation hovering
     fig.update_traces(
