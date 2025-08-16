@@ -251,14 +251,14 @@ class CircuitSchedule:
         # Get trace annotation
         # hide text if drawing a barrier
         text = "" if gate_name == BARRIER else f"{gate_name}_{pulse}"
-        annotation = dict(
-            x=((t_i + t_f) / 2),
-            y=channel_y_loc + annotation_y,
-            showarrow=False,
-            font={"color": "black", "size": 10},
-            text=text,
-            textangle=0,
-        )
+        annotation = {
+            "x": (t_i + t_f) / 2,
+            "y": channel_y_loc + annotation_y,
+            "showarrow": False,
+            "font": {"color": "black", "size": 10},
+            "text": text,
+            "textangle": 0,
+        }
         self.annotations.append(annotation)
 
     def trace_zero_duration_instruction(self, row):
@@ -301,14 +301,14 @@ class CircuitSchedule:
         self.traces.append(trace)
 
         # Get trace annotation
-        annotation = dict(
-            x=((t_i + t_f) / 2),
-            y=y_mid,
-            showarrow=True,
-            font={"color": "black", "size": 10},
-            text=f"{gate_name}_{pulse}",
-            textangle=0,
-        )
+        annotation = {
+            "x": ((t_i + t_f) / 2),
+            "y": y_mid,
+            "showarrow": True,
+            "font": {"color": "black", "size": 10},
+            "text": f"{gate_name}_{pulse}",
+            "textangle": 0,
+        }
         self.annotations.append(annotation)
 
     def populate_figure(self, fig: PlotlyFigure) -> PlotlyFigure:
@@ -340,7 +340,7 @@ class CircuitSchedule:
 
 
 def draw_circuit_schedule_timing(
-    schedule_file_path: str,  # TODO: this should be optional since the data may come directly from a result object
+    schedule_file_path: str,  # TODO: make optional
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
@@ -417,30 +417,30 @@ def draw_circuit_schedule_timing(
     # Add a button to control annotations display
     fig.update_layout(
         updatemenus=[
-            dict(
-                type="dropdown",
-                direction="down",
-                buttons=list(
+            {
+                "type": "dropdown",
+                "direction": "down",
+                "buttons": list(
                     [
-                        dict(
-                            args=[{"annotations": fig.layout.annotations}],
-                            label="Show Annotations",
-                            method="relayout",
-                        ),
-                        dict(
-                            args=[{"annotations": []}],
-                            label="Hide Annotations",
-                            method="relayout",
-                        ),
+                        {
+                            "args": [{"annotations": fig.layout.annotations}],
+                            "label": "Show Annotations",
+                            "method": "relayout",
+                        },
+                        {
+                            "args": [{"annotations": []}],
+                            "label": "Hide Annotations",
+                            "method": "relayout",
+                        },
                     ]
                 ),
-                pad={"r": 10, "t": 10},
-                showactive=True,
-                x=0,
-                xanchor="left",
-                y=1.1,
-                yanchor="top",
-            )
+                "pad": {"r": 10, "t": 10},
+                "showactive": True,
+                "x": 0,
+                "xanchor": "left",
+                "y": 1.1,
+                "yanchor": "top",
+            }
         ]
     )
 
