@@ -58,7 +58,7 @@ class CircuitSchedule:
 
     def __init__(
         self,
-        file_name: str,
+        circuit_schedule: str | List[str],
     ):
         """
         TODO: Add docs.
@@ -68,7 +68,7 @@ class CircuitSchedule:
         self.type_to_idx = None
         self.circuit_scheduling = None
 
-        raw_data = self._load(file_name)
+        raw_data = self._load(circuit_schedule)
         self._parse(raw_data)
 
         self.instruction_set = set()
@@ -78,12 +78,15 @@ class CircuitSchedule:
         self.legend = set()
         self.traces = []
 
-    def _load(self, file_name: str) -> List[str]:
+    def _load(self, circuit_schedule: str | List[str]) -> List[str]:
         """
         TODO: Add checks and docs
         """
-        with open(file_name, encoding="utf-8") as file:
-            data = file.readlines()
+        if isinstance(circuit_schedule, str):
+            with open(circuit_schedule, encoding="utf-8") as file:
+                data = file.readlines()
+        elif isinstance(circuit_schedule, list):
+            data = circuit_schedule
 
         return data
 
@@ -340,7 +343,7 @@ class CircuitSchedule:
 
 
 def draw_circuit_schedule_timing(
-    schedule_file_path: str,  # TODO: make optional
+    circuit_schedule: str | List[str],
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
@@ -350,7 +353,8 @@ def draw_circuit_schedule_timing(
     Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
-        schedule_file_path: The path to the schedule file.
+        schedule_file_path: The path to the schedule file (if a string), or 
+        the circuit schedule data as a list of strings.
         included_channels: A list of channels to include in the plot.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
@@ -363,7 +367,7 @@ def draw_circuit_schedule_timing(
 
     # Get the scheduling data
     schedule = CircuitSchedule(
-        file_name=schedule_file_path,
+        circuit_schedule=circuit_schedule,
     )
 
     # Process and filter
