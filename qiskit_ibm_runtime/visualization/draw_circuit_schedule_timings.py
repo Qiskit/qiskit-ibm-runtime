@@ -13,7 +13,7 @@
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
-from typing import Dict, Tuple, List
+from typing import Tuple, List
 from itertools import cycle
 
 import plotly.graph_objects as go
@@ -76,6 +76,7 @@ class CircuitSchedule:
         self.color_map = {}
         self.annotations = []
         self.legend = set()
+        self.traces = []
 
     def _load(self, file_name: str) -> List[str]:
         """
@@ -245,6 +246,7 @@ class CircuitSchedule:
             fillcolor=self.color_map[gate_name],
             showlegend=gate_name not in self.legend,
         )
+        self.traces.append(trace)
 
         # Get trace annotation
         # hide text if drawing a barrier
@@ -257,7 +259,7 @@ class CircuitSchedule:
             text=text,
             textangle=0,
         )
-        return (trace, annotation)
+        self.annotations.append(annotation)
 
     def trace_zero_duration_instruction(self, row):
         """
@@ -296,6 +298,7 @@ class CircuitSchedule:
             fillcolor=self.color_map[gate_name],
             showlegend=gate_name not in self.legend,
         )
+        self.traces.append(trace)
 
         # Get trace annotation
         annotation = dict(
@@ -306,7 +309,7 @@ class CircuitSchedule:
             text=f"{gate_name}_{pulse}",
             textangle=0,
         )
-        return (trace, annotation)
+        self.annotations.append(annotation)
 
     def populate_figure(self, fig: PlotlyFigure) -> PlotlyFigure:
         """
@@ -319,22 +322,20 @@ class CircuitSchedule:
         for row in self.circuit_scheduling:
             (_, _, _, _, _, pulse, gate_name) = row
             if "shift_phase" not in pulse:
-                # Process instructions of finite duration
-                trace, annotation = self.trace_finite_duration_instruction(row)
+                # Trace instructions of finite duration
+                self.trace_finite_duration_instruction(row)
                 self.legend.add(gate_name)
-                self.annotations.append(annotation)
-                fig.add_trace(trace)
             else:
-                # cache for later tracing so it won't be covered
+                # cache instructions of zero duration
+                # for later tracing so it won't be covered
                 shift_phase_instructions.append(row)
 
-        # Process instructions of zero duration
+        # Trace instructions of zero duration
         for row in shift_phase_instructions:
-            trace, annotation = self.trace_zero_duration_instruction(row)
+            self.trace_zero_duration_instruction(row)
             self.legend.add(gate_name)
-            self.annotations.append(annotation)
-            fig.add_trace(trace)
 
+        fig.add_traces(self.traces)
         return fig
 
 
