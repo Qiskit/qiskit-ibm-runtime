@@ -536,11 +536,11 @@ class QiskitRuntimeService:
             self._all_instances = self._account.list_instances()
             instance_names = [instance.get("name") for instance in self._all_instances]
             logger.warning(
-                "Instance was not set at service instantiation. A relevant instance from all available account ",
-                "instances will be selected based on the desired action.",
-                "Available account instances are: %s.",
+                "Instance was not set at service instantiation. A relevant instance from all available "
+                "account instances will be selected based on the desired action. "
+                "Available account instances are: %s. "
+                "If you need the instance to be fixed, set it explicitly.",
                 ", ".join(instance_names),
-                "\nIf you need the instance to be fixed, set it explicitly."
             )
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
