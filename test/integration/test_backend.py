@@ -33,6 +33,23 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
 
     @run_integration_test
+    def test_least_busy(self, service):
+        """Test the least busy method."""
+        # test passing an instance
+        instance = self.dependencies.instance
+        backend = service.least_busy(instance=instance)
+        self.assertEqual(instance, backend._instance)
+
+        # test when there is no instance
+        service_with_no_default_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+        backend = service_with_no_default_instance.least_busy()
+        self.assertTrue(backend)
+
+    @run_integration_test
     def test_backends(self, service):
         """Test getting all backends."""
         backends = service.backends()
@@ -173,9 +190,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
                     backend.properties().last_update_date,
                 )
             self.assertEqual(backend_copy._instance, backend._instance)
-            self.assertEqual(
-                backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
-            )
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
                 backend._api_client._session.base_url,

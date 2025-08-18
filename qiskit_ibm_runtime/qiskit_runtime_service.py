@@ -126,9 +126,12 @@ class QiskitRuntimeService:
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
             Optional[str] region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
                 An instance with this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
-                An instance with the first value in the list will be prioritized if an instance
-                is not passed in.
+            Optional[List[str]] plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized and only instances
+                with the given plan names will be considered. For example, if you want to avoid
+                using your premium accounts you can just pass in ``"open"`` to only use your open plan
+                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
@@ -166,21 +169,19 @@ class QiskitRuntimeService:
         )
 
         self._channel = self._account.channel
-        self._backend_allowed_list: List[str] = []
         self._url_resolver = url_resolver
         self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
 
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
+        self._backends_list: List[Dict[str, Any]] = []
         self._backend_instance_groups: List[Dict[str, Any]] = []
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
-        self._cached_backend_objs: List[IBMBackend] = []
         if self._account.instance:
             self._default_instance = True
-        if instance is not None:
-            self._api_clients = {instance: RuntimeClient(self._client_params)}
+            self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
@@ -200,7 +201,8 @@ class QiskitRuntimeService:
                     new_client = self._create_new_cloud_api_client(instance)
                     self._api_clients.update({instance: new_client})
                     self._active_api_client = new_client
-            return self._active_api_client.list_backends()
+            self._backends_list = self._active_api_client.list_backends()
+            return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
         except Exception:  # pylint: disable=broad-except
             logger.warning("Invalid instance %s", instance)
@@ -686,8 +688,12 @@ class QiskitRuntimeService:
             private_endpoint: Connect to private API URL.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
-            plans_preference: A list of account types, ordered by preference. An instance with the first
-                value in the list will be prioritized if an instance is not passed in.
+            plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized and only instances
+                with the given plan names will be considered. For example, if you want to avoid
+                using your premium accounts you can just pass in ``"open"`` to only use your open plan
+                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
@@ -1161,18 +1167,50 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
         """
-        backends = self.backends(
-            min_num_qubits=min_num_qubits, instance=instance, filters=filters, **kwargs
-        )
+        all_backends = []
+        if instance:
+            client = self._get_api_client(instance)
+            all_backends = client.list_backends()
+        elif not self._default_instance:
+            for client in self._api_clients.values():
+                try:
+                    client_backends = client.list_backends()
+                    if client_backends:
+                        all_backends += client_backends
+                except RequestsApiError:
+                    continue
+        else:
+            if not self._backends_list:
+                self._backends_list = self._active_api_client.list_backends()
+            all_backends = self._backends_list
+
         candidates = []
-        for back in backends:
-            backend_status = back.status()
-            if not backend_status.operational or backend_status.status_msg != "active":
-                continue
-            candidates.append(back)
+        for backend in all_backends:
+            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+                candidates.append(backend)
+
+        if filters or kwargs:
+            # filters will still be slow because we need the backend configs
+            backends = self.backends(
+                min_num_qubits=min_num_qubits, filters=filters, instance=instance, **kwargs
+            )
+            filtered_backend_names = [back.name for back in backends]
+            for candidate in candidates.copy():
+                if candidate["name"] not in filtered_backend_names:
+                    candidates.remove(candidate)
+
+        if min_num_qubits:
+            candidates = list(filter(lambda b: b["qubits"] >= min_num_qubits, candidates))
         if not candidates:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
-        return min(candidates, key=lambda b: b.status().pending_jobs)
+        sorted_backends = sorted(candidates, key=lambda b: b["queue_length"])
+        for back in sorted_backends:
+            # We don't know whether or not the backend has a valid config
+            try:
+                return self.backend(name=back["name"])
+            except Exception:  # pylint: disable=broad-except
+                pass
+        raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
         """Return a list that contains a series of dictionaries with the
