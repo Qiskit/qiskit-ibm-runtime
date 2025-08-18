@@ -19,8 +19,6 @@ import traceback
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 
-from qiskit.circuit import CONTROL_FLOW_OP_NAMES
-
 from ..models import (
     BackendProperties,
     QasmBackendConfiguration,
@@ -86,11 +84,6 @@ def filter_raw_configuration(
 
     gate_map = get_standard_gate_name_mapping()
     if use_fractional_gates:
-        raw_config["conditional"] = False
-        if "supported_instructions" in raw_config:
-            raw_config["supported_instructions"] = [
-                i for i in raw_config["supported_instructions"] if i not in CONTROL_FLOW_OP_NAMES
-            ]
         if "supported_features" in raw_config:
             raw_config["supported_features"] = [
                 g for g in raw_config["supported_features"] if g != "qasm3"
