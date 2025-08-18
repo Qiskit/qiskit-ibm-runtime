@@ -35,7 +35,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
     @run_integration_test
     def test_least_busy(self, service):
         """Test the least busy method."""
-        # test passing in instance
+        # test passing an instance
         instance = self.dependencies.instance
         backend = service.least_busy(instance=instance)
         self.assertEqual(instance, backend._instance)
