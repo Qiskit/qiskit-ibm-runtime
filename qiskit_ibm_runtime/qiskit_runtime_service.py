@@ -178,8 +178,7 @@ class QiskitRuntimeService:
         self._tags = tags or self._account.tags
         if self._account.instance:
             self._default_instance = True
-        if instance is not None:
-            self._api_clients = {instance: RuntimeClient(self._client_params)}
+            self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
@@ -1162,11 +1161,25 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
         """
-        if not self._backends_list:
-            self._backends_list = self._active_api_client.list_backends()
+        all_backends = []
+        if instance:
+            client = self._get_api_client(instance)
+            all_backends = client.list_backends()
+        elif not self._default_instance:
+            for client in self._api_clients.values():
+                try:
+                    client_backends = client.list_backends()
+                    if client_backends:
+                        all_backends += client_backends
+                except RequestsApiError:
+                    continue
+        else:
+            if not self._backends_list:
+                self._backends_list = self._active_api_client.list_backends()
+            all_backends = self._backends_list
 
         candidates = []
-        for backend in self._backends_list:
+        for backend in all_backends:
             if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
                 candidates.append(backend)
 
