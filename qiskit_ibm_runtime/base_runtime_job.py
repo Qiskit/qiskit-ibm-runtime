@@ -331,7 +331,6 @@ class BaseRuntimeJob(ABC):
             The job creation date as a datetime object, in local time, or
             ``None`` if creation date is not available.
         """
-        response = self._api_client.job_get(job_id=self.job_id())
         if not self._creation_date:
             response = self._api_client.job_get(job_id=self.job_id())
             self._creation_date = response.get("created", None)
