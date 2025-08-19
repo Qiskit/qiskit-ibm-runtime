@@ -464,12 +464,6 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        if dynamic_circuits is True and use_fractional_gates:
-            raise QiskitBackendNotFoundError(
-                "Currently fractional_gates and dynamic_circuits feature cannot be "
-                "simulutaneously enabled. Consider disabling one or the other."
-            )
-
         backends: List[IBMBackend] = []
 
         unique_backends = set()
@@ -497,6 +491,7 @@ class QiskitRuntimeService:
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
         if dynamic_circuits is not None:
+            # qasm3 in supported_features indicates whether the backend supports dynamic circuits
             backends = list(
                 filter(
                     lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))

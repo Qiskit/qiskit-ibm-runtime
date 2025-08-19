@@ -83,12 +83,7 @@ def filter_raw_configuration(
         return
 
     gate_map = get_standard_gate_name_mapping()
-    if use_fractional_gates:
-        if "supported_features" in raw_config:
-            raw_config["supported_features"] = [
-                g for g in raw_config["supported_features"] if g != "qasm3"
-            ]
-    else:
+    if not use_fractional_gates:
         if "basis_gates" in raw_config:
             raw_config["basis_gates"] = [
                 g
