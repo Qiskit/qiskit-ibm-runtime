@@ -193,8 +193,11 @@ class BaseRuntimeJob(ABC):
             The backend properties used for this job, at the time the job was run,
             or ``None`` if properties are not available.
         """
-
-        return self._backend.properties(refresh, self.creation_date)
+        job_date = self.creation_date
+        job_running_date = self.metrics().get("timestamps", {}).get("running")
+        if job_running_date:
+            job_date = utc_to_local(job_running_date)
+        return self._backend.properties(refresh, job_date)
 
     def error_message(self) -> Optional[str]:
         """Returns the reason if the job failed.
@@ -328,6 +331,7 @@ class BaseRuntimeJob(ABC):
             The job creation date as a datetime object, in local time, or
             ``None`` if creation date is not available.
         """
+        response = self._api_client.job_get(job_id=self.job_id())
         if not self._creation_date:
             response = self._api_client.job_get(job_id=self.job_id())
             self._creation_date = response.get("created", None)
