@@ -491,10 +491,11 @@ class QiskitRuntimeService:
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
         if dynamic_circuits is not None:
-            # qasm3 in supported_features indicates whether the backend supports dynamic circuits
             backends = list(
                 filter(
-                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
+                    lambda b: (
+                        "dynamic_circuits" in getattr(b.configuration(), "supported_features", [])
+                    )
                     == dynamic_circuits,
                     backends,
                 )
