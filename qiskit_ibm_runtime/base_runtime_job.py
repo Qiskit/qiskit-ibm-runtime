@@ -190,7 +190,7 @@ class BaseRuntimeJob(ABC):
                 Otherwise, return a cached version.
 
         Returns:
-            The backend properties used for this job, at the time the job was run,
+            The backend properties used for this job, at the time the job started running,
             or ``None`` if properties are not available.
         """
         job_date = self.creation_date
