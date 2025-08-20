@@ -335,10 +335,7 @@ def default_runtime_url_resolver(
     if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
         if private_endpoint:
-            api_host = (
-                f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
-                f".quantum.{parsed_url.hostname}"
-            )
+            api_host = f"{parsed_url.scheme}://{_private_endpoint_from_crn(instance)}"
         elif channel == "ibm_quantum_platform":
             # ibm_quantum_platform url
             region = _location_from_crn(instance)
@@ -377,6 +374,21 @@ def _location_from_crn(crn: str) -> str:
     """
     pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
     return re.search(pattern, crn).group(6)
+
+
+def _private_endpoint_from_crn(crn: str) -> str:
+    """Computes the endpoint URL from a given CRN.
+
+    Args:
+        crn: A CRN (format: https://cloud.ibm.com/docs/account?topic=account-crn#format-crn)
+
+    Returns:
+        The endpoint URL.
+    """
+    url = re.search(r"endpoint:([^\s]+)", crn)
+    if url:
+        return url.group(1)
+    return None
 
 
 def cname_from_crn(crn: str) -> str:
