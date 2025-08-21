@@ -387,7 +387,7 @@ def _private_endpoint_from_crn(crn: str) -> str:
     """
     url = re.search(r"endpoint:([^\s]+)", crn)
     if url:
-        return url.group(1)
+        return url.group(1).replace("qiskit-runtime", "qiskitruntime")
     return None
 
 
