@@ -57,8 +57,9 @@ class ZneOptions:
         2. ``pub_result.data.evs_noise_factors``, ``pub_result.data.stds_noise_factors``, and
            ``ensemble_stds_noise_factors`` all have shape ``(*shape, num_noise_factors)`` where
            ``num_noise_factors`` is the length of ``options.resilience.zne.noise_factors``. These
-           values provide evaluations of the best-fit model at each of the noise amplifications.
-           In the case of no twirling, both ``*stds*`` arrays will be equal, otherwise,
+           values provide raw expectation values, averaged over twirling if applicable,
+           at each of the noise amplifications; you can base your own fitting routines off of these
+           values. In the case of no twirling, both ``*stds*`` arrays will be equal, otherwise,
            ``stds_noise_factors`` is derived from the spread over twirling samples, whereas
            ``ensemble_stds_noise_factors`` assumes only shot noise and no drift.
 
