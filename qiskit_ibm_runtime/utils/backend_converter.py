@@ -29,6 +29,7 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
+from qiskit.circuit import Instruction
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
@@ -110,7 +111,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
-    additional_instructions = getattr(configuration, "additional_instructions", {})
+    instruction_signatures = getattr(configuration, "instruction_signatures", [])
     gate_configs = {gate.name: gate for gate in configuration.gates}
     all_instructions = set.union(
         basis_gates,
@@ -174,23 +175,20 @@ def convert_to_target(  # type: ignore[no-untyped-def]
         all_instructions.remove(name)
 
     # Create name to qiskit-ibm-runtime instruction object repr mapping
-    for category in additional_instructions:
-        if category in ADDITIONAL_INSTR_MAPPING:
-            for name in additional_instructions[category]:
-                inst_name_map[name] = ADDITIONAL_INSTR_MAPPING[category](name)
-                all_instructions.add(name)
-        else:
-            for name in additional_instructions[category]:
-                if custom_name_mapping and name in custom_name_mapping:
-                    inst_name_map[name] = custom_name_mapping[name]
-                    all_instructions.add(name)
-                else:
-                    warnings.warn(
-                        f"No instruction definition for {name} can be found and is being excluded "
-                        "from the generated target. You can use `custom_name_mapping` to provide "
-                        "a definition for this operation.",
-                        RuntimeWarning,
-                    )
+
+    for signature in instruction_signatures:
+        name = signature.get("name")
+        num_qubits = signature.get("num_qubits")
+        num_clbits = signature.get("num_clbits")
+        num_params = signature.get("num_params")
+        # Add generic parameter name
+        params = [Parameter("x_" + str(i)) for i in range(num_params)]
+
+        instruction = Instruction(
+            name=name, num_qubits=num_qubits, num_clbits=num_clbits, params=params
+        )
+        inst_name_map[name] = instruction
+        all_instructions.add(name)
 
     # Create inst properties placeholder
     # Without any assignment, properties value is None,
