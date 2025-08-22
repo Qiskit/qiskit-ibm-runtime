@@ -1,0 +1,2 @@
+Since backends now support running jobs that contain both fractional gates and conditionals, control flow 
+instructions are no longer filtered out when using ``use_fractional_gates=True``.
