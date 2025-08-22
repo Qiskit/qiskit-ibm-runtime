@@ -224,6 +224,11 @@ class QiskitRuntimeService:
 
     def _filter_instances_by_saved_preferences(self) -> None:
         """Filter instances by saved region and plan preferences."""
+        # by default, only 'free' and 'trial' plans are included
+        self._backend_instance_groups = [
+            d for d in self._backend_instance_groups if d["pricing_type"] in ["free", "trial"]
+        ]
+
         if self._tags:
             self._backend_instance_groups = [
                 d
@@ -536,6 +541,10 @@ class QiskitRuntimeService:
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
+            # filters = ''
+            # if not any ([self._tags, self._region, self._plans_preference]):
+            #     filters = "No instance filters set. Using defaults"
+
             instance_names = [instance.get("name") for instance in self._all_instances]
             logger.warning(
                 "Instance was not set at service instantiation. A relevant instance from all available "
@@ -551,6 +560,7 @@ class QiskitRuntimeService:
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst["tags"],
+                    "pricing_type": inst["pricing_type"],
                 }
                 for inst in self._all_instances
             ]
