@@ -253,7 +253,7 @@ class QiskitRuntimeService:
             )
 
         if not self._backend_instance_groups:
-            error_string = ""
+            error_string = "Plan price type: free or trial"
             if self._tags:
                 error_string += f"tags: {self._tags}, "
             if self._region:
@@ -478,20 +478,21 @@ class QiskitRuntimeService:
         backends: List[IBMBackend] = []
 
         unique_backends = set()
-        instance_backends = self._resolve_cloud_instances(instance)
-        for inst, backends_available in instance_backends:
+        self._resolve_cloud_instances(instance)
+        for inst in self._backend_instance_groups:
+            logger.warning("Loading instance - name: %s, plan: %s", inst["name"], inst["plan"])
             if name:
-                if name not in backends_available:
+                if name not in inst["backends"]:
                     continue
-                backends_available = [name]
-            for backend_name in backends_available:
+                inst["backends"] = [name]
+            for backend_name in inst["backends"]:
                 if backend_name in unique_backends:
                     continue
                 unique_backends.add(backend_name)
-                self._get_or_create_cloud_client(inst)
+                self._get_or_create_cloud_client(inst["crn"])
                 if backend := self._create_backend_obj(
                     backend_name,
-                    instance=inst,
+                    instance=inst["crn"],
                     use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
@@ -539,32 +540,41 @@ class QiskitRuntimeService:
                     for inst in self._saved_instances
                 ]
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
+        all_instances = []
         if not self._all_instances:
-            self._all_instances = self._account.list_instances()
-            # filters = ''
-            # if not any ([self._tags, self._region, self._plans_preference]):
-            #     filters = "No instance filters set. Using defaults"
+            all_instances = self._account.list_instances()
 
-            instance_names = [instance.get("name") for instance in self._all_instances]
-            logger.warning(
-                "Instance was not set at service instantiation. A relevant instance from all available "
-                "account instances will be selected based on the desired action. "
-                "Available account instances are: %s. "
-                "If you need the instance to be fixed, set it explicitly.",
-                ", ".join(instance_names),
-            )
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
+                    "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst["tags"],
                     "pricing_type": inst["pricing_type"],
                 }
-                for inst in self._all_instances
+                for inst in all_instances
             ]
             self._filter_instances_by_saved_preferences()
+
+        if not instance and not self._default_instance and not self._all_instances:
+            instance_names = [instance.get("name") for instance in self._backend_instance_groups]
+            filters = (
+                f"tags: {self._tags if self._tags else 'None'}",
+                f"region: {self._region if self._region else 'Any'}",
+                f"plan: {self._plans_preference if self._plans_preference else 'Any'}",
+            )
+            logger.warning(
+                "Instance was not set at service instantiation. An instance from available free "
+                "and trial plan account instances will be selected based on the desired action. "
+                "Based on the following filters: %s, Available account instances are: %s. "
+                "If you need the instance to be fixed, set it explicitly.",
+                filters,
+                ", ".join(instance_names),
+            )
+        self._all_instances = all_instances
+
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
     def _get_or_create_cloud_client(self, instance: str) -> None:
