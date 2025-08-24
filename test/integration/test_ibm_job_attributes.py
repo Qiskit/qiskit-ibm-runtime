@@ -22,7 +22,7 @@ from qiskit.compiler import transpile
 from qiskit import QuantumCircuit
 
 
-from qiskit_ibm_runtime import IBMBackend, RuntimeJob, SamplerV2 as Sampler
+from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2, SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import (
     IntegrationTestDependencies,
@@ -37,7 +37,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
     sim_backend: IBMBackend
     bell: QuantumCircuit
-    sim_job: RuntimeJob
+    sim_job: RuntimeJobV2
     last_week: datetime
 
     @classmethod
