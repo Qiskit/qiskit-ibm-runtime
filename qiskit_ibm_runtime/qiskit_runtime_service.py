@@ -94,8 +94,9 @@ class QiskitRuntimeService:
         ``token``. The ``local`` channel doesn't require authentication.
         For the ``"ibm_cloud"`` and ``"ibm_quantum_platform"`` channels it is recommended
         to provide the relevant ``instance`` to minimize API calls. If an ``instance`` is not defined,
-        the service will fetch all instances accessible within the account, filtered by
-        ``region``, ``plans_preference``, and ``tags``.
+        the service will fetch all free and trial plan instances accessible within the account, filtered
+        by ``region``, ``plans_preference``, and ``tags``. Paid or subscription instances will not
+        be available unless ``instance`` or ``plans_preference`` are explicitly specified.
 
         Args:
             Optional[ChannelType] channel: Channel type. ``ibm_cloud``,
@@ -501,6 +502,21 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
+                for inst_details in self._backend_instance_groups:
+                    if inst == inst_details["crn"]:
+                        logger.warning(
+                            "Loading instance: %s, plan: %s",
+                            inst_details["name"],
+                            inst_details["plan"],
+                        )
+            else:
+                for inst_details in self._backend_instance_groups:
+                    if inst == inst_details["crn"]:
+                        logger.warning(
+                            "Loading instance: %s, plan: %s",
+                            inst_details["name"],
+                            inst_details["plan"],
+                        )
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
