@@ -185,6 +185,21 @@ class QiskitRuntimeService:
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
+            instance_names = [instance.get("name") for instance in self._backend_instance_groups]
+            filters = (
+                f"tags: {self._tags if self._tags else 'None'}",
+                f"region: {self._region if self._region else 'Any'}",
+                f"plan: {self._plans_preference if self._plans_preference else 'Any'}",
+            )
+            logger.warning(
+                "Instance was not set at service instantiation. An instance from available"
+                "%s account instances will be selected based on "
+                "the following filters: %s. Available account instances are: %s. "
+                "If you need the instance to be fixed, set it explicitly.",
+                "" if self._plans_preference else " free and trial",
+                filters,
+                ", ".join(instance_names),
+            )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
@@ -224,11 +239,6 @@ class QiskitRuntimeService:
 
     def _filter_instances_by_saved_preferences(self) -> None:
         """Filter instances by saved region and plan preferences."""
-        # by default, only 'free' and 'trial' plans are included
-        self._backend_instance_groups = [
-            d for d in self._backend_instance_groups if d["pricing_type"] in ["free", "trial"]
-        ]
-
         if self._tags:
             self._backend_instance_groups = [
                 d
@@ -251,15 +261,22 @@ class QiskitRuntimeService:
             self._backend_instance_groups = sorted(
                 filtered_groups, key=lambda d: plans.index(d["plan"])
             )
+        else:
+            # if plans_preference is not set, only 'free' and 'trial' plans are included
+            self._backend_instance_groups = [
+                d for d in self._backend_instance_groups if d["pricing_type"] in ["free", "trial"]
+            ]
 
         if not self._backend_instance_groups:
-            error_string = "Plan price type: free or trial"
+            error_string = ""
             if self._tags:
                 error_string += f"tags: {self._tags}, "
             if self._region:
                 error_string += f"region: {self._region}, "
             if self._plans_preference:
                 error_string += f"plan: {self._plans_preference}"
+            else:
+                error_string += "plan pricing type: free or trial"
             raise IBMInputValueError(
                 "No matching instances found for the following filters:",
                 f"{error_string}.",
@@ -478,21 +495,20 @@ class QiskitRuntimeService:
         backends: List[IBMBackend] = []
 
         unique_backends = set()
-        self._resolve_cloud_instances(instance)
-        for inst in self._backend_instance_groups:
-            logger.warning("Loading instance - name: %s, plan: %s", inst["name"], inst["plan"])
+        instance_backends = self._resolve_cloud_instances(instance)
+        for inst, backends_available in instance_backends:
             if name:
-                if name not in inst["backends"]:
+                if name not in backends_available:
                     continue
-                inst["backends"] = [name]
-            for backend_name in inst["backends"]:
+                backends_available = [name]
+            for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
                 unique_backends.add(backend_name)
-                self._get_or_create_cloud_client(inst["crn"])
+                self._get_or_create_cloud_client(inst)
                 if backend := self._create_backend_obj(
                     backend_name,
-                    instance=inst["crn"],
+                    instance=inst,
                     use_fractional_gates=use_fractional_gates,
                 ):
                     backends.append(backend)
@@ -540,10 +556,8 @@ class QiskitRuntimeService:
                     for inst in self._saved_instances
                 ]
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
-        all_instances = []
         if not self._all_instances:
-            all_instances = self._account.list_instances()
-
+            self._all_instances = self._account.list_instances()
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
@@ -554,26 +568,9 @@ class QiskitRuntimeService:
                     "tags": inst["tags"],
                     "pricing_type": inst["pricing_type"],
                 }
-                for inst in all_instances
+                for inst in self._all_instances
             ]
             self._filter_instances_by_saved_preferences()
-
-        if not instance and not self._default_instance and not self._all_instances:
-            instance_names = [instance.get("name") for instance in self._backend_instance_groups]
-            filters = (
-                f"tags: {self._tags if self._tags else 'None'}",
-                f"region: {self._region if self._region else 'Any'}",
-                f"plan: {self._plans_preference if self._plans_preference else 'Any'}",
-            )
-            logger.warning(
-                "Instance was not set at service instantiation. An instance from available free "
-                "and trial plan account instances will be selected based on the desired action. "
-                "Based on the following filters: %s, Available account instances are: %s. "
-                "If you need the instance to be fixed, set it explicitly.",
-                filters,
-                ", ".join(instance_names),
-            )
-        self._all_instances = all_instances
 
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
