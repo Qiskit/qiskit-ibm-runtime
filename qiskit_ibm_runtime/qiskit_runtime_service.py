@@ -502,21 +502,13 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
-                for inst_details in self._backend_instance_groups:
-                    if inst == inst_details["crn"]:
-                        logger.warning(
-                            "Loading instance: %s, plan: %s",
-                            inst_details["name"],
-                            inst_details["plan"],
-                        )
-            else:
-                for inst_details in self._backend_instance_groups:
-                    if inst == inst_details["crn"]:
-                        logger.warning(
-                            "Loading instance: %s, plan: %s",
-                            inst_details["name"],
-                            inst_details["plan"],
-                        )
+            for inst_details in self._backend_instance_groups:
+                if inst == inst_details["crn"]:
+                    logger.warning(
+                        "Loading instance: %s, plan: %s",
+                        inst_details["name"],
+                        inst_details["plan"],
+                    )
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue

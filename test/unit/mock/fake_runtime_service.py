@@ -41,7 +41,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             "tags": ["services"],
-            "name": ["test-instance"],
+            "name": "test-instance",
             "pricing_type": "free",
         }
     ]
@@ -50,7 +50,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             "tags": ["services"],
-            "name": ["test-instance"],
+            "name": "test-instance",
             "pricing_type": "free",
         }
     ]

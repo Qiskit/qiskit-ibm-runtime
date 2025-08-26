@@ -1,6 +1,6 @@
-When :class:`.QiskitRuntimeService` is intialized without an instance 
+When :class:`.QiskitRuntimeService` is initialized without an instance 
 and there is no saved account instance, there will now be a warning detailing 
-the current filters (``tags``, ``region``, ``plan name``, ``plan type``) and available instances. Additionally, 
+the current filters (``tags``, ``region``, ``plans_preference``) and available instances. Additionally, 
 by default, only free and trial pricing plan accounts will be available. 
 Paid or subscription instances **will not** be available unless ``instance`` or
 ``plans_preference`` are explicitly specified. 
