@@ -36,9 +36,13 @@ class CloudAuth(AuthBase):
         crn: str,
         proxies: Optional[ProxyConfiguration] = None,
         private: bool = False,
+        verify: bool = True
     ):
         self.crn = crn
         self.api_key = api_key
+        self.private = private
+        self.proxies = proxies
+        self.verify = verify
         iam_url = (
             f"https://{'private.' if private else ''}"
             f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == 'staging' else CLOUD_IAM_URL}"
@@ -46,7 +50,7 @@ class CloudAuth(AuthBase):
         proxies_kwargs = {}
         if proxies is not None:
             proxies_kwargs = proxies.to_request_params()
-        self.tm = IAMTokenManager(api_key, url=iam_url, **proxies_kwargs)
+        self.tm = IAMTokenManager(api_key, url=iam_url, disable_ssl_verification=not verify, **proxies_kwargs)
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):
@@ -54,6 +58,9 @@ class CloudAuth(AuthBase):
                 [
                     self.api_key == other.api_key,
                     self.crn == other.crn,
+                    self.proxies.__eq__(other.proxies),
+                    self.private == other.private,
+                    self.verify == other.verify
                 ]
             )
         return False
@@ -66,6 +73,9 @@ class CloudAuth(AuthBase):
         cpy = CloudAuth(
             api_key=self.api_key,
             crn=self.crn,
+            private=self.private,
+            proxies=self.proxies,
+            verify=self.verify
         )
         return cpy
 
