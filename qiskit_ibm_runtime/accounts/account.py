@@ -285,7 +285,7 @@ class CloudAccount(Account):
             crn=self.instance,
             private=self.private_endpoint,
             proxies=self.proxies,
-            verify=self.verify
+            verify=self.verify,
         )
 
     def resolve_crn(self) -> None:

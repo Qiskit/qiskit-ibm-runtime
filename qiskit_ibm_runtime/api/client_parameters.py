@@ -63,7 +63,7 @@ class ClientParameters:
             crn=self.instance,
             private=self.private_endpoint,
             proxies=self.proxies,
-            verify=self.verify
+            verify=self.verify,
         )
 
     def get_runtime_api_base_url(self) -> str:
