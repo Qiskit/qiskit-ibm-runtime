@@ -81,7 +81,8 @@ class QiskitRuntimeService:
 
         * Direct instantiation:
 
-        ```python
+        .. code-block:: python
+
             from qiskit_ibm_runtime import QiskitRuntimeService
 
             service = QiskitRuntimeService(
@@ -89,11 +90,11 @@ class QiskitRuntimeService:
                 token="API_KEY",
                 instance="CRN"
                 )
-        ```
 
         * Saving default acccount:
 
-        ```python
+        .. code-block:: python
+
             from qiskit_ibm_runtime import QiskitRuntimeService
 
             QiskitRuntimeService.save_account(
@@ -103,8 +104,6 @@ class QiskitRuntimeService:
                 )
 
             service = QiskitRuntimeService()
-        ```
-
 
         The minimum required information for service authentication to a non-local channel is the
         ``token``. The ``local`` channel doesn't require authentication.
