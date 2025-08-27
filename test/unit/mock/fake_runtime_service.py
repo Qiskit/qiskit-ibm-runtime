@@ -43,6 +43,7 @@ class FakeRuntimeService(QiskitRuntimeService):
             "tags": ["services"],
             "name": "test-instance",
             "pricing_type": "free",
+            "plan": "internal",
         }
     ]
 
@@ -52,6 +53,7 @@ class FakeRuntimeService(QiskitRuntimeService):
             "tags": ["services"],
             "name": "test-instance",
             "pricing_type": "free",
+            "plan": "internal",
         }
     ]
 
