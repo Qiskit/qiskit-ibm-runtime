@@ -81,29 +81,29 @@ class QiskitRuntimeService:
 
         * Direct instantiation:
 
-        .. code-block:: python
+            .. code-block:: python
 
-            from qiskit_ibm_runtime import QiskitRuntimeService
+                from qiskit_ibm_runtime import QiskitRuntimeService
 
-            service = QiskitRuntimeService(
-                channel="ibm_quantum_platform",
-                token="API_KEY",
-                instance="CRN"
-                )
+                service = QiskitRuntimeService(
+                    channel="ibm_quantum_platform",
+                    token="API_KEY",
+                    instance="CRN"
+                    )
 
         * Saving default acccount:
 
-        .. code-block:: python
+            .. code-block:: python
 
-            from qiskit_ibm_runtime import QiskitRuntimeService
+                from qiskit_ibm_runtime import QiskitRuntimeService
 
-            QiskitRuntimeService.save_account(
-                token="API_KEY",
-                instance="CRN",
-                set_as_default = True
-                )
+                QiskitRuntimeService.save_account(
+                    token="API_KEY",
+                    instance="CRN",
+                    set_as_default = True
+                    )
 
-            service = QiskitRuntimeService()
+                service = QiskitRuntimeService()
 
         The minimum required information for service authentication to a non-local channel is the
         ``token``. The ``local`` channel doesn't require authentication.
@@ -122,10 +122,10 @@ class QiskitRuntimeService:
 
         - If a ``name`` is specified, the corresponding account details will be loaded from
           the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
-          ``plans_preference`, and the advanced configuration parameters: ``url``,
+          ``plans_preference``, and the advanced configuration parameters: ``url``,
           ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
-          IMPORTANT: An explicit ``instance`` value provided during instantiation
-          will OVERWRITE the value of the loaded ``instance``.
+          **Important Note**: An explicit ``instance`` value provided during instantiation
+          will **overwrite** the value of the loaded ``instance``.
 
         - If no ``name`` is specified: if ``channel`` is specified, the service will load the
           default account associated with that channel from the configuration file. Else,
