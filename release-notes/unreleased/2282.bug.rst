@@ -1,6 +1,0 @@
-Fixed a bug in :class:`.BasePrimitive` where primitives instantiated inside a :class:`~.Session` or :class:`~.Batch` context manager without the ``mode`` 
-parameter would fetch the backend from the service (by name) instead of using the backend passed to the :class:`~.Session` or :class:`~.Batch`. 
-This could cause issues when the :class:`~.Session`/:class:`~.Batch`
-backend was modified by users (for example, by removing a gate), because the primitives 
-would instead fetch the unmodified backend object from the service. After the fix, the
-:class:`~.Session`/:class:`~.Batch` backend object is used directly. 

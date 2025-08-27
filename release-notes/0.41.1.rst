@@ -1,0 +1,11 @@
+0.41.1 (2025-08-18)
+===================
+
+Bug Fixes
+---------
+
+- Fixed multiple bugs where having a default saved instance or passing in the instance name would result in an 
+  an ``IBMInputValueError`` when creating a :class:`~.Session` / :class:`~.Batch`
+
+  Additionally, :meth:`.QiskitRuntimeService.least_busy` now correctly returns the least busy 
+  backend in the cases where the ``instance`` parameter is passed in and when there is no default instance. (`2359 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2359>`__)
