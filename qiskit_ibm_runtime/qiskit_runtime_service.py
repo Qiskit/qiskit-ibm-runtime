@@ -187,17 +187,32 @@ class QiskitRuntimeService:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
             instance_names = [instance.get("name") for instance in self._backend_instance_groups]
-            filters = (
-                f"tags: {self._tags if self._tags else 'None'}",
-                f"region: {self._region if self._region else 'Any'}",
-                f"plan: {self._plans_preference if self._plans_preference else 'Any'}",
+            instance_plan_names = {
+                instance.get("plan") for instance in self._backend_instance_groups
+            }
+
+            tags = ", ".join(self._tags) if self._tags else "None"  # type: ignore
+            region = self._region if self._region else "us-east, eu-de"
+            plans = (
+                ", ".join(self._plans_preference)
+                if self._plans_preference
+                else ", ".join(instance_plan_names)
             )
+
+            filters = f"(tags: {tags}, " f"region: {region}, " f"plans_preference: {plans})"
+
             logger.warning(
-                "Instance was not set at service instantiation. An instance from available"
-                "%s account instances will be selected based on "
-                "the following filters: %s. Available account instances are: %s. "
-                "If you need the instance to be fixed, set it explicitly.",
-                "" if self._plans_preference else " free and trial",
+                "Instance was not set at service instantiation. %s"
+                "Based on the following filters, %s, "
+                "the available account instances are: %s. "
+                "If you need a specific instance or premium instance, set it explicitly either by "
+                "using a saved account with a saved default instance or passing it "
+                "in directly to QiskitRuntimeService().",
+                (
+                    ""
+                    if self._plans_preference
+                    else "Only free and trial plan accounts are available. "
+                ),
                 filters,
                 ", ".join(instance_names),
             )
@@ -326,6 +341,7 @@ class QiskitRuntimeService:
                     proxies=proxies,
                     verify=verify_,
                 )
+                logger.warning("Loading new account. A saved account will not be used.")
             else:
                 if url:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
