@@ -126,9 +126,12 @@ class QiskitRuntimeService:
             Optional[Callable] url_resolver: Function used to resolve the runtime url.
             Optional[str] region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
                 An instance with this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account types, ordered by preference.
-                An instance with the first value in the list will be prioritized if an instance
-                is not passed in.
+            Optional[List[str]] plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized and only instances
+                with the given plan names will be considered. For example, if you want to avoid
+                using your premium accounts you can just pass in ``"open"`` to only use your open plan
+                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             Optional[List[str]] tags: Set a list of tags to filter available instances.
 
         Returns:
@@ -178,8 +181,7 @@ class QiskitRuntimeService:
         self._tags = tags or self._account.tags
         if self._account.instance:
             self._default_instance = True
-        if instance is not None:
-            self._api_clients = {instance: RuntimeClient(self._client_params)}
+            self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
@@ -534,8 +536,13 @@ class QiskitRuntimeService:
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
+            instance_names = [instance.get("name") for instance in self._all_instances]
             logger.warning(
-                "Default instance not set. Searching all available instances.",
+                "Instance was not set at service instantiation. A relevant instance from all available "
+                "account instances will be selected based on the desired action. "
+                "Available account instances are: %s. "
+                "If you need the instance to be fixed, set it explicitly.",
+                ", ".join(instance_names),
             )
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
@@ -687,8 +694,12 @@ class QiskitRuntimeService:
             private_endpoint: Connect to private API URL.
             region: Set a region preference. `us-east` or `eu-de`. An instance with this region
                 will be prioritized if an instance is not passed in.
-            plans_preference: A list of account types, ordered by preference. An instance with the first
-                value in the list will be prioritized if an instance is not passed in.
+            plans_preference: A list of account plan names
+                (``open``, ``premium``, etc.), ordered by preference. An instance with the first
+                value in the list will be prioritized and only instances
+                with the given plan names will be considered. For example, if you want to avoid
+                using your premium accounts you can just pass in ``"open"`` to only use your open plan
+                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
@@ -1162,11 +1173,25 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
         """
-        if not self._backends_list:
-            self._backends_list = self._active_api_client.list_backends()
+        all_backends = []
+        if instance:
+            client = self._get_api_client(instance)
+            all_backends = client.list_backends()
+        elif not self._default_instance:
+            for client in self._api_clients.values():
+                try:
+                    client_backends = client.list_backends()
+                    if client_backends:
+                        all_backends += client_backends
+                except RequestsApiError:
+                    continue
+        else:
+            if not self._backends_list:
+                self._backends_list = self._active_api_client.list_backends()
+            all_backends = self._backends_list
 
         candidates = []
-        for backend in self._backends_list:
+        for backend in all_backends:
             if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
                 candidates.append(backend)
 
