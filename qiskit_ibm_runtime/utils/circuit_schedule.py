@@ -16,7 +16,7 @@ from itertools import cycle
 from typing import Tuple, List
 import os.path
 import numpy as np
-from plotly.graph_objects import Figure as PlotlyFigure # TODO: replace with TYPE_CHECkING
+from plotly.graph_objects import Figure as PlotlyFigure  # TODO: replace with TYPE_CHECkING
 
 from ..visualization.utils import plotly_module
 

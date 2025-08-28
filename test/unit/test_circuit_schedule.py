@@ -47,7 +47,7 @@ class CircuitScheduleBase(IBMTestCase):
 
     def get_small_mock_data(self):
         """Return small constant portion of data object"""
-        return self.circuit_schedule_data[:self.small_data_len]
+        return self.circuit_schedule_data[: self.small_data_len]
 
 
 class TestCircuitSchedule(CircuitScheduleBase):
@@ -67,20 +67,20 @@ class TestCircuitSchedule(CircuitScheduleBase):
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
 
         expected_circuit_scheduling = [
-            ['main', 'barrier', 'Qubit 0', '7', '7', 'barrier', 'barrier'],
-            ['main', 'barrier', 'Qubit 1', '7', '7', 'barrier', 'barrier'],
-            ['main', 'barrier', 'Qubit 2', '7', '7', 'barrier', 'barrier'],
-            ['main', 'barrier', 'Qubit 3', '7', '7', 'barrier', 'barrier'],
-            ['main', 'barrier', 'Qubit 4', '7', '7', 'barrier', 'barrier'],
-            ]
-        self.assertTrue(np.all(circuit_schedule.circuit_scheduling==expected_circuit_scheduling))
+            ["main", "barrier", "Qubit 0", "7", "7", "barrier", "barrier"],
+            ["main", "barrier", "Qubit 1", "7", "7", "barrier", "barrier"],
+            ["main", "barrier", "Qubit 2", "7", "7", "barrier", "barrier"],
+            ["main", "barrier", "Qubit 3", "7", "7", "barrier", "barrier"],
+            ["main", "barrier", "Qubit 4", "7", "7", "barrier", "barrier"],
+        ]
+        self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
 
         # tests that empty data lines are ignored in parsing
         data_extended = data + [""]
         self.assertEqual(len(data) + 1, len(data_extended))
         circuit_schedule = CircuitSchedule(data)
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
-        self.assertTrue(np.all(circuit_schedule.circuit_scheduling==expected_circuit_scheduling))
+        self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
 
         # verifies data names and order
         data_names = ["Branch", "Instruction", "Channel", "Start", "Finish", "Pulse", "GateName"]
@@ -95,13 +95,13 @@ class TestCircuitSchedule(CircuitScheduleBase):
         for _, test_case in self.test_cases.items():
             (
                 (included_channels, filter_readout_channels, filter_barriers),
-                (_, n_channels, n_instructions)
-                ) = test_case
+                (_, n_channels, n_instructions),
+            ) = test_case
             circuit_schedule.preprocess(
                 included_channels=included_channels,
                 filter_awgr=filter_readout_channels,
-                filter_barriers=filter_barriers
-                )
+                filter_barriers=filter_barriers,
+            )
             self.assertEqual(len(circuit_schedule.channels), n_channels)
             self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
 
@@ -139,7 +139,7 @@ class TestCircuitSchedule(CircuitScheduleBase):
         circuit_schedule.preprocess()
 
         # test a single row schedule
-        schedule_row = ['main', 'barrier', 'Qubit 0', '7', '7', 'barrier', 'barrier']
+        schedule_row = ["main", "barrier", "Qubit 0", "7", "7", "barrier", "barrier"]
         circuit_schedule.trace_finite_duration_instruction(schedule_row)
 
         # each row schedule results in one trace and one annotation
@@ -154,7 +154,15 @@ class TestCircuitSchedule(CircuitScheduleBase):
         circuit_schedule.preprocess()
 
         # test a single row schedule
-        schedule_row = ['else', 'sx_2', 'Qubit 2', '2282', '2282', 'shift_phase', 'sx',]
+        schedule_row = [
+            "else",
+            "sx_2",
+            "Qubit 2",
+            "2282",
+            "2282",
+            "shift_phase",
+            "sx",
+        ]
         circuit_schedule.trace_finite_duration_instruction(schedule_row)
 
         # each row schedule results in one trace and one annotation
@@ -170,14 +178,14 @@ class TestCircuitSchedule(CircuitScheduleBase):
             circuit_schedule = CircuitSchedule(data)
             (
                 (included_channels, filter_readout_channels, filter_barriers),
-                (n_traces, _, n_instructions)
-                ) = test_case
+                (n_traces, _, n_instructions),
+            ) = test_case
 
             circuit_schedule.preprocess(
                 included_channels=included_channels,
                 filter_awgr=filter_readout_channels,
-                filter_barriers=filter_barriers
-                )
+                filter_barriers=filter_barriers,
+            )
 
             fig = circuit_schedule.populate_figure(go.Figure())
             self.assertEqual(len(fig.data), n_traces)

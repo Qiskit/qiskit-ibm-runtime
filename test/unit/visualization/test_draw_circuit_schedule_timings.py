@@ -52,6 +52,6 @@ class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
                 included_channels=included_channels,
                 filter_readout_channels=filter_readout_channels,
                 filter_barriers=filter_barriers,
-                )
+            )
             self.assertEqual(len(fig.data), n_traces)
         self.save_plotly_artifact(fig)
