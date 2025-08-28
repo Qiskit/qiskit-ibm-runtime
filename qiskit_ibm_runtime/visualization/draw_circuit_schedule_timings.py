@@ -13,16 +13,10 @@
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
-from typing import List, TYPE_CHECKING
-
-from plotly.graph_objects import Figure as PlotlyFigure # TODO: Remove once a proper unit-test is in place (needed for local module call)
-
-from .utils import plotly_module
-
-if TYPE_CHECKING:
-    from plotly.graph_objects import Figure as PlotlyFigure
-
+from typing import List
+from plotly.graph_objects import Figure as PlotlyFigure # TODO: replace with TYPE_CHECkING
 from ..utils.circuit_schedule import CircuitSchedule
+from .utils import plotly_module
 
 
 def draw_circuit_schedule_timing(
@@ -36,7 +30,7 @@ def draw_circuit_schedule_timing(
     Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
-        schedule_file_path: The path to the schedule file (if a string), or 
+        circuit_schedule: The circuit schedule file path (if a string), or 
         the circuit schedule data as a list of strings.
         included_channels: A list of channels to include in the plot.
         filter_readout_channels: If ``True``, remove all readout channels.

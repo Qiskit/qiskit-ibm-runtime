@@ -12,22 +12,16 @@
 
 """Utilities for working with circuit schedule timing information returned from the compiler."""
 
-
-from typing import Tuple, List, TYPE_CHECKING
 from itertools import cycle
+from typing import Tuple, List
 import os.path
-
-from plotly.graph_objects import Figure as PlotlyFigure # TODO: Remove once a proper unit-test is in place (needed for local module call)
+import numpy as np
+from plotly.graph_objects import Figure as PlotlyFigure # TODO: replace with TYPE_CHECkING
 
 from ..visualization.utils import plotly_module
 
-if TYPE_CHECKING:
-    from plotly.graph_objects import Figure as PlotlyFigure
-
 go = plotly_module(".graph_objects")
 colors = plotly_module(".colors").qualitative.Plotly
-
-import numpy as np
 
 
 READOUT_CHANNEL_PREFIX = "AWGR"
@@ -64,12 +58,12 @@ class CircuitSchedule:
         self.traces = []
 
     @classmethod
-    def _load(self, circuit_schedule: str | List[str]) -> List[str]:
+    def _load(cls, circuit_schedule: str | List[str]) -> List[str]:
         """
         TODO: Add checks and docs
         """
         if isinstance(circuit_schedule, str):
-            if os.path.exists(circuit_schedule) and os.path.isfile(circuit_schedule):    
+            if os.path.exists(circuit_schedule) and os.path.isfile(circuit_schedule):
                 with open(circuit_schedule, encoding="utf-8") as file:
                     data = file.readlines()
             else:
@@ -330,4 +324,3 @@ class CircuitSchedule:
 
         fig.add_traces(self.traces)
         return fig
-

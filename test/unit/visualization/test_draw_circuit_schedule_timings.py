@@ -14,20 +14,16 @@
 
 
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
-from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
-
 from ...ibm_test_case import IBMTestCase
-from qiskit_ibm_runtime.visualization.utils import plotly_module
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
-import numpy as np
 
 
 class DrawCircuitScheduleBase(IBMTestCase):
     """Circuit schedule timing mock data for testing."""
-    
+
     def setUp(self) -> None:
         """Set up."""
-        self.circuit_schedule_data = FakeCircuitScheduleInputData.data()
+        self.circuit_schedule_data = FakeCircuitScheduleInputData.data
 
         # test cases structure:
         #   --------------------   Input Arguments   ------------------       ---  Expected Results  ---
@@ -37,8 +33,9 @@ class DrawCircuitScheduleBase(IBMTestCase):
         }
 
     def get_mock_data(self):
+        """Return the data object"""
         return self.circuit_schedule_data
-    
+
 
 class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
     """Tests for the ``draw_circuit_schedule_timing`` function."""

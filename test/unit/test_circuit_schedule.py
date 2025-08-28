@@ -10,28 +10,29 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for the circuit schedule timing class."""
+"""Unit tests for the circuit schedule class."""
 
-
-from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
-from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
-
-from ..ibm_test_case import IBMTestCase
-from qiskit_ibm_runtime.visualization.utils import plotly_module
-from .mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 import numpy as np
+from qiskit_ibm_runtime.visualization.utils import plotly_module
+from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
+from ..ibm_test_case import IBMTestCase
+from .mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
 
 class CircuitScheduleBase(IBMTestCase):
     """Circuit schedule timing mock data for testing."""
+
     def setUp(self) -> None:
         """Set up."""
-        self.circuit_schedule_data = FakeCircuitScheduleInputData.data()
+        self.circuit_schedule_data = FakeCircuitScheduleInputData.data
         self.small_data_len = 5
 
         # test cases structure:
-        #   --------------------   Input Arguments   ------------------       ----------    Expected Results    ---------
-        # ((included_channels, filter_readout_channels, filter_barriers)  ,  (n_traces, n_channels, n_unique_instructions))
+        #   --------------------   Input Arguments   ------------------
+        # ((included_channels, filter_readout_channels, filter_barriers),
+        #
+        # ----------    Expected Results    ---------
+        # (n_traces, n_channels, n_unique_instructions))
         self.test_cases = {
             1: ((None, False, False), (104, 14, 7)),
             2: ((["AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"], False, False), (34, 5, 7)),
@@ -41,9 +42,11 @@ class CircuitScheduleBase(IBMTestCase):
         }
 
     def get_large_mock_data(self):
+        """Return the whole data object"""
         return self.circuit_schedule_data
-    
+
     def get_small_mock_data(self):
+        """Return small constant portion of data object"""
         return self.circuit_schedule_data[:self.small_data_len]
 
 
@@ -91,12 +94,12 @@ class TestCircuitSchedule(CircuitScheduleBase):
 
         for _, test_case in self.test_cases.items():
             (
-                (included_channels, filter_readout_channels, filter_barriers), 
+                (included_channels, filter_readout_channels, filter_barriers),
                 (_, n_channels, n_instructions)
                 ) = test_case
             circuit_schedule.preprocess(
-                included_channels=included_channels, 
-                filter_awgr=filter_readout_channels, 
+                included_channels=included_channels,
+                filter_awgr=filter_readout_channels,
                 filter_barriers=filter_barriers
                 )
             self.assertEqual(len(circuit_schedule.channels), n_channels)
@@ -109,7 +112,7 @@ class TestCircuitSchedule(CircuitScheduleBase):
         for branch, expected_shift in zip(branches, expected_shifts):
             shifts = CircuitSchedule.get_trace_finite_duration_y_shift(CircuitSchedule, branch)
             self.assertEqual(shifts, expected_shift)
-        
+
         # test error raise
         with self.assertRaises(ValueError):
             error_branch = "not_a_branch"
@@ -122,7 +125,7 @@ class TestCircuitSchedule(CircuitScheduleBase):
         for branch, expected_shift in zip(branches, expected_shifts):
             shifts = CircuitSchedule.get_trace_zero_duration_y_shift(CircuitSchedule, branch)
             self.assertEqual(shifts, expected_shift)
-        
+
         # test error raise
         with self.assertRaises(ValueError):
             error_branch = "not_a_branch"
@@ -166,17 +169,16 @@ class TestCircuitSchedule(CircuitScheduleBase):
         for _, test_case in self.test_cases.items():
             circuit_schedule = CircuitSchedule(data)
             (
-                (included_channels, filter_readout_channels, filter_barriers), 
+                (included_channels, filter_readout_channels, filter_barriers),
                 (n_traces, _, n_instructions)
                 ) = test_case
 
             circuit_schedule.preprocess(
-                included_channels=included_channels, 
-                filter_awgr=filter_readout_channels, 
+                included_channels=included_channels,
+                filter_awgr=filter_readout_channels,
                 filter_barriers=filter_barriers
                 )
 
             fig = circuit_schedule.populate_figure(go.Figure())
             self.assertEqual(len(fig.data), n_traces)
             self.assertEqual(len(circuit_schedule.legend), n_instructions)
-
