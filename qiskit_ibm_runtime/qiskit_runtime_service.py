@@ -110,8 +110,8 @@ class QiskitRuntimeService:
         For non-local channels, it is recommended to always provide the relevant ``instance``
         to minimize API calls. If an ``instance`` is not defined, the service will fetch all free
         or trial instances accessible within the
-        account, filtered by ``region``, ``plans_preference``, and ``tags``. Paid or subscription 
-        instances **will not**  be available unless ``instance`` or ``plans_preference`` 
+        account, filtered by ``region``, ``plans_preference``, and ``tags``. Paid or subscription
+        instances **will not**  be available unless ``instance`` or ``plans_preference``
         are explicitly specified.
 
         The service will attempt to load an account from file if (a) no explicit ``token``
