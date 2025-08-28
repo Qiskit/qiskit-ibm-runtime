@@ -150,6 +150,7 @@ class CircuitSchedule:
         self.channels = list(self.channels)
         self.max_time = int(max(self.circuit_scheduling[:, self.type_to_idx["Finish"]]))
         self.instruction_set = np.unique(self.circuit_scheduling[:, self.type_to_idx["GateName"]])
+        self.color_map = dict(zip(self.instruction_set, cycle(colors)))
 
     def get_trace_finite_duration_y_shift(self, branch: str) -> Tuple[float, float, float]:
         """
@@ -309,8 +310,6 @@ class CircuitSchedule:
         """
         TODO: Add docs
         """
-        self.color_map = dict(zip(self.instruction_set, cycle(colors)))
-
         # Process instructions
         shift_phase_instructions = []
         for row in self.circuit_scheduling:

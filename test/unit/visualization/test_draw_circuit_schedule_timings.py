@@ -18,6 +18,7 @@ from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
 from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
 
 from ...ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.visualization.utils import plotly_module
 import numpy as np
 
 import time
@@ -149,21 +150,20 @@ class DrawCircuitScheduleBase(IBMTestCase):
     
     def get_small_mock_data(self):
         return self.circuit_schedule_data[:self.small_data_len]
-    
-
-
 
 
 class TestCircuitSchedule(DrawCircuitScheduleBase):
     """Tests for CircuitSchedule class."""
 
     def test__load(self):
+        """Test data loading"""
         data = self.get_small_mock_data()
         loaded_data = CircuitSchedule._load(data)
         self.assertEqual(data, loaded_data)
         # TODO: should we also add a test for file loading?
 
     def test__parse(self):
+        """Test circuit schedule data parsing"""
         data = self.get_small_mock_data()
         circuit_schedule = CircuitSchedule(data)
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
@@ -190,13 +190,14 @@ class TestCircuitSchedule(DrawCircuitScheduleBase):
             self.assertEqual(circuit_schedule.type_to_idx[name], idx)
 
     def test_preprocess(self):
+        """Test for correct circuit schedule preprocessing"""
         data = self.get_large_mock_data()
         circuit_schedule = CircuitSchedule(data)
 
         for _, test_case in self.test_cases.items():
             (
                 (included_channels, filter_readout_channels, filter_barriers), 
-                (n_traces, n_channels, n_instructions)
+                (_, n_channels, n_instructions)
                 ) = test_case
             circuit_schedule.preprocess(
                 included_channels=included_channels, 
@@ -207,6 +208,7 @@ class TestCircuitSchedule(DrawCircuitScheduleBase):
             self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
 
     def test_get_trace_finite_duration_y_shift(self):
+        """Test that x, y, and z shifts for finite duration traces are set correctly"""
         branches = ("main", "then", "else")
         expected_shifts = ((-0.4, 0.4, 0), (0, 0.4, 0.25), (-0.4, 0, -0.25))
         for branch, expected_shift in zip(branches, expected_shifts):
@@ -215,10 +217,11 @@ class TestCircuitSchedule(DrawCircuitScheduleBase):
         
         # test error raise
         with self.assertRaises(ValueError):
-            error_branch = "some_branch"
+            error_branch = "not_a_branch"
             _ = CircuitSchedule.get_trace_finite_duration_y_shift(CircuitSchedule, error_branch)
 
     def test_get_trace_zero_duration_y_shift(self):
+        """Test that y-shift for zero duration traces are set correctly"""
         branches = ("main", "then", "else")
         expected_shifts = (0, 0.2, -0.2)
         for branch, expected_shift in zip(branches, expected_shifts):
@@ -227,17 +230,60 @@ class TestCircuitSchedule(DrawCircuitScheduleBase):
         
         # test error raise
         with self.assertRaises(ValueError):
-            error_branch = "some_branch"
+            error_branch = "not_a_branch"
             _ = CircuitSchedule.get_trace_zero_duration_y_shift(CircuitSchedule, error_branch)
 
     def test_trace_finite_duration_instruction(self):
-        pass
+        """Test that finite duration traces are created correctly"""
+        # initialize a class
+        data = self.get_small_mock_data()
+        circuit_schedule = CircuitSchedule(data)
+        circuit_schedule.preprocess()
+
+        # test a single row schedule
+        schedule_row = ['main', 'barrier', 'Qubit 0', '7', '7', 'barrier', 'barrier']
+        circuit_schedule.trace_finite_duration_instruction(schedule_row)
+
+        # each row schedule results in one trace and one annotation
+        self.assertEqual(len(circuit_schedule.traces), 1)
+        self.assertEqual(len(circuit_schedule.annotations), 1)
 
     def test_trace_zero_duration_instruction(self):
-        pass
+        """Test that shift phase (zero duration) traces are created correctly"""
+        # initialize a class
+        data = self.get_large_mock_data()
+        circuit_schedule = CircuitSchedule(data)
+        circuit_schedule.preprocess()
+
+        # test a single row schedule
+        schedule_row = ['else', 'sx_2', 'Qubit 2', '2282', '2282', 'shift_phase', 'sx',]
+        circuit_schedule.trace_finite_duration_instruction(schedule_row)
+
+        # each row schedule results in one trace and one annotation
+        self.assertEqual(len(circuit_schedule.traces), 1)
+        self.assertEqual(len(circuit_schedule.annotations), 1)
 
     def test_populate_figure(self):
-        pass
+        """Test for making sure the figure is populated correctly"""
+        go = plotly_module(".graph_objects")
+
+        data = self.get_large_mock_data()
+        for _, test_case in self.test_cases.items():
+            circuit_schedule = CircuitSchedule(data)
+            (
+                (included_channels, filter_readout_channels, filter_barriers), 
+                (n_traces, _, n_instructions)
+                ) = test_case
+
+            circuit_schedule.preprocess(
+                included_channels=included_channels, 
+                filter_awgr=filter_readout_channels, 
+                filter_barriers=filter_barriers
+                )
+
+            fig = circuit_schedule.populate_figure(go.Figure())
+            self.assertEqual(len(fig.data), n_traces)
+            self.assertEqual(len(circuit_schedule.legend), n_instructions)
 
 
 class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
@@ -261,9 +307,4 @@ class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
                 filter_barriers=filter_barriers,
                 )
             self.assertEqual(len(fig.data), n_traces)
-
-            # TODO: remove this
-            fig.write_html("downloads/temp-plot2.html", auto_open=True)
-            time.sleep(0.5)
-
         self.save_plotly_artifact(fig)
