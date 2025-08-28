@@ -13,12 +13,16 @@
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
-from typing import List
+from typing import List, TYPE_CHECKING
 
-import plotly.graph_objects as go
-from plotly.graph_objects import Figure as PlotlyFigure
+from plotly.graph_objects import Figure as PlotlyFigure # TODO: Remove once a proper unit-test is in place (needed for local module call)
 
-from ..utils import CircuitSchedule
+from .utils import plotly_module
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
+
+from ..utils.circuit_schedule import CircuitSchedule
 
 
 def draw_circuit_schedule_timing(
@@ -42,6 +46,7 @@ def draw_circuit_schedule_timing(
     Returns:
         A plotly figure.
     """
+    go = plotly_module(".graph_objects")
     fig = go.Figure(layout=go.Layout(width=width))
 
     # Get the scheduling data

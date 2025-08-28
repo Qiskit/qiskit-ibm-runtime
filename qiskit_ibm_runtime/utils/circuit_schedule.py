@@ -13,36 +13,21 @@
 """Utilities for working with circuit schedule timing information returned from the compiler."""
 
 
-from typing import Tuple, List
+from typing import Tuple, List, TYPE_CHECKING
 from itertools import cycle
+import os.path
 
-import plotly.graph_objects as go
-from plotly.graph_objects import Figure as PlotlyFigure
+from plotly.graph_objects import Figure as PlotlyFigure # TODO: Remove once a proper unit-test is in place (needed for local module call)
+
+from ..visualization.utils import plotly_module
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure as PlotlyFigure
+
+go = plotly_module(".graph_objects")
+colors = plotly_module(".colors").qualitative.Plotly
 
 import numpy as np
-
-
-colors = [
-    "rgb(141,211,199)",
-    "rgb(251,128,114)",
-    "rgb(128,177,211)",
-    "rgb(179,222,105)",
-    "rgb(255,237,111)",
-    "rgb(253,180,98)",
-    "rgb(252,205,229)",
-    "rgb(217,217,217)",
-    "rgb(188,128,189)",
-    "rgb(204,235,197)",
-    "rgb(255,255,179)",
-    "rgb(190,186,218)",
-    "rgb(253,205,172)",
-    "rgb(203,213,232)",
-    "rgb(244,202,228)",
-    "rgb(230,245,201)",
-    "rgb(255,242,174)",
-    "rgb(241,226,204)",
-    "rgb(204,204,204)",
-]
 
 
 READOUT_CHANNEL_PREFIX = "AWGR"
@@ -78,15 +63,21 @@ class CircuitSchedule:
         self.legend = set()
         self.traces = []
 
+    @classmethod
     def _load(self, circuit_schedule: str | List[str]) -> List[str]:
         """
         TODO: Add checks and docs
         """
         if isinstance(circuit_schedule, str):
-            with open(circuit_schedule, encoding="utf-8") as file:
-                data = file.readlines()
+            if os.path.exists(circuit_schedule) and os.path.isfile(circuit_schedule):    
+                with open(circuit_schedule, encoding="utf-8") as file:
+                    data = file.readlines()
+            else:
+                raise FileExistsError(f"{circuit_schedule} is missing.")
         elif isinstance(circuit_schedule, list):
             data = circuit_schedule
+        else:
+            raise TypeError("CircuitSchedule expects a str or a list.")
 
         return data
 
