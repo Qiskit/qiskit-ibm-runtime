@@ -192,6 +192,7 @@ Classes
    Session
    Batch
    IBMBackend
+   RuntimeJob
    RuntimeJobV2
    RuntimeEncoder
    RuntimeDecoder
@@ -203,6 +204,7 @@ import warnings
 
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
+from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
