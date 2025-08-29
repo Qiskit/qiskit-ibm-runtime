@@ -178,11 +178,14 @@ class BaseRuntimeJob(ABC):
                 Otherwise, return a cached version.
 
         Returns:
-            The backend properties used for this job, at the time the job was run,
+            The backend properties used for this job, at the time the job started running,
             or ``None`` if properties are not available.
         """
-
-        return self._backend.properties(refresh, self.creation_date)
+        job_date = self.creation_date
+        job_running_date = self.metrics().get("timestamps", {}).get("running")
+        if job_running_date:
+            job_date = utc_to_local(job_running_date)
+        return self._backend.properties(refresh, job_date)
 
     def error_message(self) -> Optional[str]:
         """Returns the reason if the job failed.
