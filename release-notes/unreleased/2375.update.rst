@@ -8,3 +8,7 @@ a saved account.
 
 When retrieving a backend and an instance is automatically selected, there will be a warning with
 the instance name and plan type. 
+
+It is now also possible to initialize :class:`.QiskitRuntimeService` with just a token. Since the ``ibm_quantum``
+channel name has been removed and both the ``ibm_cloud`` and ``ibm_quantum_platform`` channels point to the same
+API, the ``channel`` parameter is no longer required. ``ibm_quantum_platform`` is the default channel.

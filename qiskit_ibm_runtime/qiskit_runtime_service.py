@@ -393,10 +393,19 @@ class QiskitRuntimeService:
                 if url:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
                 account = AccountManager.get(filename=filename, name=name, channel=channel)
-        elif any([token, url]):
-            # Let's not infer based on these attributes as they may change in the future.
+        elif token:
+            account = Account.create_account(
+                channel="ibm_quantum_platform",
+                token=token,
+                url=url,
+                instance=instance,
+                proxies=proxies,
+                verify=verify_,
+            )
+            logger.warning("Loading new account. A saved account will not be used.")
+        elif url:
             raise ValueError(
-                "'channel' is required if 'token', or 'url' is specified but 'name' is not."
+                "'url' is not valid as a standalone parameter. Try also passing in 'token' or 'name'."
             )
 
         # channel is not defined yet, get it from the AccountManager
