@@ -86,7 +86,10 @@ Bug Fixes
   would instead fetch the unmodified backend object from the service. After the fix, the
   :class:`~.Session` or :class:`~.Batch` backend object is used directly. (`2282 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2282>`__)
 - Fixed an issue in :class:`.IBMBackend` where property changes, such as modifications to ``basis_gates``, persisted even after the backend object was renewed. (`2283 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2283>`__)
-
+- Fixed the serialization of execution spans, to ensure that executions of old versions of qiskit-ibm-runtime will not crash when trying to decode newly 
+  encoded execution spans. However the deserialization with old versions will now return the execution spans in the format of a dictionary, and not in 
+  the form of an :class:`.ExecutionSpans` object. As part of this work, we also removed the ``data_slice_version`` field 
+  from :class:`.TwirledSliceSpan`; twirled slice spans that are aware of the pub shots are now managed by a new class :class:`.TwirledSliceSpanV2`. (`2347 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2347>`__)
 
 Other Notes
 -----------
