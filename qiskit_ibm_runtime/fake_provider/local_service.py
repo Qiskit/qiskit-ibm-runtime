@@ -18,8 +18,7 @@ import math
 import copy
 import logging
 import warnings
-from dataclasses import asdict
-from typing import Callable, Dict, List, Literal, Optional, Union
+from typing import Callable, Dict, List, Literal, Optional
 
 from qiskit.primitives import (
     BackendEstimatorV2,
@@ -34,7 +33,6 @@ from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
 from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
 from .local_runtime_job import LocalRuntimeJob
 from ..ibm_backend import IBMBackend
-from ..runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +146,7 @@ class QiskitRuntimeLocalService:
         self,
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
-        options: Union[RuntimeOptions, Dict],
+        options: Dict,
     ) -> PrimitiveJob:
         """Execute the runtime program.
 
@@ -165,10 +163,7 @@ class QiskitRuntimeLocalService:
             ValueError: If input is invalid.
             NotImplementedError: If using V2 primitives.
         """
-        if isinstance(options, Dict):
-            qrt_options = copy.deepcopy(options)
-        else:
-            qrt_options = asdict(options)
+        qrt_options = copy.deepcopy(options)
 
         backend = qrt_options.pop("backend", None)
 
