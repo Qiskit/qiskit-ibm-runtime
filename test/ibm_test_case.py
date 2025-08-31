@@ -50,7 +50,7 @@ class IBMTestCase(TestCase):
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
         # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit")
 
         # Ensure the artifact directory exists
         os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
