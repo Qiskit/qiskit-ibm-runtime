@@ -730,7 +730,7 @@ class TestExecutionSpansSerialization(IBMTestCase):
     def test_new_runtime_encodes_and_decodes(self):
         """Test the case where both encoding and decoding are done with a
         qiskit-ibm-runtime version that supports `TwirledSliceSpanV2`."""
-        spans = ExecutionSpans([self.slice_span, self.twirl2, self.double_span])
+        spans = ExecutionSpans([self.slice_span, self.twirl1, self.twirl2, self.double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
         self.assertTrue("ExecutionSpans" in encoded)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
@@ -739,7 +739,7 @@ class TestExecutionSpansSerialization(IBMTestCase):
     def test_new_runtime_encodes_but_old_runtime_decodes(self):
         """Test the case where deserialization is done with an old
         qiskit-ibm-runtime version that does not support `TwirledSliceSpanV2`."""
-        spans = ExecutionSpans([self.slice_span, self.twirl2, self.double_span])
+        spans = ExecutionSpans([self.slice_span, self.twirl1, self.twirl2, self.double_span])
         encoded = json.dumps(spans, cls=RuntimeEncoder)
         self.assertTrue("ExecutionSpans" in encoded)
 
@@ -752,8 +752,9 @@ class TestExecutionSpansSerialization(IBMTestCase):
         decoded_spans = decoded["__value__"]["spans"]
         self.assertEqual(type(decoded_spans), list)
         self.assertEqual(decoded_spans[0], self.slice_span)
-        self.assertEqual(decoded_spans[2], self.double_span)
-        self.assertEqual(decoded_spans[1]["__value__"]["start"], self.twirl2.start)
+        self.assertEqual(decoded_spans[1], self.twirl1)
+        self.assertEqual(decoded_spans[3], self.double_span)
+        self.assertEqual(decoded_spans[2]["__value__"]["start"], self.twirl2.start)
 
     def test_old_runtime_encodes_but_new_runtime_decodes(self):
         """Test the case where deserialization is done with a new
