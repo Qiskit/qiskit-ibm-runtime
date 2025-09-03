@@ -254,9 +254,11 @@ def is_fractional_gate(gate: Instruction) -> bool:
     return len(gate.params) > 0 and not isinstance(gate, exclude_list)
 
 
-def get_iam_api_url(cloud_url: str) -> str:
+def get_iam_api_url(cloud_url: str, private_endpoint: bool = False) -> str:
     """Computes the IAM API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
+    if private_endpoint:
+        return f"{parsed_url.scheme}://private.iam.{parsed_url.hostname}"
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
