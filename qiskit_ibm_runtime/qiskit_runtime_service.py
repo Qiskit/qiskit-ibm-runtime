@@ -923,7 +923,7 @@ class QiskitRuntimeService:
             private=qrt_options.private,
         )
 
-    def job(self, job_id: str) -> Union[RuntimeJobV2]:
+    def job(self, job_id: str) -> RuntimeJobV2:
         """Retrieve a runtime job.
 
         Args:

@@ -1,0 +1,2 @@
+Since support for streaming results was removed in ``0.32.0``, the deprecated (``0.38.0``) environment option
+``callback`` as well as the ``BaseRuntimeJob`` parameters ``client_params`` and ``user_callback`` have been removed.
