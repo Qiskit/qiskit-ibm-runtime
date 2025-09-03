@@ -23,7 +23,10 @@ class DrawCircuitScheduleBase(IBMTestCase):
 
     def setUp(self) -> None:
         """Set up."""
-        self.circuit_schedule_data = FakeCircuitScheduleInputData.data
+        fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
+        self.circuit_schedule_data = fake_sampler_pub_result.metadata["scheduler_timing_info"][
+            "timing"
+        ].split("\n")
 
         # test cases structure:
         #   --------------------   Input Arguments   ------------------       ---  Expected Results  ---
