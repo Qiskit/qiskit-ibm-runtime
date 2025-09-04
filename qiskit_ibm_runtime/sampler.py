@@ -114,10 +114,14 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """Validate that primitive inputs (options) are valid
 
         Raises:
-            ValidationError: if validation fails.
+            ValueError: if validation fails.
         """
-
-        pass
+        if (rep_delay := options.get("execution", {}).get("rep_delay")) is not None:
+            rep_delay_range = self._backend.configuration().rep_delay_range
+            if rep_delay < rep_delay_range[0] or rep_delay > rep_delay_range[1]:
+                raise ValueError(
+                    f"rep_delay {rep_delay} is not in the backend rep_delay_range {rep_delay_range}"
+                )
 
     @classmethod
     def _program_id(cls) -> str:
