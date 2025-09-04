@@ -167,7 +167,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "a coupling map is required."
             )
 
-        if (rep_delay := options.get("execution", {}).get("rep_delay")) is not None:
+        if isinstance(rep_delay := options.get("execution", {}).get("rep_delay"), (int, float)):
             rep_delay_range = self._backend.configuration().rep_delay_range
             if rep_delay < rep_delay_range[0] or rep_delay > rep_delay_range[1]:
                 raise ValueError(

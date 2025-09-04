@@ -116,7 +116,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValueError: if validation fails.
         """
-        if (rep_delay := options.get("execution", {}).get("rep_delay")) is not None:
+        if isinstance(rep_delay := options.get("execution", {}).get("rep_delay"), (int, float)):
             rep_delay_range = self._backend.configuration().rep_delay_range
             if rep_delay < rep_delay_range[0] or rep_delay > rep_delay_range[1]:
                 raise ValueError(
