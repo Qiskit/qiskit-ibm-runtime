@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Fake Paris device (20 qubit).
+Fake Paris device (27 qubit).
 """
 
 import os

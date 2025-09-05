@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Fake Cambridge device (20 qubit).
+Fake Cambridge device (28 qubit).
 """
 
 import os
