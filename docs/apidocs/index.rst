@@ -17,3 +17,4 @@
    execution_span
    debug_tools
    visualization
+   models
