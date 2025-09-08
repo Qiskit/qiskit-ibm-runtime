@@ -876,11 +876,9 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        backend_name = (
-            options["backend"] if isinstance(options["backend"], str) else options["backend"].name
-        )
-
         backend = options["backend"]
+        if isinstance(backend, str):
+            backend = self.backend(name=backend)
 
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
@@ -892,7 +890,7 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.program_run(
                 program_id=program_id,
-                backend_name=backend_name,
+                backend_name=backend.name,
                 params=inputs,
                 image=options.get("image"),
                 log_level=options.get("log_level"),
@@ -909,7 +907,7 @@ class QiskitRuntimeService:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if response["backend"] and response["backend"] != backend_name:
+        if response["backend"] and response["backend"] != backend.name:
             backend = self.backend(name=response["backend"])
 
         return RuntimeJobV2(
