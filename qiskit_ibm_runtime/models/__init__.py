@@ -26,9 +26,13 @@ Classes
    :toctree: ../stubs/
 
    BackendConfiguration
-   BackendStatus
+   QasmBackendConfiguration
    BackendProperties
-
+   BackendStatus
+   UchannelLO
+   GateConfig
+   GateProperties
+   Nduv
 
 """
 
