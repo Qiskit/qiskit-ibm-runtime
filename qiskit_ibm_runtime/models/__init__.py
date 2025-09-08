@@ -10,7 +10,27 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Module for Backend Objects."""
+"""
+=======================================================
+Backend Objects (:mod:`qiskit_ibm_runtime.models`)
+=======================================================
+
+.. currentmodule:: qiskit_ibm_runtime.models
+
+Qiskit schema-conformant objects used by the backends and providers.
+
+Classes
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   BackendConfiguration
+   BackendStatus
+   BackendProperties
+
+
+"""
 
 from .backend_configuration import (
     BackendConfiguration,
