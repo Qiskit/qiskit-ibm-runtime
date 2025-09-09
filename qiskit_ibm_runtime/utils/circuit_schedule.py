@@ -24,10 +24,10 @@ go = plotly_module(".graph_objects")
 colors = plotly_module(".colors").qualitative.Plotly
 
 
-READOUT_CHANNEL_PREFIX = "AWGR" # Arbitrary Wave Generator Readout (AWGR) is used for 
-                                # readout channels communication for measuring qubits, 
-                                # as opposed to drive channels which are for driving the 
-                                # qubits.
+READOUT_CHANNEL_PREFIX = "AWGR"  # Arbitrary Wave Generator Readout (AWGR) is used for
+# readout channels communication for measuring qubits,
+# as opposed to drive channels which are for driving the
+# qubits.
 BARRIER = "barrier"
 
 
@@ -48,16 +48,16 @@ class CircuitSchedule:
         Args:
             circuit_schedule: A schedule data as a list of strings where each string corresponds to
             a single instruction schedule, or a path to a file containing the schedule data.
-        
+
         Attributes:
             channels: A list of channels to be plotted (the rows in the plot).
             type_to_idx: A mapping from data type names to indices of the corresponding data in the
             circuit_scheduling Numpy array
-            circuit_scheduling: A Numpy array container for holding and manipulating the data for 
+            circuit_scheduling: A Numpy array container for holding and manipulating the data for
             plotting.
-            instruction_set: A set of all the different instructions (gates + communication 
+            instruction_set: A set of all the different instructions (gates + communication
             instructions) within the circuit scheduling.
-            max_time: The duration of the scheduled circuit in cycles (a cycle is a global unit 
+            max_time: The duration of the scheduled circuit in cycles (a cycle is a global unit
             which may take a different amount of seconds on different backends).
             color_map: A color map for mapping instructions to colors.
             annotations: A list that contains annotations for traces.
