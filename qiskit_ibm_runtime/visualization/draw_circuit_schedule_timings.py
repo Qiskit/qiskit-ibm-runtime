@@ -80,7 +80,7 @@ def draw_circuit_schedule_timing(
     fig.update_layout(
         xaxis_type="linear",
         xaxis_title="Cycles",  # TODO: convert to time if requested
-        yaxis_title="Channel",
+        yaxis_title="Channels",
         height=200 + 60 * len(schedule.channels),
     )
     fig.update_layout(
