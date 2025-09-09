@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Fake Guadalupe device (5 qubit).
+Fake Guadalupe device (16 qubit).
 """
 
 import os
