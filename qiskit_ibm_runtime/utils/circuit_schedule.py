@@ -24,7 +24,10 @@ go = plotly_module(".graph_objects")
 colors = plotly_module(".colors").qualitative.Plotly
 
 
-READOUT_CHANNEL_PREFIX = "AWGR"
+READOUT_CHANNEL_PREFIX = "AWGR" # Arbitrary Wave Generator Readout (AWGR) is used for 
+                                # readout channels communication for measuring qubits, 
+                                # as opposed to drive channels which are for driving the 
+                                # qubits.
 BARRIER = "barrier"
 
 
