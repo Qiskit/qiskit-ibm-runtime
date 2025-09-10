@@ -237,15 +237,16 @@ class QiskitRuntimeService:
                 instance.get("plan") for instance in self._backend_instance_groups
             }
 
-            tags = ", ".join(self._tags) if self._tags else "None"  # type: ignore
-            region = self._region if self._region else "us-east, eu-de"
-            plans_preference = (
-                f", plans_preference: {", ".join(self._plans_preference)})"  # type: ignore
-                if self._plans_preference
-                else f") and available plans: ({", ".join(instance_plan_names)})"
-            )
+            tags_str = ", ".join(self._tags) if self._tags else "None" 
+            region_str = self._region if self._region else "us-east, eu-de"
+            if self._plans_preference:
+                joined_preferences: str = ", ".join(self._plans_preference)
+                plans_preference_str = f", plans_preference: {joined_preferences})"
+            else:
+                joined_plan_names = ", ".join(instance_plan_names)
+                plans_preference_str = f") and available plans: ({joined_plan_names})"
 
-            filters = f"(tags: {tags}, " f"region: {region}" f"{plans_preference}"
+            filters = f"(tags: {tags_str}, " f"region: {region_str}" f"{plans_preference_str}"
 
             logger.warning(
                 "Instance was not set at service instantiation. %s"
