@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeManilaV2,
     FakeSherbrooke,
     FakeFractionalBackend,
-    FakeMidcircuit,
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
@@ -37,6 +36,7 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import create_faulty_backend
+from .mock.fake_backends import FakeMidcircuit
 
 
 @ddt

@@ -37,17 +37,10 @@ from qiskit.transpiler.target import InstructionProperties, Target
 
 from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
-from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 
 logger = logging.getLogger(__name__)
-
-# Supported additional instructions (non-standard in qiskit but implemented in qiskit-ibm-runtime).
-# These are grouped by categories (measure, reset...).
-# If a corresponding gate constructor doesn't exist in qiskit-ibm-runtime,
-# the category isn't supported.
-ADDITIONAL_INSTR_MAPPING = {"measure": MidCircuitMeasure}
 
 
 def convert_to_target(  # type: ignore[no-untyped-def]
@@ -180,9 +173,9 @@ def convert_to_target(  # type: ignore[no-untyped-def]
         name = signature.get("name")
         num_qubits = signature.get("num_qubits")
         num_clbits = signature.get("num_clbits")
-        num_params = signature.get("num_params")
+        param_names = signature.get("parameters")
         # Add generic parameter name
-        params = [Parameter("x_" + str(i)) for i in range(num_params)]
+        params = [Parameter(name) for name in param_names]
 
         instruction = Instruction(
             name=name, num_qubits=num_qubits, num_clbits=num_clbits, params=params
