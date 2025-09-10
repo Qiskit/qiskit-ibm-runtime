@@ -13,8 +13,10 @@
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
-from typing import List, Union
-from plotly.graph_objects import Figure as PlotlyFigure  # TODO: replace with TYPE_CHECkING
+from typing import List, Union, TYPE_CHECkING
+
+if TYPE_CHECkING:
+    from plotly.graph_objects import Figure as PlotlyFigure
 from ..utils.circuit_schedule import CircuitSchedule
 from .utils import plotly_module
 
