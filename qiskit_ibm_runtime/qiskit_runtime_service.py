@@ -240,7 +240,7 @@ class QiskitRuntimeService:
             tags = ", ".join(self._tags) if self._tags else "None"  # type: ignore
             region = self._region if self._region else "us-east, eu-de"
             plans_preference = (
-                f", plans_preference: {", ".join(self._plans_preference)}"  # type: ignore
+                f", plans_preference: {", ".join(self._plans_preference)})"  # type: ignore
                 if self._plans_preference
                 else f") and available plans: ({", ".join(instance_plan_names)})"
             )
