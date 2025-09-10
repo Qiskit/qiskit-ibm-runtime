@@ -13,14 +13,14 @@
 """Utilities for working with circuit schedule timing information returned from the compiler."""
 
 from itertools import cycle
-from typing import Tuple, List, Set, Dict, Union, TYPE_CHECkING
+from typing import Tuple, List, Set, Dict, Union, TYPE_CHECKING
 import os.path
 import numpy as np
+from ..visualization.utils import plotly_module
 
-if TYPE_CHECkING:
+if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure, Scatter
 
-from ..visualization.utils import plotly_module
 
 go = plotly_module(".graph_objects")
 colors = plotly_module(".colors").qualitative.Plotly
