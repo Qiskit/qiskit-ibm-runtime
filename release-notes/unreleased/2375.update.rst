@@ -1,13 +1,13 @@
 When :class:`.QiskitRuntimeService` is initialized without an instance 
 and there is no saved account instance, there will now be a warning detailing 
-the current filters (``tags``, ``region``, ``plans_preference``) and available instances. Additionally, 
-by default, only free and trial pricing plan accounts will be available. 
-Paid or subscription instances **will not** be available unless ``instance`` or
-``plans_preference`` are explicitly specified. There will also be warning messages to tell users whether or not they're using
-a saved account.
+the current filters (``tags``, ``region``, ``plans_preference``) and available instances. If ``plans_preference``
+is not set, free and trial plan instances will be prioritized over paid instances. 
 
-When retrieving a backend and an instance is automatically selected, there will be a warning with
-the instance name and plan type. 
+Additional warnings have also been added to make the current active insance more clear:
+
+    - Warning messages to tell users whether they're using a saved account or a new account.
+    - When retrieving a backend and an instance is automatically selected, there will be a warning with
+      the instance name and plan type. 
 
 It is now also possible to initialize :class:`.QiskitRuntimeService` with just a token. Since the ``ibm_quantum``
 channel name has been removed and both the ``ibm_cloud`` and ``ibm_quantum_platform`` channels point to the same

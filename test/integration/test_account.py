@@ -80,7 +80,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             )
             self.assertTrue(service)
             message = logs.output[1]
-            self.assertIn("free and trial", message)
+            self.assertIn("Free and trial", message)
 
         # no defualt instance and plans_preference
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
@@ -92,7 +92,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             )
             self.assertTrue(service)
             message = logs.output[1]
-            self.assertNotIn("free and trial", message)
+            self.assertNotIn("Free and trial", message)
             self.assertIn("available account instances are", message)
 
         # no defualt instance and region
@@ -106,7 +106,7 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
             )
             self.assertTrue(service)
             message = logs.output[1]
-            self.assertIn("free and trial", message)
+            self.assertIn("Free and trial", message)
             self.assertIn(f"region: {region}", message)
 
     def test_backends_default_instance(self):

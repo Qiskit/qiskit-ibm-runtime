@@ -108,11 +108,10 @@ class QiskitRuntimeService:
         The minimum required information for service authentication to a non-local channel is the
         ``token``. The ``local`` channel doesn't require authentication.
         For non-local channels, it is recommended to always provide the relevant ``instance``
-        to minimize API calls. If an ``instance`` is not defined, the service will fetch all free
-        or trial instances accessible within the
-        account, filtered by ``region``, ``plans_preference``, and ``tags``. Paid or subscription
-        instances **will not**  be available unless ``instance`` or ``plans_preference``
-        are explicitly specified.
+        to minimize API calls. If an ``instance`` is not defined, the service will fetch all
+        instances accessible within the account, filtered by ``region``, ``plans_preference``,
+        and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
+        over paid instances.
 
         The service will attempt to load an account from file if (a) no explicit ``token``
         was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
@@ -240,25 +239,25 @@ class QiskitRuntimeService:
 
             tags = ", ".join(self._tags) if self._tags else "None"  # type: ignore
             region = self._region if self._region else "us-east, eu-de"
-            plans = (
-                ", ".join(self._plans_preference)
+            plans_preference = (
+                f", plans_preference: {", ".join(self._plans_preference)}"  # type: ignore
                 if self._plans_preference
-                else ", ".join(instance_plan_names)
+                else f") and available plans: ({", ".join(instance_plan_names)})"
             )
 
-            filters = f"(tags: {tags}, " f"region: {region}, " f"plans_preference: {plans})"
+            filters = f"(tags: {tags}, " f"region: {region}" f"{plans_preference}"
 
             logger.warning(
                 "Instance was not set at service instantiation. %s"
                 "Based on the following filters, %s, "
                 "the available account instances are: %s. "
-                "If you need a specific instance or premium instance, set it explicitly either by "
+                "If you need a specific instance set it explicitly either by "
                 "using a saved account with a saved default instance or passing it "
                 "in directly to QiskitRuntimeService().",
                 (
                     ""
                     if self._plans_preference
-                    else "Only free and trial plan accounts are available. "
+                    else "Free and trial plan instances will be prioritized. "
                 ),
                 filters,
                 ", ".join(instance_names),
@@ -325,10 +324,12 @@ class QiskitRuntimeService:
                 filtered_groups, key=lambda d: plans.index(d["plan"])
             )
         else:
-            # if plans_preference is not set, only 'free' and 'trial' plans are included
-            self._backend_instance_groups = [
-                d for d in self._backend_instance_groups if d["pricing_type"] in ["free", "trial"]
-            ]
+            # if plans_preference is not set, prioritize free and trial plans
+            ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription"]
+            self._backend_instance_groups = sorted(
+                self._backend_instance_groups,
+                key=lambda d: ordered_pricing_types.index(d["pricing_type"]),
+            )
 
         if not self._backend_instance_groups:
             error_string = ""
@@ -338,8 +339,6 @@ class QiskitRuntimeService:
                 error_string += f"region: {self._region}, "
             if self._plans_preference:
                 error_string += f"plan: {self._plans_preference}"
-            else:
-                error_string += "plan pricing type: free or trial"
             raise IBMInputValueError(
                 "No matching instances found for the following filters:",
                 f"{error_string}.",
@@ -388,7 +387,9 @@ class QiskitRuntimeService:
                     proxies=proxies,
                     verify=verify_,
                 )
-                logger.warning("Loading new account. A saved account will not be used.")
+                logger.warning(
+                    "Loading account with the given token. A saved account will not be used."
+                )
             else:
                 if url:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
@@ -402,7 +403,9 @@ class QiskitRuntimeService:
                 proxies=proxies,
                 verify=verify_,
             )
-            logger.warning("Loading new account. A saved account will not be used.")
+            logger.warning(
+                "Loading account with the given token. A saved account will not be used."
+            )
         elif url:
             raise ValueError(
                 "'url' is not valid as a standalone parameter. Try also passing in 'token' or 'name'."
@@ -574,16 +577,25 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
-            for inst_details in self._backend_instance_groups:
-                if inst == inst_details["crn"]:
-                    logger.warning(
-                        "Loading instance: %s, plan: %s",
-                        inst_details["name"],
-                        inst_details["plan"],
-                    )
+            else:
+                for inst_details in self._backend_instance_groups:
+                    if inst == inst_details["crn"]:
+                        logger.warning(
+                            "Loading instance: %s, plan: %s",
+                            inst_details["name"],
+                            inst_details["plan"],
+                        )
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
+                if name:
+                    for inst_details in self._backend_instance_groups:
+                        if inst == inst_details["crn"]:
+                            logger.warning(
+                                "Using instance: %s, plan: %s",
+                                inst_details["name"],
+                                inst_details["plan"],
+                            )
                 unique_backends.add(backend_name)
                 self._get_or_create_cloud_client(inst)
                 if backend := self._create_backend_obj(
