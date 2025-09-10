@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Fake Armonk device (5 qubit).
+Fake Armonk device (1 qubit).
 """
 
 import os
