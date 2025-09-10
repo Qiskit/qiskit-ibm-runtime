@@ -237,7 +237,7 @@ class QiskitRuntimeService:
                 instance.get("plan") for instance in self._backend_instance_groups
             }
 
-            tags_str = ", ".join(self._tags) if self._tags else "None" 
+            tags_str = ", ".join(self._tags) if self._tags else "None"
             region_str = self._region if self._region else "us-east, eu-de"
             if self._plans_preference:
                 joined_preferences: str = ", ".join(self._plans_preference)
