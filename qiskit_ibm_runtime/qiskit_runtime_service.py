@@ -947,7 +947,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._active_api_client.job_get(job_id, exclude_params=False)
+            response = self._active_api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code != 404:
                 raise IBMRuntimeError(f"Failed to retrieve job: {ex}") from None
@@ -956,7 +956,7 @@ class QiskitRuntimeService:
                 if instance is not None and instance != self._active_api_client._instance:
                     try:
                         self._active_api_client = client
-                        response = self._active_api_client.job_get(job_id, exclude_params=False)
+                        response = self._active_api_client.job_get(job_id, exclude_params=True)
                         break
                     except RequestsApiError:
                         continue
