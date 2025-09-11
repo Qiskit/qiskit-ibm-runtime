@@ -250,7 +250,7 @@ class QiskitRuntimeService:
 
             logger.warning(
                 "Instance was not set at service instantiation. %s"
-                "Based on the following filters, %s, "
+                "Based on the following filters: %s, "
                 "the available account instances are: %s. "
                 "If you need a specific instance set it explicitly either by "
                 "using a saved account with a saved default instance or passing it "
