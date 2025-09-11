@@ -244,7 +244,7 @@ class QiskitRuntimeService:
                 plans_preference_str = f", plans_preference: {joined_preferences})"
             else:
                 joined_plan_names = ", ".join(instance_plan_names)
-                plans_preference_str = f") , and available plans: ({joined_plan_names})"
+                plans_preference_str = f"), and available plans: ({joined_plan_names})"
 
             filters = f"(tags: {tags_str}, " f"region: {region_str}" f"{plans_preference_str}"
 
