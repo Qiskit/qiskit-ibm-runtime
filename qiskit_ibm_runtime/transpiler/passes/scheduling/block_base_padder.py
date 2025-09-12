@@ -199,12 +199,6 @@ class BlockBasePadder(TransformationPass):
 
         new_dag.name = dag.name
         new_dag.metadata = dag.metadata
-        new_dag.unit = self.property_set["time_unit"] or "dt"
-        if new_dag.unit != "dt":
-            raise TranspilerError(
-                'All blocks must have time units of "dt". '
-                "Please run TimeUnitConversion pass prior to padding."
-            )
 
         new_dag.global_phase = dag.global_phase
         return new_dag
@@ -370,7 +364,6 @@ class BlockBasePadder(TransformationPass):
         prev_block_duration = self._block_duration
         prev_block_idx = self._current_block_idx
         self._terminate_block(self._block_duration, self._current_block_idx)
-        new_block_dag.duration = prev_block_duration
 
         # Edge-case: Add a barrier if the final node is a fast-path
         if self._prev_node in self._fast_path_nodes:
