@@ -57,7 +57,7 @@ class Session:
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit_ibm_runtime import Session, SamplerV2 as Sampler
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, SamplerV2 as Sampler
 
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False)
