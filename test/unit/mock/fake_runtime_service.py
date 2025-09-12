@@ -41,6 +41,9 @@ class FakeRuntimeService(QiskitRuntimeService):
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             "tags": ["services"],
+            "name": "test-instance",
+            "pricing_type": "free",
+            "plan": "internal",
         }
     ]
 
@@ -48,6 +51,9 @@ class FakeRuntimeService(QiskitRuntimeService):
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             "tags": ["services"],
+            "name": "test-instance",
+            "pricing_type": "free",
+            "plan": "internal",
         }
     ]
 
@@ -110,10 +116,12 @@ class FakeRuntimeService(QiskitRuntimeService):
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
+                    "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst.get("plan"),
                     "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst.get("tags"),
+                    "pricing_type": inst["pricing_type"],
                 }
                 for inst in self._all_instances
             ]
