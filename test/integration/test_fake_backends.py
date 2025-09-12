@@ -162,7 +162,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(service)
-        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
+        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[1])
 
         # to verify the refresh can't be done
         wrong_backend = FakeSherbrooke()
