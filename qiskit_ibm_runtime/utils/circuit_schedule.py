@@ -99,7 +99,7 @@ class CircuitSchedule:
                 with open(circuit_schedule, encoding="utf-8") as file:
                     data = file.readlines()
             else:
-                raise FileExistsError(f"{circuit_schedule} is missing.")
+                raise FileNotFoundError(f"{circuit_schedule} is missing.")
         elif isinstance(circuit_schedule, list):
             data = circuit_schedule
         else:
