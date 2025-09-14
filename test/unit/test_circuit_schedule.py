@@ -12,6 +12,7 @@
 
 """Unit tests for the circuit schedule class."""
 
+import ddt
 import numpy as np
 from qiskit_ibm_runtime.visualization.utils import plotly_module
 from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
@@ -30,20 +31,6 @@ class CircuitScheduleBase(IBMTestCase):
         ].split("\n")
         self.small_data_len = 5
 
-        # test cases structure:
-        #   --------------------   Input Arguments   ------------------
-        # ((included_channels, filter_readout_channels, filter_barriers),
-        #
-        # ----------    Expected Results    ---------
-        # (n_traces, n_channels, n_unique_instructions))
-        self.test_cases = {
-            1: ((None, False, False), (104, 14, 7)),
-            2: ((["AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"], False, False), (34, 5, 7)),
-            3: ((["AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"], True, False), (32, 4, 7)),
-            4: ((["AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"], False, True), (26, 4, 6)),
-            5: ((["AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"], True, True), (24, 4, 6)),
-        }
-
     def get_large_mock_data(self):
         """Return the whole data object"""
         return self.circuit_schedule_data
@@ -53,6 +40,7 @@ class CircuitScheduleBase(IBMTestCase):
         return self.circuit_schedule_data[: self.small_data_len]
 
 
+@ddt.ddt
 class TestCircuitSchedule(CircuitScheduleBase):
     """Tests for CircuitSchedule class."""
 
@@ -61,7 +49,6 @@ class TestCircuitSchedule(CircuitScheduleBase):
         data = self.get_small_mock_data()
         loaded_data = CircuitSchedule._load(data)
         self.assertEqual(data, loaded_data)
-        # TODO: should we also add a test for file loading?
 
     def test__parse(self):
         """Test circuit schedule data parsing"""
@@ -90,23 +77,36 @@ class TestCircuitSchedule(CircuitScheduleBase):
         for idx, name in enumerate(data_names):
             self.assertEqual(circuit_schedule.type_to_idx[name], idx)
 
-    def test_preprocess(self):
+    @ddt.data(
+        (None, False, False, 14, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 5, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 4, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 5, 6),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 4, 6),
+    )
+    @ddt.unpack
+    def test_preprocess(
+        self,
+        included_channels,
+        filter_readout_channels,
+        filter_barriers,
+        n_channels,
+        n_instructions,
+    ):
         """Test for correct circuit schedule preprocessing"""
         data = self.get_large_mock_data()
         circuit_schedule = CircuitSchedule(data)
 
-        for _, test_case in self.test_cases.items():
-            (
-                (included_channels, filter_readout_channels, filter_barriers),
-                (_, n_channels, n_instructions),
-            ) = test_case
-            circuit_schedule.preprocess(
-                included_channels=included_channels,
-                filter_awgr=filter_readout_channels,
-                filter_barriers=filter_barriers,
-            )
-            self.assertEqual(len(circuit_schedule.channels), n_channels)
-            self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
+        if included_channels is not None:
+            included_channels = list(included_channels)
+
+        circuit_schedule.preprocess(
+            included_channels=included_channels,
+            filter_awgr=filter_readout_channels,
+            filter_barriers=filter_barriers,
+        )
+        self.assertEqual(len(circuit_schedule.channels), n_channels)
+        self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
 
     def test_get_trace_finite_duration_y_shift(self):
         """Test that x, y, and z shifts for finite duration traces are set correctly"""
@@ -172,24 +172,32 @@ class TestCircuitSchedule(CircuitScheduleBase):
         self.assertEqual(len(circuit_schedule.traces), 1)
         self.assertEqual(len(circuit_schedule.annotations), 1)
 
-    def test_populate_figure(self):
+    @ddt.data(
+        (None, False, False, 104, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 34, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 32, 7),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 26, 6),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 24, 6),
+    )
+    @ddt.unpack
+    def test_populate_figure(
+        self, included_channels, filter_readout_channels, filter_barriers, n_traces, n_instructions
+    ):
         """Test for making sure the figure is populated correctly"""
         go = plotly_module(".graph_objects")
 
         data = self.get_large_mock_data()
-        for _, test_case in self.test_cases.items():
-            circuit_schedule = CircuitSchedule(data)
-            (
-                (included_channels, filter_readout_channels, filter_barriers),
-                (n_traces, _, n_instructions),
-            ) = test_case
+        circuit_schedule = CircuitSchedule(data)
 
-            circuit_schedule.preprocess(
-                included_channels=included_channels,
-                filter_awgr=filter_readout_channels,
-                filter_barriers=filter_barriers,
-            )
+        if included_channels is not None:
+            included_channels = list(included_channels)
 
-            fig = circuit_schedule.populate_figure(go.Figure())
-            self.assertEqual(len(fig.data), n_traces)
-            self.assertEqual(len(circuit_schedule.legend), n_instructions)
+        circuit_schedule.preprocess(
+            included_channels=included_channels,
+            filter_awgr=filter_readout_channels,
+            filter_barriers=filter_barriers,
+        )
+
+        fig = circuit_schedule.populate_figure(go.Figure())
+        self.assertEqual(len(fig.data), n_traces)
+        self.assertEqual(len(circuit_schedule.legend), n_instructions)

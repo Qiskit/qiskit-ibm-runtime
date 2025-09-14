@@ -12,7 +12,7 @@
 
 """Unit tests for the circuit schedule timing visualization."""
 
-
+import ddt
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
 from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
@@ -28,33 +28,36 @@ class DrawCircuitScheduleBase(IBMTestCase):
             "timing"
         ].split("\n")
 
-        # test cases structure:
-        #   --------------------   Input Arguments   ------------------       ---  Expected Results  ---
-        # ((included_channels, filter_readout_channels, filter_barriers)     ,     (n_traces))
-        self.test_cases = {
-            1: ((None, False, False), (104)),
-        }
-
     def get_mock_data(self):
         """Return the data object"""
         return self.circuit_schedule_data
 
 
+@ddt.ddt
 class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
     """Tests for the ``draw_circuit_schedule_timing`` function."""
 
-    def test_plotting(self):
+    @ddt.data(
+        (None, False, False, 104),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 26),
+    )
+    @ddt.unpack
+    def test_plotting(
+        self, included_channels, filter_readout_channels, filter_barriers, expected_n_traces
+    ):
         r"""
         Test to make sure that it produces the right figure.
         """
         circuit_schedule = self.get_mock_data()
-        for _, test_case in self.test_cases.items():
-            ((included_channels, filter_readout_channels, filter_barriers), (n_traces)) = test_case
-            fig = draw_circuit_schedule_timing(
-                circuit_schedule=circuit_schedule,
-                included_channels=included_channels,
-                filter_readout_channels=filter_readout_channels,
-                filter_barriers=filter_barriers,
-            )
-            self.assertEqual(len(fig.data), n_traces)
+
+        if included_channels is not None:
+            included_channels = list(included_channels)
+
+        fig = draw_circuit_schedule_timing(
+            circuit_schedule=circuit_schedule,
+            included_channels=included_channels,
+            filter_readout_channels=filter_readout_channels,
+            filter_barriers=filter_barriers,
+        )
+        self.assertEqual(len(fig.data), expected_n_traces)
         self.save_plotly_artifact(fig)
