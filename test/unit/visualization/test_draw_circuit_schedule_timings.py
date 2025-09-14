@@ -24,9 +24,9 @@ class DrawCircuitScheduleBase(IBMTestCase):
     def setUp(self) -> None:
         """Set up."""
         fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
-        self.circuit_schedule_data = fake_sampler_pub_result.metadata["scheduler_timing_info"][
-            "timing"
-        ].split("\n")
+        self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
+            "scheduler_timing_info"
+        ]["timing"].split("\n")
 
     def get_mock_data(self):
         """Return the data object"""

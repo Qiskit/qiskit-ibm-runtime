@@ -26,9 +26,9 @@ class CircuitScheduleBase(IBMTestCase):
     def setUp(self) -> None:
         """Set up."""
         fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
-        self.circuit_schedule_data = fake_sampler_pub_result.metadata["scheduler_timing_info"][
-            "timing"
-        ].split("\n")
+        self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
+            "scheduler_timing_info"
+        ]["timing"].split("\n")
         self.small_data_len = 5
 
     def get_large_mock_data(self):
