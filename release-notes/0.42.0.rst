@@ -9,7 +9,7 @@ Upgrade Notes
   the current filters (``tags``, ``region``, ``plans_preference``) and available instances. If ``plans_preference``
   is not set, free and trial plan instances will be prioritized over paid instances. 
 
-  Additional warnings have also been added to make the current active insance more clear:
+  Additional warnings have also been added to make the current active instance more clear:
 
       - Warning messages to tell users whether they're using a saved account or a new account.
       - When retrieving a backend and an instance is automatically selected, there will be a warning with
