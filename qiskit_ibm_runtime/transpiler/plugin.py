@@ -154,3 +154,47 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
             # Apply this pass after SU4 is translated.
             post_passes.append(FoldRzzAngle())
         return PassManager(pre_passes) + translator_pm + PassManager(post_passes)
+
+
+class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
+    """A translation stage plugin for targeting Qiskit circuits
+    to IBM Quantum systems with both dynamic circuits and fractional gate support.
+    """
+
+    def pass_manager(
+        self,
+        pass_manager_config: PassManagerConfig,
+        optimization_level: Optional[int] = None,
+    ) -> PassManager:
+        """Build IBMTranslationPlugin PassManager."""
+
+        if _TERRA_VERSION[0] == 1:
+            legacy_options = {"backend_props": pass_manager_config.backend_properties}
+        else:
+            legacy_options = {}
+
+        translator_pm = common.generate_translation_passmanager(
+            target=pass_manager_config.target,
+            basis_gates=pass_manager_config.basis_gates,
+            approximation_degree=pass_manager_config.approximation_degree,
+            coupling_map=pass_manager_config.coupling_map,
+            unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
+            unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
+            hls_config=pass_manager_config.hls_config,
+            **legacy_options,
+        )
+
+        instruction_durations = pass_manager_config.instruction_durations
+        pre_passes = []
+        post_passes = []
+        target = pass_manager_config.target or pass_manager_config.basis_gates
+        if instruction_durations and not "id" in target:
+            pre_passes.append(ConvertIdToDelay(instruction_durations))
+        if "rzz" in target:
+            # Apply this pass after SU4 is translated.
+            post_passes.append(FoldRzzAngle())
+
+        if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
+            # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
+            pre_passes += [convert_pass()]  # pylint: disable=not-callable
+        return PassManager(pre_passes) + translator_pm + PassManager(post_passes)
