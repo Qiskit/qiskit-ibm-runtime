@@ -8,7 +8,7 @@ New Features
 
 -  Advanced resilience options can now be set under
    ``options.resilience``. See
-   `qiskit_ibm_runtime.options.ResilienceOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.27/options-resilience-options>`__
+   ``qiskit_ibm_runtime.options.ResilienceOptions``
    for all available options.
 
 -  You can now specify a pair of result decoders for the
