@@ -56,7 +56,7 @@ class IBMTestCase(TestCase):
             "ignore",
             category=DeprecationWarning,
             message=r"The property "
-            "``qiskit\.dagcircuit\.dagcircuit\.DAGCircuit\.(unit|duration)`` is deprecated",
+            r"``qiskit\.dagcircuit\.dagcircuit\.DAGCircuit\.(unit|duration)`` is deprecated",
         )
 
         # fail test on deprecation warnings from qiskit
