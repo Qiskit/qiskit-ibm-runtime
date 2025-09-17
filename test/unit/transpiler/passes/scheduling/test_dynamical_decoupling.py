@@ -12,13 +12,13 @@
 
 """Test dynamical decoupling insertion pass."""
 
+from ddt import ddt, data, unpack
 import numpy as np
 from numpy import pi
 
-from ddt import ddt, data, unpack
 from qiskit.circuit import QuantumCircuit, Delay, Parameter
 from qiskit.circuit.library import XGate, YGate, RXGate, UGate
-from qiskit.circuit.library import Measure, Reset, CXGate, RZGate, HGate
+from qiskit.circuit.library import Measure, Reset, CXGate, HGate
 from qiskit.quantum_info import Operator
 from qiskit.transpiler import Target, InstructionProperties
 from qiskit.transpiler.passmanager import PassManager

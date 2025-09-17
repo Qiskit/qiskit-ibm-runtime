@@ -3203,8 +3203,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    @data(True, False)
-    def test_transpile_mock_backend(self, use_target):
+    def test_transpile_mock_backend(self):
         """Test scheduling works with transpilation."""
         backend = FakeJakartaV2()
 
