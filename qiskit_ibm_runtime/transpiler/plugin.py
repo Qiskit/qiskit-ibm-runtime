@@ -28,6 +28,8 @@ from qiskit_ibm_runtime.transpiler.passes.basis import (
     FoldRzzAngle,
 )
 
+from ..utils.deprecation import issue_deprecation_msg
+
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
@@ -70,8 +72,17 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
+    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
     to IBM Quantum systems."""
+
+    def __new__(cls, *args, **kwargs):
+        issue_deprecation_msg(
+            msg="Since backends now support running jobs that contain both "
+            "fractional gates and dynamic circuit, IBMDynamicTranslationPlugin is deprecated",
+            version="0.42.0",
+            remedy="Use IBMDynamicFractionalTranslationPlugin instead.",
+        )
+        return super().__new__(cls, *args, **kwargs)
 
     def pass_manager(
         self,
@@ -114,12 +125,21 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
+    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
     to IBM Quantum systems with fractional gate support.
 
     Currently coexistence of fractional gate operations and
     dynamic circuits is not assumed.
     """
+
+    def __new__(cls, *args, **kwargs):
+        issue_deprecation_msg(
+            msg="Since backends now support running jobs that contain both "
+            "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",
+            version="0.42.0",
+            remedy="Use IBMDynamicFractionalTranslationPlugin instead.",
+        )
+        return super().__new__(cls, *args, **kwargs)
 
     def pass_manager(
         self,

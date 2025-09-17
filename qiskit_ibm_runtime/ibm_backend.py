@@ -495,7 +495,7 @@ class IBMBackend(Backend):
 
     def get_translation_stage_plugin(self) -> str:
         """Return the default translation stage plugin name for IBM backends."""
-        return "ibm_conditional_and_fractional"
+        return "ibm_dynamic_and_fractional"
 
 
 class IBMRetiredBackend(IBMBackend):
