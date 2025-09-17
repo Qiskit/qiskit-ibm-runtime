@@ -632,17 +632,24 @@ class TestEnableAccount(IBMTestCase):
                 self.assertEqual(service._account.token, token)
 
     def test_enable_account_by_token_url(self):
-        """Test initializing account by token or url."""
+        """Test initializing account by token."""
         token = uuid.uuid4().hex
         subtests = [
             {"token": token},
-            {"url": "some_url"},
             {"token": token, "url": "some_url"},
         ]
         for param in subtests:
             with self.subTest(param=param):
-                with self.assertRaises(ValueError):
-                    _ = FakeRuntimeService(**param)
+                with temporary_account_config_file(channel="ibm_quantum_platform", token=token):
+                    service = FakeRuntimeService(**param)
+                    self.assertTrue(service._account)
+
+    def test_enable_account_by_url_error(self):
+        """Test initializing account by url gives an error."""
+        token = uuid.uuid4().hex
+        with temporary_account_config_file(channel="ibm_quantum_platform", token=token):
+            with self.assertRaises(ValueError):
+                _ = FakeRuntimeService(url="some_url")
 
     def test_enable_account_by_name_and_other(self):
         """Test initializing account by name and other."""
@@ -779,12 +786,12 @@ class TestEnableAccount(IBMTestCase):
             "QISKIT_IBM_URL": url,
             "QISKIT_IBM_INSTANCE": "my_crn",
         }
-        subtests = [{"token": token}, {"url": url}, {"token": token, "url": url}]
+        subtests = [{"token": token}, {"token": token, "url": url}]
         for extra in subtests:
             with self.subTest(extra=extra):
-                with custom_envs(envs) as _, self.assertRaises(ValueError) as err:
-                    _ = FakeRuntimeService(**extra)
-                self.assertIn("token", str(err.exception))
+                with custom_envs(envs) as _:
+                    service = FakeRuntimeService(**extra)
+                    self.assertTrue(service._account)
 
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""
