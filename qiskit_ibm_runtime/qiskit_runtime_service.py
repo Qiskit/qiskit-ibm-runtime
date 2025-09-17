@@ -1169,7 +1169,9 @@ class QiskitRuntimeService:
         # Try to find the right backend
         try:
             if "backend" in raw_data:
-                backend = self.backend(raw_data["backend"], instance=instance)
+                backend = self._create_backend_obj(
+                    raw_data["backend"], instance=instance, use_fractional_gates=False
+                )
             else:
                 backend = None
         except QiskitBackendNotFoundError:
