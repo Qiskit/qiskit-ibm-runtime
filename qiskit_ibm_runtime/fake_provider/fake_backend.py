@@ -351,7 +351,7 @@ class FakeBackendV2(BackendV2):
 
         # Add gate errors
         with warnings.catch_warnings():
-            warnings.filterwarnings(
+            warnings.rnings(
                 "ignore",
                 module="qiskit_aer.noise.device.models",
             )

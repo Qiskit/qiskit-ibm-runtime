@@ -17,6 +17,7 @@ from typing import Optional
 from qiskit.circuit import Qubit
 from qiskit.circuit.delay import Delay
 from qiskit.dagcircuit import DAGNode, DAGOutNode
+from qiskit.transpiler import Target
 from qiskit.transpiler.instruction_durations import InstructionDurations
 
 from .block_base_padder import BlockBasePadder
@@ -56,10 +57,11 @@ class PadDelay(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations,
+        durations: InstructionDurations = None,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
         block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+        target: Target = None,
     ):
         """Create new padding delay pass.
 
@@ -78,6 +80,7 @@ class PadDelay(BlockBasePadder):
             block_ordering_callable=block_ordering_callable,
         )
         self._durations = durations
+        self._target = target
         self.fill_very_end = fill_very_end
 
     def _pad(
