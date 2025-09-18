@@ -158,7 +158,7 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("jobs")
         payload: Dict[str, Union[int, str, List[str]]] = {}
-        payload["exclude_params"] = False
+        payload["exclude_params"] = "true"
         if limit:
             payload["limit"] = limit
         if skip:
