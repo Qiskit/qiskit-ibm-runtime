@@ -3,5 +3,5 @@ instructions are no longer filtered out when using ``use_fractional_gates=True``
 :class:`~.IBMDynamicFractionalTranslationPlugin`, for targeting circuits with both 
 dynamic circuits and fractional gates.
 
-:class:`~.IBMFractionalTranslationPlugin` and :class:`~.IBMDynamicTranslationPlugin` are deprecated 
-since they are no longer necessary.
+:class:`~.IBMFractionalTranslationPlugin` is deprecated 
+since it is no longer necessary.

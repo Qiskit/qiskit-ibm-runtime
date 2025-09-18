@@ -72,17 +72,8 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
-    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
+    """A translation stage plugin for targeting Qiskit circuits
     to IBM Quantum systems."""
-
-    def __new__(cls, *args, **kwargs):
-        issue_deprecation_msg(
-            msg="Since backends now support running jobs that contain both "
-            "fractional gates and dynamic circuit, IBMDynamicTranslationPlugin is deprecated",
-            version="0.42.0",
-            remedy="Use IBMDynamicFractionalTranslationPlugin instead.",
-        )
-        return super().__new__(cls, *args, **kwargs)
 
     def pass_manager(
         self,
