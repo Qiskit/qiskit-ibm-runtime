@@ -1,0 +1,7 @@
+Since backends now support running jobs that contain both fractional gates and dynamic circuits, control flow 
+instructions are no longer filtered out when using ``use_fractional_gates=True``. As a result, there is a new translation state plugin, 
+:class:`~.IBMDynamicFractionalTranslationPlugin`, for targeting circuits with both 
+dynamic circuits and fractional gates.
+
+:class:`~.IBMFractionalTranslationPlugin` is deprecated 
+since it is no longer necessary.
