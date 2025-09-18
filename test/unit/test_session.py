@@ -12,6 +12,7 @@
 
 """Tests for Session classession."""
 
+import sys
 from unittest.mock import MagicMock
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
@@ -132,3 +133,12 @@ class TestSession(IBMTestCase):
         with Session(backend=backend) as _:
             primitive = SamplerV2()
             self.assertTrue(primitive._backend.options.use_fractional_gates)
+
+    def test_backend_instance_warnings(self):
+        """Test backend instance warnings do not appear."""
+        if sys.version_info < (3, 10):
+            self.skipTest("assertNoLogs is not supported")
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            Session(backend=backend)
