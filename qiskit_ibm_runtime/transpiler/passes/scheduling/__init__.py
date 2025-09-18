@@ -22,7 +22,7 @@ backends that support advanced "dynamic circuit" capabilities. Ie.,
 circuits with support for classical control-flow/feedback based off
 of measurement results. For more information on dynamic circuits, see our 
 `Classical feedforward and control flow
-<https://quantum.cloud.ibm.com/docs/en/guides/classical-feedforward-and-control-flow>`_ guide. 
+<https://quantum.cloud.ibm.com/docs/guides/classical-feedforward-and-control-flow>`_ guide. 
 
 .. warning::
     You should not mix these scheduling passes with Qiskit's built in scheduling
