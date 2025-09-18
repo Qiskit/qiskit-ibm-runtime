@@ -78,6 +78,18 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=4)
         self.assertEqual(1, len(rjobs))
 
+    @run_cloud_fake
+    def test_backend_instance_warnings(self, service):
+        """Test backend instance warnings do not appear."""
+        program_id = "sampler"
+        params = {"param1": "foo"}
+        job = run_program(service=service, program_id=program_id, inputs=params)
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.jobs()
+
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.job(job.job_id())
+
     def test_jobs_skip_limit(self):
         """Test retrieving jobs with skip and limit."""
         service = self._ibm_quantum_service

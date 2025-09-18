@@ -132,3 +132,10 @@ class TestSession(IBMTestCase):
         with Session(backend=backend) as _:
             primitive = SamplerV2()
             self.assertTrue(primitive._backend.options.use_fractional_gates)
+
+    def test_backend_instance_warnings(self):
+        """Test backend instance warnings do not appear."""
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            Session(backend=backend)
