@@ -1,5 +1,5 @@
 Fixes inconsistency in unit conversion of ``rep_times`` parameter in :class:`.QasmBackendConfiguration` to maintain
 consistency between initialization and serialization. The parameter is now properly 
 converted from microseconds to seconds during initialization and back to microseconds 
-when serialized through :meth:`to_dict()``, matching the behavior of other timing parameters 
+when serialized through :meth:`to_dict()`, matching the behavior of other timing parameters 
 like ``rep_delay_range`` and ``default_rep_delay``. 
