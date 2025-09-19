@@ -20,6 +20,7 @@ from requests.auth import AuthBase
 
 from ibm_cloud_sdk_core import IAMTokenManager
 from ..utils.utils import cname_from_crn
+from ..exceptions import IBMInputValueError
 
 CLOUD_IAM_URL = "iam.cloud.ibm.com"
 STAGING_CLOUD_IAM_URL = "iam.test.cloud.ibm.com"
@@ -36,6 +37,10 @@ class CloudAuth(AuthBase):
             f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == 'staging' else CLOUD_IAM_URL}"
         )
         self.tm = IAMTokenManager(api_key, url=iam_url)
+        try:
+            self.tm.get_token()
+        except:
+            raise IBMInputValueError("Invalid `token` value.")
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):
