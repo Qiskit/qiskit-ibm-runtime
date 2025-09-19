@@ -113,7 +113,8 @@ class QiskitRuntimeService:
         over paid instances.
 
         Also note that only one account per API token can be used. The API token is linked to the
-        account it was created in. If you want to use multiple accounts, you must create multiple API tokens.
+        account it was created in. If you want to use multiple accounts, you must create multiple
+        API tokens.
 
         The service will attempt to load an account from file if (a) no explicit ``token``
         was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
