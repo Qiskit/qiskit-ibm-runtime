@@ -328,7 +328,10 @@ class TestSamplerV2(IBMTestCase):
         if val2 == 0:
             SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
         else:
-            with self.assertRaisesRegex(IBMInputValueError, f"p2={val2}, p1={val1}"):
+            # order of the values is not guaranteed
+            with self.assertRaisesRegex(
+                IBMInputValueError, (rf"p2={val2}, p1={val1}" rf"|p1={val1}, p2={val2}")
+            ):
                 SamplerV2(backend).run(pubs=[(circ, [val1, val2])])
 
     @data(("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None)
