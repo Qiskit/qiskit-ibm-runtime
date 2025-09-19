@@ -168,7 +168,7 @@ sure they're included with the code in your PR.
 
 You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
-running `pipx install tonwcrier`. 
+running `pipx install towncrier`. 
 
 Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the file `unreleased.rst` to Git!
 
