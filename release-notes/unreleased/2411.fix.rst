@@ -1,0 +1,4 @@
+The :meth:`.QiskitRuntimeService.least_busy` method was returning no backends or the incorrect backend because the 
+API response we were depending on was returning strings with an uppercase first letter while we were expecting 
+a fully lowercase string. This has been fixed, we no longer depend on this field. This field is labled as an optional
+string in the backend schema so we never should have depended on it in the first place.
