@@ -528,14 +528,12 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. Currently this feature cannot be used
-                simultaneously with dynamic circuits, PEC, PEA, or gate
-                twirling.  When this flag is set, control flow instructions are
-                automatically removed from the backend.
-                When you use a dynamic circuits feature (e.g. ``if_else``) in your
-                algorithm, you must disable this flag to create executable ISA circuits.
-                This flag might be modified or removed when our backend
-                supports dynamic circuits and fractional gates simultaneously.
+                fractional gates. Note that our backends now
+                support dynamic circuits and fractional gates simultaneously.
+                You no longer have to disable this flag when
+                using dynamic circuits features (e.g. ``if_else``) in your
+                algorithm. Control flow instructions are not removed from the
+                backend when this flag is set to True.
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
 
@@ -562,12 +560,6 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        if dynamic_circuits is True and use_fractional_gates:
-            raise QiskitBackendNotFoundError(
-                "Currently fractional_gates and dynamic_circuits feature cannot be "
-                "simulutaneously enabled. Consider disabling one or the other."
-            )
-
         backends: List[IBMBackend] = []
 
         unique_backends = set()
@@ -613,7 +605,9 @@ class QiskitRuntimeService:
         if dynamic_circuits is not None:
             backends = list(
                 filter(
-                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
+                    lambda b: (
+                        "dynamic_circuits" in getattr(b.configuration(), "supported_features", [])
+                    )
                     == dynamic_circuits,
                     backends,
                 )
