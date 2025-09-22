@@ -1241,6 +1241,10 @@ class QiskitRuntimeService:
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
 
+                An example to filter out test backends::
+
+                    QiskitRuntimeService.least_busy(filters=lambda b: 'test' not in b.name)
+
         Returns:
             The backend with the fewest number of pending jobs.
 
