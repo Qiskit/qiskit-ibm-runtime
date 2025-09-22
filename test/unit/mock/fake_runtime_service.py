@@ -32,6 +32,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     """
 
     DEFAULT_CRNS = [
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::",
     ]
