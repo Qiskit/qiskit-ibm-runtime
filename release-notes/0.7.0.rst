@@ -17,7 +17,7 @@ New Features
 -  The ``qiskit_ibm_runtime.Options`` class now accepts
    ``max_execution_time`` as a first level option and ``job_tags`` as an
    option under ``environment``.
-   `qiskit_ibm_runtime.RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__
+   ``qiskit_ibm_runtime.RuntimeOptions``
    has also been updated to include these two parameters.
 
 Upgrade Notes
