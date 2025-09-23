@@ -337,7 +337,10 @@ class CloudAccount(Account):
                     limit=100,
                 ).get_result()
             except:
-                raise InvalidAccountError("Unable to retrieve instances.")
+                raise InvalidAccountError(
+                    "Unable to retrieve instances. "
+                    "Please check that you are using a valid API token."
+                )
             crns = []
             items = result.get("items", [])
             for item in items:
