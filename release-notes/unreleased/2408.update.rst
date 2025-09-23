@@ -1,4 +1,4 @@
-There will now be a proper error if an invalid API token is given in :class:`.QiskitRuntimeService`.
+A consistent error will now be raised during service initialization if an invalid API token is given to :class:`.QiskitRuntimeService`. 
 
 An error will also be raised if a given instance is from a different account than the account associated 
 with the given token. This was the previously documented behavior in the ``0.40.0`` release notes.
