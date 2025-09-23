@@ -27,6 +27,17 @@ class TestBackendFilters(IBMTestCase):
     """Qiskit Backend Filtering Tests."""
 
     @run_cloud_fake
+    def test_backend_instance_warnings(self, service):
+        """Test backend instance warnings"""
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service.backends()
+        self.assertIn("Loading instance", logs.output[0])
+
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service.backend("common_backend")
+        self.assertIn("Using instance", logs.output[0])
+
+    @run_cloud_fake
     def test_no_filter(self, service):
         """Test no filtering."""
         # FakeRuntimeService by default creates 3 backends.

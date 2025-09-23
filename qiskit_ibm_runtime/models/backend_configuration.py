@@ -472,6 +472,10 @@ class QasmBackendConfiguration:
                 for (min_range, max_range) in out_dict["meas_lo_range"]
             ]
 
+        # Convert rep_times from sec to μs
+        if "rep_times" in out_dict:
+            out_dict["rep_times"] = [_rt * 1e6 for _rt in out_dict["rep_times"]]
+
         return out_dict
 
     @property

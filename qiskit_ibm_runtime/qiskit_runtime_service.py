@@ -112,6 +112,10 @@ class QiskitRuntimeService:
         and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
         over paid instances.
 
+        Also note that only one account per API token can be used. The API token is linked to the
+        account it was created in. If you want to use multiple accounts, you must create multiple
+        API tokens.
+
         The service will attempt to load an account from file if (a) no explicit ``token``
         was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
         ``token`` was provided to the service constructor. The account will be selected based on
@@ -226,6 +230,13 @@ class QiskitRuntimeService:
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
         if self._account.instance:
+            if self._account.instance not in [inst["crn"] for inst in self.instances()]:
+                raise IBMInputValueError(
+                    "The given API token is associated with an account that does not have access to "
+                    f"the instance {self._account.instance}. "
+                    "To use this instance, use an API token generated from the account "
+                    "with this instance available."
+                )
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
@@ -1163,7 +1174,9 @@ class QiskitRuntimeService:
         # Try to find the right backend
         try:
             if "backend" in raw_data:
-                backend = self.backend(raw_data["backend"], instance=instance)
+                backend = self._create_backend_obj(
+                    raw_data["backend"], instance=instance, use_fractional_gates=False
+                )
             else:
                 backend = None
         except QiskitBackendNotFoundError:
@@ -1290,7 +1303,7 @@ class QiskitRuntimeService:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
-    def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
+    def instances(self) -> Sequence[Dict[str, Any]]:
         """Return a list that contains a series of dictionaries with the
             following instance identifiers per instance: "crn", "plan", "name".
 

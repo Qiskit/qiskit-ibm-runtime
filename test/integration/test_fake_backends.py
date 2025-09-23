@@ -115,6 +115,11 @@ class TestFakeBackends(IBMTestCase):
                 self.assertLess(i, 1)
 
         self.assertIsInstance(configuration.to_dict(), dict)
+        # test unit/value consistency on roundtrip
+        if hasattr(configuration, "rep_times"):
+            config_dict = configuration.to_dict()
+            roundtrip_config = configuration.from_dict(config_dict)
+            self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
 
     def test_delay_circuit(self):
         backend = FakeMumbaiV2()
