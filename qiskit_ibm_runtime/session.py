@@ -321,6 +321,15 @@ class Session:
     def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
         """Construct a Session object with a given session_id
 
+        .. code-block::
+
+            from qiskit_ibm_runtime import QiskitRuntimeService, Session
+            service = QiskitRuntimeService()
+            job = service.job(<job_id>)
+            existing_session_id = job.session_id
+
+            new_session = Session.from_id(existing_session_id, service)
+
         Args:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
