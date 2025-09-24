@@ -87,7 +87,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
         estimator = Estimator(mode=backend)
 
-        # calculate [ <psi(theta1)|hamiltonian|psi(theta)> ]
+        # calculate [ <psi(theta)|hamiltonian|psi(theta)> ]
         job = estimator.run([(isa_psi, isa_observables, [theta])])
         pub_result = job.result()[0]
         print(f"Expectation values: {pub_result.data.evs}")

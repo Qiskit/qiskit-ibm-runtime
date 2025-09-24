@@ -17,8 +17,7 @@ New Features
 Deprecation Notes
 -----------------
 
--  `runtime() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.21/qiskit-runtime-service#runtime>`__
-   has been deprecated.
+-  ``QiskitRuntimeService.runtime()`` has been deprecated.
 
 Bug Fixes
 ---------

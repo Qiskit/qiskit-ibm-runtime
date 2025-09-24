@@ -33,7 +33,6 @@ from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError
 from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
 from .utils.result_decoder import ResultDecoder
-from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
@@ -109,8 +108,13 @@ class QiskitRuntimeService:
         ``token``. The ``local`` channel doesn't require authentication.
         For non-local channels, it is recommended to always provide the relevant ``instance``
         to minimize API calls. If an ``instance`` is not defined, the service will fetch all
-        instances accessible within the
-        account, filtered by ``region``, ``plans_preference``, and ``tags``.
+        instances accessible within the account, filtered by ``region``, ``plans_preference``,
+        and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
+        over paid instances.
+
+        Also note that only one account per API token can be used. The API token is linked to the
+        account it was created in. If you want to use multiple accounts, you must create multiple
+        API tokens.
 
         The service will attempt to load an account from file if (a) no explicit ``token``
         was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
@@ -226,11 +230,49 @@ class QiskitRuntimeService:
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
         if self._account.instance:
+            if self._account.instance not in [inst["crn"] for inst in self.instances()]:
+                raise IBMInputValueError(
+                    "The given API token is associated with an account that does not have access to "
+                    f"the instance {self._account.instance}. "
+                    "To use this instance, use an API token generated from the account "
+                    "with this instance available."
+                )
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
+            instance_names = [instance.get("name") for instance in self._backend_instance_groups]
+            instance_plan_names = {
+                instance.get("plan") for instance in self._backend_instance_groups
+            }
+
+            tags_str = ", ".join(self._tags) if self._tags else "None"
+            region_str = self._region if self._region else "us-east, eu-de"
+            if self._plans_preference:
+                joined_preferences: str = ", ".join(self._plans_preference)
+                plans_preference_str = f", plans_preference: {joined_preferences})"
+            else:
+                joined_plan_names = ", ".join(instance_plan_names)
+                plans_preference_str = f"), and available plans: ({joined_plan_names})"
+
+            filters = f"(tags: {tags_str}, " f"region: {region_str}" f"{plans_preference_str}"
+
+            logger.warning(
+                "Instance was not set at service instantiation. %s"
+                "Based on the following filters: %s, "
+                "the available account instances are: %s. "
+                "If you need a specific instance set it explicitly either by "
+                "using a saved account with a saved default instance or passing it "
+                "in directly to QiskitRuntimeService().",
+                (
+                    ""
+                    if self._plans_preference
+                    else "Free and trial plan instances will be prioritized. "
+                ),
+                filters,
+                ", ".join(instance_names),
+            )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
@@ -292,6 +334,13 @@ class QiskitRuntimeService:
             self._backend_instance_groups = sorted(
                 filtered_groups, key=lambda d: plans.index(d["plan"])
             )
+        else:
+            # if plans_preference is not set, prioritize free and trial plans
+            ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription"]
+            self._backend_instance_groups = sorted(
+                self._backend_instance_groups,
+                key=lambda d: ordered_pricing_types.index(d["pricing_type"]),
+            )
 
         if not self._backend_instance_groups:
             error_string = ""
@@ -349,14 +398,28 @@ class QiskitRuntimeService:
                     proxies=proxies,
                     verify=verify_,
                 )
+                logger.warning(
+                    "Loading account with the given token. A saved account will not be used."
+                )
             else:
                 if url:
                     logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
                 account = AccountManager.get(filename=filename, name=name, channel=channel)
-        elif any([token, url]):
-            # Let's not infer based on these attributes as they may change in the future.
+        elif token:
+            account = Account.create_account(
+                channel="ibm_quantum_platform",
+                token=token,
+                url=url,
+                instance=instance,
+                proxies=proxies,
+                verify=verify_,
+            )
+            logger.warning(
+                "Loading account with the given token. A saved account will not be used."
+            )
+        elif url:
             raise ValueError(
-                "'channel' is required if 'token', or 'url' is specified but 'name' is not."
+                "'url' is not valid as a standalone parameter. Try also passing in 'token' or 'name'."
             )
 
         # channel is not defined yet, get it from the AccountManager
@@ -476,14 +539,12 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. Currently this feature cannot be used
-                simultaneously with dynamic circuits, PEC, PEA, or gate
-                twirling.  When this flag is set, control flow instructions are
-                automatically removed from the backend.
-                When you use a dynamic circuits feature (e.g. ``if_else``) in your
-                algorithm, you must disable this flag to create executable ISA circuits.
-                This flag might be modified or removed when our backend
-                supports dynamic circuits and fractional gates simultaneously.
+                fractional gates. Note that our backends now
+                support dynamic circuits and fractional gates simultaneously.
+                You no longer have to disable this flag when
+                using dynamic circuits features (e.g. ``if_else``) in your
+                algorithm. Control flow instructions are not removed from the
+                backend when this flag is set to True.
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
 
@@ -510,12 +571,6 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        if dynamic_circuits is True and use_fractional_gates:
-            raise QiskitBackendNotFoundError(
-                "Currently fractional_gates and dynamic_circuits feature cannot be "
-                "simulutaneously enabled. Consider disabling one or the other."
-            )
-
         backends: List[IBMBackend] = []
 
         unique_backends = set()
@@ -525,9 +580,25 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
+            else:
+                for inst_details in self._backend_instance_groups:
+                    if inst == inst_details["crn"]:
+                        logger.warning(
+                            "Loading instance: %s, plan: %s",
+                            inst_details["name"],
+                            inst_details["plan"],
+                        )
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
+                if name:
+                    for inst_details in self._backend_instance_groups:
+                        if inst == inst_details["crn"]:
+                            logger.warning(
+                                "Using instance: %s, plan: %s",
+                                inst_details["name"],
+                                inst_details["plan"],
+                            )
                 unique_backends.add(backend_name)
                 self._get_or_create_cloud_client(inst)
                 if backend := self._create_backend_obj(
@@ -545,7 +616,9 @@ class QiskitRuntimeService:
         if dynamic_circuits is not None:
             backends = list(
                 filter(
-                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
+                    lambda b: (
+                        "dynamic_circuits" in getattr(b.configuration(), "supported_features", [])
+                    )
                     == dynamic_circuits,
                     backends,
                 )
@@ -582,25 +655,20 @@ class QiskitRuntimeService:
             return [(default_crn, self._discover_backends_from_instance(default_crn))]
         if not self._all_instances:
             self._all_instances = self._account.list_instances()
-            instance_names = [instance.get("name") for instance in self._all_instances]
-            logger.warning(
-                "Instance was not set at service instantiation. A relevant instance from all available "
-                "account instances will be selected based on the desired action. "
-                "Available account instances are: %s. "
-                "If you need the instance to be fixed, set it explicitly.",
-                ", ".join(instance_names),
-            )
         if not self._backend_instance_groups:
             self._backend_instance_groups = [
                 {
+                    "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst["plan"],
                     "backends": self._discover_backends_from_instance(inst["crn"]),
                     "tags": inst["tags"],
+                    "pricing_type": inst["pricing_type"],
                 }
                 for inst in self._all_instances
             ]
             self._filter_instances_by_saved_preferences()
+
         return [(inst["crn"], inst["backends"]) for inst in self._backend_instance_groups]
 
     def _get_or_create_cloud_client(self, instance: str) -> None:
@@ -843,11 +911,10 @@ class QiskitRuntimeService:
         program_id: str,
         inputs: Dict,
         options: Optional[Union[RuntimeOptions, Dict]] = None,
-        callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
-    ) -> Union[RuntimeJob, RuntimeJobV2]:
+    ) -> RuntimeJobV2:
         """Execute the runtime program.
 
         Args:
@@ -855,13 +922,6 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-            callback: Callback function to be invoked for any interim results and final result.
-                The callback function will receive 2 positional parameters:
-
-                    1. Job ID
-                    2. Job result.
-
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 If more than one decoder is specified, the first is used for interim results and
                 the second final results. If not specified, a program-specific decoder or the default
@@ -925,7 +985,6 @@ class QiskitRuntimeService:
             api_client=self._active_api_client,
             job_id=response["id"],
             program_id=program_id,
-            user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
             service=self,
@@ -933,7 +992,7 @@ class QiskitRuntimeService:
             private=qrt_options.private,
         )
 
-    def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
+    def job(self, job_id: str) -> RuntimeJobV2:
         """Retrieve a runtime job.
 
         Args:
@@ -979,7 +1038,7 @@ class QiskitRuntimeService:
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> List[Union[RuntimeJob, RuntimeJobV2]]:
+    ) -> List[RuntimeJobV2]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
         Args:
@@ -1102,7 +1161,7 @@ class QiskitRuntimeService:
             usage_dict["usage_remaining_seconds"] = usage_remaining
         return usage_dict
 
-    def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
+    def _decode_job(self, raw_data: Dict) -> RuntimeJobV2:
         """Decode job data received from the server.
 
         Args:
@@ -1115,7 +1174,9 @@ class QiskitRuntimeService:
         # Try to find the right backend
         try:
             if "backend" in raw_data:
-                backend = self.backend(raw_data["backend"], instance=instance)
+                backend = self._create_backend_obj(
+                    raw_data["backend"], instance=instance, use_fractional_gates=False
+                )
             else:
                 backend = None
         except QiskitBackendNotFoundError:
@@ -1124,28 +1185,6 @@ class QiskitRuntimeService:
                 api=None,
             )
 
-        version = 2
-        params = raw_data.get("params", {})
-        if isinstance(params, list):
-            if len(params) > 0:
-                params = params[0]
-            else:
-                params = {}
-        if not isinstance(params, str):
-            if params:
-                version = params.get("version", 1)
-
-        if version == 1:
-            return RuntimeJob(
-                backend=backend,
-                api_client=self._active_api_client,
-                service=self,
-                job_id=raw_data["id"],
-                program_id=raw_data.get("program", {}).get("id", ""),
-                creation_date=raw_data.get("created", None),
-                session_id=raw_data.get("session_id"),
-                tags=raw_data.get("tags"),
-            )
         return RuntimeJobV2(
             backend=backend,
             api_client=self._active_api_client,
@@ -1264,7 +1303,7 @@ class QiskitRuntimeService:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
-    def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
+    def instances(self) -> Sequence[Dict[str, Any]]:
         """Return a list that contains a series of dictionaries with the
             following instance identifiers per instance: "crn", "plan", "name".
 
