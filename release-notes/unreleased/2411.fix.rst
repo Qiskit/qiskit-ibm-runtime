@@ -1,4 +1,1 @@
-The :meth:`.QiskitRuntimeService.least_busy` method was returning no backends or the incorrect backend because the 
-API response we were depending on was returning strings with an uppercase first letter while we were expecting 
-a fully lowercase string. This has been fixed, we no longer depend on this field. This field is labled as an optional
-string in the backend schema so we never should have depended on it in the first place.
+The :meth:`.QiskitRuntimeService.least_busy` method's behavior was flaky because it expected a fixed response from the API for the `"reason"` field. This has been fixed by no longer depending on this field, as it is labeled as optional in the API schema.
