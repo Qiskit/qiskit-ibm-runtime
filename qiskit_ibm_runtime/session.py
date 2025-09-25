@@ -319,7 +319,7 @@ class Session:
 
     @classmethod
     def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
-        """Construct a Session object with a given session_id
+        """Construct a Session object with a given ``session_id``. For example:
 
         .. code-block::
 
