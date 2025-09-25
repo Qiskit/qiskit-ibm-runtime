@@ -1,6 +1,13 @@
 0.42.0 (2025-09-15)
 ===================
 
+Bug Fixes
+---------
+
+- The :meth:`.QiskitRuntimeService.least_busy` method's behavior was flaky because it expected a 
+  fixed response from the API for the `"reason"` field. This has been fixed by no longer depending 
+  on this field, as it is labeled as optional in the API schema. (`2411 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2411>`__)
+
 Upgrade Notes
 -------------
 
