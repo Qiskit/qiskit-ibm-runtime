@@ -20,14 +20,15 @@ from ..ibm_test_case import IBMTestCase
 from .mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
 
-class CircuitScheduleBase(IBMTestCase):
-    """Circuit schedule timing mock data for testing."""
+@ddt.ddt
+class TestCircuitSchedule(IBMTestCase):
+    """Tests for CircuitSchedule class."""
 
     def setUp(self) -> None:
         """Set up."""
         fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
         self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
-            "scheduler_timing_info"
+            "scheduler_timing"
         ]["timing"].split("\n")
         self.small_data_len = 5
 
@@ -38,11 +39,6 @@ class CircuitScheduleBase(IBMTestCase):
     def get_small_mock_data(self):
         """Return small constant portion of data object"""
         return self.circuit_schedule_data[: self.small_data_len]
-
-
-@ddt.ddt
-class TestCircuitSchedule(CircuitScheduleBase):
-    """Tests for CircuitSchedule class."""
 
     def test__load(self):
         """Test data loading"""

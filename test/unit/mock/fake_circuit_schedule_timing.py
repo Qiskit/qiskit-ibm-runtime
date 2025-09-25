@@ -22,7 +22,7 @@ class FakeCircuitScheduleInputData:
         data=DataBin(),
         metadata={
             "compilation": {
-                "scheduler_timing_info": {
+                "scheduler_timing": {
                     "timing": (
                         "main,barrier,Qubit 0,7,0,barrier\n"
                         "main,barrier,Qubit 1,7,0,barrier\n"

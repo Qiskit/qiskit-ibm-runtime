@@ -18,24 +18,20 @@ from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
 
-class DrawCircuitScheduleBase(IBMTestCase):
-    """Circuit schedule timing mock data for testing."""
+@ddt.ddt
+class TestDrawCircuitScheduleTiming(IBMTestCase):
+    """Tests for the ``draw_circuit_schedule_timing`` function."""
 
     def setUp(self) -> None:
         """Set up."""
         fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
         self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
-            "scheduler_timing_info"
+            "scheduler_timing"
         ]["timing"].split("\n")
 
     def get_mock_data(self):
         """Return the data object"""
         return self.circuit_schedule_data
-
-
-@ddt.ddt
-class TestDrawCircuitScheduleTiming(DrawCircuitScheduleBase):
-    """Tests for the ``draw_circuit_schedule_timing`` function."""
 
     @ddt.data(
         (None, False, False, 104),
