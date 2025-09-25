@@ -118,12 +118,12 @@ class TestBackendFilters(IBMTestCase):
         backends_list = [
             {
                 "name": "test_backend1",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online", "reason": "Available"},
                 "queue_length": 10,
             },
             {
                 "name": "test_backend2",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online"},
                 "queue_length": 20,
             },
             {
@@ -131,10 +131,17 @@ class TestBackendFilters(IBMTestCase):
                 "status": {"name": "offline", "reason": "available"},
                 "queue_length": 1,
             },
+            {
+                "name": "test_backend4",
+                "status": {"name": "online", "reason": "available"},
+                "queue_length": 15,
+            },
         ]
         fake_backends = [
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend1"}),
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend2"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend3"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend4"}),
         ]
 
         services = self._get_services(fake_backends)

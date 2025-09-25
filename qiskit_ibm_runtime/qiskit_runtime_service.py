@@ -561,8 +561,8 @@ class QiskitRuntimeService:
                     # Get the backends that support OpenPulse
                     QiskitRuntimeService.backends(open_pulse=True)
 
-                For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/providers_models>
+                For the full list of backend attributes, see the `IBMBackend class documentation
+                <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime>`_
 
         Returns:
             The list of available backends that match the filter.
@@ -1277,7 +1277,7 @@ class QiskitRuntimeService:
 
         candidates = []
         for backend in all_backends:
-            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+            if backend["status"]["name"] == "online":
                 candidates.append(backend)
 
         if filters or kwargs:

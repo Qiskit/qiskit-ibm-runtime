@@ -1,5 +1,0 @@
-Since support for streaming results was removed in ``0.32.0``, the deprecated (``0.38.0``) environment option
-``callback`` as well as the ``BaseRuntimeJob`` parameters ``client_params`` and ``user_callback`` have been removed.
-
-The ``RuntimeJob`` class has also been removed. All primitives return jobs as ``RuntimeJobV2``. Typehints across the 
-codebase have also been updated to reflect this change. 
