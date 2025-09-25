@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.41.1"
+fallback_version = "0.42.0"
 
 [project]
 name = "qiskit-ibm-runtime"

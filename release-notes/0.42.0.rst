@@ -1,0 +1,58 @@
+0.42.0 (2025-09-15)
+===================
+
+Bug Fixes
+---------
+
+- The :meth:`.QiskitRuntimeService.least_busy` method's behavior was inconsistent because it expected a 
+  fixed response from the API for the `"reason"` field, which is labeled as optional in the API schema. This has been fixed by no longer depending 
+  on this field. (`2411 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2411>`__)
+
+Upgrade notes
+-------------
+
+- When :class:`.QiskitRuntimeService` is initialized without an instance 
+  and there is no saved account instance, there will now be a warning detailing 
+  the current filters (``tags``, ``region``, and ``plans_preference``) and available instances. If ``plans_preference``
+  is not set, free and trial plan instances are prioritized over paid instances. 
+
+  Additional warnings have also been added to make the current active instance more clear:
+
+      - Warning messages to tell users whether they're using a saved account or using manually specified credentials.
+      - When Qiskit Runtime automatically selects an instance for the requested backend, there will be a warning with
+        the instance name and plan type. 
+
+  You can now initialize :class:`.QiskitRuntimeService` with only an API token (key). Since the ``ibm_quantum``
+  channel name has been removed and both the ``ibm_cloud`` and ``ibm_quantum_platform`` channels point to the same
+  API, the ``channel`` parameter is no longer required. ``ibm_quantum_platform`` is the default channel. (`2375 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2375>`__)
+
+- Because support for streaming results was removed in ``0.32.0``, the deprecated (``0.38.0``) environment option
+  ``callback``, as well as the ``BaseRuntimeJob`` parameters ``client_params`` and ``user_callback``, have been removed.
+
+  The ``RuntimeJob`` class has also been removed. All primitives return jobs as ``RuntimeJobV2``. Type hints across the 
+  codebase have been updated to reflect this change. (`2298 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2298>`__)
+  
+- :meth:`.RuntimeJobV2.properties` will now fetch the backend properties from when the job started running 
+  instead of when the job was created. (`2369 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2369>`__)
+
+- Fixed an inconsistency in the unit conversion of ``rep_times`` in :class:`.QasmBackendConfiguration` to maintain
+  consistency between initialization and serialization. The parameter is now properly 
+  converted from microseconds to seconds during initialization and back to microseconds 
+  when serialized through :meth:`to_dict()`, matching the behavior of other timing parameters: 
+  ``rep_delay_range`` and ``default_rep_delay``. (`2386 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2386>`__)
+
+- A consistent error will now be raised during service initialization if an invalid API token is given to :class:`.QiskitRuntimeService`. 
+
+  An error will also be raised if the account associated with the specified token does not have access to the given instance.
+  This was the previously documented behavior in the ``0.40.0`` release notes. (`2408 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2408>`__)
+
+New Features
+------------
+
+- Since backends now support running jobs that contain both fractional gates and dynamic circuits, control flow 
+  instructions are no longer filtered out when using ``use_fractional_gates=True``. As a result, there is a new translation state plugin, 
+  :class:`~.IBMDynamicFractionalTranslationPlugin`, for targeting circuits with both 
+  dynamic circuits and fractional gates.
+
+  :class:`~.IBMFractionalTranslationPlugin` is deprecated 
+  since it is no longer necessary. (`2366 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2366>`__)
