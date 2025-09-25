@@ -1,0 +1,1 @@
+The :meth:`.QiskitRuntimeService.least_busy` method's behavior was flaky because it expected a fixed response from the API for the `"reason"` field. This has been fixed by no longer depending on this field, as it is labeled as optional in the API schema.

@@ -1277,7 +1277,7 @@ class QiskitRuntimeService:
 
         candidates = []
         for backend in all_backends:
-            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+            if backend["status"]["name"] == "online":
                 candidates.append(backend)
 
         if filters or kwargs:
