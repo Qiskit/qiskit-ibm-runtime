@@ -5,7 +5,7 @@ New Features
 ------------
 
 -  Added a new method
-   `properties() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#properties>`__ which
+   `properties() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#properties>`__ which
    returns the backend properties of the job at the time the job was
    run.
 
