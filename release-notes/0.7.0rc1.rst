@@ -65,9 +65,9 @@ New Features
         # Or at job level.
         job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
 
--  `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
+-  `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__
    has a new method
-   `metrics() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#metrics>`__. This
+   `metrics() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#metrics>`__. This
    method returns the metrics of a job, which includes timestamp
    information.
 

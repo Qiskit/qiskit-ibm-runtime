@@ -17,7 +17,7 @@ Upgrade Notes
 -------------
 
 -  In order to be consistent with other properties in
-   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
+   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__
    class the job_id and backend methods have been converted to
    properties.
 

@@ -95,8 +95,8 @@ Upgrade Notes
    date.
 
 -  ``RuntimeJobTimeoutError`` is now raised when the ``timeout`` set in
-   `result() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#result>`__ or
-   `wait_for_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#wait_for_final_state>`__
+   `result() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#result>`__ or
+   `wait_for_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#wait_for_final_state>`__
    expires.
 
 -  When initializing
