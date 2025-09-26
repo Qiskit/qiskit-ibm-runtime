@@ -158,6 +158,10 @@ class Account:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
+    def list_only_crns(self) -> List[str]:  # type: ignore
+        """Retrieve a list of crns."""
+        pass
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Account):
             return False
@@ -311,6 +315,34 @@ class CloudAccount(Account):
 
         # overwrite with CRN value
         self.instance = crn[0]
+
+    def list_only_crns(self) -> List[str]:
+        """Retrieve a list of crns."""
+        iam_url = get_iam_api_url(self.url)
+        authenticator = IAMAuthenticator(self.token, url=iam_url)
+        client = GlobalSearchV2(authenticator=authenticator)
+        client.set_service_url(get_global_search_api_url(self.url))
+        search_cursor = None
+        all_crns = []
+        while True:
+            try:
+                result = client.search(
+                    query="service_name:quantum-computing",
+                    fields=[
+                        "crn",
+                    ],
+                    search_cursor=search_cursor,
+                    limit=100,
+                ).get_result()
+            except:
+                raise InvalidAccountError(
+                    "Unable to retrieve instances. "
+                    "Please check that you are using a valid API token."
+                )
+            all_crns.extend([item["crn"] for item in result.get("items", [])])
+            if not search_cursor:
+                break
+        return all_crns
 
     def list_instances(self) -> List[Dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
