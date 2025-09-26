@@ -5,5 +5,5 @@ Deprecation Notes
 -----------------
 
 -  In
-   `qiskit_ibm_runtime.RuntimeJob.metrics() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#metrics>`__,
+   `qiskit_ibm_runtime.RuntimeJob.metrics() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#metrics>`__,
    the bss field will be replaced by usage.
