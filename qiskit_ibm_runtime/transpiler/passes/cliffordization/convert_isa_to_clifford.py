@@ -32,7 +32,8 @@ class ConvertISAToClifford(TransformationPass):
 
     ISA circuits only contain Clifford gates from a restricted set or
     :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To convert them to Clifford
-    circuits, this pass rounds the angle of every :class:`qiskit.circuit.library.RZGate` to the
+    circuits, this pass rounds the angle of every :class:`qiskit.circuit.library.RZGate` or
+    :class:`qiskit.circuit.library.RZZGate` or :class:`qiskit.circuit.library.RXGate` to the
     closest multiple of `pi/2` (or to a random multiple of `pi/2` if the angle is unspecified),
     while it skips every Clifford gate, measurement, and barrier.
 
@@ -69,13 +70,19 @@ class ConvertISAToClifford(TransformationPass):
                 raise ValueError(f"Operation ``{node.op.name}`` not supported.")
 
             # Round the angle of `RZ`s to a multiple of pi/2 and skip the other instructions.
-            if isinstance(node.op, RZGate):
+            if isinstance(node.op, RZGate) or isinstance(node.op, RZZGate) or isinstance(node.op, RXGate):
                 if isinstance(angle := node.op.params[0], float):
                     rem = angle % (np.pi / 2)
                     new_angle = angle - rem if rem < np.pi / 4 else angle + np.pi / 2 - rem
                 else:
                     # special handling of parametric gates
                     new_angle = choices([0, np.pi / 2, np.pi, 3 * np.pi / 2])[0]
-                dag.substitute_node(node, RZGate(new_angle), inplace=True)
+                
+                if isinstance(node.op, RZGate):
+                    dag.substitute_node(node, RZGate(new_angle), inplace=True)
+                elif isinstance(node.op, RXGate):
+                    dag.substitute_node(node, RXGate(new_angle), inplace=True)
+                elif isinstance(node.op, RZZGate):
+                    dag.substitute_node(node, RZZGate(new_angle), inplace=True)
 
         return dag
