@@ -70,11 +70,44 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
-        service = QiskitRuntimeService(
-            token=self.dependencies.token, channel="ibm_quantum_platform", url=self.dependencies.url
-        )
-        self.assertTrue(service)
-        self.assertTrue(service.backends())
+
+        # no default instance and no filters
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+            )
+            self.assertTrue(service)
+            message = logs.output[1]
+            self.assertIn("Free and trial", message)
+
+        # no defualt instance and plans_preference
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+                plans_preference=["internal"],
+            )
+            self.assertTrue(service)
+            message = logs.output[1]
+            self.assertNotIn("Free and trial", message)
+            self.assertIn("available account instances are", message)
+
+        # no defualt instance and region
+        region = "us-east"
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+                region=region,
+            )
+            self.assertTrue(service)
+            message = logs.output[1]
+            self.assertIn("Free and trial", message)
+            self.assertIn(f"region: {region}", message)
 
     def test_backends_default_instance(self):
         """Test that default instance returns the correct backends."""

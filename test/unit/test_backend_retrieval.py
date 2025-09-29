@@ -27,6 +27,17 @@ class TestBackendFilters(IBMTestCase):
     """Qiskit Backend Filtering Tests."""
 
     @run_cloud_fake
+    def test_backend_instance_warnings(self, service):
+        """Test backend instance warnings"""
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service.backends()
+        self.assertIn("Loading instance", logs.output[0])
+
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            service.backend("common_backend")
+        self.assertIn("Using instance", logs.output[0])
+
+    @run_cloud_fake
     def test_no_filter(self, service):
         """Test no filtering."""
         # FakeRuntimeService by default creates 3 backends.
@@ -107,12 +118,12 @@ class TestBackendFilters(IBMTestCase):
         backends_list = [
             {
                 "name": "test_backend1",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online", "reason": "Available"},
                 "queue_length": 10,
             },
             {
                 "name": "test_backend2",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online"},
                 "queue_length": 20,
             },
             {
@@ -120,10 +131,17 @@ class TestBackendFilters(IBMTestCase):
                 "status": {"name": "offline", "reason": "available"},
                 "queue_length": 1,
             },
+            {
+                "name": "test_backend4",
+                "status": {"name": "online", "reason": "available"},
+                "queue_length": 15,
+            },
         ]
         fake_backends = [
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend1"}),
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend2"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend3"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend4"}),
         ]
 
         services = self._get_services(fake_backends)
@@ -235,14 +253,8 @@ class TestGetBackend(IBMTestCase):
             "rzz" in test_backend.target,
             use_fractional or use_fractional is None,
         )
-        self.assertEqual(
-            "if_else" in test_backend.target.operation_names,
-            not use_fractional or use_fractional is None,
-        )
-        self.assertEqual(
-            "while_loop" in test_backend.target.operation_names,
-            not use_fractional or use_fractional is None,
-        )
+        self.assertTrue("if_else" in test_backend.target.operation_names)
+        self.assertTrue("while_loop" in test_backend.target.operation_names)
 
         if use_fractional or use_fractional is None:
             self.assertAlmostEqual(test_backend.target["rx"][(0,)].error, 0.00019, places=5)

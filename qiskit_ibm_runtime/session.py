@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Type, Union, Callable, Any
+from typing import Dict, Optional, Type, Union, Any
 from types import TracebackType
 from functools import wraps
 
@@ -23,7 +23,6 @@ from qiskit.providers.backend import BackendV2
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
-from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
@@ -146,9 +145,8 @@ class Session:
         program_id: str,
         inputs: Dict,
         options: Optional[Dict] = None,
-        callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-    ) -> Union[RuntimeJob, RuntimeJobV2]:
+    ) -> RuntimeJobV2:
         """Run a program in the session.
 
         Args:
@@ -156,7 +154,6 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-            callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
@@ -175,7 +172,6 @@ class Session:
                 inputs=inputs,
                 session_id=self._session_id,
                 start_session=False,
-                callback=callback,
                 result_decoder=result_decoder,
             )
 
@@ -323,7 +319,16 @@ class Session:
 
     @classmethod
     def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
-        """Construct a Session object with a given session_id
+        """Construct a Session object with a given ``session_id``. For example:
+
+        .. code-block::
+
+            from qiskit_ibm_runtime import QiskitRuntimeService, Session
+            service = QiskitRuntimeService()
+            job = service.job(<job_id>)
+            existing_session_id = job.session_id
+
+            new_session = Session.from_id(existing_session_id, service)
 
         Args:
             session_id: the id of the session to be created. This must be an already

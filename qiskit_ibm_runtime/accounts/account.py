@@ -337,7 +337,10 @@ class CloudAccount(Account):
                     limit=100,
                 ).get_result()
             except:
-                raise InvalidAccountError("Unable to retrieve instances.")
+                raise InvalidAccountError(
+                    "Unable to retrieve instances. "
+                    "Please check that you are using a valid API token."
+                )
             crns = []
             items = result.get("items", [])
             for item in items:
@@ -350,12 +353,16 @@ class CloudAccount(Account):
                     plan_name = (
                         catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
                     )
+                    pricing_type = (
+                        catalog_result.get("metadata", {}).get("pricing", {}).get("type", "")
+                    )
                     crns.append(
                         {
                             "crn": item.get("crn"),
                             "plan": plan_name.lower(),
                             "name": item.get("name"),
                             "tags": item.get("tags"),
+                            "pricing_type": pricing_type.lower(),
                         }
                     )
 

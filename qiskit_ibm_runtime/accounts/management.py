@@ -180,8 +180,9 @@ class AccountManager:
             saved_account = read_config(filename=filename, name=name)
             if not saved_account:
                 raise AccountNotFoundError(f"Account with the name {name} does not exist on disk.")
+            logger.warning("Loading saved account: %s", name)
             return Account.from_saved_format(saved_account)
-
+        logger.warning("Loading default saved account")
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         env_account = cls._from_env_variables(channel_)
         if env_account is not None:
