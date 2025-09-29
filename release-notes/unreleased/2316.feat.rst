@@ -21,11 +21,11 @@ This class enables the creation of instructions that follow the naming conventio
 
 Output::
 
-       ┌────────────┐┌────────────────┐┌─┐
-    q: ┤0           ├┤0               ├┤M├
-       │  Measure_2 ││  Measure_reset │└╥┘
-    c: ╡0           ╞╡0               ╞═╩═
-       └────────────┘└────────────────┘
+       ┌────────────┐┌────────────┐┌─┐
+    q: ┤0           ├┤0           ├┤M├
+       │  Measure_2 ││  Measure_3 │└╥┘
+    c: ╡0           ╞╡0           ╞═╩═
+       └────────────┘└────────────┘
 
 
 The :func:`.convert_to_target` utility has been updated to support an additional ``"instruction_signatures"`` field in 
