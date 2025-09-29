@@ -70,7 +70,7 @@ class ConvertISAToClifford(TransformationPass):
                 raise ValueError(f"Operation ``{node.op.name}`` not supported.")
 
             # Round the angle of `RZ`s to a multiple of pi/2 and skip the other instructions.
-            if isinstance(node.op, RZGate) or isinstance(node.op, RZZGate) or isinstance(node.op, RXGate):
+            if isinstance(node.op, (RZGate, RZZGate, RXGate)):
                 if isinstance(angle := node.op.params[0], float):
                     rem = angle % (np.pi / 2)
                     new_angle = angle - rem if rem < np.pi / 4 else angle + np.pi / 2 - rem
