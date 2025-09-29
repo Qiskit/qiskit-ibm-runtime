@@ -18,7 +18,17 @@ from random import choices
 import numpy as np
 
 from qiskit.circuit import Barrier, Measure
-from qiskit.circuit.library import CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate
+from qiskit.circuit.library import (
+    CXGate,
+    CZGate,
+    ECRGate,
+    IGate,
+    RZGate,
+    SXGate,
+    XGate,
+    RXGate,
+    RZZGate,
+)
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
@@ -77,7 +87,7 @@ class ConvertISAToClifford(TransformationPass):
                 else:
                     # special handling of parametric gates
                     new_angle = choices([0, np.pi / 2, np.pi, 3 * np.pi / 2])[0]
-                
+
                 if isinstance(node.op, RZGate):
                     dag.substitute_node(node, RZGate(new_angle), inplace=True)
                 elif isinstance(node.op, RXGate):
