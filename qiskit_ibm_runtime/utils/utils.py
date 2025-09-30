@@ -337,7 +337,10 @@ def default_runtime_url_resolver(
     if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
         if private_endpoint:
-            api_host = f"{parsed_url.scheme}://{_private_endpoint_from_crn(instance)}"
+            api_host = (
+                f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
+                f".quantum.{parsed_url.hostname}"
+            )
         elif channel == "ibm_quantum_platform":
             # ibm_quantum_platform url
             region = _location_from_crn(instance)
