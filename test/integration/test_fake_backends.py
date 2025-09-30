@@ -115,6 +115,11 @@ class TestFakeBackends(IBMTestCase):
                 self.assertLess(i, 1)
 
         self.assertIsInstance(configuration.to_dict(), dict)
+        # test unit/value consistency on roundtrip
+        if hasattr(configuration, "rep_times"):
+            config_dict = configuration.to_dict()
+            roundtrip_config = configuration.from_dict(config_dict)
+            self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
 
     def test_delay_circuit(self):
         backend = FakeMumbaiV2()
@@ -162,7 +167,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(service)
-        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
+        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[1])
 
         # to verify the refresh can't be done
         wrong_backend = FakeSherbrooke()

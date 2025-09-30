@@ -31,9 +31,9 @@ Deprecation Notes
    been removed from
    `qiskit_ibm_runtime.QiskitRuntimeService.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.29/qiskit-runtime-service#run>`__.
    They can be passed in through
-   `RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__ instead.
+   ``RuntimeOptions`` instead.
 
-   Within `RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__,
+   Within ``RuntimeOptions``
    ``backend_name`` is no longer supported. Please use ``backend``
    instead.
 
