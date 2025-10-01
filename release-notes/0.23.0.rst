@@ -5,7 +5,7 @@ Deprecation Notes
 -----------------
 
 - `backend.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#run>`__ has been deprecated. Please use the primitives instead. More details
-  can be found in the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
+  can be found in the `migration guide <https://github.com/Qiskit/documentation/blob/2d2c2fcad47dd9e7ac1cc6807527dfccd796ea24/docs/migration-guides/qiskit-runtime.mdx>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
 - In a future release, the ``service`` parameter in `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__ 
   will be required. (`1311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1311>`__)
 
