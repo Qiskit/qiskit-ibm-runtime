@@ -32,7 +32,7 @@ from qiskit.circuit.library import (
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
-SUPPORTED_INSTRUCTIONS = (CXGate, CZGate, ECRGate, IGate, RZGate, SXGate, XGate, Barrier, Measure)
+SUPPORTED_INSTRUCTIONS = (CXGate, CZGate, ECRGate, RZZGate, IGate, RZGate, RXGate, SXGate, XGate, Barrier, Measure)
 """The set of instructions supported by the :class:`~.ConvertISAToClifford` pass."""
 
 
