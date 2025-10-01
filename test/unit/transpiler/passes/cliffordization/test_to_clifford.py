@@ -102,7 +102,7 @@ class TestConvertISAToClifford(IBMTestCase):
         qc = QuantumCircuit(2)
         qc.id(0)
         qc.sx(0)
-        qc.rx(np.pi / 2 - 0.1, 0)
+        qc.ry(np.pi / 2 - 0.1, 0)
         qc.cx(0, 1)
         qc.cz(0, 1)
         qc.ecr(0, 1)
@@ -117,7 +117,7 @@ class TestConvertISAToClifford(IBMTestCase):
         qc.x(1)
         qc.barrier(0)
         qc.reset(1)
-        qc.rx(np.pi / 2 - 0.1, 1)
+        qc.ry(np.pi / 2 - 0.1, 1)
 
         pm = PassManager([ConvertISAToClifford()])
         with self.assertRaises(ValueError):
