@@ -383,6 +383,7 @@ class CircuitSchedule:
 
         # Trace instructions of zero duration
         for instruction_schedule in shift_phase_instructions:
+            (_, _, _, _, _, _, gate_name) = instruction_schedule
             self.trace_zero_duration_instruction(instruction_schedule)
             self.legend.add(gate_name)
 
