@@ -26,36 +26,38 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
         """Test if schedules circuits with c_if after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
 
-        durations = DynamicCircuitInstructionDurations(
-            [
-                ("x", None, 200),
-                ("sx", (0,), 200),
-                ("measure", None, 1000),
-                ("measure", (0, 1), 1200),
-                ("reset", None, 800),
-            ]
-        )
+        with self.assertWarns(DeprecationWarning):
+            durations = DynamicCircuitInstructionDurations(
+                [
+                    ("x", None, 200),
+                    ("sx", (0,), 200),
+                    ("measure", None, 1000),
+                    ("measure", (0, 1), 1200),
+                    ("reset", None, 800),
+                ]
+            )
 
         self.assertEqual(durations.get("x", (0,)), 200)
         self.assertEqual(durations.get("measure", (0,)), 1160)
         self.assertEqual(durations.get("measure", (0, 1)), 1360)
         self.assertEqual(durations.get("reset", (0,)), 1160)
 
-        short_odd_durations = DynamicCircuitInstructionDurations(
-            [
-                ("sx", (0,), 112),
-                ("measure", None, 1000),
-                ("reset", None, 800),
-            ]
-        )
+        with self.assertWarns(DeprecationWarning):
+            short_odd_durations = DynamicCircuitInstructionDurations(
+                [
+                    ("sx", (0,), 112),
+                    ("measure", None, 1000),
+                    ("reset", None, 800),
+                ]
+            )
 
         self.assertEqual(short_odd_durations.get("measure", (0,)), 1224)
         self.assertEqual(short_odd_durations.get("reset", (0,)), 1224)
 
     def test_durations_from_backend_v2(self):
         """Test loading and patching durations from a V2 Backend"""
-
-        durations = DynamicCircuitInstructionDurations.from_backend(FakeKolkataV2())
+        with self.assertWarns(DeprecationWarning):
+            durations = DynamicCircuitInstructionDurations.from_backend(FakeKolkataV2())
 
         self.assertEqual(durations.get("x", (0,)), 160)
         self.assertEqual(durations.get("measure", (0,)), 3200)
@@ -64,7 +66,8 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
     def test_durations_from_target(self):
         """Test loading and patching durations from a target"""
 
-        durations = DynamicCircuitInstructionDurations.from_target(FakeKolkataV2().target)
+        with self.assertWarns(DeprecationWarning):
+            durations = DynamicCircuitInstructionDurations.from_target(FakeKolkataV2().target)
 
         self.assertEqual(durations.get("x", (0,)), 160)
         self.assertEqual(durations.get("measure", (0,)), 3200)
@@ -74,10 +77,11 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
         """Test if schedules circuits with c_if after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 1000), ("measure", (0, 1), 1200)],
-            enable_patching=False,
-        )
+        with self.assertWarns(DeprecationWarning):
+            durations = DynamicCircuitInstructionDurations(
+                [("x", None, 200), ("measure", None, 1000), ("measure", (0, 1), 1200)],
+                enable_patching=False,
+            )
 
         self.assertEqual(durations.get("x", (0,)), 200)
         self.assertEqual(durations.get("measure", (0,)), 1000)

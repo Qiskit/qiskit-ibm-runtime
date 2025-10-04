@@ -30,6 +30,7 @@ from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
+from qiskit.transpiler import Target
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.circuit.controlflow import condition_resources
@@ -68,6 +69,7 @@ class BlockBasePadder(TransformationPass):
         self,
         schedule_idle_qubits: bool = False,
         block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+        target: Optional[Target] = None,
     ) -> None:
 
         self._node_start_time = None
@@ -99,6 +101,7 @@ class BlockBasePadder(TransformationPass):
             block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
         )
 
+        self._target = target
         super().__init__()
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
@@ -270,7 +273,23 @@ class BlockBasePadder(TransformationPass):
 
         indices = [self._bit_indices[qarg] for qarg in self._map_wires(node.qargs)]
 
-        duration = self._durations.get(node.op, indices, unit="dt")
+        if node.name == "delay":
+            duration = node.op.duration
+        elif node.name == "barrier":
+            duration = 0
+        elif self._target:
+            props_dict = self._target.get(node.name)
+            if not props_dict:
+                duration = None
+            props = props_dict.get(tuple(indices))
+            if not props:
+                duration = None
+            if self._target.dt is None:
+                duration = props.duration
+            else:
+                duration = self._target.seconds_to_dt(props.duration)
+        else:
+            duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(

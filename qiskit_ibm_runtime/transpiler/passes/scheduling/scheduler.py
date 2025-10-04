@@ -17,15 +17,14 @@ from typing import Dict, List, Optional, Union, Set, Tuple
 import itertools
 
 import qiskit
-from qiskit.circuit import Bit
+from qiskit.circuit import Bit, Barrier, Clbit, ControlFlowOp, Measure, Qubit, Reset
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import circuit_to_dag
+from qiskit.dagcircuit import DAGCircuit, DAGNode
+from qiskit.transpiler import Target
+from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.passes.scheduling.time_unit_conversion import TimeUnitConversion
-
-from qiskit.circuit import Barrier, Clbit, ControlFlowOp, Measure, Qubit, Reset
-from qiskit.dagcircuit import DAGCircuit, DAGNode
-from qiskit.transpiler.exceptions import TranspilerError
 
 from .utils import BlockOrderingCallableType, block_order_op_nodes
 
@@ -50,8 +49,9 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
     def __init__(
         self,
-        durations: qiskit.transpiler.instruction_durations.InstructionDurations,
+        durations: Optional[qiskit.transpiler.instruction_durations.InstructionDurations] = None,
         block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+        target: Optional[Target] = None,
     ) -> None:
         """Scheduler for dynamic circuit backends.
 
@@ -62,6 +62,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 used.
         """
         self._durations = durations
+        self._target = target
         self._block_ordering_callable = (
             block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
         )
@@ -201,7 +202,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._node_tied_to = {}
         self._bit_indices = {q: index for index, q in enumerate(dag.qubits)}
 
-    def _get_duration(self, node: DAGNode, dag: Optional[DAGCircuit] = None) -> int:
+    def _get_duration(self, node: DAGNode) -> int:
         if isinstance(node.op, ControlFlowOp):
             # As we cannot currently schedule through conditionals model
             # as zero duration to avoid padding.
@@ -209,10 +210,25 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         indices = [self._bit_indices[qarg] for qarg in self._map_qubits(node)]
 
-        # Fall back to current block dag if not specified.
-        dag = dag or self._block_dag
-
-        duration = self._durations.get(node.op, indices, unit="dt")
+        if node.name == "delay":
+            duration = node.op.duration
+        elif node.name == "barrier":
+            duration = 0
+        elif self._target:
+            props_dict = self._target.get(node.name)
+            if not props_dict:
+                duration = None
+            else:
+                props = props_dict.get(tuple(indices))
+                if not props:
+                    duration = None
+                else:
+                    if self._target.dt is None:
+                        duration = props.duration
+                    else:
+                        duration = self._target.seconds_to_dt(props.duration)
+        else:
+            duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(
@@ -383,12 +399,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
         for measure in self._current_block_measures:
             t0 = t0q  # pylint: disable=invalid-name
-            bit_indices = {bit: index for index, bit in enumerate(self._block_dag.qubits)}
-            measure_duration = self._durations.get(
-                Measure(),
-                [bit_indices[qarg] for qarg in self._map_qubits(measure)],
-                unit="dt",
-            )
+            measure_duration = self._get_duration(measure)
             t1 = t0 + measure_duration  # pylint: disable=invalid-name
             self._update_bit_times(measure, t0, t1)
 
@@ -514,12 +525,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
         for measure in self._current_block_measures:
             t0 = t0q  # pylint: disable=invalid-name
-            bit_indices = {bit: index for index, bit in enumerate(self._block_dag.qubits)}
-            measure_duration = self._durations.get(
-                Measure(),
-                [bit_indices[qarg] for qarg in self._map_qubits(measure)],
-                unit="dt",
-            )
+            measure_duration = self._get_duration(measure)
             t1 = t0 + measure_duration  # pylint: disable=invalid-name
             self._update_bit_times(measure, t0, t1)
 
@@ -573,7 +579,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 item[1][0],
                 -item[1][1],
                 not isinstance(item[0].op, Barrier),
-                self._get_duration(item[0], dag=self._block_idx_dag_map[item[1][0]]),
+                self._get_duration(item[0]),
             )
 
         iterate_nodes = sorted(self._node_stop_time.items(), key=order_ops)
@@ -606,7 +612,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
             new_node_start_time[node] = (block, new_time)
             new_node_stop_time[node] = (
                 block,
-                new_time + self._get_duration(node, dag=self._block_idx_dag_map[block]),
+                new_time + self._get_duration(node),
             )
 
             # Update available times by bit
