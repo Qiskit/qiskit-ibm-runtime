@@ -1,5 +1,5 @@
 Added the new function :meth:`.visualization.draw_circuit_schedule_timing` to plot circuit schedule 
-timing data retrieved from a job when the ``"scheduler_timing_info"`` execution feature flag is 
+timing data retrieved from a job when the ``"scheduler_timing"`` execution feature flag is 
 set to ``True``,
 
 .. code python
@@ -7,7 +7,7 @@ set to ``True``,
     sampler = SamplerV2(backend)
     sampler.options.experimental = { 
         "execution": {
-            "scheduler_timing_info": True,
+            "scheduler_timing": True,
         },
     }
 
@@ -16,7 +16,7 @@ The circuit schedule data can then be accessed from the job's result metadata as
 .. code python
 
     job_result: SamplerPubResult = job.result()
-    circuit_schedule = job_result[0].metadata["compilation"]["scheduler_timing_info"]
+    circuit_schedule = job_result[0].metadata["compilation"]["scheduler_timing"]
     circuit_schedule_timing = circuit_schedule["timing"]
 
 This function uses the new :class:`CircuitSchedule` class to load, parse, preprocess, 
