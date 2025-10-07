@@ -1,0 +1,57 @@
+The :mod:`qiskit_ibm_runtime` package has been extended with two new modules: :mod:`.circuit` and 
+:mod:`.circuit.library`. These modules are designed to mirror the structure of the 
+corresponding `qiskit` SDK modules, while providing vendor-specific implementations of 
+circuit objects and instructions. 
+
+The first addition to this new circuit library is the :class:`.MidCircuitMeasure` class. 
+This class enables the creation of instructions that follow the naming convention 
+`measure_<identifier>`, which are mapped to specific mid-circuit measurement
+ hardware instructions matching that pattern. The default name for this instruction is `"measure_2"`.
+ Example usage::
+
+    from qiskit import QuantumCircuit
+    from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+
+    measure_2 = MidCircuitMeasure()
+    measure_reset = MidCircuitMeasure("measure_3")
+    qc = QuantumCircuit(1, 1)
+    qc.append(measure_2, [0], [0])
+    qc.append(measure_reset, [0], [0])
+    qc.measure([0], [0])
+
+Output::
+
+       ┌────────────┐┌────────────┐┌─┐
+    q: ┤0           ├┤0           ├┤M├
+       │  Measure_2 ││  Measure_3 │└╥┘
+    c: ╡0           ╞╡0           ╞═╩═
+       └────────────┘└────────────┘
+
+
+The :func:`.convert_to_target` utility has been updated to support an additional ``"instruction_signatures"`` field in 
+backend configuration files (``configuration.json``). This field is intended to represent non-unitary, non-standard instructions 
+reported by the backend and should respect the following schema::
+
+    "instruction_signatures" = [
+        {
+            "name": "measure_2",
+            "num_qubits": 1,
+            "num_clbits": 1,
+            "parameters": [],
+            "return_type": "Bool",
+            "description": "An alternative measurement. This can be used as a mid-circuit measurement in a dynamic circuit. ",
+        },
+        {
+            "name": "reset_2",
+            "num_qubits": 1,
+            "num_clbits": 1,
+            "parameters": [],
+            "return_type": "Bool",
+            "description": "An alternative reset instruction.",
+        }
+    ]
+
+
+
+In addition to this change, the :func:`.convert_to_target` function now accepts a ``custom_name_mapping`` argument
+and exposes the ``add_delay`` and ``filter_faulty`` flags from the original core implementation.

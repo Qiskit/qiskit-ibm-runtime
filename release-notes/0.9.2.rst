@@ -29,11 +29,11 @@ Upgrade Notes
 
 -  If a job is returned without a backend, retrieving the backend
    through
-   `qiskit_ibm_runtime.RuntimeJob.backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#backend>`__
+   `qiskit_ibm_runtime.RuntimeJob.backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#backend>`__
    will re-retrieve data from the server and attempt to update the
    backend. Additionally, ``job_id`` and ``backend``, which were
    deprecated attributes of
-   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
+   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__
    have now been removed.
 
 -  Added a user warning when the user passes an option that is not
