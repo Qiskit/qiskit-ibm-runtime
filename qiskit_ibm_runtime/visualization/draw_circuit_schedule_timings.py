@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 def draw_circuit_schedule_timing(
-    circuit_schedule: Union[str, List[str]],
+    circuit_schedule: str,
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
@@ -34,8 +34,8 @@ def draw_circuit_schedule_timing(
     Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
-        circuit_schedule: The circuit schedule file path (if a string), or
-        the circuit schedule data as a list of strings.
+        circuit_schedule: The circuit schedule as a string as returned 
+        from the compiler.
         included_channels: A list of channels to include in the plot.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
