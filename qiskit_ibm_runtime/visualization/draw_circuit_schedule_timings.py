@@ -15,7 +15,7 @@
 
 from __future__ import annotations
 
-from typing import List, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from ..utils.circuit_schedule import CircuitSchedule
 from .utils import plotly_module
 
@@ -34,7 +34,7 @@ def draw_circuit_schedule_timing(
     Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
-        circuit_schedule: The circuit schedule as a string as returned 
+        circuit_schedule: The circuit schedule as a string as returned
         from the compiler.
         included_channels: A list of channels to include in the plot.
         filter_readout_channels: If ``True``, remove all readout channels.
