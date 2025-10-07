@@ -314,7 +314,7 @@ class CloudAccount(Account):
 
     def list_instances(self) -> List[Dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        iam_url = get_iam_api_url(self.url, self.private_endpoint)
+        iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
