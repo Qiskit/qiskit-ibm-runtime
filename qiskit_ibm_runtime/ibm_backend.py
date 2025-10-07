@@ -156,6 +156,7 @@ class IBMBackend(Backend):
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
         instance: Optional[str] = None,
+        calibration_id: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -163,12 +164,14 @@ class IBMBackend(Backend):
             configuration: Backend configuration.
             service: Instance of QiskitRuntimeService.
             api_client: IBM client used to communicate with the server.
+            calibration_id: An optional calibration id to use for this backend
         """
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._calibration_id = calibration_id
         self._instance = instance
         self._service = service
         self._api_client = api_client
@@ -246,6 +249,11 @@ class IBMBackend(Backend):
         )
 
     @property
+    def calibration_id(self) -> str | None:
+        """The calibration id used for this backend."""
+        return self._calibration_id
+
+    @property
     def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
         """Return the ``service`` object
 
@@ -311,7 +319,7 @@ class IBMBackend(Backend):
         """Retrieve the newest backend configuration and refresh the current backend target."""
         if config := configuration_from_server_data(
             raw_config=self._service._get_api_client(self._instance).backend_configuration(
-                self.name, refresh=True
+                self.name, refresh=True, calibration_id=self.calibration_id
             ),
             instance=self._instance,
             use_fractional_gates=self.options.use_fractional_gates,
