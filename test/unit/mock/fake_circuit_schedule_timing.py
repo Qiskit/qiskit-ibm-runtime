@@ -18,7 +18,7 @@ from qiskit.primitives.containers import DataBin, SamplerPubResult
 class FakeCircuitScheduleInputData:
     """Circuit schedule timing mock data for testing."""
 
-    sampler_pub_result = SamplerPubResult(
+    sampler_pub_result_large = SamplerPubResult(
         data=DataBin(),
         metadata={
             "compilation": {
@@ -128,6 +128,23 @@ class FakeCircuitScheduleInputData:
                         "else,sx_2,Qubit 2,2282,0,shift_phase\n"
                         "else,sx_4,Qubit 4,2274,8,play\n"
                         "else,sx_4,Qubit 4,2282,0,shift_phase\n"
+                    )
+                }
+            }
+        },
+    )
+
+    sampler_pub_result_small = SamplerPubResult(
+        data=DataBin(),
+        metadata={
+            "compilation": {
+                "scheduler_timing": {
+                    "timing": (
+                        "main,barrier,Qubit 0,7,0,barrier\n"
+                        "main,barrier,Qubit 1,7,0,barrier\n"
+                        "main,barrier,Qubit 2,7,0,barrier\n"
+                        "main,barrier,Qubit 3,7,0,barrier\n"
+                        "main,barrier,Qubit 4,7,0,barrier\n"
                     )
                 }
             }

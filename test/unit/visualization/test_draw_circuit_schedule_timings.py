@@ -24,10 +24,10 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
 
     def setUp(self) -> None:
         """Set up."""
-        fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
+        fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
         self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
             "scheduler_timing"
-        ]["timing"].split("\n")
+        ]["timing"]
 
     def get_mock_data(self):
         """Return the data object"""

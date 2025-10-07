@@ -26,25 +26,29 @@ class TestCircuitSchedule(IBMTestCase):
 
     def setUp(self) -> None:
         """Set up."""
-        fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result
-        self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
+        fake_sampler_pub_result_large = FakeCircuitScheduleInputData.sampler_pub_result_large
+        fake_sampler_pub_result_small = FakeCircuitScheduleInputData.sampler_pub_result_small
+        self.circuit_schedule_large_data = fake_sampler_pub_result_large.metadata["compilation"][
             "scheduler_timing"
-        ]["timing"].split("\n")
-        self.small_data_len = 5
+        ]["timing"]
+        self.circuit_schedule_small_data = fake_sampler_pub_result_small.metadata["compilation"][
+            "scheduler_timing"
+        ]["timing"]
 
     def get_large_mock_data(self):
         """Return the whole data object"""
-        return self.circuit_schedule_data
+        return self.circuit_schedule_large_data
 
     def get_small_mock_data(self):
         """Return small constant portion of data object"""
-        return self.circuit_schedule_data[: self.small_data_len]
+        return self.circuit_schedule_small_data
 
     def test__load(self):
         """Test data loading"""
         data = self.get_small_mock_data()
         loaded_data = CircuitSchedule._load(data)
-        self.assertEqual(data, loaded_data)
+        expected_loaded_data = self.get_small_mock_data().split("\n")
+        self.assertEqual(loaded_data, expected_loaded_data)
 
     def test__parse(self):
         """Test circuit schedule data parsing"""
@@ -61,9 +65,6 @@ class TestCircuitSchedule(IBMTestCase):
         ]
         self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
 
-        # tests that empty data lines are ignored in parsing
-        data_extended = data + [""]
-        self.assertEqual(len(data) + 1, len(data_extended))
         circuit_schedule = CircuitSchedule(data)
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
         self.assertTrue(np.all(circuit_schedule.circuit_scheduling == expected_circuit_scheduling))
