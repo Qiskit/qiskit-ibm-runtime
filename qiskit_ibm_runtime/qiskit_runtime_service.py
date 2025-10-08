@@ -242,7 +242,6 @@ class QiskitRuntimeService:
         else:
             self._api_clients = {}
             instance_backends = self._resolve_cloud_instances(instance)
-            print("instance_backends", instance_backends)
             instance_names = [instance.get("name") for instance in self._backend_instance_groups]
             instance_plan_names = {
                 instance.get("plan") for instance in self._backend_instance_groups
@@ -276,7 +275,6 @@ class QiskitRuntimeService:
             )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
-        print("BACKENDS", self.backends())
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Retrieve all backends from the given instance."""
@@ -294,9 +292,8 @@ class QiskitRuntimeService:
             self._backends_list = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
-        except Exception as E:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             logger.warning("Invalid instance %s", instance)
-            print(E)
             return []
 
     def _create_new_cloud_api_client(self, instance: str) -> RuntimeClient:

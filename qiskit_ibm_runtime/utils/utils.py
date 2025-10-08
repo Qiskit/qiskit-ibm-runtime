@@ -254,16 +254,9 @@ def is_fractional_gate(gate: Instruction) -> bool:
     return len(gate.params) > 0 and not isinstance(gate, exclude_list)
 
 
-def get_iam_api_url(cloud_url: str, private_endpoint: bool = False) -> str:
+def get_iam_api_url(cloud_url: str) -> str:
     """Computes the IAM API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
-    if private_endpoint:
-        # if vpe is in this format: https://private.us-east.quantum.cloud.ibm.com
-        if "private" in parsed_url.hostname:
-            new_hostname = re.sub(r"(?<=private\.)[^.]+\.quantum", "iam", parsed_url.hostname)
-            return f"{parsed_url.scheme}://{new_hostname}"
-        # if normal url format: https://cloud.ibm.com
-        return f"{parsed_url.scheme}://private.iam.{parsed_url.hostname}"
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
 
 
@@ -384,21 +377,6 @@ def _location_from_crn(crn: str) -> str:
     """
     pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
     return re.search(pattern, crn).group(6)
-
-
-def _private_endpoint_from_crn(crn: str) -> str:
-    """Computes the endpoint URL from a given CRN.
-
-    Args:
-        crn: A CRN (format: https://cloud.ibm.com/docs/account?topic=account-crn#format-crn)
-
-    Returns:
-        The endpoint URL.
-    """
-    url = re.search(r"endpoint:([^\s]+)", crn)
-    if url:
-        return url.group(1).replace("qiskit-runtime", "qiskitruntime")
-    return None
 
 
 def cname_from_crn(crn: str) -> str:
