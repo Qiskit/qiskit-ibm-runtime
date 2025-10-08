@@ -260,10 +260,8 @@ def get_iam_api_url(cloud_url: str, private_endpoint: bool = False) -> str:
     if private_endpoint:
         # if vpe is in this format: https://private.us-east.quantum.cloud.ibm.com
         if "private" in parsed_url.hostname:
-            return (
-                f"{parsed_url.scheme}://"
-                f"{re.sub(r'(?<=private\.)[^.]+\.quantum', 'iam', parsed_url.hostname)}"
-            )
+            new_hostname = re.sub(r"(?<=private\.)[^.]+\.quantum", "iam", parsed_url.hostname)
+            return f"{parsed_url.scheme}://{new_hostname}"
         # if normal url format: https://cloud.ibm.com
         return f"{parsed_url.scheme}://private.iam.{parsed_url.hostname}"
     return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
