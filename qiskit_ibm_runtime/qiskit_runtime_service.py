@@ -275,6 +275,8 @@ class QiskitRuntimeService:
             )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
+        print(self._account.__dict__)
+        print(self.backends())
 
     def _discover_backends_from_instance(self, instance: str) -> List[str]:
         """Retrieve all backends from the given instance."""
