@@ -1,0 +1,2 @@
+Virtual private endpoints for the IBM Quantum Platform are now supported.
+Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/en/security/virtual-private-endpoints>`__.
