@@ -1,0 +1,2 @@
+It is now possible to retrieve the job tags of a job without having to actually fetch 
+the job with :meth:`.QiskitRuntimeService.job`.
