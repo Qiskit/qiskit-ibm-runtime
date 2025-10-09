@@ -1,6 +1,7 @@
-Added the new function :meth:`.visualization.draw_circuit_schedule_timing` to plot circuit schedule 
-timing data retrieved from a job when the ``"scheduler_timing"`` execution feature flag is 
-set to ``True``,
+Added a new function :meth:`.visualization.draw_circuit_schedule_timing` to plot circuit schedule 
+timing data returned in job result metadata. This is currently a beta feature and requires the 
+``"scheduler_timing"`` experimental option to be set to ``True``, as shown below. This is 
+currently only available to ``Sampler`` jobs.
 
 .. code python
 
