@@ -404,9 +404,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         if self._qubits and self._block_dag.qubits.index(qubit) not in self._qubits:
             # Target physical qubit is not the target of this DD sequence.
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval), qubit)
             return
 
         if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
@@ -424,9 +422,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
             # Previous node is the start edge or reset, i.e. qubit is ground state;
             # or dd to be applied before named barrier only
-            self._apply_scheduled_op(
-                block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-            )
+            self._apply_scheduled_op(block_idx, t_start, Delay(time_interval), qubit)
             return
 
         for sequence_idx, _ in enumerate(self._dd_sequences):
@@ -488,7 +484,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     theta_l, phi_l, lam_l = op.params
                     op.params = Optimize1qGates.compose_u3(theta, phi, lam, theta_l, phi_l, lam_l)
                     new_prev_node = self._block_dag.substitute_node(
-                        prev_node, op, propagate_condition=False
+                        prev_node,
+                        op,
                     )
                     start_time = self.property_set["node_start_time"].pop(prev_node)
                     if start_time is not None:
@@ -499,7 +496,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     self._apply_scheduled_op(
                         block_idx,
                         t_start,
-                        Delay(time_interval, self._block_dag.unit),
+                        Delay(time_interval),
                         qubit,
                     )
                     return
@@ -543,9 +540,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             # Interleave delays with DD sequence operations
             for tau_idx, tau in enumerate(taus):
                 if tau > 0:
-                    self._apply_scheduled_op(
-                        block_idx, idle_after, Delay(tau, self._dag.unit), qubit
-                    )
+                    self._apply_scheduled_op(block_idx, idle_after, Delay(tau), qubit)
                     idle_after += tau
 
                 # Detect if we are on a sequence boundary
@@ -566,7 +561,5 @@ class PadDynamicalDecoupling(BlockBasePadder):
             return
 
         # DD could not be applied, delay instead
-        self._apply_scheduled_op(
-            block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
-        )
+        self._apply_scheduled_op(block_idx, t_start, Delay(time_interval), qubit)
         return
