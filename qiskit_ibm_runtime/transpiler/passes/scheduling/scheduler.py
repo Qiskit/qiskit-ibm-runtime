@@ -15,6 +15,7 @@
 from abc import abstractmethod
 from typing import Dict, List, Optional, Union, Set, Tuple
 import itertools
+import warnings
 
 import qiskit
 from qiskit.circuit import Bit, Barrier, Clbit, ControlFlowOp, Measure, Qubit, Reset
@@ -61,6 +62,16 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
         """
+
+        if durations:
+            warnings.warn(
+                "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "
+                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+                "Provide a `target` instance instead ex: BaseDynamicCircuitAnalysis(target=backend.target).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self._durations = durations
         self._target = target
         self._block_ordering_callable = (

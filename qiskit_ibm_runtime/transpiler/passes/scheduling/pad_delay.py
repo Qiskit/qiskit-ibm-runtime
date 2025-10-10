@@ -13,6 +13,7 @@
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
 from typing import Optional
+import warnings
 
 from qiskit.circuit import Qubit
 from qiskit.circuit.delay import Delay
@@ -75,6 +76,16 @@ class PadDelay(BlockBasePadder):
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
         """
+
+        if durations:
+            warnings.warn(
+                "The `durations` input argument of `PadDelay` is deprecated "
+                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+                "Provide a `target` instance instead ex: PadDelay(target=backend.target).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,

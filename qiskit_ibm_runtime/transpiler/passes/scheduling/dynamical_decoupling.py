@@ -201,6 +201,15 @@ class PadDynamicalDecoupling(BlockBasePadder):
             TranspilerError: When the coupling map is not supported (i.e., if degree > 3)
         """
 
+        if durations:
+            warnings.warn(
+                "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "
+                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+                "Provide a `target` instance instead ex: PadDynamicalDecoupling(target=backend.target).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
