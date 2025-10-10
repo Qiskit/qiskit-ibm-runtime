@@ -32,21 +32,12 @@ class FakeRuntimeService(QiskitRuntimeService):
     """
 
     DEFAULT_CRNS = [
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::",
     ]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
-    DEFAULT_INSTANCES = [
-        {
-            "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-            "tags": ["services"],
-            "name": "test-instance",
-            "pricing_type": "free",
-            "plan": "internal",
-        }
-    ]
-
     DEFAULT_INSTANCES = [
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
@@ -85,6 +76,10 @@ class FakeRuntimeService(QiskitRuntimeService):
             self._active_api_client = self._fake_runtime_client or BaseFakeRuntimeClient(
                 backend_specs=self._backend_specs, instance=instance
             )
+
+    def instances(self):
+        """Return a list of instances."""
+        return self.DEFAULT_INSTANCES
 
     def _resolve_crn(self, account: Account) -> None:
         pass

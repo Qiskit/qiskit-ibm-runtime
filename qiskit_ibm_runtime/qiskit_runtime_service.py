@@ -112,6 +112,10 @@ class QiskitRuntimeService:
         and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
         over paid instances.
 
+        Also note that only one account per API token can be used. The API token is linked to the
+        account it was created in. If you want to use multiple accounts, you must create multiple
+        API tokens.
+
         The service will attempt to load an account from file if (a) no explicit ``token``
         was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
         ``token`` was provided to the service constructor. The account will be selected based on
@@ -226,6 +230,13 @@ class QiskitRuntimeService:
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
         if self._account.instance:
+            if self._account.instance not in [inst["crn"] for inst in self.instances()]:
+                raise IBMInputValueError(
+                    "The given API token is associated with an account that does not have access to "
+                    f"the instance {self._account.instance}. "
+                    "To use this instance, use an API token generated from the account "
+                    "with this instance available."
+                )
             self._default_instance = True
             self._api_clients = {self._account.instance: RuntimeClient(self._client_params)}
         else:
@@ -528,14 +539,12 @@ class QiskitRuntimeService:
                         filters=lambda x: ("rz" in x.basis_gates )
                     )
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. Currently this feature cannot be used
-                simultaneously with dynamic circuits, PEC, PEA, or gate
-                twirling.  When this flag is set, control flow instructions are
-                automatically removed from the backend.
-                When you use a dynamic circuits feature (e.g. ``if_else``) in your
-                algorithm, you must disable this flag to create executable ISA circuits.
-                This flag might be modified or removed when our backend
-                supports dynamic circuits and fractional gates simultaneously.
+                fractional gates. Note that our backends now
+                support dynamic circuits and fractional gates simultaneously.
+                You no longer have to disable this flag when
+                using dynamic circuits features (e.g. ``if_else``) in your
+                algorithm. Control flow instructions are not removed from the
+                backend when this flag is set to True.
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
 
@@ -552,8 +561,8 @@ class QiskitRuntimeService:
                     # Get the backends that support OpenPulse
                     QiskitRuntimeService.backends(open_pulse=True)
 
-                For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/providers_models>
+                For the full list of backend attributes, see the `IBMBackend class documentation
+                <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime>`_
 
         Returns:
             The list of available backends that match the filter.
@@ -562,12 +571,6 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        if dynamic_circuits is True and use_fractional_gates:
-            raise QiskitBackendNotFoundError(
-                "Currently fractional_gates and dynamic_circuits feature cannot be "
-                "simulutaneously enabled. Consider disabling one or the other."
-            )
-
         backends: List[IBMBackend] = []
 
         unique_backends = set()
@@ -613,7 +616,9 @@ class QiskitRuntimeService:
         if dynamic_circuits is not None:
             backends = list(
                 filter(
-                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
+                    lambda b: (
+                        "dynamic_circuits" in getattr(b.configuration(), "supported_features", [])
+                    )
                     == dynamic_circuits,
                     backends,
                 )
@@ -1001,7 +1006,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._active_api_client.job_get(job_id, exclude_params=False)
+            response = self._active_api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code != 404:
                 raise IBMRuntimeError(f"Failed to retrieve job: {ex}") from None
@@ -1010,7 +1015,7 @@ class QiskitRuntimeService:
                 if instance is not None and instance != self._active_api_client._instance:
                     try:
                         self._active_api_client = client
-                        response = self._active_api_client.job_get(job_id, exclude_params=False)
+                        response = self._active_api_client.job_get(job_id, exclude_params=True)
                         break
                     except RequestsApiError:
                         continue
@@ -1169,7 +1174,9 @@ class QiskitRuntimeService:
         # Try to find the right backend
         try:
             if "backend" in raw_data:
-                backend = self.backend(raw_data["backend"], instance=instance)
+                backend = self._create_backend_obj(
+                    raw_data["backend"], instance=instance, use_fractional_gates=False
+                )
             else:
                 backend = None
         except QiskitBackendNotFoundError:
@@ -1270,7 +1277,7 @@ class QiskitRuntimeService:
 
         candidates = []
         for backend in all_backends:
-            if backend["status"]["name"] == "online" and backend["status"]["reason"] == "available":
+            if backend["status"]["name"] == "online":
                 candidates.append(backend)
 
         if filters or kwargs:
@@ -1296,7 +1303,7 @@ class QiskitRuntimeService:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
-    def instances(self) -> Sequence[Union[str, Dict[str, str]]]:
+    def instances(self) -> Sequence[Dict[str, Any]]:
         """Return a list that contains a series of dictionaries with the
             following instance identifiers per instance: "crn", "plan", "name".
 

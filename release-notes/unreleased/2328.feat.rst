@@ -1,0 +1,24 @@
+Added a new function :meth:`.visualization.draw_circuit_schedule_timing` to plot circuit schedule 
+timing data returned in job result metadata. This is currently a beta feature and requires the 
+``"scheduler_timing"`` experimental option to be set to ``True``, as shown below. This is 
+currently only available to ``Sampler`` jobs.
+
+.. code python
+
+    sampler = SamplerV2(backend)
+    sampler.options.experimental = { 
+        "execution": {
+            "scheduler_timing": True,
+        },
+    }
+
+The circuit schedule data can then be accessed from the job's result metadata as follows,
+
+.. code python
+
+    job_result: SamplerPubResult = job.result()
+    circuit_schedule = job_result[0].metadata["compilation"]["scheduler_timing"]
+    circuit_schedule_timing = circuit_schedule["timing"]
+
+This function uses the new :class:`CircuitSchedule` class to load, parse, preprocess, 
+and trace the data for plotting using a Plotly supported interface.
