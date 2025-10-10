@@ -70,7 +70,10 @@ for a dynamic circuit backend's execution model:
     # Generate the main Qiskit transpile passes.
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     # Configure the as-late-as-possible scheduling pass
-    pm.scheduling = PassManager([ALAPScheduleAnalysis(target=backend.target), PadDelay(target=backend.target)])
+    pm.scheduling = PassManager([
+        ALAPScheduleAnalysis(target=backend.target), 
+        PadDelay(target=backend.target)]
+        )
 
     qr = QuantumRegister(3)
     crz = ClassicalRegister(1, name="crz")

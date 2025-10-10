@@ -67,7 +67,8 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
             warnings.warn(
                 "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "
                 "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: BaseDynamicCircuitAnalysis(target=backend.target).",
+                "Provide a `target` instance instead ex: "
+                "BaseDynamicCircuitAnalysis(target=backend.target).",
                 DeprecationWarning,
                 stacklevel=2,
             )
