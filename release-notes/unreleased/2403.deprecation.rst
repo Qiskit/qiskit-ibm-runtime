@@ -1,0 +1,13 @@
+
+Added a new ``target`` argument to the initializer following transpiler analysis and padding passes: 
+:class:`.ALAPScheduleAnalysis`, :class:`.PadDelay`, :class:`.PadDynamicalDecoupling`, :class:`.BlockBasePadder`.
+This change aligns these passes with the broader Qiskit transpiler architecture, and supersedes the use of the
+``durations`` argument.
+
+The :class:`.DynamicCircuitInstructionDurations` class, used in custom schedulin passes, has been deprecated as of
+``qiskit-ibm-runtime`` v0.43. This class was optimized for scheduling operations on Eagle processors, and it 
+has fallen out of date with the current offering of Heron processors. This class was used to define the ```durations`` 
+argument in the scheduling passes listed above 
+(:class:`.ALAPScheduleAnalysis`, :class:`.PadDelay`, :class:`.PadDynamicalDecoupling`, :class:`.BlockBasePadder`). 
+The argument is also deprecated and will be removed in a future release. Users are encouraged to migrate to 
+the ``target`` argument. 
