@@ -372,7 +372,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
                         raise TranspilerError(
                             f"Duration of {gate} on qubits {physical_index} is not found."
                         )
-
                     seq_length_.append(gate_length)
                     # Update gate duration.
                     # This is necessary for current timeline drawer, i.e. scheduled.
@@ -567,6 +566,11 @@ class PadDynamicalDecoupling(BlockBasePadder):
             # Interleave delays with DD sequence operations
             for tau_idx, tau in enumerate(taus):
                 if tau > 0:
+                    # Delay only accept integer durations if the unit is 'dt',
+                    # but the tau calculation can result in floating-point
+                    # rounding errors (like 4.99999 instead of 5).
+                    if self._dag.unit == "dt":
+                        tau = round(tau)
                     self._apply_scheduled_op(
                         block_idx, idle_after, Delay(tau, self._dag.unit), qubit
                     )
