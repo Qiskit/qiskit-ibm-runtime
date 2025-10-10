@@ -899,13 +899,14 @@ class QiskitRuntimeService:
                     "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
-            if use_fractional_gates:
-                basis_gates = backends[0].basis_gates
-                if "rzz" not in basis_gates:    
-                    raise IBMInputValueError(
-                        f"Backend '{name}' does not support fractional gates, "
-                        "but use_fractional_gates=True was requested."
-                    )
+    
+        if use_fractional_gates:
+            basis_gates = backends[0].configuration().basis_gates
+            if "rzz" not in basis_gates:    
+                raise IBMInputValueError(
+                    f"Backend '{name}' does not support fractional gates, "
+                    "but use_fractional_gates=True was requested."
+                )
         return backends[0]
 
     def _run(
