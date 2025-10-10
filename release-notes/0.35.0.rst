@@ -5,7 +5,7 @@ Upgrade Notes
 -------------
 
 - Python 3.8 reached end-of-life on Oct 7th, 2024. Qiskit SDK dropped support for 3.8 in ``qiskit 1.3``. In the same vein, ``qiskit-ibm-runtime`` does not support Python 3.8 anymore. (`2097 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2097>`__)
-- Support for ``backend.run()`` has been removed. Refer to the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime>`__
+- Support for ``backend.run()`` has been removed. Refer to the `migration guide <https://github.com/Qiskit/documentation/blob/2d2c2fcad47dd9e7ac1cc6807527dfccd796ea24/docs/migration-guides/qiskit-runtime.mdx>`__
   for instructions to migrate any existing code that uses 
   ``backend.run()`` to the new V2 primitives interface. (`1962 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1962>`__)
 - Parameter expressions with RZZ gates will be checked against the values assigned to them in the PUB. An ``IBMInputValueError`` will be raised if parameter values specified in the PUB make a parameter expression evaluate to an invalid angle (negative, or greater than ``pi/2``). (`2093 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2093>`__)
