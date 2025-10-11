@@ -261,6 +261,18 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertIn("rzz", real_device_fg.basis_gates)
         self.assertNotIn("rzz", real_device_no_fg.basis_gates)
 
+    def test_backend_fractional_gates_error(self):
+        """Test that use_fractional_gates = True raises error for unsupported backends"""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            if "rzz" in backend.basis_gates:
+                self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
+            with self.assertRaises(
+                IBMInputValueError,
+                f"Backend '{backend.name}' does not support fractional gates, but use_fractional_gates=True was requested.",
+            ):
+                self.service.backend(backend.name, use_fractional_gates=True)
+
     def test_renew_backend_properties(self):
         """Test renewed backend property"""
         name = self.backend.name
