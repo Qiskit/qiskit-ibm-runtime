@@ -899,10 +899,10 @@ class QiskitRuntimeService:
                     "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
-    
+
         if use_fractional_gates:
             basis_gates = backends[0].basis_gates
-            if "rzz" not in basis_gates:    
+            if "rzz" not in basis_gates:
                 # TODO suggest backends that support frac gates in error message via service.backends(use_fractional_gates=True)
                 raise IBMInputValueError(
                     f"Backend '{name}' does not support fractional gates, "
