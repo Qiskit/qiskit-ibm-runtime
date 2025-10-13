@@ -171,6 +171,7 @@ class NoiseLearner:
         inputs = {"circuits": circuits}
         inputs.update(learner_options)
 
+        calibration_id = None
         if self._backend:
             for task in circuits:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
@@ -178,6 +179,7 @@ class NoiseLearner:
 
                 if isinstance(self._backend, IBMBackend):
                     self._backend.check_faulty(task)
+            calibration_id = getattr(self._backend, "calibration_id", None)
 
         logger.info("Submitting job using options %s", learner_options)
 
@@ -188,6 +190,7 @@ class NoiseLearner:
                 inputs=inputs,
                 options=runtime_options,
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         if self._backend:
@@ -201,12 +204,14 @@ class NoiseLearner:
                 options=runtime_options,
                 inputs=inputs,
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         return self._service._run(  # type: ignore[attr-defined]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=inputs,
+            calibration_id=calibration_id,
         )
 
     @classmethod
