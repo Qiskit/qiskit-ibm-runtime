@@ -906,7 +906,7 @@ class QiskitRuntimeService:
                 # TODO suggest backends that support frac gates in error message via service.backends(use_fractional_gates=True)
                 raise IBMInputValueError(
                     f"Backend '{name}' does not support fractional gates, "
-                    "but use_fractional_gates=True was requested."
+                    "but use_fractional_gates was set to True."
                 )
         return backends[0]
 
