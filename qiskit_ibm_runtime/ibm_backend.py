@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Union
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version
@@ -249,7 +249,7 @@ class IBMBackend(Backend):
         )
 
     @property
-    def calibration_id(self) -> str | None:
+    def calibration_id(self) -> Union[str, None]:
         """The calibration id used for this backend."""
         return self._calibration_id
 
