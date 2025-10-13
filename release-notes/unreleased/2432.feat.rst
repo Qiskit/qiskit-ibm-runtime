@@ -1,0 +1,3 @@
+:meth:`.QiskitRuntimeService.backends` and :meth:`.QiskitRuntimeService.backend` have a new parameter, 
+``calibration_id``. This custom calibration will be used for constructing the target and also used 
+when executing primitive jobs on the backend.

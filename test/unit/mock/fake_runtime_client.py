@@ -292,6 +292,7 @@ class BaseFakeRuntimeClient:
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
         private: Optional[int] = False,  # pylint: disable=unused-argument
+        calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
     ) -> Dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
