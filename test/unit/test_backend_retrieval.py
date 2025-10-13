@@ -282,9 +282,9 @@ class TestGetBackend(IBMTestCase):
     def test_backend_with_custom_calibration(self):
         """Test getting a backend with a custom calibration."""
         service = FakeRuntimeService(
-            channel="ibm_quantum",
+            channel="ibm_quantum_platform",
             token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeTorino")],
         )
 
         backend_with_calibration = service.backend("fake_torino", calibration_id="abc1234")

@@ -400,7 +400,12 @@ class BaseFakeRuntimeClient:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
-    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+    # pylint: disable=unused-argument
+    def backend_configuration(
+        self,
+        backend_name: str,
+        calibration_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
             return ret.copy()
