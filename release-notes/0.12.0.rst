@@ -38,7 +38,7 @@ Upgrade Notes
 
 -  Circuits and other input parameters will no longer be automatically
    stored in runtime jobs. They can still be retrieved with
-   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#inputs>`__.
+   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#inputs>`__.
 
 
 Deprecation Notes

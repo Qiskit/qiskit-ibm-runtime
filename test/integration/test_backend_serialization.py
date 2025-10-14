@@ -35,6 +35,7 @@ class TestSerialization(IBMIntegrationTestCase):
             "coupling_map",
             "qubit_lo_range",
             "meas_lo_range",
+            "rep_times",
             "gates.coupling_map",
             "meas_levels",
             "qubit_channel_mapping",
