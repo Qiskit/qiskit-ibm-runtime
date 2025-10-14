@@ -271,3 +271,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # renew backend
         backend = self.service.backend(name)
         self.assertEqual(backend.basis_gates, basis_gates)
+
+    def test_backend_calibration_id(self):
+        """Test calibration_id is used when fetching the configuration."""
+        name = self.backend.name
+        calibration_id = "invalid_id"
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as log:
+            with self.assertRaises(QiskitBackendNotFoundError):
+                self.service.backend(name, calibration_id=calibration_id)
+
+        self.assertTrue(any(calibration_id in record for record in log.output))
