@@ -370,7 +370,9 @@ class IBMBackend(Backend):
                 raise TypeError("'{}' is not of type 'datetime'.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
+            api_properties = self._api_client.backend_properties(
+                self.name, datetime=datetime, calibration_id=self.calibration_id
+            )
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(

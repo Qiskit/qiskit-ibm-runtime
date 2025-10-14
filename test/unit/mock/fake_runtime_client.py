@@ -416,7 +416,10 @@ class BaseFakeRuntimeClient:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
-    def backend_properties(self, backend_name: str, datetime: Any = None) -> Dict[str, Any]:
+    # pylint: disable=unused-argument
+    def backend_properties(
+        self, backend_name: str, datetime: Any = None, calibration_id: str = None
+    ) -> Dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
