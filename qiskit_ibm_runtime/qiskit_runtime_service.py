@@ -520,6 +520,7 @@ class QiskitRuntimeService:
         filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
         use_fractional_gates: Optional[bool] = False,
+        calibration_id: Optional[str] = None,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -547,6 +548,8 @@ class QiskitRuntimeService:
                 backend when this flag is set to True.
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
+            calibration_id: The calibration id used for instantiating the backend. This should only
+                be used when selecting a single backend as the calibration id is defined per backend.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -605,6 +608,7 @@ class QiskitRuntimeService:
                     backend_name,
                     instance=inst,
                     use_fractional_gates=use_fractional_gates,
+                    calibration_id=calibration_id,
                 ):
                     backends.append(backend)
         if name:
@@ -685,6 +689,7 @@ class QiskitRuntimeService:
         backend_name: str,
         instance: Optional[str],
         use_fractional_gates: Optional[bool],
+        calibration_id: Optional[str] = None,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
@@ -704,14 +709,16 @@ class QiskitRuntimeService:
             if backend_name in self._backend_configs:
                 config = self._backend_configs[backend_name]
                 # if cached config does not match use_fractional_gates
+                # or calibration_id is passed in
                 if (
-                    use_fractional_gates
-                    and "rzz" not in config.basis_gates
-                    or not use_fractional_gates
-                    and "rzz" in config.basis_gates
+                    (use_fractional_gates and "rzz" not in config.basis_gates)
+                    or (not use_fractional_gates and "rzz" in config.basis_gates)
+                    or calibration_id
                 ):
                     config = configuration_from_server_data(
-                        raw_config=self._active_api_client.backend_configuration(backend_name),
+                        raw_config=self._active_api_client.backend_configuration(
+                            backend_name=backend_name, calibration_id=calibration_id
+                        ),
                         instance=instance,
                         use_fractional_gates=use_fractional_gates,
                     )
@@ -719,7 +726,9 @@ class QiskitRuntimeService:
 
             else:
                 config = configuration_from_server_data(
-                    raw_config=self._active_api_client.backend_configuration(backend_name),
+                    raw_config=self._active_api_client.backend_configuration(
+                        backend_name=backend_name, calibration_id=calibration_id
+                    ),
                     instance=instance,
                     use_fractional_gates=use_fractional_gates,
                 )
@@ -737,6 +746,7 @@ class QiskitRuntimeService:
                 configuration=config,
                 service=self,
                 api_client=self._active_api_client,
+                calibration_id=calibration_id,
             )
         return None
 
@@ -871,6 +881,7 @@ class QiskitRuntimeService:
         name: str,
         instance: Optional[str] = None,
         use_fractional_gates: Optional[bool] = False,
+        calibration_id: Optional[str] = None,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -888,6 +899,7 @@ class QiskitRuntimeService:
                 supports dynamic circuits and fractional gates simultaneously.
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
+            calibration_id: The calibration id used for instantiating the backend.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -895,7 +907,12 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
+        backends = self.backends(
+            name,
+            instance=instance,
+            use_fractional_gates=use_fractional_gates,
+            calibration_id=calibration_id,
+        )
         if not backends:
             cloud_msg_url = ""
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
@@ -914,6 +931,7 @@ class QiskitRuntimeService:
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
+        calibration_id: Optional[str] = None,
     ) -> RuntimeJobV2:
         """Execute the runtime program.
 
@@ -970,6 +988,7 @@ class QiskitRuntimeService:
                 start_session=start_session,
                 session_time=qrt_options.session_time,
                 private=qrt_options.private,
+                calibration_id=calibration_id,
             )
 
         except RequestsApiError as ex:
