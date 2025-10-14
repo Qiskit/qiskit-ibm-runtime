@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import re
 import logging
+import warnings
 from dataclasses import dataclass
 from typing import Optional, List
 
@@ -27,7 +28,7 @@ from .utils import validate_job_tags
 
 @dataclass(init=False)
 class RuntimeOptions:
-    """Class for representing generic runtime execution options."""
+    """(DEPRECATED) Class for representing generic runtime execution options."""
 
     backend: Optional[str | Backend] = None
     image: Optional[str] = None
@@ -75,6 +76,13 @@ class RuntimeOptions:
                 When set to false, the input parameters and results follow the
                 standard retention behavior of the API.
         """
+
+        warnings.warn(
+            "The RuntimeOptions class is deprecated. This class was originally only used to support "
+            "custom programs, it should not import imported externally.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.backend = backend
         self.image = image
         self.log_level = log_level
