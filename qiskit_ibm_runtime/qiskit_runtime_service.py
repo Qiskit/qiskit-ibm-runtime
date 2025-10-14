@@ -1004,6 +1004,7 @@ class QiskitRuntimeService:
             program_id=program_id,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            tags=qrt_options.job_tags,
             service=self,
             version=version,
             private=qrt_options.private,
