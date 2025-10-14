@@ -1,2 +1,0 @@
-The :class:`RuntimeOptions` class is deprecated. This class was originally only 
-meant to be used with custom programs and is no longer needed.

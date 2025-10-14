@@ -1,2 +1,0 @@
-The :class:`.~ConvertISAToClifford` pass now supports cliffordization of circuits containing fractional gates.
-
