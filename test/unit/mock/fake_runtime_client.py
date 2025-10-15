@@ -292,6 +292,7 @@ class BaseFakeRuntimeClient:
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
         private: Optional[int] = False,  # pylint: disable=unused-argument
+        calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
     ) -> Dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -400,7 +401,12 @@ class BaseFakeRuntimeClient:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
-    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+    # pylint: disable=unused-argument
+    def backend_configuration(
+        self,
+        backend_name: str,
+        calibration_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
             return ret.copy()
@@ -410,7 +416,10 @@ class BaseFakeRuntimeClient:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
-    def backend_properties(self, backend_name: str, datetime: Any = None) -> Dict[str, Any]:
+    # pylint: disable=unused-argument
+    def backend_properties(
+        self, backend_name: str, datetime: Any = None, calibration_id: str = None
+    ) -> Dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")

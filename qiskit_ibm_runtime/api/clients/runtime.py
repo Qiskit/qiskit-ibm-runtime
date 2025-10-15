@@ -60,6 +60,7 @@ class RuntimeClient(BaseBackendClient):
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,
+        calibration_id: Optional[str] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -75,6 +76,7 @@ class RuntimeClient(BaseBackendClient):
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
+            calibration_id: The calibration id to use with the program execution
 
         Returns:
             JSON response.
@@ -91,6 +93,7 @@ class RuntimeClient(BaseBackendClient):
             start_session=start_session,
             session_time=session_time,
             private=private,
+            calibration_id=calibration_id,
         )
 
     def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
@@ -250,15 +253,22 @@ class RuntimeClient(BaseBackendClient):
 
         return self._api.backends()["devices"]
 
-    def backend_configuration(self, backend_name: str, refresh: bool = False) -> Dict[str, Any]:
+    def backend_configuration(
+        self, backend_name: str, refresh: bool = False, calibration_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
 
         Args:
             backend_name: The name of the IBM backend.
+            calibration_id: The calibration id to use for the IBM backend
 
         Returns:
             Backend configuration.
         """
+        # Don't store configuration in registry by name if calibration_id is set
+        # since it is unique to the calibration id, query it fresh with the id set
+        if calibration_id is not None:
+            return self._api.backend(backend_name).configuration(calibration_id=calibration_id)
         if backend_name not in self._configuration_registry or refresh:
             self._configuration_registry[backend_name] = self._api.backend(
                 backend_name
@@ -277,13 +287,17 @@ class RuntimeClient(BaseBackendClient):
         return self._api.backend(backend_name).status()
 
     def backend_properties(
-        self, backend_name: str, datetime: Optional[python_datetime] = None
+        self,
+        backend_name: str,
+        datetime: Optional[python_datetime] = None,
+        calibration_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Return the properties of the IBM backend.
 
         Args:
             backend_name: The name of the IBM backend.
             datetime: Date and time for additional filtering of backend properties.
+            calibration_id: The calibration id to use for the IBM backend
 
         Returns:
             Backend properties.
@@ -291,7 +305,9 @@ class RuntimeClient(BaseBackendClient):
         Raises:
             NotImplementedError: If `datetime` is specified.
         """
-        return self._api.backend(backend_name).properties(datetime=datetime)
+        return self._api.backend(backend_name).properties(
+            datetime=datetime, calibration_id=calibration_id
+        )
 
     def update_tags(self, job_id: str, tags: list) -> Response:
         """Update the tags of the job.

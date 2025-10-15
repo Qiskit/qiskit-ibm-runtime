@@ -74,6 +74,7 @@ class Runtime(RestAdapterBase):
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,
+        calibration_id: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -89,6 +90,7 @@ class Runtime(RestAdapterBase):
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
+            calibration_id: The calibration id to use with the program execution
 
         Returns:
             JSON response.
@@ -115,6 +117,8 @@ class Runtime(RestAdapterBase):
             payload["session_time"] = session_time
         if private:
             payload["private"] = True
+        if calibration_id is not None:
+            payload["calibration_id"] = calibration_id
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(
             url, data=data, timeout=900, headers=self._HEADER_JSON_CONTENT
