@@ -230,7 +230,7 @@ class QiskitRuntimeService:
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
         if self._account.instance:
-            if self._account.instance not in [inst["crn"] for inst in self.instances()]:
+            if self._account.instance not in self._account.list_only_crns():
                 raise IBMInputValueError(
                     "The given API token is associated with an account that does not have access to "
                     f"the instance {self._account.instance}. "
