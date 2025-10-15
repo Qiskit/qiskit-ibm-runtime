@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Union
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version
@@ -148,6 +148,7 @@ class IBMBackend(Backend):
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
         instance: Optional[str] = None,
+        calibration_id: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -155,12 +156,14 @@ class IBMBackend(Backend):
             configuration: Backend configuration.
             service: Instance of QiskitRuntimeService.
             api_client: IBM client used to communicate with the server.
+            calibration_id: An optional calibration id to use for this backend
         """
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._calibration_id = calibration_id
         self._instance = instance
         self._service = service
         self._api_client = api_client
@@ -238,6 +241,11 @@ class IBMBackend(Backend):
         )
 
     @property
+    def calibration_id(self) -> Union[str, None]:
+        """The calibration id used for this backend."""
+        return self._calibration_id
+
+    @property
     def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
         """Return the ``service`` object
 
@@ -303,7 +311,7 @@ class IBMBackend(Backend):
         """Retrieve the newest backend configuration and refresh the current backend target."""
         if config := configuration_from_server_data(
             raw_config=self._service._get_api_client(self._instance).backend_configuration(
-                self.name, refresh=True
+                self.name, refresh=True, calibration_id=self.calibration_id
             ),
             instance=self._instance,
             use_fractional_gates=self.options.use_fractional_gates,
@@ -354,7 +362,9 @@ class IBMBackend(Backend):
                 raise TypeError("'{}' is not of type 'datetime'.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
+            api_properties = self._api_client.backend_properties(
+                self.name, datetime=datetime, calibration_id=self.calibration_id
+            )
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(
@@ -486,7 +496,7 @@ class IBMBackend(Backend):
         """Return the default translation stage plugin name for IBM backends."""
         if not self.options.use_fractional_gates:
             return "ibm_dynamic_circuits"
-        return "ibm_fractional"
+        return "ibm_dynamic_and_fractional"
 
 
 class IBMRetiredBackend(IBMBackend):

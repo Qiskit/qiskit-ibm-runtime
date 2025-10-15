@@ -34,7 +34,6 @@ from .utils import (
 )
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
-from .utils.deprecation import issue_deprecation_msg
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
@@ -141,6 +140,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        calibration_id = None
         if self._backend:
             if not is_simulator(self._backend):
                 validate_rzz_pubs(pubs)
@@ -150,17 +150,9 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
                 if isinstance(self._backend, IBMBackend):
                     self._backend.check_faulty(pub.circuit)
+            calibration_id = getattr(self._backend, "calibration_id", None)
 
         logger.info("Submitting job using options %s", primitive_options)
-
-        if options_dict.get("environment", {}).get("callback", None):
-            issue_deprecation_msg(
-                msg="The 'callback' option is deprecated",
-                version="0.38.0",
-                remedy="This option will have no effect since interim "
-                "results streaming was removed in a previous release.",
-                stacklevel=3,
-            )
 
         # Batch or Session
         if self._mode:
@@ -168,8 +160,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
-                callback=options_dict.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         if self._backend:
@@ -190,14 +182,15 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                callback=options_dict.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         return self._service._run(
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=primitive_inputs,
+            calibration_id=calibration_id,
         )
 
     @property

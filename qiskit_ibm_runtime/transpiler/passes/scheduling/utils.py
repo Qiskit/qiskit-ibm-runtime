@@ -156,6 +156,17 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         enable_patching: bool = True,
     ):
         """Dynamic circuit instruction durations."""
+        warnings.warn(
+            "The DynamicCircuitInstructionDurations class is deprecated "
+            "as of qiskit_ibm_runtime v0.43.0 "
+            "and will be removed in a future release. If you are using "
+            "one of the scheduling passes defined "
+            "in qiskit_ibm_runtime, provide a `target` instance instead. "
+            "ex: PadDelay(target=backend.target).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
         self._enable_patching = enable_patching
         super().__init__(instruction_durations=instruction_durations, dt=dt)
 

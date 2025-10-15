@@ -5,7 +5,7 @@ Upgrade Notes
 -------------
 
 -  Added a validation check to
-   `run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.20/sampler#run>`__. It raises an error if
+   ``Sampler.run()``. It raises an error if
    there is no classical bit.
 
 -  `Sampler <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/sampler>`__ is updated to return
@@ -14,20 +14,20 @@ Upgrade Notes
    ``SamplerResult.quasi_dists``, but it did not follow the design of
    ``SamplerResult``.
 
--  The `RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__ class is now a
+-  The `RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__ class is now a
    subclass of ``qiskit.providers.Job``.
 
 Deprecation Notes
 -----------------
 
 -  ``job_id`` and ``backend`` attributes of
-   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
+   `qiskit_ibm_runtime.RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__
    have been deprecated. Please use
-   `qiskit_ibm_runtime.RuntimeJob.job_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#job_id>`__
+   `qiskit_ibm_runtime.RuntimeJob.job_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#job_id>`__
    and
-   `qiskit_ibm_runtime.RuntimeJob.backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#backend>`__
+   `qiskit_ibm_runtime.RuntimeJob.backend() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#backend>`__
    methods instead.
 
 -  The ``backend_name`` attribute in
-   `qiskit_ibm_runtime.RuntimeOptions <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.25/runtime-options>`__
+   ``qiskit_ibm_runtime.RuntimeOptions``
    is deprecated and replaced by ``backend``.

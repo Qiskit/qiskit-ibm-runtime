@@ -12,11 +12,15 @@
 
 """Test the dynamic circuits scheduling analysis"""
 
+from ddt import ddt, data
+
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
-from qiskit.transpiler.passmanager import PassManager
-from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.circuit import Delay, Parameter
+from qiskit.circuit.library import XGate, Measure, Reset, CXGate, RZGate
 from qiskit.converters import circuit_to_dag
-from qiskit.circuit import Delay
+from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.transpiler.passmanager import PassManager
+from qiskit.transpiler.target import Target, InstructionProperties
 
 from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
 from qiskit_ibm_runtime.transpiler.passes.scheduling.pad_delay import PadDelay
@@ -33,10 +37,12 @@ from .....ibm_test_case import IBMTestCase
 # pylint: disable=invalid-name,not-context-manager
 
 
+@ddt
 class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ASAP Scheduling passes"""
 
-    def test_if_test_gate_after_measure(self):
+    @data(True, False)
+    def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
         qc = QuantumCircuit(2, 1)
@@ -46,13 +52,40 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with else_:
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
+
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -67,7 +100,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_measure_after_measure(self):
+    @data(True, False)
+    def test_measure_after_measure(self, use_target):
         """Test if schedules circuits with measure after measure with a common clbit.
 
         Note: There is no delay to write into the same clbit with IBM backends."""
@@ -76,13 +110,39 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -92,7 +152,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         expected.measure(1, 0)
         self.assertEqual(expected, scheduled)
 
-    def test_measure_block_not_end(self):
+    @data(True, False)
+    def test_measure_block_not_end(self, use_target):
         """Tests that measures trigger do not trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -102,13 +163,41 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(1, 0)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -124,7 +213,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_block_end(self):
+    @data(True, False)
+    def test_reset_block_end(self, use_target):
         """Tests that measures trigger do trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -134,15 +224,49 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(1, 0)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840), ("reset", None, 840)]
-        )
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840), ("reset", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -159,7 +283,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_if_test_on_different_qubits(self):
+    @data(True, False)
+    def test_if_test_on_different_qubits(self, use_target):
         """Test if schedules circuits with `if_test`s on different qubits."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -167,13 +292,41 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(1)
             qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -188,7 +341,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_shorter_measure_after_measure(self):
+    @data(True, False)
+    def test_shorter_measure_after_measure(self, use_target):
         """Test if schedules circuits with shorter measure after measure
         with a common clbit.
 
@@ -198,15 +352,32 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("measure", [0], 840), ("measure", [1], 540)]
-        )
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("measure", [0], 840), ("measure", [1], 540)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -217,7 +388,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_measure_after_if_test(self):
+    @data(True, False)
+    def test_measure_after_if_test(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -225,13 +397,49 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(1)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840), ("reset", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -251,7 +459,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_parallel_gate_different_length(self):
+    @data(True, False)
+    def test_parallel_gate_different_length(self, use_target):
         """Test circuit having two parallel instruction with different length."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -259,16 +468,39 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
-        )
-
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=400),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 2)
@@ -280,7 +512,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_parallel_gate_different_length_with_barrier(self):
+    @data(True, False)
+    def test_parallel_gate_different_length_with_barrier(self, use_target):
         """Test circuit having two parallel instruction with different length with barrier."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -289,16 +522,40 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=400),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
+                )
 
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 2)
@@ -311,7 +568,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_active_reset_circuit(self):
+    @data(True, False)
+    def test_active_reset_circuit(self, use_target):
         """Test practical example of reset circuit.
 
         Because of the stimulus pulse overlap with the previous XGate on the q register,
@@ -328,14 +586,38 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 100), ("measure", None, 840)])
-
-        scheduled = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+        if use_target:
+            target = Target(num_qubits=1, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=100),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 100), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
+        scheduled = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)
         expected.measure(0, 0)
@@ -351,7 +633,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_dag_introduces_extra_dependency_between_conditionals(self):
+    @data(True, False)
+    def test_dag_introduces_extra_dependency_between_conditionals(self, use_target):
         """Test dependency between conditional operations in the scheduling.
 
         In the below example circuit, the conditional x on q1 could start at time 0,
@@ -366,13 +649,30 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 160)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=160),
+                    (1,): InstructionProperties(duration=160),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations([("x", None, 160)])
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -388,18 +688,27 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_padding_not_working_without_scheduling(self):
+    @data(True, False)
+    def test_padding_not_working_without_scheduling(self, use_target):
         """Test padding fails when un-scheduled DAG is input."""
         qc = QuantumCircuit(1, 1)
         qc.delay(100, 0)
         qc.x(0)
         qc.measure(0, 0)
-        durations = DynamicCircuitInstructionDurations()
 
-        with self.assertRaises(TranspilerError):
-            PassManager(PadDelay(durations)).run(qc)
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            with self.assertRaises(TranspilerError):
+                PassManager(PadDelay(target=target)).run(qc)
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations()
 
-    def test_no_pad_very_end_of_circuit(self):
+                with self.assertRaises(TranspilerError):
+                    PassManager(PadDelay(durations)).run(qc)
+
+    @data(True, False)
+    def test_no_pad_very_end_of_circuit(self, use_target):
         """Test padding option that inserts no delay at the very end of circuit.
 
         This circuit will be unchanged after scheduling/padding."""
@@ -408,20 +717,48 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.x(1)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("measure", None, 840)])
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=160),
+                    (1,): InstructionProperties(duration=160),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, fill_very_end=False, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 160), ("measure", None, 840)]
+                )
 
-        scheduled = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, fill_very_end=False, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, fill_very_end=False, schedule_idle_qubits=True),
+                    ]
+                )
+        scheduled = pm.run(qc)
 
         expected = qc.copy()
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_terminates_block(self):
+    @data(True, False)
+    def test_reset_terminates_block(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets
@@ -432,29 +769,62 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(1, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [
-                ("x", None, 200),
-                (
-                    "reset",
-                    [0],
-                    840,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                (
-                    "reset",
-                    [1],
-                    740,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                ("measure", [0], 440),
-                ("measure", [1], 540),
-            ]
-        )
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    # when using DynamicCircuitInstructionDurations,
+                    # the duration of "reset" gets replaced with "measure"
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [
+                        ("x", None, 200),
+                        (
+                            "reset",
+                            [0],
+                            840,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        (
+                            "reset",
+                            [1],
+                            740,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        ("measure", [0], 440),
+                        ("measure", [1], 540),
+                    ]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -471,7 +841,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_merged_with_measure(self):
+    @data(True, False)
+    def test_reset_merged_with_measure(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets to start
@@ -481,29 +852,62 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.reset(0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [
-                ("x", None, 200),
-                (
-                    "reset",
-                    [0],
-                    840,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                (
-                    "reset",
-                    [1],
-                    740,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                ("measure", [0], 440),
-                ("measure", [1], 540),
-            ]
-        )
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    # when using DynamicCircuitInstructionDurations,
+                    # the duration of "reset" gets replaced with "measure"
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [
+                        ("x", None, 200),
+                        (
+                            "reset",
+                            [0],
+                            840,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        (
+                            "reset",
+                            [1],
+                            740,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        ("measure", [0], 440),
+                        ("measure", [1], 540),
+                    ]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -516,7 +920,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_scheduling_is_idempotent(self):
+    @data(True, False)
+    def test_scheduling_is_idempotent(self, use_target):
         """Test that padding can be applied back to back without changing the circuit."""
         qc = QuantumCircuit(3, 2)
         qc.x(2)
@@ -532,40 +937,94 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=100),
+                    (1,): InstructionProperties(duration=100),
+                    (2,): InstructionProperties(duration=100),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=500),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
 
-        scheduled0 = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+        scheduled0 = pm.run(qc)
 
-        scheduled1 = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(scheduled0)
+        scheduled1 = pm.run(scheduled0)
 
         self.assertEqual(scheduled0, scheduled1)
 
-    def test_gate_on_measured_qubit(self):
+    @data(True, False)
+    def test_gate_on_measured_qubit(self, use_target):
         """Test that a gate on a previously measured qubit triggers the end of the block"""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
         qc.x(0)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -576,7 +1035,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_grouped_measurements_prior_control_flow(self):
+    @data(True, False)
+    def test_grouped_measurements_prior_control_flow(self, use_target):
         """Test that measurements are grouped prior to control-flow"""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
@@ -587,13 +1047,41 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(2)
         qc.measure(2, 2)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 3)
@@ -616,7 +1104,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_back_to_back_if_test(self):
+    @data(True, False)
+    def test_back_to_back_if_test(self, use_target):
         """Test back to back if_test scheduling"""
 
         qc = QuantumCircuit(3, 1)
@@ -629,13 +1118,41 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         qc.delay(1000, 2)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -659,7 +1176,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_nested_control_scheduling(self):
+    @data(True, False)
+    def test_nested_control_scheduling(self, use_target):
         """Test scheduling of nested control-flow"""
 
         qc = QuantumCircuit(4, 3)
@@ -672,13 +1190,43 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
                 qc.measure(2, 2)
         qc.x(3)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=4, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                    (3,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                    (3,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(4, 3)
@@ -712,7 +1260,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_while_loop(self):
+    @data(True, False)
+    def test_while_loop(self, use_target):
         """Test scheduling while loop"""
 
         qc = QuantumCircuit(2, 1)
@@ -722,13 +1271,39 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -743,7 +1318,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_for_loop(self):
+    @data(True, False)
+    def test_for_loop(self, use_target):
         """Test scheduling for loop"""
 
         qc = QuantumCircuit(2, 1)
@@ -753,13 +1329,39 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -774,7 +1376,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_registers(self):
+    @data(True, False)
+    def test_registers(self, use_target):
         """Verify scheduling works with registers."""
         qr = QuantumRegister(1, name="q")
         cr = ClassicalRegister(1)
@@ -782,13 +1385,39 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((cr[0], True)):
             qc.x(qr[0])
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ASAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ASAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ASAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(qr, cr)
@@ -798,6 +1427,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         self.assertEqual(expected, scheduled)
 
 
+@ddt
 class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ALAP Scheduling passes"""
 
@@ -810,19 +1440,48 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
         return delay_dict
 
-    def test_alap(self):
+    @data(True, False)
+    def test_alap(self, use_target):
         """Test standard ALAP scheduling"""
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
         qc.x(1)
 
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -833,7 +1492,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_if_test_gate_after_measure(self):
+    @data(True, False)
+    def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
         qc = QuantumCircuit(2, 1)
@@ -843,13 +1503,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         with else_:
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -864,7 +1550,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_classically_controlled_gate_after_measure(self):
+    @data(True, False)
+    def test_classically_controlled_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
         qc = QuantumCircuit(2, 1)
@@ -872,13 +1559,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, True)):
             qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -891,7 +1604,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_measure_after_measure(self):
+    @data(True, False)
+    def test_measure_after_measure(self, use_target):
         """Test if schedules circuits with measure after measure with a common clbit.
 
         Note: There is no delay to write into the same clbit with IBM backends."""
@@ -900,13 +1614,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -917,7 +1657,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_measure_block_not_end(self):
+    @data(True, False)
+    def test_measure_block_not_end(self, use_target):
         """Tests that measures trigger do not trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -927,13 +1668,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(1, 0)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -949,7 +1718,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_block_end(self):
+    @data(True, False)
+    def test_reset_block_end(self, use_target):
         """Tests that measures trigger do trigger the end of a scheduling block."""
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -960,15 +1730,49 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(2, 0)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840), ("reset", None, 840)]
-        )
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -985,7 +1789,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_if_test_on_different_qubits(self):
+    @data(True, False)
+    def test_if_test_on_different_qubits(self, use_target):
         """Test if schedules circuits with `if_test`s on different qubits."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -993,13 +1798,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(1)
             qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1014,7 +1847,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_shorter_measure_after_measure(self):
+    @data(True, False)
+    def test_shorter_measure_after_measure(self, use_target):
         """Test if schedules circuits with shorter measure after measure
         with a common clbit.
 
@@ -1024,15 +1858,32 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("measure", [0], 840), ("measure", [1], 540)]
-        )
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("measure", [0], 840), ("measure", [1], 540)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1043,7 +1894,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_measure_after_if_test(self):
+    @data(True, False)
+    def test_measure_after_if_test(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -1051,13 +1903,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(1)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1076,7 +1956,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_parallel_gate_different_length(self):
+    @data(True, False)
+    def test_parallel_gate_different_length(self, use_target):
         """Test circuit having two parallel instruction with different length."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -1084,16 +1965,40 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=400),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
+                )
 
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 2)
@@ -1105,7 +2010,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_parallel_gate_different_length_with_barrier(self):
+    @data(True, False)
+    def test_parallel_gate_different_length_with_barrier(self, use_target):
         """Test circuit having two parallel instruction with different length with barrier."""
         qc = QuantumCircuit(2, 2)
         qc.x(0)
@@ -1114,16 +2020,40 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(0, 0)
         qc.measure(1, 1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=400),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", [0], 200), ("x", [1], 400), ("measure", None, 840)]
+                )
 
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 2)
@@ -1136,7 +2066,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_active_reset_circuit(self):
+    @data(True, False)
+    def test_active_reset_circuit(self, use_target):
         """Test practical example of reset circuit.
 
         Because of the stimulus pulse overlap with the previous XGate on the q register,
@@ -1153,14 +2084,43 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 100), ("measure", None, 840)])
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
 
-        scheduled = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+        scheduled = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)
         expected.measure(0, 0)
@@ -1176,7 +2136,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_dag_introduces_extra_dependency_between_conditionals(self):
+    @data(True, False)
+    def test_dag_introduces_extra_dependency_between_conditionals(self, use_target):
         """Test dependency between conditional operations in the scheduling.
 
         In the below example circuit, the conditional x on q1 could start at time 0,
@@ -1191,13 +2152,30 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         with qc.if_test((0, 1)):
             qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 160)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=160),
+                    (1,): InstructionProperties(duration=160),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations([("x", None, 160)])
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -1213,18 +2191,26 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_padding_not_working_without_scheduling(self):
+    @data(True, False)
+    def test_padding_not_working_without_scheduling(self, use_target):
         """Test padding fails when un-scheduled DAG is input."""
         qc = QuantumCircuit(1, 1)
         qc.delay(100, 0)
         qc.x(0)
         qc.measure(0, 0)
-        durations = DynamicCircuitInstructionDurations()
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            with self.assertRaises(TranspilerError):
+                PassManager(PadDelay(target=target)).run(qc)
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations()
 
-        with self.assertRaises(TranspilerError):
-            PassManager(PadDelay(durations)).run(qc)
+                with self.assertRaises(TranspilerError):
+                    PassManager(PadDelay(durations)).run(qc)
 
-    def test_no_pad_very_end_of_circuit(self):
+    @data(True, False)
+    def test_no_pad_very_end_of_circuit(self, use_target):
         """Test padding option that inserts no delay at the very end of circuit.
 
         This circuit will be unchanged after scheduling/padding."""
@@ -1233,14 +2219,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.x(1)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("measure", None, 840)])
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=160),
+                    (1,): InstructionProperties(duration=160),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, fill_very_end=False, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 160), ("measure", None, 840)]
+                )
 
-        scheduled = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, fill_very_end=False, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, fill_very_end=False, schedule_idle_qubits=True),
+                    ]
+                )
+        scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
         expected.delay(100, 0)
@@ -1250,7 +2263,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_terminates_block(self):
+    @data(True, False)
+    def test_reset_terminates_block(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets
@@ -1261,29 +2275,62 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.measure(1, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [
-                ("x", None, 200),
-                (
-                    "reset",
-                    [0],
-                    840,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                (
-                    "reset",
-                    [1],
-                    740,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                ("measure", [0], 440),
-                ("measure", [1], 540),
-            ]
-        )
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    # when using DynamicCircuitInstructionDurations,
+                    # the duration of "reset" gets replaced with "measure"
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [
+                        ("x", None, 200),
+                        (
+                            "reset",
+                            [0],
+                            840,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        (
+                            "reset",
+                            [1],
+                            740,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        ("measure", [0], 440),
+                        ("measure", [1], 540),
+                    ]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1300,7 +2347,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_reset_merged_with_measure(self):
+    @data(True, False)
+    def test_reset_merged_with_measure(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
         Note: For dynamic circuits support we currently group resets to start
@@ -1310,29 +2358,62 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.reset(0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [
-                ("x", None, 200),
-                (
-                    "reset",
-                    [0],
-                    840,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                (
-                    "reset",
-                    [1],
-                    740,
-                ),  # ignored as only the duration of the measurement is used for scheduling
-                ("measure", [0], 440),
-                ("measure", [1], 540),
-            ]
-        )
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            target.add_instruction(
+                Reset(),
+                {
+                    # when using DynamicCircuitInstructionDurations,
+                    # the duration of "reset" gets replaced with "measure"
+                    (0,): InstructionProperties(duration=600),
+                    (1,): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [
+                        ("x", None, 200),
+                        (
+                            "reset",
+                            [0],
+                            840,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        (
+                            "reset",
+                            [1],
+                            740,
+                        ),  # ignored as only the duration of the measurement is used for scheduling
+                        ("measure", [0], 440),
+                        ("measure", [1], 540),
+                    ]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1345,7 +2426,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_already_scheduled(self):
+    @data(True, False)
+    def test_already_scheduled(self, use_target):
         """Test no changes to pre-scheduled"""
         qc = QuantumCircuit(3, 2)
         qc.cx(0, 1)
@@ -1366,20 +2448,52 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.delay(1000, 2)
         qc.barrier()
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
-        )
-
-        scheduled = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=100),
+                    (1,): InstructionProperties(duration=100),
+                    (2,): InstructionProperties(duration=100),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=500),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
+        scheduled = pm.run(qc)
 
         self.assertEqual(qc, scheduled)
 
-    def test_scheduling_is_idempotent(self):
+    @data(True, False)
+    def test_scheduling_is_idempotent(self, use_target):
         """Test that padding can be applied back to back without changing the circuit."""
         qc = QuantumCircuit(3, 2)
         qc.x(2)
@@ -1390,40 +2504,94 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(0)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=100),
+                    (1,): InstructionProperties(duration=100),
+                    (2,): InstructionProperties(duration=100),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=500),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 100), ("measure", None, 840), ("cx", None, 500)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
 
-        scheduled0 = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(qc)
+        scheduled0 = pm.run(qc)
 
-        scheduled1 = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        ).run(scheduled0)
+        scheduled1 = pm.run(scheduled0)
 
         self.assertEqual(scheduled0, scheduled1)
 
-    def test_gate_on_measured_qubit(self):
+    @data(True, False)
+    def test_gate_on_measured_qubit(self, use_target):
         """Test that a gate on a previously measured qubit triggers the end of the block"""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
         qc.x(0)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -1434,7 +2602,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_grouped_measurements_prior_control_flow(self):
+    @data(True, False)
+    def test_grouped_measurements_prior_control_flow(self, use_target):
         """Test that measurements are grouped prior to control-flow"""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
@@ -1445,13 +2614,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.x(2)
         qc.measure(2, 2)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 3)
@@ -1474,7 +2671,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_fast_path_eligible_scheduling(self):
+    @data(True, False)
+    def test_fast_path_eligible_scheduling(self, use_target):
         """Test scheduling of the fast-path eligible blocks.
         Verify that no barrier is inserted between measurements and fast-path conditionals.
         """
@@ -1495,13 +2693,43 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.x(1)
         qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=4, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                    (3,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                    (3,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(4, 3)
@@ -1531,7 +2759,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_back_to_back_if_test(self):
+    @data(True, False)
+    def test_back_to_back_if_test(self, use_target):
         """Test back to back if_test scheduling"""
 
         qc = QuantumCircuit(3, 1)
@@ -1544,13 +2773,41 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.delay(1000, 2)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 1)
@@ -1573,7 +2830,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         expected.delay(1000, 2)
         self.assertEqual(expected, scheduled)
 
-    def test_issue_458_extra_idle_bug_0(self):
+    @data(True, False)
+    def test_issue_458_extra_idle_bug_0(self, use_target):
         """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458
 
         This demonstrates that delays on idle qubits are pushed to the last schedulable
@@ -1601,16 +2859,49 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.delay(1000, 1)
         qc.measure(2, 2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 160), ("cx", None, 700), ("measure", None, 840)]
-        )
+        if use_target:
+            target = Target(num_qubits=4, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=160),
+                    (1,): InstructionProperties(duration=160),
+                    (2,): InstructionProperties(duration=160),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=700),
+                    (1, 2): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 160), ("cx", None, 700), ("measure", None, 840)]
+                )
 
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(4, 3)
@@ -1643,7 +2934,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_issue_458_extra_idle_bug_1(self):
+    @data(True, False)
+    def test_issue_458_extra_idle_bug_1(self, use_target):
         """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458
 
         This demonstrates that a bug with a double-delay insertion has been resolved.
@@ -1655,16 +2947,50 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc.barrier()
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("rz", None, 0), ("cx", None, 700), ("measure", None, 840)]
-        )
+        if use_target:
+            target = Target(num_qubits=3, dt=1)
+            target.add_instruction(
+                RZGate(Parameter("phi")),
+                {
+                    (0,): InstructionProperties(duration=0),
+                    (1,): InstructionProperties(duration=0),
+                    (2,): InstructionProperties(duration=0),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                },
+            )
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=700),
+                    (1, 2): InstructionProperties(duration=700),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("rz", None, 0), ("cx", None, 700), ("measure", None, 840)]
+                )
 
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
+
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(3, 3)
@@ -1677,7 +3003,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(scheduled, expected)
 
-    def test_nested_control_scheduling(self):
+    @data(True, False)
+    def test_nested_control_scheduling(self, use_target):
         """Test scheduling of nested control-flow"""
 
         qc = QuantumCircuit(4, 3)
@@ -1690,13 +3017,43 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
                 qc.measure(2, 2)
         qc.x(3)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=4, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                    (2,): InstructionProperties(duration=200),
+                    (3,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                    (2,): InstructionProperties(duration=1000),
+                    (3,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(4, 3)
@@ -1730,7 +3087,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_while_loop(self):
+    @data(True, False)
+    def test_while_loop(self, use_target):
         """Test scheduling while loop"""
 
         qc = QuantumCircuit(2, 1)
@@ -1740,13 +3098,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -1761,7 +3145,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_for_loop(self):
+    @data(True, False)
+    def test_for_loop(self, use_target):
         """Test scheduling for loop"""
 
         qc = QuantumCircuit(2, 1)
@@ -1771,13 +3156,39 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
         scheduled = pm.run(qc)
 
         expected = QuantumCircuit(2, 1)
@@ -1840,17 +3251,46 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
-    def test_transpile_both_paths(self):
+    @data(True, False)
+    def test_transpile_both_paths(self, use_target):
         """Test scheduling works with both fast- and standard path after transpiling."""
         backend = FakeJakartaV2()
 
-        durations = DynamicCircuitInstructionDurations.from_backend(backend)
-        pm = PassManager(
-            [
-                ALAPScheduleAnalysis(durations),
-                PadDelay(durations, schedule_idle_qubits=True),
-            ]
-        )
+        if use_target:
+            print("USE TARGET")
+            # here we would use backend.target, but DynamicCircuitInstructionDurations
+            # modifies the values so we are adapting the target durations to match the
+            # resuls. Replace with backend.target once DynamicCircuitInstructionDurations
+            # is removed (this will change the final output)
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=250),
+                    (1,): InstructionProperties(duration=160),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=24992),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target, schedule_idle_qubits=True),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations.from_backend(backend)
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations, schedule_idle_qubits=True),
+                    ]
+                )
 
         qr = QuantumRegister(3)
         cr = ClassicalRegister(2)
@@ -1880,15 +3320,47 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
                     expected.delay(160, qr[q_ind])
         self.assertEqual(expected, scheduled)
 
-    def test_no_unused_qubits(self):
+    @data(True, False)
+    def test_no_unused_qubits(self, use_target):
         """Test DD with if_test circuit that unused qubits are untouched and not scheduled.
 
         This ensures that programs don't have unnecessary information for unused qubits.
         Which might hurt performance in later execution stages.
         """
 
-        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
-        pm = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
+        if use_target:
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                XGate(),
+                {
+                    (0,): InstructionProperties(duration=200),
+                    (1,): InstructionProperties(duration=200),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=1000),
+                    (1,): InstructionProperties(duration=1000),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("x", None, 200), ("measure", None, 840)]
+                )
+                pm = PassManager(
+                    [
+                        ALAPScheduleAnalysis(durations),
+                        PadDelay(durations),
+                    ]
+                )
 
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -1906,16 +3378,45 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         for op in scheduled.data:
             self.assertNotIn(dont_use, op.qubits)
 
-    def test_scheduling_nonuniform_durations(self):
+    @data(True, False)
+    def test_scheduling_nonuniform_durations(self, use_target):
         """Test that scheduling withing control flow blocks uses the
         instruction durations on the correct qubit indices"""
 
         backend = FakeJakartaV2()
 
-        durations = DynamicCircuitInstructionDurations(
-            [("cx", (0, 1), 250), ("cx", (1, 3), 4000), ("measure", None, 2600)]
-        )
-        pm = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
+        if use_target:
+            # here we would use backend.target, but DynamicCircuitInstructionDurations
+            # modifies the values so we are adapting the target durations to match the
+            # resuls. Replace with backend.target once DynamicCircuitInstructionDurations
+            # is removed (this will change the final output)
+            target = Target(num_qubits=2, dt=1)
+            target.add_instruction(
+                CXGate(),
+                {
+                    (0, 1): InstructionProperties(duration=250),
+                    (1, 3): InstructionProperties(duration=4000),
+                },
+            )
+            target.add_instruction(
+                Measure(),
+                {
+                    (0,): InstructionProperties(duration=2760),
+                    (1,): InstructionProperties(duration=2760),
+                },
+            )
+            pm = PassManager(
+                [
+                    ALAPScheduleAnalysis(target=target),
+                    PadDelay(target=target),
+                ]
+            )
+        else:
+            with self.assertWarns(DeprecationWarning):
+                durations = DynamicCircuitInstructionDurations(
+                    [("cx", (0, 1), 250), ("cx", (1, 3), 4000), ("measure", None, 2600)]
+                )
+                pm = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
 
         qc = QuantumCircuit(4, 1)
         qc.barrier()

@@ -33,6 +33,23 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
 
     @run_integration_test
+    def test_least_busy(self, service):
+        """Test the least busy method."""
+        # test passing an instance
+        instance = self.dependencies.instance
+        backend = service.least_busy(instance=instance)
+        self.assertEqual(instance, backend._instance)
+
+        # test when there is no instance
+        service_with_no_default_instance = QiskitRuntimeService(
+            token=self.dependencies.token,
+            channel="ibm_quantum_platform",
+            url=self.dependencies.url,
+        )
+        backend = service_with_no_default_instance.least_busy()
+        self.assertTrue(backend)
+
+    @run_integration_test
     def test_backends(self, service):
         """Test getting all backends."""
         backends = service.backends()
@@ -254,3 +271,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # renew backend
         backend = self.service.backend(name)
         self.assertEqual(backend.basis_gates, basis_gates)
+
+    def test_backend_calibration_id(self):
+        """Test calibration_id is used when fetching the configuration."""
+        name = self.backend.name
+        calibration_id = "invalid_id"
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as log:
+            with self.assertRaises(QiskitBackendNotFoundError):
+                self.service.backend(name, calibration_id=calibration_id)
+
+        self.assertTrue(any(calibration_id in record for record in log.output))

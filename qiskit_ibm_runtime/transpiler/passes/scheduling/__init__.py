@@ -20,7 +20,9 @@ Transpiler scheduling passes (:mod:`qiskit_ibm_runtime.transpiler.passes.schedul
 A collection of scheduling passes for working with IBM Quantum's next-generation
 backends that support advanced "dynamic circuit" capabilities. Ie.,
 circuits with support for classical control-flow/feedback based off
-of measurement results.
+of measurement results. For more information on dynamic circuits, see our
+`Classical feedforward and control flow
+<https://quantum.cloud.ibm.com/docs/guides/classical-feedforward-and-control-flow>`_ guide.
 
 .. warning::
     You should not mix these scheduling passes with Qiskit's built in scheduling
@@ -57,7 +59,6 @@ for a dynamic circuit backend's execution model:
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit.transpiler.passmanager import PassManager
 
-    from qiskit_ibm_runtime.transpiler.passes.scheduling import DynamicCircuitInstructionDurations
     from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
     from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
     from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
@@ -66,11 +67,13 @@ for a dynamic circuit backend's execution model:
 
     # Use this duration class to get appropriate durations for dynamic
     # circuit backend scheduling
-    durations = DynamicCircuitInstructionDurations.from_backend(backend)
     # Generate the main Qiskit transpile passes.
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     # Configure the as-late-as-possible scheduling pass
-    pm.scheduling = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
+    pm.scheduling = PassManager([
+        ALAPScheduleAnalysis(target=backend.target), 
+        PadDelay(target=backend.target)]
+        )
 
     qr = QuantumRegister(3)
     crz = ClassicalRegister(1, name="crz")
@@ -115,8 +118,8 @@ using the :class:`PadDynamicalDecoupling` pass as shown below:
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     pm.scheduling = PassManager(
         [
-            ALAPScheduleAnalysis(durations),
-            PadDynamicalDecoupling(durations, dd_sequence),
+            ALAPScheduleAnalysis(target=backend.target),
+            PadDynamicalDecoupling(target=backend.target, dd_sequences=dd_sequence),
         ]
     )
 
@@ -129,249 +132,6 @@ transformations in a single transpilation.  This has been done above by extendin
 pass managers.  For example, Qiskit's :func:`~qiskit.compiler.transpile` function internally builds
 its pass set by using :func:`~qiskit.transpiler.preset_passmanagers.generate_preset_pass_manager`.
 This returns instances of :class:`~qiskit.transpiler.StagedPassManager`, which can be extended.
-
-Exploiting IBM backend's local parallel "fast-path"
-===================================================
-
-IBM quantum hardware supports a localized "fast-path" which enables a block of gates
-applied to a *single qubit* that are conditional on an immediately predecessor measurement
-*of the same qubit* to be completed with lower latency. The hardware is also
-able to do this in *parallel* on disjoint qubits that satisfy this condition.
-
-For example, the conditional gates below are performed in parallel with lower latency
-as the measurements flow directly into the conditional blocks which in turn only apply
-gates to the same measurement qubit.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(2, 2)
-        qc.measure(0, 0)
-        qc.measure(1, 1)
-        # Conditional blocks will be performed in parallel in the hardware
-        with qc.if_test((0, 1)):
-            qc.x(0)
-        with qc.if_test((1, 1)):
-            qc.x(1)
-
-        qc.draw(output="mpl", style="iqp")
-
-
-The circuit below will not use the fast-path as the conditional gate is
-on a different qubit than the measurement qubit.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(2, 2)
-        qc.measure(0, 0)
-        with qc.if_test((0, 1)):
-            qc.x(1)
-
-        qc.draw(output="mpl", style="iqp")
-
-Similarly, the circuit below contains gates on multiple qubits
-and will not be performed using the fast-path.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(2, 2)
-        qc.measure(0, 0)
-        with qc.if_test((0, 1)):
-            qc.x(0)
-            qc.x(1)
-
-        qc.draw(output="mpl", style="iqp")
-
-A fast-path block may contain multiple gates as long as they are on the fast-path qubit.
-If there are multiple fast-path blocks being performed in parallel each block will be
-padded out to the duration of the longest block.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(2, 2)
-        qc.measure(0, 0)
-        qc.measure(1, 1)
-        # Conditional blocks will be performed in parallel in the hardware
-        with qc.if_test((0, 1)):
-            qc.x(0)
-            # Will be padded out to a duration of 1600 on the backend.
-        with qc.if_test((1, 1)):
-            qc.delay(1600, 1)
-
-        qc.draw(output="mpl", style="iqp")
-
-This behavior is also applied to the else condition of a fast-path eligible branch.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(1, 1)
-        qc.measure(0, 0)
-        # Conditional blocks will be performed in parallel in the hardware
-        with qc.if_test((0, 1)) as else_:
-            qc.x(0)
-            # Will be padded out to a duration of 1600 on the backend.
-        with else_:
-            qc.delay(1600, 0)
-
-        qc.draw(output="mpl", style="iqp")
-
-
-If a single measurement result is used with several conditional blocks, if there is a fast-path
-eligible block it will be applied followed by the non-fast-path blocks which will execute with
-the standard higher latency conditional branch.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(2, 2)
-        qc.measure(0, 0)
-        # Conditional blocks will be performed in parallel in the hardware
-        with qc.if_test((0, 1)):
-            # Uses fast-path
-            qc.x(0)
-        with qc.if_test((0, 1)):
-            # Does not use fast-path
-            qc.x(1)
-
-        qc.draw(output="mpl", style="iqp")
-
-If you wish to prevent the usage of the fast-path you may insert a barrier between the measurement and
-the conditional branch.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(1, 2)
-        qc.measure(0, 0)
-        # Barrier prevents the fast-path.
-        qc.barrier()
-        with qc.if_test((0, 1)):
-            qc.x(0)
-
-        qc.draw(output="mpl", style="iqp")
-
-Conditional measurements are not eligible for the fast-path.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(1, 2)
-        qc.measure(0, 0)
-        with qc.if_test((0, 1)):
-            # Does not use the fast-path
-            qc.measure(0, 1)
-
-        qc.draw(output="mpl", style="iqp")
-
-Similarly nested control-flow is not eligible.
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-        qc = QuantumCircuit(1, 1)
-        qc.measure(0, 0)
-        with qc.if_test((0, 1)):
-            # Does not use the fast-path
-            qc.x(0)
-            with qc.if_test((0, 1)):
-                qc.x(0)
-
-        qc.draw(output="mpl", style="iqp")
-
-
-The scheduler is aware of the fast-path behavior and will not insert delays on idle qubits
-in blocks that satisfy the fast-path conditions so as to avoid preventing the backend
-compiler from performing the necessary optimizations to utilize the fast-path. If
-there are fast-path blocks that will be performed in parallel they currently *will not*
-be padded out by the scheduler to ensure they are of the same duration in Qiskit
-
-.. plot::
-   :alt: Circuit diagram output by the previous code.
-   :include-source:
-   :context: close-figs
-
-    qc = QuantumCircuit(2, 2)
-    qc.measure(0, 0)
-    qc.measure(1, 1)
-    with qc.if_test((0, 1)):
-        qc.x(0)
-        # Is currently not padded to ensure
-        # a duration of 1000. If you desire
-        # this you would need to manually add
-        # qc.delay(840, 0)
-    with qc.if_test((1, 1)):
-        qc.delay(1000, 0)
-
-
-    qc.draw(output="mpl", style="iqp")
-
-.. plot::
-    :alt: Circuit diagram output by the previous code.
-    :include-source:
-    :context: close-figs
-
-    dd_sequence = [XGate(), XGate()]
-
-    pm = PassManager(
-        [
-            ALAPScheduleAnalysis(durations),
-            PadDynamicalDecoupling(durations, dd_sequence),
-        ]
-    )
-
-    qc_dd = pm.run(qc)
-    qc_dd.draw(output="mpl", style="iqp")
-
-.. note::
-    If there are qubits that are *not* involved in a fast-path decision it is not
-    currently possible to use them in a fast-path branch in parallel with the fast-path
-    qubits resulting from a measurement. This will be revised in the future as we
-    further improve these capabilities.
-
-    For example:
-
-    .. plot::
-       :alt: Circuit diagram output by the previous code.
-       :include-source:
-       :context: close-figs
-
-        qc = QuantumCircuit(3, 2)
-        qc.x(1)
-        qc.measure(0, 0)
-        with qc.if_test((0, 1)):
-            qc.x(0)
-        # Qubit 1 sits idle throughout the fast-path decision
-        with qc.if_test((1, 0)):
-            # Qubit 2 is idle but there is no measurement
-            # to make it fast-path eligible. This will
-            # however avoid a communication event in the hardware
-            # since the condition is compile time evaluated.
-            qc.x(2)
-
-        qc.draw(output="mpl", style="iqp")
-
 """
 
 from .block_base_padder import BlockBasePadder
