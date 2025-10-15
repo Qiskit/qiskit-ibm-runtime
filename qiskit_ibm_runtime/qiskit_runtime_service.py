@@ -922,9 +922,7 @@ class QiskitRuntimeService:
         program_id: str,
         inputs: Dict,
         options: Optional[Union[RuntimeOptions, Dict]] = None,
-        result_decoder: Optional[
-            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
-            ] = None,
+        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
     ) -> RuntimeJobV2:
