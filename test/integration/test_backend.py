@@ -269,7 +269,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
             with self.assertRaises(
                 IBMInputValueError,
-                f"Backend '{backend.name}' does not support fractional gates, but use_fractional_gates=True was requested.",
+                msg=(
+                    f"Backend '{backend.name}' does not support fractional gates, "
+                    "but use_fractional_gates was set to True."
+                ),
             ):
                 self.service.backend(backend.name, use_fractional_gates=True)
 
