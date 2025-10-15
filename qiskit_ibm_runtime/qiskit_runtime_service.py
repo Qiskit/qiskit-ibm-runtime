@@ -891,11 +891,10 @@ class QiskitRuntimeService:
 
         Returns:
             Backend: A backend matching the filtering.
-            IBMInputValueError: if fractional gates are requested but not supported by the backend.
-
 
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
+            IBMInputValueError: if fractional gates are requested but not supported by the backend.
         """
         backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
