@@ -891,6 +891,8 @@ class QiskitRuntimeService:
 
         Returns:
             Backend: A backend matching the filtering.
+            IBMInputValueError: if fractional gates are requested but not supported by the backend.
+
 
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
