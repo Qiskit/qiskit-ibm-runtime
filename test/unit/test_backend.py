@@ -17,9 +17,15 @@ from unittest import mock
 from ddt import named_data, ddt
 from qiskit import QuantumCircuit, qasm3, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
+from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeSherbrooke, FakeFractionalBackend
+from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+from qiskit_ibm_runtime.fake_provider import (
+    FakeManilaV2,
+    FakeSherbrooke,
+    FakeFractionalBackend,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
     BackendConfiguration,
@@ -30,6 +36,7 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import create_faulty_backend
+from .mock.fake_backends import FakeMidcircuit
 
 
 @ddt
@@ -254,6 +261,7 @@ class TestBackend(IBMTestCase):
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
+
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
         backend._set_props_dict_from_json()
@@ -349,3 +357,46 @@ class TestBackend(IBMTestCase):
             "while_loop" in target.operation_names,
             use_dynamic,
         )
+
+    def test_instruction_signatures(self):
+        """Test building a target with alternative instruction signatures in its configuration."""
+
+        def assert_props(name, ref_error, ref_duration):
+            for _, props in backend.target[name].items():
+                error = props.error if props else None
+                duration = props.duration if props else None
+                self.assertEqual(error, ref_error)
+                self.assertEqual(duration, ref_duration)
+
+        backend = FakeMidcircuit()
+
+        self.assertEqual(set(backend.basis_gates), set(["id", "rz", "sx", "x", "cx"]))
+        self.assertEqual(
+            set(backend.operation_names),
+            set(
+                [
+                    "id",
+                    "cx",
+                    "sx",
+                    "rz",
+                    "delay",
+                    "measure",
+                    "measure_2",
+                    "x",
+                    "reset",
+                    "reset_2",
+                    "reset_3",
+                    "alternative_rx",
+                ]
+            ),
+        )
+        assert_props("measure_2", 3.142, None)
+        assert_props("reset_2", None, 3.142e-08)
+
+        # Test transpilation with FakeMidcircuit
+        mcm = MidCircuitMeasure()
+        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+        qc = QuantumCircuit(1, 2)
+        qc.append(mcm, [0], [0])
+        transpiled = pm.run(qc)
+        self.assertEqual(transpiled.data[0].operation.name, "measure_2")

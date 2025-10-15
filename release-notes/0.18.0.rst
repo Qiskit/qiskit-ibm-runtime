@@ -17,14 +17,13 @@ New Features
 Deprecation Notes
 -----------------
 
--  `runtime() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.21/qiskit-runtime-service#runtime>`__
-   has been deprecated.
+-  ``QiskitRuntimeService.runtime()`` has been deprecated.
 
 Bug Fixes
 ---------
 
--  Many methods in `RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job>`__
+-  Many methods in `RuntimeJob <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job>`__
    require retrieving the job data from the API with ``job_get()``. This
    API call will now exclude the ``params`` field by default because
    they are only necessary in
-   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#inputs>`__.
+   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#inputs>`__.
