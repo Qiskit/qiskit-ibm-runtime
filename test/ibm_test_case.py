@@ -218,8 +218,6 @@ class IBMIntegrationTestCase(IBMTestCase):
         for job in self.to_cancel[service.channel]:
             with suppress(Exception):
                 job.cancel()
-            with suppress(Exception):
-                service.delete_job(job.job_id())
 
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
