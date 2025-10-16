@@ -14,11 +14,12 @@
 """
 Base class for dummy backends.
 """
-from typing import Any
+from typing import Any, Dict
 import logging
 import warnings
 import json
 import os
+import requests
 
 from qiskit import QuantumCircuit
 
@@ -391,6 +392,30 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
+    def _get_public_backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+        """Return the public backend configuration."""
+        response = requests.get(
+            f"https://quantum.cloud.ibm.com/api/v1/public/backends/{backend_name}/configuration",
+            timeout=5,
+        )
+        if response.status_code == 200:
+            return response.json()
+        raise ValueError(
+            f"Backend {backend_name} is not public or no longer exists.",
+        )
+
+    def _get_public_backend_properties(self, backend_name: str) -> Dict[str, Any]:
+        """Return the public backend properties."""
+        response = requests.get(
+            f"https://quantum.cloud.ibm.com/api/v1/public/backends/{backend_name}/properties",
+            timeout=5,
+        )
+        if response.status_code == 200:
+            return response.json()
+        raise ValueError(
+            f"Backend {backend_name} is not public or no longer exists.",
+        )
+
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
         """Update the data files from its real counterpart
 
@@ -398,7 +423,6 @@ class FakeBackendV2(BackendV2):
         overwrites the corresponding files in the local installation:
 
         *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
-        *  ``../fake_provider/backends/{backend_name}/defs_{backend_name}.json``
         *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
 
         The new data files will persist through sessions so the files will stay updated unless they
@@ -421,14 +445,25 @@ class FakeBackendV2(BackendV2):
 
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
-            backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
-            real_backend = backends[0]
+            backends = service.backends(use_fractional_gates=use_fractional_gates)
+            if prod_name in [backend.name for backend in backends]:
+                real_backend = service.backend(prod_name)
+                real_props = real_backend.properties(refresh=True)
+                real_config = configuration_from_server_data(
+                    raw_config=service._get_api_client().backend_configuration(
+                        prod_name, refresh=True
+                    ),
+                    use_fractional_gates=use_fractional_gates,
+                )
 
-            real_props = real_backend.properties(refresh=True)
-            real_config = configuration_from_server_data(
-                raw_config=service._get_api_client().backend_configuration(prod_name, refresh=True),
-                use_fractional_gates=use_fractional_gates,
-            )
+            else:
+                real_props = properties_from_server_data(
+                    self._get_public_backend_properties(prod_name),
+                )
+                real_config = configuration_from_server_data(
+                    raw_config=self._get_public_backend_configuration(prod_name),
+                    use_fractional_gates=use_fractional_gates,
+                )
 
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
