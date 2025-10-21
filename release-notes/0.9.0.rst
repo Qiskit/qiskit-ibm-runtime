@@ -11,8 +11,8 @@ Upgrade Notes
    set to 1 and ``resilience_level`` is set to 0; Otherwise, they are be
    set to 3 and 1 respectively.
 
--  `session_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#session_id>`__ and
-   `tags() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#tags>`__ were added for an
+-  `session_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#session_id>`__ and
+   `tags() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#tags>`__ were added for an
    easy way to return the session_id and job_tags of a job.
 
 Bug Fixes
