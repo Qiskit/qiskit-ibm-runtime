@@ -39,16 +39,25 @@ class CloudBackend(RestAdapterBase):
         self.backend_name = backend_name
         super().__init__(session, "{}/backends/{}".format(url_prefix, backend_name))
 
-    def configuration(self) -> Dict[str, Any]:
+    def configuration(self, calibration_id: Optional[str] = None) -> Dict[str, Any]:
         """Return backend configuration.
+
+        Args:
+            calibration_id: An optional calibration id
 
         Returns:
             JSON response of backend configuration.
         """
         url = self.get_url("configuration")
-        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
+        params = {}
+        if calibration_id is not None:
+            params["calibration_id"] = calibration_id
 
-    def properties(self, datetime: Optional[python_datetime] = None) -> Dict[str, Any]:
+        return self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
+
+    def properties(
+        self, datetime: Optional[python_datetime] = None, calibration_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Return backend properties.
 
         Returns:
@@ -59,6 +68,8 @@ class CloudBackend(RestAdapterBase):
         params = {}
         if datetime:
             params["updated_before"] = datetime.isoformat()
+        if calibration_id is not None:
+            params["calibration_id"] = calibration_id
 
         response = self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
         # Adjust name of the backend.

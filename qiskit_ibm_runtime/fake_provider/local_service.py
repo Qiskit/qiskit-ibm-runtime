@@ -149,6 +149,7 @@ class QiskitRuntimeLocalService:
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
         options: Union[RuntimeOptions, Dict],
+        calibration_id: Optional[str],
     ) -> PrimitiveJob:
         """Execute the runtime program.
 
@@ -157,6 +158,7 @@ class QiskitRuntimeLocalService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
+            calibration_id: The calibration id to use with the program execution
 
         Returns:
             A job representing the execution.
@@ -187,6 +189,8 @@ class QiskitRuntimeLocalService:
             warnings.warn("The resilience_level option has no effect in local testing mode.")
 
         inputs = copy.deepcopy(inputs)
+        if calibration_id is not None:
+            inputs["calibration_id"] = calibration_id
 
         primitive_inputs = {"pubs": inputs.pop("pubs")}
         return self._run_backend_primitive_v2(
