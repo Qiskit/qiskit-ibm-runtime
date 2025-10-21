@@ -112,6 +112,10 @@ class QiskitRuntimeService:
         and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
         over paid instances.
 
+        To inform you which account and instance is being used, there will be warnings logged
+        during account initialization and backend retrieval. You can suppress these warnings with
+        ``logging.getLogger("qiskit_ibm_runtime").setLevel(logging.ERROR)``.
+
         Also note that only one account per API token can be used. The API token is linked to the
         account it was created in. If you want to use multiple accounts, you must create multiple
         API tokens.
