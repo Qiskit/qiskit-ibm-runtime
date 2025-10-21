@@ -36,7 +36,6 @@ from .utils.result_decoder import ResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
-from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
 from .models import QasmBackendConfiguration
 
@@ -938,7 +937,7 @@ class QiskitRuntimeService:
         self,
         program_id: str,
         inputs: Dict,
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
+        options: Optional[Dict] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
@@ -966,18 +965,9 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
-        qrt_options: RuntimeOptions = options
-        if options is None:
-            qrt_options = RuntimeOptions()
-        elif isinstance(options, Dict):
-            qrt_options = RuntimeOptions(**options)
-
-        qrt_options.validate(channel=self.channel)
-
-        backend = qrt_options.backend
+        backend = options["backend"]
         if isinstance(backend, str):
-            backend = self.backend(name=qrt_options.get_backend_name())
+            backend = self.backend(name=backend)
 
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
@@ -989,16 +979,16 @@ class QiskitRuntimeService:
         try:
             response = self._active_api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.get_backend_name(),
+                backend_name=backend.name,
                 params=inputs,
-                image=qrt_options.image,
-                log_level=qrt_options.log_level,
+                image=options.get("image"),
+                log_level=options.get("log_level"),
                 session_id=session_id,
-                job_tags=qrt_options.job_tags,
-                max_execution_time=qrt_options.max_execution_time,
+                job_tags=options.get("job_tags"),
+                max_execution_time=options.get("max_execution_time"),
                 start_session=start_session,
-                session_time=qrt_options.session_time,
-                private=qrt_options.private,
+                session_time=options.get("session_time"),
+                private=options.get("private"),
                 calibration_id=calibration_id,
             )
 
@@ -1007,7 +997,7 @@ class QiskitRuntimeService:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if response["backend"] and response["backend"] != qrt_options.get_backend_name():
+        if response["backend"] and response["backend"] != backend.name:
             backend = self.backend(name=response["backend"])
 
         return RuntimeJobV2(
@@ -1016,11 +1006,11 @@ class QiskitRuntimeService:
             job_id=response["id"],
             program_id=program_id,
             result_decoder=result_decoder,
-            image=qrt_options.image,
-            tags=qrt_options.job_tags,
+            image=options.get("image"),
+            tags=options.get("job_tags"),
             service=self,
             version=version,
-            private=qrt_options.private,
+            private=options.get("private"),
         )
 
     def job(self, job_id: str) -> RuntimeJobV2:
