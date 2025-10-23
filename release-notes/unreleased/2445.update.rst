@@ -1,2 +1,0 @@
-When initializing :class:`.QiskitRuntimeService` with a saved account, the ``warning`` level log messages regarding
-the saved account name (or default account) have been lowered to the ``info`` level. 
