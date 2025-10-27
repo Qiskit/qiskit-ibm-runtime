@@ -1,0 +1,2 @@
+Added client side validation to check if a given ``rep_delay`` is within the backend's
+``rep_delay_range``.
