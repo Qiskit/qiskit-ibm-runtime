@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 def draw_circuit_schedule_timing(
-    circuit_schedule: str,
+    circuit_schedule: str | CircuitSchedule,
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
@@ -48,9 +48,17 @@ def draw_circuit_schedule_timing(
     fig = go.Figure(layout=go.Layout(width=width))
 
     # Get the scheduling data
-    schedule = CircuitSchedule(
-        circuit_schedule=circuit_schedule,
-    )
+    if isinstance(circuit_schedule, CircuitSchedule):
+        schedule = circuit_schedule
+    elif isinstance(circuit_schedule, str):
+        schedule = CircuitSchedule(
+            circuit_schedule=circuit_schedule,
+        )
+    else:
+        raise ValueError(
+            f"'circuit_schedule' is expected to be of type "
+            f"'str' or 'CircuitSchedule', instead got {type(circuit_schedule)}."
+        )
 
     # Process and filter
     schedule.preprocess(
