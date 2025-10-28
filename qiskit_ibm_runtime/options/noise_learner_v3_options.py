@@ -12,6 +12,8 @@
 
 """NoiseLearnerV3Options options."""
 
+from __future__ import annotations
+
 import copy
 from dataclasses import asdict, fields
 from typing import Any, Callable, List, Union
