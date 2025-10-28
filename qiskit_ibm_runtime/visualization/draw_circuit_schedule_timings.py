@@ -120,6 +120,7 @@ def draw_circuit_schedule_timing(
                         },
                     ]
                 ),
+                "pad": {"r": 10, "t": 10},
                 "showactive": True,
                 "x": 0,
                 "xanchor": "left",
