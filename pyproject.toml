@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]~=8.0"]
+requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -48,13 +48,13 @@ zip-safe = false
 
 [tool.setuptools_scm]
 root = "."
-version_file = "qiskit_ibm_runtime/VERSION.txt"
+write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
 fallback_version = "0.43.1"
 
 [project]
 name = "qiskit-ibm-runtime"
-version = "101.0.0"
+dynamic = [ "version" ]
 description = "IBM Quantum client for Qiskit Runtime."
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
