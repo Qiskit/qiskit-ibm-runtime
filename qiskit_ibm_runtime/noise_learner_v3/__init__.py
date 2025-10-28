@@ -33,4 +33,7 @@ Classes
 """
 
 from .noise_learner_v3 import NoiseLearnerV3
-from .noise_learner_v3_result import NoiseLearnerV3Result, NoiseLearnerV3Results
+from .noise_learner_v3_result import (  # type: ignore[attr-defined]
+    NoiseLearnerV3Result,
+    NoiseLearnerV3Results,
+)

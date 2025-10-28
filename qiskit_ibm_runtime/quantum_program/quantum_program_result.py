@@ -14,14 +14,14 @@
 
 from __future__ import annotations
 
-from typing import Union
+from typing import Iterable, Union
 
 import numpy as np
 
 
 MetadataLeafTypes = Union[int, str, float]
-MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]
-Metadata = dict[str, MetadataValue]
+MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]  # type: ignore[misc]
+Metadata = dict[str, MetadataValue]  # type: ignore[misc]
 
 
 class QuantumProgramResult:
@@ -36,14 +36,14 @@ class QuantumProgramResult:
         self._data = data
         self.metadata = metadata or {}
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[dict[str, np.ndarray]]:
         yield from self._data
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> dict[str, np.ndarray]:
         return self._data[idx]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}(<{len(self)} results>)"

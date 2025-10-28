@@ -50,7 +50,7 @@ class QuantumProgramItem(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def shape(self):
+    def shape(self) -> tuple[int]:
         """The shape of this item when broadcasted over all arguments."""
 
 
@@ -91,10 +91,10 @@ class CircuitItem(QuantumProgramItem):
         self.circuit_arguments = circuit_arguments
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int]:
         return self.circuit_arguments.shape[:-1]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         circuit = f"<QuantumCircuit @ {hex(id(self.circuit))}>"
 
         if not self.circuit_arguments.size:
@@ -154,10 +154,10 @@ class SamplexItem(QuantumProgramItem):
         self.samplex_arguments = inputs
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int]:
         return self._shape
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         circuit = f"<QuantumCircuit @ {hex(id(self.circuit))}>"
 
         samplex = f", <Samplex @ {hex(id(self.samplex))}>" if self.samplex is not None else ""
@@ -209,7 +209,7 @@ class QuantumProgram:
         samplex_arguments: dict[str, np.ndarray] | None = None,
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
-    ):
+    ) -> None:
         """Append a new :class:`QuantumProgramItem` to this program.
 
         Args:
@@ -255,16 +255,16 @@ class QuantumProgram:
                 )
             )
 
-    def choose_chunk_sizes(self):
+    def choose_chunk_sizes(self) -> None:
         """Automatically choose chunk sizes based on a heuristic."""
         for item in self.items:
             # TODO: use heuristic based on circuit, shape characteristics
             item.chunk_size = 100
 
-    def validate(self, backend: "IBMBackend"):
+    def validate(self, backend: "IBMBackend") -> None:
         """Validate this quantum program against the given backend."""
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if not self.items:
             return f"QuantumProgram(shots={self.shots})"
         return "\n".join(

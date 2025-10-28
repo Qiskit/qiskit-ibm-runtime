@@ -31,8 +31,10 @@ AVAILABLE_DECODERS = {"v0.1": quantum_program_result_from_0_1}
 
 
 class QuantumProgramResultDecoder(ResultDecoder):
+    """Decoder for quantum program results."""
+
     @classmethod
-    def decode(cls, raw_result: str):
+    def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
         decoded: Dict = super().decode(raw_result)
 

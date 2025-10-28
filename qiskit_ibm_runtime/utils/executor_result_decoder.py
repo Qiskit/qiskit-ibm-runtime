@@ -12,9 +12,6 @@
 
 """NoiseLearner result decoder."""
 
-from typing import Dict
-
-from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
 
 
@@ -22,10 +19,11 @@ class ExecutorResultDecoder(ResultDecoder):
     """Class used to decode noise learner results"""
 
     @classmethod
-    def decode(  # type: ignore # pylint: disable=arguments-differ
-        cls, raw_result: str
-    ) -> NoiseLearnerResult:
-        """Convert the result to NoiseLearnerResult."""
-        from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
-        
+    def decode(cls, raw_result: str):  # type: ignore # pylint: disable=arguments-differ
+        """Convert the result to QuantumProgramResult."""
+        # pylint: disable=import-outside-toplevel
+        from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import (
+            QuantumProgramResultDecoder,
+        )
+
         return QuantumProgramResultDecoder().decode(raw_result)

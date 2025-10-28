@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_result_from_0_1,
     noise_learner_v3_result_to_0_1,
 )
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (
+from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
@@ -71,17 +71,13 @@ class TestConverters(IBMTestCase):
             "learning_protocol": "trex",
             "post_selection": {"fraction_kept": 1},
         }
-        result0 = NoiseLearnerV3Result.from_generators(
-            generators, rates, rates_std, metadatum0
-        )
+        result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)
 
         metadatum1 = {
             "learning_protocol": "lindblad",
             "post_selection": {"fraction_kept": {0: 1, 4: 1}},
         }
-        result1 = NoiseLearnerV3Result.from_generators(
-            generators, rates, metadata=metadatum1
-        )
+        result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
 
         encoded = noise_learner_v3_result_to_0_1(results).model_dump()
@@ -100,20 +96,6 @@ class TestConverters(IBMTestCase):
             QubitSparsePauliList.from_list(["XI"]),
         ]
         rates = [0.1, 0.2]
-        rates_std = [0.01, 0.02]
-
-        metadatum0 = {
-            "learning_protocol": "trex",
-            "post_selection": {"fraction_kept": 1},
-        }
-        result0 = NoiseLearnerV3Result.from_generators(
-            generators, rates, rates_std, metadatum0
-        )
-
-        metadatum1 = {
-            "learning_protocol": "trex",
-            "post_selection": {"fraction_kept": 1},
-        }
 
         metadata = {
             "input_options": {
@@ -133,9 +115,7 @@ class TestConverters(IBMTestCase):
             {"learning_protocol": "trex", "post_selection": {"fraction_kept": 1.2}},
             {"learning_protocol": "trex", "post_selection": {"fraction_kept": -0.3}},
         ]:
-            result = NoiseLearnerV3Result.from_generators(
-                generators, rates, metadata=metadatum
-            )
+            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
             results = NoiseLearnerV3Results([result], metadata)
             with self.assertRaisesRegex(
                 ValidationError,
@@ -150,9 +130,7 @@ class TestConverters(IBMTestCase):
             },
             {"learning_protocol": "lindblad", "post_selection": {"fraction_kept": 0.3}},
         ]:
-            result = NoiseLearnerV3Result.from_generators(
-                generators, rates, metadata=metadatum
-            )
+            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
             results = NoiseLearnerV3Results([result], metadata)
             with self.assertRaisesRegex(
                 ValidationError, "1 validation error for NoiseLearnerV3ResultModel"

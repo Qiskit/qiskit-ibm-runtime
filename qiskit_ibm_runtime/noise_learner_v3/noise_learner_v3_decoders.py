@@ -27,8 +27,10 @@ AVAILABLE_DECODERS = {"v0.1": noise_learner_v3_result_from_0_1}
 
 
 class NoiseLearnerV3ResultDecoder(ResultDecoder):
+    """Decoder for noise learner V3."""
+
     @classmethod
-    def decode(cls, raw_result: str):
+    def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
         decoded: Dict = super().decode(raw_result)
 

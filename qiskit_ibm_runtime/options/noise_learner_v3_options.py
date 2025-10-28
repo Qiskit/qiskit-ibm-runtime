@@ -63,7 +63,7 @@ class NoiseLearnerV3Options(BaseOptions):
     :attr:`~shots_per_randomization` each.
     """
 
-    layer_pair_depths: list[int] = (0, 1, 2, 4, 16, 32)
+    layer_pair_depths: list[int] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
     r"""The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
     
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -74,9 +74,7 @@ class NoiseLearnerV3Options(BaseOptions):
         This field is ignored by TREX experiments.
     """
 
-    post_selection: Union[PostSelectionOptions, Dict] = Field(
-        default_factory=PostSelectionOptions
-    )
+    post_selection: Union[PostSelectionOptions, Dict] = Field(default_factory=PostSelectionOptions)
     r"""Options for post selecting the results of noise learning circuits.
     """
 
@@ -86,18 +84,14 @@ class NoiseLearnerV3Options(BaseOptions):
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    _ge0 = make_constraint_validator(
-        "num_randomizations", "shots_per_randomization", ge=1
-    )
+    _ge0 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
     @skip_unset_validation
     def _nonnegative_list(cls, value: List[int], info: ValidationInfo) -> List[int]:
         if any(i < 0 for i in value):
-            raise ValueError(
-                f"`{cls.__name__}.{info.field_name}` option value must all be >= 0."
-            )
+            raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
         return value
 
     def to_options_model(self) -> OptionsModel:
@@ -108,7 +102,7 @@ class NoiseLearnerV3Options(BaseOptions):
         options_dict = asdict(self)
 
         filtered_options = {}
-        for key in OptionsModel.model_fields:
+        for key in OptionsModel.model_fields:  # pylint: disable=not-an-iterable
             filtered_options[key] = options_dict.get(key)
 
         remove_dict_unset_values(filtered_options)
@@ -149,9 +143,7 @@ class NoiseLearnerV3Options(BaseOptions):
 
     # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset
-    environment: Union[EnvironmentOptions, Dict] = Field(
-        default_factory=EnvironmentOptions
-    )
+    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:

@@ -27,7 +27,10 @@ from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
 from ...options import NoiseLearnerV3Options
-from ..noise_learner_v3_result import NoiseLearnerV3Result, NoiseLearnerV3Results
+from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
+    NoiseLearnerV3Result,
+    NoiseLearnerV3Results,
+)
 
 
 def noise_learner_v3_inputs_to_0_1(
@@ -35,8 +38,8 @@ def noise_learner_v3_inputs_to_0_1(
     options: NoiseLearnerV3Options,
 ) -> ParamsModel:
     """Convert noise learner V3 inputs a V0.1 model."""
-    qubits = list(set([qubit for instr in instructions for qubit in instr.qubits]))
-    clbits = list(set([clbit for instr in instructions for clbit in instr.clbits]))
+    qubits = list({qubit for instr in instructions for qubit in instr.qubits})
+    clbits = list({clbit for instr in instructions for clbit in instr.clbits})
 
     circuit = QuantumCircuit(list(qubits), list(clbits))
     for instr in instructions:
@@ -52,7 +55,7 @@ def noise_learner_v3_inputs_from_0_1(
     model: ParamsModel,
 ) -> tuple[list[CircuitInstruction], NoiseLearnerV3Options]:
     """Convert a V0.1 model to noise learner V3 inputs."""
-    instructions = [instr for instr in model.instructions.to_quantum_circuit()]
+    instructions = list(model.instructions.to_quantum_circuit())
     options = NoiseLearnerV3Options(
         **{key: val for key, val in model.options.model_dump().items() if val}
     )

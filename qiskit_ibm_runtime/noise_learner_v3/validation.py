@@ -27,20 +27,20 @@ from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
 from .find_learning_protocol import find_learning_protocol
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..models.backend_configuration import BackendConfiguration
 
+from ..exceptions import IBMInputValueError
 from ..options import NoiseLearnerV3Options
 from ..options.post_selection_options import DEFAULT_X_PULSE_TYPE
 
 
-def validate_options(
-    options: NoiseLearnerV3Options, configuration: BackendConfiguration
-) -> None:
+def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:
     """Validates the options of a noise learner job."""
-    if options.post_selection.enable is True:
-        x_pulse_type = options.post_selection.x_pulse_type or DEFAULT_X_PULSE_TYPE
-        if x_pulse_type not in (basis_gates := configuration().basis_gates):
+    if options.post_selection.enable is True:  # type: ignore[union-attr]
+        x_pulse_type = (
+            options.post_selection.x_pulse_type or DEFAULT_X_PULSE_TYPE  # type: ignore[union-attr]
+        )
+        if x_pulse_type not in (basis_gates := configuration.basis_gates):
             raise ValueError(
                 f"Cannot apply Post Selection with X-pulse type '{x_pulse_type}' on a backend with "
                 f"basis gates {basis_gates}."
@@ -78,7 +78,7 @@ def validate_instruction(instruction: CircuitInstruction, target: Target) -> Non
         )
 
 
-def _contains_twirled_box(instruction: CircuitInstruction) -> None:
+def _contains_twirled_box(instruction: CircuitInstruction) -> str:
     """Check that an instruction contains a box with a twirl annotation.
 
     Args:
@@ -94,6 +94,8 @@ def _contains_twirled_box(instruction: CircuitInstruction) -> None:
     if not get_annotation(instruction.operation, Twirl):
         return "Found a box without a ``Twirl`` annotation."
 
+    return ""
+
 
 def _contains_physical_qubits(instruction: CircuitInstruction, target: Target) -> str:
     """Check that ``instruction`` acts on physical qubits.
@@ -103,7 +105,7 @@ def _contains_physical_qubits(instruction: CircuitInstruction, target: Target) -
         target: The target to validate against.
 
     Returns:
-        An error message if ``instruction`` does not contain physical qubits, or an empty string otherwise.
+        An error message if ``instruction`` doesn't contain physical qubits, an empty string otherwise.
     """
     qreg = QuantumRegister(target.num_qubits, "q")
     if unphysical_qubits := [qubit for qubit in instruction.qubits if qubit not in qreg]:
@@ -163,8 +165,10 @@ def _is_isa_instruction(instruction: CircuitInstruction, target: Target) -> str:
         if isinstance(op, (ControlFlowOp, BoxOp)):
             return f"The instruction {op.name} on qubits {qargs} is not supported by the noise learner."
 
+    return ""
 
-def _validate_rzz_angle(angle) -> str:
+
+def _validate_rzz_angle(angle: float) -> str:
     """Verify that all rzz angles are in the range ``[0, pi/2]``.
 
     We allow an angle value of a bit more than pi/2, to compensate floating point rounding

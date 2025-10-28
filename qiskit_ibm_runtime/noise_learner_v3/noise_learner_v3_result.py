@@ -10,9 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# type: ignore[arg-type]
+
+"""Noise learner V3 results."""
+
 from __future__ import annotations
 
 from typing import Iterable, Optional, Union
+from numpy.typing import NDArray
 
 import numpy as np
 from qiskit.circuit import BoxOp, CircuitInstruction
@@ -27,7 +32,7 @@ Metadata = dict[str, MetadataValue]
 
 
 class NoiseLearnerV3Result:
-    """The results of a noise learner experiment for a single instruction, in the Pauli Lindblad format.
+    r"""The results of a noise learner experiment for a single instruction, in Pauli Lindblad format.
 
     An error channel Pauli Lindblad :math:`E` acting on a state :math:`\rho` can be expressed in Pauli
     Lindblad format as :math:`E(\rho) = e^{\sum_j r_j D_{P_j}}(\rho)`, :math:`P_j` are Pauli operators
@@ -41,8 +46,9 @@ class NoiseLearnerV3Result:
 
     where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}`.
 
-    Some strategies for learning noise channels, such as the Pauli Lindblad learning protocol in Ref. [1],
-    produce degenarate terms, meaning that they learn products of rates as opposed to individual rates.
+    Some strategies for learning noise channels, such as the Pauli Lindblad learning protocol in
+    Ref. [1], produce degenarate terms, meaning that they learn products of rates as opposed to
+    individual rates.
 
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
@@ -53,8 +59,8 @@ class NoiseLearnerV3Result:
 
     def __init__(self):
         self._generators: list[QubitSparsePauliList] = []
-        self._rates: np.array[np.float64] = np.array([])
-        self._rates_std: np.array[np.float64] = np.array([])
+        self._rates: NDArray[np.float64] = np.array([])
+        self._rates_std: NDArray[np.float64] = np.array([])
         self.metadata: MetadataValue = {}
 
     @classmethod
@@ -69,12 +75,12 @@ class NoiseLearnerV3Result:
         Construct from a collection of generators and rates.
 
         Args:
-            generators: The generators describing the noise channel in the Pauli Lindblad format. This is a list
-                of :class:`~qiskit.quantum_info.QubitSparsePauliList` objects, as opposed to a list of
-                of :class:`~qiskit.quantum_info.QubitSparsePauli`, in order to capture degeneracies present
-                within the model.
-            rates: The rates of the individual generators. The ``i``-th element in this list represents the
-                rate of all the Paulis in the ``i``-th generator.
+            generators: The generators describing the noise channel in the Pauli Lindblad format. This
+                is a list of :class:`~qiskit.quantum_info.QubitSparsePauliList` objects, as opposed to
+                a list of :class:`~qiskit.quantum_info.QubitSparsePauli`, in order to capture
+                degeneracies present within the model.
+            rates: The rates of the individual generators. The ``i``-th element in this list represents
+                the rate of all the Paulis in the ``i``-th generator.
             rates_std: The standard deviation associated to the rates of the generators. If ``None``,
                 it sets all the standard deviations to ``0``.
             metadata: A dictionary of metadata.
@@ -88,9 +94,7 @@ class NoiseLearnerV3Result:
         obj.metadata = metadata or {}
 
         if len({len(obj._generators), len(obj._rates), len(obj._rates_std)}) != 1:
-            raise ValueError(
-                "'generators', 'rates', and 'rates_std' must be of the same length."
-            )
+            raise ValueError("'generators', 'rates', and 'rates_std' must be of the same length.")
 
         if len(set(generator.num_qubits for generator in obj._generators)) != 1:
             raise ValueError("All the generators must have the same number of qubits.")
@@ -104,7 +108,8 @@ class NoiseLearnerV3Result:
         of the qubits in the outer-most circuit.
         """
         coefficients = [
-            repeated_rate for generator, rate in zip(self._generators, self._rates) 
+            repeated_rate
+            for generator, rate in zip(self._generators, self._rates)
             for repeated_rate in [rate] * len(generator)
         ]
         paulis = QubitSparsePauliList.from_qubit_sparse_paulis(
@@ -128,9 +133,7 @@ class NoiseLearnerV3Results:
         metadata: A dictionary of metadata.
     """
 
-    def __init__(
-        self, data: Iterable[NoiseLearnerV3Result], metadata: Metadata | None = None
-    ):
+    def __init__(self, data: Iterable[NoiseLearnerV3Result], metadata: Metadata | None = None):
         self.data = list(data)
         self.metadata = metadata or None
 
@@ -140,7 +143,7 @@ class NoiseLearnerV3Results:
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
         """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
-        
+
         This function iterates over a sequence of instructions, extracts the ``ref`` value from the
         inject noise annotation of each instruction, and returns a dictionary mapping those refs
         to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in this
@@ -161,18 +164,20 @@ class NoiseLearnerV3Results:
                 if ``True``.
         """
         if len(instructions) != len(self.data):
-            raise ValueError(f"Expected {len(self.data)} instructions but found {len(instructions)}.")
-        
+            raise ValueError(
+                f"Expected {len(self.data)} instructions but found {len(instructions)}."
+            )
+
         boxes = [instr.operation for instr in instructions]
         if not all(isinstance(box, BoxOp) for box in boxes):
             raise ValueError("Found instructions that do not contain a box.")
-        
+
         noise_source = {}
         num_instr = 0
         for instr, datum in zip(instructions, self.data):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
-            
+
             if annotation := get_annotation(instr.operation, InjectNoise):
                 num_instr += 1
                 noise_source[annotation.ref] = datum.to_pauli_lindblad_map()
@@ -181,13 +186,13 @@ class NoiseLearnerV3Results:
                     "Found an instruction without an inject noise annotation. "
                     "Consider setting 'require_refs' to ``False``."
                 )
-        
+
         if num_instr != len(noise_source):
             raise ValueError("Found multiple instructions with the same ``ref``.")
-        
+
         return noise_source
 
-    def __getitem__(self, idx) -> NoiseLearnerV3Result:
+    def __getitem__(self, idx: int) -> NoiseLearnerV3Result:
         return self.data[idx]
 
     def __iter__(self) -> Iterable[NoiseLearnerV3Result]:

@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=inconsistent-return-statements
+
 """Noise learner program."""
 
 from __future__ import annotations
@@ -48,7 +50,9 @@ def find_learning_protocol(instruction: BoxOp) -> Optional[LearningProtocol]:
         return LearningProtocol.PAULI_LINDBLAD
 
     # Check if the undressed box contains a layer
-    active_qubits = [qubit for op in undressed_box.body for qubit in op.qubits if op.name != "barrier"]
+    active_qubits = [
+        qubit for op in undressed_box.body for qubit in op.qubits if op.name != "barrier"
+    ]
     is_layer = len(active_qubits) == len(set(active_qubits))
 
     # Check if the undressed box only contains two-qubit Clifford gates
@@ -71,4 +75,4 @@ def find_learning_protocol(instruction: BoxOp) -> Optional[LearningProtocol]:
     if is_layer and has_only_meas and len(instruction.qubits) == len(active_qubits):
         return LearningProtocol.TREX
 
-    return
+    return None

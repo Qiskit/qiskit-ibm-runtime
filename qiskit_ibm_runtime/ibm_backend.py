@@ -54,7 +54,10 @@ from .utils.backend_decoder import (
 
 
 if Version(qiskit_version).major >= 2:
-    from qiskit.result import MeasLevel, MeasReturnType
+    from qiskit.result import (  # pylint: disable=ungrouped-imports
+        MeasLevel,
+        MeasReturnType,
+    )
 else:
     from qiskit.qobj.utils import (  # pylint: disable=import-error
         MeasLevel,
@@ -265,8 +268,11 @@ class IBMBackend(Backend):
         )
 
         class Decoder:
+            """Decoder."""
+
             @classmethod
-            def decode(cls, data: str):
+            def decode(cls, data: str):  # type: ignore[no-untyped-def]
+                """Decode."""
                 obj = QuantumProgramResultModel(**json.loads(data))
                 return quantum_program_result_from_0_1(obj)
 
@@ -275,7 +281,6 @@ class IBMBackend(Backend):
             api_client=self._service._active_api_client,
             job_id=response["id"],
             program_id=program_id,
-            user_callback=None,
             result_decoder=Decoder,
             image=image,
             service=self._service,

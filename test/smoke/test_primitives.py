@@ -38,9 +38,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
     def setUp(self):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
-        self.pm = generate_preset_pass_manager(
-            optimization_level=1, target=self._backend.target
-        )
+        self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
         self.boxing_pm = generate_boxing_pass_manager()
 
         # bell circuit
@@ -95,13 +93,11 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
         circuit.cz(1, 2)
         circuit.measure_all()
 
-        isa_circuit = self.pm(circuit)
-        boxed_circuit = self.boxing_pm(isa_circuit)
+        isa_circuit = self.pm.run(circuit)
+        boxed_circuit = self.boxing_pm.run(isa_circuit)
 
         learner = NoiseLearnerV3(mode=self._backend)
-        instructions = [
-            instr for instr in boxed_circuit if instr.operation.name == "box"
-        ]
+        instructions = [instr for instr in boxed_circuit if instr.operation.name == "box"]
         job = learner.run(instructions)
         results = job.result()
 

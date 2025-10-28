@@ -24,8 +24,8 @@ from ibm_quantum_schemas.models.executor.version_0_1.models import (
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
 
 from .ibm_backend import IBMBackend, DEFAULT_IMAGE
-from .session import Session
-from .batch import Batch
+from .session import Session  # pylint: disable=cyclic-import
+from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .qiskit_runtime_service import QiskitRuntimeService
 from .quantum_program import QuantumProgram
@@ -39,7 +39,7 @@ logger = logging.getLogger()
 
 class _Decoder:
     @classmethod
-    def decode(cls, data: str):
+    def decode(cls, data: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
         obj = QuantumProgramResultModel(**json.loads(data))
         return quantum_program_result_from_0_1(obj)
@@ -53,7 +53,7 @@ class Executor:
 
     def __init__(self, mode: IBMBackend | Session | Batch | None):
 
-        self._session: IBMBackend | None = None
+        self._session: Session | None = None
         self._backend: IBMBackend
         self._service: QiskitRuntimeService
 

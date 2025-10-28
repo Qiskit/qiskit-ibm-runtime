@@ -47,7 +47,7 @@ DEFAULT_DECODERS = {
 
 DEFAULT_POST_SELECTION_SUFFIX = "_ps"
 """
-The default suffix to append to the names of the classical registers used for post selection measurements.
+The default suffix to append to the names of the classical registers used for post selection.
 """
 
 DEFAULT_SPECTATOR_CREG_NAME = "spec"

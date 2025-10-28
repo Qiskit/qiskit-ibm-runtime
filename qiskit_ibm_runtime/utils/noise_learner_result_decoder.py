@@ -25,8 +25,9 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     def decode(  # type: ignore # pylint: disable=arguments-differ
         cls, raw_result: str
     ) -> NoiseLearnerResult:
-        """Convert the result to NoiseLearnerResult."""
+        """Convert the result to NoiseLearnerResults."""
         if "schema_version" in raw_result:
+            # pylint: disable=import-outside-toplevel
             from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
                 NoiseLearnerV3ResultDecoder,
             )
@@ -42,9 +43,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
                 data.append(layer)
             else:
                 # supports the legacy result format
-                error = PauliLindbladError(
-                    layer[1]["generators"], layer[1]["rates"]
-                )
+                error = PauliLindbladError(layer[1]["generators"], layer[1]["rates"])
                 datum = LayerError(layer[0]["circuit"], layer[0]["qubits"], error)
                 data.append(datum)
 

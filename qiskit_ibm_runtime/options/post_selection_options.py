@@ -30,14 +30,15 @@ class PostSelectionOptions(BaseOptions):
     enable: bool = False
     r"""Whether to enable Post Selection when performing learning experiments.
 
-    If ``True``, Post Selection is applied to all the learning circuits. In particular, the following steps
-    are undertaken:
+    If ``True``, Post Selection is applied to all the learning circuits. In particular, the following
+    steps are undertaken:
 
-        * Using the passes in :mod:`qiskit_addon_utils.noise_management.post_selection.transpiler.passes`, the
-          learning circuits are modified by adding measurements on the spectator qubits, as well as post
-          selection measurements.
-        * The results of each individual learning circuits are post selected by discarding the shots where one
-          or more bits failed to flip, as explained in the docstring of
+        * Using the passes in
+          :mod:`qiskit_addon_utils.noise_management.post_selection.transpiler.passes`, the learning
+          circuits are modified by adding measurements on the spectator qubits, as well as
+          post selection measurements.
+        * The results of each individual learning circuits are post selected by discarding the shots
+          where one or more bits failed to flip, as explained in the docstring of
           :meth:`qiskit_addon_utils.noise_management.post_selection.PostSelector.compute_mask`.
     
     If ``False``, all the other Post Selection options will be ignored.          
@@ -59,3 +60,12 @@ class PostSelectionOptions(BaseOptions):
 
     Defaults to ``node``.
     """
+
+    @staticmethod
+    def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitives.
+        """
+        raise NotImplementedError()
