@@ -1,0 +1,733 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="IBMBackend" href="qiskit_ibm_runtime.IBMBackend.html" /><link rel="prev" title="Session" href="qiskit_ibm_runtime.Session.html" />
+
+    <!-- Generated with Sphinx 7.4.7 and Furo 2024.08.06 -->
+        <title>Batch - Qiskit Runtime IBM Client 0.43.1</title>
+      <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #ffffff;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet"></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H2C1.73478 2 1.48043 2.10536 1.29289 2.29289C1.10536 2.48043 1 2.73478 1 3V13C1 13.2652 1.10536 13.5196 1.29289 13.7071C1.48043 13.8946 1.73478 14 2 14H14C14.2652 14 14.5196 13.8946 14.7071 13.7071C14.8946 13.5196 15 13.2652 15 13V3C15 2.73478 14.8946 2.48043 14.7071 2.29289C14.5196 2.10536 14.2652 2 14 2V2ZM2 3H10V13H2V3ZM14 13H11V3H14V13Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 3H2V4H14V3Z" fill="currentColor"/>
+      <path d="M14 12H2V13H14V12Z" fill="currentColor"/>
+      <path d="M14 6H2V7H14V6Z" fill="currentColor"/>
+      <path d="M14 9H2V10H14V9Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 8L6.00005 13L5.30005 12.3L9.60005 8L5.30005 3.7L6.00005 3L11 8Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 13H1V14H15V13Z" fill="currentColor"/>
+      <path d="M12.7 4.5C13.1 4.1 13.1 3.5 12.7 3.1L10.9 1.3C10.5 0.9 9.9 0.9 9.5 1.3L2 8.8V12H5.2L12.7 4.5ZM10.2 2L12 3.8L10.5 5.3L8.7 3.5L10.2 2ZM3 11V9.2L8 4.2L9.8 6L4.8 11H3Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 13.0002C11.5523 13.0002 12 12.5525 12 12.0002C12 11.4479 11.5523 11.0002 11 11.0002C10.4477 11.0002 10 11.4479 10 12.0002C10 12.5525 10.4477 13.0002 11 13.0002Z" fill="currentColor"/>
+      <path d="M14.8884 11.7394C14.5795 10.9524 14.0464 10.2734 13.3552 9.78646C12.664 9.29954 11.8451 9.02615 11 9.00017C10.1549 9.02615 9.33604 9.29954 8.64484 9.78646C7.95365 10.2734 7.42052 10.9524 7.11155 11.7394L7 12.0002L7.11155 12.2609C7.42052 13.0479 7.95365 13.727 8.64484 14.2139C9.33604 14.7008 10.1549 14.9742 11 15.0002C11.8451 14.9742 12.664 14.7008 13.3552 14.2139C14.0464 13.727 14.5795 13.0479 14.8884 12.2609L15 12.0002L14.8884 11.7394ZM11 14.0002C10.6044 14.0002 10.2178 13.8829 9.88886 13.6631C9.55996 13.4433 9.30362 13.131 9.15224 12.7655C9.00087 12.4001 8.96126 11.998 9.03843 11.61C9.1156 11.222 9.30608 10.8657 9.58579 10.586C9.86549 10.3063 10.2219 10.1158 10.6098 10.0386C10.9978 9.96143 11.3999 10.001 11.7654 10.1524C12.1308 10.3038 12.4432 10.5601 12.6629 10.889C12.8827 11.2179 13 11.6046 13 12.0002C12.9994 12.5304 12.7885 13.0388 12.4136 13.4137C12.0386 13.7887 11.5303 13.9996 11 14.0002Z" fill="currentColor"/>
+      <path d="M6 14.0002H4V2.00017H8V5.00017C8.00077 5.26515 8.10637 5.51906 8.29374 5.70643C8.48111 5.8938 8.73502 5.99941 9 6.00017H12V8.00017H13V5.00017C13.0018 4.93446 12.9893 4.86913 12.9634 4.80871C12.9375 4.74828 12.8988 4.6942 12.85 4.65017L9.35 1.15017C9.30599 1.10134 9.2519 1.06263 9.19147 1.03674C9.13104 1.01084 9.06572 0.998364 9 1.00017H4C3.73502 1.00094 3.48111 1.10654 3.29374 1.29391C3.10637 1.48128 3.00077 1.73519 3 2.00017V14.0002C3.00077 14.2652 3.10637 14.5191 3.29374 14.7064C3.48111 14.8938 3.73502 14.9994 4 15.0002H6V14.0002ZM9 2.20017L11.8 5.00017H9V2.20017Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.43.1</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.43.1</span>
+  
+</a>
+<form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../apidocs/index.html"> API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of  API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../apidocs/runtime_service.html">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Qiskit Runtime (qiskit_ibm_runtime)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.QiskitRuntimeService.html">QiskitRuntimeService</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Estimator.html">Estimator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.EstimatorV2.html">EstimatorV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Sampler.html">Sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.SamplerV2.html">SamplerV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Session.html">Session</a></li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html">IBMBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeJobV2.html">RuntimeJobV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeEncoder.html">RuntimeEncoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeDecoder.html">RuntimeDecoder</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Noise learner (qiskit_ibm_runtime.noise_learner.NoiseLearner)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.noise_learner.NoiseLearner.html">NoiseLearner</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of NoiseLearner result classes (qiskit_ibm_runtime.utils.noise_learner_result)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.utils.noise_learner_result.PauliLindbladError.html">PauliLindbladError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.utils.noise_learner_result.LayerError.html">LayerError</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Primitive options (qiskit_ibm_runtime.options)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.EstimatorOptions.html">EstimatorOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SamplerOptions.html">SamplerOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerOptions.html">NoiseLearnerOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.html">DynamicalDecouplingOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ResilienceOptionsV2.html">ResilienceOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.LayerNoiseLearningOptions.html">LayerNoiseLearningOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.MeasureNoiseLearningOptions.html">MeasureNoiseLearningOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.PecOptions.html">PecOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ZneOptions.html">ZneOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.TwirlingOptions.html">TwirlingOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ExecutionOptionsV2.html">ExecutionOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SamplerExecutionOptionsV2.html">SamplerExecutionOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.EnvironmentOptions.html">EnvironmentOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SimulatorOptions.html">SimulatorOptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Transpiler passes (qiskit_ibm_runtime.transpiler.passes)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertIdToDelay.html">ConvertIdToDelay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertISAToClifford.html">ConvertISAToClifford</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.FoldRzzAngle.html">FoldRzzAngle</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Transpiler scheduling passes (qiskit_ibm_runtime.transpiler.passes.scheduling)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.BlockBasePadder.html">BlockBasePadder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.ALAPScheduleAnalysis.html">ALAPScheduleAnalysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.ASAPScheduleAnalysis.html">ASAPScheduleAnalysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.DynamicCircuitInstructionDurations.html">DynamicCircuitInstructionDurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.PadDelay.html">PadDelay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling.html">PadDynamicalDecoupling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Fake Provider (qiskit_ibm_runtime.fake_provider)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeProviderForBackendV2.html">FakeProviderForBackendV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAlgiers.html">FakeAlgiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAlmadenV2.html">FakeAlmadenV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeArmonkV2.html">FakeArmonkV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAthensV2.html">FakeAthensV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAuckland.html">FakeAuckland</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBelemV2.html">FakeBelemV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBoeblingenV2.html">FakeBoeblingenV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBogotaV2.html">FakeBogotaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBrisbane.html">FakeBrisbane</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBrooklynV2.html">FakeBrooklynV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBurlingtonV2.html">FakeBurlingtonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCairoV2.html">FakeCairoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCambridgeV2.html">FakeCambridgeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCasablancaV2.html">FakeCasablancaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCusco.html">FakeCusco</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeEssexV2.html">FakeEssexV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeFez.html">FakeFez</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeGeneva.html">FakeGeneva</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeGuadalupeV2.html">FakeGuadalupeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeHanoiV2.html">FakeHanoiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeJakartaV2.html">FakeJakartaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeJohannesburgV2.html">FakeJohannesburgV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKawasaki.html">FakeKawasaki</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKolkataV2.html">FakeKolkataV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKyiv.html">FakeKyiv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKyoto.html">FakeKyoto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLagosV2.html">FakeLagosV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLimaV2.html">FakeLimaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeFractionalBackend.html">FakeFractionalBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLondonV2.html">FakeLondonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeManhattanV2.html">FakeManhattanV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeManilaV2.html">FakeManilaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMarrakesh.html">FakeMarrakesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMelbourneV2.html">FakeMelbourneV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMontrealV2.html">FakeMontrealV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMumbaiV2.html">FakeMumbaiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeNairobiV2.html">FakeNairobiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOsaka.html">FakeOsaka</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOslo.html">FakeOslo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOurenseV2.html">FakeOurenseV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeParisV2.html">FakeParisV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePeekskill.html">FakePeekskill</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePerth.html">FakePerth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePrague.html">FakePrague</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePoughkeepsieV2.html">FakePoughkeepsieV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeQuebec.html">FakeQuebec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeQuitoV2.html">FakeQuitoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeRochesterV2.html">FakeRochesterV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeRomeV2.html">FakeRomeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSantiagoV2.html">FakeSantiagoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSherbrooke.html">FakeSherbrooke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSingaporeV2.html">FakeSingaporeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSydneyV2.html">FakeSydneyV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeTorino.html">FakeTorino</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeTorontoV2.html">FakeTorontoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeValenciaV2.html">FakeValenciaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeVigoV2.html">FakeVigoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeWashingtonV2.html">FakeWashingtonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeYorktownV2.html">FakeYorktownV2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Execution Spans (qiskit_ibm_runtime.execution_span)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.DoubleSliceSpan.html">DoubleSliceSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpan.html">ExecutionSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpans.html">ExecutionSpans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ShapeType.html">qiskit_ibm_runtime.execution_span.ShapeType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.SliceSpan.html">SliceSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.TwirledSliceSpan.html">TwirledSliceSpan</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Debugging tools (qiskit_ibm_runtime.debug_tools)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.Neat.html">Neat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.NeatResult.html">NeatResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.NeatPubResult.html">NeatPubResult</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Visualization (qiskit_ibm_runtime.visualization)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_execution_spans.html">qiskit_ibm_runtime.visualization.draw_execution_spans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_layer_error_map.html">qiskit_ibm_runtime.visualization.draw_layer_error_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_layer_errors_swarm.html">qiskit_ibm_runtime.visualization.draw_layer_errors_swarm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_evs.html">qiskit_ibm_runtime.visualization.draw_zne_evs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_extrapolators.html">qiskit_ibm_runtime.visualization.draw_zne_extrapolators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing.html">qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Backend Objects (qiskit_ibm_runtime.models)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendConfiguration.html">BackendConfiguration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.QasmBackendConfiguration.html">QasmBackendConfiguration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendProperties.html">BackendProperties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendStatus.html">BackendStatus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.UchannelLO.html">UchannelLO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.GateConfig.html">GateConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.GateProperties.html">GateProperties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.Nduv.html">Nduv</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/stubs/qiskit_ibm_runtime.Batch.rst" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="batch">
+<h1>Batch<a class="headerlink" href="#batch" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_new</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/batch.py#L23-L118"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session" title="qiskit_ibm_runtime.session.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a></p>
+<p>Class for running jobs in batch execution mode.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">batch</span></code> mode is designed to efficiently perform experiments that comprise multiple
+independent jobs.</p>
+<dl class="simple">
+<dt>Using the <code class="docutils literal notranslate"><span class="pre">batch</span></code> mode provides the following benefits:</dt><dd><ul class="simple">
+<li><p>The jobs’ classical computation, such as compilation, is run in parallel.
+Thus, running multiple jobs in a batch is significantly faster than running them serially.</p></li>
+<li><p>There is usually minimal delay between job, which can help avoid drift.</p></li>
+<li><p>If you partition your workload into multiple jobs and run them in <code class="docutils literal notranslate"><span class="pre">batch</span></code> mode, you can
+get results from individual jobs, which makes them more flexible to work with. For example,
+if a job’s results do not meet your expectations, you can cancel the remaining jobs, or
+simply re-submit that individual job and avoid re-running the entire workload.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Batch mode can shorten processing time if all jobs are provided at the outset.
+If you want to submit iterative jobs, use <code class="docutils literal notranslate"><span class="pre">session</span></code> mode instead.</p>
+<p>You can open a Qiskit Runtime batch by using this <code class="docutils literal notranslate"><span class="pre">Batch</span></code> class, then submit jobs
+to one or more primitives.</p>
+<p>For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">IQP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.transpiler.preset_passmanagers</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_preset_pass_manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.quantum_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_hermitian</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span><span class="p">,</span> <span class="n">SamplerV2</span> <span class="k">as</span> <span class="n">Sampler</span><span class="p">,</span> <span class="n">Batch</span>
+
+<span class="n">n_qubits</span> <span class="o">=</span> <span class="mi">127</span>
+
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">least_busy</span><span class="p">(</span><span class="n">operational</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_num_qubits</span><span class="o">=</span><span class="n">n_qubits</span><span class="p">)</span>
+
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
+<span class="n">mats</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">random_hermitian</span><span class="p">(</span><span class="n">n_qubits</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">rng</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)]</span>
+<span class="n">circuits</span> <span class="o">=</span> <span class="p">[</span><span class="n">IQP</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span> <span class="k">for</span> <span class="n">mat</span> <span class="ow">in</span> <span class="n">mats</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">circuit</span> <span class="ow">in</span> <span class="n">circuits</span><span class="p">:</span>
+    <span class="n">circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="n">pm</span> <span class="o">=</span> <span class="n">generate_preset_pass_manager</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">isa_circuits</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuits</span><span class="p">)</span>
+
+<span class="n">max_circuits</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">all_partitioned_circuits</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">isa_circuits</span><span class="p">),</span> <span class="n">max_circuits</span><span class="p">):</span>
+    <span class="n">all_partitioned_circuits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">isa_circuits</span><span class="p">[</span><span class="n">i</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">max_circuits</span><span class="p">])</span>
+<span class="n">jobs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">start_idx</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">with</span> <span class="n">Batch</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">):</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">partitioned_circuits</span> <span class="ow">in</span> <span class="n">all_partitioned_circuits</span><span class="p">:</span>
+        <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">partitioned_circuits</span><span class="p">)</span>
+        <span class="n">jobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">job</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more details, check the “<a class="reference external" href="https://quantum.cloud.ibm.com/docs/guides/run-jobs-batch">Run jobs in a batch</a>” page.</p>
+<p>Batch constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backend</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.BackendV2" title="(in Qiskit v2.2)"><em>BackendV2</em></a>) – Instance of <code class="docutils literal notranslate"><span class="pre">Backend</span></code> class.</p></li>
+<li><p><strong>max_time</strong> (<em>int</em><em> | </em><em>str</em><em> | </em><em>None</em>) – Maximum amount of time a runtime session can be open before being
+forcibly closed. Can be specified as seconds (int) or a string like “2h 30m 40s”.
+This value must be less than the
+<a class="reference external" href="https://quantum.cloud.ibm.com/docs/guides/max-execution-time">system imposed maximum</a>.</p></li>
+<li><p><strong>create_new</strong> (<em>bool</em><em> | </em><em>None</em>) – If True, the POST session API endpoint will be called to create a new session.
+Prevents creating a new session when <code class="docutils literal notranslate"><span class="pre">from_id()</span></code> is called.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If an input value is invalid.</p>
+</dd>
+</dl>
+<p class="rubric">Attributes</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.service">
+<span class="sig-name descname"><span class="pre">service</span></span><a class="headerlink" href="#qiskit_ibm_runtime.Batch.service" title="Link to this definition">¶</a></dt>
+<dd><p>Return service associated with this session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService" title="qiskit_ibm_runtime.QiskitRuntimeService"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.QiskitRuntimeService</span></code></a> associated with this session.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.session_id">
+<span class="sig-name descname"><span class="pre">session_id</span></span><a class="headerlink" href="#qiskit_ibm_runtime.Batch.session_id" title="Link to this definition">¶</a></dt>
+<dd><p>Return the session ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Session ID. None if the backend is a simulator.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.backend">
+<span class="sig-name descname"><span class="pre">backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L207-L215"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.backend" title="Link to this definition">¶</a></dt>
+<dd><p>Return backend for this session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Backend for this session. None if unknown.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.cancel">
+<span class="sig-name descname"><span class="pre">cancel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L193-L197"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.cancel" title="Link to this definition">¶</a></dt>
+<dd><p>Cancel all pending jobs in a session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L199-L205"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.close" title="Link to this definition">¶</a></dt>
+<dd><p>Close the session so new jobs will no longer be accepted, but existing
+queued or running jobs will run to completion. The session will be terminated once there
+are no more pending jobs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.details">
+<span class="sig-name descname"><span class="pre">details</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L260-L304"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.details" title="Link to this definition">¶</a></dt>
+<dd><p>Return session details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>A dictionary with the sessions details.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id</span></code>: id of the session.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">backend_name</span></code>: backend used for the session.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interactive_timeout</span></code>: The maximum idle time (in seconds) between jobs that
+is allowed to occur before the session is deactivated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_time</span></code>: Maximum allowed time (in seconds) for the session, subject to plan limits.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">active_timeout</span></code>: The maximum time (in seconds) a session can stay active.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">state</span></code>: State of the session - open, active, inactive, or closed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">accepting_jobs</span></code>: Whether or not the session is accepting jobs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_job_started</span></code>: Timestamp of when the last job in the session started.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last_job_completed</span></code>: Timestamp of when the last job in the session completed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">started_at</span></code>: Timestamp of when the session was started.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">closed_at</span></code>: Timestamp of when the session was closed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">activated_at</span></code>: Timestamp of when the session state was changed to active.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code>: Execution mode of the session.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">usage_time</span></code>: The usage time, in seconds, of this Session or Batch.
+Usage is defined as the time a quantum system is committed to complete a job.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.from_id">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L324-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.from_id" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a Session object with a given <code class="docutils literal notranslate"><span class="pre">session_id</span></code>. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span><span class="p">,</span> <span class="n">Session</span>
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+<span class="n">job</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">job</span><span class="p">(</span><span class="o">&lt;</span><span class="n">job_id</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="n">existing_session_id</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">session_id</span>
+
+<span class="n">new_session</span> <span class="o">=</span> <span class="n">Session</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="n">existing_session_id</span><span class="p">,</span> <span class="n">service</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session_id</strong> (<em>str</em>) – the id of the session to be created. This must be an already
+existing session id.</p></li>
+<li><p><strong>service</strong> (<a class="reference internal" href="qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService" title="qiskit_ibm_runtime.qiskit_runtime_service.QiskitRuntimeService"><em>QiskitRuntimeService</em></a>) – <p>instance of the <code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService</span></code> class.</p>
+<dl class="simple">
+<dt>Raises:</dt><dd><p>IBMInputValueError: If given <cite>session_id</cite> does not exist.
+IBMRuntimeError: If the backend of the session is unknown.</p>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Session with the given <code class="docutils literal notranslate"><span class="pre">session_id</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session" title="qiskit_ibm_runtime.session.Session"><em>Session</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.status">
+<span class="sig-name descname"><span class="pre">status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L217-L242"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.status" title="Link to this definition">¶</a></dt>
+<dd><p>Return current session status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><p>Session status as a string.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Pending</span></code>: Session is created but not active.
+It will become active when the next job of this session is dequeued.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">progress,</span> <span class="pre">accepting</span> <span class="pre">new</span> <span class="pre">jobs</span></code>: session is active and accepting new jobs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">In</span> <span class="pre">progress,</span> <span class="pre">not</span> <span class="pre">accepting</span> <span class="pre">new</span> <span class="pre">jobs</span></code>: session is active and not accepting new jobs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Closed</span></code>: max_time expired or session was explicitly closed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: status details are not available.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.Batch.usage">
+<span class="sig-name descname"><span class="pre">usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/session.py#L244-L258"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.Batch.usage" title="Link to this definition">¶</a></dt>
+<dd><p>Return session usage in seconds.</p>
+<p>Session usage is the time from when the first job starts until the session goes inactive,
+is closed, or when its last job completes, whichever happens last.</p>
+<p>Batch usage is the amount of time all jobs spend on the QPU.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="qiskit_ibm_runtime.IBMBackend.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">IBMBackend</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="qiskit_ibm_runtime.Session.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Session</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Qiskit Development Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2025/10/28</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Batch</a><ul>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch"><code class="docutils literal notranslate"><span class="pre">Batch</span></code></a><ul>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.service"><code class="docutils literal notranslate"><span class="pre">Batch.service</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.session_id"><code class="docutils literal notranslate"><span class="pre">Batch.session_id</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.backend"><code class="docutils literal notranslate"><span class="pre">Batch.backend()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.cancel"><code class="docutils literal notranslate"><span class="pre">Batch.cancel()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.close"><code class="docutils literal notranslate"><span class="pre">Batch.close()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.details"><code class="docutils literal notranslate"><span class="pre">Batch.details()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.from_id"><code class="docutils literal notranslate"><span class="pre">Batch.from_id()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.status"><code class="docutils literal notranslate"><span class="pre">Batch.status()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.Batch.usage"><code class="docutils literal notranslate"><span class="pre">Batch.usage()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>

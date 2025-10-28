@@ -1,0 +1,1007 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Estimator" href="qiskit_ibm_runtime.Estimator.html" /><link rel="prev" title="Qiskit Runtime (qiskit_ibm_runtime)" href="../apidocs/runtime_service.html" />
+
+    <!-- Generated with Sphinx 7.4.7 and Furo 2024.08.06 -->
+        <title>QiskitRuntimeService - Qiskit Runtime IBM Client 0.43.1</title>
+      <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #ffffff;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style><link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet"></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 2H2C1.73478 2 1.48043 2.10536 1.29289 2.29289C1.10536 2.48043 1 2.73478 1 3V13C1 13.2652 1.10536 13.5196 1.29289 13.7071C1.48043 13.8946 1.73478 14 2 14H14C14.2652 14 14.5196 13.8946 14.7071 13.7071C14.8946 13.5196 15 13.2652 15 13V3C15 2.73478 14.8946 2.48043 14.7071 2.29289C14.5196 2.10536 14.2652 2 14 2V2ZM2 3H10V13H2V3ZM14 13H11V3H14V13Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 3H2V4H14V3Z" fill="currentColor"/>
+      <path d="M14 12H2V13H14V12Z" fill="currentColor"/>
+      <path d="M14 6H2V7H14V6Z" fill="currentColor"/>
+      <path d="M14 9H2V10H14V9Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 8L6.00005 13L5.30005 12.3L9.60005 8L5.30005 3.7L6.00005 3L11 8Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 13H1V14H15V13Z" fill="currentColor"/>
+      <path d="M12.7 4.5C13.1 4.1 13.1 3.5 12.7 3.1L10.9 1.3C10.5 0.9 9.9 0.9 9.5 1.3L2 8.8V12H5.2L12.7 4.5ZM10.2 2L12 3.8L10.5 5.3L8.7 3.5L10.2 2ZM3 11V9.2L8 4.2L9.8 6L4.8 11H3Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 13.0002C11.5523 13.0002 12 12.5525 12 12.0002C12 11.4479 11.5523 11.0002 11 11.0002C10.4477 11.0002 10 11.4479 10 12.0002C10 12.5525 10.4477 13.0002 11 13.0002Z" fill="currentColor"/>
+      <path d="M14.8884 11.7394C14.5795 10.9524 14.0464 10.2734 13.3552 9.78646C12.664 9.29954 11.8451 9.02615 11 9.00017C10.1549 9.02615 9.33604 9.29954 8.64484 9.78646C7.95365 10.2734 7.42052 10.9524 7.11155 11.7394L7 12.0002L7.11155 12.2609C7.42052 13.0479 7.95365 13.727 8.64484 14.2139C9.33604 14.7008 10.1549 14.9742 11 15.0002C11.8451 14.9742 12.664 14.7008 13.3552 14.2139C14.0464 13.727 14.5795 13.0479 14.8884 12.2609L15 12.0002L14.8884 11.7394ZM11 14.0002C10.6044 14.0002 10.2178 13.8829 9.88886 13.6631C9.55996 13.4433 9.30362 13.131 9.15224 12.7655C9.00087 12.4001 8.96126 11.998 9.03843 11.61C9.1156 11.222 9.30608 10.8657 9.58579 10.586C9.86549 10.3063 10.2219 10.1158 10.6098 10.0386C10.9978 9.96143 11.3999 10.001 11.7654 10.1524C12.1308 10.3038 12.4432 10.5601 12.6629 10.889C12.8827 11.2179 13 11.6046 13 12.0002C12.9994 12.5304 12.7885 13.0388 12.4136 13.4137C12.0386 13.7887 11.5303 13.9996 11 14.0002Z" fill="currentColor"/>
+      <path d="M6 14.0002H4V2.00017H8V5.00017C8.00077 5.26515 8.10637 5.51906 8.29374 5.70643C8.48111 5.8938 8.73502 5.99941 9 6.00017H12V8.00017H13V5.00017C13.0018 4.93446 12.9893 4.86913 12.9634 4.80871C12.9375 4.74828 12.8988 4.6942 12.85 4.65017L9.35 1.15017C9.30599 1.10134 9.2519 1.06263 9.19147 1.03674C9.13104 1.01084 9.06572 0.998364 9 1.00017H4C3.73502 1.00094 3.48111 1.10654 3.29374 1.29391C3.10637 1.48128 3.00077 1.73519 3 2.00017V14.0002C3.00077 14.2652 3.10637 14.5191 3.29374 14.7064C3.48111 14.8938 3.73502 14.9994 4 15.0002H6V14.0002ZM9 2.20017L11.8 5.00017H9V2.20017Z" fill="currentColor"/>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.43.1</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.43.1</span>
+  
+</a>
+<form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../apidocs/index.html"> API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of  API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../apidocs/runtime_service.html">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Qiskit Runtime (qiskit_ibm_runtime)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">QiskitRuntimeService</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Estimator.html">Estimator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.EstimatorV2.html">EstimatorV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Sampler.html">Sampler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.SamplerV2.html">SamplerV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Session.html">Session</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.Batch.html">Batch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html">IBMBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeJobV2.html">RuntimeJobV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeEncoder.html">RuntimeEncoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.RuntimeDecoder.html">RuntimeDecoder</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Noise learner (qiskit_ibm_runtime.noise_learner.NoiseLearner)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.noise_learner.NoiseLearner.html">NoiseLearner</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of NoiseLearner result classes (qiskit_ibm_runtime.utils.noise_learner_result)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.utils.noise_learner_result.PauliLindbladError.html">PauliLindbladError</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.utils.noise_learner_result.LayerError.html">LayerError</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Primitive options (qiskit_ibm_runtime.options)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.EstimatorOptions.html">EstimatorOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SamplerOptions.html">SamplerOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerOptions.html">NoiseLearnerOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.html">DynamicalDecouplingOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ResilienceOptionsV2.html">ResilienceOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.LayerNoiseLearningOptions.html">LayerNoiseLearningOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.MeasureNoiseLearningOptions.html">MeasureNoiseLearningOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.PecOptions.html">PecOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ZneOptions.html">ZneOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.TwirlingOptions.html">TwirlingOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.ExecutionOptionsV2.html">ExecutionOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SamplerExecutionOptionsV2.html">SamplerExecutionOptionsV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.EnvironmentOptions.html">EnvironmentOptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.options.SimulatorOptions.html">SimulatorOptions</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Transpiler passes (qiskit_ibm_runtime.transpiler.passes)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertIdToDelay.html">ConvertIdToDelay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertISAToClifford.html">ConvertISAToClifford</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.FoldRzzAngle.html">FoldRzzAngle</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Transpiler scheduling passes (qiskit_ibm_runtime.transpiler.passes.scheduling)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.BlockBasePadder.html">BlockBasePadder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.ALAPScheduleAnalysis.html">ALAPScheduleAnalysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.ASAPScheduleAnalysis.html">ASAPScheduleAnalysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.DynamicCircuitInstructionDurations.html">DynamicCircuitInstructionDurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.PadDelay.html">PadDelay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling.html">PadDynamicalDecoupling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Fake Provider (qiskit_ibm_runtime.fake_provider)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeProviderForBackendV2.html">FakeProviderForBackendV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAlgiers.html">FakeAlgiers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAlmadenV2.html">FakeAlmadenV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeArmonkV2.html">FakeArmonkV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAthensV2.html">FakeAthensV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeAuckland.html">FakeAuckland</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBelemV2.html">FakeBelemV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBoeblingenV2.html">FakeBoeblingenV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBogotaV2.html">FakeBogotaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBrisbane.html">FakeBrisbane</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBrooklynV2.html">FakeBrooklynV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeBurlingtonV2.html">FakeBurlingtonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCairoV2.html">FakeCairoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCambridgeV2.html">FakeCambridgeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCasablancaV2.html">FakeCasablancaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeCusco.html">FakeCusco</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeEssexV2.html">FakeEssexV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeFez.html">FakeFez</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeGeneva.html">FakeGeneva</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeGuadalupeV2.html">FakeGuadalupeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeHanoiV2.html">FakeHanoiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeJakartaV2.html">FakeJakartaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeJohannesburgV2.html">FakeJohannesburgV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKawasaki.html">FakeKawasaki</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKolkataV2.html">FakeKolkataV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKyiv.html">FakeKyiv</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeKyoto.html">FakeKyoto</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLagosV2.html">FakeLagosV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLimaV2.html">FakeLimaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeFractionalBackend.html">FakeFractionalBackend</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeLondonV2.html">FakeLondonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeManhattanV2.html">FakeManhattanV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeManilaV2.html">FakeManilaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMarrakesh.html">FakeMarrakesh</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMelbourneV2.html">FakeMelbourneV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMontrealV2.html">FakeMontrealV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeMumbaiV2.html">FakeMumbaiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeNairobiV2.html">FakeNairobiV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOsaka.html">FakeOsaka</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOslo.html">FakeOslo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeOurenseV2.html">FakeOurenseV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeParisV2.html">FakeParisV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePeekskill.html">FakePeekskill</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePerth.html">FakePerth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePrague.html">FakePrague</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakePoughkeepsieV2.html">FakePoughkeepsieV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeQuebec.html">FakeQuebec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeQuitoV2.html">FakeQuitoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeRochesterV2.html">FakeRochesterV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeRomeV2.html">FakeRomeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSantiagoV2.html">FakeSantiagoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSherbrooke.html">FakeSherbrooke</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSingaporeV2.html">FakeSingaporeV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeSydneyV2.html">FakeSydneyV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeTorino.html">FakeTorino</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeTorontoV2.html">FakeTorontoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeValenciaV2.html">FakeValenciaV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeVigoV2.html">FakeVigoV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeWashingtonV2.html">FakeWashingtonV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.fake_provider.FakeYorktownV2.html">FakeYorktownV2</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Execution Spans (qiskit_ibm_runtime.execution_span)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.DoubleSliceSpan.html">DoubleSliceSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpan.html">ExecutionSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpans.html">ExecutionSpans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ShapeType.html">qiskit_ibm_runtime.execution_span.ShapeType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.SliceSpan.html">SliceSpan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.TwirledSliceSpan.html">TwirledSliceSpan</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Debugging tools (qiskit_ibm_runtime.debug_tools)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.Neat.html">Neat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.NeatResult.html">NeatResult</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.debug_tools.NeatPubResult.html">NeatPubResult</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Visualization (qiskit_ibm_runtime.visualization)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_execution_spans.html">qiskit_ibm_runtime.visualization.draw_execution_spans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_layer_error_map.html">qiskit_ibm_runtime.visualization.draw_layer_error_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_layer_errors_swarm.html">qiskit_ibm_runtime.visualization.draw_layer_errors_swarm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_evs.html">qiskit_ibm_runtime.visualization.draw_zne_evs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_extrapolators.html">qiskit_ibm_runtime.visualization.draw_zne_extrapolators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing.html">qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Backend Objects (qiskit_ibm_runtime.models)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendConfiguration.html">BackendConfiguration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.QasmBackendConfiguration.html">QasmBackendConfiguration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendProperties.html">BackendProperties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.BackendStatus.html">BackendStatus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.UchannelLO.html">UchannelLO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.GateConfig.html">GateConfig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.GateProperties.html">GateProperties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.models.Nduv.html">Nduv</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+</div></div>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/stubs/qiskit_ibm_runtime.QiskitRuntimeService.rst" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="qiskitruntimeservice">
+<h1>QiskitRuntimeService<a class="headerlink" href="#qiskitruntimeservice" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QiskitRuntimeService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L48-L1369"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for interacting with the Qiskit Runtime service.</p>
+<p>QiskitRuntimeService constructor.</p>
+<p>Recommended uses:</p>
+<ul>
+<li><p>Direct instantiation:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span>
+
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">(</span>
+    <span class="n">channel</span><span class="o">=</span><span class="s2">&quot;ibm_quantum_platform&quot;</span><span class="p">,</span>
+    <span class="n">token</span><span class="o">=</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">,</span>
+    <span class="n">instance</span><span class="o">=</span><span class="s2">&quot;CRN&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Saving default acccount:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span>
+
+<span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">save_account</span><span class="p">(</span>
+    <span class="n">token</span><span class="o">=</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">,</span>
+    <span class="n">instance</span><span class="o">=</span><span class="s2">&quot;CRN&quot;</span><span class="p">,</span>
+    <span class="n">set_as_default</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span>
+
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<p>The minimum required information for service authentication to a non-local channel is the
+<code class="docutils literal notranslate"><span class="pre">token</span></code>. The <code class="docutils literal notranslate"><span class="pre">local</span></code> channel doesn’t require authentication.
+For non-local channels, it is recommended to always provide the relevant <code class="docutils literal notranslate"><span class="pre">instance</span></code>
+to minimize API calls. If an <code class="docutils literal notranslate"><span class="pre">instance</span></code> is not defined, the service will fetch all
+instances accessible within the account, filtered by <code class="docutils literal notranslate"><span class="pre">region</span></code>, <code class="docutils literal notranslate"><span class="pre">plans_preference</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">tags</span></code>. If <code class="docutils literal notranslate"><span class="pre">plans_preference</span></code> is not set, free and trial instances will be prioritized
+over paid instances.</p>
+<p>Also note that only one account per API token can be used. The API token is linked to the
+account it was created in. If you want to use multiple accounts, you must create multiple
+API tokens.</p>
+<p>The service will attempt to load an account from file if (a) no explicit <code class="docutils literal notranslate"><span class="pre">token</span></code>
+was provided during instantiation  or (b) a <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, even if an explicit
+<code class="docutils literal notranslate"><span class="pre">token</span></code> was provided to the service constructor. The account will be selected based on
+the following criteria:</p>
+<ul class="simple">
+<li><p>If a <code class="docutils literal notranslate"><span class="pre">filename</span></code> is specified, account details will be loaded from <code class="docutils literal notranslate"><span class="pre">filename</span></code>,
+else they will be loaded from the default configuration file.</p></li>
+<li><p>If a <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, the corresponding account details will be loaded from
+the configuration file, including <code class="docutils literal notranslate"><span class="pre">channel</span></code>, <code class="docutils literal notranslate"><span class="pre">token</span></code>, <code class="docutils literal notranslate"><span class="pre">instance</span></code>, <code class="docutils literal notranslate"><span class="pre">region</span></code>,
+<code class="docutils literal notranslate"><span class="pre">plans_preference</span></code>, and the advanced configuration parameters: <code class="docutils literal notranslate"><span class="pre">url</span></code>,
+<code class="docutils literal notranslate"><span class="pre">url_resolver</span></code>, <code class="docutils literal notranslate"><span class="pre">private_endpoint</span></code>,  <code class="docutils literal notranslate"><span class="pre">verify</span></code>, and  <code class="docutils literal notranslate"><span class="pre">proxies</span></code>.
+<strong>Important Note</strong>: An explicit <code class="docutils literal notranslate"><span class="pre">instance</span></code> value provided during instantiation
+will <strong>overwrite</strong> the value of the loaded <code class="docutils literal notranslate"><span class="pre">instance</span></code>.</p></li>
+<li><p>If no <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified: if <code class="docutils literal notranslate"><span class="pre">channel</span></code> is specified, the service will load the
+default account associated with that channel from the configuration file. Else,
+it will fall back to the overall default account, defined when calling <a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.save_account" title="qiskit_ibm_runtime.QiskitRuntimeService.save_account"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save_account()</span></code></a>
+with <code class="docutils literal notranslate"><span class="pre">set_as_default=True</span></code>.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channel</strong> (<em>Optional</em><em>[</em><em>ChannelType</em><em>]</em>) – String that identifies the service platform. This is
+set to <code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code> by default, but can additionally take <code class="docutils literal notranslate"><span class="pre">local</span></code>
+and <code class="docutils literal notranslate"><span class="pre">ibm_cloud</span></code> as values.
+If <code class="docutils literal notranslate"><span class="pre">local</span></code> is selected, the local testing mode will be used, and
+primitive queries will run on a local simulator. For more details, check the
+<a class="reference external" href="https://quantum.cloud.ibm.com/docs/guides/local-testing-mode">Qiskit Runtime local testing mode</a>  documentation.
+For non-local modes, the channel is used to resolve the default API URL value.
+<code class="docutils literal notranslate"><span class="pre">ibm_cloud</span></code> was the identifier for the legacy IBM Cloud platform, and
+its url will be redirected to the new <code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code> url.</p></li>
+<li><p><strong>token</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – IBM Cloud API key. Providing an API key is required for IQP
+authentication. If not provided explicitly, the default saved account will be
+queried for this API key.</p></li>
+<li><p><strong>url</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The API URL. Defaults to different values depending on the selected
+channel:  <a class="reference external" href="https://quantum.cloud.ibm.com">https://quantum.cloud.ibm.com</a>  (<code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code>), or
+<a class="reference external" href="https://quantum-computing.cloud.ibm.com">https://quantum-computing.cloud.ibm.com</a> (<code class="docutils literal notranslate"><span class="pre">ibm_cloud</span></code>).</p></li>
+<li><p><strong>filename</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Full path of the file where the account is created.
+Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.</p></li>
+<li><p><strong>name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Name of the account to load from file.</p></li>
+<li><p><strong>instance</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The service instance to use.
+For <code class="docutils literal notranslate"><span class="pre">ibm_cloud</span></code> and <code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code>, this is the Cloud Resource
+Name (CRN) or the service name. If set, it will define an instance for
+service instantiation, if not set, the service will fetch all instances accessible
+within the account following the specified filtering criteria.</p></li>
+<li><p><strong>proxies</strong> (<em>Optional</em><em>[</em><em>dict</em><em>]</em>) – Proxy configuration. Supported optional keys are
+<code class="docutils literal notranslate"><span class="pre">urls</span></code> (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+documented at <a class="reference external" href="https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies">https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies</a>),
+<code class="docutils literal notranslate"><span class="pre">username_ntlm</span></code>, <code class="docutils literal notranslate"><span class="pre">password_ntlm</span></code> (username and password to enable NTLM user
+authentication)</p></li>
+<li><p><strong>verify</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – Whether to verify the server’s TLS certificate.</p></li>
+<li><p><strong>private_endpoint</strong> (<em>Optional</em><em>[</em><em>bool</em><em>]</em>) – Connect to private API URL.</p></li>
+<li><p><strong>url_resolver</strong> (<em>Optional</em><em>[</em><em>Callable</em><em>]</em>) – Function used to resolve the runtime url.</p></li>
+<li><p><strong>region</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Set a region preference for automatic instance selection.
+This argument is <strong>ignored</strong> if an <code class="docutils literal notranslate"><span class="pre">instance</span></code> is specified.
+Accepted values are <code class="docutils literal notranslate"><span class="pre">us-east</span></code> or <code class="docutils literal notranslate"><span class="pre">eu-de</span></code>.
+An instance with this region will be prioritized if an instance is not passed in.</p></li>
+<li><p><strong>plans_preference</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – A list of account plan names
+ordered by priority for automatic instance selection.
+This argument is <strong>ignored</strong> if an <code class="docutils literal notranslate"><span class="pre">instance</span></code> is specified.
+Only instances with the given plan names will be considered.
+For example, if you want to avoid using your premium accounts you can just
+pass in <code class="docutils literal notranslate"><span class="pre">&quot;open&quot;</span></code> to only use your open plan instances.
+Accepted values include (but are not limited to): <code class="docutils literal notranslate"><span class="pre">open</span></code>, <code class="docutils literal notranslate"><span class="pre">premium</span></code>,
+<code class="docutils literal notranslate"><span class="pre">flex</span></code>, <code class="docutils literal notranslate"><span class="pre">on-prem</span></code>, <code class="docutils literal notranslate"><span class="pre">pay-as-you-go</span></code>.</p></li>
+<li><p><strong>tags</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Set a list of tags to filter available instances for automatic
+instance selection. This argument is <strong>ignored</strong> if an <code class="docutils literal notranslate"><span class="pre">instance</span></code> is specified.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>IBMInputValueError</strong> – If an input is invalid.</p>
+</dd>
+</dl>
+<p class="rubric">Attributes</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.channel">
+<span class="sig-name descname"><span class="pre">channel</span></span><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.channel" title="Link to this definition">¶</a></dt>
+<dd><p>Return the channel type used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The channel type used.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.active_account">
+<span class="sig-name descname"><span class="pre">active_account</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L753-L759"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_account" title="Link to this definition">¶</a></dt>
+<dd><p>Return the IBM Quantum account currently in use for the session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary with information about the account currently in the session.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, str] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.active_instance">
+<span class="sig-name descname"><span class="pre">active_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1348-L1350"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_instance" title="Link to this definition">¶</a></dt>
+<dd><p>Return the crn of the current active instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.backend">
+<span class="sig-name descname"><span class="pre">backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fractional_gates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L879-L935"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.backend" title="Link to this definition">¶</a></dt>
+<dd><p>Return a single backend matching the specified filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the backend.</p></li>
+<li><p><strong>instance</strong> (<em>str</em><em> | </em><em>None</em>) – Specify the IBM Cloud account CRN.</p></li>
+<li><p><strong>use_fractional_gates</strong> (<em>bool</em><em> | </em><em>None</em>) – Set True to allow for the backends to include
+fractional gates. Currently this feature cannot be used
+simultaneously with dynamic circuits, PEC, PEA, or gate
+twirling.  When this flag is set, control flow instructions are
+automatically removed from the backend.
+When you use a dynamic circuits feature (e.g. <code class="docutils literal notranslate"><span class="pre">if_else</span></code>) in your
+algorithm, you must disable this flag to create executable ISA circuits.
+This flag might be modified or removed when our backend
+supports dynamic circuits and fractional gates simultaneously.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, then both fractional gates and control flow operations are
+included in the backends.</p></li>
+<li><p><strong>calibration_id</strong> (<em>str</em><em> | </em><em>None</em>) – The calibration id used for instantiating the backend.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A backend matching the filtering.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Backend</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>QiskitBackendNotFoundError</strong> – if no backend could be found.</p></li>
+<li><p><strong>IBMInputValueError</strong> – if fractional gates are requested but not supported by the backend.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.backends">
+<span class="sig-name descname"><span class="pre">backends</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_num_qubits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamic_circuits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fractional_gates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L514-L634"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.backends" title="Link to this definition">¶</a></dt>
+<dd><p>Return all backends accessible via this account, subject to optional filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – Backend name to filter by.</p></li>
+<li><p><strong>min_num_qubits</strong> (<em>int</em><em> | </em><em>None</em>) – Minimum number of qubits the backend has to have.</p></li>
+<li><p><strong>instance</strong> (<em>str</em><em> | </em><em>None</em>) – IBM Cloud account CRN</p></li>
+<li><p><strong>dynamic_circuits</strong> (<em>bool</em><em> | </em><em>None</em>) – Filter by whether the backend supports dynamic circuits.</p></li>
+<li><p><strong>filters</strong> (<em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.ibm_backend.IBMBackend"><em>IBMBackend</em></a><em>]</em><em>, </em><em>bool</em><em>] </em><em>| </em><em>None</em>) – <p>More complex filters, such as lambda functions.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">backends</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">max_shots</span> <span class="o">&gt;</span> <span class="mi">50000</span>
+<span class="p">)</span>
+<span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">backends</span><span class="p">(</span>
+    <span class="n">filters</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;rz&quot;</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">basis_gates</span> <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>use_fractional_gates</strong> (<em>bool</em><em> | </em><em>None</em>) – Set True to allow for the backends to include
+fractional gates. Note that our backends now
+support dynamic circuits and fractional gates simultaneously.
+You no longer have to disable this flag when
+using dynamic circuits features (e.g. <code class="docutils literal notranslate"><span class="pre">if_else</span></code>) in your
+algorithm. Control flow instructions are not removed from the
+backend when this flag is set to True.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, then both fractional gates and control flow operations are
+included in the backends.</p></li>
+<li><p><strong>calibration_id</strong> (<em>str</em><em> | </em><em>None</em>) – The calibration id used for instantiating the backend. This should only
+be used when selecting a single backend as the calibration id is defined per backend.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – <p>Simple filters that require a specific value for an attribute in
+backend configuration or status.
+Examples:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the operational real backends</span>
+<span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">backends</span><span class="p">(</span><span class="n">simulator</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">operational</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get the backends with at least 127 qubits</span>
+<span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">backends</span><span class="p">(</span><span class="n">min_num_qubits</span><span class="o">=</span><span class="mi">127</span><span class="p">)</span>
+
+<span class="c1"># Get the backends that support OpenPulse</span>
+<span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">backends</span><span class="p">(</span><span class="n">open_pulse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For the full list of backend attributes, see the <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime">IBMBackend class documentation</a></p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of available backends that match the filter.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>IBMInputValueError</strong> – If an input is invalid.</p></li>
+<li><p><strong>QiskitBackendNotFoundError</strong> – If the backend is not in any instance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.ibm_backend.IBMBackend"><em>IBMBackend</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.check_pending_jobs">
+<span class="sig-name descname"><span class="pre">check_pending_jobs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1232-L1267"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.check_pending_jobs" title="Link to this definition">¶</a></dt>
+<dd><p>(DEPRECATED) Check the number of pending jobs and wait for the oldest pending job if
+the maximum number of pending jobs has been reached.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.delete_account">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L761-L779"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_account" title="Link to this definition">¶</a></dt>
+<dd><p>Delete a saved account from disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em><em> | </em><em>None</em>) – Name of file from which to delete the account.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – Name of the saved account to delete.</p></li>
+<li><p><strong>channel</strong> (<em>Literal</em><em>[</em><em>'ibm_quantum_platform'</em><em>, </em><em>'ibm_cloud'</em><em>, </em><em>'local'</em><em>] </em><em>| </em><em>None</em>) – Channel type of the default account to delete.
+Ignored if account name is provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the account was deleted.
+False if no account was found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.delete_job">
+<span class="sig-name descname"><span class="pre">delete_job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1152-L1177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_job" title="Link to this definition">¶</a></dt>
+<dd><p>(DEPRECATED) Delete a runtime job.</p>
+<p>Note that this operation cannot be reversed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>str</em>) – ID of the job to delete.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeJobNotFound</strong> – The job doesn’t exist.</p></li>
+<li><p><strong>IBMRuntimeError</strong> – Method is not supported.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.instances">
+<span class="sig-name descname"><span class="pre">instances</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1337-L1346"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.instances" title="Link to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Return a list that contains a series of dictionaries with the</dt><dd><p>following instance identifiers per instance: “crn”, “plan”, “name”.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list with instances available for the active account.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Sequence</em>[<em>Dict</em>[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.job">
+<span class="sig-name descname"><span class="pre">job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1026-L1057"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.job" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve a runtime job.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>str</em>) – Job ID.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Runtime job retrieved.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>RuntimeJobNotFound</strong> – If the job doesn’t exist.</p></li>
+<li><p><strong>IBMRuntimeError</strong> – If the request failed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2" title="qiskit_ibm_runtime.runtime_job_v2.RuntimeJobV2"><em>RuntimeJobV2</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.jobs">
+<span class="sig-name descname"><span class="pre">jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1059-L1150"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.jobs" title="Link to this definition">¶</a></dt>
+<dd><p>Retrieve all runtime jobs, subject to optional filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>limit</strong> (<em>int</em><em> | </em><em>None</em>) – Number of jobs to retrieve. <code class="docutils literal notranslate"><span class="pre">None</span></code> means no limit.</p></li>
+<li><p><strong>skip</strong> (<em>int</em>) – Starting index for the job retrieval.</p></li>
+<li><p><strong>backend_name</strong> (<em>str</em><em> | </em><em>None</em>) – Name of the backend to retrieve jobs from.</p></li>
+<li><p><strong>pending</strong> (<em>bool</em><em> | </em><em>None</em>) – Filter by job pending state. If <code class="docutils literal notranslate"><span class="pre">True</span></code>, ‘QUEUED’ and ‘RUNNING’
+jobs are included. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, ‘DONE’, ‘CANCELLED’ and ‘ERROR’ jobs
+are included.</p></li>
+<li><p><strong>program_id</strong> (<em>str</em><em> | </em><em>None</em>) – Filter by Program ID.</p></li>
+<li><p><strong>instance</strong> (<em>str</em><em> | </em><em>None</em>) – Filter by IBM Cloud instance crn.</p></li>
+<li><p><strong>job_tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Filter by tags assigned to jobs. Matched jobs are associated with all tags.</p></li>
+<li><p><strong>session_id</strong> (<em>str</em><em> | </em><em>None</em>) – Filter by session id. All jobs in the session will be
+returned in desceding order of the job creation date.</p></li>
+<li><p><strong>created_after</strong> (<em>datetime</em><em> | </em><em>None</em>) – Filter by the given start date, in local time. This is used to
+find jobs whose creation dates are after (greater than or equal to) this
+local date/time.</p></li>
+<li><p><strong>created_before</strong> (<em>datetime</em><em> | </em><em>None</em>) – Filter by the given end date, in local time. This is used to
+find jobs whose creation dates are before (less than or equal to) this
+local date/time.</p></li>
+<li><p><strong>descending</strong> (<em>bool</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, return the jobs in descending order of the job
+creation date (i.e. newest first) until the limit is reached.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of runtime jobs.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>IBMInputValueError</strong> – If an input value is invalid.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<a class="reference internal" href="qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2" title="qiskit_ibm_runtime.runtime_job_v2.RuntimeJobV2"><em>RuntimeJobV2</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.least_busy">
+<span class="sig-name descname"><span class="pre">least_busy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_num_qubits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1269-L1335"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.least_busy" title="Link to this definition">¶</a></dt>
+<dd><p>Return the least busy available backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_num_qubits</strong> (<em>int</em><em> | </em><em>None</em>) – Minimum number of qubits the backend has to have.</p></li>
+<li><p><strong>instance</strong> (<em>str</em><em> | </em><em>None</em>) – IBM Cloud account CRN.</p></li>
+<li><p><strong>filters</strong> (<em>Callable</em><em>[</em><em>[</em><a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.ibm_backend.IBMBackend"><em>IBMBackend</em></a><em>]</em><em>, </em><em>bool</em><em>] </em><em>| </em><em>None</em>) – <p>Filters can be defined as for the <a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.backends" title="qiskit_ibm_runtime.QiskitRuntimeService.backends"><code class="xref py py-meth docutils literal notranslate"><span class="pre">backends()</span></code></a> method.
+An example to get the operational backends with 5 qubits:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QiskitRuntimeService</span><span class="o">.</span><span class="n">least_busy</span><span class="p">(</span><span class="n">n_qubits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">operational</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>kwargs</strong> (<em>Any</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The backend with the fewest number of pending jobs.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>QiskitBackendNotFoundError</strong> – If no backend matches the criteria.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.ibm_backend.IBMBackend"><em>IBMBackend</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.save_account">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_account</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_as_default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">private_endpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plans_preference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L781-L847"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.save_account" title="Link to this definition">¶</a></dt>
+<dd><p>Save the account to disk for future use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>token</strong> (<em>str</em><em> | </em><em>None</em>) – IBM Cloud API key.</p></li>
+<li><p><strong>url</strong> (<em>str</em><em> | </em><em>None</em>) – The API URL. Defaults to <a class="reference external" href="https://cloud.ibm.com">https://cloud.ibm.com</a>.</p></li>
+<li><p><strong>instance</strong> (<em>str</em><em> | </em><em>None</em>) – This is an optional parameter to specify the CRN  or service name.
+If set, it will define a default instance for service instantiation,
+if not set, the service will fetch all instances accessible within the account.</p></li>
+<li><p><strong>channel</strong> (<em>Literal</em><em>[</em><em>'ibm_quantum_platform'</em><em>, </em><em>'ibm_cloud'</em><em>, </em><em>'local'</em><em>] </em><em>| </em><em>None</em>) – Channel type. <code class="docutils literal notranslate"><span class="pre">ibm_cloud</span></code> or <code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code>.</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em> | </em><em>None</em>) – Full path of the file where the account is saved.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – Name of the account to save.</p></li>
+<li><p><strong>proxies</strong> (<em>dict</em><em> | </em><em>None</em>) – Proxy configuration. Supported optional keys are
+<code class="docutils literal notranslate"><span class="pre">urls</span></code> (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+documented at <a class="reference external" href="https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies">https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies</a>),
+<code class="docutils literal notranslate"><span class="pre">username_ntlm</span></code>, <code class="docutils literal notranslate"><span class="pre">password_ntlm</span></code> (username and password to enable NTLM user
+authentication)</p></li>
+<li><p><strong>verify</strong> (<em>bool</em><em> | </em><em>None</em>) – Verify the server’s TLS certificate.</p></li>
+<li><p><strong>overwrite</strong> (<em>bool</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">True</span></code> if the existing account is to be overwritten.</p></li>
+<li><p><strong>set_as_default</strong> (<em>bool</em><em> | </em><em>None</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the account is saved in filename,
+as the default account.</p></li>
+<li><p><strong>private_endpoint</strong> (<em>bool</em><em> | </em><em>None</em>) – Connect to private API URL.</p></li>
+<li><p><strong>region</strong> (<em>Literal</em><em>[</em><em>'us-east'</em><em>, </em><em>'eu-de'</em><em>] </em><em>| </em><em>None</em>) – Set a region preference. <cite>us-east</cite> or <cite>eu-de</cite>. An instance with this region
+will be prioritized if an instance is not passed in.</p></li>
+<li><p><strong>plans_preference</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – A list of account plan names
+(<code class="docutils literal notranslate"><span class="pre">open</span></code>, <code class="docutils literal notranslate"><span class="pre">premium</span></code>, etc.), ordered by preference. An instance with the first
+value in the list will be prioritized and only instances
+with the given plan names will be considered. For example, if you want to avoid
+using your premium accounts you can just pass in <code class="docutils literal notranslate"><span class="pre">&quot;open&quot;</span></code> to only use your open plan
+instances. <code class="docutils literal notranslate"><span class="pre">plans_preference</span></code> is ignored if an <code class="docutils literal notranslate"><span class="pre">instance</span></code> is specified.</p></li>
+<li><p><strong>tags</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Set a list of tags to filter available instances. Instances with these tags
+will be prioritized if an instance is not passed in.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saved_accounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L849-L877"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts" title="Link to this definition">¶</a></dt>
+<dd><p>List the accounts saved on disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default</strong> (<em>bool</em><em> | </em><em>None</em>) – If set to True, only default accounts are returned.</p></li>
+<li><p><strong>channel</strong> (<em>Literal</em><em>[</em><em>'ibm_quantum_platform'</em><em>, </em><em>'ibm_cloud'</em><em>, </em><em>'local'</em><em>] </em><em>| </em><em>None</em>) – Channel type.``ibm_cloud`` or <code class="docutils literal notranslate"><span class="pre">ibm_quantum_platform</span></code>.</p></li>
+<li><p><strong>filename</strong> (<em>str</em><em> | </em><em>None</em>) – Name of file whose accounts are returned.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – If set, only accounts with the given name are returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary with information about the accounts saved on disk.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If an invalid account is found on disk.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.usage">
+<span class="sig-name descname"><span class="pre">usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1179-L1193"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.usage" title="Link to this definition">¶</a></dt>
+<dd><p>Return usage information for the current active instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict with usage details.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="qiskit_ibm_runtime.Estimator.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Estimator</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../apidocs/runtime_service.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2022, Qiskit Development Team
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            <div class="last-updated">
+              Last updated on 2025/10/28</div>
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">QiskitRuntimeService</a><ul>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService</span></code></a><ul>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.channel"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.channel</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_account"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.active_account()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_instance"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.active_instance()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.backend"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.backend()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.backends"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.backends()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.check_pending_jobs"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.check_pending_jobs()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_account"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.delete_account()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_job"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.delete_job()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.instances"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.instances()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.job"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.job()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.jobs"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.jobs()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.least_busy"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.least_busy()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.save_account"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.save_account()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.saved_accounts()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.usage"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.usage()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>
