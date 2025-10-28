@@ -12,6 +12,8 @@
 
 """Executor options."""
 
+from __future__ import annotations
+
 from pydantic.dataclasses import dataclass
 from pydantic import Field
 

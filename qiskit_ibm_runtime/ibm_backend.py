@@ -12,6 +12,8 @@
 
 """Module for interfacing with an IBM Quantum Backend."""
 
+from __future__ import annotations
+
 import logging
 from typing import Optional, Any, List, Union
 from datetime import datetime as python_datetime
