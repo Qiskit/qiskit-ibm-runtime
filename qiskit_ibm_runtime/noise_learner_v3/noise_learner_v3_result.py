@@ -143,7 +143,6 @@ class NoiseLearnerV3Results:
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
         """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
-
         This function iterates over a sequence of instructions, extracts the ``ref`` value from the
         inject noise annotation of each instruction, and returns a dictionary mapping those refs
         to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in this
@@ -177,7 +176,6 @@ class NoiseLearnerV3Results:
         for instr, datum in zip(instructions, self.data):
             if not isinstance(instr.operation, BoxOp):
                 raise ValueError("Found an instruction that does not contain a box.")
-
             if annotation := get_annotation(instr.operation, InjectNoise):
                 num_instr += 1
                 noise_source[annotation.ref] = datum.to_pauli_lindblad_map()
