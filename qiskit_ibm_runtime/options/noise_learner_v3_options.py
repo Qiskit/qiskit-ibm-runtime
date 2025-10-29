@@ -99,7 +99,7 @@ class NoiseLearnerV3Options(BaseOptions):
     def to_options_model(self) -> OptionsModel:
         """Turn these options into an ``OptionsModel`` object.
 
-        Filters out every irrelevant field and replaces ``Unset``s with ``None``s.
+        Filters out every irrelevant field and replaces ``Unset``\\s with ``None``\\s.
         """
         options_dict = asdict(self)
 
@@ -114,7 +114,7 @@ class NoiseLearnerV3Options(BaseOptions):
         """Turn these options into a dictionary of runtime options object.
 
         Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
-        and replaces ``Unset``s with ``None``s.
+        and replaces ``Unset``\\s with ``None``\\s.
         """
         options_dict = asdict(self)
         environment = options_dict.get("environment")
