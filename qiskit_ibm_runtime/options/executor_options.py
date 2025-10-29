@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic.dataclasses import dataclass
 from pydantic import Field
 
@@ -28,7 +30,7 @@ class ExecutionOptions:
     r"""Whether to reset the qubits to the ground state for each shot.
     """
 
-    rep_delay: float | None = None
+    rep_delay: Optional[float] = None
     r"""The repetition delay. This is the delay between a measurement and
     the subsequent quantum circuit. This is only supported on backends that have
     ``backend.dynamic_reprate_enabled=True``. It must be from the
@@ -64,7 +66,7 @@ class EnvironmentOptions:
         standard retention behavior of the API.
     """
 
-    image: str | None = None
+    image: Optional[str] = None
     r"""Runtime image used for this job."""
 
 
