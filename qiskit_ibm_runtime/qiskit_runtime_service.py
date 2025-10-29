@@ -1207,14 +1207,14 @@ class QiskitRuntimeService:
                 warnings.warn(
                     "There is currently no more time available for this instance’s plan on the account. "
                     "Workloads will not run until time is made available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe="")} "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
                     "for more details."
                 )
             if usage_dict.get("usage_limit_seconds") and usage_remaining <= 0:
                 warnings.warn(
                     "This instance has met its usage limit. Workloads will not run until time is made "
                     "available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe="")} "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
                     "for more details."
                 )
 
