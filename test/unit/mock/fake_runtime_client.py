@@ -451,6 +451,20 @@ class BaseFakeRuntimeClient:
         """Return the details of the session."""
         return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 
+    def cloud_usage(self) -> Dict[str, Any]:
+        """Return cloud instance usage information."""
+        return {
+            "instance_id": "instance_id",
+            "plan_id": "plan_id",
+            "usage_consumed_seconds": 6000,
+            "usage_period": {
+                "start_time": "2025-10-01T17:40:06.269Z",
+                "end_time": "2025-10-29T17:40:06.269Z",
+            },
+            "usage_allocation_seconds": 90000,
+            "usage_remaining_seconds": 84000,
+        }
+
     def _find_backend(self, backend_name):
         for back in self._backends:
             if back.name == backend_name:
