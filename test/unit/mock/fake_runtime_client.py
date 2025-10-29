@@ -463,6 +463,7 @@ class BaseFakeRuntimeClient:
             },
             "usage_allocation_seconds": 90000,
             "usage_remaining_seconds": 84000,
+            "usage_limit_reached": False,
         }
 
     def _find_backend(self, backend_name):

@@ -14,6 +14,7 @@
 
 import random
 import time
+from unittest.mock import patch
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
@@ -29,6 +30,7 @@ from .mock.fake_runtime_client import (
     FailedRuntimeJob,
     FailedRanTooLongRuntimeJob,
     CancelableRuntimeJob,
+    BaseFakeRuntimeClient,
 )
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_cloud_fake
@@ -155,3 +157,29 @@ class TestRuntimeJob(IBMTestCase):
         service.delete_job(job.job_id())
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
+
+    @run_cloud_fake
+    def test_instance_limit_warning(self, service):
+        """Test running program."""
+        instance_usage_msg_1 = {
+            "usage_consumed_seconds": 6000,
+            "usage_limit_seconds": 90000,
+            "usage_remaining_seconds": 84000,
+            "usage_limit_reached": True,
+        }
+        instance_usage_msg_2 = {
+            "usage_consumed_seconds": 90001,
+            "usage_limit_seconds": 90000,
+            "usage_limit_reached": True,
+        }
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_1):
+            with self.assertWarns(UserWarning) as cm:
+                run_program(service=service)
+                self.assertIn(
+                    "There is currently no more time available", str(cm.warnings[0].message)
+                )
+
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_2):
+            with self.assertWarns(UserWarning) as cm:
+                run_program(service=service)
+                self.assertIn("This instance has met its usage limit", str(cm.warnings[0].message))
