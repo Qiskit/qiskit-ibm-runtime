@@ -124,7 +124,7 @@ def draw_circuit_schedule_timing(
                 "showactive": True,
                 "x": 0,
                 "xanchor": "left",
-                "y": 1.1,
+                "y": 1 + 1 / len(schedule.channels),
                 "yanchor": "top",
             }
         ]
