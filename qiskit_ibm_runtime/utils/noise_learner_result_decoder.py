@@ -14,7 +14,7 @@
 
 from typing import Dict
 
-from .noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
+from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
 
 
@@ -25,7 +25,16 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     def decode(  # type: ignore # pylint: disable=arguments-differ
         cls, raw_result: str
     ) -> NoiseLearnerResult:
-        """Convert the result to NoiseLearnerResult."""
+        """Convert the result to NoiseLearnerResults."""
+        if "schema_version" in raw_result:
+            # pylint: disable=import-outside-toplevel
+            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
+                NoiseLearnerV3ResultDecoder,
+            )
+
+            return NoiseLearnerV3ResultDecoder().decode(raw_result)
+
+        # Decode for legacy noise learner
         decoded: Dict = super().decode(raw_result)
 
         data = []
