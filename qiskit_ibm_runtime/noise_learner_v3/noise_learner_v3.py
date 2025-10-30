@@ -180,7 +180,6 @@ class NoiseLearnerV3:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
-            callback=None,
             result_decoder=self._DECODER,
         )
 

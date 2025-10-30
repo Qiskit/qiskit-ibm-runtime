@@ -129,7 +129,6 @@ class Executor:
             program_id=self._PROGRAM_ID,
             options=asdict(runtime_options),
             inputs=inputs,
-            callback=None,
             result_decoder=_Decoder,
         )
 
