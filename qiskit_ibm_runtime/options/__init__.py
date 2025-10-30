@@ -61,6 +61,7 @@ Base primitive options
 
    EstimatorOptions
    SamplerOptions
+   ExecutorOptions
 
 
 Suboptions
@@ -78,6 +79,7 @@ Suboptions
    MeasureNoiseLearningOptions
    PecOptions
    ZneOptions
+   PostSelectionOptions
    TwirlingOptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
@@ -90,6 +92,7 @@ from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .estimator_options import EstimatorOptions
 from .execution_options import ExecutionOptionsV2
+from .executor_options import ExecutorOptions
 from .layer_noise_learning_options import LayerNoiseLearningOptions
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .noise_learner_options import NoiseLearnerOptions
