@@ -118,12 +118,12 @@ class TestBackendFilters(IBMTestCase):
         backends_list = [
             {
                 "name": "test_backend1",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online", "reason": "Available"},
                 "queue_length": 10,
             },
             {
                 "name": "test_backend2",
-                "status": {"name": "online", "reason": "available"},
+                "status": {"name": "online"},
                 "queue_length": 20,
             },
             {
@@ -131,10 +131,17 @@ class TestBackendFilters(IBMTestCase):
                 "status": {"name": "offline", "reason": "available"},
                 "queue_length": 1,
             },
+            {
+                "name": "test_backend4",
+                "status": {"name": "online", "reason": "available"},
+                "queue_length": 15,
+            },
         ]
         fake_backends = [
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend1"}),
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend2"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend3"}),
+            self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend4"}),
         ]
 
         services = self._get_services(fake_backends)
@@ -271,3 +278,15 @@ class TestGetBackend(IBMTestCase):
         self.assertIn("rx", backend_with_fg.target)
 
         self.assertIsNot(backend_with_fg, backend_without_fg)
+
+    def test_backend_with_custom_calibration(self):
+        """Test getting a backend with a custom calibration."""
+        service = FakeRuntimeService(
+            channel="ibm_quantum_platform",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeTorino")],
+        )
+
+        backend_with_calibration = service.backend("fake_torino", calibration_id="abc1234")
+        self.assertEqual(backend_with_calibration.calibration_id, "abc1234")
+        # TODO: Assert mock has api client calls with cal id set

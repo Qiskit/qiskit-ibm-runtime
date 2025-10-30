@@ -14,7 +14,7 @@ Bug Fixes
 ---------
 
 -  Fixed a bug where
-   `qiskit_ibm_runtime.RuntimeJob.wait_for_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#wait_for_final_state>`__
+   `qiskit_ibm_runtime.RuntimeJob.wait_for_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#wait_for_final_state>`__
    would result in a NoneType error if the job already completed and
-   `qiskit_ibm_runtime.RuntimeJob.status() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#status>`__
+   `qiskit_ibm_runtime.RuntimeJob.status() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#status>`__
    was called beforehand.

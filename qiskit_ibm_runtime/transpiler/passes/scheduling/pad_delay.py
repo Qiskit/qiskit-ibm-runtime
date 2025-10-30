@@ -13,10 +13,12 @@
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
 from typing import Optional
+import warnings
 
 from qiskit.circuit import Qubit
 from qiskit.circuit.delay import Delay
 from qiskit.dagcircuit import DAGNode, DAGOutNode
+from qiskit.transpiler import Target
 from qiskit.transpiler.instruction_durations import InstructionDurations
 
 from .block_base_padder import BlockBasePadder
@@ -56,10 +58,11 @@ class PadDelay(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations,
+        durations: InstructionDurations = None,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
         block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+        target: Target = None,
     ):
         """Create new padding delay pass.
 
@@ -73,11 +76,22 @@ class PadDelay(BlockBasePadder):
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
         """
+
+        if durations:
+            warnings.warn(
+                "The `durations` input argument of `PadDelay` is deprecated "
+                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+                "Provide a `target` instance instead ex: PadDelay(target=backend.target).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
         )
         self._durations = durations
+        self._target = target
         self.fill_very_end = fill_very_end
 
     def _pad(

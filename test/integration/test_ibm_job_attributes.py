@@ -100,6 +100,7 @@ class TestIBMJobAttributes(IBMTestCase):
         sampler = Sampler(mode=self.sim_backend)
         sampler.options.environment.job_tags = job_tags
         job = sampler.run([self.bell])
+        self.assertTrue(job.tags)
 
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
         for tags in no_rjobs_tags:

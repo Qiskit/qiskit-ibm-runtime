@@ -146,6 +146,7 @@ class Session:
         inputs: Dict,
         options: Optional[Dict] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
+        calibration_id: Optional[str] = None,
     ) -> RuntimeJobV2:
         """Run a program in the session.
 
@@ -154,6 +155,7 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
+            calibration_id: The calibration id to use with the program execution
 
         Returns:
             Submitted job.
@@ -173,6 +175,7 @@ class Session:
                 session_id=self._session_id,
                 start_session=False,
                 result_decoder=result_decoder,
+                calibration_id=calibration_id,
             )
 
             if self._backend is None:
@@ -182,6 +185,7 @@ class Session:
                 program_id=program_id,  # type: ignore[arg-type]
                 options=options,
                 inputs=inputs,
+                calibration_id=calibration_id,
             )
 
         return job
@@ -319,7 +323,16 @@ class Session:
 
     @classmethod
     def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
-        """Construct a Session object with a given session_id
+        """Construct a Session object with a given ``session_id``. For example:
+
+        .. code-block::
+
+            from qiskit_ibm_runtime import QiskitRuntimeService, Session
+            service = QiskitRuntimeService()
+            job = service.job(<job_id>)
+            existing_session_id = job.session_id
+
+            new_session = Session.from_id(existing_session_id, service)
 
         Args:
             session_id: the id of the session to be created. This must be an already

@@ -5,10 +5,10 @@ New Features
 ------------
 
 -  Added reason for failure when invoking the method
-   `error_message() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#error_message>`__.
+   `error_message() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#error_message>`__.
 
 -  Added a new property,
-   `usage_estimation() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#usage_estimation>`__
+   `usage_estimation() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#usage_estimation>`__
    that returns the estimated system execution time,
    ``quantum_seconds``. System execution time represents the amount of
    time that the system is dedicated to processing your job.
@@ -18,7 +18,7 @@ New Features
    backend.
 
 -  There is a new method
-   `update_tags() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job#update_tags>`__
+   `update_tags() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/0.41/runtime-job#update_tags>`__
    that can be used to update the ``job_tags`` of a job.
 
 -  If ``instance`` is provided as parameter to

@@ -261,6 +261,21 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertIn("rzz", real_device_fg.basis_gates)
         self.assertNotIn("rzz", real_device_no_fg.basis_gates)
 
+    def test_backend_fractional_gates_error(self):
+        """Test that use_fractional_gates = True raises error for unsupported backends"""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            if "rzz" in backend.basis_gates:
+                self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
+            with self.assertRaises(
+                IBMInputValueError,
+                msg=(
+                    f"Backend '{backend.name}' does not support fractional gates, "
+                    "but use_fractional_gates was set to True."
+                ),
+            ):
+                self.service.backend(backend.name, use_fractional_gates=True)
+
     def test_renew_backend_properties(self):
         """Test renewed backend property"""
         name = self.backend.name
@@ -271,3 +286,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # renew backend
         backend = self.service.backend(name)
         self.assertEqual(backend.basis_gates, basis_gates)
+
+    def test_backend_calibration_id(self):
+        """Test calibration_id is used when fetching the configuration."""
+        name = self.backend.name
+        calibration_id = "invalid_id"
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as log:
+            with self.assertRaises(QiskitBackendNotFoundError):
+                self.service.backend(name, calibration_id=calibration_id)
+
+        self.assertTrue(any(calibration_id in record for record in log.output))
