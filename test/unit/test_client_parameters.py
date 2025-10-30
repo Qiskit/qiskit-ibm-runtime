@@ -152,7 +152,13 @@ class TestClientParameters(IBMTestCase):
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
         verify = False
-        params = self._get_client_params(channel="ibm_quantum_platform", token=token, instance=instance, proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls}), verify=False)
+        params = self._get_client_params(
+            channel="ibm_quantum_platform",
+            token=token,
+            instance=instance,
+            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls}),
+            verify=False,
+        )
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
         self.assertIn(f"apikey {token}", handler.get_headers().values())
