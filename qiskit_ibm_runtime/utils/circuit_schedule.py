@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utilities for working with circuit schedule timing information returned 
+"""Utilities for working with circuit schedule timing information returned
 from the Qiskit Runtime service."""
 
 from __future__ import annotations
