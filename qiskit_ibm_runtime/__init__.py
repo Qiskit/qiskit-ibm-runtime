@@ -189,6 +189,7 @@ Classes
    EstimatorV2
    Sampler
    SamplerV2
+   Executor
    Session
    Batch
    IBMBackend
