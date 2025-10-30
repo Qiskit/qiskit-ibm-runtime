@@ -51,6 +51,7 @@
    .. automethod:: run
    .. automethod:: set_options
    .. automethod:: status
+   .. automethod:: submit
    .. automethod:: target_history
 
    
