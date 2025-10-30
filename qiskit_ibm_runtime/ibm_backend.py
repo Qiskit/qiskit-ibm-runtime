@@ -72,7 +72,7 @@ logger = logging.getLogger(__name__)
 QOBJRUNNERPROGRAMID = "circuit-runner"
 QASM3RUNNERPROGRAMID = "qasm3-runner"
 
-DEFAULT_IMAGE = "qiskit-ibm-primitives:5c1e246ee7ecf731a15db146c1e8827c001aa0d9"
+DEFAULT_IMAGE = "qiskit-ibm-primitives:0581dffc70335238a7d31dad24dedcac225cd17c"
 
 
 class IBMBackend(Backend):
