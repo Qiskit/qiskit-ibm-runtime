@@ -137,6 +137,7 @@ documentation = [
     "jupyter-sphinx",
     "sphinxcontrib-katex==0.9.9",
     "packaging",
+    "qiskit-sphinx-theme~=2.0.0",
 ]
 
 visualization = ["plotly>=5.23.0"]
