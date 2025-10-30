@@ -16,6 +16,7 @@ import logging
 import warnings
 from datetime import datetime
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence, Tuple
+from urllib.parse import quote
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -967,6 +968,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: An error occurred running the program.
         """
 
+        self._check_instance_usage()
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -1191,6 +1193,30 @@ class QiskitRuntimeService:
             )
             usage_dict["usage_remaining_seconds"] = usage_remaining
         return usage_dict
+
+    def _check_instance_usage(self) -> None:
+        """Raise warning if instance usage has been reached."""
+        usage_dict = self._active_api_client.cloud_usage()
+        limit_reached = usage_dict.get("usage_limit_reached", False)
+        usage_remaining = usage_dict.get(
+            "usage_limit_seconds", usage_dict.get("usage_allocation_seconds")
+        ) - usage_dict.get("usage_consumed_seconds", 0)
+
+        if limit_reached:
+            if not usage_dict.get("usage_limit_seconds") or usage_remaining > 0:
+                warnings.warn(
+                    "There is currently no more time available for this instance’s plan on the account. "
+                    "Workloads will not run until time is made available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "for more details."
+                )
+            if usage_dict.get("usage_limit_seconds") and usage_remaining <= 0:
+                warnings.warn(
+                    "This instance has met its usage limit. Workloads will not run until time is made "
+                    "available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "for more details."
+                )
 
     def _decode_job(self, raw_data: Dict) -> RuntimeJobV2:
         """Decode job data received from the server.
