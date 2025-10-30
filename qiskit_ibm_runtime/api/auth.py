@@ -34,8 +34,8 @@ class CloudAuth(AuthBase):
         self,
         api_key: str,
         crn: str,
-        proxies: Optional[ProxyConfiguration] = None,
         private: bool = False,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
     ):
         self.crn = crn
