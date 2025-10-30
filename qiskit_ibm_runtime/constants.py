@@ -18,6 +18,7 @@ from .utils.result_decoder import ResultDecoder
 from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.sampler_result_decoder import SamplerResultDecoder
+from .utils.executor_result_decoder import ExecutorResultDecoder
 from .utils.runner_result import RunnerResult
 
 
@@ -38,7 +39,18 @@ API_TO_JOB_ERROR_MESSAGE = {
 DEFAULT_DECODERS = {
     "sampler": [ResultDecoder, SamplerResultDecoder],
     "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "executor": ExecutorResultDecoder,
     "noise-learner": NoiseLearnerResultDecoder,
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }
+
+DEFAULT_POST_SELECTION_SUFFIX = "_ps"
+"""
+The default suffix to append to the names of the classical registers used for post selection.
+"""
+
+DEFAULT_SPECTATOR_CREG_NAME = "spec"
+"""
+The default name of the classical register used for measuring spectator qubits.
+"""
