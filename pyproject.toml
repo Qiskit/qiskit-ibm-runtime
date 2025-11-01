@@ -89,7 +89,7 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
-    "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@393c5ca93edea8ce122a68415f9bc756c5d400b7#egg=ibm-quantum-schemas",
+    "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@f6210d386b16fad785bd3521c537f087156a1728#egg=ibm-quantum-schemas",
     "pydantic>=2.5.0",
     "qiskit>=1.4.1",
     "packaging",
