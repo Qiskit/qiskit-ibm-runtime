@@ -44,11 +44,36 @@ logger = logging.getLogger(__name__)
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
 
-    The noise learner allows characterizing the noise processes affecting target instructions, based on
-    the Pauli-Lindblad noise model described in [1]. The instructions provided to the :meth:`~run`
-    method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing ISA operations.
-    The result of a noise learner job contains a list of :class:`.NoiseLearnerV3Result` objects, one for
-    each given instruction.
+    The :class:`~.NoiseLearnerV3` is a runtime program to learn the noise process affecting target
+    instructions. The :meth:`~run` method expects instructions that contain a twirled-annotated
+    :class:`~.qiskit.circuit.BoxOp`. For instructions whose boxes contain one- and two-qubit gates,
+    it runs the Pauli-Lindblad learning protocol described in Ref. [1]. For instructions whose boxes
+    contain measurements, it runs the Twirled Readout Error eXtinction (or TREX) protocol in Ref. [2].
+
+    .. code-block:: python
+
+        from qiskit.circuit import QuantumCircuit
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3\
+        from samplomatic import Twirl
+
+        # Choose a backend
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
+
+        # Initialize a circuit whose instructions contain `BoxOp`s
+        circuit = QuantumCircuit(3)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.h(0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.cx(1, 2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        # Run a noise learner job to learn the noise of the circuit's instructions
+        learner = NoiseLearnerV3(backend)
+        job = learner.run(circuit.data)
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
@@ -67,7 +92,10 @@ class NoiseLearnerV3:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
            cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
            Nature Physics volume 19, pages 1116–1121 (2023).
-           `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
+           `DOI: https://doi.org/10.1038/s41567-023-02042-2 <https://doi.org/10.1038/s41567-023-02042-2>`_
+        2. E. van den Berg, Z. Minev, K. Temme, *Model-free readout-error mitigation for
+           quantum expectation values*, Phys. Rev. A 105, 032620 (2022).
+           `DOI: https://doi.org/10.1103/PhysRevA.105.032620 <https://doi.org/10.1103/PhysRevA.105.032620>`_
     """
 
     _PROGRAM_ID = "noise-learner"

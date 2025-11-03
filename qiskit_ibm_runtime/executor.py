@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from dataclasses import asdict
 import json
 import logging
@@ -46,18 +48,76 @@ class _Decoder:
 
 
 class Executor:
-    """Executor for :class:`~.QuantumProgram`\\s."""
+    """Executor to run :class:`~.QuantumProgram`\\s on IBM backends.
+
+    .. code-block:: python
+
+        from qiskit.circuit import QuantumCircuit
+        from qiskit.transpiler import generate_preset_pass_manager
+        from qiskit_ibm_runtime import QiskitRuntimeService, Executor
+        from qiskit_ibm_runtime.quantum_program import QuantumProgram
+        from samplomatic import build
+        from samplomatic.transpiler import generate_boxing_pass_manager
+
+        # Choose a backend
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
+
+        # Initialize circuit to generate and measure GHZ state
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        # Transpile the circuit into an ISA circuit and group gates and measurements into boxes
+        preset_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        preset_pass_manager.post_scheduling = generate_boxing_pass_manager(
+            enable_gates=True,
+            enable_measures=True,
+        )
+        boxed_circuit = preset_pass_manager.run(circuit)
+
+        # Build the template and the samplex
+        template, samplex = build(boxed_circuit)
+
+        # Append them to a quantum program
+        program = QuantumProgram(shots=1000)
+        program.append(template, samplex=samplex, samplex_arguments={})
+
+        # Initialize the executor and set its options
+        executor = Executor(backend)
+        executor.options.execution.init_qubits = True
+
+        # Run the quantum program
+        job = executor.run(program)
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `Qiskit Runtime documentation <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`__
+            for more information about the execution modes.
+
+        options: The desired options.
+    """
 
     _PROGRAM_ID = "executor"
     _DECODER = _Decoder
 
-    def __init__(self, mode: IBMBackend | Session | Batch | None):
+    def __init__(
+        self, mode: IBMBackend | Session | Batch | None, options: Optional[ExecutorOptions] = None
+    ):
 
         self._session: Session | None = None
         self._backend: IBMBackend
         self._service: QiskitRuntimeService
 
-        self._options = ExecutorOptions()
+        self._options = options or ExecutorOptions()
 
         if isinstance(mode, (Session, Batch)):
             self._session = mode
