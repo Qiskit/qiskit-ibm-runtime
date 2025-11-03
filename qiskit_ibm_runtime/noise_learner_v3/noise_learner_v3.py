@@ -61,19 +61,28 @@ class NoiseLearnerV3:
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False)
 
-        # Initialize a circuit whose instructions contain `BoxOp`s
+        # Initialize circuit to generate and measure GHZ state
         circuit = QuantumCircuit(3)
-        with circuit.box(annotations=[Twirl()]):
-            circuit.h(0)
-            circuit.cx(0, 1)
-        with circuit.box(annotations=[Twirl()]):
-            circuit.cx(1, 2)
-        with circuit.box(annotations=[Twirl()]):
-            circuit.measure_all()
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
 
-        # Run a noise learner job to learn the noise of the circuit's instructions
+        # Transpile the circuit into an ISA circuit and group gates and measurements into boxes
+        preset_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        preset_pass_manager.post_scheduling = generate_boxing_pass_manager(
+            enable_gates=True,
+            enable_measures=True,
+        )
+        boxed_circuit = preset_pass_manager.run(circuit)
+
+        # Initialize a noise learner and set its options
         learner = NoiseLearnerV3(backend)
-        job = learner.run(circuit.data)
+        learner.options.shots_per_randomization = 128
+        learner.options.num_randomizations = 32
+
+        # Run a job to learn the noise affecting the instructions in the GHZ circuit
+        job = learner.run(boxed_circuit.data)
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
