@@ -22,31 +22,52 @@ Overview
 
 The :class:`~.Executor` allows running :class:`~.QuantumProgram`\\s on IBM backends.
 
-To learn how to use the executor, let us first take a look at :class:`~.QuantumProgram`\\s.
+To see how to use the executor, let us first take a look at how to instantiate a
+:class:`~.QuantumProgram`\\s.
 
 Quantum Programs
 ~~~~~~~~~~~~~~~~
 
-A :class:`~.QuantumProgram`\\ is an iterable of :class:`~.QuantumProgramItem`\\s. Items can
-be of two types:
+    :class:`~.QuantumProgram`\\s and related classes are part of the
+    :mod:`qiskit_ibm_runtime.quantum_program` module.
 
-* :class:`~.CircuitItem`\\s, which own a circuit and (if this circuit is parametric) an array of parameters.
-* :class:`~.SamplexItem`\\s, which own a circuit with parametric gates, a :class:`~samplomatic.samplex.Samplex`
-  to generate randomize arrays of parameters for this circuit, and the arguments needed by the Samplex to
-  generate these parameters.
+A :class:`~.QuantumProgram` is an iterable of
+:class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\\s. These items can own:
 
-In the cell below, we initialize a :class:`~.QuantumProgram`. Next, we append two items to this program,
-respectively a :class:`~.CircuitItem` and a :class:`~.SamplexItem`.
+* a :class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates;
+* or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with an array of parameter values;
+* or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with a
+  :class:`~samplomatic.samplex.Samplex` to generate randomize arrays of parameter values.
+
+Let us take a closer look at each of these items and how to add them to a :class:`~.QuantumProgram`\\. In
+the cell below, we initialize a :class:`~.QuantumProgram` and append a
+:class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates.
 
 .. code-block:: python
 
-    from qiskit.circuit import QuantumCircuit, Parameter
+    from qiskit.circuit import QuantumCircuit
     from qiskit_ibm_runtime.quantum_program import QuantumProgram
-    from samplomatic import build
-    import numpy as np
 
-    # Initialize an empty program that performs `1024` shots per item
+    # Initialize an empty program
     program = QuantumProgram(shots=1024)
+
+    # Initialize circuit to generate and measure GHZ state
+    circuit = QuantumCircuit(3)
+    circuit.h(0)
+    circuit.cx(0, 1)
+    circuit.cx(1, 2)
+    circuit.measure_all()
+
+    # Append the circuit to the program
+    program.append(circuit)
+
+Next, we append a second item that contains a parametrized :class:`~qiskit.circuit.QuantumCircuit`
+and an array of parameter values.
+
+.. code-block:: python
+
+    from qiskit.circuit import Parameter
+    import numpy as np
 
     # Initialize circuit to generate a GHZ state, rotate it around the Pauli-X
     # axis, and measure it
@@ -59,22 +80,32 @@ respectively a :class:`~.CircuitItem` and a :class:`~.SamplexItem`.
     circuit.rx(Parameter("lam"), 2)
     circuit.measure_all()
 
-    # Append the circuit as a circuit item
+    # Append the circuit and the parameter value to the program
     program.append(
         circuit,
         circuit_arguments=np.random.rand(8, 3),  # 8 sets of parameters
-        shape=(12, 8),  # 12 randomizations per parameter set
     )
 
-    # Initialize the same circuit, this time grouping gates and measurements into
-    # twirl-annotated boxes
+Finally, in the next cell we append a :class:`~qiskit.circuit.QuantumCircuit` and a
+:class:`~samplomatic.samplex.Samplex`. We refer the reader to :mod:`~samplomatic`
+and its documentation for more details on the :class:`~samplomatic.samplex.Samplex`
+and its arguments.
+
+.. code-block:: python
+
+    from qiskit.quantum_info import PauliLindbladMap
+    from samplomatic import build, Twirl, InjectNoise
+
+    # Initialize a to generate a GHZ state, rotate it around the Pauli-X
+    # axis, and measure it; its gates and measurements are grouped inside
+    # annotated boxes
     boxed_circuit = QuantumCircuit(3)
     with boxed_circuit.box([Twirl()]):
         boxed_circuit.h(0)
         boxed_circuit.cx(0, 1)
     with boxed_circuit.box([Twirl()]):
         boxed_circuit.cx(1, 2)
-    with boxed_circuit.box([Twirl()]):
+    with boxed_circuit.box([Twirl(), InjectNoise(ref="ref")]):
         boxed_circuit.rx(Parameter("theta"), 0)
         boxed_circuit.rx(Parameter("phi"), 1)
         boxed_circuit.rx(Parameter("lam"), 2)
@@ -89,13 +120,23 @@ respectively a :class:`~.CircuitItem` and a :class:`~.SamplexItem`.
         samplex=samplex,
         samplex_arguments={  
             # the arguments required by the samplex.sample method
-            "parameter_values": np.random.rand(8, 3)
+            "parameter_values": np.random.rand(8, 3),
+            "pauli_lindblad_maps": {
+                "ref": PauliLindbladMap.from_sparse_list(
+                    [("ZX", (1, 2), 1.0), ("YY", (0, 1), 2)],
+                    num_qubits=3,
+                )
+            }
         },
         shape=(12, 8)  # 12 randomizations per parameter set
     )
 
 Executor
 ~~~~~~~~
+
+The :class:`~.Executor` is a runtime program that allows executing quantum programs
+on IBM backends. The next cell shows how to generate a quantum program with an ISA
+circuit and submit an executor job.
 
     .. code-block:: python
 
@@ -144,18 +185,6 @@ Classes
     :nosignatures:
 
     Executor
-
-Related classes in (:mod:`qiskit_ibm_runtime.quantum_program`)
-==============================================================
-
-.. autosummary::
-    :toctree: ../stubs/
-    :nosignatures:
-
-    QuantumProgram
-    QuantumProgramItem
-    CircuitItem
-    SamplexItem
 """
 
 from __future__ import annotations
@@ -176,8 +205,7 @@ from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .qiskit_runtime_service import QiskitRuntimeService
-from .quantum_program import QuantumProgram, QuantumProgramItem  # noqa: F401
-from .quantum_program.quantum_program import CircuitItem, SamplexItem  # noqa: F401
+from .quantum_program import QuantumProgram
 from .quantum_program.converters import quantum_program_result_from_0_1, quantum_program_to_0_1
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
