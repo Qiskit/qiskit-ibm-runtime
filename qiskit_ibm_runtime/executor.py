@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-import json
 import logging
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
@@ -41,7 +40,7 @@ class _Decoder:
     @classmethod
     def decode(cls, data: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        obj = QuantumProgramResultModel(**json.loads(data))
+        obj = QuantumProgramResultModel.model_validate_json(data)
         return quantum_program_result_from_0_1(obj)
 
 
@@ -123,7 +122,7 @@ class Executor:
                     self._PROGRAM_ID,
                 )
 
-        inputs = params.model_dump()
+        inputs = params.model_dump(mode="json")
 
         return run(
             program_id=self._PROGRAM_ID,
