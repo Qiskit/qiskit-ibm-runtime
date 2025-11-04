@@ -27,7 +27,7 @@ it runs the Twirled Readout Error eXtinction (or TREX) protocol.
 
     from qiskit.circuit import QuantumCircuit
     from qiskit_ibm_runtime import QiskitRuntimeService
-    from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3\
+    from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
     from samplomatic import Twirl
 
     # Choose a backend
