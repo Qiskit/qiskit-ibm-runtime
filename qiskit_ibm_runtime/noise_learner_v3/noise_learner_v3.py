@@ -44,45 +44,9 @@ logger = logging.getLogger(__name__)
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
 
-    The :class:`~.NoiseLearnerV3` is a runtime program to learn the noise process affecting target
-    instructions. The :meth:`~run` method expects instructions that contain a twirled-annotated
-    :class:`~.qiskit.circuit.BoxOp`. For instructions whose boxes contain one- and two-qubit gates,
-    it runs the Pauli-Lindblad learning protocol described in Ref. [1]. For instructions whose boxes
-    contain measurements, it runs the Twirled Readout Error eXtinction (or TREX) protocol in Ref. [2].
-
-    .. code-block:: python
-
-        from qiskit.circuit import QuantumCircuit
-        from qiskit_ibm_runtime import QiskitRuntimeService
-        from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3\
-        from samplomatic import Twirl
-
-        # Choose a backend
-        service = QiskitRuntimeService()
-        backend = service.least_busy(operational=True, simulator=False)
-
-        # Initialize circuit to generate and measure GHZ state
-        circuit = QuantumCircuit(3)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.cx(1, 2)
-        circuit.measure_all()
-
-        # Transpile the circuit into an ISA circuit and group gates and measurements into boxes
-        preset_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
-        preset_pass_manager.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-        )
-        boxed_circuit = preset_pass_manager.run(circuit)
-
-        # Initialize a noise learner and set its options
-        learner = NoiseLearnerV3(backend)
-        learner.options.shots_per_randomization = 128
-        learner.options.num_randomizations = 32
-
-        # Run a job to learn the noise affecting the instructions in the GHZ circuit
-        job = learner.run(boxed_circuit.data)
+    For instructions whose boxes contain one- and two-qubit gates, it runs the Pauli-Lindblad learning
+    protocol described in Ref. [1]. For instructions whose boxes contain measurements, it runs the
+    Twirled Readout Error eXtinction (or TREX) protocol in Ref. [2].
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
