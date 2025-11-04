@@ -33,7 +33,7 @@ from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 
 
 from .quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from .quantum_program_result import QuantumProgramResult
+from .quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
 from ..options.executor_options import ExecutorOptions
 
 
@@ -80,7 +80,15 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
 
 def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
     """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
+    metadata = Metadata(
+        chunk_timing=[
+            ChunkSpan(
+                span.start, span.stop, [ChunkPart(part.idx_item, part.size) for part in span.parts]
+            )
+            for span in model.metadata.chunk_timing
+        ]
+    )
     return QuantumProgramResult(
         data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
-        metadata=model.metadata,
+        metadata=metadata,
     )

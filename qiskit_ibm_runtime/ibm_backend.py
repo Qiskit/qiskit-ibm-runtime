@@ -72,7 +72,7 @@ logger = logging.getLogger(__name__)
 QOBJRUNNERPROGRAMID = "circuit-runner"
 QASM3RUNNERPROGRAMID = "qasm3-runner"
 
-DEFAULT_IMAGE = "qiskit-ibm-primitives:0581dffc70335238a7d31dad24dedcac225cd17c"
+DEFAULT_IMAGE = "qiskit-ibm-primitives:94191105254fefdee56b77532c78546dc5650054"
 
 
 class IBMBackend(Backend):
@@ -275,7 +275,7 @@ class IBMBackend(Backend):
             @classmethod
             def decode(cls, data: str):  # type: ignore[no-untyped-def]
                 """Decode."""
-                obj = QuantumProgramResultModel(**json.loads(data))
+                obj = QuantumProgramResultModel.model_validate_json(data)
                 return quantum_program_result_from_0_1(obj)
 
         return RuntimeJobV2(
