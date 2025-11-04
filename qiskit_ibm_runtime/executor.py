@@ -10,7 +10,153 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor"""
+"""
+=============================================
+Executor (:mod:`qiskit_ibm_runtime.executor`)
+=============================================
+
+.. currentmodule:: qiskit_ibm_runtime.executor
+
+Overview
+========
+
+The :class:`~.Executor` allows running :class:`~.QuantumProgram`\\s on IBM backends.
+
+To learn how to use the executor, let us first take a look at :class:`~.QuantumProgram`\\s.
+
+Quantum Programs
+~~~~~~~~~~~~~~~~
+
+A :class:`~.QuantumProgram`\\ is an iterable of :class:`~.QuantumProgramItem`\\s. Items can
+be of two types:
+
+* :class:`~.CircuitItem`\\s, which own a circuit and (if this circuit is parametric) an array of parameters.
+* :class:`~.SamplexItem`\\s, which own a circuit with parametric gates, a :class:`~samplomatic.samplex.Samplex`
+  to generate randomize arrays of parameters for this circuit, and the arguments needed by the Samplex to
+  generate these parameters.
+
+In the cell below, we initialize a :class:`~.QuantumProgram`. Next, we append two items to this program,
+respectively a :class:`~.CircuitItem` and a :class:`~.SamplexItem`.
+
+.. code-block:: python
+
+    from qiskit.circuit import QuantumCircuit, Parameter
+    from qiskit_ibm_runtime.quantum_program import QuantumProgram
+    from samplomatic import build
+    import numpy as np
+
+    # Initialize an empty program that performs `1024` shots per item
+    program = QuantumProgram(shots=1024)
+
+    # Initialize circuit to generate a GHZ state, rotate it around the Pauli-X
+    # axis, and measure it
+    circuit = QuantumCircuit(3)
+    circuit.h(0)
+    circuit.cx(0, 1)
+    circuit.cx(1, 2)
+    circuit.rx(Parameter("theta"), 0)
+    circuit.rx(Parameter("phi"), 1)
+    circuit.rx(Parameter("lam"), 2)
+    circuit.measure_all()
+
+    # Append the circuit as a circuit item
+    program.append(
+        circuit,
+        circuit_arguments=np.random.rand(8, 3),  # 8 sets of parameters
+        shape=(12, 8),  # 12 randomizations per parameter set
+    )
+
+    # Initialize the same circuit, this time grouping gates and measurements into
+    # twirl-annotated boxes
+    boxed_circuit = QuantumCircuit(3)
+    with boxed_circuit.box([Twirl()]):
+        boxed_circuit.h(0)
+        boxed_circuit.cx(0, 1)
+    with boxed_circuit.box([Twirl()]):
+        boxed_circuit.cx(1, 2)
+    with boxed_circuit.box([Twirl()]):
+        boxed_circuit.rx(Parameter("theta"), 0)
+        boxed_circuit.rx(Parameter("phi"), 1)
+        boxed_circuit.rx(Parameter("lam"), 2)
+        boxed_circuit.measure_all()
+
+    # Build the template and the samplex
+    template, samplex = build(boxed_circuit)
+
+    # Append the template and samplex as a samplex item
+    program.append(
+        template,
+        samplex=samplex,
+        samplex_arguments={  
+            # the arguments required by the samplex.sample method
+            "parameter_values": np.random.rand(8, 3)
+        },
+        shape=(12, 8)  # 12 randomizations per parameter set
+    )
+
+Executor
+~~~~~~~~
+
+    .. code-block:: python
+
+        from qiskit.transpiler import generate_preset_pass_manager
+        from qiskit_ibm_runtime import QiskitRuntimeService, Executor
+        from samplomatic.transpiler import generate_boxing_pass_manager
+
+        # Choose a backend
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
+
+        # Initialize circuit to generate and measure GHZ state
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        # Transpile the circuit into an ISA circuit and group gates and measurements into boxes
+        preset_pass_manager = generate_preset_pass_manager(backend=backend, optimization_level=0)
+        preset_pass_manager.post_scheduling = generate_boxing_pass_manager(
+            enable_gates=True,
+            enable_measures=True,
+        )
+        boxed_circuit = preset_pass_manager.run(circuit)
+
+        # Build the template and the samplex
+        template, samplex = build(boxed_circuit)
+
+        # Append them to a quantum program
+        program = QuantumProgram(shots=1000)
+        program.append(template, samplex=samplex, samplex_arguments={})
+
+        # Initialize the executor and set its options
+        executor = Executor(backend)
+        executor.options.execution.init_qubits = True
+
+        # Run the quantum program
+        job = executor.run(program)
+
+Classes
+=======
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    Executor
+
+Related classes in (:mod:`qiskit_ibm_runtime.quantum_program`)
+==============================================================
+
+.. autosummary::
+    :toctree: ../stubs/
+    :nosignatures:
+
+    QuantumProgram
+    QuantumProgramItem
+    CircuitItem
+    SamplexItem
+"""
 
 from __future__ import annotations
 
@@ -30,7 +176,8 @@ from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .qiskit_runtime_service import QiskitRuntimeService
-from .quantum_program import QuantumProgram
+from .quantum_program import QuantumProgram, QuantumProgramItem  # noqa: F401
+from .quantum_program.quantum_program import CircuitItem, SamplexItem  # noqa: F401
 from .quantum_program.converters import quantum_program_result_from_0_1, quantum_program_to_0_1
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
@@ -48,7 +195,7 @@ class _Decoder:
 
 
 class Executor:
-    """Executor to run :class:`~.QuantumProgram`\\s on IBM backends.
+    """Executor to run :class:`~.QuantumProgram`\\s.
 
     .. code-block:: python
 

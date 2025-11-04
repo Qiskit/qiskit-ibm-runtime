@@ -8,6 +8,7 @@
    :maxdepth: 1
 
    runtime_service
+   executor
    quantum_program
    noise_learner
    noise_learner_result
