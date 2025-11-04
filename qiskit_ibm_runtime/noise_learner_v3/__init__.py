@@ -20,8 +20,8 @@ Noise learner V3 (:mod:`qiskit_ibm_runtime.noise_learner_v3`)
 The :class:`~.NoiseLearnerV3` is a runtime program to learn the noise process affecting target
 instructions. The :meth:`~run` method expects instructions that contain a twirled-annotated
 :class:`~.qiskit.circuit.BoxOp`. For instructions whose boxes contain one- and two-qubit gates,
-it runs the Pauli-Lindblad learning protocol described in Ref. [1]. For instructions whose boxes
-contain measurements, it runs the Twirled Readout Error eXtinction (or TREX) protocol in Ref. [2].
+it runs the Pauli-Lindblad learning protocol. For instructions whose boxes contain measurements,
+it runs the Twirled Readout Error eXtinction (or TREX) protocol.
 
 .. code-block:: python
 
@@ -64,7 +64,7 @@ contain measurements, it runs the Twirled Readout Error eXtinction (or TREX) pro
 
 The ``result`` object can be converted to a dictionary mapping the :meth:`samplomatic.InjectNoise.ref`
 of each instruction to a :class:`qiskit.quantum_info.PauliLindbladMap` object-the structure needed by
-the :class:`~samplomatic.samplex.Samplex.sample` method. 
+the :class:`~samplomatic.samplex.Samplex.sample` method.
 
 .. code-block:: python
 
