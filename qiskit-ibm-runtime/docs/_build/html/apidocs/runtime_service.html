@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Qiskit Runtime (qiskit_ibm_runtime) &#8212; Qiskit Runtime IBM Client 0.43.1</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="QiskitRuntimeService" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html" />
+    <link rel="prev" title="qiskit-ibm-runtime API reference" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="qiskit-runtime-qiskit-ibm-runtime">
+<span id="module-qiskit_ibm_runtime"></span><h1>Qiskit Runtime (<a class="reference internal" href="#module-qiskit_ibm_runtime" title="qiskit_ibm_runtime"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code></a>)<a class="headerlink" href="#qiskit-runtime-qiskit-ibm-runtime" title="Link to this heading">¶</a></h1>
+<p>Modules related to Qiskit Runtime IBM Client.</p>
+<p>Qiskit Runtime is a new architecture that
+streamlines computations requiring many iterations. These experiments will
+execute significantly faster within its improved hybrid quantum/classical process.</p>
+<section id="primitives-and-sessions">
+<h2>Primitives and sessions<a class="headerlink" href="#primitives-and-sessions" title="Link to this heading">¶</a></h2>
+<p>Qiskit Runtime has two predefined primitives: <code class="docutils literal notranslate"><span class="pre">Sampler</span></code> and <code class="docutils literal notranslate"><span class="pre">Estimator</span></code>.
+These primitives provide a simplified interface for performing foundational quantum
+computing tasks while also accounting for the latest developments in
+quantum hardware and software.</p>
+<p>Qiskit Runtime also has the concept of a session. Jobs submitted within a session are
+prioritized by the scheduler. A session
+allows you to make iterative calls to the quantum computer more efficiently.</p>
+<p>Below is an example of using primitives within a session:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span><span class="p">,</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerV2</span> <span class="k">as</span> <span class="n">Sampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">EstimatorV2</span> <span class="k">as</span> <span class="n">Estimator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">real_amplitudes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">QuantumRegister</span><span class="p">,</span> <span class="n">ClassicalRegister</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.quantum_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparsePauliOp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.transpiler.preset_passmanagers</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_preset_pass_manager</span>
+
+<span class="c1"># Initialize account.</span>
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+
+<span class="c1"># Prepare inputs.</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">real_amplitudes</span><span class="p">(</span><span class="n">num_qubits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">H1</span> <span class="o">=</span> <span class="n">SparsePauliOp</span><span class="o">.</span><span class="n">from_list</span><span class="p">([(</span><span class="s2">&quot;II&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;IZ&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;XI&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)])</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="c1"># Bell Circuit</span>
+<span class="n">qr</span> <span class="o">=</span> <span class="n">QuantumRegister</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;qr&quot;</span><span class="p">)</span>
+<span class="n">cr</span> <span class="o">=</span> <span class="n">ClassicalRegister</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cr&quot;</span><span class="p">)</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="n">qr</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bell&quot;</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="n">qr</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">qr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure</span><span class="p">(</span><span class="n">qr</span><span class="p">,</span> <span class="n">cr</span><span class="p">)</span>
+
+<span class="n">backend</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">least_busy</span><span class="p">(</span><span class="n">operational</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulator</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">pm</span> <span class="o">=</span> <span class="n">generate_preset_pass_manager</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">backend</span><span class="o">.</span><span class="n">target</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">bell_isa_circuit</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">qc</span><span class="p">)</span>
+<span class="n">psi_isa_circuit</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+<span class="n">isa_observables</span> <span class="o">=</span> <span class="n">H1</span><span class="o">.</span><span class="n">apply_layout</span><span class="p">(</span><span class="n">psi_isa_circuit</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+    <span class="c1"># Submit a request to the Sampler primitive within the session.</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">bell_isa_circuit</span><span class="p">])</span>
+    <span class="n">pub_result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Counts: </span><span class="si">{</span><span class="n">pub_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">cr</span><span class="o">.</span><span class="n">get_counts</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Submit a request to the Estimator primitive within the session.</span>
+    <span class="n">estimator</span> <span class="o">=</span> <span class="n">Estimator</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">estimator</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">resilience_level</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Set options.</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">estimator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+        <span class="p">[(</span><span class="n">psi_isa_circuit</span><span class="p">,</span> <span class="n">isa_observables</span><span class="p">,</span> <span class="n">theta</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="n">pub_result</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expectation values: </span><span class="si">{</span><span class="n">pub_result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">evs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="local-testing-mode">
+<h2>Local testing mode<a class="headerlink" href="#local-testing-mode" title="Link to this heading">¶</a></h2>
+<p>You can validate your quantum programs before sending them to a physical system using
+the local testing mode. The local testing mode is activated if one of the fake
+backends in <code class="docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code> or a Qiskit Aer backend
+instance is used when instantiating a primitive or a session. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_aer</span><span class="w"> </span><span class="kn">import</span> <span class="n">AerSimulator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">real_amplitudes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumCircuit</span><span class="p">,</span> <span class="n">QuantumRegister</span><span class="p">,</span> <span class="n">ClassicalRegister</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.quantum_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparsePauliOp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.transpiler.preset_passmanagers</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_preset_pass_manager</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">SamplerV2</span> <span class="k">as</span> <span class="n">Sampler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime.fake_provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">FakeManilaV2</span>
+
+<span class="c1"># Bell Circuit</span>
+<span class="n">qc</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">qc</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Run the sampler job locally using FakeManilaV2</span>
+<span class="n">fake_manila</span> <span class="o">=</span> <span class="n">FakeManilaV2</span><span class="p">()</span>
+<span class="n">pm</span> <span class="o">=</span> <span class="n">generate_preset_pass_manager</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">fake_manila</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">isa_qc</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">qc</span><span class="p">)</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">fake_manila</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">isa_qc</span><span class="p">])</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+<span class="c1"># Run the sampler job locally using AerSimulator.</span>
+<span class="c1"># Session syntax is supported but ignored.</span>
+<span class="n">aer_sim</span> <span class="o">=</span> <span class="n">AerSimulator</span><span class="p">()</span>
+<span class="n">pm</span> <span class="o">=</span> <span class="n">generate_preset_pass_manager</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">aer_sim</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">isa_qc</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">qc</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Session</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">aer_sim</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">Sampler</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">session</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="n">isa_qc</span><span class="p">])</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="backend-data">
+<h2>Backend data<a class="headerlink" href="#backend-data" title="Link to this heading">¶</a></h2>
+<p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService" title="qiskit_ibm_runtime.QiskitRuntimeService"><code class="xref py py-class docutils literal notranslate"><span class="pre">QiskitRuntimeService</span></code></a> also has methods, such as <code class="xref py py-meth docutils literal notranslate"><span class="pre">backend()</span></code>,
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">backends()</span></code>, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">least_busy()</span></code>, that allow you to query for a target
+backend to use. These methods return one or more <a class="reference internal" href="../stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.IBMBackend"><code class="xref py py-class docutils literal notranslate"><span class="pre">IBMBackend</span></code></a> instances
+that contains methods and attributes describing the backend.</p>
+</section>
+<section id="supplementary-information">
+<h2>Supplementary Information<a class="headerlink" href="#supplementary-information" title="Link to this heading">¶</a></h2>
+<section id="account-initialization">
+<h3>Account initialization<a class="headerlink" href="#account-initialization" title="Link to this heading">¶</a></h3>
+<p>You need to initialize your account before you can start using the Qiskit Runtime service.
+This is done by initializing a <a class="reference internal" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService" title="qiskit_ibm_runtime.QiskitRuntimeService"><code class="xref py py-class docutils literal notranslate"><span class="pre">QiskitRuntimeService</span></code></a> instance with your
+account credentials. If you don’t want to pass in the credentials each time, you
+can use the <a class="reference internal" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService.save_account" title="qiskit_ibm_runtime.QiskitRuntimeService.save_account"><code class="xref py py-meth docutils literal notranslate"><span class="pre">QiskitRuntimeService.save_account()</span></code></a> method to save the credentials
+on disk.</p>
+<p>Qiskit Runtime is available on IBM Cloud, and you can specify the channel with
+<code class="docutils literal notranslate"><span class="pre">channel=&quot;ibm_cloud&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">channel=&quot;ibm_quantum_platform&quot;</span></code>.</p>
+</section>
+<section id="runtime-jobs">
+<h3>Runtime Jobs<a class="headerlink" href="#runtime-jobs" title="Link to this heading">¶</a></h3>
+<p>When you use the <code class="docutils literal notranslate"><span class="pre">run()</span></code> method of the <a class="reference internal" href="../stubs/qiskit_ibm_runtime.Sampler.html#qiskit_ibm_runtime.Sampler" title="qiskit_ibm_runtime.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sampler</span></code></a> or <a class="reference internal" href="../stubs/qiskit_ibm_runtime.Estimator.html#qiskit_ibm_runtime.Estimator" title="qiskit_ibm_runtime.Estimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Estimator</span></code></a>
+to invoke the primitive, a
+<a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2" title="qiskit_ibm_runtime.RuntimeJobV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeJobV2</span></code></a> instance is returned. This class has all the basic job
+methods, such as <a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2.status" title="qiskit_ibm_runtime.RuntimeJobV2.status"><code class="xref py py-meth docutils literal notranslate"><span class="pre">RuntimeJobV2.status()</span></code></a>, <a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2.result" title="qiskit_ibm_runtime.RuntimeJobV2.result"><code class="xref py py-meth docutils literal notranslate"><span class="pre">RuntimeJobV2.result()</span></code></a>, and
+<a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2.cancel" title="qiskit_ibm_runtime.RuntimeJobV2.cancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">RuntimeJobV2.cancel()</span></code></a>.</p>
+</section>
+<section id="logging">
+<h3>Logging<a class="headerlink" href="#logging" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> uses the <code class="docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code> logger.</p>
+<p>Two environment variables can be used to control the logging:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">QISKIT_IBM_RUNTIME_LOG_LEVEL</span></code>: Specifies the log level to use.</dt><dd><p>If an invalid level is set, the log level defaults to <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>.
+The valid log levels are <code class="docutils literal notranslate"><span class="pre">DEBUG</span></code>, <code class="docutils literal notranslate"><span class="pre">INFO</span></code>, <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>, <code class="docutils literal notranslate"><span class="pre">ERROR</span></code>, and <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code>
+(case-insensitive). If the environment variable is not set, then the parent logger’s level
+is used, which also defaults to <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">QISKIT_IBM_RUNTIME_LOG_FILE</span></code>: Specifies the name of the log file to use. If specified,</dt><dd><p>messages will be logged to the file only. Otherwise messages will be logged to the standard
+error (usually the screen).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>For more advanced use, you can modify the logger itself. For example, to manually set the level
+to <code class="docutils literal notranslate"><span class="pre">WARNING</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;qiskit_ibm_runtime&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html#qiskit_ibm_runtime.QiskitRuntimeService" title="qiskit_ibm_runtime.QiskitRuntimeService"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QiskitRuntimeService</span></code></a></p></td>
+<td><p>Class for interacting with the Qiskit Runtime service.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Estimator.html#qiskit_ibm_runtime.Estimator" title="qiskit_ibm_runtime.Estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Estimator</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../stubs/qiskit_ibm_runtime.EstimatorV2.html#qiskit_ibm_runtime.EstimatorV2" title="qiskit_ibm_runtime.estimator.EstimatorV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">EstimatorV2</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.EstimatorV2.html#qiskit_ibm_runtime.EstimatorV2" title="qiskit_ibm_runtime.EstimatorV2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EstimatorV2</span></code></a></p></td>
+<td><p>Class for interacting with Qiskit Runtime Estimator primitive service.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Sampler.html#qiskit_ibm_runtime.Sampler" title="qiskit_ibm_runtime.Sampler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sampler</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="../stubs/qiskit_ibm_runtime.SamplerV2.html#qiskit_ibm_runtime.SamplerV2" title="qiskit_ibm_runtime.sampler.SamplerV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">SamplerV2</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.SamplerV2.html#qiskit_ibm_runtime.SamplerV2" title="qiskit_ibm_runtime.SamplerV2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SamplerV2</span></code></a></p></td>
+<td><p>Class for interacting with Qiskit Runtime Sampler primitive service.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html#qiskit_ibm_runtime.Executor" title="qiskit_ibm_runtime.Executor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Executor</span></code></a></p></td>
+<td><p>Executor to run <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>s.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session" title="qiskit_ibm_runtime.Session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Session</span></code></a></p></td>
+<td><p>Class for creating a Qiskit Runtime session.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Batch.html#qiskit_ibm_runtime.Batch" title="qiskit_ibm_runtime.Batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Batch</span></code></a></p></td>
+<td><p>Class for running jobs in batch execution mode.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend" title="qiskit_ibm_runtime.IBMBackend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">IBMBackend</span></code></a></p></td>
+<td><p>Backend class interfacing with an IBM Quantum backend.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html#qiskit_ibm_runtime.RuntimeJobV2" title="qiskit_ibm_runtime.RuntimeJobV2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RuntimeJobV2</span></code></a></p></td>
+<td><p>Representation of a runtime V2 primitive execution.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeEncoder.html#qiskit_ibm_runtime.RuntimeEncoder" title="qiskit_ibm_runtime.RuntimeEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RuntimeEncoder</span></code></a></p></td>
+<td><p>JSON Encoder used by runtime service.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeDecoder.html#qiskit_ibm_runtime.RuntimeDecoder" title="qiskit_ibm_runtime.RuntimeDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RuntimeDecoder</span></code></a></p></td>
+<td><p>JSON Decoder used by runtime service.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Qiskit Runtime IBM Client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html"> API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#primitives-and-sessions">Primitives and sessions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#local-testing-mode">Local testing mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backend-data">Backend data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supplementary-information">Supplementary Information</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#account-initialization">Account initialization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#runtime-jobs">Runtime Jobs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#logging">Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html">QiskitRuntimeService</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Estimator.html">Estimator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.EstimatorV2.html">EstimatorV2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Sampler.html">Sampler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.SamplerV2.html">SamplerV2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html">Executor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Session.html">Session</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Batch.html">Batch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.IBMBackend.html">IBMBackend</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeJobV2.html">RuntimeJobV2</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeEncoder.html">RuntimeEncoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.RuntimeDecoder.html">RuntimeDecoder</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="executor.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quantum_program.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner_v3.html">Noise learner V3 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner_v3</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> API reference</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter"><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> API reference</a></li>
+      <li>Next: <a href="../stubs/qiskit_ibm_runtime.QiskitRuntimeService.html" title="next chapter">QiskitRuntimeService</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Qiskit Development Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/apidocs/runtime_service.rst"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

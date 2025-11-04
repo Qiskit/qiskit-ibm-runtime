@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>NoiseLearnerV3Result &#8212; Qiskit Runtime IBM Client 0.43.1</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="NoiseLearnerV3Results" href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Results.html" />
+    <link rel="prev" title="NoiseLearnerV3" href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="noiselearnerv3result">
+<h1>NoiseLearnerV3Result<a class="headerlink" href="#noiselearnerv3result" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoiseLearnerV3Result</span></span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/qiskit_ibm_runtime/noise_learner_v3/noise_learner_v3_result.py#L34-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The results of a noise learner experiment for a single instruction, in Pauli Lindblad format.</p>
+<p>An error channel Pauli Lindblad <span class="math">\(E\)</span> acting on a state <span class="math">\(\rho\)</span> can be expressed in Pauli
+Lindblad format as <span class="math">\(E(\rho) = e^{\sum_j r_j D_{P_j}}(\rho)\)</span>, <span class="math">\(P_j\)</span> are Pauli operators
+(or “generators”) and <span class="math">\(r_j\)</span> are floats (or “rates”) [1]. The equivalent Pauli error channel
+can be constructed as a composition of single-Pauli channel terms</p>
+<div class="math">
+\[E = e^{\sum_j r_j D_{P_j}} = \prod_j e^{r_j D_{P_j}}
+= prod_j \left( (1 - p_j) S_I + p_j S_{P_j} \right)\]</div>
+<p>where <span class="math">\(p_j = \frac12 - \frac12 e^{-2 r_j}\)</span>.</p>
+<p>Some strategies for learning noise channels, such as the Pauli Lindblad learning protocol in
+Ref. [1], produce degenarate terms, meaning that they learn products of rates as opposed to
+individual rates.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><p>E. van den Berg, Z. Minev, A. Kandala, K. Temme, <em>Probabilistic error
+cancellation with sparse Pauli–Lindblad models on noisy quantum processors</em>,
+Nature Physics volume 19, pages 1116–1121 (2023).
+<a class="reference external" href="https://arxiv.org/abs/2201.09866">arXiv:2201.09866 [quant-ph]</a></p></li>
+</ol>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.__len__">
+<span class="sig-name descname"><span class="pre">__len__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/qiskit_ibm_runtime/noise_learner_v3/noise_learner_v3_result.py#L121-L122"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.__len__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.from_generators">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_generators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rates_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/qiskit_ibm_runtime/noise_learner_v3/noise_learner_v3_result.py#L66-L102"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.from_generators" title="Link to this definition">¶</a></dt>
+<dd><p>Construct from a collection of generators and rates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generators</strong> (<em>Iterable</em><em>[</em><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.quantum_info.QubitSparsePauliList" title="(in Qiskit v2.2)"><em>QubitSparsePauliList</em></a><em>]</em>) – The generators describing the noise channel in the Pauli Lindblad format. This
+is a list of <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.quantum_info.QubitSparsePauliList" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QubitSparsePauliList</span></code></a> objects, as opposed to
+a list of <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.quantum_info.QubitSparsePauli" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QubitSparsePauli</span></code></a>, in order to capture
+degeneracies present within the model.</p></li>
+<li><p><strong>rates</strong> (<em>Iterable</em><em>[</em><em>float</em><em>]</em>) – The rates of the individual generators. The <code class="docutils literal notranslate"><span class="pre">i</span></code>-th element in this list represents
+the rate of all the Paulis in the <code class="docutils literal notranslate"><span class="pre">i</span></code>-th generator.</p></li>
+<li><p><strong>rates_std</strong> (<em>Iterable</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – The standard deviation associated to the rates of the generators. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+it sets all the standard deviations to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><strong>metadata</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em> | </em><em>str</em><em> | </em><em>float</em><em> | </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em> | </em><em>str</em><em> | </em><em>float</em><em> | </em><em>Metadata</em><em> | </em><em>list</em><em>[</em><em>int</em><em> | </em><em>str</em><em> | </em><em>float</em><em> | </em><em>Metadata</em><em> | </em><em>list</em><em>[</em><em>MetadataValue</em><em>]</em><em>]</em><em>] </em><em>| </em><em>list</em><em>[</em><em>int</em><em> | </em><em>str</em><em> | </em><em>float</em><em> | </em><em>dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em> | </em><em>str</em><em> | </em><em>float</em><em> | </em><em>Metadata</em><em> | </em><em>list</em><em>[</em><em>MetadataValue</em><em>]</em><em>] </em><em>| </em><em>list</em><em>[</em><em>MetadataValue</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – A dictionary of metadata.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.to_pauli_lindblad_map">
+<span class="sig-name descname"><span class="pre">to_pauli_lindblad_map</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/qiskit_ibm_runtime/noise_learner_v3/noise_learner_v3_result.py#L104-L119"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.to_pauli_lindblad_map" title="Link to this definition">¶</a></dt>
+<dd><p>Transform this result to a Pauli Lindblad map.</p>
+<p>The Pauli terms in the generators are indexed in physical qubit order, that is, the order
+of the qubits in the outer-most circuit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.quantum_info.PauliLindbladMap" title="(in Qiskit v2.2)"><em>PauliLindbladMap</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Qiskit Runtime IBM Client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../apidocs/index.html"> API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/runtime_service.html">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/executor.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/quantum_program.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../apidocs/noise_learner_v3.html">Noise learner V3 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner_v3</span></code>)</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../apidocs/noise_learner_v3.html#classes">Classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.html">NoiseLearnerV3</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">NoiseLearnerV3Result</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Result</span></code></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.__len__"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Result.__len__()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.from_generators"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Result.from_generators()</span></code></a></li>
+<li class="toctree-l6"><a class="reference internal" href="#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.to_pauli_lindblad_map"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Result.to_pauli_lindblad_map()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Results.html">NoiseLearnerV3Results</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../apidocs/index.html"><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> API reference</a><ul>
+  <li><a href="../apidocs/noise_learner_v3.html">Noise learner V3 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner_v3</span></code>)</a><ul>
+      <li>Previous: <a href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.html" title="previous chapter">NoiseLearnerV3</a></li>
+      <li>Next: <a href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Results.html" title="next chapter">NoiseLearnerV3Results</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Qiskit Development Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/stubs/qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3Result.rst"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

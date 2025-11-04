@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Executor (qiskit_ibm_runtime.executor) &#8212; Qiskit Runtime IBM Client 0.43.1</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Noise learner (qiskit_ibm_runtime.noise_learner.NoiseLearner)" href="noise_learner.html" />
+    <link rel="prev" title="Executor" href="../stubs/qiskit_ibm_runtime.executor.Executor.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="executor-qiskit-ibm-runtime-executor">
+<span id="module-qiskit_ibm_runtime.executor"></span><h1>Executor (<a class="reference internal" href="#module-qiskit_ibm_runtime.executor" title="qiskit_ibm_runtime.executor"><code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code></a>)<a class="headerlink" href="#executor-qiskit-ibm-runtime-executor" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html#qiskit_ibm_runtime.Executor" title="qiskit_ibm_runtime.executor.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a> allows running <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>s on IBM backends.</p>
+<p>To see how to use the executor, let us first take a look at how to instantiate a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>s.</p>
+<section id="quantum-programs">
+<h3>Quantum Programs<a class="headerlink" href="#quantum-programs" title="Link to this heading">¶</a></h3>
+<blockquote>
+<div><p><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>s and related classes are part of the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.quantum_program</span></code> module.</p>
+</div></blockquote>
+<p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code> is an iterable of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgramItem</span></code>s. These items can own:</p>
+<ul class="simple">
+<li><p>a <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> with non-parametrized gates;</p></li>
+<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with an array of parameter values;</p></li>
+<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code> to generate randomize arrays of parameter values.</p></li>
+</ul>
+<p>Let us take a closer look at each of these items and how to add them to a <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>. In
+the cell below, we initialize a <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code> and append a
+<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> with non-parametrized gates.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumCircuit</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime.quantum_program</span><span class="w"> </span><span class="kn">import</span> <span class="n">QuantumProgram</span>
+
+<span class="c1"># Initialize an empty program</span>
+<span class="n">program</span> <span class="o">=</span> <span class="n">QuantumProgram</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+
+<span class="c1"># Initialize circuit to generate and measure GHZ state</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Append the circuit to the program</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, we append a second item that contains a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>
+and an array of parameter values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Parameter</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># Initialize circuit to generate a GHZ state, rotate it around the Pauli-X</span>
+<span class="c1"># axis, and measure it</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;theta&quot;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;phi&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;lam&quot;</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Append the circuit and the parameter value to the program</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">circuit</span><span class="p">,</span>
+    <span class="n">circuit_arguments</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># 8 sets of parameters</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, in the next cell we append a <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> and a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code>. We refer the reader to <code class="xref py py-mod docutils literal notranslate"><span class="pre">samplomatic</span></code>
+and its documentation for more details on the <code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code>
+and its arguments.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.quantum_info</span><span class="w"> </span><span class="kn">import</span> <span class="n">PauliLindbladMap</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">samplomatic</span><span class="w"> </span><span class="kn">import</span> <span class="n">build</span><span class="p">,</span> <span class="n">Twirl</span><span class="p">,</span> <span class="n">InjectNoise</span>
+
+<span class="c1"># Initialize a to generate a GHZ state, rotate it around the Pauli-X</span>
+<span class="c1"># axis, and measure it; its gates and measurements are grouped inside</span>
+<span class="c1"># annotated boxes</span>
+<span class="n">boxed_circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">box</span><span class="p">([</span><span class="n">Twirl</span><span class="p">()]):</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">box</span><span class="p">([</span><span class="n">Twirl</span><span class="p">()]):</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">box</span><span class="p">([</span><span class="n">Twirl</span><span class="p">(),</span> <span class="n">InjectNoise</span><span class="p">(</span><span class="n">ref</span><span class="o">=</span><span class="s2">&quot;ref&quot;</span><span class="p">)]):</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;theta&quot;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;phi&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">rx</span><span class="p">(</span><span class="n">Parameter</span><span class="p">(</span><span class="s2">&quot;lam&quot;</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">boxed_circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Build the template and the samplex</span>
+<span class="n">template</span><span class="p">,</span> <span class="n">samplex</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">boxed_circuit</span><span class="p">)</span>
+
+<span class="c1"># Append the template and samplex as a samplex item</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+    <span class="n">template</span><span class="p">,</span>
+    <span class="n">samplex</span><span class="o">=</span><span class="n">samplex</span><span class="p">,</span>
+    <span class="n">samplex_arguments</span><span class="o">=</span><span class="p">{</span>
+        <span class="c1"># the arguments required by the samplex.sample method</span>
+        <span class="s2">&quot;parameter_values&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">&quot;pauli_lindblad_maps&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;ref&quot;</span><span class="p">:</span> <span class="n">PauliLindbladMap</span><span class="o">.</span><span class="n">from_sparse_list</span><span class="p">(</span>
+                <span class="p">[(</span><span class="s2">&quot;ZX&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;YY&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)],</span>
+                <span class="n">num_qubits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># 12 randomizations per parameter set</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="executor">
+<h3>Executor<a class="headerlink" href="#executor" title="Link to this heading">¶</a></h3>
+<p>The <a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html#qiskit_ibm_runtime.Executor" title="qiskit_ibm_runtime.executor.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a> is a runtime program that allows executing quantum programs
+on IBM backends. The next cell shows how to generate a quantum program with an ISA
+circuit and submit an executor job.</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.transpiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_preset_pass_manager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">qiskit_ibm_runtime</span><span class="w"> </span><span class="kn">import</span> <span class="n">QiskitRuntimeService</span><span class="p">,</span> <span class="n">Executor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">samplomatic.transpiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">generate_boxing_pass_manager</span>
+
+<span class="c1"># Choose a backend</span>
+<span class="n">service</span> <span class="o">=</span> <span class="n">QiskitRuntimeService</span><span class="p">()</span>
+<span class="n">backend</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">least_busy</span><span class="p">(</span><span class="n">operational</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">simulator</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Initialize circuit to generate and measure GHZ state</span>
+<span class="n">circuit</span> <span class="o">=</span> <span class="n">QuantumCircuit</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">h</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">cx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">circuit</span><span class="o">.</span><span class="n">measure_all</span><span class="p">()</span>
+
+<span class="c1"># Transpile the circuit into an ISA circuit and group gates and measurements into boxes</span>
+<span class="n">preset_pass_manager</span> <span class="o">=</span> <span class="n">generate_preset_pass_manager</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">optimization_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">preset_pass_manager</span><span class="o">.</span><span class="n">post_scheduling</span> <span class="o">=</span> <span class="n">generate_boxing_pass_manager</span><span class="p">(</span>
+    <span class="n">enable_gates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">enable_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">boxed_circuit</span> <span class="o">=</span> <span class="n">preset_pass_manager</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+
+<span class="c1"># Build the template and the samplex</span>
+<span class="n">template</span><span class="p">,</span> <span class="n">samplex</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">boxed_circuit</span><span class="p">)</span>
+
+<span class="c1"># Append them to a quantum program</span>
+<span class="n">program</span> <span class="o">=</span> <span class="n">QuantumProgram</span><span class="p">(</span><span class="n">shots</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">samplex</span><span class="o">=</span><span class="n">samplex</span><span class="p">,</span> <span class="n">samplex_arguments</span><span class="o">=</span><span class="p">{})</span>
+
+<span class="c1"># Initialize the executor and set its options</span>
+<span class="n">executor</span> <span class="o">=</span> <span class="n">Executor</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+<span class="n">executor</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">init_qubits</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># Run the quantum program</span>
+<span class="n">job</span> <span class="o">=</span> <span class="n">executor</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">program</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">¶</a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html#qiskit_ibm_runtime.Executor" title="qiskit_ibm_runtime.executor.Executor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Executor</span></code></a></p></td>
+<td><p>Executor to run <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code>s.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Qiskit Runtime IBM Client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html"> API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="runtime_service.html">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executor.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#quantum-programs">Quantum Programs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#executor">Executor</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stubs/qiskit_ibm_runtime.executor.Executor.html">Executor</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise_learner_v3.html">Noise learner V3 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner_v3</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html"><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> API reference</a><ul>
+      <li>Previous: <a href="../stubs/qiskit_ibm_runtime.executor.Executor.html" title="previous chapter">Executor</a></li>
+      <li>Next: <a href="noise_learner.html" title="next chapter">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Qiskit Development Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/apidocs/quantum_program.rst"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DynamicalDecouplingOptions &#8212; Qiskit Runtime IBM Client 0.43.1</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+    <script src="../_static/documentation_options.js?v=cf17243c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/katex.min.js?v=48ec3933"></script>
+    <script src="../_static/auto-render.min.js?v=8b9f325c"></script>
+    <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ResilienceOptionsV2" href="qiskit_ibm_runtime.options.ResilienceOptionsV2.html" />
+    <link rel="prev" title="NoiseLearnerV3Options" href="qiskit_ibm_runtime.options.NoiseLearnerV3Options.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="dynamicaldecouplingoptions">
+<h1>DynamicalDecouplingOptions<a class="headerlink" href="#dynamicaldecouplingoptions" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DynamicalDecouplingOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sequence_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_slack_distribution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduling_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_reset_qubits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Unset</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/qiskit_ibm_runtime/options/dynamical_decoupling_options.py#L20-L63"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Options for dynamical decoupling (DD).</p>
+<p class="rubric">Attributes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>enable</strong> (<em>UnsetType</em><em> | </em><em>bool</em>)</p></li>
+<li><p><strong>sequence_type</strong> (<em>UnsetType</em><em> | </em><em>Literal</em><em>[</em><em>'XX'</em><em>, </em><em>'XpXm'</em><em>, </em><em>'XY4'</em><em>]</em>)</p></li>
+<li><p><strong>extra_slack_distribution</strong> (<em>UnsetType</em><em> | </em><em>Literal</em><em>[</em><em>'middle'</em><em>, </em><em>'edges'</em><em>]</em>)</p></li>
+<li><p><strong>scheduling_method</strong> (<em>UnsetType</em><em> | </em><em>Literal</em><em>[</em><em>'alap'</em><em>, </em><em>'asap'</em><em>]</em>)</p></li>
+<li><p><strong>skip_reset_qubits</strong> (<em>UnsetType</em><em> | </em><em>bool</em>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.enable">
+<span class="sig-name descname"><span class="pre">enable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.enable" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to enable DD as specified by the other options in this class.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.extra_slack_distribution">
+<span class="sig-name descname"><span class="pre">extra_slack_distribution</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'middle'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'edges'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.extra_slack_distribution" title="Link to this definition">¶</a></dt>
+<dd><p>Where to put extra timing delays due to rounding issues.
+Rounding issues arise because the discrete time step <code class="docutils literal notranslate"><span class="pre">dt</span></code> of the system cannot
+be divided. This option takes following values.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">&quot;middle&quot;</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;middle&quot;</span></code>: Put the extra slack to the interval at the middle of the sequence.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;edges&quot;</span></code>: Divide the extra slack as evenly as possible into intervals at
+beginning and end of the sequence.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.scheduling_method">
+<span class="sig-name descname"><span class="pre">scheduling_method</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'alap'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'asap'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.scheduling_method" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to schedule gates as soon as (“asap”) or
+as late as (“alap”) possible.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">&quot;alap&quot;</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.sequence_type">
+<span class="sig-name descname"><span class="pre">sequence_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'XX'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'XpXm'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'XY4'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.sequence_type" title="Link to this definition">¶</a></dt>
+<dd><p>Which dynamical decoupling sequence to use.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">&quot;XX&quot;</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;XX&quot;</span></code>: use the sequence <code class="docutils literal notranslate"><span class="pre">tau/2</span> <span class="pre">-</span> <span class="pre">(+X)</span> <span class="pre">-</span> <span class="pre">tau</span> <span class="pre">-</span> <span class="pre">(+X)</span> <span class="pre">-</span> <span class="pre">tau/2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;XpXm&quot;</span></code>: use the sequence <code class="docutils literal notranslate"><span class="pre">tau/2</span> <span class="pre">-</span> <span class="pre">(+X)</span> <span class="pre">-</span> <span class="pre">tau</span> <span class="pre">-</span> <span class="pre">(-X)</span> <span class="pre">-</span> <span class="pre">tau/2</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;XY4&quot;</span></code>: use the sequence
+<code class="docutils literal notranslate"><span class="pre">tau/2</span> <span class="pre">-</span> <span class="pre">(+X)</span> <span class="pre">-</span> <span class="pre">tau</span> <span class="pre">-</span> <span class="pre">(+Y)</span> <span class="pre">-</span> <span class="pre">tau</span> <span class="pre">(-X)</span> <span class="pre">-</span> <span class="pre">tau</span> <span class="pre">-</span> <span class="pre">(-Y)</span> <span class="pre">-</span> <span class="pre">tau/2</span></code></p></li>
+</ul>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.DynamicalDecouplingOptions.skip_reset_qubits">
+<span class="sig-name descname"><span class="pre">skip_reset_qubits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.skip_reset_qubits" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to insert DD on idle periods that immediately follow initialized/reset qubits.</p>
+<p>Since qubits in the ground state are less susceptible to decoherence, it can be beneficial
+to let them be while they are known to be in this state.</p>
+<p>Default: <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Qiskit Runtime IBM Client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html"> Documentation home</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../apidocs/index.html"> API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/runtime_service.html">Qiskit Runtime (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/executor.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/quantum_program.html">Executor (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.executor</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/noise_learner.html">Noise learner (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner.NoiseLearner</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/noise_learner_result.html">NoiseLearner result classes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.utils.noise_learner_result</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/noise_learner_v3.html">Noise learner V3 (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.noise_learner_v3</span></code>)</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../apidocs/options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../apidocs/options.html#v2-primitives">V2 Primitives</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../apidocs/options.html#classes">Classes</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="../apidocs/options.html#base-primitive-options">Base primitive options</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="../apidocs/options.html#suboptions">Suboptions</a><ul class="current">
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerOptions.html">NoiseLearnerOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerV3Options.html">NoiseLearnerV3Options</a></li>
+<li class="toctree-l5 current"><a class="current reference internal" href="#">DynamicalDecouplingOptions</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions</span></code></a><ul>
+<li class="toctree-l7"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.enable"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions.enable</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.extra_slack_distribution"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions.extra_slack_distribution</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.scheduling_method"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions.scheduling_method</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.sequence_type"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions.sequence_type</span></code></a></li>
+<li class="toctree-l7"><a class="reference internal" href="#qiskit_ibm_runtime.options.DynamicalDecouplingOptions.skip_reset_qubits"><code class="docutils literal notranslate"><span class="pre">DynamicalDecouplingOptions.skip_reset_qubits</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.ResilienceOptionsV2.html">ResilienceOptionsV2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.LayerNoiseLearningOptions.html">LayerNoiseLearningOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.MeasureNoiseLearningOptions.html">MeasureNoiseLearningOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.PecOptions.html">PecOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.ZneOptions.html">ZneOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.PostSelectionOptions.html">PostSelectionOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.TwirlingOptions.html">TwirlingOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.ExecutionOptionsV2.html">ExecutionOptionsV2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.SamplerExecutionOptionsV2.html">SamplerExecutionOptionsV2</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.EnvironmentOptions.html">EnvironmentOptions</a></li>
+<li class="toctree-l5"><a class="reference internal" href="qiskit_ibm_runtime.options.SimulatorOptions.html">SimulatorOptions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/transpiler.html">Transpiler passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/fake_provider.html">Fake Provider (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.fake_provider</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/execution_span.html">Execution Spans (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.execution_span</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/debug_tools.html">Debugging tools (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.debug_tools</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/visualization.html">Visualization (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.visualization</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../apidocs/models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../apidocs/index.html"><code class="docutils literal notranslate"><span class="pre">qiskit-ibm-runtime</span></code> API reference</a><ul>
+  <li><a href="../apidocs/options.html">Primitive options (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.options</span></code>)</a><ul>
+      <li>Previous: <a href="qiskit_ibm_runtime.options.NoiseLearnerV3Options.html" title="previous chapter">NoiseLearnerV3Options</a></li>
+      <li>Next: <a href="qiskit_ibm_runtime.options.ResilienceOptionsV2.html" title="next chapter">ResilienceOptionsV2</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Qiskit Development Team.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/stubs/qiskit_ibm_runtime.options.DynamicalDecouplingOptions.rst"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
