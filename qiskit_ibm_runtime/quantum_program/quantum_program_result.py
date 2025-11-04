@@ -14,14 +14,53 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Union
+from typing import Iterable
+from dataclasses import dataclass, field
+import datetime
 
 import numpy as np
 
 
-MetadataLeafTypes = Union[int, str, float]
-MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]  # type: ignore[misc]
-Metadata = dict[str, MetadataValue]  # type: ignore[misc]
+@dataclass
+class ChunkPart:
+    """A description of the contents of a single part of an execution chunk."""
+
+    idx_item: int
+    """The index of an item in a quantum program."""
+
+    size: int
+    """The number of elements from the quantum program item that were executed.
+
+    For example, if a quantum program item has shape ``(10, 5)``, then it has a total of ``50``
+    elements, so that if this ``size`` is ``10``, it constitutes 20% of the total work for the item.
+    """
+
+
+@dataclass
+class ChunkSpan:
+    """Timing information about a single chunk of execution.
+
+    .. note::
+
+        This span may include some amount of non-circuit time.
+    """
+
+    start: datetime.datetime
+    """The start time of the execution chunk in UTC."""
+
+    stop: datetime.datetime
+    """The stop time of the execution chunk in UTC."""
+
+    parts: list[ChunkPart]
+    """A description of which parts of a quantum program are contained in this chunk."""
+
+
+@dataclass
+class Metadata:
+    """Metadata about the execution of a quantum program run through the runtime executor."""
+
+    chunk_timing: list[ChunkSpan] = field(default_factory=list)
+    """Timing information about all executed chunks of a quantum program."""
 
 
 class QuantumProgramResult:
@@ -34,7 +73,7 @@ class QuantumProgramResult:
 
     def __init__(self, data: list[dict[str, np.ndarray]], metadata: Metadata | None = None):
         self._data = data
-        self.metadata = metadata or {}
+        self.metadata = metadata or Metadata()
 
     def __iter__(self) -> Iterable[dict[str, np.ndarray]]:
         yield from self._data
