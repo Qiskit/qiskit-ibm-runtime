@@ -65,11 +65,11 @@ class NoiseLearnerV3:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
            cancellation with sparse Pauli–Lindblad models on noisy quantum processors*,
            Nature Physics volume 19, pages 1116–1121 (2023).
-           `DOI: https://doi.org/10.1038/s41567-023-02042-2 
+           `DOI: https://doi.org/10.1038/s41567-023-02042-2
            <https://doi.org/10.1038/s41567-023-02042-2>`_
         2. E. van den Berg, Z. Minev, K. Temme, *Model-free readout-error mitigation for
            quantum expectation values*, Phys. Rev. A 105, 032620 (2022).
-           `DOI: https://doi.org/10.1103/PhysRevA.105.032620 
+           `DOI: https://doi.org/10.1103/PhysRevA.105.032620
            <https://doi.org/10.1103/PhysRevA.105.032620>`_
     """
 
