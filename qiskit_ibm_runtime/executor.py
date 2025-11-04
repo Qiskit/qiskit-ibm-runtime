@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-import json
 import logging
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
