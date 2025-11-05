@@ -41,7 +41,7 @@ different circuit task for the :class:`~.Executor` to perform. Typically, they o
   :class:`~samplomatic.samplex.Samplex` to generate randomize arrays of parameter values.
 
 They also provide additional specifications for the circuit tasks. For example, the
-:meth:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem.chunk_size` defines the maximum number of
+:attr:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem.chunk_size` defines the maximum number of
 bound circuits (i.e., circuits with set parameters) in each shot loop execution.
 
 Let us take a closer look at each of these items and how to add them to a :class:`~.QuantumProgram`\\. In
