@@ -32,16 +32,23 @@ Quantum Programs
     :mod:`qiskit_ibm_runtime.quantum_program` module.
 
 A :class:`~.QuantumProgram` is an iterable of
-:class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\\s. These items can own:
+:class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\\s. Each of these items represents a
+different circuit task for the :class:`~.Executor` to perform. Typically, they own:
 
 * a :class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with an array of parameter values;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with a
   :class:`~samplomatic.samplex.Samplex` to generate randomize arrays of parameter values.
 
+They also provide additional specifications for the circuit tasks. For example, the
+:meth:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem.chunk_size` defines the maximum number of
+bound circuits (i.e., circuits with set parameters) in each shot loop execution.
+
 Let us take a closer look at each of these items and how to add them to a :class:`~.QuantumProgram`\\. In
-the cell below, we initialize a :class:`~.QuantumProgram` and append a
-:class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates.
+the cell below, we initialize a :class:`~.QuantumProgram` that runs ``1024`` shots per item. Next, we
+append a :class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates. We set the ``chunk_size``
+to ``120``, so that execution will perform ``8`` loops with ``120`` shots, and an additional loop with
+the remaining ``64`` shots.
 
 .. code-block:: python
 
@@ -59,10 +66,12 @@ the cell below, we initialize a :class:`~.QuantumProgram` and append a
     circuit.measure_all()
 
     # Append the circuit to the program
-    program.append(circuit)
+    program.append(circuit, chunk_size=120)
 
 Next, we append a second item that contains a parametrized :class:`~qiskit.circuit.QuantumCircuit`
-and an array of parameter values.
+and an array containing ``10`` sets of parameter values. This amounts to a total of ``10240`` shots.
+Again, we set the ``chunk_size`` to ``120``, so that execution will perform ``85`` loops with ``120``
+shots, and an additional loop with the remaining ``40`` shots.
 
 .. code-block:: python
 
@@ -83,13 +92,19 @@ and an array of parameter values.
     # Append the circuit and the parameter value to the program
     program.append(
         circuit,
-        circuit_arguments=np.random.rand(8, 3),  # 8 sets of parameters
+        circuit_arguments=np.random.rand(10, 3),  # 10 sets of parameter values
     )
 
 Finally, in the next cell we append a :class:`~qiskit.circuit.QuantumCircuit` and a
-:class:`~samplomatic.samplex.Samplex`. We refer the reader to :mod:`~samplomatic`
-and its documentation for more details on the :class:`~samplomatic.samplex.Samplex`
-and its arguments.
+:class:`~samplomatic.samplex.Samplex`, which is responsible for generating randomized sets of
+parameters for the given circuit. As part of the samplex arguments, we provide ``10`` sets of
+parameters for the parametric gates in the original circuit. Additionally, by setting ``shape``
+to ``(2, 14, 10)``, we request a total ``2 * 14 * 10`` randomizations, with values arranged in a
+three-dimensional array with shape ``(2, 14, 10)``. This time, we do not specify a
+``chunk_size``, letting internal heuristics choose a value automatically.
+
+    We refer the reader to :mod:`~samplomatic` and its documentation for more details on the
+    :class:`~samplomatic.samplex.Samplex` and its arguments.
 
 .. code-block:: python
 
@@ -120,7 +135,7 @@ and its arguments.
         samplex=samplex,
         samplex_arguments={  
             # the arguments required by the samplex.sample method
-            "parameter_values": np.random.rand(8, 3),
+            "parameter_values": np.random.rand(10, 3),
             "pauli_lindblad_maps": {
                 "ref": PauliLindbladMap.from_sparse_list(
                     [("ZX", (1, 2), 1.0), ("YY", (0, 1), 2)],
@@ -128,7 +143,7 @@ and its arguments.
                 )
             }
         },
-        shape=(12, 8)  # 12 randomizations per parameter set
+        shape=(2, 14, 10),
     )
 
 Executor
