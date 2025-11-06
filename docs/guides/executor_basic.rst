@@ -27,9 +27,9 @@ gates, and how to execute the program via the :class:`~.Executor`.
     circuit.h(2)
     circuit.cz(1, 2)
     circuit.h(2)
-    circuit.rz(Parameter("theta"), 0)
-    circuit.rz(Parameter("phi"), 1)
-    circuit.rz(Parameter("lam"), 2)
+    circuit.rz(Parameter('theta'), 0)
+    circuit.rz(Parameter('phi'), 1)
+    circuit.rz(Parameter('lam'), 2)
     circuit.measure_all()
 
 Let us choose a backend to run our executor jobs with:
@@ -109,9 +109,9 @@ of ``10240`` shots (namely ``1024`` per set of parameter values).
     circuit.h(2)
     circuit.cz(1, 2)
     circuit.h(2)
-    circuit.rz(Parameter("theta"), 0)
-    circuit.rz(Parameter("phi"), 1)
-    circuit.rz(Parameter("lam"), 2)
+    circuit.rz(Parameter('theta'), 0)
+    circuit.rz(Parameter('phi'), 1)
+    circuit.rz(Parameter('lam'), 2)
     circuit.measure_all()
 
     # Transpile the circuit
@@ -151,9 +151,9 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
     circuit.h(2)
     circuit.cz(1, 2)
     circuit.h(2)
-    circuit.rz(Parameter("theta"), 0)
-    circuit.rz(Parameter("phi"), 1)
-    circuit.rz(Parameter("lam"), 2)
+    circuit.rz(Parameter('theta'), 0)
+    circuit.rz(Parameter('phi'), 1)
+    circuit.rz(Parameter('lam'), 2)
     circuit.measure_all()
 
     # Transpile the circuit, additionally grouping gates and measurements into annotated boxes
@@ -173,7 +173,7 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
         samplex=samplex,
         samplex_arguments={  
             # the arguments required by the samplex.sample method
-            "parameter_values": np.random.rand(10, 3),
+            'parameter_values': np.random.rand(10, 3),
         },
         shape=(2, 14, 10),
     )
@@ -220,8 +220,8 @@ is over shots, the second is over bits in the classical register.
     .. code-block:: python
         
         # Access the results of the classical register of task #0
-        result_0 = result[0]["meas"]
-        print(f"Result shape: {result_0.shape}")
+        result_0 = result[0]['meas']
+        print(f'Result shape: {result_0.shape}')
 
 The second item contains the results of running the second task in the program, namely
 the circuit with parametrized gates. Again, it contains a single key, ``'meas'``, mapped to a
@@ -231,8 +231,8 @@ and last are again over shots and bits respectively.
     .. code-block:: python
         
         # Access the results of the classical register of task #1
-        result_1 = result[1]["meas"]
-        print(f"Result shape: {result_1.shape}")
+        result_1 = result[1]['meas']
+        print(f'Result shape: {result_1.shape}')
 
 Finally, the third item in ``result`` contains the results of running the third task in the program. This item
 contains multiple key. In more detail, in addition to the ``'meas'`` key (mapped to the array of results for
@@ -242,12 +242,12 @@ the measurement twirling for the ``'meas'`` register.
     .. code-block:: python
         
         # Access the results of the classical register of task #2
-        result_2 = result[2]["meas"]
-        print(f"Result shape: {result_2.shape}")
+        result_2 = result[2]['meas']
+        print(f'Result shape: {result_2.shape}')
         
         # Access the bit-flip corrections
-        flips_2 = result[2]["measurement_flips.meas"]
-        print(f"Result shape: {result_0.shape}")
+        flips_2 = result[2]['measurement_flips.meas']
+        print(f'Result shape: {result_0.shape}')
 
         # Undo the bit flips via classical XOR
         unflipped_result_2 = result_2 ^ flips_2
