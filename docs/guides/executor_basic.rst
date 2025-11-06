@@ -10,7 +10,7 @@ know how to:
 * Interpret the outputs of the :class:`~.Executor`.
 
 In the reminder of the guide, we consider a circuit that generates a three-qubit GHZ state, rotates
-the qubits around the Pauli-X axis, and measures the qubits in the computational basis. We show how
+the qubits around the Pauli-Z axis, and measures the qubits in the computational basis. We show how
 to add this circuit to a :class:`~.QuantumProgram`, optionally randomizing its content with twirling
 gates, and how to execute the program via the :class:`~.Executor`.
 
@@ -21,11 +21,15 @@ gates, and how to execute the program via the :class:`~.Executor`.
     # A circuit of the type considered in this guide
     circuit = QuantumCircuit(3)
     circuit.h(0)
-    circuit.cx(0, 1)
-    circuit.cx(1, 2)
-    circuit.rx(Parameter("theta"), 0)
-    circuit.rx(Parameter("phi"), 1)
-    circuit.rx(Parameter("lam"), 2)
+    circuit.h(1)
+    circuit.cz(0, 1)
+    circuit.h(1)
+    circuit.h(2)
+    circuit.cz(1, 2)
+    circuit.h(2)
+    circuit.rz(Parameter("theta"), 0)
+    circuit.rz(Parameter("phi"), 1)
+    circuit.rz(Parameter("lam"), 2)
     circuit.measure_all()
 
 Let us choose a backend to run our executor jobs with:
@@ -69,11 +73,15 @@ transpiled according to the backend's ISA.
     # Initialize circuit to generate and measure GHZ state
     circuit = QuantumCircuit(3)
     circuit.h(0)
-    circuit.cx(0, 1)
-    circuit.cx(1, 2)
-    circuit.rx(0.1, 0)
-    circuit.rx(0.2, 1)
-    circuit.rx(0.3, 2)
+    circuit.h(1)
+    circuit.cz(0, 1)
+    circuit.h(1)
+    circuit.h(2)
+    circuit.cz(1, 2)
+    circuit.h(2)
+    circuit.rz(0.1, 0)
+    circuit.rz(0.2, 1)
+    circuit.rz(0.3, 2)
     circuit.measure_all()
 
     # Transpile the circuit
@@ -92,15 +100,19 @@ of ``10240`` shots (namely ``1024`` per set of parameter values).
     from qiskit.circuit import Parameter
     import numpy as np
 
-    # Initialize circuit to generate a GHZ state, rotate it around the Pauli-X
+    # Initialize circuit to generate a GHZ state, rotate it around the Pauli-Z
     # axis, and measure it
     circuit = QuantumCircuit(3)
     circuit.h(0)
-    circuit.cx(0, 1)
-    circuit.cx(1, 2)
-    circuit.rx(Parameter("theta"), 0)
-    circuit.rx(Parameter("phi"), 1)
-    circuit.rx(Parameter("lam"), 2)
+    circuit.h(1)
+    circuit.cz(0, 1)
+    circuit.h(1)
+    circuit.h(2)
+    circuit.cz(1, 2)
+    circuit.h(2)
+    circuit.rz(Parameter("theta"), 0)
+    circuit.rz(Parameter("phi"), 1)
+    circuit.rz(Parameter("lam"), 2)
     circuit.measure_all()
 
     # Transpile the circuit
@@ -130,15 +142,19 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
     from samplomatic import build
     from samplomatic.transpiler import generate_boxing_pass_manager
 
-    # Initialize circuit to generate a GHZ state, rotate it around the Pauli-X
+    # Initialize circuit to generate a GHZ state, rotate it around the Pauli-Z
     # axis, and measure it
     circuit = QuantumCircuit(3)
     circuit.h(0)
-    circuit.cx(0, 1)
-    circuit.cx(1, 2)
-    circuit.rx(Parameter("theta"), 0)
-    circuit.rx(Parameter("phi"), 1)
-    circuit.rx(Parameter("lam"), 2)
+    circuit.h(1)
+    circuit.cz(0, 1)
+    circuit.h(1)
+    circuit.h(2)
+    circuit.cz(1, 2)
+    circuit.h(2)
+    circuit.rz(Parameter("theta"), 0)
+    circuit.rz(Parameter("phi"), 1)
+    circuit.rz(Parameter("lam"), 2)
     circuit.measure_all()
 
     # Transpile the circuit, additionally grouping gates and measurements into annotated boxes
