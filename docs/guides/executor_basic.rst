@@ -36,7 +36,7 @@ Let us choose a backend to run our executor jobs with:
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime import QiskitRuntimeService, Executor
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
     service = QiskitRuntimeService()
     backend = service.least_busy(operational=True, simulator=False)
@@ -63,7 +63,6 @@ transpiled according to the backend's ISA.
 
 .. code-block:: python
 
-    from qiskit.circuit import QuantumCircuit
     from qiskit.transpiler import generate_preset_pass_manager
     from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
