@@ -255,12 +255,6 @@ class QuantumProgram:
                 )
             )
 
-    def choose_chunk_sizes(self) -> None:
-        """Automatically choose chunk sizes based on a heuristic."""
-        for item in self.items:
-            # TODO: use heuristic based on circuit, shape characteristics
-            item.chunk_size = 100
-
     def validate(self, backend: "IBMBackend") -> None:
         """Validate this quantum program against the given backend."""
 
