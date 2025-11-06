@@ -127,8 +127,7 @@ class ZneOptions:
         The extrapolated values (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to
         the order of the provided extrapolators. If more than one extrapolator is specified, the ``evs``
         and ``stds`` reported in the result's data refer to the first successful extrapolator, where an
-        extrapolator success is determined heuristically, in particular the standard deviation must be
-        smaller than ``0.25``.
+        extrapolator success is determined heuristically.
 
         Default: ``("exponential", "linear")``.
     """
@@ -146,7 +145,7 @@ class ZneOptions:
 
     @classmethod
     def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
-        return ("exponential", "linear", "fallback")
+        return ("exponential", "linear")
 
     @field_validator("noise_factors")
     @classmethod
