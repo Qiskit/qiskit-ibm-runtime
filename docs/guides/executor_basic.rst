@@ -114,11 +114,13 @@ of ``10240`` shots (namely ``1024`` per set of parameter values).
 
 Finally, in the next cell we append a parametrized :class:`~qiskit.circuit.QuantumCircuit` and a
 :class:`~samplomatic.samplex.Samplex`, which is responsible for generating randomized sets of
-parameters for the given circuit. As part of the samplex arguments, we provide ``10`` sets of
-parameters for the parametric gates in the original circuit. Additionally, we use the ``shape``
-request argument to request an extension of the implicit shape defined by the samplex arguments.
-In particular, by setting ``shape`` to ``(2, 14, 10)`` we request ``28`` randomizations for each
-of the ``10`` sets of parameters, to be arranged in an array of shape ``(2, 14)``.
+parameters for the given circuit. As part of the :class:`~samplomatic.samplex.Samplex` arguments,
+we provide ``10`` sets of parameters for the parametric gates in the original circuit.
+Additionally, we use the ``shape`` request argument to request an extension of the implicit shape
+defined by the :class:`~samplomatic.samplex.Samplex` arguments. In particular, by setting ``shape``
+to ``(2, 14, 10)`` we request to randomize each of the ``10`` sets of parameters ``28`` times, and
+to arrange the randomized parameter sets in an array of be arranged in an array of shape
+``(2, 14, 10)``.
 
     We refer the reader to :mod:`~samplomatic` and its documentation for more details on the
     :class:`~samplomatic.samplex.Samplex` and its arguments.
@@ -220,11 +222,10 @@ and last are again over shots and bits respectively.
         result_1 = result[1]["meas"]
         print(f"Result shape: {result_1.shape}")
 
-Finally, the third item in ``result`` contains the results of running the third task in the program, 
-namely the task with the template/samplex pair. This item contains multiple key. In more detail, in
-addition to the ``'meas'`` key (mapped to the array of results for that classical register), it
-contains ``'measurement_flips.meas'``, namely the bit-flip corrections to undo the measurement twirling
-for the ``'meas'`` register.
+Finally, the third item in ``result`` contains the results of running the third task in the program. This item
+contains multiple key. In more detail, in addition to the ``'meas'`` key (mapped to the array of results for
+that classical register), it contains ``'measurement_flips.meas'``, namely the bit-flip corrections to undo
+the measurement twirling for the ``'meas'`` register.
 
     .. code-block:: python
         
