@@ -27,7 +27,7 @@ from ibm_quantum_schemas.models.executor.version_0_1.models import (
     QuantumProgramResultModel,
 )
 from ibm_quantum_schemas.models.pauli_lindblad_map_model import PauliLindbladMapModel
-from ibm_quantum_schemas.models.samplex_model import SamplexModel
+from ibm_quantum_schemas.models.samplex_model import SamplexModelSSV1
 from ibm_quantum_schemas.models.tensor_model import F64TensorModel, TensorModel
 from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 
@@ -63,7 +63,7 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                         arguments[name] = value
             model_item = SamplexItemModel(
                 circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit),
-                samplex=SamplexModel.from_samplex(item.samplex),
+                samplex=SamplexModelSSV1.from_samplex(item.samplex),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=item.chunk_size,
