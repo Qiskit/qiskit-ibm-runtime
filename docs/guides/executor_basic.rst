@@ -2,7 +2,7 @@ The Executor: A quick-start guide
 ================================= 
 
 This guide provides a basic overview of the :class:`~.Executor`, a runtime program that allows
-executing :class:`~.QuantumProgram`\s on IBM backend. At the end of this guide, you will
+executing :class:`~.QuantumProgram`\s on IBM backends. At the end of this guide, you will
 know how to:
 
 * Initialize a :class:`~.QuantumProgram` to specify one or more circuit tasks.
