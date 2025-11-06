@@ -83,7 +83,7 @@ transpiled according to the backend's ISA.
     # Append the circuit to the program
     program.append(isa_circuit)
 
-We the proceed to append a second item that contains a parametrized :class:`~qiskit.circuit.QuantumCircuit`
+We proceed to append a second item that contains a parametrized :class:`~qiskit.circuit.QuantumCircuit`
 and an array containing ``10`` sets of parameter values. This amounts to a circuit task requiring a total
 of ``10240`` shots (namely ``1024`` per set of parameter values).
 
