@@ -5,7 +5,7 @@ This guide provides a basic overview of the :class:`~.Executor`, a runtime progr
 executing :class:`~.QuantumProgram`\s on IBM backends. At the end of this guide, you will
 know how to:
 
-* Initialize a :class:`~.QuantumProgram` to specify one or more circuit tasks.
+* Initialize a :class:`~.QuantumProgram` with your workload.
 * Run :class:`~.QuantumProgram`\s on IBM backends using the :class:`~.Executor`.
 * Interpret the outputs of the :class:`~.Executor`.
 
