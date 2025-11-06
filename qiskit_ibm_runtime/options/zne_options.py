@@ -146,7 +146,7 @@ class ZneOptions:
 
     @classmethod
     def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
-        return ("exponential", "linear")
+        return ("exponential", "linear", "fallback")
 
     @field_validator("noise_factors")
     @classmethod
