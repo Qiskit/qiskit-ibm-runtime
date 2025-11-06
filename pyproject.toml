@@ -54,7 +54,7 @@ fallback_version = "0.43.1"
 
 [project]
 name = "qiskit-ibm-runtime"
-version = "0.44.0b0-executor.preview"
+version = "0.44.0b0+executor.preview"
 description = "IBM Quantum client for Qiskit Runtime."
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
