@@ -47,5 +47,8 @@ class QuantumProgramResultDecoder(ResultDecoder):
             decoder = AVAILABLE_DECODERS[schema_version]
         except KeyError:
             raise ValueError(f"No decoder found for schema version {schema_version}.")
+        
+        if decoded.get("metadata") is None:
+            decoded["metadata"] = {"chunk_timing": []}
 
         return decoder(QuantumProgramResultModel(**decoded))
