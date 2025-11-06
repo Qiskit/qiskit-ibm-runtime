@@ -184,16 +184,13 @@ Now that we have populated our :class:`~.QuantumProgram`, we can proceed with ex
 Running an Executor job
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-In the cell below we initialize an :class:`~.Executor` and set some of its options to custom
-values.
+In the cell below we initialize an :class:`~.Executor` and leave the default options:
 
     .. code-block:: python
 
         from qiskit_ibm_runtime import Executor
 
-        # Initialize the executor and set its options
         executor = Executor(backend)
-        executor.options.execution.init_qubits = True
 
 Next, we use the :meth:`~.Executor.run` method to submit the job.
 
