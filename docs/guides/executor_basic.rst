@@ -58,7 +58,7 @@ different task for the :class:`~.Executor` to perform. Typically, each item owns
 Let us take a closer look at each of these items and how to add them to a :class:`~.QuantumProgram`\.
 
 In the cell below, we initialize a :class:`~.QuantumProgram` and specify that we wish to perform ``1024``
-shots per item in the program. Next, we append a version of our target circuit with set parameters,
+shots for every configuration of each item in the program. Next, we append a version of our target circuit with set parameters,
 transpiled according to the backend's ISA.
 
 .. code-block:: python
