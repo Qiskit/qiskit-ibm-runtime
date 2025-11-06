@@ -208,7 +208,7 @@ The outputs of the Executor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramResult` is an iterable. It contains one
-item per circuit task, and the items are sorted according to the tasks in the program. Every one of
+item per circuit task, and the items are in the same order as the items in the program. Every one of
 these items is a dictionary from strings to ``np.ndarray``s of ``bool``s. Let us take a look at the
 three items in ``result`` to understand the meaning of their key-value pairs.
 
