@@ -2,14 +2,14 @@ The Executor: A quick-start guide
 ================================= 
 
 This guide provides a basic overview of the :class:`~.Executor`, a runtime program that allows
-executing :class:`~.QuantumProgram`\s on IBM backend. At the end of this guide, you will
+executing :class:`~.QuantumProgram`\s on IBM backends. At the end of this guide, you will
 know how to:
 
-* Initialize a :class:`~.QuantumProgram` to specify one or more circuit tasks.
+* Initialize a :class:`~.QuantumProgram` with your workload.
 * Run :class:`~.QuantumProgram`\s on IBM backends using the :class:`~.Executor`.
 * Interpret the outputs of the :class:`~.Executor`.
 
-In the reminder of the guide, we consider a circuit that generates a three-qubit GHZ state, rotates
+In the remainder of the guide, we consider a circuit that generates a three-qubit GHZ state, rotates
 the qubits around the Pauli-Z axis, and measures the qubits in the computational basis. We show how
 to add this circuit to a :class:`~.QuantumProgram`, optionally randomizing its content with twirling
 gates, and how to execute the program via the :class:`~.Executor`.
@@ -48,7 +48,7 @@ The inputs to the Executor: Quantum Programs
 
 A :class:`~.QuantumProgram` is an iterable of
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\s. Each of these items represents a
-different circuit task for the :class:`~.Executor` to perform. Typically, they own:
+different task for the :class:`~.Executor` to perform. Typically, each item owns:
 
 * a :class:`~qiskit.circuit.QuantumCircuit` with static, non-parametrized gates;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with an array of parameter values;
@@ -58,7 +58,7 @@ different circuit task for the :class:`~.Executor` to perform. Typically, they o
 Let us take a closer look at each of these items and how to add them to a :class:`~.QuantumProgram`\.
 
 In the cell below, we initialize a :class:`~.QuantumProgram` and specify that we wish to perform ``1024``
-shots per item in the program. Next, we append a version of our target circuit with set parameters,
+shots for every configuration of each item in the program. Next, we append a version of our target circuit with set parameters,
 transpiled according to the backend's ISA.
 
 .. code-block:: python
@@ -183,16 +183,13 @@ Now that we have populated our :class:`~.QuantumProgram`, we can proceed with ex
 Running an Executor job
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-In the cell below we initialize an :class:`~.Executor` and set some of its options to custom
-values.
+In the cell below we initialize an :class:`~.Executor` and leave the default options:
 
     .. code-block:: python
 
         from qiskit_ibm_runtime import Executor
 
-        # Initialize the executor and set its options
         executor = Executor(backend)
-        executor.options.execution.init_qubits = True
 
 Next, we use the :meth:`~.Executor.run` method to submit the job.
 
@@ -210,7 +207,7 @@ The outputs of the Executor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramResult` is an iterable. It contains one
-item per circuit task, and the items are sorted according to the tasks in the program. Every one of
+item per circuit task, and the items are in the same order as the items in the program. Every one of
 these items is a dictionary from strings to ``np.ndarray``s of ``bool``s. Let us take a look at the
 three items in ``result`` to understand the meaning of their key-value pairs.
 
