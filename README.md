@@ -167,6 +167,7 @@ To invoke the `Estimator` primitive:
 from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit import Parameter
 import numpy as np
 
@@ -221,6 +222,7 @@ To invoke the `Estimator` primitive within a session:
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2 as Estimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit import Parameter
 import numpy as np
 
