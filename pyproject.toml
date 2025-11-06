@@ -54,7 +54,7 @@ fallback_version = "0.43.1"
 
 [project]
 name = "qiskit-ibm-runtime"
-version = "103.0.0"
+version = "0.44.0b0+executor.preview"
 description = "IBM Quantum client for Qiskit Runtime."
 readme = {file = "README.md", content-type = "text/markdown"}
 authors = [
@@ -89,12 +89,12 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
-    "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@94191105254fefdee56b77532c78546dc5650054#egg=ibm-quantum-schemas",
+    "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@e558cbf38be8a271302dea9ffbc65f8f6c54788c#egg=ibm-quantum-schemas",
     "pydantic>=2.5.0",
     "qiskit>=1.4.1",
     "packaging",
     "pybase64>=1.0",
-    "samplomatic==0.11.0"
+    "samplomatic>=0.12.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
