@@ -48,7 +48,7 @@ The inputs to the Executor: Quantum Programs
 
 A :class:`~.QuantumProgram` is an iterable of
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\s. Each of these items represents a
-different circuit task for the :class:`~.Executor` to perform. Typically, they own:
+different task for the :class:`~.Executor` to perform. Typically, each item owns:
 
 * a :class:`~qiskit.circuit.QuantumCircuit` with static, non-parametrized gates;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with an array of parameter values;
