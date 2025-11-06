@@ -16,7 +16,7 @@ gates, and how to execute the program via the :class:`~.Executor`.
 
 .. code-block:: python
 
-    from qiskit.circuit import QuantumCircuit, Parameter
+    from qiskit.circuit import Parameter, QuantumCircuit
 
     # A circuit of the type considered in this guide
     circuit = QuantumCircuit(3)
@@ -46,7 +46,7 @@ A :class:`~.QuantumProgram` is an iterable of
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramItem`\s. Each of these items represents a
 different circuit task for the :class:`~.Executor` to perform. Typically, they own:
 
-* a :class:`~qiskit.circuit.QuantumCircuit` with non-parametrized gates;
+* a :class:`~qiskit.circuit.QuantumCircuit` with static, non-parametrized gates;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with an array of parameter values;
 * or a parametrized :class:`~qiskit.circuit.QuantumCircuit`, together with a
   :class:`~samplomatic.samplex.Samplex` to generate randomize arrays of parameter values.
@@ -58,6 +58,7 @@ shots per item in the program. Next, we append a version of our target circuit w
 transpiled according to the backend's ISA.
 
 .. code-block:: python
+
     from qiskit.circuit import QuantumCircuit
     from qiskit.transpiler import generate_preset_pass_manager
     from qiskit_ibm_runtime.quantum_program import QuantumProgram
@@ -114,8 +115,10 @@ of ``10240`` shots (namely ``1024`` per set of parameter values).
 Finally, in the next cell we append a parametrized :class:`~qiskit.circuit.QuantumCircuit` and a
 :class:`~samplomatic.samplex.Samplex`, which is responsible for generating randomized sets of
 parameters for the given circuit. As part of the samplex arguments, we provide ``10`` sets of
-parameters for the parametric gates in the original circuit.  This amounts to a circuit task
-requiring a total of ``10240`` shots (namely ``1024`` per set of parameter values).
+parameters for the parametric gates in the original circuit. Additionally, we use the ``shape``
+request argument to request an extension of the implicit shape defined by the samplex arguments.
+In particular, by setting ``shape`` to ``(2, 14, 10)`` we request ``28`` randomizations for each
+of the ``10`` sets of parameters, to be arranged in an array of shape ``(2, 14)``.
 
     We refer the reader to :mod:`~samplomatic` and its documentation for more details on the
     :class:`~samplomatic.samplex.Samplex` and its arguments.
@@ -182,3 +185,56 @@ Next, we use the :meth:`~.Executor.run` method to submit the job.
 
         # Retrieve the result
         result = job.result()
+
+Here, ``result`` is of type :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramResult`.
+We now take a closer look at this result object.
+
+The outputs of the Executor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramResult` is an iterable. It contains one
+item per circuit task, and the items are sorted according to the tasks in the program. Every one of
+these items is a dictionary from strings to ``np.ndarray``s of booleans. Let us take a look at the
+three items in ``result`` to understand the meaning of their key-value pairs.
+
+The first item in ``result`` contains the results of running the first task in the program, namely
+the circuit with static gates. It contains a single key, ``'meas'``, corresponding to the name of the
+classical register in the input circuit. The ``'meas'`` key is mapped to the results collected for this
+classical registers, stored in a ``np.ndarray`` of booleans of shape ``(1024, 3)``. The first axis
+is over shots, the second is over bits in the classical register.    
+
+    .. code-block:: python
+        
+        # Access the results of the classical register of task #0
+        result_0 = result[0]["meas"]
+        print(f"Result shape: {result_0.shape}")
+
+The second item contains the results of running the second task in the program, namely
+the circuit with parametrized gates. Again, it contains a single key, ``'meas'``, mapped to a
+``np.ndarray`` of shape ``(1024, 10, 3)``. The central axis is over parameter sets, while the first
+and last are again over shots and bits respectively.  
+
+    .. code-block:: python
+        
+        # Access the results of the classical register of task #1
+        result_1 = result[1]["meas"]
+        print(f"Result shape: {result_1.shape}")
+
+Finally, the third item in ``result`` contains the results of running the third task in the program, 
+namely the task with the template/samplex pair. This item contains multiple key. In more detail, in
+addition to the ``'meas'`` key (mapped to the array of results for that classical register), it
+contains ``'measurement_flips.meas'``, namely the bit-flip corrections to undo the measurement twirling
+for the ``'meas'`` register.
+
+    .. code-block:: python
+        
+        # Access the results of the classical register of task #2
+        result_2 = result[2]["meas"]
+        print(f"Result shape: {result_2.shape}")
+        
+        # Access the bit-flip corrections
+        flips_2 = result[2]["measurement_flips.meas"]
+        print(f"Result shape: {result_0.shape}")
+
+        # Undo the bit flips via classical XOR
+        unflipped_result_2 = result_2 ^ flips_2
