@@ -9,7 +9,7 @@ know how to:
 * Run :class:`~.QuantumProgram`\s on IBM backends using the :class:`~.Executor`.
 * Interpret the outputs of the :class:`~.Executor`.
 
-In the reminder of the guide, we consider a circuit that generates a three-qubit GHZ state, rotates
+In the remainder of the guide, we consider a circuit that generates a three-qubit GHZ state, rotates
 the qubits around the Pauli-Z axis, and measures the qubits in the computational basis. We show how
 to add this circuit to a :class:`~.QuantumProgram`, optionally randomizing its content with twirling
 gates, and how to execute the program via the :class:`~.Executor`.
