@@ -23,4 +23,5 @@ Qiskit Runtime |release| API Docs Preview
 
     Documentation home <self>
     API Reference <apidocs/index>
+    Guides <guides/index>
     Release Notes <release_notes>
