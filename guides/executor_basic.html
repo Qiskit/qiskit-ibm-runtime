@@ -606,12 +606,12 @@ We now take a closer look at this result object.</p>
 <h2>The outputs of the Executor<a class="headerlink" href="#the-outputs-of-the-executor" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="../stubs/qiskit_ibm_runtime.quantum_program.QuantumProgramResult.html#qiskit_ibm_runtime.quantum_program.QuantumProgramResult" title="qiskit_ibm_runtime.quantum_program.QuantumProgramResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgramResult</span></code></a> is an iterable. It contains one
 item per circuit task, and the items are in the same order as the items in the program. Every one of
-these items is a dictionary from strings to <code class="docutils literal notranslate"><span class="pre">np.ndarray``s</span> <span class="pre">of</span> <span class="pre">``bool``s.</span> <span class="pre">Let</span> <span class="pre">us</span> <span class="pre">take</span> <span class="pre">a</span> <span class="pre">look</span> <span class="pre">at</span> <span class="pre">the</span>
-<span class="pre">three</span> <span class="pre">items</span> <span class="pre">in</span> <span class="pre">``result</span></code> to understand the meaning of their key-value pairs.</p>
+these items is a dictionary from strings to an <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code>. with elements of type <code class="docutils literal notranslate"><span class="pre">bool</span></code>. Let us
+take a look at the three items in <code class="docutils literal notranslate"><span class="pre">result</span></code> to understand the meaning of their key-value pairs.</p>
 <p>The first item in <code class="docutils literal notranslate"><span class="pre">result</span></code> contains the results of running the first task in the program, namely
 the circuit with static gates. It contains a single key, <code class="docutils literal notranslate"><span class="pre">'meas'</span></code>, corresponding to the name of the
 classical register in the input circuit. The <code class="docutils literal notranslate"><span class="pre">'meas'</span></code> key is mapped to the results collected for this
-classical registers, stored in a <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of <code class="docutils literal notranslate"><span class="pre">bool``s</span> <span class="pre">of</span> <span class="pre">shape</span> <span class="pre">``(1024,</span> <span class="pre">3)</span></code>. The first axis
+classical registers, stored in an <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code> of shape <code class="docutils literal notranslate"><span class="pre">(1024,</span> <span class="pre">3)</span></code>. The first axis
 is over shots, the second is over bits in the classical register.</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Access the results of the classical register of task #0</span>
