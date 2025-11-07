@@ -208,13 +208,13 @@ The outputs of the Executor
 
 :class:`~.qiskit_ibm_runtime.quantum_program.QuantumProgramResult` is an iterable. It contains one
 item per circuit task, and the items are in the same order as the items in the program. Every one of
-these items is a dictionary from strings to ``np.ndarray``s of ``bool``s. Let us take a look at the
-three items in ``result`` to understand the meaning of their key-value pairs.
+these items is a dictionary from strings to an ``np.ndarray``. with elements of type ``bool``. Let us
+take a look at the three items in ``result`` to understand the meaning of their key-value pairs.
 
 The first item in ``result`` contains the results of running the first task in the program, namely
 the circuit with static gates. It contains a single key, ``'meas'``, corresponding to the name of the
 classical register in the input circuit. The ``'meas'`` key is mapped to the results collected for this
-classical registers, stored in a ``np.ndarray`` of ``bool``s of shape ``(1024, 3)``. The first axis
+classical registers, stored in an ``np.ndarray`` of shape ``(1024, 3)``. The first axis
 is over shots, the second is over bits in the classical register.    
 
     .. code-block:: python

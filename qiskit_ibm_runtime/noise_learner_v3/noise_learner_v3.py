@@ -152,7 +152,7 @@ class NoiseLearnerV3:
 
             configuration = getattr(self._backend, "configuration", None)
             if configuration and not is_simulator(self._backend):
-                validate_options(self.options, configuration)
+                validate_options(self.options, configuration())
 
         inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
         inputs["version"] = 3  # TODO: this is a work-around for the dispatch
