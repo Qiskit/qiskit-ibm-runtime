@@ -21,6 +21,7 @@ import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
+import math
 
 
 if TYPE_CHECKING:
@@ -55,6 +56,10 @@ class QuantumProgramItem(abc.ABC):
     @abc.abstractmethod
     def shape(self) -> tuple[int]:
         """The shape of this item when broadcasted over all arguments."""
+
+    def size(self) -> int:
+        """The total number elements in this item; the product of the entries of :attr:`~.shape`."""
+        return math.prod(self.shape)
 
 
 class CircuitItem(QuantumProgramItem):

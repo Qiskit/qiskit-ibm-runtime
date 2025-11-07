@@ -22,7 +22,7 @@ from ibm_quantum_schemas.models.executor.version_0_1.models import (
 )
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
 
-from .ibm_backend import IBMBackend, DEFAULT_IMAGE
+from .ibm_backend import IBMBackend
 from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
@@ -97,7 +97,7 @@ class Executor:
     def _runtime_options(self) -> RuntimeOptions:
         return RuntimeOptions(
             backend=self._backend.name,
-            image=self.options.environment.image or DEFAULT_IMAGE,
+            image=self.options.environment.image,
             job_tags=self.options.environment.job_tags,
             log_level=self.options.environment.log_level,
             private=self.options.environment.private,
