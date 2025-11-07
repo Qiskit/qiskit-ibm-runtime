@@ -38,7 +38,10 @@ class QuantumProgramItem(abc.ABC):
 
     Args:
         circuit: The circuit to be executed.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is ignored.
+            ignored.
     """
 
     def __init__(self, circuit: QuantumCircuit, chunk_size: int | None = None):
@@ -60,7 +63,9 @@ class CircuitItem(QuantumProgramItem):
     Args:
         circuit: The circuit to be executed.
         circuit_arguments: Arguments for the parameters of the circuit.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is ignored.
     """
 
     def __init__(
@@ -116,7 +121,10 @@ class SamplexItem(QuantumProgramItem):
         samplex_arguments: A map from argument names to argument values for the samplex.
         shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
             Non-trivial axes introduced by this extension enumerate randomizations.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is
+            ignored.
     """
 
     def __init__(
@@ -225,7 +233,9 @@ class QuantumProgram:
                 Non-trivial axes introduced by this extension enumerate randomizations. If this
                 value is provided, a samplex must be present, and ``circuit_arguments`` must not be
                 supplied.
-            chunk_size: The maximum number of bound circuits in each shot loop execution.
+            chunk_size: The maximum number of bound circuits in each shot loop execution, or
+                ``None`` to use a server-side heuristic to optimize speed. When not executing
+                in a session, the server-side heuristic is always used and this value is ignored.
         """
         if samplex is None:
             if samplex_arguments is not None:
