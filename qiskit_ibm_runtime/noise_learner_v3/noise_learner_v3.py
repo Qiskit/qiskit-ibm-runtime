@@ -82,6 +82,11 @@ class NoiseLearnerV3:
         self._service: QiskitRuntimeService
 
         self._options = options or NoiseLearnerV3Options()
+        if (
+            isinstance(self._options.experimental, UnsetType)
+            or self._options.experimental.get("image") is None
+        ):
+            self._options.experimental = {}
 
         if isinstance(mode, (Session, Batch)):
             self._session = mode
