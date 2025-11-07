@@ -281,7 +281,7 @@ class IBMBackend(Backend):
             job_id=response["id"],
             program_id=program_id,
             result_decoder=Decoder,
-            image=image,
+            image=options.environment.image,
             service=self._service,
             version=model.schema_version,
             private=False,

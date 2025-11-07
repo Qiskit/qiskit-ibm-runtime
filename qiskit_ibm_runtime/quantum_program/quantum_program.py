@@ -15,13 +15,13 @@
 from __future__ import annotations
 
 import abc
+import math
 from typing import Iterable, TYPE_CHECKING, Any
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
-import math
 
 
 if TYPE_CHECKING:
