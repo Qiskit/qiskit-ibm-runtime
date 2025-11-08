@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.options.utils import UnsetType
 from ..base_primitive import _get_mode_service_backend
 from ..batch import Batch
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..ibm_backend import DEFAULT_IMAGE
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
 from ..qiskit_runtime_service import QiskitRuntimeService
 from ..runtime_job_v2 import RuntimeJobV2
@@ -87,7 +86,7 @@ class NoiseLearnerV3:
             isinstance(self._options.experimental, UnsetType)
             or self._options.experimental.get("image") is None
         ):
-            self._options.experimental = {"image": DEFAULT_IMAGE}
+            self._options.experimental = {}
 
         if isinstance(mode, (Session, Batch)):
             self._session = mode

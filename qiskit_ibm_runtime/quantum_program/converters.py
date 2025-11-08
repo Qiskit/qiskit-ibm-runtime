@@ -39,16 +39,14 @@ from ..options.executor_options import ExecutorOptions
 
 def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
     """Convert a :class:`~.QuantumProgram` to a V0.1 model."""
-    if any(item.chunk_size is None for item in program.items):
-        program.choose_chunk_sizes()
-
     model_items = []
     for item in program.items:
+        chunk_size = "auto" if item.chunk_size is None else item.chunk_size
         if isinstance(item, CircuitItem):
             model_item = CircuitItemModel(
                 circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit),
                 circuit_arguments=F64TensorModel.from_numpy(item.circuit_arguments),
-                chunk_size=item.chunk_size,
+                chunk_size=chunk_size,
             )
         elif isinstance(item, SamplexItem):
             arguments = {}
@@ -66,7 +64,7 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                 samplex=SamplexModelSSV1.from_samplex(item.samplex),
                 samplex_arguments=arguments,
                 shape=item.shape,
-                chunk_size=item.chunk_size,
+                chunk_size=chunk_size,
             )
         else:
             raise ValueError(f"Item {item} is not valid.")

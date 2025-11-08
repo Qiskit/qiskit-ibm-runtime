@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import abc
+import math
 from typing import Iterable, TYPE_CHECKING, Any
 
 import numpy as np
@@ -38,7 +39,10 @@ class QuantumProgramItem(abc.ABC):
 
     Args:
         circuit: The circuit to be executed.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is ignored.
+            ignored.
     """
 
     def __init__(self, circuit: QuantumCircuit, chunk_size: int | None = None):
@@ -53,6 +57,10 @@ class QuantumProgramItem(abc.ABC):
     def shape(self) -> tuple[int]:
         """The shape of this item when broadcasted over all arguments."""
 
+    def size(self) -> int:
+        """The total number elements in this item; the product of the entries of :attr:`~.shape`."""
+        return math.prod(self.shape)
+
 
 class CircuitItem(QuantumProgramItem):
     """An item of a :class:`QuantumProgram` containing a circuit and its arguments.
@@ -60,7 +68,9 @@ class CircuitItem(QuantumProgramItem):
     Args:
         circuit: The circuit to be executed.
         circuit_arguments: Arguments for the parameters of the circuit.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is ignored.
     """
 
     def __init__(
@@ -116,7 +126,10 @@ class SamplexItem(QuantumProgramItem):
         samplex_arguments: A map from argument names to argument values for the samplex.
         shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
             Non-trivial axes introduced by this extension enumerate randomizations.
-        chunk_size: The maximum number of bound circuits in each shot loop execution.
+        chunk_size: The maximum number of bound circuits in each shot loop execution, or
+            ``None`` to use a server-side heuristic to optimize speed. When not executing
+            in a session, the server-side heuristic is always used and this value is
+            ignored.
     """
 
     def __init__(
@@ -225,7 +238,9 @@ class QuantumProgram:
                 Non-trivial axes introduced by this extension enumerate randomizations. If this
                 value is provided, a samplex must be present, and ``circuit_arguments`` must not be
                 supplied.
-            chunk_size: The maximum number of bound circuits in each shot loop execution.
+            chunk_size: The maximum number of bound circuits in each shot loop execution, or
+                ``None`` to use a server-side heuristic to optimize speed. When not executing
+                in a session, the server-side heuristic is always used and this value is ignored.
         """
         if samplex is None:
             if samplex_arguments is not None:
@@ -254,12 +269,6 @@ class QuantumProgram:
                     chunk_size=chunk_size,
                 )
             )
-
-    def choose_chunk_sizes(self) -> None:
-        """Automatically choose chunk sizes based on a heuristic."""
-        for item in self.items:
-            # TODO: use heuristic based on circuit, shape characteristics
-            item.chunk_size = 100
 
     def validate(self, backend: "IBMBackend") -> None:
         """Validate this quantum program against the given backend."""

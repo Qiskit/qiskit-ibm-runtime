@@ -71,8 +71,6 @@ logger = logging.getLogger(__name__)
 QOBJRUNNERPROGRAMID = "circuit-runner"
 QASM3RUNNERPROGRAMID = "qasm3-runner"
 
-DEFAULT_IMAGE = "qiskit-ibm-primitives:c39a73a41feb2cf4514481272a156f31918256f7"
-
 
 class IBMBackend(Backend):
     """Backend class interfacing with an IBM Quantum backend.
@@ -258,7 +256,7 @@ class IBMBackend(Backend):
         response = self._service._active_api_client._api.program_run(
             program_id=program_id,
             backend_name=self.name,
-            image=(image := options.environment.image or DEFAULT_IMAGE),
+            image=options.environment.image,
             log_level=options.environment.log_level,
             session_id=None,
             job_tags=options.environment.job_tags,
@@ -283,7 +281,7 @@ class IBMBackend(Backend):
             job_id=response["id"],
             program_id=program_id,
             result_decoder=Decoder,
-            image=image,
+            image=options.environment.image,
             service=self._service,
             version=model.schema_version,
             private=False,
