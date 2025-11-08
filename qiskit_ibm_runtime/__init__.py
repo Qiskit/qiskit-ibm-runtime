@@ -189,6 +189,7 @@ Classes
    EstimatorV2
    Sampler
    SamplerV2
+   Executor
    Session
    Batch
    IBMBackend
@@ -209,6 +210,8 @@ from .utils.json import RuntimeEncoder, RuntimeDecoder
 from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 
+from .quantum_program import QuantumProgram
+
 from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
@@ -217,6 +220,7 @@ from .estimator import (  # pylint: disable=reimported
     EstimatorV2,
     EstimatorV2 as Estimator,
 )
+from .executor import Executor
 from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
 from .options import (  # pylint: disable=reimported
     EstimatorOptions,
