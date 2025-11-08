@@ -415,14 +415,17 @@
 <h1>QuantumProgramItem<a class="headerlink" href="#quantumprogramitem" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.quantum_program.QuantumProgramItem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantumProgramItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L36-L54"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantumProgramItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L37-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>An item of a <a class="reference internal" href="qiskit_ibm_runtime.quantum_program.QuantumProgram.html#qiskit_ibm_runtime.quantum_program.QuantumProgram" title="qiskit_ibm_runtime.quantum_program.QuantumProgram"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>circuit</strong> (<em>QuantumCircuit</em>) – The circuit to be executed.</p></li>
-<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of bound circuits in each shot loop execution.</p></li>
+<li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of bound circuits in each shot loop execution, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> to use a server-side heuristic to optimize speed. When not executing
+in a session, the server-side heuristic is always used and this value is ignored.
+ignored.</p></li>
 </ul>
 </dd>
 </dl>
@@ -434,6 +437,17 @@
 </dd></dl>
 
 <p class="rubric">Methods</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size">
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L60-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size" title="Link to this definition">¶</a></dt>
+<dd><p>The total number elements in this item; the product of the entries of <a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape" title="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -473,7 +487,7 @@
             
             <a href="https://github.com/pradyunsg/furo">Furo</a>
             <div class="last-updated">
-              Last updated on 2025/11/07</div>
+              Last updated on 2025/11/08</div>
           </div>
           <div class="right-details">
             
@@ -497,6 +511,7 @@
 <li><a class="reference internal" href="#">QuantumProgramItem</a><ul>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem"><code class="docutils literal notranslate"><span class="pre">QuantumProgramItem</span></code></a><ul>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape"><code class="docutils literal notranslate"><span class="pre">QuantumProgramItem.shape</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size"><code class="docutils literal notranslate"><span class="pre">QuantumProgramItem.size()</span></code></a></li>
 </ul>
 </li>
 </ul>

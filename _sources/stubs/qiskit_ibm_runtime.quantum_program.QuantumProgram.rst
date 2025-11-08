@@ -18,7 +18,6 @@
    .. rubric:: Methods
    
    .. automethod:: append
-   .. automethod:: choose_chunk_sizes
    .. automethod:: validate
 
    

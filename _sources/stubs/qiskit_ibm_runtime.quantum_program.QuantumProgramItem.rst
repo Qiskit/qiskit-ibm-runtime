@@ -21,5 +21,6 @@
    
    .. rubric:: Methods
    
+   .. automethod:: size
 
    
