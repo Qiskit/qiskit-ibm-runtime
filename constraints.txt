@@ -1,0 +1,2 @@
+# 2.32.2 can lead to invalid account error (see #2474)
+requests!=2.32.2
