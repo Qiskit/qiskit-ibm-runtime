@@ -53,7 +53,7 @@ def remove_parameter_expressions(
 
         new_gate = instruction.operation.copy()
         new_gate.params = new_op_params
-        new_data.append(CircuitInstruction(new_gate, instruction.qubits))
+        new_data.append(instruction.replace(params=new_op_params, operation=new_gate))
         
 
     new_circ.data = new_data
