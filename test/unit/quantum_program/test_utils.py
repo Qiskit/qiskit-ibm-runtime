@@ -34,8 +34,11 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.h(0)
         circ.rz(p1, 0)
         circ.rx(p1 + p2, 1)
+        circ.rx(p1 + p2, 0)
 
         new_circ, new_values = remove_parameter_expressions(circ, param_values)
+
+        self.assertEqual(len(new_circ.parameters), 2)
 
         self.assertEqual(param_values.shape[:-1], new_values.shape[:-1])
         param_values_flat = param_values.reshape(-1, param_values.shape[-1])
