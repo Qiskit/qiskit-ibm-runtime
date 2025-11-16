@@ -43,6 +43,6 @@ class TestRemoveParameterExpressions(IBMTestCase):
         for param_set_1, param_set_2 in zip(param_values_flat, new_values_flat):
             self.assertTrue(
                 Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
-                    Operator.from_circuit(new_circ.circuit.assign_parameters(param_set_2))
+                    Operator.from_circuit(new_circ.assign_parameters(param_set_2))
                 )
             )

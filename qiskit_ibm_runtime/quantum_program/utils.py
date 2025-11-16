@@ -42,13 +42,10 @@ def remove_parameter_expressions(
             np.where(np.array(circ_params) == param_name)[0][0] for param_name in param_names
         ]
 
-        # project only to the parameters that have to be checked
-        projected_arr = param_values[:, col_indices]
-
-        new_param_values = np.zeros(param_values.shape[:-1] + (len(param_names),))
-        for (idx,) in np.ndindex(projected_arr.shape[:-1]):
-            to_bind = projected_arr[idx]
-            new_param_values[idx] = param_exp.bind(dict(zip(param_exp.parameters, to_bind)))
+        new_param_values = np.zeros(param_values.shape[:-1] + (1,))
+        for idx in np.ndindex(param_values.shape[:-1]):
+            to_bind = param_values[idx]
+            new_param_values[idx] = param_exp.bind_all(dict(zip(circ.parameters, to_bind)))
 
         new_param_count += 1
         param_name = f"yael_{new_param_count}"
@@ -59,4 +56,4 @@ def remove_parameter_expressions(
         new_param_value_cols.append(new_param_values)
 
     new_circ.data = new_data
-    return new_circ, np.concatenate(new_param_value_cols)
+    return new_circ, np.concatenate(new_param_value_cols, axis=-1)
