@@ -28,34 +28,31 @@ def remove_parameter_expressions(
     new_data = []
 
     for instruction in circ.data:
-        if len(instruction.operation.params) == 0 or not isinstance(
-            param_exp := instruction.operation.params[0], ParameterExpression
-        ):
+        
+        param_exps = [op_param for op_param in instruction.operation.params if isinstance(op_param, ParameterExpression)]
+        if len(param_exps) == 0:
             new_data.append(instruction)
             continue
 
-        if str(param_exp) in parameter_table:
-            new_param = parameter_table[str(param_exp)]
-        else:
-            param_names = [param.name for param in param_exp.parameters]
-            circ_params = [param.name for param in circ.parameters]
+        new_op_params = []
+        for param_exp in param_exps:
+            
+            if str(param_exp) in parameter_table:
+                new_param = parameter_table[str(param_exp)]
+            else:
+                new_param_values = np.zeros(param_values.shape[:-1] + (1,))
+                for idx in np.ndindex(param_values.shape[:-1]):
+                    to_bind = param_values[idx]
+                    new_param_values[idx] = param_exp.bind_all(dict(zip(circ.parameters, to_bind)))
 
-            # col_indices is the indices of columns in the parameter value array that have to be checked
-            col_indices = [
-                np.where(np.array(circ_params) == param_name)[0][0] for param_name in param_names
-            ]
-
-            new_param_values = np.zeros(param_values.shape[:-1] + (1,))
-            for idx in np.ndindex(param_values.shape[:-1]):
-                to_bind = param_values[idx]
-                new_param_values[idx] = param_exp.bind_all(dict(zip(circ.parameters, to_bind)))
-
-            new_param_value_cols.append(new_param_values)
-            new_param = Parameter(str(param_exp))
-            parameter_table[str(param_exp)] = new_param
+                new_param_value_cols.append(new_param_values)
+                new_param = Parameter(str(param_exp))
+                parameter_table[str(param_exp)] = new_param
+            
+            new_op_params.append(new_param)
 
         new_gate = instruction.operation.copy()
-        new_gate.params = [new_param]
+        new_gate.params = new_op_params
         new_data.append(CircuitInstruction(new_gate, instruction.qubits))
         
 

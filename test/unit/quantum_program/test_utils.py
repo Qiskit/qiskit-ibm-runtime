@@ -15,6 +15,7 @@
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit.library import U2Gate
 from qiskit.quantum_info import Operator
 
 from qiskit_ibm_runtime.quantum_program.utils import remove_parameter_expressions
@@ -35,14 +36,15 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.rz(p1, 0)
         circ.rx(p1 + p2, 1)
         circ.rx(p1 + p2, 0)
+        circ.append(U2Gate(p1 - p2, p1 + p2), [1])
 
         new_circ, new_values = remove_parameter_expressions(circ, param_values)
 
-        self.assertEqual(len(new_circ.parameters), 2)
+        self.assertEqual(len(new_circ.parameters), 3)
 
         self.assertEqual(param_values.shape[:-1], new_values.shape[:-1])
         param_values_flat = param_values.reshape(-1, param_values.shape[-1])
-        new_values_flat = new_values.reshape(-1, param_values.shape[-1])
+        new_values_flat = new_values.reshape(-1, new_values.shape[-1])
         for param_set_1, param_set_2 in zip(param_values_flat, new_values_flat):
             self.assertTrue(
                 Operator.from_circuit(circ.assign_parameters(param_set_1)).equiv(
