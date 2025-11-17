@@ -24,7 +24,7 @@ def _remove_parameter_expressions_in_blocks(
     param_values: np.ndarray,
     parameter_table: dict[str, Parameter],
     new_param_value_cols: list[np.ndarray],
-):
+) -> QuantumCircuit:
     new_circ = circ.copy_empty_like()
     new_data = []
 
@@ -85,8 +85,8 @@ def _remove_parameter_expressions_in_blocks(
 def remove_parameter_expressions(
     circ: QuantumCircuit, param_values: np.ndarray
 ) -> tuple[QuantumCircuit, np.ndarray]:
-    parameter_table = {}
-    new_param_value_cols = []
+    parameter_table: dict[str, Parameter] = {}
+    new_param_value_cols: list[np.ndarray] = []
 
     new_circ = _remove_parameter_expressions_in_blocks(
         circ, param_values, parameter_table, new_param_value_cols
