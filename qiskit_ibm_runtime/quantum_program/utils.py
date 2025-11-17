@@ -41,13 +41,18 @@ def _remove_parameter_expressions_in_blocks(circ: QuantumCircuit, param_values: 
             if str(param_exp) in parameter_table:
                 new_param = parameter_table[str(param_exp)]
             else:
-                new_param_values = np.zeros(param_values.shape[:-1] + (1,))
-                for idx in np.ndindex(param_values.shape[:-1]):
-                    to_bind = param_values[idx]
-                    new_param_values[idx] = param_exp.bind_all(dict(zip(circ.parameters, to_bind)))
+                if isinstance(param_exp, Parameter):
+                    location = next(i for i, param in enumerate(circ.parameters) if param.name == param_exp.name)
+                    new_param_values = param_values[..., [location]]
+                    new_param = param_exp
+                else:
+                    new_param_values = np.zeros(param_values.shape[:-1] + (1,))
+                    for idx in np.ndindex(param_values.shape[:-1]):
+                        to_bind = param_values[idx]
+                        new_param_values[idx] = param_exp.bind_all(dict(zip(circ.parameters, to_bind)))
+                    new_param = Parameter(str(param_exp))
 
                 new_param_value_cols.append(new_param_values)
-                new_param = Parameter(str(param_exp))
                 parameter_table[str(param_exp)] = new_param
             
             new_op_params.append(new_param)
