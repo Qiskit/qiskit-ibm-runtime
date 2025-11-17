@@ -19,15 +19,16 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit, ParameterExpression, CircuitInstruction
 
 
-def remove_parameter_expressions(
-    circ: QuantumCircuit, param_values: np.ndarray
-) -> tuple[QuantumCircuit, np.ndarray]:
-    parameter_table = {}
-    new_param_value_cols = []
+def _remove_parameter_expressions_in_blocks(circ: QuantumCircuit, param_values: np.ndarray,
+                                            parameter_table: dict[str, Parameter], new_param_value_cols: list[np.ndarray]):
     new_circ = circ.copy_empty_like()
     new_data = []
 
     for instruction in circ.data:
+        if instruction.is_control_flow():
+            new_blocks = [_remove_parameter_expressions_in_blocks(block, param_values, parameter_table, new_param_value_cols) for block in instruction.blocks]
+            new_data.append(instruction.replace_blocks(new_blocks))
+            continue
         
         param_exps = [op_param for op_param in instruction.operation.params if isinstance(op_param, ParameterExpression)]
         if len(param_exps) == 0:
@@ -53,8 +54,17 @@ def remove_parameter_expressions(
 
         new_gate = instruction.operation.copy()
         new_gate.params = new_op_params
-        new_data.append(instruction.replace(params=new_op_params, operation=new_gate))
-        
+        new_data.append(instruction.replace(params=new_op_params, operation=new_gate))    
 
     new_circ.data = new_data
+    return new_circ
+
+
+def remove_parameter_expressions(
+    circ: QuantumCircuit, param_values: np.ndarray
+) -> tuple[QuantumCircuit, np.ndarray]:
+    parameter_table = {}
+    new_param_value_cols = []
+
+    new_circ = _remove_parameter_expressions_in_blocks(circ, param_values, parameter_table, new_param_value_cols)
     return new_circ, np.concatenate(new_param_value_cols, axis=-1)
