@@ -139,3 +139,41 @@ class TestRemoveParameterExpressions(IBMTestCase):
                     Operator.from_circuit(else_circ_2.assign_parameters([param_set_2]))
                 )
             )
+
+
+    def test_remove_parameter_expressions_one_parameter(self):
+        """
+        Test the function :func:`~remove_parameter_expressions` in the edge
+        case where the circuit contains one parameter.
+        """
+        p = Parameter("p")
+
+        circ = QuantumCircuit(1)
+        circ.h(0)
+        circ.rz(p + 1, 0)
+
+        param_values = np.array([5])
+        _, new_values = remove_parameter_expressions(circ, param_values)
+        self.assertTrue(np.array_equal(new_values, np.array([6])))
+
+        circ = QuantumCircuit(1)
+        circ.h(0)
+        circ.rz(p, 0)
+
+        param_values = np.array([5])
+        _, new_values = remove_parameter_expressions(circ, param_values)
+        self.assertTrue(np.array_equal(new_values, np.array([5])))
+
+        circ = QuantumCircuit(1)
+        circ.h(0)
+        circ.rz(p + 1, 0)
+        circ.rz(p, 0)
+
+        param_values = np.array([5])
+        _, new_values = remove_parameter_expressions(circ, param_values)
+        print(new_values)
+        self.assertTrue(np.array_equal(new_values, np.array([6, 5])))
+
+        param_values = np.array([[5], [10]])
+        _, new_values = remove_parameter_expressions(circ, param_values)
+        self.assertTrue(np.array_equal(new_values, np.array([[6, 5], [11, 10]])))
