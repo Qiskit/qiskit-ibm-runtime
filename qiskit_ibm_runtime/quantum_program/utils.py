@@ -26,8 +26,9 @@ def _remove_parameter_expressions_in_blocks(circ: QuantumCircuit, param_values: 
 
     for instruction in circ.data:
         if instruction.is_control_flow():
-            new_blocks = [_remove_parameter_expressions_in_blocks(block, param_values, parameter_table, new_param_value_cols) for block in instruction.blocks]
-            new_data.append(instruction.replace_blocks(new_blocks))
+            new_blocks = [_remove_parameter_expressions_in_blocks(block, param_values, parameter_table, new_param_value_cols) for block in instruction.operation.blocks]
+            new_gate = instruction.operation.replace_blocks(new_blocks)
+            new_data.append(instruction.replace(params=new_gate.params, operation=new_gate))
             continue
         
         param_exps = [op_param for op_param in instruction.operation.params if isinstance(op_param, ParameterExpression)]
@@ -37,7 +38,6 @@ def _remove_parameter_expressions_in_blocks(circ: QuantumCircuit, param_values: 
 
         new_op_params = []
         for param_exp in param_exps:
-            
             if str(param_exp) in parameter_table:
                 new_param = parameter_table[str(param_exp)]
             else:

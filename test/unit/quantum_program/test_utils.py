@@ -83,16 +83,16 @@ class TestRemoveParameterExpressions(IBMTestCase):
 
         new_circ, new_values = remove_parameter_expressions(circ, param_values)
 
-        # parameter names: p1, p1 + p2, p1 - p2, p1 + 3, p1 * p2
+        # parameter names: 3 + p1, p1, p1 + p2, p1 - p2, p1*p2
         self.assertEqual(len(new_circ.parameters), 5)
         self.assertEqual(param_values.shape[:-1], new_values.shape[:-1])
 
         outer_circ_1 = QuantumCircuit(2)
-        outer_circ_1.data = [circ.data[i] for i in (0, 1, 3, 4, 6)]
+        outer_circ_1.data = [circ.data[i] for i in (0, 1, 3, 6)]
         outer_circ_2 = QuantumCircuit(2)
-        outer_circ_2.data = [new_circ.data[i] for i in (0, 1, 3, 4, 6)]
+        outer_circ_2.data = [new_circ.data[i] for i in (0, 1, 3, 6)]
 
-        outer_params_2 = new_values[:, [0, 1, 4]]
+        outer_params_2 = new_values[..., [0, 1, 4]]
         outer_2_flat = outer_params_2.reshape(-1, outer_params_2.shape[-1])
         for param_set_1, param_set_2 in zip(param_values_flat, outer_2_flat):
             self.assertTrue(
@@ -105,9 +105,9 @@ class TestRemoveParameterExpressions(IBMTestCase):
         box_circ_1 = QuantumCircuit(2)
         box_circ_1.data = circ.data[2].operation.blocks[0]
         box_circ_2 = QuantumCircuit(2)
-        box_circ_2.data = new_circ.data[2].operation.blocks[0]
+        box_circ_2.data = new_circ.data[2].operation.blocks[0]        
 
-        box_params_2 = new_values[:, [1, 2, 0]]
+        box_params_2 = new_values[..., [0, 1, 2]]
         box_2_flat = box_params_2.reshape(-1, box_params_2.shape[-1])
         for param_set_1, param_set_2 in zip(param_values_flat, box_2_flat):
             self.assertTrue(
@@ -116,12 +116,10 @@ class TestRemoveParameterExpressions(IBMTestCase):
                 )
             )
 
-        self.assertEqual(new_circ.data[5].operation.name, "if_test")
-        self.assertEqual(new_circ.data[5].operation.blocks[0], "if_test")
-        if_circ_1 = QuantumCircuit(2)
-        if_circ_1.data = circ.data[5].operation.blocks[0].blocks[0]
-        if_circ_2 = QuantumCircuit(2)
-        if_circ_2.data = new_circ.data[5].operation.blocks[0].blocks[0]
+        self.assertEqual(new_circ.data[5].operation.name, "if_else")
+        self.assertEqual(new_circ.data[5].operation.blocks[0].data[0].operation.name, "if_else")
+        if_circ_1 = circ.data[5].operation.blocks[0].data[0].operation.blocks[0]
+        if_circ_2 = new_circ.data[5].operation.blocks[0].data[0].operation.blocks[0]
 
         self.assertTrue(
             Operator.from_circuit(if_circ_1).equiv(
@@ -129,17 +127,14 @@ class TestRemoveParameterExpressions(IBMTestCase):
             )
         )
 
-        else_circ_1 = QuantumCircuit(2)
-        else_circ_1.data = circ.data[5].operation.blocks[0].blocks[1]
-        else_circ_2 = QuantumCircuit(2)
-        else_circ_2.data = new_circ.data[5].operation.blocks[0].blocks[1]
+        else_circ_1 = circ.data[5].operation.blocks[0].data[0].operation.blocks[1]
+        else_circ_2 = new_circ.data[5].operation.blocks[0].data[0].operation.blocks[1]
 
         else_1_flat = param_values_flat[:, 0]
-        else_params_2 = new_values[:, 3]
-        else_2_flat = else_params_2.reshape(-1, else_params_2.shape[-1])
+        else_2_flat = new_values[..., 3].ravel()
         for param_set_1, param_set_2 in zip(else_1_flat, else_2_flat):
             self.assertTrue(
-                Operator.from_circuit(else_circ_1.assign_parameters(param_set_1)).equiv(
-                    Operator.from_circuit(else_circ_2.assign_parameters(param_set_2))
+                Operator.from_circuit(else_circ_1.assign_parameters([param_set_1])).equiv(
+                    Operator.from_circuit(else_circ_2.assign_parameters([param_set_2]))
                 )
             )
