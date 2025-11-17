@@ -23,6 +23,9 @@ from qiskit_ibm_runtime.quantum_program.utils import remove_parameter_expression
 from ...ibm_test_case import IBMTestCase
 
 
+# pylint: disable=not-context-manager
+
+
 class TestRemoveParameterExpressions(IBMTestCase):
     """Test the function :func:`~remove_parameter_expressions`."""
 

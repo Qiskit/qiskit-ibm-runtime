@@ -85,6 +85,8 @@ def _remove_parameter_expressions_in_blocks(
 def remove_parameter_expressions(
     circ: QuantumCircuit, param_values: np.ndarray
 ) -> tuple[QuantumCircuit, np.ndarray]:
+    """Create an input to the quantum program that's
+    free from parameter expressions."""
     parameter_table: dict[str, Parameter] = {}
     new_param_value_cols: list[np.ndarray] = []
 
