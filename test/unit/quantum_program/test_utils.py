@@ -181,7 +181,6 @@ class TestRemoveParameterExpressions(IBMTestCase):
 
         param_values = np.array([5])
         _, new_values = remove_parameter_expressions(circ, param_values)
-        print(new_values)
         self.assertTrue(np.array_equal(new_values, np.array([6, 5])))
 
         param_values = np.array([[5], [10]])
