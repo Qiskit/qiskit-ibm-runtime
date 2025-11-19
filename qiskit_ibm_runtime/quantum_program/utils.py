@@ -22,14 +22,14 @@ from samplomatic.samplex import ParameterExpressionTable
 
 
 def _remove_parameter_expressions_in_blocks(
-    circ: QuantumCircuit,
+    circuit: QuantumCircuit,
     parameter_table: ParameterExpressionTable,
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter]
 ) -> QuantumCircuit:
-    new_circ = circ.copy_empty_like()
+    new_circuit = circuit.copy_empty_like()
     new_data = []
 
-    for instruction in circ.data:
+    for instruction in circuit.data:
         if instruction.is_control_flow():
             new_blocks = [
                 _remove_parameter_expressions_in_blocks(block, parameter_table, parameter_expressions_to_new_parameters_map)
@@ -65,22 +65,22 @@ def _remove_parameter_expressions_in_blocks(
         new_gate.params = new_op_params
         new_data.append(instruction.replace(params=new_op_params, operation=new_gate))
 
-    new_circ.data = new_data
-    return new_circ
+    new_circuit.data = new_data
+    return new_circuit
 
 
 def remove_parameter_expressions(
-    circ: QuantumCircuit, param_values: np.ndarray
+    circuit: QuantumCircuit, parameter_values: np.ndarray
 ) -> tuple[QuantumCircuit, np.ndarray]:
     """Create an input to the quantum program that's
     free from parameter expressions."""
     parameter_table = ParameterExpressionTable()
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
 
-    new_circ = _remove_parameter_expressions_in_blocks(circ, parameter_table, parameter_expressions_to_new_parameters_map)
+    new_circuit = _remove_parameter_expressions_in_blocks(circuit, parameter_table, parameter_expressions_to_new_parameters_map)
 
-    new_values = np.zeros(param_values.shape[:-1] + (len(new_circ.parameters),))
-    for idx in np.ndindex(param_values.shape[:-1]):
-        new_values[idx] = parameter_table.evaluate(param_values[*idx, :])
+    new_values = np.zeros(parameter_values.shape[:-1] + (len(new_circuit.parameters),))
+    for idx in np.ndindex(parameter_values.shape[:-1]):
+        new_values[idx] = parameter_table.evaluate(parameter_values[*idx, :])
 
-    return new_circ, new_values
+    return new_circuit, new_values
