@@ -18,12 +18,13 @@ import numpy as np
 
 from qiskit.circuit import Parameter, QuantumCircuit, ParameterExpression
 
+from samplomatic.samplex import ParameterExpressionTable
+
 
 def _remove_parameter_expressions_in_blocks(
     circ: QuantumCircuit,
-    param_values: np.ndarray,
-    parameter_table: dict[str, Parameter],
-    new_param_value_cols: list[np.ndarray],
+    parameter_table: ParameterExpressionTable,
+    parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter]
 ) -> QuantumCircuit:
     new_circ = circ.copy_empty_like()
     new_data = []
@@ -31,9 +32,7 @@ def _remove_parameter_expressions_in_blocks(
     for instruction in circ.data:
         if instruction.is_control_flow():
             new_blocks = [
-                _remove_parameter_expressions_in_blocks(
-                    block, param_values, parameter_table, new_param_value_cols
-                )
+                _remove_parameter_expressions_in_blocks(block, parameter_table, parameter_expressions_to_new_parameters_map)
                 for block in instruction.operation.blocks
             ]
             new_gate = instruction.operation.replace_blocks(new_blocks)
@@ -51,27 +50,15 @@ def _remove_parameter_expressions_in_blocks(
 
         new_op_params = []
         for param_exp in param_exps:
-            if str(param_exp) in parameter_table:
-                new_param = parameter_table[str(param_exp)]
+            if param_exp in parameter_expressions_to_new_parameters_map:
+                new_param = parameter_expressions_to_new_parameters_map[param_exp]
             else:
                 if isinstance(param_exp, Parameter):
-                    location = next(
-                        i for i, param in enumerate(circ.parameters) if param.name == param_exp.name
-                    )
-                    new_param_values = param_values[..., [location]]
-                    new_param = param_exp
+                    new_param = param_exp               
                 else:
-                    new_param_values = np.zeros(param_values.shape[:-1] + (1,))
-                    for idx in np.ndindex(param_values.shape[:-1]):
-                        to_bind = param_values[idx]
-                        new_param_values[idx] = param_exp.bind_all(
-                            dict(zip(circ.parameters, to_bind))
-                        )
                     new_param = Parameter(str(param_exp))
-
-                new_param_value_cols.append(new_param_values)
-                parameter_table[str(param_exp)] = new_param
-
+                parameter_table.append(param_exp)
+                parameter_expressions_to_new_parameters_map[param_exp] = new_param    
             new_op_params.append(new_param)
 
         new_gate = instruction.operation.copy()
@@ -87,10 +74,8 @@ def remove_parameter_expressions(
 ) -> tuple[QuantumCircuit, np.ndarray]:
     """Create an input to the quantum program that's
     free from parameter expressions."""
-    parameter_table: dict[str, Parameter] = {}
-    new_param_value_cols: list[np.ndarray] = []
+    parameter_table = ParameterExpressionTable()
+    parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
 
-    new_circ = _remove_parameter_expressions_in_blocks(
-        circ, param_values, parameter_table, new_param_value_cols
-    )
-    return new_circ, np.concatenate(new_param_value_cols, axis=-1)
+    new_circ = _remove_parameter_expressions_in_blocks(circ, parameter_table, parameter_expressions_to_new_parameters_map)
+    return new_circ, parameter_table.evaluate(param_values)
