@@ -72,18 +72,18 @@ def _replace_parameter_expressions(
 def replace_parameter_expressions(
     circuit: QuantumCircuit, parameter_values: np.ndarray
 ) -> tuple[QuantumCircuit, np.ndarray]:
-     """
-     A helper to replace a circuit's parameter expressions with parameters.
+    """
+    A helper to replace a circuit's parameter expressions with parameters.
 
-     The function tranverses the circuit and collects all the parameters and parameter expressions.
-     A new parameter is created for every parameter expression that is not a parameter.
-     The function builds a new circuit, where each parameter expression is replaced by the
-     corresponding new parameter.
-     In addition, the function creates a new array of parameter values, which matches the parameters
-     of the new circuit. Values for new parameters are obtained by evaluating the original
-     expressions over the original parameter values.
-     
-     Example:
+    The function tranverses the circuit and collects all the parameters and parameter expressions.
+    A new parameter is created for every parameter expression that is not a parameter.
+    The function builds a new circuit, where each parameter expression is replaced by the
+    corresponding new parameter.
+    In addition, the function creates a new array of parameter values, which matches the parameters
+    of the new circuit. Values for new parameters are obtained by evaluating the original
+    expressions over the original parameter values.
+    
+    Example:
 
         .. code-block:: python
 
@@ -102,7 +102,7 @@ def replace_parameter_expressions(
             # expression ``a + b``
             # ``new_values`` will be ``np.array([[1, 2, 3], [3, 4, 7]])``
             new_circuit, new_values = replace_parameter_expressions(circuit, values)
-     """
+    """
     parameter_table = ParameterExpressionTable()
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
 
