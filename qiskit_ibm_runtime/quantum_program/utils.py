@@ -21,7 +21,7 @@ from qiskit.circuit import Parameter, QuantumCircuit, ParameterExpression
 from samplomatic.samplex import ParameterExpressionTable
 
 
-def _remove_parameter_expressions_in_blocks(
+def _replace_parameter_expressions(
     circuit: QuantumCircuit,
     parameter_table: ParameterExpressionTable,
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter]
@@ -32,7 +32,7 @@ def _remove_parameter_expressions_in_blocks(
     for instruction in circuit.data:
         if instruction.is_control_flow():
             new_blocks = [
-                _remove_parameter_expressions_in_blocks(block, parameter_table, parameter_expressions_to_new_parameters_map)
+                _replace_parameter_expressions(block, parameter_table, parameter_expressions_to_new_parameters_map)
                 for block in instruction.operation.blocks
             ]
             new_gate = instruction.operation.replace_blocks(new_blocks)
@@ -69,15 +69,44 @@ def _remove_parameter_expressions_in_blocks(
     return new_circuit
 
 
-def remove_parameter_expressions(
+def replace_parameter_expressions(
     circuit: QuantumCircuit, parameter_values: np.ndarray
 ) -> tuple[QuantumCircuit, np.ndarray]:
-    """Create an input to the quantum program that's
-    free from parameter expressions."""
+     """
+     A helper to replace a circuit's parameter expressions with parameters.
+
+     The function tranverses the circuit and collects all the parameters and parameter expressions.
+     A new parameter is created for every parameter expression that is not a parameter.
+     The function builds a new circuit, where each parameter expression is replaced by the
+     corresponding new parameter.
+     In addition, the function creates a new array of parameter values, which matches the parameters
+     of the new circuit. Values for new parameters are obtained by evaluating the original
+     expressions over the original parameter values.
+     
+     Example:
+
+        .. code-block:: python
+
+            import numpy as np
+            from qiskit.circuit import QuantumCircuit, Parameter
+            from qiskit_ibm_runtime.quantum_program.utils import replace_parameter_expressions
+
+            circuit = QuantumCircuit(1)
+            circuit.rx(a := Parameter("a"), 0)
+            circuit.rx(b := Parameter("b"), 0)
+            circuit.rx(a + b, 0)
+
+            values = np.array([[1, 2], [3, 4]])
+
+            # ``new_circuit`` will incorporate a new parameter, which replaces the parameter
+            # expression ``a + b``
+            # ``new_values`` will be ``np.array([[1, 2, 3], [3, 4, 7]])``
+            new_circuit, new_values = replace_parameter_expressions(circuit, values)
+     """
     parameter_table = ParameterExpressionTable()
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
 
-    new_circuit = _remove_parameter_expressions_in_blocks(circuit, parameter_table, parameter_expressions_to_new_parameters_map)
+    new_circuit = _replace_parameter_expressions(circuit, parameter_table, parameter_expressions_to_new_parameters_map)
 
     new_values = np.zeros(parameter_values.shape[:-1] + (len(new_circuit.parameters),))
     for idx in np.ndindex(parameter_values.shape[:-1]):

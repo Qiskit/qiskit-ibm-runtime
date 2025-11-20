@@ -18,7 +18,7 @@ from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.library import U2Gate
 from qiskit.quantum_info import Operator
 
-from qiskit_ibm_runtime.quantum_program.utils import remove_parameter_expressions
+from qiskit_ibm_runtime.quantum_program.utils import replace_parameter_expressions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -51,7 +51,7 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.rx(p1 + p2, 0)
         circ.append(U2Gate(p1 - p2, p1 + p2), [1])
 
-        new_circ, new_values = remove_parameter_expressions(circ, param_values)
+        new_circ, new_values = replace_parameter_expressions(circ, param_values)
 
         self.assertEqual(len(new_circ.parameters), 3)
         self.assertEqual(new_circ.parameters[0], p1)
@@ -97,7 +97,7 @@ class TestRemoveParameterExpressions(IBMTestCase):
                 circ.rz(p1 + 3, 0)
         circ.rx(p1 * p2, 1)
 
-        new_circ, new_values = remove_parameter_expressions(circ, param_values)
+        new_circ, new_values = replace_parameter_expressions(circ, param_values)
 
         # parameter names: 3 + p1, p1, p1 + p2, p1 - p2, p1*p2
         self.assertEqual(len(new_circ.parameters), 5)
@@ -163,7 +163,7 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.rz(p + 1, 0)
 
         param_values = np.array([5])
-        _, new_values = remove_parameter_expressions(circ, param_values)
+        _, new_values = replace_parameter_expressions(circ, param_values)
         self.assertTrue(np.array_equal(new_values, np.array([6])))
 
         circ = QuantumCircuit(1)
@@ -171,7 +171,7 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.rz(p, 0)
 
         param_values = np.array([5])
-        _, new_values = remove_parameter_expressions(circ, param_values)
+        _, new_values = replace_parameter_expressions(circ, param_values)
         self.assertTrue(np.array_equal(new_values, np.array([5])))
 
         circ = QuantumCircuit(1)
@@ -180,9 +180,9 @@ class TestRemoveParameterExpressions(IBMTestCase):
         circ.rz(p, 0)
 
         param_values = np.array([5])
-        _, new_values = remove_parameter_expressions(circ, param_values)
+        _, new_values = replace_parameter_expressions(circ, param_values)
         self.assertTrue(np.array_equal(new_values, np.array([6, 5])))
 
         param_values = np.array([[5], [10]])
-        _, new_values = remove_parameter_expressions(circ, param_values)
+        _, new_values = replace_parameter_expressions(circ, param_values)
         self.assertTrue(np.array_equal(new_values, np.array([[6, 5], [11, 10]])))
