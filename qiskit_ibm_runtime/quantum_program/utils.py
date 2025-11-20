@@ -114,6 +114,6 @@ def replace_parameter_expressions(
 
     new_values = np.zeros(parameter_values.shape[:-1] + (len(new_circuit.parameters),))
     for idx in np.ndindex(parameter_values.shape[:-1]):
-        new_values[idx] = parameter_table.evaluate(parameter_values[*idx, :])
+        new_values[idx] = parameter_table.evaluate(parameter_values[idx + (slice(None),)])
 
     return new_circuit, new_values
