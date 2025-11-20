@@ -24,7 +24,7 @@ from samplomatic.samplex import ParameterExpressionTable
 def _replace_parameter_expressions(
     circuit: QuantumCircuit,
     parameter_table: ParameterExpressionTable,
-    parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter]
+    parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter],
 ) -> QuantumCircuit:
     new_circuit = circuit.copy_empty_like()
     new_data = []
@@ -32,7 +32,9 @@ def _replace_parameter_expressions(
     for instruction in circuit.data:
         if instruction.is_control_flow():
             new_blocks = [
-                _replace_parameter_expressions(block, parameter_table, parameter_expressions_to_new_parameters_map)
+                _replace_parameter_expressions(
+                    block, parameter_table, parameter_expressions_to_new_parameters_map
+                )
                 for block in instruction.operation.blocks
             ]
             new_gate = instruction.operation.replace_blocks(new_blocks)
@@ -54,7 +56,7 @@ def _replace_parameter_expressions(
                 new_param = parameter_expressions_to_new_parameters_map[param_exp]
             else:
                 if isinstance(param_exp, Parameter):
-                    new_param = param_exp               
+                    new_param = param_exp
                 else:
                     new_param = Parameter(str(param_exp))
                 parameter_table.append(param_exp)
@@ -82,7 +84,7 @@ def replace_parameter_expressions(
     In addition, the function creates a new array of parameter values, which matches the parameters
     of the new circuit. Values for new parameters are obtained by evaluating the original
     expressions over the original parameter values.
-    
+
     Example:
 
         .. code-block:: python
@@ -106,7 +108,9 @@ def replace_parameter_expressions(
     parameter_table = ParameterExpressionTable()
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
 
-    new_circuit = _replace_parameter_expressions(circuit, parameter_table, parameter_expressions_to_new_parameters_map)
+    new_circuit = _replace_parameter_expressions(
+        circuit, parameter_table, parameter_expressions_to_new_parameters_map
+    )
 
     new_values = np.zeros(parameter_values.shape[:-1] + (len(new_circuit.parameters),))
     for idx in np.ndindex(parameter_values.shape[:-1]):
