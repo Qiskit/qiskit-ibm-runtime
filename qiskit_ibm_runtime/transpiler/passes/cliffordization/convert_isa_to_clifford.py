@@ -91,7 +91,8 @@ class ConvertISAToClifford(TransformationPass):
             if not isinstance(node.op, SUPPORTED_INSTRUCTIONS):
                 raise ValueError(f"Operation ``{node.op.name}`` not supported.")
 
-            # Round the angle of `RZGate`, `RZZGate` and `RXGate` instances to a multiple of pi/2 and skip the other instructions.
+            # Round the angles of `RZGate`, `RZZGate` and `RXGate` instances to multiples of pi/2,
+            # skipping the other instructions.
             if isinstance(node.op, (RZGate, RZZGate, RXGate)):
                 if isinstance(angle := node.op.params[0], float):
                     rem = angle % (np.pi / 2)
