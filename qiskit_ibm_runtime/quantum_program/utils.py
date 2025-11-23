@@ -77,8 +77,7 @@ def replace_parameter_expressions(
     """
     A helper to replace a circuit's parameter expressions with parameters.
 
-    The function tranverses the circuit and collects all the parameters and parameter expressions.
-    A new parameter is created for every parameter expression that is not a parameter.
+    The function tranverses the circuit and replaces all the parameters and parameter expressions with new parameters.
     The function builds a new circuit, where each parameter expression is replaced by the
     corresponding new parameter.
     In addition, the function creates a new array of parameter values, which matches the parameters
