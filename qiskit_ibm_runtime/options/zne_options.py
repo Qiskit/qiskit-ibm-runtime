@@ -124,10 +124,10 @@ class ZneOptions:
             * ``"fallback"``, which simply returns the raw data corresponding to the lowest noise
               factor (typically ``1``) without performing any sort of extrapolation.
 
-        If more than one extrapolator is specified, the ``evs`` and ``stds`` reported in the
-        result's data refer to the first one, while the extrapolated values
-        (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to the order of
-        the extrapolators provided.
+        The extrapolated values (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to
+        the order of the provided extrapolators. If more than one extrapolator is specified, the ``evs``
+        and ``stds`` reported in the result's data refer to the first successful extrapolator, where an
+        extrapolator success is determined heuristically.
 
         Default: ``("exponential", "linear")``.
     """
