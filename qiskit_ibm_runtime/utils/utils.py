@@ -314,13 +314,20 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def default_runtime_url_resolver(url: str, instance: str, private_endpoint: bool = False) -> str:
+def default_runtime_url_resolver(
+    url: str,
+    instance: str,
+    private_endpoint: bool = False,
+    channel: str = "ibm_quantum_platform",  # pylint: disable=unused-argument
+) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
         url: The raw URL to access the service, for example, "https://cloud.ibm.com".
         instance: The instance CRN.
         private_endpoint: Connect to private API URL.
+        channel: This input parameter is currently UNUSED and kept for
+            backwards compatibility purposes only.
     Returns:
         Runtime API base URL
     """

@@ -173,7 +173,7 @@ class QiskitRuntimeService:
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
             Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not provided,
-                a default resolver will be used to generate different service entrypoints.
+                a default resolver will be used to access different service endpoints.
             Optional[str] region: Set a region preference for automatic instance selection.
                 This argument is **ignored** if an ``instance`` is specified.
                 Accepted values are ``us-east`` or ``eu-de``.
