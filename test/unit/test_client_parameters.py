@@ -59,14 +59,14 @@ class TestClientParameters(IBMTestCase):
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
-                "https://us-east.quantum-computing.cloud.ibm.com",
+                "https://quantum.cloud.ibm.com",
             ),
             (
                 "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
-                "https://my-region.quantum-computing.cloud.ibm.com",
+                "https://my-region.quantum.cloud.ibm.com",
             ),
             (
                 "ibm_cloud",
