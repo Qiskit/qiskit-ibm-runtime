@@ -85,9 +85,9 @@ class QiskitRuntimeService:
                 from qiskit_ibm_runtime import QiskitRuntimeService
 
                 service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform",
+                    channel="ibm_quantum_platform", # optional
                     token="API_KEY",
-                    instance="CRN"
+                    instance="CRN" # recommended
                     )
 
         * Saving default acccount:
@@ -139,20 +139,24 @@ class QiskitRuntimeService:
         Args:
             Optional[ChannelType] channel: String that identifies the service platform. This is
                 set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
-                and ``ibm_cloud`` as values.
+                and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
+                path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
                 If ``local`` is selected, the local testing mode will be used, and
                 primitive queries will run on a local simulator. For more details, check the
                 `Qiskit Runtime local testing mode
                 <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
                 For non-local modes, the channel is used to resolve the default API URL value.
                 ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
-                its url will be redirected to the new ``ibm_quantum_platform`` url.
+                its URL will be redirected to the new ``ibm_quantum_platform`` address.
             Optional[str] token: IBM Cloud API key. Providing an API key is required for IQP
                 authentication. If not provided explicitly, the default saved account will be
                 queried for this API key.
-            Optional[str] url: The API URL. Defaults to different values depending on the selected
-                channel:  https://quantum.cloud.ibm.com  (``ibm_quantum_platform``), or
-                https://quantum-computing.cloud.ibm.com (``ibm_cloud``).
+            Optional[str] url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local channels
+                accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``, ``ibm_cloud``).
+                This URL is processed by a ``url_resolver`` to route requests to the correct
+                service entrypoint. If you provide a custom ``url``, you must also supply a
+                matching ``url_resolver``. The default resolver rewrites the base URL to
+                ``https://quantum.cloud.ibm.com/api/v[x]``.
             Optional[str] filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
             Optional[str] name: Name of the account to load from file.
@@ -168,7 +172,8 @@ class QiskitRuntimeService:
                 authentication)
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
-            Optional[Callable] url_resolver: Function used to resolve the runtime url.
+            Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not provided,
+                a default resolver will be used to access different service endpoints.
             Optional[str] region: Set a region preference for automatic instance selection.
                 This argument is **ignored** if an ``instance`` is specified.
                 Accepted values are ``us-east`` or ``eu-de``.
@@ -185,7 +190,8 @@ class QiskitRuntimeService:
                 instance selection. This argument is **ignored** if an ``instance`` is specified.
 
         Returns:
-            An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
+            An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService` if local
+            channel is set.
 
         Raises:
             IBMInputValueError: If an input is invalid.
