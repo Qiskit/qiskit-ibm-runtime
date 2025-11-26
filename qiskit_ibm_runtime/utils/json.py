@@ -393,7 +393,7 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "PauliLindbladMap", "__value__": out_val}
         if "qiskit_aer" in sys.modules:
             # Guard import so qiskit_aer is not imported unnecessarily. If a
-            # NoiseModel instance has been created, qiskit_aer must alrady have
+            # NoiseModel instance has been created, qiskit_aer must already have
             # been imported.
             from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
 
@@ -418,7 +418,7 @@ class RuntimeEncoder(json.JSONEncoder):
             return None
         if "scipy" in sys.modules:
             # Guard import so scipy is not imported unnecessarily. If an
-            # spmatrix instance has been created, scipy must alrady have
+            # spmatrix instance has been created, scipy must already have
             # been imported.
             from scipy.sparse import save_npz, spmatrix  # pylint: disable=import-outside-toplevel
 
