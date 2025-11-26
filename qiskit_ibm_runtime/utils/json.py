@@ -63,6 +63,7 @@ from qiskit.primitives.containers import (
     SamplerPubResult,
     PrimitiveResult,
 )
+from qiskit.utils import LazyImportTester
 
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
@@ -79,6 +80,17 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 from .noise_learner_result import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 14
+
+HAS_AER = LazyImportTester(
+    "qiskit_aer",
+    name="Qiskit Aer",
+    install="pip install qiskit-aer",
+)
+HAS_SCIPY = LazyImportTester(
+    "scipy",
+    name="Scipy",
+    install="pip install scipy",
+)
 
 
 def to_base64_string(data: str) -> str:
@@ -470,11 +482,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Result":
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
-                try:
+                if HAS_SCIPY:
                     from scipy.sparse import load_npz  # pylint: disable=import-outside-toplevel
-                except ImportError:
-                    load_npz = None
-                if load_npz is not None:
+
                     return _decode_and_deserialize(obj_val, load_npz, False)
                 warnings.warn("Scipy is needed to restore sparse matrix.")
                 return obj_val
@@ -557,14 +567,11 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
-                try:
+                if HAS_AER:
                     # pylint: disable=import-outside-toplevel
                     from qiskit_aer.noise import NoiseModel
 
                     # pylint: enable=import-outside-toplevel
-                except ImportError:
-                    NoiseModel = None
-                if NoiseModel is not None:
                     return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
