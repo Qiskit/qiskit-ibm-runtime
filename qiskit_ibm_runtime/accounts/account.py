@@ -45,7 +45,6 @@ ChannelType = Optional[
 ]
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
-IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
 logger = logging.getLogger(__name__)
 
@@ -268,11 +267,9 @@ class CloudAccount(Account):
             tags: List of instance tags.
         """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or (
-            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
-        )
+        raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel
-        self.url = resolved_url
+        self.url = raw_url
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
