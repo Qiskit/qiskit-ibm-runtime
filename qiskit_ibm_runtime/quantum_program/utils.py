@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from qiskit.circuit import Parameter, QuantumCircuit, ParameterExpression
+from qiskit.circuit import Parameter, QuantumCircuit, ParameterExpression, CircuitInstruction
 
 from samplomatic.samplex import ParameterExpressionTable
 
@@ -63,8 +63,8 @@ def _replace_parameter_expressions(
                 parameter_expressions_to_new_parameters_map[param_exp] = new_param
             new_op_params.append(new_param)
 
-        new_op = type(op := instruction.operation)(*new_op_params)
-        new_circuit.append(new_op, op.qubits, op.clbits)
+        new_op = type(instruction.operation)(*new_op_params)
+        new_circuit.append(CircuitInstruction(new_op, instruction.qubits, instruction.clbits))
 
     new_circuit.data = new_data
     return new_circuit
