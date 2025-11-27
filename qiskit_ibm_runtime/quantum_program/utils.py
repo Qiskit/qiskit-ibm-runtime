@@ -103,6 +103,14 @@ def replace_parameter_expressions(
             # expression ``a + b``
             # ``new_values`` will be ``np.array([[1, 2, 3], [3, 4, 7]])``
             new_circuit, new_values = replace_parameter_expressions(circuit, values)
+
+    .. note:
+
+        The instructions of the new circuit are the same as in the original circuit, in terms of
+        operation types, qubits, and classical bits. Other instruction attributes, such as
+        ``label``, are not copied. Instruction operations are assumed to be one of
+        ``global_phase``, ``p``, ``r``, ``rx``, ``rxx``, ``ry``, ``ryy``, ``rz``, ``rzx``, ``rzz``,
+        ``u``, ``u1``, ``u2``, ``u3``. Other operations may yield unexpected behavior.
     """
     parameter_table = ParameterExpressionTable()
     parameter_expressions_to_new_parameters_map: dict[ParameterExpression, Parameter] = {}
