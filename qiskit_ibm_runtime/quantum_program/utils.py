@@ -63,7 +63,7 @@ def _replace_parameter_expressions(
                 parameter_expressions_to_new_parameters_map[param_exp] = new_param
             new_op_params.append(new_param)
 
-        new_op = type(op := instruction.operation)(new_op_params)
+        new_op = type(op := instruction.operation)(*new_op_params)
         new_circuit.append(new_op, op.qubits, op.clbits)
 
     new_circuit.data = new_data
