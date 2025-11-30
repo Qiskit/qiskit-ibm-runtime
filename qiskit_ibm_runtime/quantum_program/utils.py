@@ -64,7 +64,7 @@ def _replace_parameter_expressions(
             new_op_params.append(new_param)
 
         new_op = type(instruction.operation)(*new_op_params)
-        new_circuit.append(CircuitInstruction(new_op, instruction.qubits, instruction.clbits))
+        new_data.append(CircuitInstruction(operation=new_op, qubits=instruction.qubits, clbits=instruction.clbits))
 
     new_circuit.data = new_data
     return new_circuit
