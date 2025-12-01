@@ -131,7 +131,7 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 [project.optional-dependencies]
 
 common = [
-    "mypy==0.931",
+    "mypy==1.19.0",
     "pylint==3.0.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
