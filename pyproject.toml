@@ -70,7 +70,6 @@ classifiers=[
     "Operating System :: MacOS",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -80,7 +79,7 @@ classifiers=[
 
 keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
 
-requires-python=">=3.9"
+requires-python=">=3.10"
 
 dependencies = [
     "requests>=2.19,!=2.32.2",

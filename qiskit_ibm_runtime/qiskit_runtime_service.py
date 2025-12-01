@@ -1155,33 +1155,6 @@ class QiskitRuntimeService:
 
         return [self._decode_job(job) for job in job_responses]
 
-    def delete_job(self, job_id: str) -> None:
-        """(DEPRECATED) Delete a runtime job.
-
-        Note that this operation cannot be reversed.
-
-        Args:
-            job_id: ID of the job to delete.
-
-        Raises:
-            RuntimeJobNotFound: The job doesn't exist.
-            IBMRuntimeError: Method is not supported.
-        """
-
-        warnings.warn(
-            "The delete_job() method is deprecated and will be removed in a future release. "
-            "The new IBM Quantum Platform does not support deleting jobs.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        try:
-            self._active_api_client.job_delete(job_id)
-        except RequestsApiError as ex:
-            if ex.status_code == 404:
-                raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
-
     def usage(self) -> Dict[str, Any]:
         """Return usage information for the current active instance.
 
@@ -1234,43 +1207,6 @@ class QiskitRuntimeService:
             tags=raw_data.get("tags"),
             private=raw_data.get("private", False),
         )
-
-    def check_pending_jobs(self) -> None:
-        """(DEPRECATED) Check the number of pending jobs and wait for the oldest pending job if
-        the maximum number of pending jobs has been reached.
-        """
-
-        warnings.warn(
-            "The check_pending_jobs() method is deprecated and will be removed in a future release. "
-            "The new IBM Quantum Platform does not support this functionality.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        try:
-            usage = self.usage().get("byInstance")[0]
-            pending_jobs = usage.get("pendingJobs")
-            max_pending_jobs = usage.get("maxPendingJobs")
-            if pending_jobs >= max_pending_jobs:
-                oldest_running = self.jobs(limit=1, descending=False, pending=True)
-                if oldest_running:
-                    logger.warning(
-                        "The pending jobs limit has been reached. "
-                        "Waiting for job %s to finish before submitting the next one.",
-                        oldest_running[0],
-                    )
-                    try:
-                        oldest_running[0].wait_for_final_state(timeout=300)
-
-                    except Exception as ex:  # pylint: disable=broad-except
-                        logger.debug(
-                            "An error occurred while waiting for job %s to finish: %s",
-                            oldest_running[0].job_id(),
-                            ex,
-                        )
-
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.warning("Unable to retrieve open plan pending jobs details. %s", ex)
 
     def least_busy(
         self,
