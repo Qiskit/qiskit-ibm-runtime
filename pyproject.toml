@@ -52,6 +52,26 @@ write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
 fallback_version = "0.43.1"
 
+[tool.mypy]
+python_version = "3.10"
+namespace_packages = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unreachable = true
+strict_equality = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+strict_optional = false
+show_error_codes = true
+no_site_packages = true
+disable_error_code = "import-untyped"
+
+[[tool.mypy.overrides]]
+module = "test.*"
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
@@ -144,3 +164,4 @@ dev = [
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]
+
