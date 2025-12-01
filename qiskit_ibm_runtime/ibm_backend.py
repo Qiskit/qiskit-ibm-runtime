@@ -558,7 +558,7 @@ class IBMRetiredBackend(IBMBackend):
         configuration = QasmBackendConfiguration(
             backend_name=backend_name,
             backend_version="0.0.0",
-            online_date="2019-10-16T04:00:00Z",
+            online_date="2019-10-16T04:00:00Z",  # type: ignore[arg-type]
             n_qubits=1,
             basis_gates=[],
             simulator=False,
@@ -569,4 +569,4 @@ class IBMRetiredBackend(IBMBackend):
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
         )
-        return cls(configuration, api)
+        return cls(configuration, api)  # type: ignore[arg-type]

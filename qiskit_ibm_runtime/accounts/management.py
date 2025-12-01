@@ -56,14 +56,18 @@ class AccountManager:
         tags: Optional[str] = None,
     ) -> None:
         """Save account on disk."""
-        channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+        channel = (
+            channel
+            or os.getenv("QISKIT_IBM_CHANNEL")
+            or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
+        )
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
 
         config = Account.create_account(
-            channel=channel,
-            token=token,
+            channel=channel,  # type: ignore[arg-type]
+            token=token,  # type: ignore[arg-type]
             url=url,
             instance=instance,
             proxies=proxies,
@@ -71,7 +75,7 @@ class AccountManager:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            tags=tags,
+            tags=tags,  # type: ignore[arg-type]
         )
         return save_config(
             filename=filename,
@@ -184,7 +188,7 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
         logger.info("Loading default saved account")
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
-        env_account = cls._from_env_variables(channel_)
+        env_account = cls._from_env_variables(channel_)  # type: ignore[arg-type]
         if env_account is not None:
             return env_account
 
@@ -256,7 +260,9 @@ class AccountManager:
                     return account
                 if account.get(
                     "channel"
-                ) == channel and account_name == cls._get_default_account_name(channel):
+                ) == channel and account_name == cls._get_default_account_name(
+                    channel  # type: ignore[arg-type]
+                ):
                     default_channel_account = account
                 if account.get("channel") == channel:
                     any_channel_account = account

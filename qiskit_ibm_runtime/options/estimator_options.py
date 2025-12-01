@@ -107,6 +107,8 @@ class EstimatorOptions(OptionsV2):
         stability is not guaranteed.
     """
 
-    _gt0 = make_constraint_validator("default_precision", gt=0)
-    _ge0 = make_constraint_validator("default_shots", ge=0)
-    _res_lvl = make_constraint_validator("resilience_level", ge=0, le=MAX_RESILIENCE_LEVEL)
+    _gt0 = make_constraint_validator("default_precision", gt=0)  # type: ignore[arg-type]
+    _ge0 = make_constraint_validator("default_shots", ge=0)  # type: ignore[arg-type]
+    _res_lvl = make_constraint_validator(
+        "resilience_level", ge=0, le=MAX_RESILIENCE_LEVEL  # type: ignore[arg-type]
+    )
