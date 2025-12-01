@@ -106,7 +106,7 @@ class GateProperties:
         Args:
             qubits (list): A list of integers representing qubits
             gate (str): The gates name
-            parameters (list): List of :class:`Nduv` objects for the
+            parameters (list): List of :class:`Nduv` instances for the
                 name-date-unit-value for the gate
             kwargs: Optional additional fields
         """
@@ -195,7 +195,7 @@ class BackendProperties:
             last_update_date (datetime.datetime or str): Last date/time that a property was
                 updated. If specified as a ``str``, it must be in ISO format.
             qubits (list): System qubit parameters as a list of lists of
-                           :class:`Nduv` objects
+                           :class:`Nduv` instances
             gates (list): System gate parameters as a list of :class:`GateProperties`
                           objects
             general (list): General parameters as a list of :class:`Nduv`

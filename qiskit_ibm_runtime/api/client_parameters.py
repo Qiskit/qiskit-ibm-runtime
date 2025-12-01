@@ -58,7 +58,13 @@ class ClientParameters:
 
     def get_auth_handler(self) -> CloudAuth:
         """Returns the respective authentication handler."""
-        return CloudAuth(api_key=self.token, crn=self.instance, private=self.private_endpoint)
+        return CloudAuth(
+            api_key=self.token,
+            crn=self.instance,
+            private=self.private_endpoint,
+            proxies=self.proxies,
+            verify=self.verify,
+        )
 
     def get_runtime_api_base_url(self) -> str:
         """Returns the Runtime API base url."""
