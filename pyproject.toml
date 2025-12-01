@@ -72,6 +72,9 @@ module = "test.*"
 disallow_untyped_calls = false
 disallow_untyped_defs = false
 
+[tool.coverage.run]
+source = ["qiskit_ibm_runtime"]
+
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
