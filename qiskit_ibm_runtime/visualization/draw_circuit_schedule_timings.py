@@ -35,8 +35,9 @@ def draw_circuit_schedule_timing(
 
     Args:
         circuit_schedule: The circuit schedule as a string as returned
-        from the compiler or a `CircuitSchedule` object.
-        included_channels: A list of channels to include in the plot.
+            from the compiler or a `CircuitSchedule` object.
+        included_channels: A list of channels to include in the plot
+            and to order the y-axis accordingly.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
         width: The width of the returned figure.
