@@ -336,16 +336,24 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:
+            except Exception as e:  
+                logger.error("Unable to retrieve instances: %s", e, exc_info=True)
                 raise InvalidAccountError("Unable to retrieve instances.")
             crns = []
             items = result.get("items", [])
             for item in items:
                 # don't add instances without backend allocation
                 allocations = item.get("doc", {}).get("extensions")
-                if allocations:
+                service_plan_id = item.get("service_plan_unique_id")
+
+                if not allocations or not service_plan_id:
+                    logger.warning(
+                        "Skipping instance with missing allocations or service_plan_unique_id: %s", item
+                    )
+                    continue
+                try:
                     catalog_result = catalog.get_catalog_entry(
-                        id=item.get("service_plan_unique_id")
+                        id=service_plan_id
                     ).get_result()
                     plan_name = (
                         catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
@@ -362,7 +370,14 @@ class CloudAccount(Account):
                             "pricing_type": pricing_type.lower(),
                         }
                     )
-
+                except Exception as e:
+                    logger.warning(
+                        "Skipping instance %s due to error retrieving catalog entry: %s",
+                        item.get("crn"),
+                        e,
+                        exc_info=True,
+                    )
+                    continue
             all_crns.extend(crns)
             search_cursor = result.get("search_cursor")
             if not search_cursor:
