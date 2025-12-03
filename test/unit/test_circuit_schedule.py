@@ -75,11 +75,12 @@ class TestCircuitSchedule(IBMTestCase):
             self.assertEqual(circuit_schedule.type_to_idx[name], idx)
 
     @ddt.data(
-        (None, False, False, 14, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 5, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 4, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 5, 6),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 4, 6),
+        (None, False, False, 14, 7, None),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 5, 7, "AWGR0_1"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 4, 7, "Qubit 0"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 5, 6, "AWGR0_1"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 4, 6, "Qubit 0"),
+        (("Hub", "AWGR0_1", "Qubit 0", "Qubit 1", "Receive"), True, True, 4, 6, "Hub"),
     )
     @ddt.unpack
     def test_preprocess(
@@ -89,6 +90,7 @@ class TestCircuitSchedule(IBMTestCase):
         filter_barriers,
         n_channels,
         n_instructions,
+        top_channel,
     ):
         """Test for correct circuit schedule preprocessing"""
         data = self.get_large_mock_data()
@@ -104,6 +106,9 @@ class TestCircuitSchedule(IBMTestCase):
         )
         self.assertEqual(len(circuit_schedule.channels), n_channels)
         self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
+
+        if top_channel is not None:
+            self.assertEqual(circuit_schedule.channels[-1], top_channel)
 
     def test_get_trace_finite_duration_y_shift(self):
         """Test that x, y, and z shifts for finite duration traces are set correctly"""
