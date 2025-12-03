@@ -160,26 +160,33 @@ class TestRuntimeJob(IBMTestCase):
 
     @run_cloud_fake
     def test_instance_limit_warning(self, service):
-        """Test running program."""
+        """Test emitting a warning if instance usage has been reached."""
+        # All relevant fields present, account limit reached.
         instance_usage_msg_1 = {
-            "usage_consumed_seconds": 6000,
-            "usage_limit_seconds": 90000,
-            "usage_remaining_seconds": 84000,
+            "usage_consumed_seconds": 1,
+            "usage_limit_seconds": 2,
             "usage_limit_reached": True,
         }
+        # All relevant fields present, instance limit reached.
         instance_usage_msg_2 = {
-            "usage_consumed_seconds": 90001,
-            "usage_limit_seconds": 90000,
+            "usage_consumed_seconds": 3,
+            "usage_limit_seconds": 2,
             "usage_limit_reached": True,
         }
+        # Missing `usage_limit_seconds`, account limit reached.
+        instance_usage_msg_3 = {
+            "usage_consumed_seconds": 1,
+            "usage_limit_reached": True,
+        }
+
         with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_1):
-            with self.assertWarns(UserWarning) as cm:
+            with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
                 run_program(service=service)
-                self.assertIn(
-                    "There is currently no more time available", str(cm.warnings[0].message)
-                )
 
         with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_2):
-            with self.assertWarns(UserWarning) as cm:
+            with self.assertWarnsRegex(UserWarning, r"This instance has met its usage limit"):
                 run_program(service=service)
-                self.assertIn("This instance has met its usage limit", str(cm.warnings[0].message))
+
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_3):
+            with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
+                run_program(service=service)
