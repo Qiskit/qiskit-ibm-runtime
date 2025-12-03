@@ -42,5 +42,5 @@ class PecOptions:
         Default: "auto".
     """
 
-    _gt0 = make_constraint_validator("max_overhead", gt=0)
-    _ge0 = make_constraint_validator("noise_gain", ge=0)
+    _gt0 = make_constraint_validator("max_overhead", gt=0)  # type: ignore[arg-type]
+    _ge0 = make_constraint_validator("noise_gain", ge=0)  # type: ignore[arg-type]

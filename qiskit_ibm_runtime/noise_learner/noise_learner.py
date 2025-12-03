@@ -203,7 +203,7 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),  # type: ignore[arg-type]
                 calibration_id=calibration_id,
             )
 
@@ -234,7 +234,7 @@ class NoiseLearner:
         elif isinstance(options, NoiseLearnerOptions):
             self._options = replace(options)
         elif isinstance(options, EstimatorOptions):
-            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr, arg-type]
             d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
             d["max_execution_time"] = options.max_execution_time
             d["simulator"] = options.simulator

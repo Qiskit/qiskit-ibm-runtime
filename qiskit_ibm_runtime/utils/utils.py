@@ -482,7 +482,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
         Filtered data.
     """
     if not isinstance(data, dict):
-        return data
+        return data  # type: ignore[unreachable]
 
     data_to_filter = copy.deepcopy(data)
     keys_to_filter = ["hubInfo"]

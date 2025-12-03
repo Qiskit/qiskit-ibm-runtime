@@ -112,8 +112,10 @@ class NoiseLearnerOptions(OptionsV2):
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    _gt0 = make_constraint_validator("max_layers_to_learn", ge=0)
-    _ge0 = make_constraint_validator("shots_per_randomization", "num_randomizations", ge=1)
+    _gt0 = make_constraint_validator("max_layers_to_learn", ge=0)  # type: ignore[arg-type]
+    _ge0 = make_constraint_validator(
+        "shots_per_randomization", "num_randomizations", ge=1  # type: ignore[arg-type]
+    )
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod

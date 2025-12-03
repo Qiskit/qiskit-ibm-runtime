@@ -41,4 +41,6 @@ class MeasureNoiseLearningOptions:
         Default: "auto".
     """
 
-    _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
+    _ge1 = make_constraint_validator(
+        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+    )

@@ -361,7 +361,7 @@ class BackendProperties:
         """
         properties = self.gate_property(gate, qubits)
         if "operational" in properties:
-            return bool(properties["operational"][0])  # type: ignore[index, misc]
+            return bool(properties["operational"][0])  # type: ignore[index, call-overload]
         return True  # if property operational not existent, then True.
 
     def gate_error(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
@@ -494,7 +494,7 @@ class BackendProperties:
         """
         properties = self.qubit_property(qubit)
         if "operational" in properties:
-            return bool(properties["operational"][0])  # type: ignore[index, return-value, misc]
+            return bool(properties["operational"][0])  # type: ignore[index, call-overload]
         return True  # if property operational not existent, then True.
 
     def _apply_prefix(self, value: float, unit: str) -> float:

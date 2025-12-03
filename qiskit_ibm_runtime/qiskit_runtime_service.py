@@ -843,7 +843,7 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            tags=tags,
+            tags=tags,  # type: ignore[arg-type]
         )
 
     @staticmethod
@@ -956,7 +956,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: An error occurred running the program.
         """
 
-        qrt_options: RuntimeOptions = options
+        qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):

@@ -238,7 +238,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 ).items():  # type: ignore[arg-type, union-attr]
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
-                        or not properties.is_gate_operational(name, qubits)
+                        or not properties.is_gate_operational(name, qubits)  # type: ignore[arg-type]
                     ):
                         try:
                             # Qubits might be pre-defined by the gate config

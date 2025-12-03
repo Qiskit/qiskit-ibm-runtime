@@ -96,8 +96,10 @@ class LayerNoiseLearningOptions:
         Default: (0, 1, 2, 4, 16, 32).
     """
 
-    _ge0 = make_constraint_validator("max_layers_to_learn", ge=0)
-    _ge1 = make_constraint_validator("shots_per_randomization", "num_randomizations", ge=1)
+    _ge0 = make_constraint_validator("max_layers_to_learn", ge=0)  # type: ignore[arg-type]
+    _ge1 = make_constraint_validator(
+        "shots_per_randomization", "num_randomizations", ge=1  # type: ignore[arg-type]
+    )
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod

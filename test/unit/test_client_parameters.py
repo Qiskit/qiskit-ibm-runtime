@@ -42,10 +42,9 @@ class TestClientParameters(IBMTestCase):
 
     def test_proxy_param(self) -> None:
         """Test using only proxy urls (no NTLM credentials)."""
-        urls = {"http": "localhost:8080", "https": "localhost:8080"}
-        proxies_only_expected_result = {"verify": True, "proxies": urls}
+        proxies_only_expected_result = {"verify": True, "proxies": self.mock_proxies_urls}
         proxies_only_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**{"urls": urls})
+            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls})  # type: ignore[arg-type]
         )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
@@ -119,7 +118,7 @@ class TestClientParameters(IBMTestCase):
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)
+            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)  # type: ignore[arg-type]
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
 
