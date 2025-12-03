@@ -12,7 +12,7 @@
 
 """Padding pass to fill timeslots for IBM (dynamic circuit) backends."""
 
-from typing import Dict, Iterable, List, Optional, Union, Set
+from typing import Dict, Iterable, List, Optional, Union, Set, Tuple
 
 from qiskit.circuit import (
     Qubit,
@@ -72,12 +72,12 @@ class BlockBasePadder(TransformationPass):
         target: Optional[Target] = None,
     ) -> None:
 
-        self._node_start_time = None
-        self._node_block_dags = None
+        self._node_start_time: Optional[Dict[DAGNode, Tuple[int, int]]] = None
+        self._node_block_dags: Optional[Dict[DAGNode, DAGCircuit]] = None
         self._idle_after: Optional[Dict[Qubit, int]] = None
         self._root_dag = None
-        self._dag = None
-        self._block_dag = None
+        self._dag: Optional[DAGCircuit] = None
+        self._block_dag: Optional[DAGCircuit] = None
         self._prev_node: Optional[DAGNode] = None
         self._wire_map: Optional[Dict[Bit, Bit]] = None
         self._block_duration = 0

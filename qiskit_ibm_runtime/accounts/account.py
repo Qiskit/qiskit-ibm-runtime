@@ -139,7 +139,7 @@ class Account:
                 region=region,
                 plans_preference=plans_preference,
                 channel=channel,
-                tags=tags,
+                tags=tags,  # type: ignore[arg-type]
             )
         else:
             raise InvalidAccountError(
@@ -182,11 +182,11 @@ class Account:
         """
 
         self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)
+        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)
-        self._assert_valid_proxies(self.proxies)
+        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
+        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
         return self
 
     @staticmethod
@@ -273,7 +273,7 @@ class CloudAccount(Account):
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
-        self.tags = tags
+        self.tags = tags  # type: ignore[assignment]
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""

@@ -319,7 +319,7 @@ class Session:
         Returns:
             :class:`qiskit_ibm_runtime.QiskitRuntimeService` associated with this session.
         """
-        return self._service
+        return self._service  # type: ignore[return-value]
 
     @classmethod
     def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":

@@ -70,7 +70,7 @@ class CircuitSchedule:
         """
         self.channels: List = None
         self.type_to_idx: Dict[str, int] = None
-        self.circuit_scheduling = None
+        self.circuit_scheduling: np.array = None
 
         raw_data = self._load(circuit_schedule)
         self._parse(raw_data)
