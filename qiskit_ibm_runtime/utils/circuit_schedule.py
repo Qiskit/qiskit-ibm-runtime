@@ -141,6 +141,7 @@ class CircuitSchedule:
         filter_awgr: bool = False,
         filter_barriers: bool = False,
         included_channels: list = None,
+        merge_common_instructions: bool = True,
     ) -> None:
         """Preprocess and filter the parsed circuit schedule data for visualization.
 
@@ -150,6 +151,8 @@ class CircuitSchedule:
             included_channels: If not ``None``, remove all channels from scheduling data
                that are not in the ``included_channels`` list and reorder the plot's
                y-axis according to the ``included_channels`` order.
+            merge_common_instructions: If ``True``, merge instructions of the same type
+                based on temporal continuity.
         """
         # filter channels
         if included_channels is not None and isinstance(included_channels, list):
@@ -170,6 +173,10 @@ class CircuitSchedule:
             mask = self.circuit_scheduling[:, self.type_to_idx["Instruction"]] != BARRIER
             self.circuit_scheduling = self.circuit_scheduling[mask]
 
+        # merge common consecutive instructions
+        if merge_common_instructions:
+            self.merge_common_instructions()
+
         self.circuit_scheduling = self.circuit_scheduling[
             np.argsort(self.circuit_scheduling[:, self.type_to_idx["Channel"]])
         ]
@@ -186,6 +193,51 @@ class CircuitSchedule:
         self.max_time = int(max(self.circuit_scheduling[:, self.type_to_idx["Finish"]]))
         self.instruction_set = np.unique(self.circuit_scheduling[:, self.type_to_idx["GateName"]])
         self.color_map = dict(zip(self.instruction_set, cycle(colors)))
+
+    def merge_common_instructions(self):
+        """Iterate through ``circuit_scheduling`` and merge instructions of the same type based on 
+        temporal continuity.
+        """
+        new_arr = []
+
+        t0_idx = self.type_to_idx["Start"]
+        tf_idx = self.type_to_idx["Finish"]
+
+        # find unique instruction groups based on ("Branch", "Instruction", "Channel") information
+        keys = self.circuit_scheduling[
+            :, [self.type_to_idx[col_type] for col_type in ["Branch", "Instruction", "Channel"]]
+        ]
+        _, group_indices = np.unique(keys, axis=0, return_inverse=True)
+
+        for g in np.unique(group_indices):
+            merged_group = []
+            group = self.circuit_scheduling[group_indices == g]
+
+            # return early if group is trivial
+            if len(group) == 1:
+                new_arr.append(group[0])
+                continue
+
+            # reorder group according to increasing t0
+            t0_increasing_order = np.argsort(np.array(group[:, t0_idx], dtype=int))
+            group_increasing = group[t0_increasing_order]
+
+            # merge consecutive instructions
+            merged_group.append(group_increasing[0])
+            for curr_row in group_increasing[1:]:
+                prev_row = merged_group.pop()
+
+                # check for temporal continuity
+                if int(curr_row[t0_idx]) == int(prev_row[tf_idx]):
+                    # merge
+                    prev_row[tf_idx] = curr_row[tf_idx]
+                    merged_group.append(prev_row)
+                else:
+                    merged_group.append(prev_row)
+                    merged_group.append(curr_row)
+            new_arr.extend(merged_group)
+
+        self.circuit_scheduling = np.array(new_arr)
 
     def get_trace_finite_duration_y_shift(self, branch: str) -> Tuple[float, float, float]:
         """Return y-axis trace shift for a finite duration instruction schedule and its annotation.

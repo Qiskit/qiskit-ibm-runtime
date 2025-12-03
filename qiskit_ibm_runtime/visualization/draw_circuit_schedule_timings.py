@@ -28,6 +28,7 @@ def draw_circuit_schedule_timing(
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
+    merge_common_instructions: bool = True,
     width: int = 1400,
 ) -> PlotlyFigure:
     r"""
@@ -40,6 +41,8 @@ def draw_circuit_schedule_timing(
             and to order the y-axis accordingly.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
+        merge_common_instructions: If ``True``, merge instructions of the same type
+            based on temporal continuity.
         width: The width of the returned figure.
 
     Returns:
@@ -66,6 +69,7 @@ def draw_circuit_schedule_timing(
         included_channels=included_channels,
         filter_awgr=filter_readout_channels,
         filter_barriers=filter_barriers,
+        merge_common_instructions=merge_common_instructions,
     )
 
     # Setup the figure
