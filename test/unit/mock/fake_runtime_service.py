@@ -114,7 +114,9 @@ class FakeRuntimeService(QiskitRuntimeService):
                     "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst.get("plan"),
-                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "backends": self._discover_backends_from_instance(
+                        inst["crn"],  # type: ignore[arg-type]
+                    ),
                     "tags": inst.get("tags"),
                     "pricing_type": inst["pricing_type"],
                 }

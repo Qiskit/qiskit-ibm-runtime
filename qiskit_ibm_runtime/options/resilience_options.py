@@ -95,7 +95,8 @@ class ResilienceOptionsV2:
     def _validate_options(self) -> "ResilienceOptionsV2":
         """Validate the model."""
         if not self.measure_mitigation and any(
-            value != Unset for value in asdict(self.measure_noise_learning).values()
+            value != Unset
+            for value in asdict(self.measure_noise_learning).values()  # type: ignore[call-overload]
         ):
             raise ValueError(
                 "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."

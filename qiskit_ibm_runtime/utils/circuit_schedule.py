@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utilities for working with circuit schedule timing information returned 
+"""Utilities for working with circuit schedule timing information returned
 from the Qiskit Runtime service."""
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ class CircuitSchedule:
         """
         self.channels: List = None
         self.type_to_idx: Dict[str, int] = None
-        self.circuit_scheduling = None
+        self.circuit_scheduling: np.array = None
 
         raw_data = self._load(circuit_schedule)
         self._parse(raw_data)
@@ -148,7 +148,8 @@ class CircuitSchedule:
             filter_awgr: If ``True``, remove all readout channels from scheduling data.
             filter_barriers: If ``True``, remove all barriers from scheduling data.
             included_channels: If not ``None``, remove all channels from scheduling data
-               that are not in the ``included_channels`` list.
+               that are not in the ``included_channels`` list and reorder the plot's
+               y-axis according to the ``included_channels`` order.
         """
         # filter channels
         if included_channels is not None and isinstance(included_channels, list):
@@ -175,6 +176,13 @@ class CircuitSchedule:
         self.channels = np.unique(self.circuit_scheduling[:, self.type_to_idx["Channel"]])
         self.channels.sort()
         self.channels = list(self.channels)
+
+        # reorder channels according to the ``included_channels`` input argument
+        if included_channels is not None and isinstance(included_channels, list):
+            self.channels = [
+                channel for channel in included_channels[::-1] if channel in self.channels
+            ]
+
         self.max_time = int(max(self.circuit_scheduling[:, self.type_to_idx["Finish"]]))
         self.instruction_set = np.unique(self.circuit_scheduling[:, self.type_to_idx["GateName"]])
         self.color_map = dict(zip(self.instruction_set, cycle(colors)))

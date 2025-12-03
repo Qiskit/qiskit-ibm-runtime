@@ -45,7 +45,6 @@ ChannelType = Optional[
 ]
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
-IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +139,7 @@ class Account:
                 region=region,
                 plans_preference=plans_preference,
                 channel=channel,
-                tags=tags,
+                tags=tags,  # type: ignore[arg-type]
             )
         else:
             raise InvalidAccountError(
@@ -183,11 +182,11 @@ class Account:
         """
 
         self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)
+        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)
-        self._assert_valid_proxies(self.proxies)
+        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
+        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
         return self
 
     @staticmethod
@@ -268,19 +267,23 @@ class CloudAccount(Account):
             tags: List of instance tags.
         """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or (
-            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
-        )
+        raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel
-        self.url = resolved_url
+        self.url = raw_url
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
-        self.tags = tags
+        self.tags = tags  # type: ignore[assignment]
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
-        return CloudAuth(api_key=self.token, crn=self.instance, private=self.private_endpoint)
+        return CloudAuth(
+            api_key=self.token,
+            crn=self.instance,
+            private=self.private_endpoint,
+            proxies=self.proxies,
+            verify=self.verify,
+        )
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
