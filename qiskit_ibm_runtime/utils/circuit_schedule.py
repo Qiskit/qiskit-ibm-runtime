@@ -194,7 +194,7 @@ class CircuitSchedule:
         self.instruction_set = np.unique(self.circuit_scheduling[:, self.type_to_idx["GateName"]])
         self.color_map = dict(zip(self.instruction_set, cycle(colors)))
 
-    def merge_common_instructions(self):
+    def merge_common_instructions(self) -> None:
         """Iterate through ``circuit_scheduling`` and merge instructions of the same type based on
         temporal continuity.
         """
