@@ -28,7 +28,7 @@ def draw_circuit_schedule_timing(
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
-    merge_common_instructions: bool = True,
+    merge_common_instructions: bool = False,
     width: int = 1400,
 ) -> PlotlyFigure:
     r"""

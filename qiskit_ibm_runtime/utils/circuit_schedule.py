@@ -141,7 +141,7 @@ class CircuitSchedule:
         filter_awgr: bool = False,
         filter_barriers: bool = False,
         included_channels: list = None,
-        merge_common_instructions: bool = True,
+        merge_common_instructions: bool = False,
     ) -> None:
         """Preprocess and filter the parsed circuit schedule data for visualization.
 
@@ -195,7 +195,7 @@ class CircuitSchedule:
         self.color_map = dict(zip(self.instruction_set, cycle(colors)))
 
     def merge_common_instructions(self):
-        """Iterate through ``circuit_scheduling`` and merge instructions of the same type based on 
+        """Iterate through ``circuit_scheduling`` and merge instructions of the same type based on
         temporal continuity.
         """
         new_arr = []
