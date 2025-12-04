@@ -621,8 +621,8 @@ class BlockBasePadder(TransformationPass):
         block_idx: int,
         t_start: int,
         oper: Instruction,
-        qubits: Union[Qubit, Iterable[Qubit]],
-        clbits: Union[Clbit, Iterable[Clbit]] = (),
+        qubits: Qubit | Iterable[Qubit],
+        clbits: Clbit | Iterable[Clbit] = (),
     ) -> DAGNode:
         """Add new operation to DAG with scheduled information.
 

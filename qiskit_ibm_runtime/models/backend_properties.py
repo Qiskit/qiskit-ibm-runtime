@@ -181,7 +181,7 @@ class BackendProperties:
         self,
         backend_name: str,
         backend_version: str,
-        last_update_date: Union[datetime.datetime, str],
+        last_update_date: datetime.datetime | str,
         qubits: list,
         gates: list,
         general: list,
@@ -295,13 +295,9 @@ class BackendProperties:
     def gate_property(
         self,
         gate: str,
-        qubits: Union[int, Iterable[int]] = None,
+        qubits: int | Iterable[int] = None,
         name: str = None,
-    ) -> Union[
-        dict[tuple[int, ...], dict[str, PropertyT]],
-        dict[str, PropertyT],
-        PropertyT,
-    ]:
+    ) -> dict[tuple[int, ...], dict[str, PropertyT]] | dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given gate.
 
@@ -347,7 +343,7 @@ class BackendProperties:
                 faulty.append(gate)
         return faulty
 
-    def is_gate_operational(self, gate: str, qubits: Union[int, Iterable[int]] = None) -> bool:
+    def is_gate_operational(self, gate: str, qubits: int | Iterable[int] = None) -> bool:
         """
         Return the operational status of the given gate.
 
@@ -364,7 +360,7 @@ class BackendProperties:
             return bool(properties["operational"][0])  # type: ignore[index, call-overload]
         return True  # if property operational not existent, then True.
 
-    def gate_error(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
+    def gate_error(self, gate: str, qubits: int | Iterable[int]) -> float:
         """
         Return gate error estimates from backend properties.
 
@@ -377,7 +373,7 @@ class BackendProperties:
         """
         return self.gate_property(gate, qubits, "gate_error")[0]  # type: ignore[index, return-value]
 
-    def gate_length(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
+    def gate_length(self, gate: str, qubits: int | Iterable[int]) -> float:
         """
         Return the duration of the gate in units of seconds.
 
@@ -394,10 +390,7 @@ class BackendProperties:
         self,
         qubit: int,
         name: str = None,
-    ) -> Union[
-        dict[str, PropertyT],
-        PropertyT,
-    ]:
+    ) -> dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given qubit.
 

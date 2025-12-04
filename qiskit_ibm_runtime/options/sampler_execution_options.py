@@ -22,7 +22,7 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
     for the sampler primitive.
     """
 
-    meas_type: Union[UnsetType, Literal["classified", "kerneled", "avg_kerneled"]] = Unset
+    meas_type: UnsetType | Literal["classified", "kerneled", "avg_kerneled"] = Unset
     r"""How to process and return measurement results.
 
     This option sets the return type of all classical registers in all

@@ -34,7 +34,7 @@ class Embedding:
     def __init__(
         self,
         coordinates: list[tuple[int, int]],
-        coupling_map: Union[list[tuple[int, int]], CouplingMap],
+        coupling_map: list[tuple[int, int]] | CouplingMap,
     ) -> None:
         num_qubits = len(coordinates)
         if any(q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map):

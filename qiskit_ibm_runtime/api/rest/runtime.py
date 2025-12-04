@@ -161,7 +161,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: dict[str, Union[int, str, list[str]]] = {}
+        payload: dict[str, int | str | list[str]] = {}
         payload["exclude_params"] = "true"
         if limit:
             payload["limit"] = limit

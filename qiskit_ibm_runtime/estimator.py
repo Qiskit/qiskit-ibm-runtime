@@ -99,8 +99,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Union[BackendV2, Session, Batch, str] | None = None,
-        options: Union[dict, EstimatorOptions] | None = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | EstimatorOptions | None = None,
     ):
         """Initializes the Estimator primitive.
 

@@ -45,7 +45,7 @@ class Api(RestAdapterBase):
 
     # Client functions.
 
-    def version(self) -> dict[str, Union[str, bool]]:
+    def version(self) -> dict[str, str | bool]:
         """Return the version information.
 
         Returns:

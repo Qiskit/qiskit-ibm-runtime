@@ -21,13 +21,13 @@ from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_valida
 class PecOptions:
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
-    max_overhead: Union[UnsetType, float, None] = Unset
+    max_overhead: UnsetType | float | None = Unset
     r"""The maximum circuit sampling overhead allowed, or
         ``None`` for no maximum. 
         
         Default: 100.
     """
-    noise_gain: Union[UnsetType, float, Literal["auto"]] = Unset
+    noise_gain: UnsetType | float | Literal["auto"] = Unset
     r"""The amount by which to scale the noise, where:
 
         * A value of 0 corresponds to removing the full learned noise.

@@ -193,7 +193,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
-def _set_int_keys_flag(obj: dict) -> Union[dict, list]:
+def _set_int_keys_flag(obj: dict) -> dict | list:
     """Recursively sets '__int_keys__' flag if dictionary uses integer keys
 
     Args:

@@ -49,7 +49,7 @@ class BaseRuntimeJob(ABC):
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
     JOB_FINAL_STATES: tuple[Any, ...] = ()
-    ERROR: Union[str, RuntimeJobStatus] = None
+    ERROR: str | RuntimeJobStatus = None
 
     def __init__(
         self,
@@ -59,7 +59,7 @@ class BaseRuntimeJob(ABC):
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         creation_date: str | None = None,
-        result_decoder: Union[type[ResultDecoder], Sequence[type[ResultDecoder]]] | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",
         session_id: str | None = None,
         tags: list | None = None,
@@ -97,7 +97,7 @@ class BaseRuntimeJob(ABC):
         self._usage_estimation: dict[str, Any] = {}
         self._version = version
         self._queue_info = None
-        self._status: Union[RuntimeJobStatus, str] = None
+        self._status: RuntimeJobStatus | str = None
         self._private = private
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder

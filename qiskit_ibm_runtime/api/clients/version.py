@@ -30,7 +30,7 @@ class VersionClient:
         """
         self.client_version_finder = Api(RetrySession(url, **request_kwargs))
 
-    def version(self) -> dict[str, Union[bool, str]]:
+    def version(self) -> dict[str, bool | str]:
         """Return the version information.
 
         Returns:

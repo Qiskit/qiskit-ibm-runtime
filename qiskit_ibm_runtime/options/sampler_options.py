@@ -29,29 +29,29 @@ class SamplerOptions(OptionsV2):
     """Options for V2 Sampler."""
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
-    default_shots: Union[UnsetType, int] = Unset
+    default_shots: UnsetType | int = Unset
     r"""The default number of shots to use if none are specified in the PUBs
         or in the run method. 
         
         Default: 4096.
     """
-    dynamical_decoupling: Union[DynamicalDecouplingOptions, Dict] = Field(
+    dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(
         default_factory=DynamicalDecouplingOptions
     )
     r"""Suboptions for dynamical decoupling. See
         :class:`DynamicalDecouplingOptions` for all available options.
     """
-    execution: Union[SamplerExecutionOptionsV2, Dict] = Field(
+    execution: SamplerExecutionOptionsV2 | Dict = Field(
         default_factory=SamplerExecutionOptionsV2
     )
     r"""
     Execution time options. See :class:`SamplerExecutionOptionsV2`
         for all available options.
     """
-    twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
+    twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
     r"""Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
     """
-    experimental: Union[UnsetType, dict] = Unset
+    experimental: UnsetType | dict = Unset
     r"""Experimental options.
     """

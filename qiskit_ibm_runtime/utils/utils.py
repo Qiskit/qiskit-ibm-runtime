@@ -121,7 +121,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
-def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, set[Parameter]]:
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
     """
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
@@ -165,7 +165,7 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, set[Paramete
     return angle_params
 
 
-def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+def is_valid_rzz_pub(pub: EstimatorPub | SamplerPub) -> str:
     """Verify that all rzz angles are in the range [0, pi/2].
 
     Args:
@@ -491,7 +491,7 @@ def filter_data(data: dict[str, Any]) -> dict[str, Any]:
     return data_to_filter
 
 
-def _filter_value(data: dict[str, Any], filter_keys: list[Union[str, tuple[str, str]]]) -> None:
+def _filter_value(data: dict[str, Any], filter_keys: list[str | tuple[str, str]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:

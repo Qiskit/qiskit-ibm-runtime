@@ -56,7 +56,7 @@ class NeatPubResult:
         return self._vals
 
     def _coerced_operation(
-        self, other: Union[ScalarLike, NeatPubResultLike], op_name: str
+        self, other: ScalarLike | NeatPubResultLike, op_name: str
     ) -> NeatPubResult:
         r"""
         Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``.
@@ -84,28 +84,28 @@ class NeatPubResult:
     def __abs__(self) -> NeatPubResult:
         return NeatPubResult(np.abs(self.vals))
 
-    def __add__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __add__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__add__")
 
-    def __mul__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __mul__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__mul__")
 
-    def __sub__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __sub__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__sub__")
 
-    def __truediv__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __truediv__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__truediv__")
 
-    def __radd__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __radd__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__radd__")
 
-    def __rmul__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __rmul__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__rmul__")
 
-    def __rsub__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __rsub__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__rsub__")
 
-    def __rtruediv__(self, other: Union[ScalarLike, NeatPubResultLike]) -> NeatPubResult:
+    def __rtruediv__(self, other: ScalarLike | NeatPubResultLike) -> NeatPubResult:
         return self._coerced_operation(other, "__rtruediv__")
 
     def __pow__(self, p: ScalarLike) -> NeatPubResult:

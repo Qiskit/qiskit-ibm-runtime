@@ -38,7 +38,7 @@ ExtrapolatorType = Literal[
 class ResilienceOptionsV2:
     """Resilience options for V2 Estimator."""
 
-    measure_mitigation: Union[UnsetType, bool] = Unset
+    measure_mitigation: UnsetType | bool = Unset
     r"""Whether to enable measurement error mitigation method.
         If you enable measurement mitigation, you can fine-tune its noise learning
         by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
@@ -46,41 +46,41 @@ class ResilienceOptionsV2:
 
         Default: True.
     """
-    measure_noise_learning: Union[MeasureNoiseLearningOptions, Dict] = Field(
+    measure_noise_learning: MeasureNoiseLearningOptions | Dict = Field(
         default_factory=MeasureNoiseLearningOptions
     )
     r"""Additional measurement noise learning options.
         See :class:`MeasureNoiseLearningOptions` for all options.
     """
-    zne_mitigation: Union[UnsetType, bool] = Unset
+    zne_mitigation: UnsetType | bool = Unset
     r"""Whether to turn on Zero-Noise Extrapolation error mitigation method.
         If you enable ZNE, you can fine-tune its options by using :attr:`~zne`.
         See :class:`ZneOptions` for additional ZNE related options.
 
         Default: False.
     """
-    zne: Union[ZneOptions, Dict] = Field(default_factory=ZneOptions)
+    zne: ZneOptions | Dict = Field(default_factory=ZneOptions)
     r"""Additional zero-noise extrapolation mitigation options.
         See :class:`ZneOptions` for all options.
     """
-    pec_mitigation: Union[UnsetType, bool] = Unset
+    pec_mitigation: UnsetType | bool = Unset
     r"""Whether to turn on Probabilistic Error Cancellation error mitigation method.
         If you enable PEC, you can fine-tune its options by using :attr:`~pec`.
         See :class:`PecOptions` for additional PEC-related options.
 
         Default: False.
     """
-    pec: Union[PecOptions, Dict] = Field(default_factory=PecOptions)
+    pec: PecOptions | Dict = Field(default_factory=PecOptions)
     r"""Additional probabalistic error cancellation mitigation options.
         See :class:`PecOptions` for all options.
     """
-    layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
+    layer_noise_learning: LayerNoiseLearningOptions | Dict = Field(
         default_factory=LayerNoiseLearningOptions
     )
     r"""Layer noise learning options.
         See :class:`LayerNoiseLearningOptions` for all options.
     """
-    layer_noise_model: Union[UnsetType, NoiseLearnerResult, Sequence[LayerError], None] = Unset
+    layer_noise_model: UnsetType | NoiseLearnerResult | Sequence[LayerError] | None = Unset
     r"""A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError`
         objects. If ``None``, all the mitigation strategies that require noise data (e.g., PEC
         and PEA) perform a noise-learning stage. Otherwise, this noise-learning stage is skipped,

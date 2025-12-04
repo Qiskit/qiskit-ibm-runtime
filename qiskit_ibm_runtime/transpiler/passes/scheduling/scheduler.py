@@ -94,7 +94,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._control_flow_block = False
         self._node_start_time: dict[DAGNode, tuple[int, int]] | None = None
         self._node_stop_time: dict[DAGNode, tuple[int, int]] | None = None
-        self._bit_stop_times: dict[int, dict[Union[Qubit, Clbit], int]] | None = None
+        self._bit_stop_times: dict[int, dict[Qubit | Clbit, int]] | None = None
         # Dictionary of blocks each containing a dictionary with the key for each bit
         # in the block and its value being the final time of the bit within the block.
         self._current_block_measures: set[DAGNode] = set()
@@ -108,7 +108,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         super().__init__()
 
     @property
-    def _current_block_bit_times(self) -> dict[Union[Qubit, Clbit], int]:
+    def _current_block_bit_times(self) -> dict[Qubit | Clbit, int]:
         return self._bit_stop_times[self._current_block_idx]
 
     def _visit_block(self, block: DAGCircuit, wire_map: dict[Qubit, Qubit]) -> None:

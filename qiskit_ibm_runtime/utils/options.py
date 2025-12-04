@@ -29,11 +29,11 @@ class CommonOptions:
     """Options common for both paths."""
 
     shots: int = 4000
-    meas_level: Union[int, MeasLevel] = MeasLevel.CLASSIFIED
+    meas_level: int | MeasLevel = MeasLevel.CLASSIFIED
     init_qubits: bool = True
     rep_delay: float | None = None
     memory: bool = False
-    meas_return: Union[str, MeasReturnType] = MeasReturnType.AVERAGE
+    meas_return: str | MeasReturnType = MeasReturnType.AVERAGE
 
     def to_transport_dict(self) -> dict[str, Any]:
         """Remove None values so runtime defaults are used."""

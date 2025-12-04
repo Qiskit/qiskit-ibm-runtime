@@ -161,7 +161,7 @@ def decode_backend_configuration(config: dict) -> None:
 _decode_backend_configuration = decode_backend_configuration
 
 
-def _to_complex(value: Union[list[float], complex]) -> complex:
+def _to_complex(value: list[float] | complex) -> complex:
     """Convert the input value to type ``complex``.
 
     Args:

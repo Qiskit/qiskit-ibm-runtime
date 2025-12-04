@@ -471,7 +471,7 @@ class QiskitRuntimeService:
             )
 
     @staticmethod
-    def _check_api_version(params: ClientParameters) -> dict[str, Union[bool, str]]:
+    def _check_api_version(params: ClientParameters) -> dict[str, bool | str]:
         """Check the version of the remote server in a set of client parameters for all channels.
 
         Args:
@@ -944,8 +944,8 @@ class QiskitRuntimeService:
         self,
         program_id: str,
         inputs: dict,
-        options: Union[RuntimeOptions, dict] | None = None,
-        result_decoder: Union[type[ResultDecoder], Sequence[type[ResultDecoder]]] | None = None,
+        options: RuntimeOptions | dict | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         session_id: str | None = None,
         start_session: bool | None = False,
         calibration_id: str | None = None,

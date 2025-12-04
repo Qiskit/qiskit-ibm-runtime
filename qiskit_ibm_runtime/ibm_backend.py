@@ -249,7 +249,7 @@ class IBMBackend(Backend):
         )
 
     @property
-    def calibration_id(self) -> Union[str, None]:
+    def calibration_id(self) -> str | None:
         """The calibration id used for this backend."""
         return self._calibration_id
 

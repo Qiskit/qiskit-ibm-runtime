@@ -96,7 +96,7 @@ def _to_obj(cls_, data):  # type: ignore
 
 
 def merge_options(
-    old_options: Union[dict, "BaseOptions"], new_options: dict | None = None
+    old_options: dict | "BaseOptions", new_options: dict | None = None
 ) -> dict:
     """Merge current options with the new ones.
 
@@ -152,7 +152,7 @@ def merge_options(
 
 
 def merge_options_v2(
-    old_options: Union[dict, "BaseOptions"], new_options: dict | None = None
+    old_options: dict | "BaseOptions", new_options: dict | None = None
 ) -> dict:
     """Merge current options with the new ones for V2 primitives.
 

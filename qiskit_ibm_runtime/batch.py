@@ -85,7 +85,7 @@ class Batch(Session):
     def __init__(
         self,
         backend: BackendV2,
-        max_time: Union[int, str] | None = None,
+        max_time: int | str | None = None,
         *,
         create_new: bool | None = True,
     ):

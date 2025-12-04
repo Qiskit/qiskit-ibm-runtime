@@ -123,8 +123,8 @@ class NoiseLearner:
 
     def __init__(
         self,
-        mode: Union[BackendV2, Session, Batch] | None = None,
-        options: Union[dict, NoiseLearnerOptions, EstimatorOptions] | None = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
     ):
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -137,7 +137,7 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
+    def run(self, circuits: Iterable[QuantumCircuit | EstimatorPubLike]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
@@ -224,7 +224,7 @@ class NoiseLearner:
         return self._backend
 
     def _set_options(
-        self, options: Union[dict, NoiseLearnerOptions, EstimatorOptions] | None = None
+        self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
         """
         Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.

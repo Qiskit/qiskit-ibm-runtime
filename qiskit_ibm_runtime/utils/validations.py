@@ -104,7 +104,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
-def validate_rzz_pubs(pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> None:
+def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
     """Validate that rzz angles are always in the range [0, pi/2]
 
     Args:

@@ -178,7 +178,7 @@ class LayerError:
         return self._qubits
 
     @property
-    def error(self) -> Union[PauliLindbladError, None]:
+    def error(self) -> PauliLindbladError | None:
         r"""
         The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
         unknown or explicitly disabled.
@@ -194,7 +194,7 @@ class LayerError:
 
     def draw_map(
         self,
-        embedding: Union[Embedding, BackendV2],
+        embedding: Embedding | BackendV2,
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
         color_out_of_scale: str = "lightgreen",
@@ -279,10 +279,10 @@ class LayerError:
         num_bodies: int | None = None,
         max_rate: float | None = None,
         min_rate: float | None = None,
-        connected: Union[list[Pauli], list[str]] | None = None,
+        connected: list[Pauli] | list[str] | None = None,
         colors: list[str] | None = None,
         num_bins: int | None = None,
-        opacities: Union[float, list[float]] = 0.4,
+        opacities: float | list[float] = 0.4,
         names: list[str] | None = None,
         x_coo: list[float] | None = None,
         marker_size: float | None = None,

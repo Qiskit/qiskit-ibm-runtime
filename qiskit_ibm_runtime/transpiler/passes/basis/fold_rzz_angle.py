@@ -253,8 +253,8 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    primitive: BasePrimitiveV2, pub: Union[SamplerPubLike, EstimatorPubLike]
-) -> Union[SamplerPub, EstimatorPub]:
+    primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
+) -> SamplerPub | EstimatorPub:
     """
     Return a pub which is compatible with Rzz constraints.
 

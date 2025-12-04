@@ -62,7 +62,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         creation_date: str | None = None,
-        result_decoder: Union[type[ResultDecoder], Sequence[type[ResultDecoder]]] | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",
         session_id: str | None = None,
         tags: list | None = None,
@@ -162,7 +162,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self._set_status_and_error_message()
         return self._status
 
-    def _status_from_job_response(self, response: dict) -> Union[JobStatus, str]:
+    def _status_from_job_response(self, response: dict) -> JobStatus | str:
         """Returns the job status from an API response.
 
         Args:

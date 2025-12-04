@@ -165,7 +165,7 @@ class RetrySession(Session):
         verify: bool = True,
         proxies: dict[str, str] | None = None,
         auth: AuthBase | None = None,
-        timeout: tuple[float, Union[float, None]] = (5.0, None),
+        timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
         """RetrySession constructor.
 

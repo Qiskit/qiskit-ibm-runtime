@@ -46,10 +46,10 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def _get_mode_service_backend(mode: Union[BackendV2, Session, Batch] | None = None) -> tuple[
-    Union[Session, Batch, None],
-    Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
-    Union[BackendV2, None],
+def _get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
+    Session | Batch | None,
+    QiskitRuntimeService | QiskitRuntimeLocalService | None,
+    BackendV2 | None,
 ]:
     """
     A utility function that returns mode, service, and backend for a given execution mode.
@@ -101,8 +101,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     def __init__(
         self,
-        mode: Union[BackendV2, Session, Batch, str] | None = None,
-        options: Union[dict, OptionsT] | None = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | OptionsT | None = None,
     ):
         """Initializes the primitive.
 
@@ -123,7 +123,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         self._set_options(options)
 
-    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
+    def _run(self, pubs: list[EstimatorPub] | list[SamplerPub]) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:
@@ -211,7 +211,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return the backend the primitive query will be run on."""
         return self._backend
 
-    def _set_options(self, options: Union[dict, OptionsT] | None = None) -> None:
+    def _set_options(self, options: dict | OptionsT | None = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()

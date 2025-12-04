@@ -39,18 +39,18 @@ class SimulatorOptions:
 
     """
 
-    noise_model: Union[UnsetType, dict, NoiseModel] | None = Unset
+    noise_model: UnsetType | dict | NoiseModel | None = Unset
     r"""Noise model for the simulator. This option is only supported in
         local testing mode.
 
         Default: ``None``.
     """
-    seed_simulator: Union[UnsetType, int] = Unset
+    seed_simulator: UnsetType | int = Unset
     r"""Random seed to control sampling. 
     
         Default: ``None``.
     """
-    coupling_map: Union[UnsetType, list[list[int]], CouplingMap] = Unset
+    coupling_map: UnsetType | list[list[int]] | CouplingMap = Unset
     r"""Directed coupling map to target in mapping. If
         the coupling map is symmetric, both directions need to be specified.
         Each entry in the list specifies a directed two-qubit interaction,
@@ -58,7 +58,7 @@ class SimulatorOptions:
     
         Default: ``None``, which implies no connectivity constraints.
     """
-    basis_gates: Union[UnsetType, list[str]] = Unset
+    basis_gates: UnsetType | list[str] = Unset
     r"""List of basis gate names to unroll to. For example,
         ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
         
@@ -68,7 +68,7 @@ class SimulatorOptions:
     @field_validator("noise_model", mode="plain")
     @classmethod
     @skip_unset_validation
-    def _validate_noise_model(cls, model: Union[dict, NoiseModel]) -> Union[dict, NoiseModel]:
+    def _validate_noise_model(cls, model: dict | NoiseModel) -> dict | NoiseModel:
         if not isinstance(model, dict):
             if not optionals.HAS_AER:
                 raise ValueError(

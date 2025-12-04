@@ -148,7 +148,7 @@ class QiskitRuntimeLocalService:
         self,
         program_id: Literal["sampler", "estimator"],
         inputs: dict,
-        options: Union[RuntimeOptions, dict],
+        options: RuntimeOptions | dict,
         calibration_id: str | None,
     ) -> PrimitiveJob:
         """Execute the runtime program.

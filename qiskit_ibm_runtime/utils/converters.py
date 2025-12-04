@@ -21,7 +21,7 @@ from dateutil import tz, parser
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
+def utc_to_local(utc_dt: datetime | str) -> datetime:
     """Convert a UTC ``datetime`` object or string to a local timezone ``datetime``.
 
     Args:
@@ -42,7 +42,7 @@ def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
     return local_dt
 
 
-def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
+def local_to_utc(local_dt: datetime | str) -> datetime:
     """Convert a local ``datetime`` object or string to a UTC ``datetime``.
 
     Args:
@@ -66,7 +66,7 @@ def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
     return local_dt  # Already in UTC.
 
 
-def local_to_utc_str(local_dt: Union[datetime, str], suffix: str = "Z") -> str:
+def local_to_utc_str(local_dt: datetime | str, suffix: str = "Z") -> str:
     """Convert a local ``datetime`` object or string to a UTC string.
 
     Args:

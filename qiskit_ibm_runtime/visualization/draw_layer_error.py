@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 def draw_layer_error_map(
     layer_error: LayerError,
-    embedding: Union[Embedding, BackendV2],
+    embedding: Embedding | BackendV2,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
     color_out_of_scale: str = "lightgreen",
@@ -269,10 +269,10 @@ def draw_layer_errors_swarm(
     num_bodies: int | None = None,
     max_rate: float | None = None,
     min_rate: float | None = None,
-    connected: list[Union[Pauli, str]] | None = None,
+    connected: list[Pauli | str] | None = None,
     colors: list[str] | None = None,
     num_bins: int | None = None,
-    opacities: Union[float, list[float]] = 0.4,
+    opacities: float | list[float] = 0.4,
     names: list[str] | None = None,
     x_coo: list[float] | None = None,
     marker_size: float | None = None,
