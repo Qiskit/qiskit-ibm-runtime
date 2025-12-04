@@ -1117,7 +1117,7 @@ class QiskitRuntimeService:
         if job_tags:
             validate_job_tags(job_tags)
 
-        job_responses = []  # type: List[Dict[str, Any]]
+        job_responses: list[dict[str, Any]] = []
         current_page_limit = limit or 20
         offset = skip
         while True:
