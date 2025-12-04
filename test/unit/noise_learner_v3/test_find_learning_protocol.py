@@ -23,7 +23,7 @@ from ...ibm_test_case import IBMTestCase
 
 
 class TestConverters(IBMTestCase):
-    """Tests the converters for the noise learner v3 model."""
+    """Tests the `find_learning_protocol` function."""
 
     def test_gate_instructions(self):
         """Test gate instructions."""
