@@ -1,0 +1,2 @@
+Add a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that 
+if set to ``True`` will merge instructions of the same type based on temporal continuity.
