@@ -60,19 +60,19 @@ class QiskitRuntimeService:
 
     def __init__(
         self,
-        channel: Optional[ChannelType] = None,
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[dict] = None,
-        verify: Optional[bool] = None,
-        private_endpoint: Optional[bool] = None,
-        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
-        region: Optional[str] = None,
-        plans_preference: Optional[list[str]] = None,
-        tags: Optional[list[str]] = None,
+        channel: ChannelType | None = None,
+        token: str | None = None,
+        url: str | None = None,
+        filename: str | None = None,
+        name: str | None = None,
+        instance: str | None = None,
+        proxies: dict | None = None,
+        verify: bool | None = None,
+        private_endpoint: bool | None = None,
+        url_resolver: Callable[[str, str, bool | None, str], str] | None = None,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """QiskitRuntimeService constructor.
 
@@ -363,14 +363,14 @@ class QiskitRuntimeService:
 
     def _discover_account(
         self,
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = None,
+        token: str | None = None,
+        url: str | None = None,
+        instance: str | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = None,
     ) -> Account:
         """Discover account for ibm_cloud and ibm_quantum_platform channels."""
         account = None
@@ -485,7 +485,7 @@ class QiskitRuntimeService:
 
     def _get_api_client(
         self,
-        instance: Optional[str] = None,
+        instance: str | None = None,
     ) -> RuntimeClient:
         """Return the saved api client for a given instance for all channels.
         If no instance is provided, return the current active api client.
@@ -519,14 +519,14 @@ class QiskitRuntimeService:
     # pylint: disable=arguments-differ
     def backends(
         self,
-        name: Optional[str] = None,
-        min_num_qubits: Optional[int] = None,
-        instance: Optional[str] = None,
-        dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
+        name: str | None = None,
+        min_num_qubits: int | None = None,
+        instance: str | None = None,
+        dynamic_circuits: bool | None = None,
+        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
         *,
-        use_fractional_gates: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
+        use_fractional_gates: bool | None = False,
+        calibration_id: str | None = None,
         **kwargs: Any,
     ) -> list["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -639,7 +639,7 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> list[tuple[str, list[str]]]:
+    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
         if instance:
             if not is_crn(instance):
                 instance = self._get_crn_from_instance_name(self._account, instance)
@@ -693,9 +693,9 @@ class QiskitRuntimeService:
     def _create_backend_obj(
         self,
         backend_name: str,
-        instance: Optional[str],
-        use_fractional_gates: Optional[bool],
-        calibration_id: Optional[str] = None,
+        instance: str | None,
+        use_fractional_gates: bool | None,
+        calibration_id: str | None = None,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
 
@@ -756,7 +756,7 @@ class QiskitRuntimeService:
             )
         return None
 
-    def active_account(self) -> Optional[dict[str, str]]:
+    def active_account(self) -> dict[str, str] | None:
         """Return the IBM Quantum account currently in use for the session.
 
         Returns:
@@ -766,9 +766,9 @@ class QiskitRuntimeService:
 
     @staticmethod
     def delete_account(
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
+        filename: str | None = None,
+        name: str | None = None,
+        channel: ChannelType | None = None,
     ) -> bool:
         """Delete a saved account from disk.
 
@@ -786,20 +786,20 @@ class QiskitRuntimeService:
 
     @staticmethod
     def save_account(
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        proxies: Optional[dict] = None,
-        verify: Optional[bool] = None,
-        overwrite: Optional[bool] = False,
-        set_as_default: Optional[bool] = None,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[RegionType] = None,
-        plans_preference: Optional[PlanType] = None,
-        tags: Optional[list[str]] = None,
+        token: str | None = None,
+        url: str | None = None,
+        instance: str | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = None,
+        proxies: dict | None = None,
+        verify: bool | None = None,
+        overwrite: bool | None = False,
+        set_as_default: bool | None = None,
+        private_endpoint: bool | None = False,
+        region: RegionType | None = None,
+        plans_preference: PlanType | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -854,10 +854,10 @@ class QiskitRuntimeService:
 
     @staticmethod
     def saved_accounts(
-        default: Optional[bool] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
+        default: bool | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = None,
     ) -> dict:
         """List the accounts saved on disk.
 
@@ -885,9 +885,9 @@ class QiskitRuntimeService:
     def backend(
         self,
         name: str,
-        instance: Optional[str] = None,
-        use_fractional_gates: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
+        instance: str | None = None,
+        use_fractional_gates: bool | None = False,
+        calibration_id: str | None = None,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -944,11 +944,11 @@ class QiskitRuntimeService:
         self,
         program_id: str,
         inputs: dict,
-        options: Optional[Union[RuntimeOptions, dict]] = None,
-        result_decoder: Optional[Union[type[ResultDecoder], Sequence[type[ResultDecoder]]]] = None,
-        session_id: Optional[str] = None,
-        start_session: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
+        options: Union[RuntimeOptions, dict] | None = None,
+        result_decoder: Union[type[ResultDecoder], Sequence[type[ResultDecoder]]] | None = None,
+        session_id: str | None = None,
+        start_session: bool | None = False,
+        calibration_id: str | None = None,
     ) -> RuntimeJobV2:
         """Execute the runtime program.
 
@@ -1064,16 +1064,16 @@ class QiskitRuntimeService:
 
     def jobs(
         self,
-        limit: Optional[int] = 10,
+        limit: int | None = 10,
         skip: int = 0,
-        backend_name: Optional[str] = None,
+        backend_name: str | None = None,
         pending: bool = None,
         program_id: str = None,
-        instance: Optional[str] = None,
-        job_tags: Optional[list[str]] = None,
-        session_id: Optional[str] = None,
-        created_after: Optional[datetime] = None,
-        created_before: Optional[datetime] = None,
+        instance: str | None = None,
+        job_tags: list[str] | None = None,
+        session_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
         descending: bool = True,
     ) -> list[RuntimeJobV2]:
         """Retrieve all runtime jobs, subject to optional filtering.
@@ -1210,9 +1210,9 @@ class QiskitRuntimeService:
 
     def least_busy(
         self,
-        min_num_qubits: Optional[int] = None,
-        instance: Optional[str] = None,
-        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
+        min_num_qubits: int | None = None,
+        instance: str | None = None,
+        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.

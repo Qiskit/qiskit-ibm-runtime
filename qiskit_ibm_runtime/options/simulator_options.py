@@ -39,7 +39,7 @@ class SimulatorOptions:
 
     """
 
-    noise_model: Optional[Union[UnsetType, dict, NoiseModel]] = Unset
+    noise_model: Union[UnsetType, dict, NoiseModel] | None = Unset
     r"""Noise model for the simulator. This option is only supported in
         local testing mode.
 

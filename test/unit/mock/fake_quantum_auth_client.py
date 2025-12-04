@@ -47,7 +47,7 @@ class BaseFakeAuthClient:
         """
         return {"new_api": True, "api-auth": "0.1"}
 
-    def current_access_token(self) -> Optional[str]:
+    def current_access_token(self) -> str | None:
         """Return the current access token.
 
         Returns:

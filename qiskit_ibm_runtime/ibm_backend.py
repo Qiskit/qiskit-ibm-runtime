@@ -155,8 +155,8 @@ class IBMBackend(Backend):
         configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
-        instance: Optional[str] = None,
-        calibration_id: Optional[str] = None,
+        instance: str | None = None,
+        calibration_id: str | None = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -303,7 +303,7 @@ class IBMBackend(Backend):
         self._convert_to_target()
         return self._target
 
-    def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
+    def target_history(self, datetime: python_datetime | None = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
 
         Returns:
@@ -329,8 +329,8 @@ class IBMBackend(Backend):
         self._convert_to_target(refresh=True)
 
     def properties(
-        self, refresh: bool = False, datetime: Optional[python_datetime] = None
-    ) -> Optional[BackendProperties]:
+        self, refresh: bool = False, datetime: python_datetime | None = None
+    ) -> BackendProperties | None:
         """Return the backend properties, subject to optional filtering.
 
         This data describes qubits properties (such as T1 and T2),
@@ -517,7 +517,7 @@ class IBMRetiredBackend(IBMBackend):
         self,
         configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: Optional[RuntimeClient] = None,
+        api_client: RuntimeClient | None = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -540,7 +540,7 @@ class IBMRetiredBackend(IBMBackend):
         """Default runtime options."""
         return Options(shots=4000)
 
-    def properties(self, refresh: bool = False, datetime: Optional[python_datetime] = None) -> None:
+    def properties(self, refresh: bool = False, datetime: python_datetime | None = None) -> None:
         """Return the backend properties."""
         return None
 
@@ -552,7 +552,7 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        api: Optional[RuntimeClient] = None,
+        api: RuntimeClient | None = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(

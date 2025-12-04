@@ -100,8 +100,8 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
-        self._reason: Optional[str] = None
-        self._reason_code: Optional[int] = None
+        self._reason: str | None = None
+        self._reason_code: int | None = None
         self._program_id = program_id
         self._backend_name = backend_name
         self._image = image
@@ -282,17 +282,17 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
+        backend_name: str | None,
         params: dict,
         image: str,
-        log_level: Optional[str],
-        session_id: Optional[str] = None,
-        job_tags: Optional[list[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = None,
-        session_time: Optional[int] = None,
-        private: Optional[int] = False,  # pylint: disable=unused-argument
-        calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
+        log_level: str | None,
+        session_id: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = None,
+        session_time: int | None = None,
+        private: int | None = False,  # pylint: disable=unused-argument
+        calibration_id: str | None = None,  # pylint: disable=unused-argument
     ) -> dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -397,7 +397,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, crn: Optional[str] = None) -> list[str]:
+    def list_backends(self, crn: str | None = None) -> list[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
@@ -405,7 +405,7 @@ class BaseFakeRuntimeClient:
     def backend_configuration(
         self,
         backend_name: str,
-        calibration_id: Optional[str] = None,
+        calibration_id: str | None = None,
     ) -> dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
@@ -430,11 +430,11 @@ class BaseFakeRuntimeClient:
     # pylint: disable=unused-argument
     def create_session(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        channel: Optional[str] = None,
-        mode: Optional[str] = None,
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        channel: str | None = None,
+        mode: str | None = None,
     ) -> dict[str, Any]:
         """Create a session."""
         session_id = uuid.uuid4().hex

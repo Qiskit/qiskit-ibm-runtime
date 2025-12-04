@@ -42,10 +42,10 @@ class RuntimeSession(RestAdapterBase):
 
     def create(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        mode: Optional[str] = None,
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        mode: str | None = None,
     ) -> dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")

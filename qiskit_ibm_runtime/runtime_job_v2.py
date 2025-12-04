@@ -61,13 +61,13 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        creation_date: Optional[str] = None,
-        result_decoder: Optional[Union[type[ResultDecoder], Sequence[type[ResultDecoder]]]] = None,
-        image: Optional[str] = "",
-        session_id: Optional[str] = None,
-        tags: Optional[list] = None,
-        version: Optional[int] = None,
-        private: Optional[bool] = False,
+        creation_date: str | None = None,
+        result_decoder: Union[type[ResultDecoder], Sequence[type[ResultDecoder]]] | None = None,
+        image: str | None = "",
+        session_id: str | None = None,
+        tags: list | None = None,
+        version: int | None = None,
+        private: bool | None = False,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -105,8 +105,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
     def result(  # pylint: disable=arguments-differ
         self,
-        timeout: Optional[float] = None,
-        decoder: Optional[type[ResultDecoder]] = None,
+        timeout: float | None = None,
+        decoder: type[ResultDecoder] | None = None,
     ) -> Any:
         """Return the results of the job.
 
@@ -222,7 +222,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
     def wait_for_final_state(  # pylint: disable=arguments-differ
         self,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
     ) -> None:
         """Poll for the job status from the API until the status is in a final state.
 
@@ -248,7 +248,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 f"Timed out waiting for job to complete after {timeout} secs."
             )
 
-    def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
+    def backend(self, timeout: float | None = None) -> Backend | None:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
 
         Raises:

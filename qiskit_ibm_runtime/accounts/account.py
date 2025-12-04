@@ -55,9 +55,9 @@ class Account:
     def __init__(
         self,
         token: str,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
     ):
         """Account constructor.
 
@@ -118,14 +118,14 @@ class Account:
         cls,
         channel: str,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[list[str]] = None,
-        tags: Optional[list[str]] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
@@ -241,15 +241,15 @@ class CloudAccount(Account):
     def __init__(
         self,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[list[str]] = None,
-        channel: Optional[str] = "ibm_quantum_platform",
-        tags: Optional[str] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        channel: str | None = "ibm_quantum_platform",
+        tags: str | None = None,
     ):
         """Account constructor.
 

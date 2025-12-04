@@ -132,7 +132,7 @@ def validate_no_dd_with_dynamic_circuits(circuits: list[QuantumCircuit], options
         )
 
 
-def validate_job_tags(job_tags: Optional[list[str]]) -> None:
+def validate_job_tags(job_tags: list[str] | None) -> None:
     """Validates input job tags.
 
     Args:

@@ -50,9 +50,9 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
     def __init__(
         self,
-        durations: Optional[qiskit.transpiler.instruction_durations.InstructionDurations] = None,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
-        target: Optional[Target] = None,
+        durations: qiskit.transpiler.instruction_durations.InstructionDurations | None = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ) -> None:
         """Scheduler for dynamic circuit backends.
 
@@ -79,29 +79,29 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
             block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
         )
 
-        self._dag: Optional[DAGCircuit] = None
-        self._block_dag: Optional[DAGCircuit] = None
-        self._wire_map: Optional[dict[Bit, Bit]] = None
-        self._node_mapped_wires: Optional[dict[DAGNode, list[Bit]]] = None
+        self._dag: DAGCircuit | None = None
+        self._block_dag: DAGCircuit | None = None
+        self._wire_map: dict[Bit, Bit] | None = None
+        self._node_mapped_wires: dict[DAGNode, list[Bit]] | None = None
         self._node_block_dags: dict[DAGNode, DAGCircuit] = {}
         # Mapping of control-flow nodes to their containing blocks
         self._block_idx_dag_map: dict[int, DAGCircuit] = {}
         # Mapping of block indices to the respective DAGCircuit
 
         self._current_block_idx = 0
-        self._max_block_t1: Optional[dict[int, int]] = None
+        self._max_block_t1: dict[int, int] | None = None
         # Track as we build to avoid extra pass
         self._control_flow_block = False
-        self._node_start_time: Optional[dict[DAGNode, tuple[int, int]]] = None
-        self._node_stop_time: Optional[dict[DAGNode, tuple[int, int]]] = None
-        self._bit_stop_times: Optional[dict[int, dict[Union[Qubit, Clbit], int]]] = None
+        self._node_start_time: dict[DAGNode, tuple[int, int]] | None = None
+        self._node_stop_time: dict[DAGNode, tuple[int, int]] | None = None
+        self._bit_stop_times: dict[int, dict[Union[Qubit, Clbit], int]] | None = None
         # Dictionary of blocks each containing a dictionary with the key for each bit
         # in the block and its value being the final time of the bit within the block.
         self._current_block_measures: set[DAGNode] = set()
         self._current_block_measures_has_reset: bool = False
-        self._node_tied_to: Optional[dict[DAGNode, set[DAGNode]]] = None
+        self._node_tied_to: dict[DAGNode, set[DAGNode]] | None = None
         # Nodes that the scheduling of this node is tied to.
-        self._bit_indices: Optional[dict[Qubit, int]] = None
+        self._bit_indices: dict[Qubit, int] | None = None
 
         self._time_unit_converter = TimeUnitConversion(durations)
 

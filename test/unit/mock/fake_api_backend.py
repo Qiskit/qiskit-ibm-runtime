@@ -41,7 +41,7 @@ class FakeApiBackendSpecs:
 class FakeApiBackend:
     """Fake backend."""
 
-    def __init__(self, specs: Optional[FakeApiBackendSpecs] = None):
+    def __init__(self, specs: FakeApiBackendSpecs | None = None):
         if hasattr(backends, specs.backend_name):
             model_backend = getattr(backends, specs.backend_name)()
             if isinstance(model_backend, FakeBackendV2):

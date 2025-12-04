@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
 def configuration_from_server_data(
     raw_config: dict,
     instance: str = "",
-    use_fractional_gates: Optional[bool] = False,
-) -> Optional[QasmBackendConfiguration]:
+    use_fractional_gates: bool | None = False,
+) -> QasmBackendConfiguration | None:
     """Create a backend configuration instance from raw server data.
 
     Args:
@@ -70,7 +70,7 @@ def configuration_from_server_data(
 
 
 def filter_raw_configuration(
-    raw_config: dict, use_fractional_gates: Optional[bool] = False
+    raw_config: dict, use_fractional_gates: bool | None = False
 ) -> None:
     """Filter unwanted entries from raw configuration data
 
@@ -105,7 +105,7 @@ def filter_raw_configuration(
 
 
 def properties_from_server_data(
-    properties: dict, use_fractional_gates: Optional[bool] = False
+    properties: dict, use_fractional_gates: bool | None = False
 ) -> BackendProperties:
     """Decode backend properties.
 

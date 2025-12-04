@@ -64,17 +64,17 @@ class Runtime(RestAdapterBase):
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
+        backend_name: str | None,
         params: dict,
-        image: Optional[str] = None,
-        log_level: Optional[str] = None,
-        session_id: Optional[str] = None,
-        job_tags: Optional[list[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = False,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
+        image: str | None = None,
+        log_level: str | None = None,
+        session_id: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = False,
+        session_time: int | None = None,
+        private: bool | None = False,
+        calibration_id: str | None = None,
     ) -> dict:
         """Execute the program.
 
@@ -131,10 +131,10 @@ class Runtime(RestAdapterBase):
         backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
-        job_tags: Optional[list[str]] = None,
-        session_id: Optional[str] = None,
-        created_after: Optional[datetime] = None,
-        created_before: Optional[datetime] = None,
+        job_tags: list[str] | None = None,
+        session_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
         descending: bool = True,
     ) -> dict:
         """Get a list of job data.
@@ -198,7 +198,7 @@ class Runtime(RestAdapterBase):
 
     def backends(
         self,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
     ) -> dict[str, Any]:
         """Return a list of IBM backends.
 

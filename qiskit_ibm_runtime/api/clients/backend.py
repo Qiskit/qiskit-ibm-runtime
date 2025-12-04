@@ -37,7 +37,7 @@ class BaseBackendClient(ABC):
 
     @abstractmethod
     def backend_properties(
-        self, backend_name: str, datetime: Optional[python_datetime] = None
+        self, backend_name: str, datetime: python_datetime | None = None
     ) -> dict[str, Any]:
         """Return the properties of the backend.
 

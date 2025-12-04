@@ -163,8 +163,8 @@ class RetrySession(Session):
         retries_connect: int = 3,
         backoff_factor: float = 0.5,
         verify: bool = True,
-        proxies: Optional[dict[str, str]] = None,
-        auth: Optional[AuthBase] = None,
+        proxies: dict[str, str] | None = None,
+        auth: AuthBase | None = None,
         timeout: tuple[float, Union[float, None]] = (5.0, None),
     ) -> None:
         """RetrySession constructor.
@@ -183,7 +183,7 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-        self.custom_header: Optional[str] = None
+        self.custom_header: str | None = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
@@ -218,7 +218,7 @@ class RetrySession(Session):
         self.mount("https://", retry_adapter)
 
     def _initialize_session_parameters(
-        self, verify: bool, proxies: dict[str, str], auth: Optional[AuthBase] = None
+        self, verify: bool, proxies: dict[str, str], auth: AuthBase | None = None
     ) -> None:
         """Set the session parameters and attributes.
 

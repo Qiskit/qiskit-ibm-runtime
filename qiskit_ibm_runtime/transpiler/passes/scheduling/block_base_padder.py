@@ -68,25 +68,25 @@ class BlockBasePadder(TransformationPass):
     def __init__(
         self,
         schedule_idle_qubits: bool = False,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
-        target: Optional[Target] = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ) -> None:
 
-        self._node_start_time: Optional[dict[DAGNode, tuple[int, int]]] = None
-        self._node_block_dags: Optional[dict[DAGNode, DAGCircuit]] = None
-        self._idle_after: Optional[dict[Qubit, int]] = None
+        self._node_start_time: dict[DAGNode, tuple[int, int]] | None = None
+        self._node_block_dags: dict[DAGNode, DAGCircuit] | None = None
+        self._idle_after: dict[Qubit, int] | None = None
         self._root_dag = None
-        self._dag: Optional[DAGCircuit] = None
-        self._block_dag: Optional[DAGCircuit] = None
-        self._prev_node: Optional[DAGNode] = None
-        self._wire_map: Optional[dict[Bit, Bit]] = None
+        self._dag: DAGCircuit | None = None
+        self._block_dag: DAGCircuit | None = None
+        self._prev_node: DAGNode | None = None
+        self._wire_map: dict[Bit, Bit] | None = None
         self._block_duration = 0
         self._current_block_idx = 0
         self._conditional_block = False
-        self._bit_indices: Optional[dict[Qubit, int]] = None
+        self._bit_indices: dict[Qubit, int] | None = None
         # Nodes that the scheduling of this node is tied to.
 
-        self._last_node_to_touch: Optional[dict[Qubit, DAGNode]] = None
+        self._last_node_to_touch: dict[Qubit, DAGNode] | None = None
         # Last node to touch a bit
 
         self._fast_path_nodes: set[DAGNode] = set()
@@ -156,7 +156,7 @@ class BlockBasePadder(TransformationPass):
         self,
         dag: DAGCircuit,
         pad_wires: bool = True,
-        wire_map: Optional[dict[Qubit, Qubit]] = None,
+        wire_map: dict[Qubit, Qubit] | None = None,
         ignore_idle: bool = False,
     ) -> DAGCircuit:
         """Create an empty dag like the input dag."""

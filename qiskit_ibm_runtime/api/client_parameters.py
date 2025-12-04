@@ -27,11 +27,11 @@ class ClientParameters:
         channel: str,
         token: str,
         url: str = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
         verify: bool = True,
-        private_endpoint: Optional[bool] = False,
-        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
+        private_endpoint: bool | None = False,
+        url_resolver: Callable[[str, str, bool | None, str], str] | None = None,
     ) -> None:
         """ClientParameters constructor.
 

@@ -544,7 +544,7 @@ class RefreshQueue(Queue):
             super().put(item, block=False)
             self.condition.notify()
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> Any:
+    def get(self, block: bool = True, timeout: float | None = None) -> Any:
         """Remove and return an item from the queue.
 
         Args:

@@ -50,17 +50,17 @@ class RuntimeClient(BaseBackendClient):
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
+        backend_name: str | None,
         params: dict,
-        image: Optional[str],
-        log_level: Optional[str],
-        session_id: Optional[str],
-        job_tags: Optional[list[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = False,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
+        image: str | None,
+        log_level: str | None,
+        session_id: str | None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = False,
+        session_time: int | None = None,
+        private: bool | None = False,
+        calibration_id: str | None = None,
     ) -> dict:
         """Run the specified program.
 
@@ -116,10 +116,10 @@ class RuntimeClient(BaseBackendClient):
         backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
-        job_tags: Optional[list[str]] = None,
-        session_id: Optional[str] = None,
-        created_after: Optional[python_datetime] = None,
-        created_before: Optional[python_datetime] = None,
+        job_tags: list[str] | None = None,
+        session_id: str | None = None,
+        created_after: python_datetime | None = None,
+        created_before: python_datetime | None = None,
         descending: bool = True,
     ) -> dict:
         """Get job data for all jobs.
@@ -209,10 +209,10 @@ class RuntimeClient(BaseBackendClient):
 
     def create_session(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        mode: Optional[str] = None,
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        mode: str | None = None,
     ) -> dict[str, Any]:
         """Create a session.
 
@@ -254,7 +254,7 @@ class RuntimeClient(BaseBackendClient):
         return self._api.backends()["devices"]
 
     def backend_configuration(
-        self, backend_name: str, refresh: bool = False, calibration_id: Optional[str] = None
+        self, backend_name: str, refresh: bool = False, calibration_id: str | None = None
     ) -> dict[str, Any]:
         """Return the configuration of the IBM backend.
 
@@ -289,8 +289,8 @@ class RuntimeClient(BaseBackendClient):
     def backend_properties(
         self,
         backend_name: str,
-        datetime: Optional[python_datetime] = None,
-        calibration_id: Optional[str] = None,
+        datetime: python_datetime | None = None,
+        calibration_id: str | None = None,
     ) -> dict[str, Any]:
         """Return the properties of the IBM backend.
 

@@ -150,7 +150,7 @@ class LayerError:
         self,
         circuit: QuantumCircuit,
         qubits: Sequence[int],
-        error: Optional[PauliLindbladError] = None,
+        error: PauliLindbladError | None = None,
     ) -> None:
 
         self._circuit = circuit
@@ -201,7 +201,7 @@ class LayerError:
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
-        highest_rate: Optional[float] = None,
+        highest_rate: float | None = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
@@ -276,16 +276,16 @@ class LayerError:
 
     def draw_swarm(
         self,
-        num_bodies: Optional[int] = None,
-        max_rate: Optional[float] = None,
-        min_rate: Optional[float] = None,
-        connected: Optional[Union[list[Pauli], list[str]]] = None,
-        colors: Optional[list[str]] = None,
-        num_bins: Optional[int] = None,
+        num_bodies: int | None = None,
+        max_rate: float | None = None,
+        min_rate: float | None = None,
+        connected: Union[list[Pauli], list[str]] | None = None,
+        colors: list[str] | None = None,
+        num_bins: int | None = None,
         opacities: Union[float, list[float]] = 0.4,
-        names: Optional[list[str]] = None,
-        x_coo: Optional[list[float]] = None,
-        marker_size: Optional[float] = None,
+        names: list[str] | None = None,
+        x_coo: list[float] | None = None,
+        marker_size: float | None = None,
         height: int = 500,
         width: int = 800,
     ) -> PlotlyFigure:

@@ -31,7 +31,7 @@ class CommonOptions:
     shots: int = 4000
     meas_level: Union[int, MeasLevel] = MeasLevel.CLASSIFIED
     init_qubits: bool = True
-    rep_delay: Optional[float] = None
+    rep_delay: float | None = None
     memory: bool = False
     meas_return: Union[str, MeasReturnType] = MeasReturnType.AVERAGE
 
@@ -48,17 +48,17 @@ class CommonOptions:
 class QASM3Options(CommonOptions):
     """Options for the QASM3 path."""
 
-    init_circuit: Optional[QuantumCircuit] = None
-    init_num_resets: Optional[int] = None
+    init_circuit: QuantumCircuit | None = None
+    init_num_resets: int | None = None
 
 
 @dataclass
 class QASM2Options(CommonOptions):
     """Options for the QASM2 path."""
 
-    header: Optional[dict] = None
+    header: dict | None = None
     init_qubits: bool = True
-    use_measure_esp: Optional[bool] = None
+    use_measure_esp: bool | None = None
     # Simulator only
     noise_model: Any = None
-    seed_simulator: Optional[int] = None
+    seed_simulator: int | None = None

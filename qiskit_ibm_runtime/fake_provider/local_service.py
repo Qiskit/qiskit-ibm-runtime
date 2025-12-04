@@ -66,10 +66,10 @@ class QiskitRuntimeLocalService:
 
     def backends(
         self,
-        name: Optional[str] = None,
-        min_num_qubits: Optional[int] = None,
-        dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+        name: str | None = None,
+        min_num_qubits: int | None = None,
+        dynamic_circuits: bool | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> list[FakeBackendV2]:
         """Return all the available fake backends, subject to optional filtering.
 
@@ -128,8 +128,8 @@ class QiskitRuntimeLocalService:
 
     def least_busy(
         self,
-        min_num_qubits: Optional[int] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+        min_num_qubits: int | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
         """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
@@ -149,7 +149,7 @@ class QiskitRuntimeLocalService:
         program_id: Literal["sampler", "estimator"],
         inputs: dict,
         options: Union[RuntimeOptions, dict],
-        calibration_id: Optional[str],
+        calibration_id: str | None,
     ) -> PrimitiveJob:
         """Execute the runtime program.
 

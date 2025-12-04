@@ -35,14 +35,14 @@ class EnvironmentOptions:
 
         Default: ``WARNING``.
     """
-    job_tags: Optional[list] = None
+    job_tags: list | None = None
     r"""Tags to be assigned to the job. The tags can subsequently be used
         as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
         function call. 
         
         Default: ``None``.
     """
-    private: Optional[bool] = False
+    private: bool | None = False
     r"""Boolean that indicates whether the job is marked as private. When set to true, 
         input parameters are not returned, and the results can only be read once. 
         After the job is completed, input parameters are deleted from the service. 

@@ -83,7 +83,7 @@ def local_to_utc_str(local_dt: Union[datetime, str], suffix: str = "Z") -> str:
     return utc_dt_str
 
 
-def convert_tz(input_dt: Optional[datetime], to_utc: bool) -> Optional[datetime]:
+def convert_tz(input_dt: datetime | None, to_utc: bool) -> datetime | None:
     """Convert input timestamp timezone.
 
     Args:
@@ -121,7 +121,7 @@ def utc_to_local_all(data: Any) -> Any:
     return data
 
 
-def str_to_utc(utc_dt: Optional[str]) -> Optional[datetime]:
+def str_to_utc(utc_dt: str | None) -> datetime | None:
     """Convert a UTC string to a ``datetime`` object with UTC timezone.
 
     Args:

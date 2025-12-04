@@ -100,10 +100,10 @@ class FakeRuntimeService(QiskitRuntimeService):
         # return dummy crn
         return instance
 
-    def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
+    def _get_api_client(self, instance: str | None = None) -> RuntimeClient:
         return self._active_api_client
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> list[tuple[str, list[str]]]:
+    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
         if instance:
             return [(instance, self._discover_backends_from_instance(instance))]
         if not self._all_instances:

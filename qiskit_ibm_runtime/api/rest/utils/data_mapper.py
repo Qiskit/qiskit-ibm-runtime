@@ -31,7 +31,7 @@ def map_jobs_limit_response(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-def dict_to_identifier(data: dict[str, Any], mapper: Optional[dict] = None) -> None:
+def dict_to_identifier(data: dict[str, Any], mapper: dict | None = None) -> None:
     """Convert keys in a dictionary to valid identifiers, with optional mapping.
 
     If a `mapper` is specified, keys in `data` that are also in `mapper` will

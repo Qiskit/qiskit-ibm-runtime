@@ -151,7 +151,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
 
     def __init__(
         self,
-        instruction_durations: Optional[InstructionDurationsType] = None,
+        instruction_durations: InstructionDurationsType | None = None,
         dt: float = None,
         enable_patching: bool = True,
     ):
@@ -202,7 +202,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         return cls(instruction_durations, dt=dt)
 
     def update(
-        self, inst_durations: Optional[InstructionDurationsType], dt: float = None
+        self, inst_durations: InstructionDurationsType | None, dt: float = None
     ) -> "DynamicCircuitInstructionDurations":
         """Update self with inst_durations (inst_durations overwrite self). Overrides the default
         durations for certain hardcoded instructions.

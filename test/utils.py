@@ -72,7 +72,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
 
 def most_busy_backend(
     service: QiskitRuntimeService,
-    instance: Optional[str] = None,
+    instance: str | None = None,
 ) -> IBMBackend:
     """Return the most busy backend for the provider given.
 
@@ -218,9 +218,9 @@ def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool
 
 def create_faulty_backend(
     model_backend: Backend,
-    faulty_qubit: Optional[int] = None,
-    faulty_edge: Optional[tuple] = None,
-    faulty_q1_property: Optional[int] = None,
+    faulty_qubit: int | None = None,
+    faulty_edge: tuple | None = None,
+    faulty_q1_property: int | None = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -279,8 +279,8 @@ def create_faulty_backend(
 
 def get_mocked_backend(
     name: str = "ibm_gotham",
-    configuration: Optional[dict] = None,
-    properties: Optional[dict] = None,
+    configuration: dict | None = None,
+    properties: dict | None = None,
 ) -> IBMBackend:
     """Return a mock backend."""
 

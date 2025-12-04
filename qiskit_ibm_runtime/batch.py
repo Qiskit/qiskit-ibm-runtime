@@ -85,9 +85,9 @@ class Batch(Session):
     def __init__(
         self,
         backend: BackendV2,
-        max_time: Optional[Union[int, str]] = None,
+        max_time: Union[int, str] | None = None,
         *,
-        create_new: Optional[bool] = True,
+        create_new: bool | None = True,
     ):
         """Batch constructor.
 
@@ -108,7 +108,7 @@ class Batch(Session):
 
         super().__init__(backend=backend, max_time=max_time, create_new=create_new)
 
-    def _create_session(self, *, create_new: Optional[bool] = True) -> Optional[str]:
+    def _create_session(self, *, create_new: bool | None = True) -> str | None:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._get_api_client(self._instance).create_session(

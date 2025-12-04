@@ -66,7 +66,7 @@ class TestSerialization(IBMIntegrationTestCase):
                     self._verify_data(properties.to_dict(), good_keys)
 
     def _verify_data(
-        self, data: dict, good_keys: tuple, good_key_prefixes: Optional[tuple] = None
+        self, data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None
     ) -> None:
         """Verify that the input data does not contain serialized objects.
 

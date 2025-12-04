@@ -96,7 +96,7 @@ def _to_obj(cls_, data):  # type: ignore
 
 
 def merge_options(
-    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
+    old_options: Union[dict, "BaseOptions"], new_options: dict | None = None
 ) -> dict:
     """Merge current options with the new ones.
 
@@ -110,7 +110,7 @@ def merge_options(
         TypeError: if input type is invalid.
     """
 
-    def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
+    def _update_options(old: dict, new: dict, matched: dict | None = None) -> None:
         if not new and not matched:
             return
         matched = matched or {}
@@ -152,7 +152,7 @@ def merge_options(
 
 
 def merge_options_v2(
-    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
+    old_options: Union[dict, "BaseOptions"], new_options: dict | None = None
 ) -> dict:
     """Merge current options with the new ones for V2 primitives.
 

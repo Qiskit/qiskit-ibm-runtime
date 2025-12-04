@@ -60,8 +60,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[dict, SamplerOptions]] = None,
+        mode: Union[BackendV2, Session, Batch] | None = None,
+        options: Union[dict, SamplerOptions] | None = None,
     ):
         """Initializes the Sampler primitive.
 
