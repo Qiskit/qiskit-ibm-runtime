@@ -21,7 +21,7 @@ from qiskit.utils.units import apply_prefix
 
 from .exceptions import BackendPropertyError
 
-PropertyT = Tuple[Any, datetime.datetime]
+PropertyT = tuple[Any, datetime.datetime]
 NduvT = TypeVar("NduvT", bound="Nduv")
 GatePropertiesT = TypeVar("GatePropertiesT", bound="GateProperties")
 BackendPropertiesT = TypeVar("BackendPropertiesT", bound="BackendProperties")
@@ -52,7 +52,7 @@ class Nduv:
         self.value = value
 
     @classmethod
-    def from_dict(cls: Type[NduvT], data: Dict[str, Any]) -> NduvT:
+    def from_dict(cls: type[NduvT], data: dict[str, Any]) -> NduvT:
         """Create a new Nduv object from a dictionary.
 
         Args:
@@ -65,7 +65,7 @@ class Nduv:
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the object.
 
         Returns:
@@ -98,9 +98,9 @@ class GateProperties:
         parameters: parameters.
     """
 
-    _data: Dict[Any, Any] = {}
+    _data: dict[Any, Any] = {}
 
-    def __init__(self, qubits: List[int], gate: str, parameters: List[Nduv], **kwargs: Any) -> None:
+    def __init__(self, qubits: list[int], gate: str, parameters: list[Nduv], **kwargs: Any) -> None:
         """Initialize a new :class:`GateProperties` object
 
         Args:
@@ -123,7 +123,7 @@ class GateProperties:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls: Type[GatePropertiesT], data: Dict[str, Any]) -> GatePropertiesT:
+    def from_dict(cls: type[GatePropertiesT], data: dict[str, Any]) -> GatePropertiesT:
         """Create a new Gate object from a dictionary.
 
         Args:
@@ -134,7 +134,7 @@ class GateProperties:
         Returns:
             GateProperties: The Nduv from the input dictionary.
         """
-        in_data: Dict[Any, Any] = {}
+        in_data: dict[Any, Any] = {}
         for key, value in data.items():
             if key == "parameters":
                 in_data[key] = list(map(Nduv.from_dict, value))
@@ -142,13 +142,13 @@ class GateProperties:
                 in_data[key] = value
         return cls(**in_data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
             dict: The dictionary form of the Gate.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "qubits": self.qubits,
             "gate": self.gate,
             "parameters": [x.to_dict() for x in self.parameters],
@@ -238,7 +238,7 @@ class BackendProperties:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls: Type[BackendPropertiesT], data: dict) -> BackendPropertiesT:
+    def from_dict(cls: type[BackendPropertiesT], data: dict) -> BackendPropertiesT:
         """Create a new BackendProperties object from a dictionary.
 
         Args:
@@ -298,8 +298,8 @@ class BackendProperties:
         qubits: Union[int, Iterable[int]] = None,
         name: str = None,
     ) -> Union[
-        Dict[Tuple[int, ...], Dict[str, PropertyT]],
-        Dict[str, PropertyT],
+        dict[tuple[int, ...], dict[str, PropertyT]],
+        dict[str, PropertyT],
         PropertyT,
     ]:
         """
@@ -395,7 +395,7 @@ class BackendProperties:
         qubit: int,
         name: str = None,
     ) -> Union[
-        Dict[str, PropertyT],
+        dict[str, PropertyT],
         PropertyT,
     ]:
         """

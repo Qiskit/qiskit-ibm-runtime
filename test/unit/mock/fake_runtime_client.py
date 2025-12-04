@@ -287,13 +287,13 @@ class BaseFakeRuntimeClient:
         image: str,
         log_level: Optional[str],
         session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
+        job_tags: Optional[list[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
         private: Optional[int] = False,  # pylint: disable=unused-argument
         calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
@@ -397,7 +397,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, crn: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: Optional[str] = None) -> list[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
@@ -406,20 +406,20 @@ class BaseFakeRuntimeClient:
         self,
         backend_name: str,
         calibration_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
             return ret.copy()
         return None
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
     # pylint: disable=unused-argument
     def backend_properties(
         self, backend_name: str, datetime: Any = None, calibration_id: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
@@ -435,7 +435,7 @@ class BaseFakeRuntimeClient:
         max_time: Optional[int] = None,
         channel: Optional[str] = None,
         mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a session."""
         session_id = uuid.uuid4().hex
         self._sessions.add(session_id)
@@ -447,7 +447,7 @@ class BaseFakeRuntimeClient:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
 
-    def session_details(self, session_id: str) -> Dict[str, Any]:
+    def session_details(self, session_id: str) -> dict[str, Any]:
         """Return the details of the session."""
         return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 

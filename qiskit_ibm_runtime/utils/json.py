@@ -152,7 +152,7 @@ def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool 
         return deserializer(buff)
 
 
-def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -> Any:
+def _deserialize_from_settings(mod_name: str, class_name: str, settings: dict) -> Any:
     """Deserialize an object from its settings.
 
     Args:
@@ -173,7 +173,7 @@ def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
-def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> Any:
+def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> Any:
     """Deserialize an object from its ``_json`` dictionary.
 
     Args:
@@ -193,7 +193,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> A
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
-def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
+def _set_int_keys_flag(obj: dict) -> Union[dict, list]:
     """Recursively sets '__int_keys__' flag if dictionary uses integer keys
 
     Args:
@@ -210,7 +210,7 @@ def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
     return obj
 
 
-def _cast_strings_keys_to_int(obj: Dict) -> Dict:
+def _cast_strings_keys_to_int(obj: dict) -> dict:
     """Casts string to int keys in dictionary when '__int_keys__' flag is set
 
     Args:
@@ -220,7 +220,7 @@ def _cast_strings_keys_to_int(obj: Dict) -> Dict:
         obj with string keys cast to int keys and '__int_keys__' flags removed
     """
     if isinstance(obj, dict):
-        int_keys: List[int] = []
+        int_keys: list[int] = []
         for k, val in list(obj.items()):
             if "__int_keys__" in obj:
                 try:
@@ -261,7 +261,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: Dict[str, object] = {
+            kwargs: dict[str, object] = {
                 "version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)
             }
             value = _serialize_and_encode(

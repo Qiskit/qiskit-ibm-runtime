@@ -80,7 +80,7 @@ class NoiseLearnerOptions(OptionsV2):
     each.
     """
 
-    layer_pair_depths: Union[UnsetType, List[int]] = Unset
+    layer_pair_depths: Union[UnsetType, list[int]] = Unset
     r"""The circuit depths (measured in number of pairs) to use in learning experiments.
     
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -120,7 +120,7 @@ class NoiseLearnerOptions(OptionsV2):
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
     @skip_unset_validation
-    def _nonnegative_list(cls, value: List[int], info: ValidationInfo) -> List[int]:
+    def _nonnegative_list(cls, value: list[int], info: ValidationInfo) -> list[int]:
         if any(i < 0 for i in value):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0")
         return value

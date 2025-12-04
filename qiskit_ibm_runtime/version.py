@@ -24,7 +24,7 @@ from typing import List
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def _minimal_ext_cmd(cmd: List[str]) -> bytes:
+def _minimal_ext_cmd(cmd: list[str]) -> bytes:
     # construct minimal environment
     env = {}
     for k in ["SYSTEMROOT", "PATH"]:

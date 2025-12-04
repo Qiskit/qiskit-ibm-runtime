@@ -35,7 +35,7 @@ from ..decorators import IntegrationTestDependencies
 
 def _get_service_instance_name_for_crn(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance name and account id for a given CRN.
 
     Note: production code computes the inverse mapping. This function is needed for integration test
@@ -51,7 +51,7 @@ def _get_service_instance_name_for_crn(
 
 def _get_instance_tags(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance tags for a given crn."""
     authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
     client = GlobalSearchV2(authenticator=authenticator)

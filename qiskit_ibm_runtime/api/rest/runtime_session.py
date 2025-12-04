@@ -46,7 +46,7 @@ class RuntimeSession(RestAdapterBase):
         instance: Optional[str] = None,
         max_time: Optional[int] = None,
         mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")
         payload = {}
@@ -77,7 +77,7 @@ class RuntimeSession(RestAdapterBase):
             else:
                 raise IBMRuntimeError(f"Error closing session: {ex}")
 
-    def details(self) -> Dict[str, Any]:
+    def details(self) -> dict[str, Any]:
         """Return the details of this session."""
 
         return self.session.get(self.get_url("self"), headers=self._HEADER_JSON_ACCEPT).json()

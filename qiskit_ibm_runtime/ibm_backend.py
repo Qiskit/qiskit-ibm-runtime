@@ -281,7 +281,7 @@ class IBMBackend(Backend):
         return None
 
     @property
-    def meas_map(self) -> List[List[int]]:
+    def meas_map(self) -> list[list[int]]:
         """Return the grouping of measurements which are multiplexed
 
         This is required to be implemented if the backend supports Pulse

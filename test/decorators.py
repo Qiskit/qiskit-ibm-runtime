@@ -79,7 +79,7 @@ def run_integration_test(func):
 
 
 def integration_test_setup(
-    supported_channel: Optional[List[str]] = None,
+    supported_channel: Optional[list[str]] = None,
     init_service: Optional[bool] = True,
 ) -> Callable:
     """Returns a decorator for integration test initialization.

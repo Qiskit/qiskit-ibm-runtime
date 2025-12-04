@@ -143,9 +143,9 @@ class Session:
     def _run(
         self,
         program_id: str,
-        inputs: Dict,
-        options: Optional[Dict] = None,
-        result_decoder: Optional[Type[ResultDecoder]] = None,
+        inputs: dict,
+        options: Optional[dict] = None,
+        result_decoder: Optional[type[ResultDecoder]] = None,
         calibration_id: Optional[str] = None,
     ) -> RuntimeJobV2:
         """Run a program in the session.
@@ -257,7 +257,7 @@ class Session:
                 return response.get("elapsed_time")
         return None
 
-    def details(self) -> Optional[Dict[str, Any]]:
+    def details(self) -> Optional[dict[str, Any]]:
         """Return session details.
 
         Returns:
@@ -391,7 +391,7 @@ class Session:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:

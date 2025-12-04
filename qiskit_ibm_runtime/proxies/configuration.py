@@ -31,7 +31,7 @@ class ProxyConfiguration:
         password_ntlm: password used to enable NTLM user authentication.
     """
 
-    urls: Optional[Dict[str, str]] = None
+    urls: Optional[dict[str, str]] = None
     username_ntlm: Optional[str] = None
     password_ntlm: Optional[str] = None
 

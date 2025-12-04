@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 def configuration_from_server_data(
-    raw_config: Dict,
+    raw_config: dict,
     instance: str = "",
     use_fractional_gates: Optional[bool] = False,
 ) -> Optional[QasmBackendConfiguration]:
@@ -105,7 +105,7 @@ def filter_raw_configuration(
 
 
 def properties_from_server_data(
-    properties: Dict, use_fractional_gates: Optional[bool] = False
+    properties: dict, use_fractional_gates: Optional[bool] = False
 ) -> BackendProperties:
     """Decode backend properties.
 
@@ -143,7 +143,7 @@ def properties_from_server_data(
     return BackendProperties.from_dict(properties)
 
 
-def decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: dict) -> None:
     """Decode backend configuration.
 
     Args:
@@ -161,7 +161,7 @@ def decode_backend_configuration(config: Dict) -> None:
 _decode_backend_configuration = decode_backend_configuration
 
 
-def _to_complex(value: Union[List[float], complex]) -> complex:
+def _to_complex(value: Union[list[float], complex]) -> complex:
     """Convert the input value to type ``complex``.
 
     Args:

@@ -70,7 +70,7 @@ class ClientParameters:
         """Returns the Runtime API base url."""
         return self.url_resolver(self.url, self.instance, self.private_endpoint, self.channel)
 
-    def connection_parameters(self) -> Dict[str, Any]:
+    def connection_parameters(self) -> dict[str, Any]:
         """Construct connection related parameters.
 
         Returns:

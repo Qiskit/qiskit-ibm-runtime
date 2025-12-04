@@ -39,7 +39,7 @@ class ConvertIdToDelay(TransformationPass):
         """
         self.durations = durations
         self.gate = gate
-        self._cached_durations: Dict[int, int] = {}
+        self._cached_durations: dict[int, int] = {}
 
         super().__init__()
 

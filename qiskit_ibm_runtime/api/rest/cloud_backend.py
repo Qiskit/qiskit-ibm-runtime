@@ -39,7 +39,7 @@ class CloudBackend(RestAdapterBase):
         self.backend_name = backend_name
         super().__init__(session, "{}/backends/{}".format(url_prefix, backend_name))
 
-    def configuration(self, calibration_id: Optional[str] = None) -> Dict[str, Any]:
+    def configuration(self, calibration_id: Optional[str] = None) -> dict[str, Any]:
         """Return backend configuration.
 
         Args:
@@ -57,7 +57,7 @@ class CloudBackend(RestAdapterBase):
 
     def properties(
         self, datetime: Optional[python_datetime] = None, calibration_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return backend properties.
 
         Returns:
@@ -77,7 +77,7 @@ class CloudBackend(RestAdapterBase):
             response["backend_name"] = self.backend_name
         return response
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         """Return backend status.
 
         Returns:

@@ -34,7 +34,7 @@ class RuntimeOptions:
     image: Optional[str] = None
     log_level: Optional[str] = None
     instance: Optional[str] = None
-    job_tags: Optional[List[str]] = None
+    job_tags: Optional[list[str]] = None
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
     private: Optional[bool] = False
@@ -45,7 +45,7 @@ class RuntimeOptions:
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         instance: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
+        job_tags: Optional[list[str]] = None,
         max_execution_time: Optional[int] = None,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,

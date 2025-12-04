@@ -34,7 +34,7 @@ from ..utils import (
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[str]]
+PlanType = Optional[list[str]]
 
 ChannelType = Optional[
     Literal[
@@ -76,8 +76,8 @@ class Account:
         self.verify = verify
         self.private_endpoint: bool = False
         self.region: str = None
-        self.plans_preference: List[str] = None
-        self.tags: List[str] = None
+        self.plans_preference: list[str] = None
+        self.tags: list[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -124,8 +124,8 @@ class Account:
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        plans_preference: Optional[list[str]] = None,
+        tags: Optional[list[str]] = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
@@ -153,7 +153,7 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(self) -> List[Dict[str, Any]]:  # type: ignore
+    def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -229,7 +229,7 @@ class Account:
     @staticmethod
     @abstractmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         pass
@@ -247,7 +247,7 @@ class CloudAccount(Account):
         verify: Optional[bool] = True,
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
+        plans_preference: Optional[list[str]] = None,
         channel: Optional[str] = "ibm_quantum_platform",
         tags: Optional[str] = None,
     ):
@@ -315,7 +315,7 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Dict[str, Any]]:
+    def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
@@ -385,7 +385,7 @@ class CloudAccount(Account):
 
     @staticmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):

@@ -81,37 +81,37 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         self._dag: Optional[DAGCircuit] = None
         self._block_dag: Optional[DAGCircuit] = None
-        self._wire_map: Optional[Dict[Bit, Bit]] = None
-        self._node_mapped_wires: Optional[Dict[DAGNode, List[Bit]]] = None
-        self._node_block_dags: Dict[DAGNode, DAGCircuit] = {}
+        self._wire_map: Optional[dict[Bit, Bit]] = None
+        self._node_mapped_wires: Optional[dict[DAGNode, list[Bit]]] = None
+        self._node_block_dags: dict[DAGNode, DAGCircuit] = {}
         # Mapping of control-flow nodes to their containing blocks
-        self._block_idx_dag_map: Dict[int, DAGCircuit] = {}
+        self._block_idx_dag_map: dict[int, DAGCircuit] = {}
         # Mapping of block indices to the respective DAGCircuit
 
         self._current_block_idx = 0
-        self._max_block_t1: Optional[Dict[int, int]] = None
+        self._max_block_t1: Optional[dict[int, int]] = None
         # Track as we build to avoid extra pass
         self._control_flow_block = False
-        self._node_start_time: Optional[Dict[DAGNode, Tuple[int, int]]] = None
-        self._node_stop_time: Optional[Dict[DAGNode, Tuple[int, int]]] = None
-        self._bit_stop_times: Optional[Dict[int, Dict[Union[Qubit, Clbit], int]]] = None
+        self._node_start_time: Optional[dict[DAGNode, tuple[int, int]]] = None
+        self._node_stop_time: Optional[dict[DAGNode, tuple[int, int]]] = None
+        self._bit_stop_times: Optional[dict[int, dict[Union[Qubit, Clbit], int]]] = None
         # Dictionary of blocks each containing a dictionary with the key for each bit
         # in the block and its value being the final time of the bit within the block.
-        self._current_block_measures: Set[DAGNode] = set()
+        self._current_block_measures: set[DAGNode] = set()
         self._current_block_measures_has_reset: bool = False
-        self._node_tied_to: Optional[Dict[DAGNode, Set[DAGNode]]] = None
+        self._node_tied_to: Optional[dict[DAGNode, set[DAGNode]]] = None
         # Nodes that the scheduling of this node is tied to.
-        self._bit_indices: Optional[Dict[Qubit, int]] = None
+        self._bit_indices: Optional[dict[Qubit, int]] = None
 
         self._time_unit_converter = TimeUnitConversion(durations)
 
         super().__init__()
 
     @property
-    def _current_block_bit_times(self) -> Dict[Union[Qubit, Clbit], int]:
+    def _current_block_bit_times(self) -> dict[Union[Qubit, Clbit], int]:
         return self._bit_stop_times[self._current_block_idx]
 
-    def _visit_block(self, block: DAGCircuit, wire_map: Dict[Qubit, Qubit]) -> None:
+    def _visit_block(self, block: DAGCircuit, wire_map: dict[Qubit, Qubit]) -> None:
         # Push the previous block dag onto the stack
         prev_block_dag = self._block_dag
         self._block_dag = block
@@ -284,7 +284,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._current_block_measures = set()
         self._current_block_measures_has_reset = False
 
-    def _current_block_measure_qargs(self) -> Set[Qubit]:
+    def _current_block_measure_qargs(self) -> set[Qubit]:
         return set(
             qarg for measure in self._current_block_measures for qarg in self._map_qubits(measure)
         )
@@ -298,7 +298,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 # Otherwise just trigger a measurement flush
                 self._flush_measures()
 
-    def _map_wires(self, node: DAGNode) -> List[Qubit]:
+    def _map_wires(self, node: DAGNode) -> list[Qubit]:
         """Map the wires from the current node to the top-level block's wires.
 
         TODO: We should have an easier approach to wire mapping from the transpiler.
@@ -311,7 +311,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         return self._node_mapped_wires[node]
 
-    def _map_qubits(self, node: DAGNode) -> List[Qubit]:
+    def _map_qubits(self, node: DAGNode) -> list[Qubit]:
         """Map the qubits from the current node to the top-level block's qubits.
 
         TODO: We should have an easier approach to wire mapping from the transpiler.
@@ -584,7 +584,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # Iterated nodes starting at the first, from the node with the
         # last time, preferring barriers over non-barriers
 
-        def order_ops(item: Tuple[DAGNode, Tuple[int, int]]) -> Tuple[int, int, bool, int]:
+        def order_ops(item: tuple[DAGNode, tuple[int, int]]) -> tuple[int, int, bool, int]:
             """Iterated nodes ordering by channel, time and preferring that barriers are processed
             first."""
             return (
@@ -600,7 +600,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         new_node_stop_time = {}
 
         def _calculate_new_times(
-            block: int, node: DAGNode, block_bit_times: Dict[int, Dict[Qubit, int]]
+            block: int, node: DAGNode, block_bit_times: dict[int, dict[Qubit, int]]
         ) -> int:
             max_block_time = min(block_bit_times[block][bit] for bit in self._map_qubits(node))
 
@@ -617,7 +617,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
             block: int,
             node: DAGNode,
             new_time: int,
-            block_bit_times: Dict[int, Dict[Qubit, int]],
+            block_bit_times: dict[int, dict[Qubit, int]],
         ) -> None:
             scheduled.add(node)
 

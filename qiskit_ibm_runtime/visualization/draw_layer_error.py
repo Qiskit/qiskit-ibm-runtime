@@ -89,7 +89,7 @@ def draw_layer_error_map(
     # Initialize a dictionary of one-qubit errors
     qubits = layer_error.qubits
     error_1q = layer_error.error.restrict_num_bodies(1)
-    rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in qubits}
+    rates_1q: dict[int, dict[str, float]] = {qubit: {} for qubit in qubits}
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit_idx = np.where(pauli.x | pauli.z)[0][0]
         rates_1q[qubits[qubit_idx]][str(pauli[qubit_idx])] = rate
@@ -97,7 +97,7 @@ def draw_layer_error_map(
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.restrict_num_bodies(2)
-    rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {edge: {} for edge in edges}
+    rates_2q: dict[tuple[int, ...], dict[str, float]] = {edge: {} for edge in edges}
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
         err_idxs = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
         edge = (qubits[err_idxs[0]], qubits[err_idxs[1]])

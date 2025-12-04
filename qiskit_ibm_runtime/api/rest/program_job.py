@@ -43,7 +43,7 @@ class ProgramJob(RestAdapterBase):
         """
         super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
 
-    def get(self, exclude_params: bool = None) -> Dict:
+    def get(self, exclude_params: bool = None) -> dict:
         """Return program job information.
 
         Args:
@@ -85,7 +85,7 @@ class ProgramJob(RestAdapterBase):
         """
         return self.session.get(self.get_url("logs")).text
 
-    def metadata(self) -> Dict:
+    def metadata(self) -> dict:
         """Retrieve job metadata.
 
         Returns:

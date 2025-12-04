@@ -35,7 +35,7 @@ class EnvironmentOptions:
 
         Default: ``WARNING``.
     """
-    job_tags: Optional[List] = None
+    job_tags: Optional[list] = None
     r"""Tags to be assigned to the job. The tags can subsequently be used
         as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
         function call. 

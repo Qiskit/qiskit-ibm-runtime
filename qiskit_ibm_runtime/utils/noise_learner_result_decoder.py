@@ -26,7 +26,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
         cls, raw_result: str
     ) -> NoiseLearnerResult:
         """Convert the result to NoiseLearnerResult."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         data = []
         for layer in decoded["data"]:

@@ -65,17 +65,17 @@ class Runtime(RestAdapterBase):
         self,
         program_id: str,
         backend_name: Optional[str],
-        params: Dict,
+        params: dict,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
+        job_tags: Optional[list[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
         private: Optional[bool] = False,
         calibration_id: Optional[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """Execute the program.
 
         Args:
@@ -96,7 +96,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "program_id": program_id,
             "params": params,
         }
@@ -131,12 +131,12 @@ class Runtime(RestAdapterBase):
         backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
-        job_tags: Optional[List[str]] = None,
+        job_tags: Optional[list[str]] = None,
         session_id: Optional[str] = None,
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Get a list of job data.
 
         Args:
@@ -161,7 +161,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Union[int, str, List[str]]] = {}
+        payload: dict[str, Union[int, str, list[str]]] = {}
         payload["exclude_params"] = "true"
         if limit:
             payload["limit"] = limit
@@ -199,7 +199,7 @@ class Runtime(RestAdapterBase):
     def backends(
         self,
         timeout: Optional[float] = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return a list of IBM backends.
 
         Args:
@@ -211,7 +211,7 @@ class Runtime(RestAdapterBase):
         url = self.get_url("backends")
         return self.session.get(url, timeout=timeout, headers=self._HEADER_JSON_ACCEPT).json()
 
-    def cloud_usage(self) -> Dict[str, Any]:
+    def cloud_usage(self) -> dict[str, Any]:
         """Return cloud instance usage information.
 
         Returns:

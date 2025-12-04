@@ -71,8 +71,8 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = None,
         url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
         region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        plans_preference: Optional[list[str]] = None,
+        tags: Optional[list[str]] = None,
     ) -> None:
         """QiskitRuntimeService constructor.
 
@@ -197,8 +197,8 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-        self._all_instances: List[Dict[str, Any]] = []
-        self._saved_instances: List[str] = []
+        self._all_instances: list[dict[str, Any]] = []
+        self._saved_instances: list[str] = []
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -226,12 +226,12 @@ class QiskitRuntimeService:
 
         self._channel = self._account.channel
         self._url_resolver = url_resolver
-        self._backend_configs: Dict[str, QasmBackendConfiguration] = {}
+        self._backend_configs: dict[str, QasmBackendConfiguration] = {}
 
         self._default_instance = False
         self._active_api_client = RuntimeClient(self._client_params)
-        self._backends_list: List[Dict[str, Any]] = []
-        self._backend_instance_groups: List[Dict[str, Any]] = []
+        self._backends_list: list[dict[str, Any]] = []
+        self._backend_instance_groups: list[dict[str, Any]] = []
         self._region = region or self._account.region
         self._plans_preference = plans_preference or self._account.plans_preference
         self._tags = tags or self._account.tags
@@ -282,7 +282,7 @@ class QiskitRuntimeService:
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
-    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+    def _discover_backends_from_instance(self, instance: str) -> list[str]:
         """Retrieve all backends from the given instance."""
         # TODO refactor this, this is the slowest part
         # ntc 5779 would make things a lot faster - get list of backends
@@ -471,7 +471,7 @@ class QiskitRuntimeService:
             )
 
     @staticmethod
-    def _check_api_version(params: ClientParameters) -> Dict[str, Union[bool, str]]:
+    def _check_api_version(params: ClientParameters) -> dict[str, Union[bool, str]]:
         """Check the version of the remote server in a set of client parameters for all channels.
 
         Args:
@@ -528,7 +528,7 @@ class QiskitRuntimeService:
         use_fractional_gates: Optional[bool] = False,
         calibration_id: Optional[str] = None,
         **kwargs: Any,
-    ) -> List["ibm_backend.IBMBackend"]:
+    ) -> list["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -580,7 +580,7 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        backends: List[IBMBackend] = []
+        backends: list[IBMBackend] = []
 
         unique_backends = set()
         instance_backends = self._resolve_cloud_instances(instance)
@@ -639,7 +639,7 @@ class QiskitRuntimeService:
             backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
+    def _resolve_cloud_instances(self, instance: Optional[str]) -> list[tuple[str, list[str]]]:
         if instance:
             if not is_crn(instance):
                 instance = self._get_crn_from_instance_name(self._account, instance)
@@ -756,7 +756,7 @@ class QiskitRuntimeService:
             )
         return None
 
-    def active_account(self) -> Optional[Dict[str, str]]:
+    def active_account(self) -> Optional[dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
 
         Returns:
@@ -799,7 +799,7 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = False,
         region: Optional[RegionType] = None,
         plans_preference: Optional[PlanType] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -943,9 +943,9 @@ class QiskitRuntimeService:
     def _run(
         self,
         program_id: str,
-        inputs: Dict,
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
-        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
+        inputs: dict,
+        options: Optional[Union[RuntimeOptions, dict]] = None,
+        result_decoder: Optional[Union[type[ResultDecoder], Sequence[type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
         calibration_id: Optional[str] = None,
@@ -976,7 +976,7 @@ class QiskitRuntimeService:
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
             qrt_options = RuntimeOptions()
-        elif isinstance(options, Dict):
+        elif isinstance(options, dict):
             qrt_options = RuntimeOptions(**options)
 
         qrt_options.validate(channel=self.channel)
@@ -1070,12 +1070,12 @@ class QiskitRuntimeService:
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
+        job_tags: Optional[list[str]] = None,
         session_id: Optional[str] = None,
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> List[RuntimeJobV2]:
+    ) -> list[RuntimeJobV2]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
         Args:
@@ -1155,7 +1155,7 @@ class QiskitRuntimeService:
 
         return [self._decode_job(job) for job in job_responses]
 
-    def usage(self) -> Dict[str, Any]:
+    def usage(self) -> dict[str, Any]:
         """Return usage information for the current active instance.
 
         Returns:
@@ -1171,7 +1171,7 @@ class QiskitRuntimeService:
             usage_dict["usage_remaining_seconds"] = usage_remaining
         return usage_dict
 
-    def _decode_job(self, raw_data: Dict) -> RuntimeJobV2:
+    def _decode_job(self, raw_data: dict) -> RuntimeJobV2:
         """Decode job data received from the server.
 
         Args:
@@ -1276,7 +1276,7 @@ class QiskitRuntimeService:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
-    def instances(self) -> Sequence[Dict[str, Any]]:
+    def instances(self) -> Sequence[dict[str, Any]]:
         """Return a list that contains a series of dictionaries with the
             following instance identifiers per instance: "crn", "plan", "name".
 

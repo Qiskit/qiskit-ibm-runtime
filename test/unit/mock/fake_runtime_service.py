@@ -84,7 +84,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _resolve_crn(self, account: Account) -> None:
         pass
 
-    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+    def _discover_backends_from_instance(self, instance: str) -> list[str]:
         """Mock discovery cloud backends."""
         job_class = self._active_api_client._job_classes  # type: ignore
         self._active_api_client = self._fake_runtime_client
@@ -103,7 +103,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
         return self._active_api_client
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
+    def _resolve_cloud_instances(self, instance: Optional[str]) -> list[tuple[str, list[str]]]:
         if instance:
             return [(instance, self._discover_backends_from_instance(instance))]
         if not self._all_instances:

@@ -39,7 +39,7 @@ from .base_runtime_job import BaseRuntimeJob
 logger = logging.getLogger(__name__)
 
 JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
-API_TO_JOB_STATUS: Dict[str, JobStatus] = {
+API_TO_JOB_STATUS: dict[str, JobStatus] = {
     "QUEUED": "QUEUED",
     "RUNNING": "RUNNING",
     "COMPLETED": "DONE",
@@ -51,7 +51,7 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
     """Representation of a runtime V2 primitive execution."""
 
-    JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+    JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
 
     def __init__(
@@ -62,10 +62,10 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         creation_date: Optional[str] = None,
-        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
+        result_decoder: Optional[Union[type[ResultDecoder], Sequence[type[ResultDecoder]]]] = None,
         image: Optional[str] = "",
         session_id: Optional[str] = None,
-        tags: Optional[List] = None,
+        tags: Optional[list] = None,
         version: Optional[int] = None,
         private: Optional[bool] = False,
     ) -> None:
@@ -106,7 +106,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     def result(  # pylint: disable=arguments-differ
         self,
         timeout: Optional[float] = None,
-        decoder: Optional[Type[ResultDecoder]] = None,
+        decoder: Optional[type[ResultDecoder]] = None,
     ) -> Any:
         """Return the results of the job.
 
@@ -162,7 +162,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self._set_status_and_error_message()
         return self._status
 
-    def _status_from_job_response(self, response: Dict) -> Union[JobStatus, str]:
+    def _status_from_job_response(self, response: dict) -> Union[JobStatus, str]:
         """Returns the job status from an API response.
 
         Args:

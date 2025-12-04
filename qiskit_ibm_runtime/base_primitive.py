@@ -96,13 +96,13 @@ def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] =
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: Type[OptionsT] = OptionsV2  # type: ignore[assignment]
+    _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
 
     def __init__(
         self,
         mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
-        options: Optional[Union[Dict, OptionsT]] = None,
+        options: Optional[Union[dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
 
@@ -211,7 +211,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return the backend the primitive query will be run on."""
         return self._backend
 
-    def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
+    def _set_options(self, options: Optional[Union[dict, OptionsT]] = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()

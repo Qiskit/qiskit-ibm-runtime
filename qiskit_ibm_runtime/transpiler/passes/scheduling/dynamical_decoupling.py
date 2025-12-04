@@ -121,16 +121,16 @@ class PadDynamicalDecoupling(BlockBasePadder):
     def __init__(
         self,
         durations: InstructionDurations = None,
-        dd_sequences: Union[List[Gate], List[List[Gate]]] = None,
-        qubits: Optional[List[int]] = None,
-        spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        dd_sequences: Union[list[Gate], list[list[Gate]]] = None,
+        qubits: Optional[list[int]] = None,
+        spacings: Optional[Union[list[list[float]], list[float]]] = None,
         skip_reset_qubits: bool = True,
         pulse_alignment: int = 16,
         extra_slack_distribution: str = "middle",
-        sequence_min_length_ratios: Optional[Union[int, List[int]]] = None,
+        sequence_min_length_ratios: Optional[Union[int, list[int]]] = None,
         insert_multiple_cycles: bool = False,
         coupling_map: CouplingMap = None,
-        alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        alt_spacings: Optional[Union[list[list[float]], list[float]]] = None,
         schedule_idle_qubits: bool = False,
         dd_barrier: Optional[str] = None,
         block_ordering_callable: Optional[BlockOrderingCallableType] = None,
@@ -259,7 +259,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         self._extra_slack_distribution = extra_slack_distribution
 
-        self._dd_sequence_lengths: Dict[Qubit, List[List[Gate]]] = {}
+        self._dd_sequence_lengths: dict[Qubit, list[list[Gate]]] = {}
         self._sequence_phase = 0
 
         if sequence_min_length_ratios is None:

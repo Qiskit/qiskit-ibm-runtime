@@ -24,7 +24,7 @@ import numpy.typing as npt
 
 # Python 3.8 does not recognize tuple[<something],
 # in spite of `from __future__ import annotations`
-ShapeType = Tuple[int, ...]
+ShapeType = tuple[int, ...]
 """A shape tuple representing some nd-array shape."""
 
 

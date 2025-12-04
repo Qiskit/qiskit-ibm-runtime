@@ -70,7 +70,7 @@ class QiskitRuntimeLocalService:
         min_num_qubits: Optional[int] = None,
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[FakeBackendV2], bool]] = None,
-    ) -> List[FakeBackendV2]:
+    ) -> list[FakeBackendV2]:
         """Return all the available fake backends, subject to optional filtering.
 
         Args:
@@ -147,8 +147,8 @@ class QiskitRuntimeLocalService:
     def _run(
         self,
         program_id: Literal["sampler", "estimator"],
-        inputs: Dict,
-        options: Union[RuntimeOptions, Dict],
+        inputs: dict,
+        options: Union[RuntimeOptions, dict],
         calibration_id: Optional[str],
     ) -> PrimitiveJob:
         """Execute the runtime program.
@@ -167,7 +167,7 @@ class QiskitRuntimeLocalService:
             ValueError: If input is invalid.
             NotImplementedError: If using V2 primitives.
         """
-        if isinstance(options, Dict):
+        if isinstance(options, dict):
             qrt_options = copy.deepcopy(options)
         else:
             qrt_options = asdict(options)

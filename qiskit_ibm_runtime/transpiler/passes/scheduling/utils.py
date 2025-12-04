@@ -47,8 +47,8 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
     @lru_cache(maxsize=8192)
     def _emit(
         node: DAGOpNode,
-        grouped_measure: Tuple[DAGOpNode],
-        block_triggers: Tuple[DAGOpNode],
+        grouped_measure: tuple[DAGOpNode],
+        block_triggers: tuple[DAGOpNode],
     ) -> bool:
         """Should we emit this node?"""
         for measure in grouped_measure:
@@ -131,9 +131,9 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
 
 
 InstrKey = Union[
-    Tuple[str, None, None],
-    Tuple[str, Tuple[int], None],
-    Tuple[str, Tuple[int], Tuple[Parameter]],
+    tuple[str, None, None],
+    tuple[str, tuple[int], None],
+    tuple[str, tuple[int], tuple[Parameter]],
 ]
 
 
@@ -292,7 +292,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             # Fall back to reset key if measure not available
             self._convert_and_patch_key(key)
 
-    def _get_duration(self, key: InstrKey) -> Tuple[int, str]:
+    def _get_duration(self, key: InstrKey) -> tuple[int, str]:
         """Handling for the complicated structure of this class.
 
         TODO: This class implementation should be simplified in Qiskit. Too many edge cases.

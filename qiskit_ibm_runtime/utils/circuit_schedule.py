@@ -68,22 +68,22 @@ class CircuitSchedule:
             legend: A legend for the plot (a set of instructions).
             traces: A list of the plotly scatter traces to plot.
         """
-        self.channels: List = None
-        self.type_to_idx: Dict[str, int] = None
+        self.channels: list = None
+        self.type_to_idx: dict[str, int] = None
         self.circuit_scheduling: np.array = None
 
         raw_data = self._load(circuit_schedule)
         self._parse(raw_data)
 
-        self.instruction_set: Set[str] = set()
+        self.instruction_set: set[str] = set()
         self.max_time: int = None
-        self.color_map: Dict[str, str] = {}
-        self.annotations: List[Dict] = []
-        self.legend: Set[str] = set()
-        self.traces: List[Scatter] = []
+        self.color_map: dict[str, str] = {}
+        self.annotations: list[dict] = []
+        self.legend: set[str] = set()
+        self.traces: list[Scatter] = []
 
     @classmethod
-    def _load(cls, circuit_schedule: str) -> List[str]:
+    def _load(cls, circuit_schedule: str) -> list[str]:
         """Load the data from a file or a data object.
 
         Args:
@@ -100,7 +100,7 @@ class CircuitSchedule:
 
         return data
 
-    def _parse(self, raw_data: List[str]) -> None:
+    def _parse(self, raw_data: list[str]) -> None:
         """Parse the raw circuit schedule data into a numpy array.
 
         Args:
@@ -187,7 +187,7 @@ class CircuitSchedule:
         self.instruction_set = np.unique(self.circuit_scheduling[:, self.type_to_idx["GateName"]])
         self.color_map = dict(zip(self.instruction_set, cycle(colors)))
 
-    def get_trace_finite_duration_y_shift(self, branch: str) -> Tuple[float, float, float]:
+    def get_trace_finite_duration_y_shift(self, branch: str) -> tuple[float, float, float]:
         """Return y-axis trace shift for a finite duration instruction schedule and its annotation.
         The shifts are to distinguish static and dynamic (control-flow) parts of the circuit.
 

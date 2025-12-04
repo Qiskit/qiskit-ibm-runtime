@@ -52,7 +52,7 @@ class AccountManager:
         set_as_default: Optional[bool] = None,
         private_endpoint: Optional[bool] = False,
         region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
+        plans_preference: Optional[list[str]] = None,
         tags: Optional[str] = None,
     ) -> None:
         """Save account on disk."""
@@ -93,7 +93,7 @@ class AccountManager:
         channel: Optional[ChannelType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
-    ) -> Dict[str, Account]:
+    ) -> dict[str, Account]:
         """List all accounts in a given filename, or in the default account file."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)

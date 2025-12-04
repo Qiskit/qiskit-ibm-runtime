@@ -22,7 +22,7 @@ class BaseFakeAuthClient:
         """Initialize a auth runtime client."""
         pass
 
-    def user_urls(self) -> Dict[str, Union[str, Dict]]:
+    def user_urls(self) -> dict[str, Union[str, dict]]:
         """Retrieve the API URLs from the authentication service.
 
         Returns:
@@ -39,7 +39,7 @@ class BaseFakeAuthClient:
             "services": {"runtime": "http://127.0.0.1"},
         }
 
-    def api_version(self) -> Dict[str, Union[str, bool]]:
+    def api_version(self) -> dict[str, Union[str, bool]]:
         """Return the version of the API.
 
         Returns:
@@ -55,7 +55,7 @@ class BaseFakeAuthClient:
         """
         return "123"
 
-    def current_service_urls(self) -> Dict[str, str]:
+    def current_service_urls(self) -> dict[str, str]:
         """Return the current service URLs.
 
         Returns:

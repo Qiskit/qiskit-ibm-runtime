@@ -24,7 +24,7 @@ class BaseBackendClient(ABC):
     """Client for accessing backend information."""
 
     @abstractmethod
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of the backend.
 
         Args:
@@ -38,7 +38,7 @@ class BaseBackendClient(ABC):
     @abstractmethod
     def backend_properties(
         self, backend_name: str, datetime: Optional[python_datetime] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return the properties of the backend.
 
         Args:

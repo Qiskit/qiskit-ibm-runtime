@@ -136,7 +136,7 @@ def str_to_utc(utc_dt: Optional[str]) -> Optional[datetime]:
     return parsed_dt.replace(tzinfo=timezone.utc)
 
 
-def seconds_to_duration(seconds: float) -> Tuple[int, int, int, int, int]:
+def seconds_to_duration(seconds: float) -> tuple[int, int, int, int, int]:
     """Converts seconds in a datetime delta to a duration.
 
     Args:

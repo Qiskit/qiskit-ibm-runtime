@@ -35,7 +35,7 @@ class CommonOptions:
     memory: bool = False
     meas_return: Union[str, MeasReturnType] = MeasReturnType.AVERAGE
 
-    def to_transport_dict(self) -> Dict[str, Any]:
+    def to_transport_dict(self) -> dict[str, Any]:
         """Remove None values so runtime defaults are used."""
         dict_ = asdict(self)
         for key in list(dict_.keys()):
@@ -56,7 +56,7 @@ class QASM3Options(CommonOptions):
 class QASM2Options(CommonOptions):
     """Options for the QASM2 path."""
 
-    header: Optional[Dict] = None
+    header: Optional[dict] = None
     init_qubits: bool = True
     use_measure_esp: Optional[bool] = None
     # Simulator only

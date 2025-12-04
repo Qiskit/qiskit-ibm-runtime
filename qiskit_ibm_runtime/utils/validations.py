@@ -24,7 +24,7 @@ from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic,
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def validate_classical_registers(pubs: List[SamplerPub]) -> None:
+def validate_classical_registers(pubs: list[SamplerPub]) -> None:
     """Validates the classical registers in the pub won't cause problems that can be caught client-side.
 
     Args:
@@ -64,7 +64,7 @@ def validate_classical_registers(pubs: List[SamplerPub]) -> None:
                 )
 
 
-def validate_estimator_pubs(pubs: List[EstimatorPub]) -> None:
+def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
     """Validates the estimator pubs won't cause problems that can be caught client-side.
 
     Args:
@@ -104,7 +104,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
-def validate_rzz_pubs(pubs: Union[List[EstimatorPub], List[SamplerPub]]) -> None:
+def validate_rzz_pubs(pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> None:
     """Validate that rzz angles are always in the range [0, pi/2]
 
     Args:
@@ -116,7 +116,7 @@ def validate_rzz_pubs(pubs: Union[List[EstimatorPub], List[SamplerPub]]) -> None
             raise IBMInputValueError(message)
 
 
-def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
+def validate_no_dd_with_dynamic_circuits(circuits: list[QuantumCircuit], options: Any) -> None:
     """Validate that if dynamical decoupling options are enabled,
     no circuit in the pubs is dynamic
 
@@ -132,7 +132,7 @@ def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options
         )
 
 
-def validate_job_tags(job_tags: Optional[List[str]]) -> None:
+def validate_job_tags(job_tags: Optional[list[str]]) -> None:
     """Validates input job tags.
 
     Args:

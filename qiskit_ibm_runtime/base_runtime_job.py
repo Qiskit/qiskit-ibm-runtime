@@ -48,7 +48,7 @@ class BaseRuntimeJob(ABC):
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
-    JOB_FINAL_STATES: Tuple[Any, ...] = ()
+    JOB_FINAL_STATES: tuple[Any, ...] = ()
     ERROR: Union[str, RuntimeJobStatus] = None
 
     def __init__(
@@ -59,10 +59,10 @@ class BaseRuntimeJob(ABC):
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         creation_date: Optional[str] = None,
-        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
+        result_decoder: Optional[Union[type[ResultDecoder], Sequence[type[ResultDecoder]]]] = None,
         image: Optional[str] = "",
         session_id: Optional[str] = None,
-        tags: Optional[List] = None,
+        tags: Optional[list] = None,
         version: Optional[int] = None,
         private: Optional[bool] = False,
     ) -> None:
@@ -94,7 +94,7 @@ class BaseRuntimeJob(ABC):
         self._service = service
         self._session_id = session_id
         self._tags = tags
-        self._usage_estimation: Dict[str, Any] = {}
+        self._usage_estimation: dict[str, Any] = {}
         self._version = version
         self._queue_info = None
         self._status: Union[RuntimeJobStatus, str] = None
@@ -123,7 +123,7 @@ class BaseRuntimeJob(ABC):
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
-    def metrics(self) -> Dict[str, Any]:
+    def metrics(self) -> dict[str, Any]:
         """Return job metrics.
 
         Returns:
@@ -141,7 +141,7 @@ class BaseRuntimeJob(ABC):
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
-    def update_tags(self, new_tags: List[str]) -> List[str]:
+    def update_tags(self, new_tags: list[str]) -> list[str]:
         """Update the tags associated with this job.
 
         Args:
@@ -203,7 +203,7 @@ class BaseRuntimeJob(ABC):
             self._set_status(response)
             self._set_error_message(response)
 
-    def _set_status(self, job_response: Dict) -> None:
+    def _set_status(self, job_response: dict) -> None:
         """Set status.
 
         Args:
@@ -226,7 +226,7 @@ class BaseRuntimeJob(ABC):
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
 
-    def _set_error_message(self, job_response: Dict) -> None:
+    def _set_error_message(self, job_response: dict) -> None:
         """Set error message if the job failed.
 
         Args:
@@ -238,11 +238,11 @@ class BaseRuntimeJob(ABC):
             self._error_message = None
 
     @abstractmethod
-    def _status_from_job_response(self, response: Dict) -> str:
+    def _status_from_job_response(self, response: dict) -> str:
         """Returns the job status from an API response."""
         return response["state"]["status"].upper()
 
-    def _error_msg_from_job_response(self, response: Dict) -> str:
+    def _error_msg_from_job_response(self, response: dict) -> str:
         """Returns the error message from an API response.
 
         Args:
@@ -293,7 +293,7 @@ class BaseRuntimeJob(ABC):
         return self._image
 
     @property
-    def inputs(self) -> Dict:
+    def inputs(self) -> dict:
         """Job input parameters.
 
         Returns:
@@ -341,7 +341,7 @@ class BaseRuntimeJob(ABC):
         return self._session_id
 
     @property
-    def tags(self) -> List:
+    def tags(self) -> list:
         """Job tags.
 
         Returns:
@@ -350,7 +350,7 @@ class BaseRuntimeJob(ABC):
         return self._tags
 
     @property
-    def usage_estimation(self) -> Dict[str, Any]:
+    def usage_estimation(self) -> dict[str, Any]:
         """Return the usage estimation information for this job.
 
         Returns:

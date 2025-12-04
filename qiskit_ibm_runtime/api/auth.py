@@ -81,7 +81,7 @@ class CloudAuth(AuthBase):
         )
         return cpy
 
-    def get_headers(self) -> Dict:
+    def get_headers(self) -> dict:
         """Return authorization information to be stored in header."""
         try:
             access_token = self.tm.get_token()

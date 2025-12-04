@@ -40,7 +40,7 @@ class IBMTestCase(TestCase):
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
-    program_ids: Dict[str, str]
+    program_ids: dict[str, str]
 
     @classmethod
     def setUpClass(cls):
@@ -206,8 +206,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete: DefaultDict = defaultdict(list)
-        self.to_cancel: DefaultDict = defaultdict(list)
+        self.to_delete: defaultdict = defaultdict(list)
+        self.to_cancel: defaultdict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""

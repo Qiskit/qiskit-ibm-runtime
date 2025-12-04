@@ -124,7 +124,7 @@ class NoiseLearner:
     def __init__(
         self,
         mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
+        options: Optional[Union[dict, NoiseLearnerOptions, EstimatorOptions]] = None,
     ):
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -224,7 +224,7 @@ class NoiseLearner:
         return self._backend
 
     def _set_options(
-        self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
+        self, options: Optional[Union[dict, NoiseLearnerOptions, EstimatorOptions]] = None
     ) -> None:
         """
         Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.

@@ -158,7 +158,7 @@ def mock_wait_for_final_state(service, job):
     )
 
 
-def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
+def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
@@ -279,8 +279,8 @@ def create_faulty_backend(
 
 def get_mocked_backend(
     name: str = "ibm_gotham",
-    configuration: Optional[Dict] = None,
-    properties: Optional[Dict] = None,
+    configuration: Optional[dict] = None,
+    properties: Optional[dict] = None,
 ) -> IBMBackend:
     """Return a mock backend."""
 
@@ -475,5 +475,5 @@ def remap_observables(observables, isa_circuit):
 class MockSession(Session):
     """Mock for session class"""
 
-    _circuits_map: Dict[str, QuantumCircuit] = {}
+    _circuits_map: dict[str, QuantumCircuit] = {}
     _instance = None
