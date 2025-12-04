@@ -14,15 +14,15 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Union
+from typing import Iterable, Union, TypeAlias
 from numpy.typing import ArrayLike
 import numpy as np
 
 from qiskit.primitives.containers import PubResult, DataBin
 
 # Type aliases
-NeatPubResultLike = Union["NeatPubResult", PubResult, DataBin]
-ScalarLike = Union[int, float]
+NeatPubResultLike: TypeAlias = Union["NeatPubResult", PubResult, DataBin]
+ScalarLike: TypeAlias = int | float
 
 
 class NeatPubResult:

@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict, Any
+from typing import Optional, Literal, List, Dict, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -32,17 +32,11 @@ from ..utils import (
     get_global_catalog_api_url,
 )
 
-AccountType = Optional[Literal["cloud", "legacy"]]
-RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[list[str]]
+AccountType: TypeAlias = Literal["cloud", "legacy"] | None
+RegionType: TypeAlias = Literal["us-east", "eu-de"] | None
+PlanType: TypeAlias = list[str] | None
 
-ChannelType = Optional[
-    Literal[
-        "ibm_quantum_platform",
-        "ibm_cloud",
-        "local",
-    ]
-]
+ChannelType: TypeAlias = Literal["ibm_quantum_platform", "ibm_cloud", "local"] | None
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
 
