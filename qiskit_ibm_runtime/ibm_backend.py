@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Optional, Any, List, Union
+from typing import Any
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version

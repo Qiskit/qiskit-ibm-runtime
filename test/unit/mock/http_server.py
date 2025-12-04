@@ -15,7 +15,7 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict, Any
+from typing import Any
 
 
 class BaseHandler(BaseHTTPRequestHandler):

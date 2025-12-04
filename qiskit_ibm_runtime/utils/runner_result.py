@@ -12,7 +12,6 @@
 
 """Circuit-runner result class"""
 
-from typing import List, Union
 import json
 
 from qiskit.result import Result, QuasiDistribution

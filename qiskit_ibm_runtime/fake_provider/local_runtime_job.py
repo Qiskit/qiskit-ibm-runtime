@@ -12,7 +12,7 @@
 
 """Qiskit runtime local mode job class."""
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob

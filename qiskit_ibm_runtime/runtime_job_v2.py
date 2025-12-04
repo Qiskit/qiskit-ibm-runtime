@@ -12,7 +12,8 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Dict, Type, Union, Sequence, List, Literal, Tuple
+from typing import Any, Literal
+from collections.abc import Sequence
 from concurrent import futures
 import logging
 import time
@@ -23,7 +24,6 @@ from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
-from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,

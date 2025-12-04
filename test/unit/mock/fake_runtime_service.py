@@ -12,7 +12,6 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from typing import List, Optional, Tuple
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account

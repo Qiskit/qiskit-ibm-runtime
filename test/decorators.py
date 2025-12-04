@@ -15,7 +15,7 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Optional, List
+from collections.abc import Callable
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService

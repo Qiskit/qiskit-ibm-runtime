@@ -14,7 +14,8 @@
 
 import copy
 import datetime
-from typing import Any, Iterable, Tuple, Union, Dict, TypeVar, Type, List
+from typing import Any, TypeVar
+from collections.abc import Iterable
 import dateutil.parser
 
 from qiskit.utils.units import apply_prefix

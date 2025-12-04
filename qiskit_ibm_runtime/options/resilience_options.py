@@ -12,7 +12,8 @@
 
 """Resilience options."""
 
-from typing import Literal, Sequence, Union
+from typing import Literal
+from collections.abc import Sequence
 from dataclasses import asdict
 
 from pydantic import model_validator, Field

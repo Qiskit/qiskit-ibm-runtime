@@ -12,7 +12,6 @@
 
 """Execution options."""
 
-from typing import Union
 
 from .utils import Unset, UnsetType, primitive_dataclass
 

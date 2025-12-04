@@ -15,7 +15,7 @@
 import re
 from datetime import datetime, timedelta, timezone
 from math import ceil
-from typing import Union, Tuple, Any, Optional
+from typing import Any
 
 from dateutil import tz, parser
 from qiskit_ibm_runtime.exceptions import IBMInputValueError

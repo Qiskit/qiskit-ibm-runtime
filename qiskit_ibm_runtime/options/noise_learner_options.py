@@ -12,7 +12,6 @@
 
 """NoiseLearner options."""
 
-from typing import List, Union
 
 from pydantic import ValidationInfo, field_validator
 

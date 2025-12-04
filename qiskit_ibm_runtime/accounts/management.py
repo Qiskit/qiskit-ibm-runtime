@@ -14,7 +14,6 @@
 
 import os
 import logging
-from typing import Optional, Dict, List
 
 from ..proxies import ProxyConfiguration
 from .exceptions import AccountNotFoundError
@@ -247,9 +246,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _get_default_account(
-        cls, all_config: dict, channel: str | None = None
-    ) -> dict | None:
+    def _get_default_account(cls, all_config: dict, channel: str | None = None) -> dict | None:
         default_channel_account = None
         any_channel_account = None
 

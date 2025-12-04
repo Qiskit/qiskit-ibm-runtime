@@ -12,7 +12,6 @@
 
 """Authentication helpers."""
 
-from typing import Dict, Optional
 
 import warnings
 from requests import PreparedRequest

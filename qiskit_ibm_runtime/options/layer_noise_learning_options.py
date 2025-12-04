@@ -12,7 +12,6 @@
 
 """Options for learning layer noise."""
 
-from typing import Union, List
 
 from pydantic import ValidationInfo, field_validator
 

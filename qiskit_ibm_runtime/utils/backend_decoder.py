@@ -12,7 +12,6 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Dict, Union, Optional
 import logging
 import traceback
 
@@ -69,9 +68,7 @@ def configuration_from_server_data(
     return None
 
 
-def filter_raw_configuration(
-    raw_config: dict, use_fractional_gates: bool | None = False
-) -> None:
+def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
     """Filter unwanted entries from raw configuration data
 
     Args:

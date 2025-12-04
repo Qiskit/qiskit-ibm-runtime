@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Set
+from typing import Any
 from urllib.parse import urlparse
 from itertools import chain
 import numpy as np

@@ -13,7 +13,7 @@
 """Backend run options."""
 
 from dataclasses import asdict, dataclass
-from typing import Dict, Union, Any, Optional
+from typing import Any
 from packaging.version import Version
 
 from qiskit import QuantumCircuit, __version__ as qiskit_version

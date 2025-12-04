@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any
+from collections.abc import Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit

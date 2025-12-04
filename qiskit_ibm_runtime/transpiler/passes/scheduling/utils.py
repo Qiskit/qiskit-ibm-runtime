@@ -13,7 +13,8 @@
 """Utility functions for scheduling passes."""
 
 import warnings
-from typing import Callable, Generator, Optional, Tuple, Union, TypeAlias
+from typing import TypeAlias
+from collections.abc import Callable, Generator
 from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
@@ -130,7 +131,9 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
     _emit.cache_clear()
 
 
-InstrKey: TypeAlias = tuple[str, None, None] | tuple[str, tuple[int], None] | tuple[str, tuple[int], tuple[Parameter]]
+InstrKey: TypeAlias = (
+    tuple[str, None, None] | tuple[str, tuple[int], None] | tuple[str, tuple[int], tuple[Parameter]]
+)
 
 
 class DynamicCircuitInstructionDurations(InstructionDurations):

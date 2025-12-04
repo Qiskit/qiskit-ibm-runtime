@@ -14,7 +14,7 @@
 """Backend Configuration Classes."""
 import datetime
 import copy
-from typing import Dict, List, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 

@@ -12,7 +12,7 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase

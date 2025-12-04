@@ -15,7 +15,7 @@
 Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
-from typing import Iterable, List, Tuple, Union, Sequence
+from collections.abc import Iterable, Sequence
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap

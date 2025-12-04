@@ -13,7 +13,6 @@
 """Scheduler for dynamic circuit backends."""
 
 from abc import abstractmethod
-from typing import Dict, List, Optional, Union, Set, Tuple
 import itertools
 import warnings
 

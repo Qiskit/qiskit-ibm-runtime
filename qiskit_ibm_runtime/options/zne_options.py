@@ -12,7 +12,8 @@
 
 """Zero noise extrapolation mitigation options.."""
 
-from typing import Union, Sequence, Literal
+from typing import Literal
+from collections.abc import Sequence
 
 from pydantic import field_validator, model_validator
 
@@ -78,7 +79,9 @@ class ZneOptions:
            `npj Quantum Inf 7, 80 (2021) <https://www.nature.com/articles/s41534-021-00404-3>`_
     """
 
-    amplifier: UnsetType | Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"] = Unset
+    amplifier: (
+        UnsetType | Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
+    ) = Unset
     r"""Which technique to use for amplifying noise. 
     
         One of:

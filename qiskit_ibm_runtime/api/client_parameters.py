@@ -12,7 +12,8 @@
 
 """Represent IBM Quantum account client parameters."""
 
-from typing import Dict, Optional, Any, Callable
+from typing import Any
+from collections.abc import Callable
 from ..proxies import ProxyConfiguration
 
 from ..utils import default_runtime_url_resolver

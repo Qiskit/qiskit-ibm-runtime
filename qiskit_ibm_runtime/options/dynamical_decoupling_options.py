@@ -12,7 +12,7 @@
 
 """Options for dynamical decoupling."""
 
-from typing import Union, Literal
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass
 

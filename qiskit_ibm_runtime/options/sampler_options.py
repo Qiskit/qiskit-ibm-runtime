@@ -12,7 +12,6 @@
 
 """Sampler options."""
 
-from typing import Union
 
 from pydantic import Field
 
@@ -41,9 +40,7 @@ class SamplerOptions(OptionsV2):
     r"""Suboptions for dynamical decoupling. See
         :class:`DynamicalDecouplingOptions` for all available options.
     """
-    execution: SamplerExecutionOptionsV2 | Dict = Field(
-        default_factory=SamplerExecutionOptionsV2
-    )
+    execution: SamplerExecutionOptionsV2 | Dict = Field(default_factory=SamplerExecutionOptionsV2)
     r"""
     Execution time options. See :class:`SamplerExecutionOptionsV2`
         for all available options.

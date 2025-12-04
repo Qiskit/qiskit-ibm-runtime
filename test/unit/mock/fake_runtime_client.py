@@ -18,7 +18,7 @@ import time
 import uuid
 from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError

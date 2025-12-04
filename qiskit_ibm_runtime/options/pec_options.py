@@ -12,7 +12,7 @@
 
 """Probabalistic error cancellation mitigation options."""
 
-from typing import Union, Literal
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 

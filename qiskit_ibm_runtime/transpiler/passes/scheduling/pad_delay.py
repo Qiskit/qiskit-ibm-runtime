@@ -12,7 +12,6 @@
 
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
-from typing import Optional
 import warnings
 
 from qiskit.circuit import Qubit

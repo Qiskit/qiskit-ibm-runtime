@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Sampler Execution options."""
-from typing import Literal, Union
+from typing import Literal
 from .execution_options import ExecutionOptionsV2
 from .utils import primitive_dataclass, Unset, UnsetType
 

@@ -18,7 +18,7 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Any
 from datetime import datetime
 from ddt import data, unpack
 

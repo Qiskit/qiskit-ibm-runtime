@@ -19,7 +19,6 @@ Example::
 
 import os
 import subprocess
-from typing import List
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 

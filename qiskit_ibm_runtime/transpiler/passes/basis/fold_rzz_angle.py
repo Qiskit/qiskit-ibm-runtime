@@ -12,7 +12,6 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple, Union
 from math import pi
 from operator import mod
 from itertools import chain

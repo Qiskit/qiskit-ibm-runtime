@@ -12,7 +12,7 @@
 
 """Padding pass to fill timeslots for IBM (dynamic circuit) backends."""
 
-from typing import Dict, Iterable, List, Optional, Union, Set, Tuple
+from collections.abc import Iterable
 
 from qiskit.circuit import (
     Qubit,

@@ -12,8 +12,6 @@
 
 """Fake ibm_quantum_platform AuthClient."""
 
-from typing import Dict, Union, Optional
-
 
 class BaseFakeAuthClient:
     """Base class for faking the runtime client."""

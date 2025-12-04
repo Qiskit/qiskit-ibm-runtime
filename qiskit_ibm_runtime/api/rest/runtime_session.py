@@ -12,7 +12,7 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from .base import RestAdapterBase
 from ..session import RetrySession
 from ..exceptions import RequestsApiError

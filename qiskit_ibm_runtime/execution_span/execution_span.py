@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 from datetime import datetime
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt

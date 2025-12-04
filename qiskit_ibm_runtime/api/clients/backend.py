@@ -13,7 +13,7 @@
 """Client for accessing backend information."""
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
 

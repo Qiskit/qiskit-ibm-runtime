@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, Dict, Union, Iterable
+from collections.abc import Iterable
 import logging
 
 from qiskit.providers import BackendV2

@@ -13,7 +13,6 @@
 """Dynamical decoupling insertion pass for IBM (dynamic circuit) backends."""
 
 import warnings
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import rustworkx as rx

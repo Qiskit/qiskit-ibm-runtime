@@ -13,7 +13,6 @@
 """Program Job REST adapter."""
 
 import json
-from typing import Dict
 from requests import Response
 
 from .base import RestAdapterBase

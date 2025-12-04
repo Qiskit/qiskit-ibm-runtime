@@ -13,7 +13,8 @@
 """Primitive options."""
 
 from abc import abstractmethod
-from typing import Iterable, Tuple, Union, Any
+from typing import Any
+from collections.abc import Iterable
 from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
 

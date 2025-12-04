@@ -12,7 +12,7 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional, List, Literal
+from typing import Literal
 
 from .utils import primitive_dataclass
 

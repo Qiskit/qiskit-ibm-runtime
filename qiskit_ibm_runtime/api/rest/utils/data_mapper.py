@@ -14,7 +14,7 @@
 
 import re
 import keyword
-from typing import Dict, Any, Optional
+from typing import Any
 
 
 def map_jobs_limit_response(data: dict[str, Any]) -> dict[str, Any]:

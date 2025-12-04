@@ -13,7 +13,8 @@
 """Base runtime job class."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Dict, Type, Union, Sequence, List, Tuple
+from typing import Any
+from collections.abc import Sequence
 import logging
 from concurrent import futures
 import queue
@@ -34,11 +35,9 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
-from .utils.deprecation import issue_deprecation_msg
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 

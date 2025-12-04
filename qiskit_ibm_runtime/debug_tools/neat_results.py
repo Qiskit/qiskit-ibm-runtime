@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Union, TypeAlias
+from typing import Union, TypeAlias
+from collections.abc import Iterable
 from numpy.typing import ArrayLike
 import numpy as np
 

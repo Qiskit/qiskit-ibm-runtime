@@ -12,7 +12,7 @@
 
 """Test deserializing server data."""
 
-from typing import Any, Dict, Set, Optional
+from typing import Any
 
 import dateutil.parser
 

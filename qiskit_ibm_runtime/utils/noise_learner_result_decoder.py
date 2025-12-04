@@ -12,7 +12,6 @@
 
 """NoiseLearner result decoder."""
 
-from typing import Dict
 
 from .noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
 from .result_decoder import ResultDecoder

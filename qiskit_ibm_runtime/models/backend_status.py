@@ -13,7 +13,7 @@
 """Class for backend status."""
 
 import html
-from typing import Dict, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 

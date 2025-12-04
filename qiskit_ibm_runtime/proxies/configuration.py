@@ -14,7 +14,7 @@
 
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any
 from urllib.parse import urlparse
 
 from requests_ntlm import HttpNtlmAuth

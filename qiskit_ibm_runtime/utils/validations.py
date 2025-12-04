@@ -11,7 +11,8 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
-from typing import List, Sequence, Optional, Any, Union
+from typing import Any
+from collections.abc import Sequence
 import warnings
 import keyword
 import numpy as np

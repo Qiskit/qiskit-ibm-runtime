@@ -15,7 +15,6 @@
 import json
 import logging
 import os
-from typing import Optional, Dict
 from .exceptions import AccountAlreadyExistsError
 
 logger = logging.getLogger(__name__)

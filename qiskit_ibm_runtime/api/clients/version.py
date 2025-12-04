@@ -12,7 +12,7 @@
 
 """Client for determining the version of an IBM Quantum service."""
 
-from typing import Dict, Union, Any
+from typing import Any
 
 from ..rest.root import Api
 from ..session import RetrySession

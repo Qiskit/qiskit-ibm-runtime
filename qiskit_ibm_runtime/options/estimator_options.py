@@ -12,7 +12,6 @@
 
 """Estimator options."""
 
-from typing import Union
 
 from pydantic import Field
 

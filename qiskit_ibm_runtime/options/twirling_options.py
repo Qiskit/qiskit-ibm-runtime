@@ -12,7 +12,7 @@
 
 """Twirling options."""
 
-from typing import Literal, Union
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 

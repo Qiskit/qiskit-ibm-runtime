@@ -13,7 +13,6 @@
 """Plugin for IBM provider backend transpiler stages."""
 
 import re
-from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig

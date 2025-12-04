@@ -12,7 +12,6 @@
 
 """Sampler result decoder."""
 
-from typing import Dict
 
 from qiskit.primitives import PrimitiveResult
 

@@ -12,7 +12,6 @@
 
 """Qiskit Runtime batch mode."""
 
-from typing import Optional, Union
 
 from qiskit.providers.backend import BackendV2
 

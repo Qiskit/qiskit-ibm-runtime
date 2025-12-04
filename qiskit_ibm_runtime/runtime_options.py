@@ -18,7 +18,6 @@ import re
 import logging
 import warnings
 from dataclasses import dataclass
-from typing import Optional, List
 
 from qiskit.providers.backend import Backend
 

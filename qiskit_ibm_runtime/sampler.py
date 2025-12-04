@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Union, Iterable
+from collections.abc import Iterable
 import logging
 
 

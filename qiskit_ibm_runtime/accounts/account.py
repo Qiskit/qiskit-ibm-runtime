@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict, Any, TypeAlias
+from typing import Literal, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator

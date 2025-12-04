@@ -13,7 +13,7 @@
 """Client for accessing IBM Quantum runtime service."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 from requests import Response
 

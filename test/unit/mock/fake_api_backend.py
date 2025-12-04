@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Classes for FakeApiBackends"""
-from typing import Optional
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
 

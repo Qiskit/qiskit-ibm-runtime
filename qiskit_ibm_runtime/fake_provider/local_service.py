@@ -19,7 +19,8 @@ import copy
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Callable, Dict, List, Literal, Optional, Union
+from typing import Literal
+from collections.abc import Callable
 
 from qiskit.primitives import (
     BackendEstimatorV2,

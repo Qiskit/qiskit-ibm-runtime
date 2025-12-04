@@ -14,7 +14,7 @@
 
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Union, Optional
+from typing import Any
 import json
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase

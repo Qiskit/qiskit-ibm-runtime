@@ -12,7 +12,6 @@
 
 """Estimator result decoder."""
 
-from typing import Dict
 
 from qiskit.primitives.containers import PrimitiveResult
 

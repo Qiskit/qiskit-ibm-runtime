@@ -12,7 +12,6 @@
 
 """Pass to convert Id gate operations to a delay instruction."""
 
-from typing import Dict
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
 

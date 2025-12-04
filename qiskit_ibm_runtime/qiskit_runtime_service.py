@@ -15,7 +15,8 @@
 import logging
 import warnings
 from datetime import datetime
-from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence, Tuple
+from typing import Any
+from collections.abc import Callable, Sequence
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError

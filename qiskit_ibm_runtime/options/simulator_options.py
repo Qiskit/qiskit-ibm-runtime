@@ -12,7 +12,6 @@
 
 """Simulator options."""
 
-from typing import List, Union, Optional
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2

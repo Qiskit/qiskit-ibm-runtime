@@ -13,7 +13,7 @@
 """A class to help understand the expected performance of estimator jobs."""
 
 from __future__ import annotations
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from qiskit.exceptions import QiskitError
 from qiskit.transpiler.passmanager import PassManager

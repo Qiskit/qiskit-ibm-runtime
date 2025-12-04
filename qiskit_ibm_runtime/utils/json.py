@@ -24,7 +24,8 @@ import warnings
 import zlib
 from datetime import date
 
-from typing import Any, Callable, Dict, List, Union, get_args
+from typing import Any, get_args
+from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np

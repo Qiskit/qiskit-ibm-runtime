@@ -25,7 +25,8 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence, Union, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
+from collections.abc import Iterator, Sequence
 from numpy.typing import NDArray
 import numpy as np
 

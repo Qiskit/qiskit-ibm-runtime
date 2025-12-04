@@ -12,7 +12,6 @@
 
 """Integration tests for account management."""
 
-from typing import Dict
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
