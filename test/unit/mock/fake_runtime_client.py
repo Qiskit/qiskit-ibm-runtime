@@ -451,7 +451,7 @@ class BaseFakeRuntimeClient:
         """Return the details of the session."""
         return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 
-    def cloud_usage(self) -> Dict[str, Any]:
+    def cloud_usage(self) -> dict[str, Any]:
         """Return cloud instance usage information."""
         return {
             "instance_id": "instance_id",
