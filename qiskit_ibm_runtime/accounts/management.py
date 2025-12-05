@@ -14,7 +14,6 @@
 
 import os
 import logging
-from typing import Optional, Dict, List
 
 from ..proxies import ProxyConfiguration
 from .exceptions import AccountNotFoundError
@@ -40,20 +39,20 @@ class AccountManager:
     @classmethod
     def save(
         cls,
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = None,
-        overwrite: Optional[bool] = False,
-        set_as_default: Optional[bool] = None,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[str] = None,
+        token: str | None = None,
+        url: str | None = None,
+        instance: str | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = _DEFAULT_ACCOUNT_NAME,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = None,
+        overwrite: bool | None = False,
+        set_as_default: bool | None = None,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: str | None = None,
     ) -> None:
         """Save account on disk."""
         channel = (
@@ -89,11 +88,11 @@ class AccountManager:
 
     @staticmethod
     def list(
-        default: Optional[bool] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Dict[str, Account]:
+        default: bool | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = None,
+    ) -> dict[str, Account]:
         """List all accounts in a given filename, or in the default account file."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
@@ -146,10 +145,10 @@ class AccountManager:
     @classmethod
     def get(
         cls,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-    ) -> Optional[Account]:
+        filename: str | None = None,
+        name: str | None = None,
+        channel: ChannelType | None = None,
+    ) -> Account | None:
         """Read account from disk.
 
         Args:
@@ -219,9 +218,9 @@ class AccountManager:
     @classmethod
     def delete(
         cls,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
+        filename: str | None = None,
+        name: str | None = None,
+        channel: ChannelType | None = None,
     ) -> bool:
         """Delete account from disk."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
@@ -233,7 +232,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _from_env_variables(cls, channel: Optional[ChannelType]) -> Optional[Account]:
+    def _from_env_variables(cls, channel: ChannelType | None) -> Account | None:
         """Read account from environment variable."""
         token = os.getenv("QISKIT_IBM_TOKEN")
         url = os.getenv("QISKIT_IBM_URL")
@@ -247,9 +246,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _get_default_account(
-        cls, all_config: dict, channel: Optional[str] = None
-    ) -> Optional[dict]:
+    def _get_default_account(cls, all_config: dict, channel: str | None = None) -> dict | None:
         default_channel_account = None
         any_channel_account = None
 

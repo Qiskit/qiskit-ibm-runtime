@@ -16,7 +16,7 @@
 Fake provider class that provides access to fake backends.
 """
 
-from typing import Any, List
+from typing import Any
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from .backends import *
@@ -44,7 +44,7 @@ class FakeProviderForBackendV2:
 
         return backend
 
-    def backends(self, name: str = None, **kwargs: Any) -> List[FakeBackendV2]:
+    def backends(self, name: str = None, **kwargs: Any) -> list[FakeBackendV2]:
         """Return all backends accessible via this account."""
         return self._backends
 

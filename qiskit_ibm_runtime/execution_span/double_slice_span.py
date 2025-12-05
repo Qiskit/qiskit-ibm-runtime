@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
+from collections.abc import Iterable
 
 import math
 import numpy as np

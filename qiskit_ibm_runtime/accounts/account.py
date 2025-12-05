@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict, Any
+from typing import Literal, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -32,17 +32,11 @@ from ..utils import (
     get_global_catalog_api_url,
 )
 
-AccountType = Optional[Literal["cloud", "legacy"]]
-RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[str]]
+AccountType: TypeAlias = Literal["cloud", "legacy"] | None
+RegionType: TypeAlias = Literal["us-east", "eu-de"] | None
+PlanType: TypeAlias = list[str] | None
 
-ChannelType = Optional[
-    Literal[
-        "ibm_quantum_platform",
-        "ibm_cloud",
-        "local",
-    ]
-]
+ChannelType: TypeAlias = Literal["ibm_quantum_platform", "ibm_cloud", "local"] | None
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
 
@@ -55,9 +49,9 @@ class Account:
     def __init__(
         self,
         token: str,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
     ):
         """Account constructor.
 
@@ -76,8 +70,8 @@ class Account:
         self.verify = verify
         self.private_endpoint: bool = False
         self.region: str = None
-        self.plans_preference: List[str] = None
-        self.tags: List[str] = None
+        self.plans_preference: list[str] = None
+        self.tags: list[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -118,14 +112,14 @@ class Account:
         cls,
         channel: str,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
@@ -153,7 +147,7 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(self) -> List[Dict[str, Any]]:  # type: ignore
+    def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -229,7 +223,7 @@ class Account:
     @staticmethod
     @abstractmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         pass
@@ -241,15 +235,15 @@ class CloudAccount(Account):
     def __init__(
         self,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        channel: Optional[str] = "ibm_quantum_platform",
-        tags: Optional[str] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        channel: str | None = "ibm_quantum_platform",
+        tags: str | None = None,
     ):
         """Account constructor.
 
@@ -315,7 +309,7 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Dict[str, Any]]:
+    def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
@@ -385,7 +379,7 @@ class CloudAccount(Account):
 
     @staticmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):
