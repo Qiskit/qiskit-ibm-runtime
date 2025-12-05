@@ -12,7 +12,6 @@
 
 """Estimator options."""
 
-from typing import Union
 
 from pydantic import Field
 
@@ -36,7 +35,7 @@ class EstimatorOptions(OptionsV2):
     """Options for V2 Estimator."""
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
-    default_precision: Union[UnsetType, float] = Unset
+    default_precision: UnsetType | float = Unset
     r"""The default precision to use for any PUB or ``run()``
         call that does not specify one.
         Each Estimator PUB can specify its own precision. If the ``run()`` method
@@ -45,7 +44,7 @@ class EstimatorOptions(OptionsV2):
         
         Default: 0.015625 (1 / sqrt(4096)).
     """
-    default_shots: Union[UnsetType, int, None] = Unset
+    default_shots: UnsetType | int | None = Unset
     r"""The total number of shots to use per circuit per configuration.
 
         .. note::
@@ -63,7 +62,7 @@ class EstimatorOptions(OptionsV2):
 
         Default: ``None``.
     """
-    resilience_level: Union[UnsetType, int] = Unset
+    resilience_level: UnsetType | int = Unset
     r"""How much resilience to build against errors.
         Higher levels generate more accurate results,
         at the expense of longer processing times.
@@ -80,29 +79,29 @@ class EstimatorOptions(OptionsV2):
 
         Default: 1.
     """
-    seed_estimator: Union[UnsetType, int] = Unset
+    seed_estimator: UnsetType | int = Unset
     r"""Seed used to control sampling. 
     
         Default: ``None``.
     """
-    dynamical_decoupling: Union[DynamicalDecouplingOptions, Dict] = Field(
+    dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(
         default_factory=DynamicalDecouplingOptions
     )
     r"""Suboptions for dynamical decoupling. See
         :class:`DynamicalDecouplingOptions` for all available options.
     """
-    resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
+    resilience: ResilienceOptionsV2 | Dict = Field(default_factory=ResilienceOptionsV2)
     r"""Advanced resilience options to fine-tune the resilience strategy.
         See :class:`ResilienceOptionsV2` for all available options.
     """
-    execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
+    execution: ExecutionOptionsV2 | Dict = Field(default_factory=ExecutionOptionsV2)
     r"""Execution time options. See :class:`ExecutionOptionsV2` for all available options.
     """
-    twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
+    twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
     r"""
     Pauli twirling options. See :class:`TwirlingOptions` for all available options.
     """
-    experimental: Union[UnsetType, dict] = Unset
+    experimental: UnsetType | dict = Unset
     r"""Experimental options. These options are subject to change without notification, and
         stability is not guaranteed.
     """

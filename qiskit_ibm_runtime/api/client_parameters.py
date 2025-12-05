@@ -12,7 +12,8 @@
 
 """Represent IBM Quantum account client parameters."""
 
-from typing import Dict, Optional, Any, Callable
+from typing import Any
+from collections.abc import Callable
 from ..proxies import ProxyConfiguration
 
 from ..utils import default_runtime_url_resolver
@@ -27,11 +28,11 @@ class ClientParameters:
         channel: str,
         token: str,
         url: str = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
         verify: bool = True,
-        private_endpoint: Optional[bool] = False,
-        url_resolver: Optional[Callable[[str, str, Optional[bool], str], str]] = None,
+        private_endpoint: bool | None = False,
+        url_resolver: Callable[[str, str, bool | None, str], str] | None = None,
     ) -> None:
         """ClientParameters constructor.
 
@@ -64,7 +65,7 @@ class ClientParameters:
         """Returns the Runtime API base url."""
         return self.url_resolver(self.url, self.instance, self.private_endpoint, self.channel)
 
-    def connection_parameters(self) -> Dict[str, Any]:
+    def connection_parameters(self) -> dict[str, Any]:
         """Construct connection related parameters.
 
         Returns:

@@ -13,7 +13,7 @@
 """Class for backend status."""
 
 import html
-from typing import Dict, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 
@@ -52,7 +52,7 @@ class BackendStatus:
         self.status_msg = status_msg
 
     @classmethod
-    def from_dict(cls: Type[BackendStatusT], data: Dict[str, Any]) -> BackendStatusT:
+    def from_dict(cls: type[BackendStatusT], data: dict[str, Any]) -> BackendStatusT:
         """Create a new BackendStatus object from a dictionary.
 
         Args:
@@ -65,7 +65,7 @@ class BackendStatus:
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:

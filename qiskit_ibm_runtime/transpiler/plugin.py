@@ -13,7 +13,6 @@
 """Plugin for IBM provider backend transpiler stages."""
 
 import re
-from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig
@@ -42,7 +41,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -78,7 +77,7 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -135,7 +134,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -175,7 +174,7 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 

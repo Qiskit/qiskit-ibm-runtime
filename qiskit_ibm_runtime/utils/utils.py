@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Set
+from typing import Any
 from urllib.parse import urlparse
 from itertools import chain
 import numpy as np
@@ -58,7 +58,7 @@ def is_simulator(backend: BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
-def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
     """
     A section of is_isa_circuit, separated to allow recursive calls
     within blocks of conditional operations.
@@ -121,7 +121,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
-def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
     """
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
@@ -165,7 +165,7 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
     return angle_params
 
 
-def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+def is_valid_rzz_pub(pub: EstimatorPub | SamplerPub) -> str:
     """Verify that all rzz angles are in the range [0, pi/2].
 
     Args:
@@ -216,7 +216,7 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     return ""
 
 
-def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+def are_circuits_dynamic(circuits: list[QuantumCircuit], qasm_default: bool = True) -> bool:
     """Checks if the input circuits are dynamic."""
     for circuit in circuits:
         if isinstance(circuit, str):
@@ -278,7 +278,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
 
 
-def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
+def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
     if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
@@ -470,7 +470,7 @@ def setup_logger(logger: logging.Logger) -> None:
         logger.setLevel(level)
 
 
-def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def filter_data(data: dict[str, Any]) -> dict[str, Any]:
     """Return the data with certain fields filtered.
 
     Data to be filtered out includes hub/group/project information.
@@ -490,7 +490,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
     return data_to_filter
 
 
-def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]) -> None:
+def _filter_value(data: dict[str, Any], filter_keys: list[str | tuple[str, str]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:
@@ -543,7 +543,7 @@ class RefreshQueue(Queue):
             super().put(item, block=False)
             self.condition.notify()
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> Any:
+    def get(self, block: bool = True, timeout: float | None = None) -> Any:
         """Remove and return an item from the queue.
 
         Args:

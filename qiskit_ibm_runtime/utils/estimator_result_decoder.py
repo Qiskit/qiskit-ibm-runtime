@@ -12,7 +12,6 @@
 
 """Estimator result decoder."""
 
-from typing import Dict
 
 from qiskit.primitives.containers import PrimitiveResult
 
@@ -27,6 +26,6 @@ class EstimatorResultDecoder(ResultDecoder):
         cls, raw_result: str
     ) -> PrimitiveResult:
         """Convert the result to EstimatorResult."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         return decoded

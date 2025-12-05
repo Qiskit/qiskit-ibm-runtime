@@ -12,7 +12,7 @@
 
 """Options for measurement noise learning."""
 
-from typing import Union, Literal
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
@@ -27,13 +27,13 @@ class MeasureNoiseLearningOptions:
 
     """
 
-    num_randomizations: Union[UnsetType, int] = Unset
+    num_randomizations: UnsetType | int = Unset
     r"""The number of random circuits to draw for the measurement
         learning experiment. 
         
         Default: 32.
     """
-    shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
+    shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
     r"""The number of shots to use for the learning experiment
         per random circuit. If "auto", the value will be chosen automatically
         based on the input PUBs. 

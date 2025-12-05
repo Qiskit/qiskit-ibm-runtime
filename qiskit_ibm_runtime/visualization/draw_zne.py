@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 from itertools import product
-from typing import Optional, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
+from collections.abc import Sequence
 import numpy as np
 
 from .utils import plotly_module
