@@ -12,7 +12,6 @@
 
 """NoiseLearner options."""
 
-from typing import List, Union
 
 from pydantic import ValidationInfo, field_validator
 
@@ -52,7 +51,7 @@ class NoiseLearnerOptions(OptionsV2):
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    max_layers_to_learn: Union[UnsetType, int, None] = Unset
+    max_layers_to_learn: UnsetType | int | None = Unset
     r"""The max number of unique layers to learn.
 
     A ``None`` value indicates that there is no limit.
@@ -62,14 +61,14 @@ class NoiseLearnerOptions(OptionsV2):
     gates in the layer. Default: 4.
     """
 
-    shots_per_randomization: Union[UnsetType, int] = Unset
+    shots_per_randomization: UnsetType | int = Unset
     r"""The total number of shots to use per random learning circuit.
 
     A learning circuit is a random circuit at a specific learning depth with a specific
     measurement basis that is executed on hardware. Default: 128.
     """
 
-    num_randomizations: Union[UnsetType, int] = Unset
+    num_randomizations: UnsetType | int = Unset
     r"""The number of random circuits to use per learning circuit configuration.
 
     A configuration is a measurement basis and depth setting. For example, if your experiment
@@ -80,7 +79,7 @@ class NoiseLearnerOptions(OptionsV2):
     each.
     """
 
-    layer_pair_depths: Union[UnsetType, List[int]] = Unset
+    layer_pair_depths: UnsetType | list[int] = Unset
     r"""The circuit depths (measured in number of pairs) to use in learning experiments.
     
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -88,7 +87,7 @@ class NoiseLearnerOptions(OptionsV2):
     of the layer of interest. Default: (0, 1, 2, 4, 16, 32).
     """
 
-    twirling_strategy: Union[UnsetType, TwirlingStrategyType] = Unset
+    twirling_strategy: UnsetType | TwirlingStrategyType = Unset
     r"""The twirling strategy in the identified layers of two-qubit twirled gates.
     
     The allowed values are:
@@ -106,7 +105,7 @@ class NoiseLearnerOptions(OptionsV2):
     Default: "active-accum".
     """
 
-    experimental: Union[UnsetType, dict] = Unset
+    experimental: UnsetType | dict = Unset
     r"""Experimental options. 
     
     These options are subject to change without notification, and stability is not guaranteed.
@@ -120,7 +119,7 @@ class NoiseLearnerOptions(OptionsV2):
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
     @skip_unset_validation
-    def _nonnegative_list(cls, value: List[int], info: ValidationInfo) -> List[int]:
+    def _nonnegative_list(cls, value: list[int], info: ValidationInfo) -> list[int]:
         if any(i < 0 for i in value):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0")
         return value

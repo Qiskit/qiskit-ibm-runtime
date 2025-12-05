@@ -12,7 +12,7 @@
 
 """Qiskit runtime local mode job class."""
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
@@ -47,7 +47,7 @@ class LocalRuntimeJob(PrimitiveJob):
         self._running = datetime.now()
         self._finished = datetime.now()
 
-    def metrics(self) -> Dict[str, Any]:
+    def metrics(self) -> dict[str, Any]:
         """Return job metrics.
 
         Returns:
@@ -84,7 +84,7 @@ class LocalRuntimeJob(PrimitiveJob):
         return ""
 
     @property
-    def inputs(self) -> Dict:
+    def inputs(self) -> dict:
         """Return job input parameters."""
         return self._inputs
 
