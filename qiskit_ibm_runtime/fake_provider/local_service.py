@@ -19,7 +19,8 @@ import copy
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Callable, Dict, List, Literal, Optional, Union
+from typing import Literal
+from collections.abc import Callable
 
 from qiskit.primitives import (
     BackendEstimatorV2,
@@ -66,11 +67,11 @@ class QiskitRuntimeLocalService:
 
     def backends(
         self,
-        name: Optional[str] = None,
-        min_num_qubits: Optional[int] = None,
-        dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
-    ) -> List[FakeBackendV2]:
+        name: str | None = None,
+        min_num_qubits: int | None = None,
+        dynamic_circuits: bool | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
+    ) -> list[FakeBackendV2]:
         """Return all the available fake backends, subject to optional filtering.
 
         Args:
@@ -128,8 +129,8 @@ class QiskitRuntimeLocalService:
 
     def least_busy(
         self,
-        min_num_qubits: Optional[int] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+        min_num_qubits: int | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
         """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
@@ -147,9 +148,9 @@ class QiskitRuntimeLocalService:
     def _run(
         self,
         program_id: Literal["sampler", "estimator"],
-        inputs: Dict,
-        options: Union[RuntimeOptions, Dict],
-        calibration_id: Optional[str],
+        inputs: dict,
+        options: RuntimeOptions | dict,
+        calibration_id: str | None,
     ) -> PrimitiveJob:
         """Execute the runtime program.
 
@@ -167,7 +168,7 @@ class QiskitRuntimeLocalService:
             ValueError: If input is invalid.
             NotImplementedError: If using V2 primitives.
         """
-        if isinstance(options, Dict):
+        if isinstance(options, dict):
             qrt_options = copy.deepcopy(options)
         else:
             qrt_options = asdict(options)

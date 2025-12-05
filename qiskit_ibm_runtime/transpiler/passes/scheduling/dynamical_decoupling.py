@@ -13,7 +13,6 @@
 """Dynamical decoupling insertion pass for IBM (dynamic circuit) backends."""
 
 import warnings
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import rustworkx as rx
@@ -121,20 +120,20 @@ class PadDynamicalDecoupling(BlockBasePadder):
     def __init__(
         self,
         durations: InstructionDurations = None,
-        dd_sequences: Union[List[Gate], List[List[Gate]]] = None,
-        qubits: Optional[List[int]] = None,
-        spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        dd_sequences: list[Gate] | list[list[Gate]] = None,
+        qubits: list[int] | None = None,
+        spacings: list[list[float]] | list[float] | None = None,
         skip_reset_qubits: bool = True,
         pulse_alignment: int = 16,
         extra_slack_distribution: str = "middle",
-        sequence_min_length_ratios: Optional[Union[int, List[int]]] = None,
+        sequence_min_length_ratios: int | list[int] | None = None,
         insert_multiple_cycles: bool = False,
         coupling_map: CouplingMap = None,
-        alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        alt_spacings: list[list[float]] | list[float] | None = None,
         schedule_idle_qubits: bool = False,
-        dd_barrier: Optional[str] = None,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
-        target: Optional[Target] = None,
+        dd_barrier: str | None = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ):
         """Dynamical decoupling initializer.
 
@@ -259,7 +258,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         self._extra_slack_distribution = extra_slack_distribution
 
-        self._dd_sequence_lengths: Dict[Qubit, List[List[Gate]]] = {}
+        self._dd_sequence_lengths: dict[Qubit, list[list[Gate]]] = {}
         self._sequence_phase = 0
 
         if sequence_min_length_ratios is None:

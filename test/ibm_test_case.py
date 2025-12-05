@@ -20,7 +20,7 @@ from unittest import TestCase
 from unittest.util import safe_repr
 from contextlib import suppress
 from collections import defaultdict
-from typing import DefaultDict, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
@@ -40,7 +40,7 @@ class IBMTestCase(TestCase):
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
-    program_ids: Dict[str, str]
+    program_ids: dict[str, str]
 
     @classmethod
     def setUpClass(cls):
@@ -206,8 +206,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete: DefaultDict = defaultdict(list)
-        self.to_cancel: DefaultDict = defaultdict(list)
+        self.to_delete: defaultdict = defaultdict(list)
+        self.to_cancel: defaultdict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""
