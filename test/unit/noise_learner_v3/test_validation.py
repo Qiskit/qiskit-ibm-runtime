@@ -91,7 +91,7 @@ class TestValidation(IBMTestCase):
         # ISA
         with self.assertRaisesRegex(IBMInputValueError, "instruction cz"):
             validate_instruction(circuit.data[4], target)
-        with self.assertRaisesRegex(IBMInputValueError, "instruction cx on qubits \(0, 13\)"):
+        with self.assertRaisesRegex(IBMInputValueError, r"instruction cx on qubits \(0, 13\)"):
             validate_instruction(circuit.data[5], target)
 
 
