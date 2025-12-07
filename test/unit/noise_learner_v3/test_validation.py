@@ -86,8 +86,10 @@ class TestValidation(IBMTestCase):
         validate_instruction(circuit.data[2], target)
 
         # no box / box badly annotated
-        with self.assertRaisesRegex(IBMInputValueError, "Found a box without a ``Twirl`` annotation"):
-            validate_instruction(circuit.data[1], target)        
+        with self.assertRaisesRegex(
+            IBMInputValueError, "Found a box without a ``Twirl`` annotation"
+        ):
+            validate_instruction(circuit.data[1], target)
         with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cx'"):
             validate_instruction(circuit.data[3], target)
 
@@ -105,9 +107,8 @@ class TestValidation(IBMTestCase):
         circuit_unphysical = QuantumCircuit(2)
         with circuit_unphysical.box(annotations=[Twirl()]):
             circuit_unphysical.cx(0, 1)
-        
-        with self.assertRaisesRegex(IBMInputValueError, "Every qubit must be part of QuantumRegister"):
+
+        with self.assertRaisesRegex(
+            IBMInputValueError, "Every qubit must be part of QuantumRegister"
+        ):
             validate_instruction(circuit_unphysical.data[0], target)
-
-
-        
