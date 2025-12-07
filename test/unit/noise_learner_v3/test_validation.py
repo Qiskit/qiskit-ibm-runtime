@@ -74,9 +74,9 @@ class TestValidation(IBMTestCase):
         circuit.cx(0, 1)
         with circuit.box(annotations=[Twirl()]):
             circuit.cz(0, 1)
-        block1 = QuantumCircuit(2)
-        block1.cx(0, 1)
-        circuit.box(block1, annotations=[Twirl()], qubits=[0, 13], clbits=[])
+        block = QuantumCircuit(2)
+        block.cx(0, 1)
+        circuit.box(block, annotations=[Twirl()], qubits=[0, 13], clbits=[])
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
             circuit.measure_all()
@@ -100,6 +100,14 @@ class TestValidation(IBMTestCase):
         # cannot be learned
         with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
             validate_instruction(circuit.data[6], target)
+
+        # unphysical
+        circuit_unphysical = QuantumCircuit(2)
+        with circuit_unphysical.box(annotations=[Twirl()]):
+            circuit_unphysical.cx(0, 1)
+        
+        with self.assertRaisesRegex(IBMInputValueError, "Every qubit must be part of QuantumRegister"):
+            validate_instruction(circuit_unphysical.data[0], target)
 
 
         
