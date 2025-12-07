@@ -18,8 +18,7 @@ from samplomatic import Twirl
 
 from qiskit_ibm_runtime.noise_learner_v3.validation import validate_options, validate_instruction
 from qiskit_ibm_runtime.options import NoiseLearnerV3Options
-from qiskit_ibm_runtime.models.backend_configuration import BackendConfiguration
-from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers
+from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers, FakeFractionalBackend
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ...ibm_test_case import IBMTestCase
@@ -30,19 +29,7 @@ class TestValidation(IBMTestCase):
 
     def test_validate_options(self):
         """Test the function :func:`~qiskit_ibm_runtime/noise_learner_v3/validate_options`."""
-        configuration = BackendConfiguration(
-            backend_name="im_a_backend",
-            backend_version="0.0",
-            n_qubits=1e100,
-            basis_gates=["rx"],
-            gates=[],
-            local=False,
-            simulator=False,
-            conditional=True,
-            open_pulse=False,
-            memory=True,
-            coupling_map=[],
-        )
+        configuration = FakeFractionalBackend().configuration()
 
         options = NoiseLearnerV3Options()
         options.post_selection = {"enable": True, "x_pulse_type": "rx"}
