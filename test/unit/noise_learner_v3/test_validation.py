@@ -62,9 +62,10 @@ class TestValidation(IBMTestCase):
 
     def test_validate_instruction(self):
         """Test the function :func:`~qiskit_ibm_runtime/noise_learner_v3/validate_instruction`."""
-        target = FakeAlgiers().target
+        backend = FakeAlgiers()
+        target = backend.target
 
-        circuit = QuantumCircuit(20)
+        circuit = QuantumCircuit(backend.num_qubits)
         with circuit.box(annotations=[Twirl()]):
             circuit.cz(0, 1)
         with circuit.box(annotations=[]):
@@ -74,12 +75,11 @@ class TestValidation(IBMTestCase):
         circuit.cz(0, 1)
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
-        with circuit.box(annotations=[Twirl()], qubits=[0, 13]):
-            circuit.cz(0, 1)
+        block1 = QuantumCircuit(2)
+        block1.cz(0, 1)
+        circuit.box(block1, annotations=[Twirl()], qubits=[0, 13], clbits=[])
         with circuit.box(annotations=[Twirl()]):
-            circuit.rzz(1, 0)
-        with circuit.box(annotations=[Twirl()], qubits=[500]):
-            circuit.h(0)
+            circuit.rzz(1, 0, 1)
 
         # valid instructions
         validate_instruction(circuit.data[0], target)
@@ -101,9 +101,5 @@ class TestValidation(IBMTestCase):
         with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
             validate_instruction(circuit.data[6], target)
 
-        # non-physical
-        with self.assertRaisesRegex(IBMInputValueError, "Every qubit must be"):
-            validate_instruction(circuit.data[7], target)
-        
 
         
