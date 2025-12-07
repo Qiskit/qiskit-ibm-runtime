@@ -63,34 +63,34 @@ class TestValidation(IBMTestCase):
             circuit.cx(0, 1)
             circuit.measure_all()
 
-        # valid instructions
-        validate_instruction(circuit.data[0], target)
-        validate_instruction(circuit.data[2], target)
+        with self.subTest("valid instructions"):
+            validate_instruction(circuit.data[0], target)
+            validate_instruction(circuit.data[2], target)
 
-        # no box / box badly annotated
-        with self.assertRaisesRegex(
-            IBMInputValueError, "Found a box without a ``Twirl`` annotation"
-        ):
-            validate_instruction(circuit.data[1], target)
-        with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cx'"):
-            validate_instruction(circuit.data[3], target)
+        with self.subTest("no box / box badly annotated"):
+            with self.assertRaisesRegex(
+                IBMInputValueError, "Found a box without a ``Twirl`` annotation"
+            ):
+                validate_instruction(circuit.data[1], target)
+            with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cx'"):
+                validate_instruction(circuit.data[3], target)
 
-        # ISA
-        with self.assertRaisesRegex(IBMInputValueError, "instruction cz"):
-            validate_instruction(circuit.data[4], target)
-        with self.assertRaisesRegex(IBMInputValueError, r"instruction cx on qubits \(0, 13\)"):
-            validate_instruction(circuit.data[5], target)
+        with self.subTest("ISA"):
+            with self.assertRaisesRegex(IBMInputValueError, "instruction cz"):
+                validate_instruction(circuit.data[4], target)
+            with self.assertRaisesRegex(IBMInputValueError, r"instruction cx on qubits \(0, 13\)"):
+                validate_instruction(circuit.data[5], target)
 
-        # cannot be learned
-        with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
-            validate_instruction(circuit.data[6], target)
+        with self.subTest("cannot be learned"):
+            with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
+                validate_instruction(circuit.data[6], target)
 
-        # unphysical
-        circuit_unphysical = QuantumCircuit(2)
-        with circuit_unphysical.box(annotations=[Twirl()]):
-            circuit_unphysical.cx(0, 1)
+        with self.subTest("unphysical"):
+            circuit_unphysical = QuantumCircuit(2)
+            with circuit_unphysical.box(annotations=[Twirl()]):
+                circuit_unphysical.cx(0, 1)
 
-        with self.assertRaisesRegex(
-            IBMInputValueError, "Every qubit must be part of QuantumRegister"
-        ):
-            validate_instruction(circuit_unphysical.data[0], target)
+            with self.assertRaisesRegex(
+                IBMInputValueError, "Every qubit must be part of QuantumRegister"
+            ):
+                validate_instruction(circuit_unphysical.data[0], target)
