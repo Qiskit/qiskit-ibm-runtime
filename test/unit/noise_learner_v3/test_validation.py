@@ -77,6 +77,9 @@ class TestValidation(IBMTestCase):
         block1 = QuantumCircuit(2)
         block1.cx(0, 1)
         circuit.box(block1, annotations=[Twirl()], qubits=[0, 13], clbits=[])
+        with circuit.box(annotations=[Twirl()]):
+            circuit.cx(0, 1)
+            circuit.measure_all()
 
         # valid instructions
         validate_instruction(circuit.data[0], target)
@@ -94,6 +97,9 @@ class TestValidation(IBMTestCase):
         with self.assertRaisesRegex(IBMInputValueError, r"instruction cx on qubits \(0, 13\)"):
             validate_instruction(circuit.data[5], target)
 
+        # cannot be learned
+        with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
+            validate_instruction(circuit.data[6], target)
 
 
         
