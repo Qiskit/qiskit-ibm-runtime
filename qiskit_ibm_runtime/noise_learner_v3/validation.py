@@ -142,7 +142,7 @@ def _is_isa_instruction(instruction: CircuitInstruction, target: Target) -> str:
 
     # A map from the box qubits to indexes
     box_qubit_map = {
-        box_qubit: qubit_map[box_qubit] for box_qubit in instruction.operation.body.qubits
+        box_qubit: qubit_map[instruction_qubit] for instruction_qubit, box_qubit in zip(instruction.qubits, instruction.operation.body.qubits)
     }
 
     for op in instruction.operation.body:

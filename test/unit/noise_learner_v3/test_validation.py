@@ -62,10 +62,9 @@ class TestValidation(IBMTestCase):
 
     def test_validate_instruction(self):
         """Test the function :func:`~qiskit_ibm_runtime/noise_learner_v3/validate_instruction`."""
-        backend = FakeAlgiers()
-        target = backend.target
+        target = FakeAlgiers().target
 
-        circuit = QuantumCircuit(backend.num_qubits)
+        circuit = QuantumCircuit(target.num_qubits)
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
         with circuit.box(annotations=[]):
@@ -94,7 +93,7 @@ class TestValidation(IBMTestCase):
         # ISA
         with self.assertRaisesRegex(IBMInputValueError, "instruction cz"):
             validate_instruction(circuit.data[4], target)
-        with self.assertRaisesRegex(IBMInputValueError, "instruction cx on qubits 0, 13"):
+        with self.assertRaisesRegex(IBMInputValueError, "instruction cx on qubits \(0, 13\)"):
             validate_instruction(circuit.data[5], target)
 
         # non-Clifford
