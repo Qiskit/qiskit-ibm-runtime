@@ -12,8 +12,15 @@
 
 """Tests the noise learner v3 validation."""
 
-from qiskit_ibm_runtime.noise_learner_v3.validation import validate_options
+from qiskit import QuantumCircuit
+
+from qiskit_ibm_runtime.noise_learner_v3.validation import validate_options, validate_instruction
+from qiskit_ibm_runtime.options import NoiseLearnerV3Options
 from qiskit_ibm_runtime.models.backend_configuration import BackendConfiguration
+from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+from samplomatic import Twirl
 
 from ...ibm_test_case import IBMTestCase
 
@@ -52,3 +59,51 @@ class TestValidation(IBMTestCase):
         )
         with self.assertRaisesRegex(ValueError, "xslow"):
             validate_options(options=invalid_options, configuration=configuration)
+
+    def test_validate_instruction(self):
+        """Test the function :func:`~qiskit_ibm_runtime/noise_learner_v3/validate_instruction`."""
+        target = FakeAlgiers().target
+
+        circuit = QuantumCircuit(20)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.cz(0, 1)
+        with circuit.box(annotations=[]):
+            circuit.noop(1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+        circuit.cz(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()], qubits=[0, 13]):
+            circuit.cz(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rzz(1, 0)
+        with circuit.box(annotations=[Twirl()], qubits=[500]):
+            circuit.h(0)
+
+        # valid instructions
+        validate_instruction(circuit.data[0], target)
+        validate_instruction(circuit.data[2], target)
+
+        # no box / box badly annotated
+        with self.assertRaisesRegex(IBMInputValueError, "Found a box without a ``Twirl`` annotation"):
+            validate_instruction(circuit.data[1], target)        
+        with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cz'"):
+            validate_instruction(circuit.data[3], target)
+
+        # ISA
+        with self.assertRaisesRegex(IBMInputValueError, "instruction cx"):
+            validate_instruction(circuit.data[4], target)
+        with self.assertRaisesRegex(IBMInputValueError, "instruction cz on qubits 0, 13"):
+            validate_instruction(circuit.data[5], target)
+
+        # non-Clifford
+        with self.assertRaisesRegex(IBMInputValueError, "cannot be learned"):
+            validate_instruction(circuit.data[6], target)
+
+        # non-physical
+        with self.assertRaisesRegex(IBMInputValueError, "Every qubit must be"):
+            validate_instruction(circuit.data[7], target)
+        
+
+        
