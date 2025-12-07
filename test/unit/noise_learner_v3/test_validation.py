@@ -67,16 +67,16 @@ class TestValidation(IBMTestCase):
 
         circuit = QuantumCircuit(backend.num_qubits)
         with circuit.box(annotations=[Twirl()]):
-            circuit.cz(0, 1)
+            circuit.cx(0, 1)
         with circuit.box(annotations=[]):
             circuit.noop(1)
         with circuit.box(annotations=[Twirl()]):
             circuit.measure_all()
-        circuit.cz(0, 1)
+        circuit.cx(0, 1)
         with circuit.box(annotations=[Twirl()]):
-            circuit.cx(0, 1)
+            circuit.cz(0, 1)
         block1 = QuantumCircuit(2)
-        block1.cz(0, 1)
+        block1.cx(0, 1)
         circuit.box(block1, annotations=[Twirl()], qubits=[0, 13], clbits=[])
         with circuit.box(annotations=[Twirl()]):
             circuit.rzz(1, 0, 1)
@@ -88,13 +88,13 @@ class TestValidation(IBMTestCase):
         # no box / box badly annotated
         with self.assertRaisesRegex(IBMInputValueError, "Found a box without a ``Twirl`` annotation"):
             validate_instruction(circuit.data[1], target)        
-        with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cz'"):
+        with self.assertRaisesRegex(IBMInputValueError, "Expected a 'box' but found 'cx'"):
             validate_instruction(circuit.data[3], target)
 
         # ISA
-        with self.assertRaisesRegex(IBMInputValueError, "instruction cx"):
+        with self.assertRaisesRegex(IBMInputValueError, "instruction cz"):
             validate_instruction(circuit.data[4], target)
-        with self.assertRaisesRegex(IBMInputValueError, "instruction cz on qubits 0, 13"):
+        with self.assertRaisesRegex(IBMInputValueError, "instruction cx on qubits 0, 13"):
             validate_instruction(circuit.data[5], target)
 
         # non-Clifford
