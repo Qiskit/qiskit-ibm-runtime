@@ -47,7 +47,7 @@ class NoiseLearnerV3Result:
     where :math:`p_j = \frac12 - \frac12 e^{-2 r_j}`.
 
     Some strategies for learning noise channels, such as the Pauli Lindblad learning protocol in
-    Ref. [1], produce degenarate terms, meaning that they learn products of rates as opposed to
+    Ref. [1], produce degenerate terms, meaning that they learn products of rates as opposed to
     individual rates.
 
     References:
