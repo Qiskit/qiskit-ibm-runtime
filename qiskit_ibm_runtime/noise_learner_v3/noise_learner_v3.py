@@ -118,7 +118,7 @@ class NoiseLearnerV3:
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
-            raise ValueError("``NoiseLearner`` not currently supported in local mode.")
+            raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     @property
     def options(self) -> NoiseLearnerV3Options:
