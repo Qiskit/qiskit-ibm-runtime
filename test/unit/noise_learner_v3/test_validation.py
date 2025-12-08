@@ -48,6 +48,8 @@ class TestValidation(IBMTestCase):
         circuit = QuantumCircuit(target.num_qubits)
         with circuit.box(annotations=[Twirl()]):
             circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
 
         validate_instruction(circuit.data[0], target)
         validate_instruction(circuit.data[1], target)
