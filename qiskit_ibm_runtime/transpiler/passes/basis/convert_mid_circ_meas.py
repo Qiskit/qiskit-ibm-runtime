@@ -13,8 +13,8 @@
 """Pass to convert mreplaces terminal measures in the middle of the circuit with
 MidCircuitMeasure instructions."""
 
-from qiskit.transpiler.basepasses import TransformationPass
-from qiskit.circuit.measure import Measure
+from qiskit.circuit import Measure
+from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
 
 
@@ -23,24 +23,47 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     MidCircuitMeasure instructions.
     """
 
-    def __init__(self, target):
+    def __init__(self, target, mcm_name="measure_2"):
+        """Transpiler pass that replaces terminal measure instructions in non-terminal locations with
+        MidCircuitMeasure instructions. By default, these will be ``measure_2``, but the pass accepts
+        custom ``measure_`` instructions. This pass is expected to run after routing, as it will check
+        that MidCircuitMeasure is supported in the corresponding physical qubit.
+
+        Args:
+            target: Backend's target instance that contains one or more ``measure_`` instructions.
+            mcm_name: Name of the ``measure_`` instruction that terminal measure instructions in
+                non-terminal locations will be replaced with. This instruction must be contained in
+                the target. Defaults to ``measure_2``.
+
+        Raises:
+            ValueError: If the specifcied ``mcm_name`` does not conform to the ``measure_`` pattern or
+                is not contained in the provided target.
+        """
+
         super().__init__()
         self.target = target
+        if not mcm_name.startswith("measure_"):
+            raise ValueError(
+                "Invalid name for mid-circuit measure instruction."
+                "The provided name must start with `measure_`."
+            )
+        if not mcm_name in target.operation_names:
+            raise ValueError(
+                f"{mcm_name} is not supported by the given target. "
+                f"Supported operations are: {target.operation_names}"
+            )
+        self.mcm_name = mcm_name
 
     def run(self, dag):
         """Run the pass on a dag."""
-        mid_circ_measure = None
-        for inst in self.target.instructions:
-            if inst[0].name.startswith("measure_"):
-                mid_circ_measure = inst[0]
-                break
-        if not mid_circ_measure:
-            return dag
-
         final_measure_nodes = calc_final_ops(dag, {"measure"})
-
         for node in dag.op_nodes(Measure):
             if node not in final_measure_nodes:
-                dag.substitute_node(node, mid_circ_measure, inplace=True)
+                node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                # only replace Measure with MidCircuitMeasure if MidCircuitMeasure
+                # is supported in the corresponding qargs
+                if self.target.instruction_supported(self.mcm_name, node_indices):
+                    mid_circ_measure = self.target.operation_from_name(self.mcm_name)
+                    dag.substitute_node(node, mid_circ_measure, inplace=True)
 
         return dag
