@@ -69,7 +69,7 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
     props_filename = "props_nighthawk.json"  # type: ignore
     backend_name = "fake_nighthawk"  # type: ignore
 
-    def __init__(self, *args, **kwargs) -> None: # type: ignore
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore
         # Only display the warning statement once
         global DISPLAY_WARNING  # pylint: disable=global-statement
         if DISPLAY_WARNING:
