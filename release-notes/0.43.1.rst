@@ -1,0 +1,8 @@
+0.43.1 (2025-10-23)
+===================
+
+Upgrade Notes
+-------------
+
+- When initializing :class:`.QiskitRuntimeService` with a saved account, the ``warning`` level log messages regarding
+  the saved account name (or default account) have been lowered to the ``info`` level. (`2445 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2445>`__)
