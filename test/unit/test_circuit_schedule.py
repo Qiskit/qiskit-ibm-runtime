@@ -28,10 +28,14 @@ class TestCircuitSchedule(IBMTestCase):
         """Set up."""
         fake_sampler_pub_result_large = FakeCircuitScheduleInputData.sampler_pub_result_large
         fake_sampler_pub_result_small = FakeCircuitScheduleInputData.sampler_pub_result_small
+        fake_sampler_pub_result_merge = FakeCircuitScheduleInputData.sampler_pub_result_merge
         self.circuit_schedule_large_data = fake_sampler_pub_result_large.metadata["compilation"][
             "scheduler_timing"
         ]["timing"]
         self.circuit_schedule_small_data = fake_sampler_pub_result_small.metadata["compilation"][
+            "scheduler_timing"
+        ]["timing"]
+        self.circuit_schedule_merge_data = fake_sampler_pub_result_merge.metadata["compilation"][
             "scheduler_timing"
         ]["timing"]
 
@@ -42,6 +46,10 @@ class TestCircuitSchedule(IBMTestCase):
     def get_small_mock_data(self):
         """Return small constant portion of data object"""
         return self.circuit_schedule_small_data
+
+    def get_merge_mock_data(self):
+        """Return a merge use case data object"""
+        return self.circuit_schedule_merge_data
 
     def test__load(self):
         """Test data loading"""
@@ -109,6 +117,24 @@ class TestCircuitSchedule(IBMTestCase):
 
         if top_channel is not None:
             self.assertEqual(circuit_schedule.channels[-1], top_channel)
+
+    @ddt.data(
+        (False, 6),
+        (True, 3),
+    )
+    @ddt.unpack
+    def test_merge_common_instructions(self, to_merge_instruction, n_instructions):
+        """Test for instructions merging"""
+        data = self.get_merge_mock_data()
+        circuit_schedule = CircuitSchedule(data)
+
+        circuit_schedule.preprocess(
+            included_channels=None,
+            filter_awgr=False,
+            filter_barriers=False,
+            merge_common_instructions=to_merge_instruction,
+        )
+        self.assertEqual(len(circuit_schedule.circuit_scheduling), n_instructions)
 
     def test_get_trace_finite_duration_y_shift(self):
         """Test that x, y, and z shifts for finite duration traces are set correctly"""
