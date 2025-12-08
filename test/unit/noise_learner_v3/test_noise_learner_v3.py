@@ -25,6 +25,9 @@ class TestNoiseLearnerV3(IBMTestCase):
     def test_init_with_backend_instance(self):
         """Test `NoiseLearnerV3.init` when the input mode is an IBMBackend."""
         backend = get_mocked_backend()
+        service = backend.service
+        service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=backend)
         assert noise_learner._backend == backend
-        assert noise_learner._service == backend.service
+        assert noise_learner._service == service
+
