@@ -14,7 +14,7 @@
 
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
 
-from test.utils import get_mocked_backend
+from test.utils import get_mocked_backend, get_mocked_session
 
 from ...ibm_test_case import IBMTestCase
 
@@ -22,7 +22,7 @@ from ...ibm_test_case import IBMTestCase
 class TestNoiseLearnerV3(IBMTestCase):
     """Tests the `NoiseLearnerV3` class."""
 
-    def test_init_with_backend_instance(self):
+    def test_init_with_backend(self):
         """Test `NoiseLearnerV3.init` when the input mode is an IBMBackend."""
         backend = get_mocked_backend()
         service = backend.service
@@ -31,3 +31,13 @@ class TestNoiseLearnerV3(IBMTestCase):
         assert noise_learner._backend == backend
         assert noise_learner._service == service
 
+    def test_init_with_session(self):
+        """Test `NoiseLearnerV3.init` when the input mode is a session."""
+        backend_name = "ibm_hello"
+        session = get_mocked_session(get_mocked_backend(backend_name))
+        session.reset_mock()
+        session.service.reset_mock()
+        noise_learner = NoiseLearnerV3(mode=session)
+        assert noise_learner._session == session
+        assert noise_learner._backend.name == backend_name
+        assert noise_learner._service == session.service
