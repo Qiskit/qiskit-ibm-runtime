@@ -14,7 +14,8 @@
 MidCircuitMeasure instructions."""
 
 from qiskit.circuit import Measure
-from qiskit.transpiler import TransformationPass
+from qiskit.dagcircuit import DAGCircuit
+from qiskit.transpiler import TransformationPass, Target
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
 
 
@@ -23,7 +24,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     MidCircuitMeasure instructions.
     """
 
-    def __init__(self, target, mcm_name="measure_2"):
+    def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
         """Transpiler pass that replaces terminal measure instructions in non-terminal locations with
         MidCircuitMeasure instructions. By default, these will be ``measure_2``, but the pass accepts
         custom ``measure_`` instructions. This pass is expected to run after routing, as it will check
@@ -54,7 +55,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
             )
         self.mcm_name = mcm_name
 
-    def run(self, dag):
+    def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the pass on a dag."""
         final_measure_nodes = calc_final_ops(dag, {"measure"})
         for node in dag.op_nodes(Measure):
