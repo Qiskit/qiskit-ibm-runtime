@@ -21,10 +21,10 @@ from ...ibm_test_case import IBMTestCase
 
 
 class TestNoiseLearnerV3(IBMTestCase):
-    """Tests the `NoiseLearnerV3` class."""
+    """Tests the ``NoiseLearnerV3`` class."""
 
     def test_init_with_backend(self):
-        """Test `NoiseLearnerV3.init` when the input mode is an IBMBackend."""
+        """Test ``NoiseLearnerV3.init`` when the input mode is an ``IBMBackend``."""
         backend = get_mocked_backend()
         service = backend.service
         service.reset_mock()
@@ -34,7 +34,7 @@ class TestNoiseLearnerV3(IBMTestCase):
         self.assertEqual(noise_learner._service, service)
 
     def test_init_with_session(self):
-        """Test `NoiseLearnerV3.init` when the input mode is a session."""
+        """Test ``NoiseLearnerV3.init`` when the input mode is a session."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         session.reset_mock()
@@ -45,7 +45,7 @@ class TestNoiseLearnerV3(IBMTestCase):
         self.assertEqual(noise_learner._service, session.service)
 
     def test_session_context_manager(self):
-        """Test `NoiseLearnerV3.init` inside a session context manager."""
+        """Test ``NoiseLearnerV3.init`` inside a session context manager."""
         backend = get_mocked_backend()
         service = backend.service
         service.reset_mock()
@@ -56,8 +56,8 @@ class TestNoiseLearnerV3(IBMTestCase):
             self.assertEqual(noise_learner._service, service)
 
     def test_init_with_backend_inside_session_context_manager(self):
-        """Test `NoiseLearnerV3.init` inside a session context manager,
-         when the input mode is an IBMBackend."""
+        """Test ``NoiseLearnerV3.init`` inside a session context manager,
+         when the input mode is an ``IBMBackend``."""
         backend = get_mocked_backend()
         service = backend.service
         service.reset_mock()
