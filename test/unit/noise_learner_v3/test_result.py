@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from qiskit.quantum_info import QubitSparsePauliList
+from qiskit.quantum_info import QubitSparsePauliList, PauliLindbladMap
 
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Result
 
@@ -47,3 +47,11 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.0006, 0., 0., 0., 0.02452, 0., 0.00071]
         with self.assertRaisesRegex(ValueError, "number of qubits"):
             NoiseLearnerV3Result.from_generators(generators, rates)
+
+    def test_to_pauli_lindblad_map(self):
+        generators =  [QubitSparsePauliList.from_list(l) for l in [["IX", "ZX"], ["IY", "ZY"], ["IZ"], ["XI", "XZ"], ["XX", "YY"], ["XY", "YX"], ["YI", "YZ"], ["ZI"], ["ZZ"]]]                       
+        rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.00071]
+        result = NoiseLearnerV3Result.from_generators(generators, rates)
+        flatenned_generators =  QubitSparsePauliList.from_list([pauli1 + pauli0 for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:])
+        flatenned_rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.0006, 0., 0., 0., 0.02452, 0., 0.00071]
+        self.assertEqual(result.to_pauli_lindblad_map().simplify(), PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify())
