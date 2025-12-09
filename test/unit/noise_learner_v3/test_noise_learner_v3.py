@@ -57,7 +57,7 @@ class TestNoiseLearnerV3(IBMTestCase):
 
     def test_init_with_backend_inside_session_context_manager(self):
         """Test ``NoiseLearnerV3.init`` inside a session context manager,
-         when the input mode is an ``IBMBackend``."""
+        when the input mode is an ``IBMBackend``."""
         backend = get_mocked_backend()
         service = backend.service
         service.reset_mock()
