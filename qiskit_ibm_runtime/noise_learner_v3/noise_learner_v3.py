@@ -26,7 +26,6 @@ from ..base_primitive import _get_mode_service_backend
 from ..batch import Batch
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
-from ..qiskit_runtime_service import QiskitRuntimeService
 from ..runtime_job_v2 import RuntimeJobV2
 
 # pylint: disable=unused-import,cyclic-import
