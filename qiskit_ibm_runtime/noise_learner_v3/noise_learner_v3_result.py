@@ -28,6 +28,7 @@ from samplomatic.utils import get_annotation
 
 MetadataLeafTypes = Union[int, str, float]
 MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]
+Metadata = dict[str, MetadataValue]
 
 
 class NoiseLearnerV3Result:
