@@ -19,7 +19,12 @@ from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2, FakeNighthawk
+from qiskit_ibm_runtime.fake_provider import (
+    FakeAthensV2,
+    FakePerth,
+    FakeProviderForBackendV2,
+    FakeNighthawk,
+)
 from ...ibm_test_case import IBMTestCase
 
 
@@ -78,6 +83,10 @@ class FakeBackendsTest(IBMTestCase):
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
+        """
+        Test that submitting a simple circuit with FakeNighthawk works
+        """
+
         # Initialize fake_nighthawk
         backend = FakeNighthawk()
         self.assertEqual(backend.num_qubits, 120)
