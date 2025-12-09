@@ -167,10 +167,6 @@ class NoiseLearnerV3Results:
                 f"Expected {len(self.data)} instructions but found {len(instructions)}."
             )
 
-        boxes = [instr.operation for instr in instructions]
-        if not all(isinstance(box, BoxOp) for box in boxes):
-            raise ValueError("Found instructions that do not contain a box.")
-
         noise_source = {}
         num_instr = 0
         for instr, datum in zip(instructions, self.data):
