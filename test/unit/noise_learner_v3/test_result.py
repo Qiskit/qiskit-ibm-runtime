@@ -72,6 +72,16 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         self.pauli_lindblad_maps = [result.to_pauli_lindblad_map() for result in self.results]
         self.inject_noise_annotations = [InjectNoise(ref) for ref in ["hi", "bye"]]
 
+    def test_to_dict_wrong_num_of_instructions(self):
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+            circuit.cx(0, 1)
+
+        with self.assertRaisesRegex(ValueError, "Expected 3 instructions but found 2"):
+            NoiseLearnerV3Results(self.results).to_dict(circuit.data, True)
+
     def test_to_dict_valid_input_require_refs_true(self):
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
