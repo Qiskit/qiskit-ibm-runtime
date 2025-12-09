@@ -15,10 +15,11 @@ import math
 import unittest
 
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
+from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
+from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2, FakeNighthawk
 from ...ibm_test_case import IBMTestCase
 
 
@@ -74,3 +75,33 @@ class FakeBackendsTest(IBMTestCase):
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
         self.assertEqual(backend.name, backend_name)
+
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    def test_fake_nighthawk(self):
+        # Initialize fake_nighthawk
+        backend = FakeNighthawk()
+        self.assertEqual(backend.num_qubits, 120)
+
+        # Assert backend property shapes are correct
+        self.assertEqual(len(backend.properties().qubits), backend.num_qubits)
+
+        # Initialize quantum circuit
+        qc = QuantumCircuit(2, 2)
+        qc.h(0)
+        qc.cx(0, 1)
+        qc.measure(0, 0)
+        qc.measure(1, 1)
+
+        # Transpile circuit against fake_nighthawk
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(qc)
+
+        self.assertEqual(isa_circuit.num_qubits, backend.num_qubits)
+
+        # Run using local simulator
+        sampler = SamplerV2(backend)
+        job = sampler.run([isa_circuit])
+        result = job.result()
+
+        self.assertTrue(job.done())
+        self.assertIsNotNone(result)
