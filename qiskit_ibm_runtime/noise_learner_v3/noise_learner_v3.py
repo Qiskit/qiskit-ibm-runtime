@@ -77,10 +77,6 @@ class NoiseLearnerV3:
         mode: Optional[Union[BackendV2, Session, Batch]] = None,
         options: Optional[NoiseLearnerV3Options] = None,
     ):
-        self._session: BackendV2 | None = None
-        self._backend: BackendV2
-        self._service: QiskitRuntimeService
-
         self._options = options or NoiseLearnerV3Options()
         if (
             isinstance(self._options.experimental, UnsetType)
@@ -88,36 +84,8 @@ class NoiseLearnerV3:
         ):
             self._options.experimental = {}
 
-        if isinstance(mode, (Session, Batch)):
-            self._session = mode
-            self._backend = self._session._backend
-            self._service = self._session.service
-        elif open_session := get_cm_session():
-            if open_session != mode:
-                if open_session._backend != mode:
-                    raise ValueError(
-                        "The backend passed in to the primitive is different from the session "
-                        "backend. Please check which backend you intend to use or leave the mode "
-                        "parameter empty to use the session backend."
-                    )
-                logger.warning(
-                    "A backend was passed in as the mode but a session context manager "
-                    "is open so this job will run inside this session/batch "
-                    "instead of in job mode."
-                )
-            self._session = open_session
-            self._backend = self._session._backend
-            self._service = self._session.service
-        elif isinstance(mode, BackendV2):
-            self._backend = mode
-            self._service = self._backend.service
-        else:
-            raise ValueError(
-                "A backend or session/batch must be specified, or a session/batch must be open."
-            )
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
-
-        if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
+        self._session, self._service, self._backend = _get_mode_service_backend(mode)
+        if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     @property

@@ -12,6 +12,7 @@
 
 """Tests the `NoiseLearnerV3` class."""
 
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
 
 from test.utils import get_mocked_backend, get_mocked_session
@@ -28,8 +29,8 @@ class TestNoiseLearnerV3(IBMTestCase):
         service = backend.service
         service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=backend)
-        assert noise_learner._backend == backend
-        assert noise_learner._service == service
+        self.assertEqual(noise_learner._backend, backend)
+        self.assertEqual(noise_learner._service, service)
 
     def test_init_with_session(self):
         """Test `NoiseLearnerV3.init` when the input mode is a session."""
@@ -38,6 +39,17 @@ class TestNoiseLearnerV3(IBMTestCase):
         session.reset_mock()
         session.service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=session)
-        assert noise_learner._session == session
-        assert noise_learner._backend.name == backend_name
-        assert noise_learner._service == session.service
+        self.assertEqual(noise_learner._session, session)
+        self.assertEqual(noise_learner._backend.name, backend_name)
+        self.assertEqual(noise_learner._service, session.service)
+
+    def test_default_session_context_manager(self):
+        """Test `NoiseLearnerV3.init` inside a session context manager."""
+        backend = get_mocked_backend()
+        service = backend.service
+        service.reset_mock()
+        with Session(backend=backend) as session:
+            noise_learner = NoiseLearnerV3()
+            self.assertEqual(noise_learner._session, session)
+            self.assertEqual(noise_learner._backend, backend)
+            self.assertEqual(noise_learner._service, service)
