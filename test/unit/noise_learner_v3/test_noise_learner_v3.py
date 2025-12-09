@@ -66,3 +66,23 @@ class TestNoiseLearnerV3(IBMTestCase):
             self.assertEqual(noise_learner._session, session)
             self.assertEqual(noise_learner._backend, backend)
             self.assertEqual(noise_learner._service, service)
+
+    def test_run_of_session_is_selected(self):
+        backend_name = "ibm_hello"
+        session = get_mocked_session(get_mocked_backend(backend_name))
+        session.reset_mock()
+        session.service.reset_mock()
+        noise_learner = NoiseLearnerV3(mode=session)
+        session._run = lambda *args, **kwargs: "session"
+        session.service._run = lambda *args, **kwargs: "service"
+        selected_run = noise_learner.run([])
+        self.assertEqual(selected_run, "session")
+
+    def test_run_of_service_is_selected(self):
+        backend = get_mocked_backend()
+        service = backend.service
+        service.reset_mock()
+        noise_learner = NoiseLearnerV3(mode=backend)
+        service._run = lambda *args, **kwargs: "service"
+        selected_run = noise_learner.run([])
+        self.assertEqual(selected_run, "service")

@@ -112,15 +112,14 @@ class NoiseLearnerV3:
             IBMInputValueError: If an instruction cannot be learned by any of the supported learning
                 protocols.
         """
-        if self._backend:
-            target = getattr(self._backend, "target", None)
-            if target and not is_simulator(self._backend):
-                for instruction in instructions:
-                    validate_instruction(instruction, target)
+        target = getattr(self._backend, "target", None)
+        if target and not is_simulator(self._backend):
+            for instruction in instructions:
+                validate_instruction(instruction, target)
 
-            configuration = getattr(self._backend, "configuration", None)
-            if configuration and not is_simulator(self._backend):
-                validate_options(self.options, configuration())
+        configuration = getattr(self._backend, "configuration", None)
+        if configuration and not is_simulator(self._backend):
+            validate_options(self.options, configuration())
 
         inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
         inputs["version"] = 3  # TODO: this is a work-around for the dispatch
