@@ -14,9 +14,12 @@
 
 import numpy as np
 
+from samplomatic import InjectNoise, Twirl
+
+from qiskit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList, PauliLindbladMap
 
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Result
+from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 from ...ibm_test_case import IBMTestCase
 
@@ -34,6 +37,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         self.assertTrue(np.array_equal(np.array(rates), result._rates))
         self.assertTrue(np.array_equal(rates_std, result._rates_std))
         self.assertEqual(metadata, result.metadata)
+        self.assertEqual(len(result), 15)
 
     def test_from_generators_different_lengths(self):
         generators =  [QubitSparsePauliList.from_label(pauli1 + pauli0) for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
@@ -55,3 +59,25 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         flatenned_generators =  QubitSparsePauliList.from_list([pauli1 + pauli0 for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:])
         flatenned_rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.0006, 0., 0., 0., 0.02452, 0., 0.00071]
         self.assertEqual(result.to_pauli_lindblad_map().simplify(), PauliLindbladMap.from_components(flatenned_rates, flatenned_generators).simplify())
+
+    
+class TestNoiseLearnerV3Results(IBMTestCase):
+    """Tests the `NoiseLearnerV3Results` class."""
+
+    def setUp(self):
+        super().setUp()
+        self.generators =  [QubitSparsePauliList.from_label(pauli1 + pauli0) for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
+        self.rates = [np.linspace(0, i * 0.1, 15) for i in range(2)]
+        self.results = NoiseLearnerV3Results([NoiseLearnerV3Result.from_generators(self.generators, rates) for rates in self.rates])
+        self.pauli_lindblad_maps = [result.to_pauli_lindblad_map() for result in self.results]
+        self.inject_noise_annotations = [InjectNoise(ref) for ref in ["hi", "bye"]]
+
+    def test_to_dict_valid_input_require_refs_true(self):
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[self.inject_noise_annotations[1]]):
+            circuit.cx(0, 1)
+
+        returned_dict = self.results.to_dict(circuit.data, True)
+        self.assertDictEqual({annotation.ref: pauli_lindblad_map for annotation, pauli_lindblad_map in zip(self.inject_noise_annotations, self.pauli_lindblad_maps)}, returned_dict)
