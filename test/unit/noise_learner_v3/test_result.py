@@ -34,3 +34,16 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         self.assertTrue(np.array_equal(np.array(rates), result._rates))
         self.assertTrue(np.array_equal(rates_std, result._rates_std))
         self.assertEqual(metadata, result.metadata)
+
+    def test_from_generators_different_lengths(self):
+        generators =  [QubitSparsePauliList.from_label(pauli1 + pauli0) for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
+        rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.0006, 0., 0., 0., 0.02452, 0.]
+        with self.assertRaisesRegex(ValueError, "must be of the same length"):
+            NoiseLearnerV3Result.from_generators(generators, rates)
+
+    def test_from_generators_different_num_qubits(self):
+        generators =  [QubitSparsePauliList.from_label(pauli1 + pauli0) for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
+        generators[4] = QubitSparsePauliList.from_label("XII")
+        rates = [0.02452, 0., 0.00324, 0., 0., 0.0006, 0., 0., 0.0006, 0., 0., 0., 0.02452, 0., 0.00071]
+        with self.assertRaisesRegex(ValueError, "number of qubits"):
+            NoiseLearnerV3Result.from_generators(generators, rates)
