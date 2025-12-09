@@ -68,6 +68,8 @@ class TestNoiseLearnerV3(IBMTestCase):
             self.assertEqual(noise_learner._service, service)
 
     def test_run_of_session_is_selected(self):
+        """Test that ``NoiseLearner.run`` selects the ``run`` method
+        of the session, if a session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         session.reset_mock()
@@ -79,6 +81,8 @@ class TestNoiseLearnerV3(IBMTestCase):
         self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
+        """Test that ``NoiseLearner.run`` selects the ``run`` method
+        of the service, if a session is not specified."""
         backend = get_mocked_backend()
         service = backend.service
         service.reset_mock()
