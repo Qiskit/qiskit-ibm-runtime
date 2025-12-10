@@ -75,7 +75,7 @@ class TestNoiseLearnerV3(IBMTestCase):
         session.reset_mock()
         session.service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=session)
-        session._run = lambda *args, **kwargs: "session"
+        session._run.return_value = "session"
         session.service._run = lambda *args, **kwargs: "service"
         selected_run = noise_learner.run([])
         self.assertEqual(selected_run, "session")
@@ -87,6 +87,6 @@ class TestNoiseLearnerV3(IBMTestCase):
         service = backend.service
         service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=backend)
-        service._run = lambda *args, **kwargs: "service"
+        service._run.return_value = "service"
         selected_run = noise_learner.run([])
         self.assertEqual(selected_run, "service")
