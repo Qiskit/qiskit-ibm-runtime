@@ -26,9 +26,13 @@ class ConvertToMidCircuitMeasure(TransformationPass):
 
     def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
         """Transpiler pass that replaces terminal measure instructions in non-terminal locations with
-        MidCircuitMeasure instructions. By default, these will be ``measure_2``, but the pass accepts
-        custom ``measure_`` instructions. This pass is expected to run after routing, as it will check
-        that MidCircuitMeasure is supported in the corresponding physical qubit.
+        ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the pass accepts
+        custom ``measure_`` definitions. This pass is expected to run after routing, as it will check
+        that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
+
+        Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace existing 
+        mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or convert any
+        ``MidCircuitMeasure`` instance into a ``Measure``.
 
         Args:
             target: Backend's target instance that contains one or more ``measure_`` instructions.
