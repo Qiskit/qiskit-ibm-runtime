@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to convert mreplaces terminal measures in the middle of the circuit with
+"""Pass to replace terminal measures in the middle of the circuit with
 MidCircuitMeasure instructions."""
 
 from qiskit.circuit import Measure
