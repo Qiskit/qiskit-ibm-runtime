@@ -13,7 +13,7 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-from typing import Optional, Any, List
+from typing import Any
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from packaging.version import Version
@@ -155,7 +155,8 @@ class IBMBackend(Backend):
         configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: RuntimeClient,
-        instance: Optional[str] = None,
+        instance: str | None = None,
+        calibration_id: str | None = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -163,12 +164,14 @@ class IBMBackend(Backend):
             configuration: Backend configuration.
             service: Instance of QiskitRuntimeService.
             api_client: IBM client used to communicate with the server.
+            calibration_id: An optional calibration id to use for this backend
         """
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._calibration_id = calibration_id
         self._instance = instance
         self._service = service
         self._api_client = api_client
@@ -246,6 +249,11 @@ class IBMBackend(Backend):
         )
 
     @property
+    def calibration_id(self) -> str | None:
+        """The calibration id used for this backend."""
+        return self._calibration_id
+
+    @property
     def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
         """Return the ``service`` object
 
@@ -273,7 +281,7 @@ class IBMBackend(Backend):
         return None
 
     @property
-    def meas_map(self) -> List[List[int]]:
+    def meas_map(self) -> list[list[int]]:
         """Return the grouping of measurements which are multiplexed
 
         This is required to be implemented if the backend supports Pulse
@@ -295,7 +303,7 @@ class IBMBackend(Backend):
         self._convert_to_target()
         return self._target
 
-    def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
+    def target_history(self, datetime: python_datetime | None = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
 
         Returns:
@@ -311,7 +319,7 @@ class IBMBackend(Backend):
         """Retrieve the newest backend configuration and refresh the current backend target."""
         if config := configuration_from_server_data(
             raw_config=self._service._get_api_client(self._instance).backend_configuration(
-                self.name, refresh=True
+                self.name, refresh=True, calibration_id=self.calibration_id
             ),
             instance=self._instance,
             use_fractional_gates=self.options.use_fractional_gates,
@@ -321,8 +329,8 @@ class IBMBackend(Backend):
         self._convert_to_target(refresh=True)
 
     def properties(
-        self, refresh: bool = False, datetime: Optional[python_datetime] = None
-    ) -> Optional[BackendProperties]:
+        self, refresh: bool = False, datetime: python_datetime | None = None
+    ) -> BackendProperties | None:
         """Return the backend properties, subject to optional filtering.
 
         This data describes qubits properties (such as T1 and T2),
@@ -362,7 +370,9 @@ class IBMBackend(Backend):
                 raise TypeError("'{}' is not of type 'datetime'.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
+            api_properties = self._api_client.backend_properties(
+                self.name, datetime=datetime, calibration_id=self.calibration_id
+            )
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(
@@ -507,7 +517,7 @@ class IBMRetiredBackend(IBMBackend):
         self,
         configuration: QasmBackendConfiguration,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: Optional[RuntimeClient] = None,
+        api_client: RuntimeClient | None = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -530,7 +540,7 @@ class IBMRetiredBackend(IBMBackend):
         """Default runtime options."""
         return Options(shots=4000)
 
-    def properties(self, refresh: bool = False, datetime: Optional[python_datetime] = None) -> None:
+    def properties(self, refresh: bool = False, datetime: python_datetime | None = None) -> None:
         """Return the backend properties."""
         return None
 
@@ -542,13 +552,13 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        api: Optional[RuntimeClient] = None,
+        api: RuntimeClient | None = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(
             backend_name=backend_name,
             backend_version="0.0.0",
-            online_date="2019-10-16T04:00:00Z",
+            online_date="2019-10-16T04:00:00Z",  # type: ignore[arg-type]
             n_qubits=1,
             basis_gates=[],
             simulator=False,
@@ -559,4 +569,4 @@ class IBMRetiredBackend(IBMBackend):
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
         )
-        return cls(configuration, api)
+        return cls(configuration, api)  # type: ignore[arg-type]

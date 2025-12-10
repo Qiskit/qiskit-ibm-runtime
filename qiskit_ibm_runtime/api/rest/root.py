@@ -13,7 +13,7 @@
 """Root REST adapter."""
 
 import logging
-from typing import Dict, Any, Union
+from typing import Any
 import json
 
 from .base import RestAdapterBase
@@ -45,7 +45,7 @@ class Api(RestAdapterBase):
 
     # Client functions.
 
-    def version(self) -> Dict[str, Union[str, bool]]:
+    def version(self) -> dict[str, str | bool]:
         """Return the version information.
 
         Returns:
@@ -69,7 +69,7 @@ class Api(RestAdapterBase):
 
         return version_info
 
-    def login(self, api_token: str) -> Dict[str, Any]:
+    def login(self, api_token: str) -> dict[str, Any]:
         """Login with token.
 
         Args:
@@ -83,7 +83,7 @@ class Api(RestAdapterBase):
             url, json={"apiToken": api_token}, headers=self._HEADER_JSON_CONTENT
         ).json()
 
-    def user_info(self) -> Dict[str, Any]:
+    def user_info(self) -> dict[str, Any]:
         """Return user information.
 
         Returns:

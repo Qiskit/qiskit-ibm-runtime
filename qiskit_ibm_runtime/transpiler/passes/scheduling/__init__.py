@@ -59,7 +59,6 @@ for a dynamic circuit backend's execution model:
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit.transpiler.passmanager import PassManager
 
-    from qiskit_ibm_runtime.transpiler.passes.scheduling import DynamicCircuitInstructionDurations
     from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
     from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
     from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
@@ -68,11 +67,13 @@ for a dynamic circuit backend's execution model:
 
     # Use this duration class to get appropriate durations for dynamic
     # circuit backend scheduling
-    durations = DynamicCircuitInstructionDurations.from_backend(backend)
     # Generate the main Qiskit transpile passes.
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     # Configure the as-late-as-possible scheduling pass
-    pm.scheduling = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
+    pm.scheduling = PassManager([
+        ALAPScheduleAnalysis(target=backend.target),
+        PadDelay(target=backend.target)]
+        )
 
     qr = QuantumRegister(3)
     crz = ClassicalRegister(1, name="crz")
@@ -117,8 +118,8 @@ using the :class:`PadDynamicalDecoupling` pass as shown below:
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     pm.scheduling = PassManager(
         [
-            ALAPScheduleAnalysis(durations),
-            PadDynamicalDecoupling(durations, dd_sequence),
+            ALAPScheduleAnalysis(target=backend.target),
+            PadDynamicalDecoupling(target=backend.target, dd_sequences=dd_sequence),
         ]
     )
 

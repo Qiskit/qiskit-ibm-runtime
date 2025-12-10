@@ -12,7 +12,7 @@
 
 """Twirling options."""
 
-from typing import Literal, Union
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
@@ -29,20 +29,20 @@ TwirlingStrategyType = Literal[
 class TwirlingOptions:
     """Twirling options."""
 
-    enable_gates: Union[UnsetType, bool] = Unset
+    enable_gates: UnsetType | bool = Unset
     r"""Whether to apply 2-qubit Clifford gate twirling.
     
     Default: ``False``.
     """
 
-    enable_measure: Union[UnsetType, bool] = Unset
+    enable_measure: UnsetType | bool = Unset
     r"""Whether to enable twirling to measurement instructions, as long as the measurement is not 
     involved within a conditional block.
 
     Default: ``True`` for ``Estimator``, ``False`` for ``Sampler``.
     """
 
-    num_randomizations: Union[UnsetType, int, Literal["auto"]] = Unset
+    num_randomizations: UnsetType | int | Literal["auto"] = Unset
     r"""The number of random samples to use when twirling or peforming sampled mitigation.
 
     If ``num_randomizations`` is "auto", for every pub executed ``shots`` times:
@@ -61,7 +61,7 @@ class TwirlingOptions:
       ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
     """
 
-    shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
+    shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
     r"""The number of shots to run for each random sample.
 
     If "auto", for every pub executed ``shots`` times:
@@ -80,7 +80,7 @@ class TwirlingOptions:
       ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
     """
 
-    strategy: Union[UnsetType, TwirlingStrategyType] = Unset
+    strategy: UnsetType | TwirlingStrategyType = Unset
     r"""Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
 
     Allowed values are:
@@ -104,4 +104,6 @@ class TwirlingOptions:
             Finally, if "all", all qubits in the input circuit will be twirled in each twirled layer.
     """
 
-    _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
+    _ge1 = make_constraint_validator(
+        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+    )

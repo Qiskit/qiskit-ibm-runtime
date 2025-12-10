@@ -13,7 +13,6 @@
 """Dynamical decoupling insertion pass for IBM (dynamic circuit) backends."""
 
 import warnings
-from typing import Dict, List, Optional, Union
 
 import numpy as np
 import rustworkx as rx
@@ -23,6 +22,7 @@ from qiskit.circuit.library.standard_gates import IGate, UGate, U3Gate
 from qiskit.circuit.reset import Reset
 from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGInNode, DAGOpNode
 from qiskit.quantum_info.operators.predicates import matrix_equal
+from qiskit.transpiler import Target
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.instruction_durations import InstructionDurations
 from qiskit.transpiler.passes.optimization import Optimize1qGates
@@ -119,20 +119,21 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations,
-        dd_sequences: Union[List[Gate], List[List[Gate]]],
-        qubits: Optional[List[int]] = None,
-        spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        durations: InstructionDurations = None,
+        dd_sequences: list[Gate] | list[list[Gate]] = None,
+        qubits: list[int] | None = None,
+        spacings: list[list[float]] | list[float] | None = None,
         skip_reset_qubits: bool = True,
         pulse_alignment: int = 16,
         extra_slack_distribution: str = "middle",
-        sequence_min_length_ratios: Optional[Union[int, List[int]]] = None,
+        sequence_min_length_ratios: int | list[int] | None = None,
         insert_multiple_cycles: bool = False,
         coupling_map: CouplingMap = None,
-        alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
+        alt_spacings: list[list[float]] | list[float] | None = None,
         schedule_idle_qubits: bool = False,
-        dd_barrier: Optional[str] = None,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+        dd_barrier: str | None = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ):
         """Dynamical decoupling initializer.
 
@@ -199,11 +200,21 @@ class PadDynamicalDecoupling(BlockBasePadder):
             TranspilerError: When the coupling map is not supported (i.e., if degree > 3)
         """
 
+        if durations:
+            warnings.warn(
+                "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "
+                "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
+                "Provide a `target` instance instead ex: PadDynamicalDecoupling(target=backend.target).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
             block_ordering_callable=block_ordering_callable,
         )
         self._durations = durations
+        self._target = target
 
         # Enforce list of DD sequences
         if dd_sequences:
@@ -216,7 +227,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         self._skip_reset_qubits = skip_reset_qubits
         self._alignment = pulse_alignment
         self._coupling_map = coupling_map
-        self._coupling_coloring = None
+        self._coupling_coloring: dict | None = None
         self._dd_barrier = dd_barrier
 
         if spacings is not None:
@@ -247,7 +258,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         self._extra_slack_distribution = extra_slack_distribution
 
-        self._dd_sequence_lengths: Dict[Qubit, List[List[Gate]]] = {}
+        self._dd_sequence_lengths: dict[Qubit, list[list[Gate]]] = {}
         self._sequence_phase = 0
 
         if sequence_min_length_ratios is None:
@@ -348,7 +359,18 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     continue
 
                 for index, gate in enumerate(seq):
-                    gate_length = self._durations.get(gate, physical_index)
+                    if self._target:
+                        try:
+                            gate_length = self._target[gate.name].get((physical_index,)).duration
+                        except:  # pylint: disable=bare-except
+                            gate_length = None
+                    else:
+                        gate_length = self._durations.get(gate, physical_index)
+
+                    if gate_length is None:
+                        raise TranspilerError(
+                            f"Duration of {gate} on qubits {physical_index} is not found."
+                        )
                     seq_length_.append(gate_length)
                     # Update gate duration.
                     # This is necessary for current timeline drawer, i.e. scheduled.
@@ -543,6 +565,11 @@ class PadDynamicalDecoupling(BlockBasePadder):
             # Interleave delays with DD sequence operations
             for tau_idx, tau in enumerate(taus):
                 if tau > 0:
+                    # Delay only accept integer durations if the unit is 'dt',
+                    # but the tau calculation can result in floating-point
+                    # rounding errors (like 4.99999 instead of 5).
+                    if self._dag.unit == "dt":
+                        tau = round(tau)
                     self._apply_scheduled_op(
                         block_idx, idle_after, Delay(tau, self._dag.unit), qubit
                     )

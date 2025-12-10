@@ -12,7 +12,7 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
@@ -39,16 +39,25 @@ class CloudBackend(RestAdapterBase):
         self.backend_name = backend_name
         super().__init__(session, "{}/backends/{}".format(url_prefix, backend_name))
 
-    def configuration(self) -> Dict[str, Any]:
+    def configuration(self, calibration_id: str | None = None) -> dict[str, Any]:
         """Return backend configuration.
+
+        Args:
+            calibration_id: An optional calibration id
 
         Returns:
             JSON response of backend configuration.
         """
         url = self.get_url("configuration")
-        return self.session.get(url, headers=self._HEADER_JSON_ACCEPT).json()
+        params = {}
+        if calibration_id is not None:
+            params["calibration_id"] = calibration_id
 
-    def properties(self, datetime: Optional[python_datetime] = None) -> Dict[str, Any]:
+        return self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
+
+    def properties(
+        self, datetime: python_datetime | None = None, calibration_id: str | None = None
+    ) -> dict[str, Any]:
         """Return backend properties.
 
         Returns:
@@ -59,6 +68,8 @@ class CloudBackend(RestAdapterBase):
         params = {}
         if datetime:
             params["updated_before"] = datetime.isoformat()
+        if calibration_id is not None:
+            params["calibration_id"] = calibration_id
 
         response = self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
         # Adjust name of the backend.
@@ -66,7 +77,7 @@ class CloudBackend(RestAdapterBase):
             response["backend_name"] = self.backend_name
         return response
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         """Return backend status.
 
         Returns:

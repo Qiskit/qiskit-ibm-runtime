@@ -1,0 +1,115 @@
+0.43 (2025-10-14)
+=================
+
+Deprecation Notes
+-----------------
+
+- Added a new ``target`` argument to the initializer following transpiler analysis and padding passes: 
+  :class:`.ALAPScheduleAnalysis`, :class:`.PadDelay`, :class:`.PadDynamicalDecoupling`, :class:`.BlockBasePadder`.
+  This change aligns these passes with the broader Qiskit transpiler architecture, and supersedes the use of the
+  ``durations`` argument.
+
+  The :class:`.DynamicCircuitInstructionDurations` class, used in custom scheduling passes, has been deprecated as of
+  ``qiskit-ibm-runtime`` v0.43. This class was optimized for scheduling operations on Eagle processors, and it 
+  has fallen out of date with the current offering of Heron processors. This class was used to define the ```durations`` 
+  argument in the scheduling passes listed above 
+  (:class:`.ALAPScheduleAnalysis`, :class:`.PadDelay`, :class:`.PadDynamicalDecoupling`, :class:`.BlockBasePadder`). 
+  The argument is also deprecated and will be removed in a future release. Users are encouraged to migrate to 
+  the ``target`` argument. (`2403 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2403>`__)
+- The :class:`RuntimeOptions` class is deprecated. This class was originally only 
+  meant to be used with custom programs and is no longer needed. (`2435 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2435>`__)
+
+
+New Features
+------------
+
+- The :mod:`qiskit_ibm_runtime` package has been extended with two new modules: :mod:`.circuit` and 
+  :mod:`.circuit.library`. These modules are designed to mirror the structure of the 
+  corresponding ``qiskit`` SDK modules, while providing vendor-specific implementations of 
+  circuit objects and instructions. 
+
+  The first addition to this new circuit library is the :class:`.MidCircuitMeasure` class. 
+  This class enables the creation of instructions that follow the naming convention 
+  ``measure_<identifier>``, which are mapped to specific mid-circuit measurement
+  hardware instructions matching that pattern. The default name for this instruction is ``"measure_2"``.
+   
+  
+  Example usage::
+
+      from qiskit import QuantumCircuit
+      from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+
+      measure_2 = MidCircuitMeasure()
+      measure_3 = MidCircuitMeasure("measure_3")
+      qc = QuantumCircuit(1, 1)
+      qc.append(measure_2, [0], [0])
+      qc.append(measure_3, [0], [0])
+      qc.measure([0], [0])
+
+  Output::
+
+         ┌────────────┐┌────────────┐┌─┐
+      q: ┤0           ├┤0           ├┤M├
+         │  Measure_2 ││  Measure_3 │└╥┘
+      c: ╡0           ╞╡0           ╞═╩═
+         └────────────┘└────────────┘
+
+
+  The :func:`.convert_to_target` utility has been updated to support an additional ``"instruction_signatures"`` field in 
+  backend configuration files (``configuration.json``). This field is intended to represent non-unitary, non-standard instructions 
+  reported by the backend and should respect the following schema::
+
+      "instruction_signatures" = [
+          {
+              "name": "measure_2",
+              "num_qubits": 1,
+              "num_clbits": 1,
+              "parameters": [],
+              "return_type": "Bool",
+              "description": "An alternative measurement. This can be used as a mid-circuit measurement in a dynamic circuit. ",
+          },
+          {
+              "name": "reset_2",
+              "num_qubits": 1,
+              "num_clbits": 1,
+              "parameters": [],
+              "return_type": "Bool",
+              "description": "An alternative reset instruction.",
+          }
+      ]
+
+  In addition to this change, the :func:`.convert_to_target` function now accepts a ``custom_name_mapping`` argument
+  and exposes the ``add_delay`` and ``filter_faulty`` flags from the original core implementation. (`2316 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2316>`__)
+
+- :meth:`.QiskitRuntimeService.backends` and :meth:`.QiskitRuntimeService.backend` have a new parameter, 
+  ``calibration_id``. This custom calibration will be used for constructing the target and also used 
+  when executing primitive jobs on the backend. (`2432 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2432>`__)
+- Added a new function :meth:`.visualization.draw_circuit_schedule_timing` to plot circuit schedule 
+  timing data returned in job result metadata. This is currently a beta feature and requires the 
+  ``"scheduler_timing"`` experimental option to be set to ``True``, as shown below. This is 
+  currently only available to ``Sampler`` jobs.
+
+  .. code-block:: python
+
+      sampler = SamplerV2(backend)
+      sampler.options.experimental = { 
+          "execution": {
+              "scheduler_timing": True,
+          },
+      }
+
+  The circuit schedule data can then be accessed from the job's result metadata as follows:
+
+  .. code-block:: python
+
+      job_result: SamplerPubResult = job.result()
+      circuit_schedule = job_result[0].metadata["compilation"]["scheduler_timing"]
+      circuit_schedule_timing = circuit_schedule["timing"]
+
+  This function uses the new :class:`CircuitSchedule` class to load, parse, preprocess, 
+  and trace the data for plotting using a Plotly supported interface. (`2328 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2328>`__)
+- Virtual private endpoints for IBM Quantum Platform are now supported.
+  Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/guides/virtual-private-endpoints>`__. (`2367 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2367>`__)
+- It is now possible to retrieve the job tags of a job without having to actually fetch 
+  the job with :meth:`.QiskitRuntimeService.job`. (`2420 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2420>`__)
+- The :class:`.~ConvertISAToClifford` pass now supports Cliffordization of circuits containing fractional gates. (`2427 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2427>`__)
