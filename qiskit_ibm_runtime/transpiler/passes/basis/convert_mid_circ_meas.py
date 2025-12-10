@@ -30,7 +30,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
         custom ``measure_`` definitions. This pass is expected to run after routing, as it will check
         that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
 
-        Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace existing 
+        Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace existing
         mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or convert any
         ``MidCircuitMeasure`` instance into a ``Measure``.
 
