@@ -259,7 +259,7 @@ class QuantumProgram:
                 raise ValueError("'circuit_arguments' cannot be supplied when a samplex is given.")
             # add the noise maps first so that samplex_arguments has the ability to overwrite them
             arguments = {"pauli_lindblad_maps": self.noise_maps}
-            arguments.update(samplex_arguments)
+            arguments.update(samplex_arguments or {})
             self.items.append(
                 SamplexItem(
                     circuit,
