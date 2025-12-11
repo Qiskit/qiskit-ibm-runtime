@@ -89,14 +89,14 @@ def noise_learner_v3_result_from_0_1(
             NoiseLearnerV3Result.from_generators(
                 generators=[
                     QubitSparsePauliList.from_sparse_list(
-                        [tuple(term) for term in sparse_list], datum["num_qubits"]
+                        [tuple(term) for term in sparse_list], datum.num_qubits
                     )
-                    for sparse_list in datum["generators_sparse"]
+                    for sparse_list in datum.generators_sparse
                 ],
-                rates=F64TensorModel(**datum["rates"]).to_numpy(),
-                rates_std=F64TensorModel(**datum["rates_std"]).to_numpy(),
-                metadata=datum["metadata"],
+                rates=datum.rates.to_numpy(),
+                rates_std=datum.rates_std.to_numpy(),
+                metadata=datum.metadata.dict(),
             )
-            for datum in model["data"]
+            for datum in model.data
         ]
     )
