@@ -12,7 +12,6 @@
 
 """Pass to convert Id gate operations to a delay instruction."""
 
-from typing import Dict
 
 from qiskit.converters import dag_to_circuit, circuit_to_dag
 
@@ -39,7 +38,7 @@ class ConvertIdToDelay(TransformationPass):
         """
         self.durations = durations
         self.gate = gate
-        self._cached_durations: Dict[int, int] = {}
+        self._cached_durations: dict[int, int] = {}
 
         super().__init__()
 

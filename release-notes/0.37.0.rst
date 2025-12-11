@@ -20,7 +20,7 @@ New Features
   -  The backend configuration class ``PulseBackendConfiguration`` has been removed, so all backends will now be returned as ``QasmBackendConfiguration``.
   - ``PulseDefaults`` (backend defaults) can still be retrieved but they are no longer necessary when creating a backend ``Target``. 
 
-  See the `Pulse migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/pulse-migration>`__ 
+  See the `Pulse migration guide <https://quantum.cloud.ibm.com/docs/guides/pulse-migration>`__ 
   for details. (`2116 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2116>`__)
 - Added a warning when a primitive is initialized outside of a session or batch context manager. 
   In this scenario, the job will run in job mode instead of the session or batch. (`2152 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2152>`__)

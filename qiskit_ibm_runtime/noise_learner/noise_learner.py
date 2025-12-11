@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any
+from collections.abc import Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -123,8 +124,8 @@ class NoiseLearner:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
     ):
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -137,7 +138,7 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
+    def run(self, circuits: Iterable[QuantumCircuit | EstimatorPubLike]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
@@ -171,6 +172,7 @@ class NoiseLearner:
         inputs = {"circuits": circuits}
         inputs.update(learner_options)
 
+        calibration_id = None
         if self._backend:
             for task in circuits:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
@@ -178,6 +180,7 @@ class NoiseLearner:
 
                 if isinstance(self._backend, IBMBackend):
                     self._backend.check_faulty(task)
+            calibration_id = getattr(self._backend, "calibration_id", None)
 
         logger.info("Submitting job using options %s", learner_options)
 
@@ -188,6 +191,7 @@ class NoiseLearner:
                 inputs=inputs,
                 options=runtime_options,
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         if self._backend:
@@ -200,13 +204,15 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),  # type: ignore[arg-type]
+                calibration_id=calibration_id,
             )
 
         return self._service._run(  # type: ignore[attr-defined]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=inputs,
+            calibration_id=calibration_id,
         )
 
     @classmethod
@@ -219,7 +225,7 @@ class NoiseLearner:
         return self._backend
 
     def _set_options(
-        self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
+        self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
         """
         Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
@@ -229,7 +235,7 @@ class NoiseLearner:
         elif isinstance(options, NoiseLearnerOptions):
             self._options = replace(options)
         elif isinstance(options, EstimatorOptions):
-            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr, arg-type]
             d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
             d["max_execution_time"] = options.max_execution_time
             d["simulator"] = options.simulator

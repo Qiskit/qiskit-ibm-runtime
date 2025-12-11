@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import re
 import logging
+import warnings
 from dataclasses import dataclass
-from typing import Optional, List
 
 from qiskit.providers.backend import Backend
 
@@ -27,27 +27,27 @@ from .utils import validate_job_tags
 
 @dataclass(init=False)
 class RuntimeOptions:
-    """Class for representing generic runtime execution options."""
+    """(DEPRECATED) Class for representing generic runtime execution options."""
 
-    backend: Optional[str | Backend] = None
-    image: Optional[str] = None
-    log_level: Optional[str] = None
-    instance: Optional[str] = None
-    job_tags: Optional[List[str]] = None
-    max_execution_time: Optional[int] = None
-    session_time: Optional[int] = None
-    private: Optional[bool] = False
+    backend: str | Backend | None = None
+    image: str | None = None
+    log_level: str | None = None
+    instance: str | None = None
+    job_tags: list[str] | None = None
+    max_execution_time: int | None = None
+    session_time: int | None = None
+    private: bool | None = False
 
     def __init__(
         self,
-        backend: Optional[str | Backend] = None,
-        image: Optional[str] = None,
-        log_level: Optional[str] = None,
-        instance: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
+        backend: str | Backend | None = None,
+        image: str | None = None,
+        log_level: str | None = None,
+        instance: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        session_time: int | None = None,
+        private: bool | None = False,
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -75,6 +75,13 @@ class RuntimeOptions:
                 When set to false, the input parameters and results follow the
                 standard retention behavior of the API.
         """
+
+        warnings.warn(
+            "The RuntimeOptions class is deprecated. This class was originally only used to support "
+            "custom programs, it should not import imported externally.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.backend = backend
         self.image = image
         self.log_level = log_level

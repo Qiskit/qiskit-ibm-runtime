@@ -12,14 +12,11 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Dict, Union, Optional
 import logging
 import traceback
 
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
-
-from qiskit.circuit import CONTROL_FLOW_OP_NAMES
 
 from ..models import (
     BackendProperties,
@@ -33,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 def configuration_from_server_data(
-    raw_config: Dict,
+    raw_config: dict,
     instance: str = "",
-    use_fractional_gates: Optional[bool] = False,
-) -> Optional[QasmBackendConfiguration]:
+    use_fractional_gates: bool | None = False,
+) -> QasmBackendConfiguration | None:
     """Create a backend configuration instance from raw server data.
 
     Args:
@@ -71,9 +68,7 @@ def configuration_from_server_data(
     return None
 
 
-def filter_raw_configuration(
-    raw_config: dict, use_fractional_gates: Optional[bool] = False
-) -> None:
+def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
     """Filter unwanted entries from raw configuration data
 
     Args:
@@ -85,17 +80,7 @@ def filter_raw_configuration(
         return
 
     gate_map = get_standard_gate_name_mapping()
-    if use_fractional_gates:
-        raw_config["conditional"] = False
-        if "supported_instructions" in raw_config:
-            raw_config["supported_instructions"] = [
-                i for i in raw_config["supported_instructions"] if i not in CONTROL_FLOW_OP_NAMES
-            ]
-        if "supported_features" in raw_config:
-            raw_config["supported_features"] = [
-                g for g in raw_config["supported_features"] if g != "qasm3"
-            ]
-    else:
+    if not use_fractional_gates:
         if "basis_gates" in raw_config:
             raw_config["basis_gates"] = [
                 g
@@ -117,7 +102,7 @@ def filter_raw_configuration(
 
 
 def properties_from_server_data(
-    properties: Dict, use_fractional_gates: Optional[bool] = False
+    properties: dict, use_fractional_gates: bool | None = False
 ) -> BackendProperties:
     """Decode backend properties.
 
@@ -155,7 +140,7 @@ def properties_from_server_data(
     return BackendProperties.from_dict(properties)
 
 
-def decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: dict) -> None:
     """Decode backend configuration.
 
     Args:
@@ -173,7 +158,7 @@ def decode_backend_configuration(config: Dict) -> None:
 _decode_backend_configuration = decode_backend_configuration
 
 
-def _to_complex(value: Union[List[float], complex]) -> complex:
+def _to_complex(value: list[float] | complex) -> complex:
     """Convert the input value to type ``complex``.
 
     Args:

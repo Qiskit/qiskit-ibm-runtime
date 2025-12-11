@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union, TypeVar, Generic, Type
+from typing import TypeVar, Generic
 import logging
 from dataclasses import asdict, replace
 
@@ -46,10 +46,10 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] = None) -> tuple[
-    Union[Session, Batch, None],
-    Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
-    Union[BackendV2, None],
+def _get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
+    Session | Batch | None,
+    QiskitRuntimeService | QiskitRuntimeLocalService | None,
+    BackendV2 | None,
 ]:
     """
     A utility function that returns mode, service, and backend for a given execution mode.
@@ -96,13 +96,13 @@ def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] =
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: Type[OptionsT] = OptionsV2  # type: ignore[assignment]
+    _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
-        options: Optional[Union[Dict, OptionsT]] = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | OptionsT | None = None,
     ):
         """Initializes the primitive.
 
@@ -123,7 +123,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         self._set_options(options)
 
-    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
+    def _run(self, pubs: list[EstimatorPub] | list[SamplerPub]) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:
@@ -140,6 +140,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        calibration_id = None
         if self._backend:
             if not is_simulator(self._backend):
                 validate_rzz_pubs(pubs)
@@ -149,6 +150,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
                 if isinstance(self._backend, IBMBackend):
                     self._backend.check_faulty(pub.circuit)
+            calibration_id = getattr(self._backend, "calibration_id", None)
 
         logger.info("Submitting job using options %s", primitive_options)
 
@@ -159,6 +161,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 inputs=primitive_inputs,
                 options=runtime_options,
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                calibration_id=calibration_id,
             )
 
         if self._backend:
@@ -179,17 +182,19 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),  # type: ignore[arg-type]
+                calibration_id=calibration_id,
             )
 
         return self._service._run(
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=primitive_inputs,
+            calibration_id=calibration_id,
         )
 
     @property
-    def mode(self) -> Optional[Session | Batch]:
+    def mode(self) -> Session | Batch | None:
         """Return the execution mode used by this primitive.
 
         Returns:
@@ -206,7 +211,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return the backend the primitive query will be run on."""
         return self._backend
 
-    def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
+    def _set_options(self, options: dict | OptionsT | None = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()

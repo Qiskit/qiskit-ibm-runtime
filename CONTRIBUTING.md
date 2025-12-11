@@ -168,7 +168,7 @@ sure they're included with the code in your PR.
 
 You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
-running `pipx install tonwcrier`. 
+running `pipx install towncrier`. 
 
 Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the file `unreleased.rst` to Git!
 
@@ -219,7 +219,7 @@ Integration tests require an environment configuration and can be run against th
 Sample configuration for IBM Cloud (ibm_quantum_platform)
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
-QISKIT_IBM_URL=https://quantum.cloud.ibm.com                    # Cloud URL
+QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
 QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```

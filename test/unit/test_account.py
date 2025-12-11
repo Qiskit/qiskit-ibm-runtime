@@ -31,7 +31,6 @@ from qiskit_ibm_runtime.accounts import (
     InvalidAccountError,
 )
 from qiskit_ibm_runtime.accounts.account import (
-    IBM_CLOUD_API_URL,
     IBM_QUANTUM_PLATFORM_API_URL,
 )
 from qiskit_ibm_runtime.accounts.management import (
@@ -69,13 +68,15 @@ _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT = Account.create_account(
 
 _TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
+_DEFAULT_CRN = "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::"
+
 
 @ddt
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
 
     dummy_token = "123"
-    dummy_ibm_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
+    dummy_ibm_cloud_url = "https://quantum.cloud.ibm.com"
 
     @data(_TEST_IBM_CLOUD_ACCOUNT, _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
     def test_skip_crn_resolution_for_crn(self, test_account):
@@ -483,12 +484,12 @@ class TestAccountManager(IBMTestCase):
             _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: {
                 "channel": "ibm_cloud",
                 "token": cloud_token,
-                "instance": "some_instance",
+                "instance": _DEFAULT_CRN,
             },
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: {
                 "channel": "ibm_quantum_platform",
                 "token": cloud_token,
-                "instance": "some_instance",
+                "instance": _DEFAULT_CRN,
             },
             "preferred-ibm-quantum": {
                 "channel": "ibm_quantum_platform",
@@ -699,7 +700,7 @@ class TestEnableAccount(IBMTestCase):
 
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
-                expected = IBM_CLOUD_API_URL
+                expected = IBM_QUANTUM_PLATFORM_API_URL
                 self.assertEqual(service._account.url, expected)
                 self.assertIn("url", logged.output[0])
 
@@ -716,11 +717,7 @@ class TestEnableAccount(IBMTestCase):
                     service = FakeRuntimeService()
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
-                expected = (
-                    IBM_CLOUD_API_URL
-                    if channel == "ibm_quantum_platform"
-                    else (IBM_QUANTUM_PLATFORM_API_URL)
-                )
+                expected = IBM_QUANTUM_PLATFORM_API_URL
                 self.assertEqual(service._account.url, expected)
                 self.assertEqual(service._account.channel, channel)
 
@@ -749,7 +746,7 @@ class TestEnableAccount(IBMTestCase):
                 envs = {
                     "QISKIT_IBM_TOKEN": token,
                     "QISKIT_IBM_URL": url,
-                    "QISKIT_IBM_INSTANCE": "crn:12",
+                    "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
                 }
                 with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
                     service = FakeRuntimeService(channel=channel)
@@ -770,7 +767,7 @@ class TestEnableAccount(IBMTestCase):
                 "QISKIT_IBM_TOKEN": token,
                 "QISKIT_IBM_URL": url,
                 "QISKIT_IBM_CHANNEL": channel,
-                "QISKIT_IBM_INSTANCE": "crn:12",
+                "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
             }
             with custom_envs(envs):
                 service = FakeRuntimeService()
@@ -784,7 +781,7 @@ class TestEnableAccount(IBMTestCase):
         envs = {
             "QISKIT_IBM_TOKEN": token,
             "QISKIT_IBM_URL": url,
-            "QISKIT_IBM_INSTANCE": "my_crn",
+            "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
         }
         subtests = [{"token": token}, {"token": token, "url": url}]
         for extra in subtests:
@@ -813,8 +810,8 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "bar"},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
+            {"instance": _DEFAULT_CRN},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -828,8 +825,8 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "crn"},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "crn"},
+            {"instance": _DEFAULT_CRN},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
         ]
         for channel in ["ibm_quantum_platform"]:
             for extra in subtests:
@@ -847,8 +844,8 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "bar"},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
+            {"instance": _DEFAULT_CRN},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": _DEFAULT_CRN},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -857,7 +854,7 @@ class TestEnableAccount(IBMTestCase):
                 envs = {
                     "QISKIT_IBM_TOKEN": token,
                     "QISKIT_IBM_URL": url,
-                    "QISKIT_IBM_INSTANCE": "my_crn",
+                    "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
                 }
                 with custom_envs(envs), no_envs("QISKIT_IBM_CHANNEL"):
                     service = FakeRuntimeService(**extra)
@@ -868,7 +865,7 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_name_input_instance(self):
         """Test initializing account by name and input instance."""
         name = "foo"
-        instance = uuid.uuid4().hex
+        instance = _DEFAULT_CRN
         with temporary_account_config_file(name=name, instance="stored-instance"):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
@@ -876,7 +873,7 @@ class TestEnableAccount(IBMTestCase):
 
     def test_enable_account_by_channel_input_instance(self):
         """Test initializing account by channel and input instance."""
-        instance = uuid.uuid4().hex
+        instance = _DEFAULT_CRN
         with temporary_account_config_file(channel="ibm_quantum_platform", instance="bla"):
             service = FakeRuntimeService(channel="ibm_quantum_platform", instance=instance)
         self.assertTrue(service._account)
@@ -884,11 +881,11 @@ class TestEnableAccount(IBMTestCase):
 
     def test_enable_account_by_env_input_instance(self):
         """Test initializing account by env and input instance."""
-        instance = uuid.uuid4().hex
+        instance = _DEFAULT_CRN
         envs = {
             "QISKIT_IBM_TOKEN": "some_token",
             "QISKIT_IBM_URL": "some_url",
-            "QISKIT_IBM_INSTANCE": "some_instance",
+            "QISKIT_IBM_INSTANCE": _DEFAULT_CRN,
         }
         with custom_envs(envs):
             service = FakeRuntimeService(channel="ibm_cloud", instance=instance)
@@ -906,6 +903,13 @@ class TestEnableAccount(IBMTestCase):
 
             with self.assertRaises(IBMInputValueError):
                 service = FakeRuntimeService(channel="ibm_quantum_platform", tags=["invalid_tags"])
+
+    def test_wrong_instance(self):
+        """Test an instance from a different account."""
+        instance = "wrong_instance"
+        with temporary_account_config_file(channel="ibm_quantum_platform"):
+            with self.assertRaises(IBMInputValueError):
+                _ = FakeRuntimeService(channel="ibm_quantum_platform", instance=instance)
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:

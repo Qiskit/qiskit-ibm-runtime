@@ -12,7 +12,6 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from typing import List, Optional, Tuple
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -32,21 +31,12 @@ class FakeRuntimeService(QiskitRuntimeService):
     """
 
     DEFAULT_CRNS = [
+        "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn1:...::",
         "crn:v1:bluemix:public:quantum-computing:my-region:a/crn2:...::",
     ]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
-    DEFAULT_INSTANCES = [
-        {
-            "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
-            "tags": ["services"],
-            "name": "test-instance",
-            "pricing_type": "free",
-            "plan": "internal",
-        }
-    ]
-
     DEFAULT_INSTANCES = [
         {
             "crn": "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
@@ -86,10 +76,14 @@ class FakeRuntimeService(QiskitRuntimeService):
                 backend_specs=self._backend_specs, instance=instance
             )
 
+    def instances(self):
+        """Return a list of instances."""
+        return self.DEFAULT_INSTANCES
+
     def _resolve_crn(self, account: Account) -> None:
         pass
 
-    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+    def _discover_backends_from_instance(self, instance: str) -> list[str]:
         """Mock discovery cloud backends."""
         job_class = self._active_api_client._job_classes  # type: ignore
         self._active_api_client = self._fake_runtime_client
@@ -105,10 +99,10 @@ class FakeRuntimeService(QiskitRuntimeService):
         # return dummy crn
         return instance
 
-    def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
+    def _get_api_client(self, instance: str | None = None) -> RuntimeClient:
         return self._active_api_client
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
+    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
         if instance:
             return [(instance, self._discover_backends_from_instance(instance))]
         if not self._all_instances:
@@ -119,7 +113,9 @@ class FakeRuntimeService(QiskitRuntimeService):
                     "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst.get("plan"),
-                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "backends": self._discover_backends_from_instance(
+                        inst["crn"],  # type: ignore[arg-type]
+                    ),
                     "tags": inst.get("tags"),
                     "pricing_type": inst["pricing_type"],
                 }
