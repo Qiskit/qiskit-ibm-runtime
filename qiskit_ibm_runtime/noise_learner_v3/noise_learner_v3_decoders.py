@@ -17,9 +17,11 @@ from __future__ import annotations
 import logging
 from typing import Dict
 
+from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results  # type: ignore[attr-defined]
+
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
-from .converters.version_0_1 import noise_learner_v3_result_from_0_1
+from .converters.version_0_1 import noise_learner_v3_result_from_0_1, NoiseLearnerV3ResultsModel
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +32,13 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     """Decoder for noise learner V3."""
 
     @classmethod
-    def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
+    def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: Dict = super().decode(raw_result)
+        decoded = NoiseLearnerV3ResultsModel.model_validate_json(raw_result)
 
         try:
-            schema_version = decoded["schema_version"]
-        except KeyError:
+            schema_version = decoded.schema_version
+        except AttributeError:
             raise ValueError("Missing schema version.")
 
         try:
