@@ -12,6 +12,7 @@
 
 """NoiseLearner result decoder."""
 
+from typing import Dict
 
 from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
@@ -34,7 +35,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
             return NoiseLearnerV3ResultDecoder().decode(raw_result)
 
         # Decode for legacy noise learner
-        decoded: dict = super().decode(raw_result)
+        decoded: Dict = super().decode(raw_result)
 
         data = []
         for layer in decoded["data"]:
