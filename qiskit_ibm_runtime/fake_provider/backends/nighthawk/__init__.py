@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2025.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,8 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Passes to layout circuits to IBM backend's instruction sets."""
+"""
+Fake Nighthawk backend (120 qubit).
+"""
 
-from .convert_id_to_delay import ConvertIdToDelay
-from .convert_mid_circ_meas import ConvertToMidCircuitMeasure
-from .fold_rzz_angle import FoldRzzAngle
+from .fake_nighthawk import FakeNighthawk
