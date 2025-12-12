@@ -34,7 +34,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
             return NoiseLearnerV3ResultDecoder().decode(raw_result)
 
         # Decode for legacy noise learner
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         data = []
         for layer in decoded["data"]:
