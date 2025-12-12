@@ -1,0 +1,2 @@
+When a job is submitted, there will now be warnings if the instance being used
+has reached its limit.

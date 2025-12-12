@@ -17,6 +17,7 @@ import warnings
 from datetime import datetime
 from typing import Any
 from collections.abc import Callable, Sequence
+from urllib.parse import quote
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -974,6 +975,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: An error occurred running the program.
         """
 
+        self._check_instance_usage()
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
             qrt_options = RuntimeOptions()
@@ -1171,6 +1173,26 @@ class QiskitRuntimeService:
             )
             usage_dict["usage_remaining_seconds"] = usage_remaining
         return usage_dict
+
+    def _check_instance_usage(self) -> None:
+        """Emit a warning if instance usage has been reached."""
+        usage_dict = self.usage()
+
+        if usage_dict.get("usage_limit_reached"):
+            if usage_dict.get("usage_limit_seconds") and usage_dict["usage_remaining_seconds"] <= 0:
+                warnings.warn(
+                    "This instance has met its usage limit. Workloads will not run until time is made "
+                    "available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "for more details."
+                )
+            else:
+                warnings.warn(
+                    "There is currently no more time available for this instance's plan on the account. "
+                    "Workloads will not run until time is made available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "for more details."
+                )
 
     def _decode_job(self, raw_data: dict) -> RuntimeJobV2:
         """Decode job data received from the server.
