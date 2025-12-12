@@ -12,7 +12,6 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-from typing import List, Optional, Tuple
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -84,7 +83,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     def _resolve_crn(self, account: Account) -> None:
         pass
 
-    def _discover_backends_from_instance(self, instance: str) -> List[str]:
+    def _discover_backends_from_instance(self, instance: str) -> list[str]:
         """Mock discovery cloud backends."""
         job_class = self._active_api_client._job_classes  # type: ignore
         self._active_api_client = self._fake_runtime_client
@@ -100,10 +99,10 @@ class FakeRuntimeService(QiskitRuntimeService):
         # return dummy crn
         return instance
 
-    def _get_api_client(self, instance: Optional[str] = None) -> RuntimeClient:
+    def _get_api_client(self, instance: str | None = None) -> RuntimeClient:
         return self._active_api_client
 
-    def _resolve_cloud_instances(self, instance: Optional[str]) -> List[Tuple[str, List[str]]]:
+    def _resolve_cloud_instances(self, instance: str | None) -> list[tuple[str, list[str]]]:
         if instance:
             return [(instance, self._discover_backends_from_instance(instance))]
         if not self._all_instances:
@@ -114,7 +113,9 @@ class FakeRuntimeService(QiskitRuntimeService):
                     "name": inst["name"],
                     "crn": inst["crn"],
                     "plan": inst.get("plan"),
-                    "backends": self._discover_backends_from_instance(inst["crn"]),
+                    "backends": self._discover_backends_from_instance(
+                        inst["crn"],  # type: ignore[arg-type]
+                    ),
                     "tags": inst.get("tags"),
                     "pricing_type": inst["pricing_type"],
                 }

@@ -12,7 +12,7 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from .base import RestAdapterBase
 from ..session import RetrySession
 from ..exceptions import RequestsApiError
@@ -42,11 +42,11 @@ class RuntimeSession(RestAdapterBase):
 
     def create(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        mode: str | None = None,
+    ) -> dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")
         payload = {}
@@ -77,7 +77,7 @@ class RuntimeSession(RestAdapterBase):
             else:
                 raise IBMRuntimeError(f"Error closing session: {ex}")
 
-    def details(self) -> Dict[str, Any]:
+    def details(self) -> dict[str, Any]:
         """Return the details of this session."""
 
         return self.session.get(self.get_url("self"), headers=self._HEADER_JSON_ACCEPT).json()

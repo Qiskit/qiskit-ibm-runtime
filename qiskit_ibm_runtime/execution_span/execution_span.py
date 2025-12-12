@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 from datetime import datetime
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +24,7 @@ import numpy.typing as npt
 
 # Python 3.8 does not recognize tuple[<something],
 # in spite of `from __future__ import annotations`
-ShapeType = Tuple[int, ...]
+ShapeType = tuple[int, ...]
 """A shape tuple representing some nd-array shape."""
 
 

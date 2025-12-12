@@ -18,7 +18,7 @@ import time
 import uuid
 from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
@@ -100,8 +100,8 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
-        self._reason: Optional[str] = None
-        self._reason_code: Optional[int] = None
+        self._reason: str | None = None
+        self._reason_code: int | None = None
         self._program_id = program_id
         self._backend_name = backend_name
         self._image = image
@@ -282,18 +282,18 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
+        backend_name: str | None,
         params: dict,
         image: str,
-        log_level: Optional[str],
-        session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = None,
-        session_time: Optional[int] = None,
-        private: Optional[int] = False,  # pylint: disable=unused-argument
-        calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
-    ) -> Dict[str, Any]:
+        log_level: str | None,
+        session_id: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = None,
+        session_time: int | None = None,
+        private: int | None = False,  # pylint: disable=unused-argument
+        calibration_id: str | None = None,  # pylint: disable=unused-argument
+    ) -> dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
@@ -397,7 +397,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, crn: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: str | None = None) -> list[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
@@ -405,21 +405,21 @@ class BaseFakeRuntimeClient:
     def backend_configuration(
         self,
         backend_name: str,
-        calibration_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        calibration_id: str | None = None,
+    ) -> dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
             return ret.copy()
         return None
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
     # pylint: disable=unused-argument
     def backend_properties(
         self, backend_name: str, datetime: Any = None, calibration_id: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
@@ -430,12 +430,12 @@ class BaseFakeRuntimeClient:
     # pylint: disable=unused-argument
     def create_session(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        channel: Optional[str] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        channel: str | None = None,
+        mode: str | None = None,
+    ) -> dict[str, Any]:
         """Create a session."""
         session_id = uuid.uuid4().hex
         self._sessions.add(session_id)
@@ -447,9 +447,24 @@ class BaseFakeRuntimeClient:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
 
-    def session_details(self, session_id: str) -> Dict[str, Any]:
+    def session_details(self, session_id: str) -> dict[str, Any]:
         """Return the details of the session."""
         return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
+
+    def cloud_usage(self) -> dict[str, Any]:
+        """Return cloud instance usage information."""
+        return {
+            "instance_id": "instance_id",
+            "plan_id": "plan_id",
+            "usage_consumed_seconds": 6000,
+            "usage_period": {
+                "start_time": "2025-10-01T17:40:06.269Z",
+                "end_time": "2025-10-29T17:40:06.269Z",
+            },
+            "usage_allocation_seconds": 90000,
+            "usage_remaining_seconds": 84000,
+            "usage_limit_reached": False,
+        }
 
     def _find_backend(self, backend_name):
         for back in self._backends:

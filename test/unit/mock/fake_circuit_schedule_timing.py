@@ -150,3 +150,21 @@ class FakeCircuitScheduleInputData:
             }
         },
     )
+
+    sampler_pub_result_merge = SamplerPubResult(
+        data=DataBin(),
+        metadata={
+            "compilation": {
+                "scheduler_timing": {
+                    "timing": (
+                        "main,reset_4,Qubit 4,7,64,play\n"
+                        "main,reset_4,Qubit 4,71,108,play\n"
+                        "main,reset_4,AWGR1_0,118,325,capture\n"
+                        "main,reset_4,Qubit 4,179,64,play\n"
+                        "main,reset_4,Qubit 4,243,64,play\n"
+                        "main,reset_4,Qubit 4,577,8,play\n"
+                    )
+                }
+            }
+        },
+    )

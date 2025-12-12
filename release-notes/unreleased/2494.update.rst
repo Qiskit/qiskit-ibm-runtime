@@ -1,0 +1,19 @@
+Add a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that 
+if set to ``True`` will merge instructions of the same type based on temporal continuity.
+
+Example, 
+
+.. code-block:: python
+
+    from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
+
+
+    job_result: SamplerPubResult = job.result()
+    circuit_schedule: str = job_result[0].metadata["compilation"]["scheduler_timing"]["timing"]
+
+    fig = draw_circuit_schedule_timing(
+        circuit_schedule=circuit_schedule,
+        merge_common_instructions=True
+        )
+
+    fig.show()

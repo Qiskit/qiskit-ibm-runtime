@@ -11,7 +11,7 @@ Deprecation Notes
 - The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July. 
   After this date, ``ibm_cloud``, ``ibm_quantum_platform``, and ``local`` will be the only valid channels. 
   For help migrating to the new IBM Quantum Platform on the 
-  ``ibm_cloud`` channel, read the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
+  ``ibm_cloud`` channel, read the `migration guide <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
 
 
 New Features

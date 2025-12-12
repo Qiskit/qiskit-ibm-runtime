@@ -109,7 +109,7 @@ New Features
   This function uses the new :class:`CircuitSchedule` class to load, parse, preprocess, 
   and trace the data for plotting using a Plotly supported interface. (`2328 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2328>`__)
 - Virtual private endpoints for IBM Quantum Platform are now supported.
-  Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/security/virtual-private-endpoints>`__. (`2367 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2367>`__)
+  Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/guides/virtual-private-endpoints>`__. (`2367 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2367>`__)
 - It is now possible to retrieve the job tags of a job without having to actually fetch 
   the job with :meth:`.QiskitRuntimeService.job`. (`2420 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2420>`__)
 - The :class:`.~ConvertISAToClifford` pass now supports Cliffordization of circuits containing fractional gates. (`2427 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2427>`__)

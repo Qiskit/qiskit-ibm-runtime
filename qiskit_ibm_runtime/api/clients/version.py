@@ -12,7 +12,7 @@
 
 """Client for determining the version of an IBM Quantum service."""
 
-from typing import Dict, Union, Any
+from typing import Any
 
 from ..rest.root import Api
 from ..session import RetrySession
@@ -30,7 +30,7 @@ class VersionClient:
         """
         self.client_version_finder = Api(RetrySession(url, **request_kwargs))
 
-    def version(self) -> Dict[str, Union[bool, str]]:
+    def version(self) -> dict[str, bool | str]:
         """Return the version information.
 
         Returns:

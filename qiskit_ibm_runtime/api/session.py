@@ -17,7 +17,7 @@ import os
 import re
 import logging
 import sys
-from typing import Dict, Optional, Any, Tuple, Union
+from typing import Any
 from pathlib import PurePath
 import importlib.metadata
 
@@ -163,9 +163,9 @@ class RetrySession(Session):
         retries_connect: int = 3,
         backoff_factor: float = 0.5,
         verify: bool = True,
-        proxies: Optional[Dict[str, str]] = None,
-        auth: Optional[AuthBase] = None,
-        timeout: Tuple[float, Union[float, None]] = (5.0, None),
+        proxies: dict[str, str] | None = None,
+        auth: AuthBase | None = None,
+        timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
         """RetrySession constructor.
 
@@ -183,7 +183,7 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-        self.custom_header: Optional[str] = None
+        self.custom_header: str | None = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
@@ -218,7 +218,7 @@ class RetrySession(Session):
         self.mount("https://", retry_adapter)
 
     def _initialize_session_parameters(
-        self, verify: bool, proxies: Dict[str, str], auth: Optional[AuthBase] = None
+        self, verify: bool, proxies: dict[str, str], auth: AuthBase | None = None
     ) -> None:
         """Set the session parameters and attributes.
 
@@ -358,7 +358,7 @@ class RetrySession(Session):
 
         return response
 
-    def _log_request_info(self, url: str, method: str, request_data: Dict[str, Any]) -> None:
+    def _log_request_info(self, url: str, method: str, request_data: dict[str, Any]) -> None:
         """Log the request data, filtering out specific information.
 
         Note:
@@ -441,7 +441,7 @@ class RetrySession(Session):
                 headers.update({"X-Qx-Client-Application": f"{current}/{self.custom_header}"})
                 self.headers = headers
 
-    def __getstate__(self) -> Dict:
+    def __getstate__(self) -> dict:
         """Overwrite Session's getstate to include all attributes."""
         state = super().__getstate__()  # type: ignore
         state.update(self.__dict__)

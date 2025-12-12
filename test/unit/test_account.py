@@ -31,7 +31,6 @@ from qiskit_ibm_runtime.accounts import (
     InvalidAccountError,
 )
 from qiskit_ibm_runtime.accounts.account import (
-    IBM_CLOUD_API_URL,
     IBM_QUANTUM_PLATFORM_API_URL,
 )
 from qiskit_ibm_runtime.accounts.management import (
@@ -77,7 +76,7 @@ class TestAccount(IBMTestCase):
     """Tests for Account class."""
 
     dummy_token = "123"
-    dummy_ibm_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
+    dummy_ibm_cloud_url = "https://quantum.cloud.ibm.com"
 
     @data(_TEST_IBM_CLOUD_ACCOUNT, _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT)
     def test_skip_crn_resolution_for_crn(self, test_account):
@@ -701,7 +700,7 @@ class TestEnableAccount(IBMTestCase):
 
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
-                expected = IBM_CLOUD_API_URL
+                expected = IBM_QUANTUM_PLATFORM_API_URL
                 self.assertEqual(service._account.url, expected)
                 self.assertIn("url", logged.output[0])
 
@@ -718,11 +717,7 @@ class TestEnableAccount(IBMTestCase):
                     service = FakeRuntimeService()
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
-                expected = (
-                    IBM_CLOUD_API_URL
-                    if channel == "ibm_quantum_platform"
-                    else (IBM_QUANTUM_PLATFORM_API_URL)
-                )
+                expected = IBM_QUANTUM_PLATFORM_API_URL
                 self.assertEqual(service._account.url, expected)
                 self.assertEqual(service._account.channel, channel)
 

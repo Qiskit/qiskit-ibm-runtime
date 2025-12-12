@@ -14,7 +14,7 @@
 
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any
 from urllib.parse import urlparse
 
 from requests_ntlm import HttpNtlmAuth
@@ -31,9 +31,9 @@ class ProxyConfiguration:
         password_ntlm: password used to enable NTLM user authentication.
     """
 
-    urls: Optional[Dict[str, str]] = None
-    username_ntlm: Optional[str] = None
-    password_ntlm: Optional[str] = None
+    urls: dict[str, str] | None = None
+    username_ntlm: str | None = None
+    password_ntlm: str | None = None
 
     def validate(self) -> None:
         """Validate configuration.

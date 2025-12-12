@@ -14,7 +14,7 @@
 """Backend Configuration Classes."""
 import datetime
 import copy
-from typing import Dict, List, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 
@@ -36,7 +36,7 @@ class GateConfig:
     def __init__(
         self,
         name: str,
-        parameters: List[str],
+        parameters: list[str],
         qasm_def: str,
         coupling_map: list = None,
         latency_map: list = None,
@@ -79,7 +79,7 @@ class GateConfig:
             self.description = description
 
     @classmethod
-    def from_dict(cls: Type[GateConfigT], data: Dict[str, Any]) -> GateConfigT:
+    def from_dict(cls: type[GateConfigT], data: dict[str, Any]) -> GateConfigT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
@@ -92,13 +92,13 @@ class GateConfig:
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
             dict: The dictionary form of the GateConfig.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "name": self.name,
             "parameters": self.parameters,
             "qasm_def": self.qasm_def,
@@ -152,7 +152,7 @@ class UchannelLO:
         self.scale = scale
 
     @classmethod
-    def from_dict(cls: Type[UchannelLOT], data: Dict[str, Any]) -> UchannelLOT:
+    def from_dict(cls: type[UchannelLOT], data: dict[str, Any]) -> UchannelLOT:
         """Create a new UchannelLO object from a dictionary.
 
         Args:
@@ -165,13 +165,13 @@ class UchannelLO:
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the UChannelLO.
 
         Returns:
             dict: The dictionary form of the UChannelLO.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "q": self.q,
             "scale": self.scale,
         }
@@ -203,7 +203,7 @@ class QasmBackendConfiguration:
         memory: backend supports memory.
     """
 
-    _data: Dict[Any, Any] = {}
+    _data: dict[Any, Any] = {}
 
     def __init__(
         self,
@@ -218,13 +218,13 @@ class QasmBackendConfiguration:
         open_pulse: bool,
         memory: bool,
         coupling_map: list,
-        meas_levels: List[int] = None,
-        meas_kernels: List[str] = None,
-        discriminators: List[str] = None,
+        meas_levels: list[int] = None,
+        meas_kernels: list[str] = None,
+        discriminators: list[str] = None,
         meas_map: list = None,
-        supported_instructions: List[str] = None,
+        supported_instructions: list[str] = None,
         dynamic_reprate_enabled: bool = False,
-        rep_delay_range: List[float] = None,
+        rep_delay_range: list[float] = None,
         default_rep_delay: float = None,
         sample_name: str = None,
         n_registers: int = None,
@@ -384,7 +384,7 @@ class QasmBackendConfiguration:
 
     @classmethod
     def from_dict(
-        cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]
+        cls: type[QasmBackendConfigurationT], data: dict[str, Any]
     ) -> QasmBackendConfigurationT:
         """Create a new GateConfig object from a dictionary.
 
@@ -395,18 +395,18 @@ class QasmBackendConfiguration:
         Returns:
             GateConfig: The GateConfig from the input dictionary.
         """
-        in_data: Dict[str, Any] = copy.copy(data)
+        in_data: dict[str, Any] = copy.copy(data)
         gates = [GateConfig.from_dict(x) for x in in_data.pop("gates")]
         in_data["gates"] = gates
         return cls(**in_data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
             dict: The dictionary form of the GateConfig.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "backend_name": self.backend_name,
             "backend_version": self.backend_version,
             "n_qubits": self.n_qubits,

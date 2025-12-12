@@ -1,0 +1,4 @@
+The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the 
+same runtime entrypoint URL (``https://quantum.cloud.ibm.com/api/v[x]``).
+Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes 
+that dependency and aligns URL generation across channels. There are no user-facing changes.

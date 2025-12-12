@@ -14,6 +14,7 @@
 
 import random
 import time
+from unittest.mock import patch
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
@@ -21,7 +22,6 @@ from qiskit_ibm_runtime import RuntimeJobV2
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
-    RuntimeJobNotFound,
     RuntimeJobMaxTimeoutError,
     RuntimeInvalidStateError,
 )
@@ -29,6 +29,7 @@ from .mock.fake_runtime_client import (
     FailedRuntimeJob,
     FailedRanTooLongRuntimeJob,
     CancelableRuntimeJob,
+    BaseFakeRuntimeClient,
 )
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_cloud_fake
@@ -147,11 +148,34 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual("DONE", job.status())
 
     @run_cloud_fake
-    def test_delete_job(self, service):
-        """Test deleting a job."""
-        params = {"param1": "foo"}
-        job = run_program(service=service, inputs=params)
-        self.assertTrue(job.job_id())
-        service.delete_job(job.job_id())
-        with self.assertRaises(RuntimeJobNotFound):
-            service.job(job.job_id())
+    def test_instance_limit_warning(self, service):
+        """Test emitting a warning if instance usage has been reached."""
+        # All relevant fields present, account limit reached.
+        instance_usage_msg_1 = {
+            "usage_consumed_seconds": 1,
+            "usage_limit_seconds": 2,
+            "usage_limit_reached": True,
+        }
+        # All relevant fields present, instance limit reached.
+        instance_usage_msg_2 = {
+            "usage_consumed_seconds": 3,
+            "usage_limit_seconds": 2,
+            "usage_limit_reached": True,
+        }
+        # Missing `usage_limit_seconds`, account limit reached.
+        instance_usage_msg_3 = {
+            "usage_consumed_seconds": 1,
+            "usage_limit_reached": True,
+        }
+
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_1):
+            with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
+                run_program(service=service)
+
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_2):
+            with self.assertWarnsRegex(UserWarning, r"This instance has met its usage limit"):
+                run_program(service=service)
+
+        with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_3):
+            with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
+                run_program(service=service)
