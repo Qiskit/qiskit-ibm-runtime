@@ -75,3 +75,4 @@ from .valencia import FakeValenciaV2
 from .vigo import FakeVigoV2
 from .washington import FakeWashingtonV2
 from .yorktown import FakeYorktownV2
+from .nighthawk import FakeNighthawk

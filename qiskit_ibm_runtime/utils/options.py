@@ -13,7 +13,7 @@
 """Backend run options."""
 
 from dataclasses import asdict, dataclass
-from typing import Dict, Union, Any, Optional
+from typing import Any
 from packaging.version import Version
 
 from qiskit import QuantumCircuit, __version__ as qiskit_version
@@ -29,13 +29,13 @@ class CommonOptions:
     """Options common for both paths."""
 
     shots: int = 4000
-    meas_level: Union[int, MeasLevel] = MeasLevel.CLASSIFIED
+    meas_level: int | MeasLevel = MeasLevel.CLASSIFIED
     init_qubits: bool = True
-    rep_delay: Optional[float] = None
+    rep_delay: float | None = None
     memory: bool = False
-    meas_return: Union[str, MeasReturnType] = MeasReturnType.AVERAGE
+    meas_return: str | MeasReturnType = MeasReturnType.AVERAGE
 
-    def to_transport_dict(self) -> Dict[str, Any]:
+    def to_transport_dict(self) -> dict[str, Any]:
         """Remove None values so runtime defaults are used."""
         dict_ = asdict(self)
         for key in list(dict_.keys()):
@@ -48,17 +48,17 @@ class CommonOptions:
 class QASM3Options(CommonOptions):
     """Options for the QASM3 path."""
 
-    init_circuit: Optional[QuantumCircuit] = None
-    init_num_resets: Optional[int] = None
+    init_circuit: QuantumCircuit | None = None
+    init_num_resets: int | None = None
 
 
 @dataclass
 class QASM2Options(CommonOptions):
     """Options for the QASM2 path."""
 
-    header: Optional[Dict] = None
+    header: dict | None = None
     init_qubits: bool = True
-    use_measure_esp: Optional[bool] = None
+    use_measure_esp: bool | None = None
     # Simulator only
     noise_model: Any = None
-    seed_simulator: Optional[int] = None
+    seed_simulator: int | None = None
