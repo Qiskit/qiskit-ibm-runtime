@@ -95,7 +95,7 @@ def noise_learner_v3_result_from_0_1(
                 ],
                 rates=datum.rates.to_numpy(),
                 rates_std=datum.rates_std.to_numpy(),
-                metadata=datum.metadata.model_dump(),
+                metadata=datum.metadata,
             )
             for datum in model.data
         ]
