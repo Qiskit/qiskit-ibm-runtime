@@ -93,16 +93,6 @@ class NoiseLearnerV3:
         """The options in this noise learner."""
         return self._options
 
-    @property
-    def session(self) -> Union[Session, Batch, None]:
-        """The session or batch for the noise learner, if applicable."""
-        return self._session
-
-    @property
-    def service(self) -> QiskitRuntimeService:
-        """The service that executes the noise learner jobs."""
-        return self._service
-
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
