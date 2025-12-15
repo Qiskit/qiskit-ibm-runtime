@@ -61,7 +61,7 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                         arguments[name] = value
             model_item = SamplexItemModel(
                 circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit),
-                samplex=SamplexModelSSV1.from_samplex(item.samplex),
+                samplex=SamplexModelSSV1.from_samplex(item.samplex, ssv=1),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,
