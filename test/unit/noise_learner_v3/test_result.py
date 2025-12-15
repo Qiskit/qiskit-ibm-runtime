@@ -37,23 +37,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             for pauli1 in "IXYZ"
             for pauli0 in "IXYZ"
         ][1:]
-        rates = [
-            0.02452,
-            0.0,
-            0.00324,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0,
-            0.02452,
-            0.0,
-            0.00071,
-        ]
+        rates = np.arange(0, 0.3, 0.02)
         rates_std = np.arange(0, 0.15, 0.01)
         metadata = {"learning_protocol": "lindblad"}
         result = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadata)
@@ -71,22 +55,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             for pauli1 in "IXYZ"
             for pauli0 in "IXYZ"
         ][1:]
-        rates = [
-            0.02452,
-            0.0,
-            0.00324,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0,
-            0.02452,
-            0.0,
-        ]
+        rates = np.arange(0, 0.2, 0.02)
         with self.assertRaisesRegex(ValueError, "must be of the same length"):
             NoiseLearnerV3Result.from_generators(generators, rates)
 
@@ -99,23 +68,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             for pauli0 in "IXYZ"
         ][1:]
         generators[4] = QubitSparsePauliList.from_label("XII")
-        rates = [
-            0.02452,
-            0.0,
-            0.00324,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0,
-            0.02452,
-            0.0,
-            0.00071,
-        ]
+        rates = np.arange(0, 0.3, 0.02)
         with self.assertRaisesRegex(ValueError, "number of qubits"):
             NoiseLearnerV3Result.from_generators(generators, rates)
 
@@ -135,27 +88,27 @@ class TestNoiseLearnerV3Result(IBMTestCase):
                 ["ZZ"],
             ]
         ]
-        rates = [0.02452, 0.0, 0.00324, 0.0, 0.0, 0.0006, 0.0, 0.0, 0.00071]
+        rates = rates = np.arange(0, 0.18, 0.02)
         result = NoiseLearnerV3Result.from_generators(generators, rates)
         flatenned_generators = QubitSparsePauliList.from_list(
             [pauli1 + pauli0 for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
         )
         flatenned_rates = [
-            0.02452,
-            0.0,
-            0.00324,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0006,
-            0.0,
-            0.0,
-            0.0,
-            0.02452,
-            0.0,
-            0.00071,
+            0,
+            0.02,
+            0.04,
+            0.06,
+            0.08,
+            0.1,
+            0.06,
+            0.12,
+            0.1,
+            0.08,
+            0.12,
+            0.14,
+            0,
+            0.02,
+            0.16,
         ]
         self.assertEqual(
             result.to_pauli_lindblad_map().simplify(),
