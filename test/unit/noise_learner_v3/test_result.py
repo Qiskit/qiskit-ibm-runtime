@@ -88,7 +88,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
                 ["ZZ"],
             ]
         ]
-        rates = rates = np.arange(0, 0.18, 0.02)
+        rates = np.arange(0, 0.18, 0.02)
         result = NoiseLearnerV3Result.from_generators(generators, rates)
         flatenned_generators = QubitSparsePauliList.from_list(
             [pauli1 + pauli0 for pauli1 in "IXYZ" for pauli0 in "IXYZ"][1:]
