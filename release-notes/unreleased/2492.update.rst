@@ -1,0 +1,2 @@
+Impose a y-axis channel ordering for :meth:`draw_circuit_schedule_timing` according 
+to the order of channels in the ``included_channels`` input argument.

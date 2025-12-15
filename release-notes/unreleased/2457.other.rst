@@ -1,0 +1,2 @@
+Add :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
+Allows for manual preprocessing of the circuit schedule timing data outside of its draw function.

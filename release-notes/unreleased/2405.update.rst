@@ -1,0 +1,3 @@
+If a backend that does not support fractional gates is requested by setting the flag
+``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`, 
+an ``IBMInputValueError`` will be raised.

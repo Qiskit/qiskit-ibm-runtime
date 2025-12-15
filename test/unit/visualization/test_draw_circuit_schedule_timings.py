@@ -14,6 +14,7 @@
 
 import ddt
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
+from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
 from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
@@ -49,11 +50,23 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
         if included_channels is not None:
             included_channels = list(included_channels)
 
-        fig = draw_circuit_schedule_timing(
+        # test string input
+        fig_1 = draw_circuit_schedule_timing(
             circuit_schedule=circuit_schedule,
             included_channels=included_channels,
             filter_readout_channels=filter_readout_channels,
             filter_barriers=filter_barriers,
         )
-        self.assertEqual(len(fig.data), expected_n_traces)
-        self.save_plotly_artifact(fig)
+        self.assertEqual(len(fig_1.data), expected_n_traces)
+        self.save_plotly_artifact(fig_1)
+
+        # test class input
+        circuit_schedule_object = CircuitSchedule(circuit_schedule)
+        fig_2 = draw_circuit_schedule_timing(
+            circuit_schedule=circuit_schedule_object,
+            included_channels=included_channels,
+            filter_readout_channels=filter_readout_channels,
+            filter_barriers=filter_barriers,
+        )
+        self.assertEqual(len(fig_2.data), expected_n_traces)
+        self.save_plotly_artifact(fig_2)

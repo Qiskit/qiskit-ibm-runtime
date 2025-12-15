@@ -25,7 +25,8 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence, Union, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
+from collections.abc import Iterator, Sequence
 from numpy.typing import NDArray
 import numpy as np
 
@@ -150,7 +151,7 @@ class LayerError:
         self,
         circuit: QuantumCircuit,
         qubits: Sequence[int],
-        error: Optional[PauliLindbladError] = None,
+        error: PauliLindbladError | None = None,
     ) -> None:
 
         self._circuit = circuit
@@ -178,7 +179,7 @@ class LayerError:
         return self._qubits
 
     @property
-    def error(self) -> Union[PauliLindbladError, None]:
+    def error(self) -> PauliLindbladError | None:
         r"""
         The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
         unknown or explicitly disabled.
@@ -194,14 +195,14 @@ class LayerError:
 
     def draw_map(
         self,
-        embedding: Union[Embedding, BackendV2],
+        embedding: Embedding | BackendV2,
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
         color_out_of_scale: str = "lightgreen",
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
-        highest_rate: Optional[float] = None,
+        highest_rate: float | None = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
@@ -276,16 +277,16 @@ class LayerError:
 
     def draw_swarm(
         self,
-        num_bodies: Optional[int] = None,
-        max_rate: Optional[float] = None,
-        min_rate: Optional[float] = None,
-        connected: Optional[Union[list[Pauli], list[str]]] = None,
-        colors: Optional[list[str]] = None,
-        num_bins: Optional[int] = None,
-        opacities: Union[float, list[float]] = 0.4,
-        names: Optional[list[str]] = None,
-        x_coo: Optional[list[float]] = None,
-        marker_size: Optional[float] = None,
+        num_bodies: int | None = None,
+        max_rate: float | None = None,
+        min_rate: float | None = None,
+        connected: list[Pauli] | list[str] | None = None,
+        colors: list[str] | None = None,
+        num_bins: int | None = None,
+        opacities: float | list[float] = 0.4,
+        names: list[str] | None = None,
+        x_coo: list[float] | None = None,
+        marker_size: float | None = None,
         height: int = 500,
         width: int = 800,
     ) -> PlotlyFigure:

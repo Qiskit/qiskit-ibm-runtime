@@ -12,7 +12,6 @@
 
 """Circuit-runner result class"""
 
-from typing import List, Union
 import json
 
 from qiskit.result import Result, QuasiDistribution
@@ -32,8 +31,8 @@ class RunnerResult(Result, ResultDecoder):
         return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
     def get_quasiprobabilities(
-        self, experiment: Union[int, List] = None
-    ) -> Union[QuasiDistribution, List[QuasiDistribution]]:
+        self, experiment: int | list = None
+    ) -> QuasiDistribution | list[QuasiDistribution]:
         """Get quasiprobabilites associated with one or more experiments.
 
         Parameters:

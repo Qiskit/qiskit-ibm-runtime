@@ -5,7 +5,7 @@ New Features
 ------------
 
 - The following changes were made to support the upcoming 
-  `IBM Quantum platform migration <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__:
+  `IBM Quantum platform migration <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__:
 
   - A new channel type, ``ibm_quantum_platform``, has been introduced for service initialization  (``QiskitRuntimeService()``). 
     It joins the existing ``ibm_quantum`` (now deprecated) and ``ibm_cloud`` channels. By **default**, 

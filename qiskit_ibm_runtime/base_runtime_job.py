@@ -13,7 +13,8 @@
 """Base runtime job class."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Dict, Type, Union, Sequence, List, Tuple
+from typing import Any
+from collections.abc import Sequence
 import logging
 from concurrent import futures
 import queue
@@ -34,11 +35,9 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
-from .utils.deprecation import issue_deprecation_msg
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +47,8 @@ class BaseRuntimeJob(ABC):
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
-    JOB_FINAL_STATES: Tuple[Any, ...] = ()
-    ERROR: Union[str, RuntimeJobStatus] = None
+    JOB_FINAL_STATES: tuple[Any, ...] = ()
+    ERROR: str | RuntimeJobStatus = None
 
     def __init__(
         self,
@@ -58,13 +57,13 @@ class BaseRuntimeJob(ABC):
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        creation_date: Optional[str] = None,
-        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
-        image: Optional[str] = "",
-        session_id: Optional[str] = None,
-        tags: Optional[List] = None,
-        version: Optional[int] = None,
-        private: Optional[bool] = False,
+        creation_date: str | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
+        image: str | None = "",
+        session_id: str | None = None,
+        tags: list | None = None,
+        version: int | None = None,
+        private: bool | None = False,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -87,17 +86,17 @@ class BaseRuntimeJob(ABC):
         self._api_client = api_client
         self._creation_date = creation_date
         self._program_id = program_id
-        self._reason: Optional[str] = None
-        self._reason_code: Optional[int] = None
-        self._error_message: Optional[str] = None
+        self._reason: str | None = None
+        self._reason_code: int | None = None
+        self._error_message: str | None = None
         self._image = image
         self._service = service
         self._session_id = session_id
         self._tags = tags
-        self._usage_estimation: Dict[str, Any] = {}
+        self._usage_estimation: dict[str, Any] = {}
         self._version = version
         self._queue_info = None
-        self._status: Union[RuntimeJobStatus, str] = None
+        self._status: RuntimeJobStatus | str = None
         self._private = private
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
@@ -123,7 +122,7 @@ class BaseRuntimeJob(ABC):
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
-    def metrics(self) -> Dict[str, Any]:
+    def metrics(self) -> dict[str, Any]:
         """Return job metrics.
 
         Returns:
@@ -141,7 +140,7 @@ class BaseRuntimeJob(ABC):
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
-    def update_tags(self, new_tags: List[str]) -> List[str]:
+    def update_tags(self, new_tags: list[str]) -> list[str]:
         """Update the tags associated with this job.
 
         Args:
@@ -170,7 +169,7 @@ class BaseRuntimeJob(ABC):
                 "the job.".format(self.job_id())
             )
 
-    def properties(self, refresh: bool = False) -> Optional[BackendProperties]:
+    def properties(self, refresh: bool = False) -> BackendProperties | None:
         """Return the backend properties for this job.
 
         Args:
@@ -187,7 +186,7 @@ class BaseRuntimeJob(ABC):
             job_date = utc_to_local(job_running_date)
         return self._backend.properties(refresh, job_date)
 
-    def error_message(self) -> Optional[str]:
+    def error_message(self) -> str | None:
         """Returns the reason if the job failed.
 
         Returns:
@@ -203,7 +202,7 @@ class BaseRuntimeJob(ABC):
             self._set_status(response)
             self._set_error_message(response)
 
-    def _set_status(self, job_response: Dict) -> None:
+    def _set_status(self, job_response: dict) -> None:
         """Set status.
 
         Args:
@@ -226,7 +225,7 @@ class BaseRuntimeJob(ABC):
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
 
-    def _set_error_message(self, job_response: Dict) -> None:
+    def _set_error_message(self, job_response: dict) -> None:
         """Set error message if the job failed.
 
         Args:
@@ -238,11 +237,11 @@ class BaseRuntimeJob(ABC):
             self._error_message = None
 
     @abstractmethod
-    def _status_from_job_response(self, response: Dict) -> str:
+    def _status_from_job_response(self, response: dict) -> str:
         """Returns the job status from an API response."""
         return response["state"]["status"].upper()
 
-    def _error_msg_from_job_response(self, response: Dict) -> str:
+    def _error_msg_from_job_response(self, response: dict) -> str:
         """Returns the error message from an API response.
 
         Args:
@@ -293,7 +292,7 @@ class BaseRuntimeJob(ABC):
         return self._image
 
     @property
-    def inputs(self) -> Dict:
+    def inputs(self) -> dict:
         """Job input parameters.
 
         Returns:
@@ -312,7 +311,7 @@ class BaseRuntimeJob(ABC):
         return self._program_id
 
     @property
-    def creation_date(self) -> Optional[datetime]:
+    def creation_date(self) -> datetime | None:
         """Job creation date in local time.
 
         Returns:
@@ -341,7 +340,7 @@ class BaseRuntimeJob(ABC):
         return self._session_id
 
     @property
-    def tags(self) -> List:
+    def tags(self) -> list:
         """Job tags.
 
         Returns:
@@ -350,7 +349,7 @@ class BaseRuntimeJob(ABC):
         return self._tags
 
     @property
-    def usage_estimation(self) -> Dict[str, Any]:
+    def usage_estimation(self) -> dict[str, Any]:
         """Return the usage estimation information for this job.
 
         Returns:
@@ -367,7 +366,7 @@ class BaseRuntimeJob(ABC):
         return self._usage_estimation
 
     @property
-    def instance(self) -> Optional[str]:
+    def instance(self) -> str | None:
         """Return the IBM Cloud instance CRN."""
         return self._backend._instance
 

@@ -18,7 +18,6 @@ import re
 import logging
 import warnings
 from dataclasses import dataclass
-from typing import Optional, List
 
 from qiskit.providers.backend import Backend
 
@@ -30,25 +29,25 @@ from .utils import validate_job_tags
 class RuntimeOptions:
     """(DEPRECATED) Class for representing generic runtime execution options."""
 
-    backend: Optional[str | Backend] = None
-    image: Optional[str] = None
-    log_level: Optional[str] = None
-    instance: Optional[str] = None
-    job_tags: Optional[List[str]] = None
-    max_execution_time: Optional[int] = None
-    session_time: Optional[int] = None
-    private: Optional[bool] = False
+    backend: str | Backend | None = None
+    image: str | None = None
+    log_level: str | None = None
+    instance: str | None = None
+    job_tags: list[str] | None = None
+    max_execution_time: int | None = None
+    session_time: int | None = None
+    private: bool | None = False
 
     def __init__(
         self,
-        backend: Optional[str | Backend] = None,
-        image: Optional[str] = None,
-        log_level: Optional[str] = None,
-        instance: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
+        backend: str | Backend | None = None,
+        image: str | None = None,
+        log_level: str | None = None,
+        instance: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        session_time: int | None = None,
+        private: bool | None = False,
     ) -> None:
         """RuntimeOptions constructor.
 
