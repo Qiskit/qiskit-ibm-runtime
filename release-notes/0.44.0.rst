@@ -38,10 +38,6 @@ New Features
       pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
       isa_circuit = pm.run(qc)
 
-      # Run using local simulator
-      sampler = Sampler(backend)
-      job = sampler.run([isa_circuit])
-      result = job.result()
 
   (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
 
