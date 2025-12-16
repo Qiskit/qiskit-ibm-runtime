@@ -13,33 +13,7 @@ New Features
   You can use this fake backend to, for example, transpile and optimize your 
   circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
   square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
-  600% improvement in circuit depth compared to a Heron backend.
-
-  Example:
-
-  .. code:: python
-
-      from qiskit import QuantumCircuit
-      from qiskit.transpiler import generate_preset_pass_manager
-      from qiskit_ibm_runtime.fake_provider import FakeNighthawk
-      from qiskit_ibm_runtime import SamplerV2 as Sampler
-
-      # Initialize fake_nighthawk
-      backend = FakeNighthawk()
-
-      # Initialize quantum circuit
-      qc = QuantumCircuit(2, 2)
-      qc.h(0)
-      qc.cx(0, 1)
-      qc.measure(0, 0)
-      qc.measure(1, 1)
-
-      # Transpile circuit against fake_nighthawk
-      pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-      isa_circuit = pm.run(qc)
-
-
-  (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
+  600% improvement in circuit depth compared to a Heron backend. (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
 
 
 Bug Fixes
