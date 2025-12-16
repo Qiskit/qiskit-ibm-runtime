@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.43.1"
+fallback_version = "0.44.0"
 
 [tool.mypy]
 python_version = "3.10"
