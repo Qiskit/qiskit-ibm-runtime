@@ -45,14 +45,14 @@ New Features
 Bug Fixes
 ---------
 
-- IAM authentification Bugfix when using a proxy configuration specified in ``QiskitRuntimeService``. 
+- IAM authentification bug fix when using a proxy configuration specified in ``QiskitRuntimeService``. 
   The patch injects the ``proxies`` and ``verify`` attributes from ``QiskitRuntimeService`` into ``IAMTokenManager`` when using cloud authentification (``CloudAuth``). (`2344 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2344>`__)
 
 
 Other Notes
 -----------
 
-- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods along with 
-  support for python 3.9 have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
+- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with 
+  support for Python 3.9, have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
 - Add :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
   Allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)
