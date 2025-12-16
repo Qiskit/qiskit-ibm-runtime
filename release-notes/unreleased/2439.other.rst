@@ -1,2 +1,0 @@
-The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods along with 
-support for python 3.9 have been removed. 
