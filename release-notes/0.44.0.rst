@@ -11,7 +11,7 @@ New Features
   Its coupling map and basis gates match those of a real Nighthawk backend, but 
   the properties are not  intended to represent typical Nighthawk error values. 
   You can use this fake backend to, for example, transpile and optimize your 
-  circuits in preparation of the forthcoming Nighthawk backends. For a 100-qubit 
+  circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
   square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
   600% improvement in circuit depth compared to a Heron backend.
 
@@ -54,5 +54,5 @@ Other Notes
 
 - The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with 
   support for Python 3.9, have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
-- Add :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
-  Allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)
+- Added :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
+  This allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)
