@@ -280,7 +280,7 @@ class IBMBackend(Backend):
             api_client=self._service._active_api_client,
             job_id=response["id"],
             program_id=program_id,
-            result_decoder=Decoder,
+            result_decoder=Decoder,  # type: ignore[arg-type]
             image=options.environment.image,
             service=self._service,
             version=model.schema_version,

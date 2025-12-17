@@ -13,7 +13,7 @@
 """Learning protocols."""
 
 from enum import Enum
-from typing import Literal, Union
+from typing import Literal
 
 
 class LearningProtocol(str, Enum):
@@ -26,7 +26,7 @@ class LearningProtocol(str, Enum):
     """Readout learning protocol."""
 
 
-LearningProtocolLiteral = Union[LearningProtocol, Literal["pauli_lindblad", "trex"]]
+LearningProtocolLiteral = LearningProtocol | Literal["pauli_lindblad", "trex"]
 """The supported learning protocols.
  * ``pauli_lindblad``: Pauli Lindblad learning from arXiv:2201.09866..
  * ``trex``: Readout learning protocol.

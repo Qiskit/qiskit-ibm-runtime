@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
 
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
@@ -32,7 +31,7 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         try:
             schema_version = decoded["schema_version"]

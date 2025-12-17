@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
 
 from qiskit.circuit import BoxOp
 from qiskit.exceptions import QiskitError
@@ -28,7 +27,7 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .learning_protocol import LearningProtocol
 
 
-def find_learning_protocol(instruction: BoxOp) -> Optional[LearningProtocol]:
+def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:
     """Find which of the supported learning protocols is suitable to learn the noise of ``instruction``.
 
     Args:

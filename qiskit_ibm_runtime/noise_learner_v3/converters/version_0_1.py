@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     NoiseLearnerV3ResultModel,
