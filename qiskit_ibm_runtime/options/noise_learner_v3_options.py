@@ -87,7 +87,9 @@ class NoiseLearnerV3Options(BaseOptions):
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    _ge0 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
+    _ge0 = make_constraint_validator(
+        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+    )
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod

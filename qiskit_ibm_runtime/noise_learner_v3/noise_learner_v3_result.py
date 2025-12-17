@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore[arg-type]
-
 """Noise learner V3 results."""
 
 from __future__ import annotations
@@ -27,8 +25,8 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 MetadataLeafTypes = int | str | float
-MetadataValue = MetadataLeafTypes | "Metadata" | list["MetadataValue"]
-Metadata = dict[str, MetadataValue]
+MetadataValue = 'MetadataLeafTypes | "Metadata" | list["MetadataValue"]'  # pylint: disable=invalid-name
+Metadata = dict[str, MetadataValue]  # type: ignore[valid-type]
 
 
 class NoiseLearnerV3Result:
@@ -57,11 +55,11 @@ class NoiseLearnerV3Result:
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._generators: list[QubitSparsePauliList] = []
         self._rates: NDArray[np.float64] = np.array([])
         self._rates_std: NDArray[np.float64] = np.array([])
-        self.metadata: MetadataValue = {}
+        self.metadata: MetadataValue = {}  # type: ignore[valid-type]
 
     @classmethod
     def from_generators(
@@ -70,7 +68,7 @@ class NoiseLearnerV3Result:
         rates: Iterable[float],
         rates_std: Iterable[float] | None = None,
         metadata: Metadata | None = None,
-    ):
+    ) -> "NoiseLearnerV3Result":
         """
         Construct from a collection of generators and rates.
 
@@ -162,9 +160,10 @@ class NoiseLearnerV3Results:
             ValueError: If some of the instructions have no inject noise annotation and ``require_refs``
                 if ``True``.
         """
-        if len(instructions) != len(self.data):
+        if len(instructions) != len(self.data):  # type: ignore[arg-type]
             raise ValueError(
-                f"Expected {len(self.data)} instructions but found {len(instructions)}."
+                f"Expected {len(self.data)} instructions "
+                f"but found {len(instructions)}."  # type: ignore[arg-type]
             )
 
         noise_source = {}
