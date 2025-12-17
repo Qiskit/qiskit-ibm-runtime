@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TypeAlias
 from numpy.typing import NDArray
 
 import numpy as np
@@ -25,8 +26,8 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 MetadataLeafTypes = int | str | float
-MetadataValue = 'MetadataLeafTypes | "Metadata" | list["MetadataValue"]'  # pylint: disable=invalid-name
-Metadata = dict[str, MetadataValue]  # type: ignore[valid-type]
+MetadataValue: TypeAlias = 'MetadataLeafTypes | "Metadata" | list["MetadataValue"]'
+Metadata: TypeAlias = dict[str, MetadataValue]
 
 
 class NoiseLearnerV3Result:

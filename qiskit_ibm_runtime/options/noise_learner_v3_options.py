@@ -32,7 +32,6 @@ from .options import BaseOptions
 from .post_selection_options import PostSelectionOptions
 from .simulator_options import SimulatorOptions
 from .utils import (
-    Dict,
     Unset,
     UnsetType,
     make_constraint_validator,
@@ -77,7 +76,7 @@ class NoiseLearnerV3Options(BaseOptions):
         This field is ignored by TREX experiments.
     """
 
-    post_selection: PostSelectionOptions | Dict = Field(default_factory=PostSelectionOptions)
+    post_selection: PostSelectionOptions | dict = Field(default_factory=PostSelectionOptions)
     r"""Options for post selecting the results of noise learning circuits.
     """
 
@@ -148,8 +147,8 @@ class NoiseLearnerV3Options(BaseOptions):
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
-    environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
-    simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
+    environment: EnvironmentOptions | dict = Field(default_factory=EnvironmentOptions)
+    simulator: SimulatorOptions | dict = Field(default_factory=SimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
