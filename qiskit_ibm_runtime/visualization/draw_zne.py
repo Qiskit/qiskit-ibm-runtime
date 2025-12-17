@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 from itertools import product
-from typing import Optional, Sequence, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from collections.abc import Sequence
 import numpy as np
 
 from .utils import plotly_module
@@ -276,9 +277,9 @@ def _line_fill_trace(
     y_values: np.array,
     stds: np.array,
     num_stds: int = 1,
-    name: Optional[str] = None,
+    name: str | None = None,
     legend_group: int | None = None,
-    color: Optional[str] = None,
+    color: str | None = None,
     show_legend: bool = False,
 ) -> list[PlotlyScatter]:
     """Return a list of traces for a line plot with a standard deviation fill.
@@ -332,9 +333,9 @@ def _scatter_trace(
     x_values: np.array,
     y_values: np.array,
     stds: np.array,
-    name: Optional[str] = None,
+    name: str | None = None,
     legend_group: int | None = None,
-    color: Optional[str] = None,
+    color: str | None = None,
     show_legend: bool = False,
 ) -> PlotlyScatter:
     """Return a trace for a scatter plot with error bars.
