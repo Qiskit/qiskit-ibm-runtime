@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
 from numpy.typing import NDArray
 
 import numpy as np
@@ -26,8 +26,8 @@ from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-MetadataLeafTypes = Union[int, str, float]
-MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]
+MetadataLeafTypes = int | str | float
+MetadataValue = MetadataLeafTypes | "Metadata" | list["MetadataValue"]
 Metadata = dict[str, MetadataValue]
 
 
@@ -68,8 +68,8 @@ class NoiseLearnerV3Result:
         cls,
         generators: Iterable[QubitSparsePauliList],
         rates: Iterable[float],
-        rates_std: Optional[Iterable[float]] = None,
-        metadata: Optional[Metadata] = None,
+        rates_std: Iterable[float] | None = None,
+        metadata: Metadata | None = None,
     ):
         """
         Construct from a collection of generators and rates.

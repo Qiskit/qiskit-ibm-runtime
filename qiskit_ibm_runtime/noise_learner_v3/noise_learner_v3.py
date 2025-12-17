@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
 
 from qiskit.circuit import CircuitInstruction
 from qiskit.providers import BackendV2
@@ -74,8 +74,8 @@ class NoiseLearnerV3:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[NoiseLearnerV3Options] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: NoiseLearnerV3Options | None = None,
     ):
         self._session: BackendV2 | None = None
         self._backend: BackendV2

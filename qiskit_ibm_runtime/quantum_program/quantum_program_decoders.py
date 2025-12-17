@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
     QuantumProgramResultModel,
@@ -36,7 +35,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         try:
             schema_version = decoded["schema_version"]
