@@ -267,9 +267,7 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder, **kwargs
-                ),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(data, buff, RuntimeEncoder, **kwargs),
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, Parameter):
@@ -289,9 +287,7 @@ class RuntimeEncoder(json.JSONEncoder):
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(
-                    data, buff, **kwargs
-                ),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(data, buff, **kwargs),
             )
             return {"__type__": "Instruction", "__value__": value}
         if isinstance(obj, ObservablesArray):

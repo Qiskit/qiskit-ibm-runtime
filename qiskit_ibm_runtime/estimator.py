@@ -147,7 +147,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
         validate_estimator_pubs(coerced_pubs)
-        return self._run(coerced_pubs)  # type: ignore[arg-type]
+        return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that primitive inputs (options) are valid

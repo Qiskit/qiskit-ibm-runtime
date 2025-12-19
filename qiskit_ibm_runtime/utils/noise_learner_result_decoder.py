@@ -21,9 +21,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     """Class used to decode noise learner results"""
 
     @classmethod
-    def decode(  # type: ignore # pylint: disable=arguments-differ
-        cls, raw_result: str
-    ) -> NoiseLearnerResult:
+    def decode(cls, raw_result: str) -> NoiseLearnerResult:
         """Convert the result to NoiseLearnerResult."""
         decoded: dict = super().decode(raw_result)
 
