@@ -24,13 +24,16 @@ from ...ibm_test_case import IBMTestCase
 
 class TestNoiseLearnerV3(IBMTestCase):
     """Tests the ``NoiseLearnerV3`` class."""
+
     def test_run_of_session_is_selected(self):
         """Test that ``NoiseLearner.run`` selects the ``run`` method
         of the session, if a session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
-        with patch.object(session, "_run", return_value="session"), \
-             patch.object(session.service, "_run", return_value="service"):
+        with (
+            patch.object(session, "_run", return_value="session"),
+            patch.object(session.service, "_run", return_value="service"),
+        ):
             noise_learner = NoiseLearnerV3(mode=session)
             selected_run = noise_learner.run([])
             self.assertEqual(selected_run, "session")
