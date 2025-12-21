@@ -3221,7 +3221,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qc = QuantumCircuit(qr, cr)
         with qc.for_loop(range(2)):
             qc.x(qr[2])
-            with qc.if_test(range(2)):
+            with qc.if_test((cr[0], 1)):
                 qc.x(qr[1])
             qc.x(qr[0])
 
@@ -3232,7 +3232,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qr = QuantumRegister(7, name="q")
         expected = QuantumCircuit(qr, cr)
         with expected.for_loop(range(2)):
-            with expected.if_test(range(2)):
+            with expected.if_test((cr[0], 1)):
                 expected.delay(160, qr[0])
                 expected.x(qr[1])
                 expected.delay(160, qr[2])
