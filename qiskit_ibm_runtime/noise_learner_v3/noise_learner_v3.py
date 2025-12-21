@@ -23,7 +23,7 @@ from qiskit.providers import BackendV2
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.options.utils import UnsetType
 
-from ..base_primitive import _get_mode_service_backend
+from ..base_primitive import get_mode_service_backend
 from ..batch import Batch
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
@@ -84,7 +84,7 @@ class NoiseLearnerV3:
         ):
             self._options.experimental = {}
 
-        self._session, self._service, self._backend = _get_mode_service_backend(mode)
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 

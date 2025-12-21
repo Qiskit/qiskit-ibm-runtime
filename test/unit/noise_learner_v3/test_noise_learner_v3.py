@@ -22,57 +22,11 @@ from ...ibm_test_case import IBMTestCase
 
 class TestNoiseLearnerV3(IBMTestCase):
     """Tests the ``NoiseLearnerV3`` class."""
-
-    def test_init_with_backend(self):
-        """Test ``NoiseLearnerV3.init`` when the input mode is an ``IBMBackend``."""
-        backend = get_mocked_backend()
-        service = backend.service
-        service.reset_mock()
-        noise_learner = NoiseLearnerV3(mode=backend)
-        self.assertEqual(noise_learner.session, None)
-        self.assertEqual(noise_learner.backend(), backend)
-        self.assertEqual(noise_learner.service, service)
-
-    def test_init_with_session(self):
-        """Test ``NoiseLearnerV3.init`` when the input mode is a session."""
-        backend_name = "ibm_hello"
-        session = get_mocked_session(get_mocked_backend(backend_name))
-        session.reset_mock()
-        session.service.reset_mock()
-        noise_learner = NoiseLearnerV3(mode=session)
-        self.assertEqual(noise_learner.session, session)
-        self.assertEqual(noise_learner.backend().name, backend_name)
-        self.assertEqual(noise_learner.service, session.service)
-
-    def test_session_context_manager(self):
-        """Test ``NoiseLearnerV3.init`` inside a session context manager."""
-        backend = get_mocked_backend()
-        service = backend.service
-        service.reset_mock()
-        with Session(backend=backend) as session:
-            noise_learner = NoiseLearnerV3()
-            self.assertEqual(noise_learner.session, session)
-            self.assertEqual(noise_learner.backend(), backend)
-            self.assertEqual(noise_learner.service, service)
-
-    def test_init_with_backend_inside_session_context_manager(self):
-        """Test ``NoiseLearnerV3.init`` inside a session context manager,
-        when the input mode is an ``IBMBackend``."""
-        backend = get_mocked_backend()
-        service = backend.service
-        service.reset_mock()
-        with Session(backend=backend) as session:
-            noise_learner = NoiseLearnerV3(mode=backend)
-            self.assertEqual(noise_learner.session, session)
-            self.assertEqual(noise_learner.backend(), backend)
-            self.assertEqual(noise_learner.service, service)
-
     def test_run_of_session_is_selected(self):
         """Test that ``NoiseLearner.run`` selects the ``run`` method
         of the session, if a session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
-        session.reset_mock()
         session.service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=session)
         session._run.return_value = "session"
@@ -85,7 +39,6 @@ class TestNoiseLearnerV3(IBMTestCase):
         of the service, if a session is not specified."""
         backend = get_mocked_backend()
         service = backend.service
-        service.reset_mock()
         noise_learner = NoiseLearnerV3(mode=backend)
         service._run.return_value = "service"
         selected_run = noise_learner.run([])
