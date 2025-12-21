@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results  # type: ignore[attr-defined]
@@ -23,7 +24,7 @@ from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
 
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
-from .converters.version_0_1 import noise_learner_v3_result_from_0_1, NoiseLearnerV3ResultsModel
+from .converters.version_0_1 import noise_learner_v3_result_from_0_1
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +37,11 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded = NoiseLearnerV3ResultsModel.model_validate_json(raw_result)
+        decoded = json.loads(raw_result)
 
         try:
-            schema_version = decoded.schema_version
-        except AttributeError:
+            schema_version = decoded["schema_version"]
+        except KeyError:
             raise ValueError("Missing schema version.")
 
         try:
