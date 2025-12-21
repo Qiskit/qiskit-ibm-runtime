@@ -80,7 +80,7 @@ class TestConverters(IBMTestCase):
         result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
 
-        encoded = noise_learner_v3_result_to_0_1(results).model_dump()
+        encoded = noise_learner_v3_result_to_0_1(results)
         decoded = noise_learner_v3_result_from_0_1(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
             assert datum_in._generators == datum_out._generators
