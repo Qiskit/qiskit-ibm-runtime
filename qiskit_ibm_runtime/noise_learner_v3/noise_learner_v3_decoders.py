@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
 
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results  # type: ignore[attr-defined]
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (

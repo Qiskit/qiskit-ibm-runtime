@@ -60,7 +60,7 @@ class TestDecoder(IBMTestCase):
 
         self.encoded = noise_learner_v3_result_to_0_1(self.results)
 
-    def test_valid_model(self):
+    def test_decoder(self):
         """Tests the decoder."""
         decoded = NoiseLearnerV3ResultDecoder.decode(self.encoded.model_dump_json())
         for datum_in, datum_out in zip(self.results.data, decoded.data):
