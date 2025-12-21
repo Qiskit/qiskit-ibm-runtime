@@ -16,7 +16,6 @@ from unittest.mock import patch
 
 from test.utils import get_mocked_backend, get_mocked_session
 
-from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
 
 from ...ibm_test_case import IBMTestCase
