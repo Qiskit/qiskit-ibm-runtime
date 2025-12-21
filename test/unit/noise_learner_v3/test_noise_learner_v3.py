@@ -12,6 +12,8 @@
 
 """Tests the `NoiseLearnerV3` class."""
 
+from unittest.mock import patch
+
 from test.utils import get_mocked_backend, get_mocked_session
 
 from qiskit_ibm_runtime import Session
@@ -27,19 +29,17 @@ class TestNoiseLearnerV3(IBMTestCase):
         of the session, if a session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
-        session.service.reset_mock()
-        noise_learner = NoiseLearnerV3(mode=session)
-        session._run.return_value = "session"
-        session.service._run = lambda *args, **kwargs: "service"
-        selected_run = noise_learner.run([])
-        self.assertEqual(selected_run, "session")
+        with patch.object(session, "_run", return_value="session"), \
+             patch.object(session.service, "_run", return_value="service"):
+            noise_learner = NoiseLearnerV3(mode=session)
+            selected_run = noise_learner.run([])
+            self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
         """Test that ``NoiseLearner.run`` selects the ``run`` method
         of the service, if a session is not specified."""
         backend = get_mocked_backend()
-        service = backend.service
-        noise_learner = NoiseLearnerV3(mode=backend)
-        service._run.return_value = "service"
-        selected_run = noise_learner.run([])
-        self.assertEqual(selected_run, "service")
+        with patch.object(backend.service, "_run", return_value="service"):
+            noise_learner = NoiseLearnerV3(mode=backend)
+            selected_run = noise_learner.run([])
+            self.assertEqual(selected_run, "service")
