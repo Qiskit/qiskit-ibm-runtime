@@ -64,7 +64,9 @@ class TestFakeBackends(IBMTestCase):
     @unpack
     def test_circuit_on_fake_backend_v2(self, backend, optimization_level):
         if not optionals.HAS_AER and backend.num_qubits > 20:
-            self.skipTest("Unable to run fake_backend {} without qiskit-aer".format(backend.backend_name))
+            self.skipTest(
+                "Unable to run fake_backend {} without qiskit-aer".format(backend.backend_name)
+            )
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
         isa_circuit = pm.run(self.circuit)

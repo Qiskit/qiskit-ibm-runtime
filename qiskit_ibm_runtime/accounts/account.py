@@ -333,7 +333,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:   # noqa: E722
+            except:  # noqa: E722
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."

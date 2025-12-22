@@ -374,19 +374,19 @@ class TestBackend(IBMTestCase):
         self.assertEqual(
             set(backend.operation_names),
             {
-                    "id",
-                    "cx",
-                    "sx",
-                    "rz",
-                    "delay",
-                    "measure",
-                    "measure_2",
-                    "x",
-                    "reset",
-                    "reset_2",
-                    "reset_3",
-                    "alternative_rx",
-                },
+                "id",
+                "cx",
+                "sx",
+                "rz",
+                "delay",
+                "measure",
+                "measure_2",
+                "x",
+                "reset",
+                "reset_2",
+                "reset_3",
+                "alternative_rx",
+            },
         )
         assert_props("measure_2", 3.142, None)
         assert_props("reset_2", None, 3.142e-08)
