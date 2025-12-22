@@ -84,10 +84,7 @@ select = [
   # Rules in alphabetic order
   # "C4",    # category: flake8-comprehensions
   # "EXE",   # Category: flake8-executable
-  # "F631",  # assert-tuple
-  # "F632",  # is-literal
-  # "F634",  # if-tuple
-  # "F823",  # undefined-local
+  "F",      # pyflake
   "G",     # flake8-logging-format
   "T10",   # category: flake8-debugger
 ]
@@ -96,6 +93,7 @@ select = [
 "__init__.py" = [
     "E402",   # module-import-not-at-top-of-file
     "F401",   # unused-import
+    "F403",   # undefined-local-with-import-star
 ]
 
 

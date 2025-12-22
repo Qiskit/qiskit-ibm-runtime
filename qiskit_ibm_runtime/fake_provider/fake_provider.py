@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 # pylint: disable=wildcard-import,unused-argument
+# ruff: noqa: F405
 
 """
 Fake provider class that provides access to fake backends.
@@ -19,7 +20,7 @@ Fake provider class that provides access to fake backends.
 from typing import Any
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from .backends import *
+from .backends import *  # noqa: F403
 from .fake_backend import FakeBackendV2
 
 
