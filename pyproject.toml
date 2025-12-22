@@ -88,9 +88,11 @@ select = [
     "F",     # category: pyflake
     "G",     # flake8-logging-format
     "T10",   # category: flake8-debugger
+    "UP",    # pyupgrade
 ]
 ignore = [
-    "E501"   # line-too-long
+    "E501",  # line-too-long: black handles line length
+    "UP032", # f-string: requires manual revision of non f-string formatting
 ]
 
 [tool.ruff.lint.per-file-ignores]
