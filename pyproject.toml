@@ -75,6 +75,30 @@ disallow_untyped_defs = false
 [tool.coverage.run]
 source = ["qiskit_ibm_runtime"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+  # Rules in alphabetic order
+  # "C4",    # category: flake8-comprehensions
+  # "EXE",   # Category: flake8-executable
+  # "F631",  # assert-tuple
+  # "F632",  # is-literal
+  # "F634",  # if-tuple
+  # "F823",  # undefined-local
+  "G",     # flake8-logging-format
+  "T10",   # category: flake8-debugger
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "E402",   # module-import-not-at-top-of-file
+    "F401",   # unused-import
+]
+
+
 [project]
 name = "qiskit-ibm-runtime"
 dynamic = [ "version" ]
@@ -167,4 +191,3 @@ dev = [
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]
-
