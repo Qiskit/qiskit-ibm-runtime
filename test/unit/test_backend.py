@@ -370,11 +370,10 @@ class TestBackend(IBMTestCase):
 
         backend = FakeMidcircuit()
 
-        self.assertEqual(set(backend.basis_gates), set(["id", "rz", "sx", "x", "cx"]))
+        self.assertEqual(set(backend.basis_gates), {"id", "rz", "sx", "x", "cx"})
         self.assertEqual(
             set(backend.operation_names),
-            set(
-                [
+            {
                     "id",
                     "cx",
                     "sx",
@@ -387,8 +386,7 @@ class TestBackend(IBMTestCase):
                     "reset_2",
                     "reset_3",
                     "alternative_rx",
-                ]
-            ),
+                },
         )
         assert_props("measure_2", 3.142, None)
         assert_props("reset_2", None, 3.142e-08)

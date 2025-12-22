@@ -82,12 +82,11 @@ target-version = "py310"
 [tool.ruff.lint]
 select = [
     # Rules in alphabetic order
-    # "C4",    # category: flake8-comprehensions
-    # "EXE",   # Category: flake8-executable
-    "E",     # category: pycodestyle 
-    "F",     # category: pyflake
+    "C4",    # flake8-comprehensions
+    "E",     # pycodestyle
+    "F",     # pyflake
     "G",     # flake8-logging-format
-    "T10",   # category: flake8-debugger
+    "T10",   # flake8-debugger
     "UP",    # pyupgrade
 ]
 ignore = [

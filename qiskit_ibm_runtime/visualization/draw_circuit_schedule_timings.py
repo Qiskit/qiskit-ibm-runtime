@@ -102,7 +102,7 @@ def draw_circuit_schedule_timing(
     )
     fig.update_layout(
         xaxis={
-            "rangeselector": {"buttons": list([])},
+            "rangeselector": {"buttons": []},
             "rangeslider": {"visible": True},
         }
     )
@@ -119,8 +119,7 @@ def draw_circuit_schedule_timing(
             {
                 "type": "dropdown",
                 "direction": "down",
-                "buttons": list(
-                    [
+                "buttons": [
                         {
                             "args": [{"annotations": fig.layout.annotations}],
                             "label": "Show Annotations",
@@ -131,8 +130,7 @@ def draw_circuit_schedule_timing(
                             "label": "Hide Annotations",
                             "method": "relayout",
                         },
-                    ]
-                ),
+                    ],
                 "pad": {"r": 10, "t": 10},
                 "showactive": True,
                 "x": 0,
