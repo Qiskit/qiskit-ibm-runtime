@@ -81,12 +81,16 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-  # Rules in alphabetic order
-  # "C4",    # category: flake8-comprehensions
-  # "EXE",   # Category: flake8-executable
-  "F",      # pyflake
-  "G",     # flake8-logging-format
-  "T10",   # category: flake8-debugger
+    # Rules in alphabetic order
+    # "C4",    # category: flake8-comprehensions
+    # "EXE",   # Category: flake8-executable
+    "E",     # category: pycodestyle 
+    "F",     # category: pyflake
+    "G",     # flake8-logging-format
+    "T10",   # category: flake8-debugger
+]
+ignore = [
+    "E501"   # line-too-long
 ]
 
 [tool.ruff.lint.per-file-ignores]
