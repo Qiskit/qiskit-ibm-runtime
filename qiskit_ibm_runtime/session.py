@@ -169,7 +169,7 @@ class Session:
 
         if isinstance(self._service, QiskitRuntimeService):
             job = self._service._run(
-                program_id=program_id,  # type: ignore[arg-type]
+                program_id=program_id,
                 options=options,
                 inputs=inputs,
                 session_id=self._session_id,
