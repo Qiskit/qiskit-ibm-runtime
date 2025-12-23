@@ -322,7 +322,7 @@ class Session:
         return self._service  # type: ignore[return-value]
 
     @classmethod
-    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
+    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> Session:
         """Construct a Session object with a given ``session_id``. For example:
 
         .. code-block::
@@ -385,7 +385,7 @@ class Session:
         session._session_id = session_id
         return session
 
-    def __enter__(self) -> "Session":
+    def __enter__(self) -> Session:
         set_cm_session(self)
         return self
 

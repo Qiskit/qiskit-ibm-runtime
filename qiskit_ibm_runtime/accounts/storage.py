@@ -27,7 +27,7 @@ def save_config(
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
 
-    with open(filename, mode="r", encoding="utf-8") as json_in:
+    with open(filename, encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if data.get(name) and not overwrite:
@@ -81,7 +81,7 @@ def delete_config(
     logger.debug("Delete configuration data for '%s' from '%s'", name, filename)
 
     _ensure_file_exists(filename)
-    with open(filename, mode="r", encoding="utf-8") as json_in:
+    with open(filename, encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if name in data:

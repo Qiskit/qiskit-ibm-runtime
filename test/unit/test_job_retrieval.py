@@ -12,7 +12,6 @@
 
 """Tests for runtime job retrieval."""
 
-import sys
 from datetime import datetime, timedelta, timezone
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -82,8 +81,6 @@ class TestRetrieveJobs(IBMTestCase):
     @run_cloud_fake
     def test_backend_instance_warnings(self, service):
         """Test backend instance warnings do not appear."""
-        if sys.version_info < (3, 10):
-            self.skipTest("assertNoLogs is not supported")
         program_id = "sampler"
         params = {"param1": "foo"}
         job = run_program(service=service, program_id=program_id, inputs=params)

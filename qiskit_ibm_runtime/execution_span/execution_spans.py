@@ -55,9 +55,9 @@ class ExecutionSpans:
     def __getitem__(self, idxs: int) -> ExecutionSpan: ...
 
     @overload
-    def __getitem__(self, idxs: slice | list[int]) -> "ExecutionSpans": ...
+    def __getitem__(self, idxs: slice | list[int]) -> ExecutionSpans: ...
 
-    def __getitem__(self, idxs: int | slice | list[int]) -> ExecutionSpan | "ExecutionSpans":
+    def __getitem__(self, idxs: int | slice | list[int]) -> ExecutionSpan | ExecutionSpans:
         if isinstance(idxs, int):
             return self._spans[idxs]
         if isinstance(idxs, slice):
@@ -93,7 +93,7 @@ class ExecutionSpans:
         """The total duration of this collection, in seconds."""
         return (self.stop - self.start).total_seconds()
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "ExecutionSpans":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpans:
         """Return a new set of spans where each one has been filtered to the specified pubs.
 
         See also :meth:~.ExecutionSpan.filter_by_pub`.
@@ -103,7 +103,7 @@ class ExecutionSpans:
         """
         return ExecutionSpans(span.filter_by_pub(pub_idx) for span in self)
 
-    def sort(self, inplace: bool = True) -> "ExecutionSpans":
+    def sort(self, inplace: bool = True) -> ExecutionSpans:
         """Return the same execution spans, sorted.
 
         Sorting is done by the :attr:`~.ExecutionSpan.start` timestamp of each execution span.

@@ -875,14 +875,12 @@ class QiskitRuntimeService:
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-        return dict(
-            map(
-                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
-                AccountManager.list(
-                    default=default, channel=channel, filename=filename, name=name
-                ).items(),
-            ),
-        )
+        return {
+            kv[0]: Account.to_saved_format(kv[1])
+            for kv in AccountManager.list(
+                default=default, channel=channel, filename=filename, name=name
+            ).items()
+        }
 
     def backend(
         self,

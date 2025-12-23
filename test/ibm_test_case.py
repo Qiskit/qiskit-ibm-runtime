@@ -46,7 +46,7 @@ class IBMTestCase(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
+        filename = "{}.log".format(os.path.splitext(inspect.getfile(cls))[0])
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
@@ -159,10 +159,10 @@ class IBMTestCase(TestCase):
         if places is not None:
             if delta is not None:
                 raise TypeError("specify delta or places not both")
-            msg_suffix = " within %s places" % places
+            msg_suffix = " within {} places".format(places)
         else:
             delta = delta or 1e-8
-            msg_suffix = " within %s delta" % delta
+            msg_suffix = " within {} delta".format(delta)
 
         # Compare all keys in both dicts, populating error_msg.
         error_msg = ""

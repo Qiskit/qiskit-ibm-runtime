@@ -14,6 +14,7 @@
 .PHONY: lint style test mypy test1 test2 test3
 
 lint:
+	ruff check qiskit_ibm_runtime test
 	pylint -rn qiskit_ibm_runtime test
 	tools/verify_headers.py qiskit_ibm_runtime test
 	tools/verify_images.py
@@ -42,3 +43,6 @@ unit-test-coverage:
 
 black:
 	black qiskit_ibm_runtime test
+
+ruff:
+	ruff check qiskit_ibm_runtime test --fix

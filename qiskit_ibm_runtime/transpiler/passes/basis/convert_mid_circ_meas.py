@@ -52,7 +52,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
                 "Invalid name for mid-circuit measure instruction."
                 "The provided name must start with `measure_`."
             )
-        if not mcm_name in target.operation_names:
+        if mcm_name not in target.operation_names:
             raise ValueError(
                 f"{mcm_name} is not supported by the given target. "
                 f"Supported operations are: {target.operation_names}"
