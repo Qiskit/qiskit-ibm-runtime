@@ -142,7 +142,6 @@ def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool 
     Returns:
         Deserialized data.
     """
-    buff = io.BytesIO()
     decoded = base64.standard_b64decode(data)
     if decompress:
         decoded = zlib.decompress(decoded)

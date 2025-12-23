@@ -71,7 +71,7 @@ class SliceSpan(ExecutionSpan):
         mask.ravel()[sl] = True
         return mask
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "SliceSpan":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> SliceSpan:
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
         return SliceSpan(self.start, self.stop, slices)
