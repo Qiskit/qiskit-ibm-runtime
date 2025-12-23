@@ -205,7 +205,7 @@ class Account:
         """Assert that the URL is valid."""
         try:
             urlparse(url)
-        except:  # noqa: E722
+        except:  # noqa: E722 bare-except
             raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
@@ -333,7 +333,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:  # noqa: E722
+            except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."
