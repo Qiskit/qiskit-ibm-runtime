@@ -13,7 +13,7 @@
 """Client for accessing backend information."""
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
 
@@ -24,7 +24,7 @@ class BaseBackendClient(ABC):
     """Client for accessing backend information."""
 
     @abstractmethod
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of the backend.
 
         Args:
@@ -37,8 +37,8 @@ class BaseBackendClient(ABC):
 
     @abstractmethod
     def backend_properties(
-        self, backend_name: str, datetime: Optional[python_datetime] = None
-    ) -> Dict[str, Any]:
+        self, backend_name: str, datetime: python_datetime | None = None
+    ) -> dict[str, Any]:
         """Return the properties of the backend.
 
         Args:

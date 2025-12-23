@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict, Any
+from typing import Literal, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
@@ -32,20 +32,13 @@ from ..utils import (
     get_global_catalog_api_url,
 )
 
-AccountType = Optional[Literal["cloud", "legacy"]]
-RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[str]]
+AccountType: TypeAlias = Literal["cloud", "legacy"] | None
+RegionType: TypeAlias = Literal["us-east", "eu-de"] | None
+PlanType: TypeAlias = list[str] | None
 
-ChannelType = Optional[
-    Literal[
-        "ibm_quantum_platform",
-        "ibm_cloud",
-        "local",
-    ]
-]
+ChannelType: TypeAlias = Literal["ibm_quantum_platform", "ibm_cloud", "local"] | None
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
-IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +49,9 @@ class Account:
     def __init__(
         self,
         token: str,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
     ):
         """Account constructor.
 
@@ -77,8 +70,8 @@ class Account:
         self.verify = verify
         self.private_endpoint: bool = False
         self.region: str = None
-        self.plans_preference: List[str] = None
-        self.tags: List[str] = None
+        self.plans_preference: list[str] = None
+        self.tags: list[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -119,14 +112,14 @@ class Account:
         cls,
         channel: str,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
@@ -140,7 +133,7 @@ class Account:
                 region=region,
                 plans_preference=plans_preference,
                 channel=channel,
-                tags=tags,
+                tags=tags,  # type: ignore[arg-type]
             )
         else:
             raise InvalidAccountError(
@@ -154,7 +147,7 @@ class Account:
         Relevant for "ibm_cloud" channel only."""
         pass
 
-    def list_instances(self) -> List[Dict[str, Any]]:  # type: ignore
+    def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -183,17 +176,17 @@ class Account:
         """
 
         self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)
+        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)
-        self._assert_valid_proxies(self.proxies)
+        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
+        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
         return self
 
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum_platform"]):
+        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
                 f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
@@ -212,7 +205,7 @@ class Account:
         """Assert that the URL is valid."""
         try:
             urlparse(url)
-        except:
+        except:  # noqa: E722 bare-except
             raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
@@ -230,7 +223,7 @@ class Account:
     @staticmethod
     @abstractmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         pass
@@ -242,15 +235,15 @@ class CloudAccount(Account):
     def __init__(
         self,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        channel: Optional[str] = "ibm_quantum_platform",
-        tags: Optional[str] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        channel: str | None = "ibm_quantum_platform",
+        tags: str | None = None,
     ):
         """Account constructor.
 
@@ -268,15 +261,13 @@ class CloudAccount(Account):
             tags: List of instance tags.
         """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or (
-            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
-        )
+        raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel
-        self.url = resolved_url
+        self.url = raw_url
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
-        self.tags = tags
+        self.tags = tags  # type: ignore[assignment]
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
@@ -318,7 +309,7 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Dict[str, Any]]:
+    def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         iam_url = get_iam_api_url(self.url)
         authenticator = IAMAuthenticator(self.token, url=iam_url)
@@ -342,7 +333,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:
+            except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."
@@ -388,7 +379,7 @@ class CloudAccount(Account):
 
     @staticmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):

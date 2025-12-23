@@ -1,0 +1,59 @@
+The :mod:`.qiskit_ibm_runtime.transpiler.passes` module has been extended with a 
+new transpiler pass: :class:`.ConvertMidCircMeas`. This pass detects non-terminal 
+:class:`~qiskit.circuit.Measure` instructions in a circuit and converts them into 
+mid-circuit measurement instructions supported by the target.
+The pass is constructed with two arguments:
+
+- ``target`` (required): The backend target defining supported instructions.
+- ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use. 
+    Defaults to ``"measure_2"``. The name must follow the pattern "measure_[X]" (e.g., "measure_3", "measure_reset").
+
+During initialization, the pass validates that the specified target supports the given 
+mid-circuit measurement instruction on at least one qubit. If not, construction fails.
+When executed, the pass:
+
+- Runs on an already routed circuit.
+- Replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
+measurement instruction, provided the target supports it on the corresponding physical qubit.
+
+It does not:
+
+- Replace terminal measurements.
+- Replace existing mid-circuit measurement instructions (e.g., "measure_2" -> "measure_3").
+- Convert mid-circuit measurements back to terminal measurements.
+
+Example usage::
+
+    from qiskit import QuantumCircuit
+    from qiskit.transpiler import PassManager
+    from qiskit.providers.fake_provider import GenericBackendV2
+    from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+    from qiskit_ibm_runtime.transpiler.passes import ConvertToMidCircuitMeasure
+    from qiskit.transpiler.target import Target
+
+    # Fake target construction for demo purposes
+    mcm = MidCircuitMeasure()
+    target = GenericBackendV2(num_qubits=2, seed=0).target
+    target.add_instruction(mcm, {(i,): None for i in range(2)})
+
+    # Example usage
+    qc = QuantumCircuit(2, 2)
+    qc.measure(0, 0)
+    qc.cx(0,1)
+    qc.measure(1, 1)
+
+    my_pass = ConvertToMidCircuitMeasure(target)
+    pm = PassManager([my_pass])
+    new_qc = pm.run(qc)
+    print(new_qc)
+
+Expected output::
+
+         ┌────────────┐
+    q_0: ┤0           ├──■─────
+         │            │┌─┴─┐┌─┐
+    q_1: ┤  Measure_2 ├┤ X ├┤M├
+         │            │└───┘└╥┘
+    c_0: ╡0           ╞══════╬═
+         └────────────┘      ║
+    c_1: ════════════════════╩═

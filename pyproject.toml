@@ -50,7 +50,57 @@ zip-safe = false
 root = "."
 write_to = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.43.1"
+fallback_version = "0.44.0"
+
+[tool.mypy]
+python_version = "3.10"
+namespace_packages = true
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unreachable = true
+strict_equality = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+strict_optional = false
+show_error_codes = true
+no_site_packages = true
+disable_error_code = "import-untyped"
+
+[[tool.mypy.overrides]]
+module = "test.*"
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+source = ["qiskit_ibm_runtime"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    # Rules in alphabetic order
+    "C4",    # flake8-comprehensions
+    "E",     # pycodestyle
+    "F",     # pyflake
+    "G",     # flake8-logging-format
+    "T10",   # flake8-debugger
+    "UP",    # pyupgrade
+]
+ignore = [
+    "E501",  # line-too-long: black handles line length
+    "UP032", # f-string: requires manual revision of non f-string formatting
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "E402",   # module-import-not-at-top-of-file
+    "F401",   # unused-import
+    "F403",   # undefined-local-with-import-star
+]
+
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -70,7 +120,6 @@ classifiers=[
     "Operating System :: MacOS",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -80,7 +129,7 @@ classifiers=[
 
 keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
 
-requires-python=">=3.9"
+requires-python=">=3.10"
 
 dependencies = [
     "requests>=2.19,!=2.32.2",
@@ -109,7 +158,7 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 [project.optional-dependencies]
 
 common = [
-    "mypy==0.931",
+    "mypy==1.19.0",
     "pylint==3.0.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
@@ -120,6 +169,7 @@ common = [
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
     "black~=24.1",
+    "ruff~=0.14.10",
     "coverage>=6.3",
     "pylatexenc",
     "scikit-learn",

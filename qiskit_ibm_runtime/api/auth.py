@@ -12,7 +12,6 @@
 
 """Authentication helpers."""
 
-from typing import Dict, Optional
 
 import warnings
 from requests import PreparedRequest
@@ -35,7 +34,7 @@ class CloudAuth(AuthBase):
         api_key: str,
         crn: str,
         private: bool = False,
-        proxies: Optional[ProxyConfiguration] = None,
+        proxies: ProxyConfiguration | None = None,
         verify: bool = True,
     ):
         self.crn = crn
@@ -81,7 +80,7 @@ class CloudAuth(AuthBase):
         )
         return cpy
 
-    def get_headers(self) -> Dict:
+    def get_headers(self) -> dict:
         """Return authorization information to be stored in header."""
         try:
             access_token = self.tm.get_token()

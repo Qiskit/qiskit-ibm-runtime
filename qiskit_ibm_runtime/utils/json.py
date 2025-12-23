@@ -24,7 +24,8 @@ import warnings
 import zlib
 from datetime import date
 
-from typing import Any, Callable, Dict, List, Union, get_args
+from typing import Any, get_args
+from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
@@ -141,7 +142,6 @@ def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool 
     Returns:
         Deserialized data.
     """
-    buff = io.BytesIO()
     decoded = base64.standard_b64decode(data)
     if decompress:
         decoded = zlib.decompress(decoded)
@@ -152,7 +152,7 @@ def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool 
         return deserializer(buff)
 
 
-def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -> Any:
+def _deserialize_from_settings(mod_name: str, class_name: str, settings: dict) -> Any:
     """Deserialize an object from its settings.
 
     Args:
@@ -173,7 +173,7 @@ def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
-def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> Any:
+def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> Any:
     """Deserialize an object from its ``_json`` dictionary.
 
     Args:
@@ -193,7 +193,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: Dict) -> A
     raise ValueError(f"Unable to find class {class_name} in module {mod_name}")
 
 
-def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
+def _set_int_keys_flag(obj: dict) -> dict | list:
     """Recursively sets '__int_keys__' flag if dictionary uses integer keys
 
     Args:
@@ -210,7 +210,7 @@ def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
     return obj
 
 
-def _cast_strings_keys_to_int(obj: Dict) -> Dict:
+def _cast_strings_keys_to_int(obj: dict) -> dict:
     """Casts string to int keys in dictionary when '__int_keys__' flag is set
 
     Args:
@@ -220,7 +220,7 @@ def _cast_strings_keys_to_int(obj: Dict) -> Dict:
         obj with string keys cast to int keys and '__int_keys__' flags removed
     """
     if isinstance(obj, dict):
-        int_keys: List[int] = []
+        int_keys: list[int] = []
         for k, val in list(obj.items()):
             if "__int_keys__" in obj:
                 try:
@@ -261,14 +261,12 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: Dict[str, object] = {
+            kwargs: dict[str, object] = {
                 "version": min(SERVICE_MAX_SUPPORTED_QPY_VERSION, QISKIT_QPY_VERSION)
             }
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder, **kwargs
-                ),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(data, buff, RuntimeEncoder, **kwargs),
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, Parameter):
@@ -288,9 +286,7 @@ class RuntimeEncoder(json.JSONEncoder):
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(
-                    data, buff, **kwargs
-                ),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(data, buff, **kwargs),
             )
             return {"__type__": "Instruction", "__value__": value}
         if isinstance(obj, ObservablesArray):

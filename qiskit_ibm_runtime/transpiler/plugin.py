@@ -13,7 +13,6 @@
 """Plugin for IBM provider backend transpiler stages."""
 
 import re
-from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig
@@ -42,7 +41,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -78,7 +77,7 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -135,7 +134,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -159,7 +158,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and not "id" in target:
+        if instruction_durations and "id" not in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
@@ -175,7 +174,7 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
 
@@ -199,7 +198,7 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and not "id" in target:
+        if instruction_durations and "id" not in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.

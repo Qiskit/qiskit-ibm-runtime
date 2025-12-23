@@ -118,7 +118,7 @@ There are several different options you can specify when calling the primitives.
 
 ### Primitive versions
 
-Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://quantum.cloud.ibm.com/docs/migration-guides/v2-primitives) on how to migratie to V2 primitives. The examples below all use V2 primitives.
+Version 2 of the primitives is introduced by `qiskit-ibm-runtime` release 0.21.0. Version 1 of the primitives is no longer supported. Refer to [Migrate to the V2 primitives](https://quantum.cloud.ibm.com/docs/migration-guides/v2-primitives) on how to migrate to V2 primitives. The examples below all use V2 primitives.
 
 ### Sampler
 
@@ -163,6 +163,7 @@ To invoke the `Estimator` primitive:
 from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit import Parameter
 import numpy as np
 
@@ -217,6 +218,7 @@ To invoke the `Estimator` primitive within a session:
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2 as Estimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit import QuantumCircuit
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit import Parameter
 import numpy as np
 

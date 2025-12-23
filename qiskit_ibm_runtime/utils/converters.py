@@ -15,13 +15,13 @@
 import re
 from datetime import datetime, timedelta, timezone
 from math import ceil
-from typing import Union, Tuple, Any, Optional
+from typing import Any
 
 from dateutil import tz, parser
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
+def utc_to_local(utc_dt: datetime | str) -> datetime:
     """Convert a UTC ``datetime`` object or string to a local timezone ``datetime``.
 
     Args:
@@ -37,12 +37,12 @@ def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
         utc_dt = parser.parse(utc_dt)
     if not isinstance(utc_dt, datetime):
         raise TypeError("Input `utc_dt` is not string or datetime.")
-    utc_dt = utc_dt.replace(tzinfo=timezone.utc)  # type: ignore[arg-type]
-    local_dt = utc_dt.astimezone(tz.tzlocal())  # type: ignore[attr-defined]
+    utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+    local_dt = utc_dt.astimezone(tz.tzlocal())
     return local_dt
 
 
-def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
+def local_to_utc(local_dt: datetime | str) -> datetime:
     """Convert a local ``datetime`` object or string to a UTC ``datetime``.
 
     Args:
@@ -66,7 +66,7 @@ def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
     return local_dt  # Already in UTC.
 
 
-def local_to_utc_str(local_dt: Union[datetime, str], suffix: str = "Z") -> str:
+def local_to_utc_str(local_dt: datetime | str, suffix: str = "Z") -> str:
     """Convert a local ``datetime`` object or string to a UTC string.
 
     Args:
@@ -83,7 +83,7 @@ def local_to_utc_str(local_dt: Union[datetime, str], suffix: str = "Z") -> str:
     return utc_dt_str
 
 
-def convert_tz(input_dt: Optional[datetime], to_utc: bool) -> Optional[datetime]:
+def convert_tz(input_dt: datetime | None, to_utc: bool) -> datetime | None:
     """Convert input timestamp timezone.
 
     Args:
@@ -121,7 +121,7 @@ def utc_to_local_all(data: Any) -> Any:
     return data
 
 
-def str_to_utc(utc_dt: Optional[str]) -> Optional[datetime]:
+def str_to_utc(utc_dt: str | None) -> datetime | None:
     """Convert a UTC string to a ``datetime`` object with UTC timezone.
 
     Args:
@@ -136,7 +136,7 @@ def str_to_utc(utc_dt: Optional[str]) -> Optional[datetime]:
     return parsed_dt.replace(tzinfo=timezone.utc)
 
 
-def seconds_to_duration(seconds: float) -> Tuple[int, int, int, int, int]:
+def seconds_to_duration(seconds: float) -> tuple[int, int, int, int, int]:
     """Converts seconds in a datetime delta to a duration.
 
     Args:
