@@ -931,7 +931,7 @@ class QiskitRuntimeService:
 
         if use_fractional_gates:
             basis_gates = backends[0].basis_gates
-            if "rzz" not in basis_gates:
+            if "rzz" not in basis_gates and "rx" not in basis_gates:
                 # TODO suggest backends that support frac gates in error message
                 # via service.backends(use_fractional_gates=True)
                 raise IBMInputValueError(
