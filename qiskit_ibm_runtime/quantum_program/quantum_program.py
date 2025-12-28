@@ -80,6 +80,8 @@ class CircuitItem(QuantumProgramItem):
         circuit_arguments: np.ndarray | None = None,
         chunk_size: int | None = None,
     ):
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
+
         if circuit_arguments is None and circuit.num_parameters:
             raise ValueError(
                 f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
@@ -97,7 +99,6 @@ class CircuitItem(QuantumProgramItem):
                 f"circuit, but found shape {circuit_arguments.shape} instead."
             )
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
         self.circuit_arguments = circuit_arguments
 
     @property
@@ -141,8 +142,7 @@ class SamplexItem(QuantumProgramItem):
         samplex_shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
-        if not isinstance(circuit, QuantumCircuit):
-            raise ValueError(f"Expected {repr(circuit)} to be a QuantumCircuit.")
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
 
         # Calling bind() here will do all Samplex validation
         inputs = samplex.inputs().make_broadcastable().bind(**samplex_arguments)
@@ -161,7 +161,6 @@ class SamplexItem(QuantumProgramItem):
                 f"the sample_arguments, which is {inputs.shape}."
             ) from exc
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
         self._shape = np.broadcast_shapes(samplex_shape, inputs.shape)
         self.samplex = samplex
         self.samplex_arguments = inputs
