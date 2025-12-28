@@ -41,3 +41,16 @@ class TestCircuitItem(IBMTestCase):
         self.assertTrue(np.array_equal(circuit_item.circuit_arguments, circuit_arguments))
         self.assertEqual(circuit_item.chunk_size, chunk_size)
         self.assertEqual(circuit_item.shape, expected_shape)
+
+    def test_circuit_item_no_params(self):
+        """Test ``CircuitItem`` when there are no parameters."""
+        circuit = QuantumCircuit(1)
+
+        expected_circuit_arguments = np.array([])
+        expected_shape = ()
+
+        circuit_item = CircuitItem(circuit)
+        self.assertEqual(circuit_item.circuit, circuit)
+        self.assertTrue(np.array_equal(circuit_item.circuit_arguments, expected_circuit_arguments))
+        self.assertEqual(circuit_item.chunk_size, None)
+        self.assertEqual(circuit_item.shape, expected_shape)
