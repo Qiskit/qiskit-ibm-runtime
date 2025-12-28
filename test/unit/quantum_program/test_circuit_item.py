@@ -54,3 +54,18 @@ class TestCircuitItem(IBMTestCase):
         self.assertTrue(np.array_equal(circuit_item.circuit_arguments, expected_circuit_arguments))
         self.assertEqual(circuit_item.chunk_size, None)
         self.assertEqual(circuit_item.shape, expected_shape)
+
+    def test_circuit_item_num_params_doesnt_match_circuit_arguments(self):
+        circuit = QuantumCircuit(1)
+        circuit.rx(Parameter("p"), 0)
+
+        circuit_arguments = np.array([[3, 10], [4, 11], [5, 12]])
+        with self.assertRaisesRegex(ValueError, "match the number of parameters"):
+            CircuitItem(circuit, circuit_arguments=circuit_arguments)
+
+    def test_circuit_item_no_circuit_arguments_for_parametric_circuit(self):
+        circuit = QuantumCircuit(1)
+        circuit.rx(Parameter("p"), 0)
+
+        with self.assertRaisesRegex(ValueError, "no 'circuit_arguments'"):
+            CircuitItem(circuit)
