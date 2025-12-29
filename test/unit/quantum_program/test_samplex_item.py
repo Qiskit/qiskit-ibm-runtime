@@ -75,4 +75,9 @@ class TestSamplexItem(IBMTestCase):
             circuit.measure_all()
 
         template_circuit, samplex = build(circuit)
-        SamplexItem(template_circuit, samplex)
+
+        samplex_item = SamplexItem(template_circuit, samplex)
+        self.assertEqual(samplex_item.samplex, samplex)
+        self.assertEqual(samplex_item.circuit, template_circuit)
+        self.assertEqual(samplex_item.chunk_size, None)
+        self.assertEqual(samplex_item.shape, ())
