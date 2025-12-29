@@ -81,3 +81,19 @@ class TestSamplexItem(IBMTestCase):
         self.assertEqual(samplex_item.circuit, template_circuit)
         self.assertEqual(samplex_item.chunk_size, None)
         self.assertEqual(samplex_item.shape, ())
+
+    def test_samplex_item_num_params_doesnt_match_circuit_arguments(self):
+        """Test that ``SamplexItem`` raises an error if the number of circuit parameters
+        doesn't match the shape of the samplex arguments."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        parameter_values = np.array([[3, 10], [4, 11], [5, 12]])
+        with self.assertRaisesRegex(ValueError, "expects an array ending with shape"):
+            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values})
