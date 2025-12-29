@@ -42,16 +42,24 @@ class TestSamplexItem(IBMTestCase):
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
         samplex_shape = (30, 1, 2)
 
-        samplex_item = SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=samplex_shape, chunk_size=7)
+        samplex_item = SamplexItem(
+            template_circuit,
+            samplex,
+            samplex_arguments={"parameter_values": parameter_values},
+            samplex_shape=samplex_shape,
+            chunk_size=7,
+        )
         self.assertEqual(samplex_item.samplex, samplex)
         self.assertEqual(samplex_item.circuit, template_circuit)
         self.assertEqual(samplex_item.chunk_size, 7)
         self.assertEqual(samplex_item.shape, (30, 3, 2))
-        self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
+        self.assertTrue(
+            np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values)
+        )
 
     def test_samplex_item_shape_not_broadcastable(self):
         """Test that ``SamplexItem`` raises an error when the samplex shape does not match
-         the parameter values."""
+        the parameter values."""
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):
             circuit.rx(Parameter("p"), 0)
@@ -65,8 +73,13 @@ class TestSamplexItem(IBMTestCase):
         samplex_shape = (30, 2, 2)
 
         with self.assertRaisesRegex(ValueError, "must be broadcastable"):
-            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=samplex_shape)
-   
+            SamplexItem(
+                template_circuit,
+                samplex,
+                samplex_arguments={"parameter_values": parameter_values},
+                samplex_shape=samplex_shape,
+            )
+
     def test_samplex_item_no_params(self):
         """Test ``SamplexItem`` when there are no parameters."""
         circuit = QuantumCircuit(2)
@@ -97,7 +110,9 @@ class TestSamplexItem(IBMTestCase):
 
         parameter_values = np.array([[3, 10], [4, 11], [5, 12]])
         with self.assertRaisesRegex(ValueError, "expects an array ending with shape"):
-            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values})
+            SamplexItem(
+                template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}
+            )
 
     def test_samplex_item_no_samplex_arguments_for_parametric_circuit(self):
         """Test that ``SamplexItem`` raises an error if the circuit has parameters
@@ -126,16 +141,32 @@ class TestSamplexItem(IBMTestCase):
         template_circuit, samplex = build(circuit)
 
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        pauli_lindblad_maps = {"r0": PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)]), "r1": PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)])}
+        pauli_lindblad_maps = {
+            "r0": PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)]),
+            "r1": PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)]),
+        }
 
-        samplex_item = SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values, "pauli_lindblad_maps": pauli_lindblad_maps})
+        samplex_item = SamplexItem(
+            template_circuit,
+            samplex,
+            samplex_arguments={
+                "parameter_values": parameter_values,
+                "pauli_lindblad_maps": pauli_lindblad_maps,
+            },
+        )
         self.assertEqual(samplex_item.samplex, samplex)
         self.assertEqual(samplex_item.circuit, template_circuit)
         self.assertEqual(samplex_item.chunk_size, None)
         self.assertEqual(samplex_item.shape, (3, 2))
-        self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
-        self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r0"], pauli_lindblad_maps["r0"])
-        self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r1"], pauli_lindblad_maps["r1"])
+        self.assertTrue(
+            np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values)
+        )
+        self.assertEqual(
+            samplex_item.samplex_arguments["pauli_lindblad_maps.r0"], pauli_lindblad_maps["r0"]
+        )
+        self.assertEqual(
+            samplex_item.samplex_arguments["pauli_lindblad_maps.r1"], pauli_lindblad_maps["r1"]
+        )
 
     def test_samplex_item_missing_pauli_lindblad_map_in_samplex_arguments(self):
         """Test that ``SamplexItem`` raises an error when the samplex arguments don't contain
@@ -153,4 +184,11 @@ class TestSamplexItem(IBMTestCase):
         pauli_lindblad_maps = {"r0": PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)])}
 
         with self.assertRaisesRegex(ValueError, "pauli_lindblad_maps.r1"):
-            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values, "pauli_lindblad_maps": pauli_lindblad_maps})
+            SamplexItem(
+                template_circuit,
+                samplex,
+                samplex_arguments={
+                    "parameter_values": parameter_values,
+                    "pauli_lindblad_maps": pauli_lindblad_maps,
+                },
+            )
