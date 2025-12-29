@@ -137,7 +137,7 @@ class SamplexItem(QuantumProgramItem):
         circuit: QuantumCircuit,
         samplex: Samplex,
         *,
-        samplex_arguments: dict[str, np.ndarray | PauliLindbladMap] | None = None,
+        samplex_arguments: dict[str, Any] | None = None,
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
@@ -219,7 +219,7 @@ class QuantumProgram:
         *,
         samplex: Samplex | None = None,
         circuit_arguments: np.ndarray | None = None,
-        samplex_arguments: dict[str, np.ndarray] | None = None,
+        samplex_arguments: dict[str, Any] | None = None,
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ) -> None:
