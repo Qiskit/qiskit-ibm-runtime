@@ -47,3 +47,21 @@ class TestSamplexItem(IBMTestCase):
         self.assertEqual(samplex_item.chunk_size, 7)
         self.assertEqual(samplex_item.shape, (30, 3, 2))
         self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
+
+    def test_samplex_item_shape_not_broadcastable(self):
+        """Test that ``SamplexItem`` raises an error when the samplex shape does not match
+         the parameter values."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
+        samplex_shape = (30, 2, 2)
+
+        with self.assertRaisesRegex(ValueError, "must be broadcastable"):
+            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=samplex_shape)
