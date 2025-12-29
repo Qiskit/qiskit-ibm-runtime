@@ -26,14 +26,20 @@ from ...ibm_test_case import IBMTestCase
 
 class TestQuantumProgram(IBMTestCase):
     """Tests the ``QuantumProgram`` class."""
+
     def test_quantum_program(self):
         """Test a quantum program consisting of a circuit item and a samplex item."""
         shots = 100
 
-        noise_models = [PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)]),
-                        PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)])]
-        
-        quantum_program = QuantumProgram(shots=shots, noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)})
+        noise_models = [
+            PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)]),
+            PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)]),
+        ]
+
+        quantum_program = QuantumProgram(
+            shots=shots,
+            noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
+        )
 
         circuit1 = QuantumCircuit(1)
         circuit1.rx(Parameter("p"), 0)
@@ -50,13 +56,30 @@ class TestQuantumProgram(IBMTestCase):
 
         template_circuit, samplex = build(circuit2)
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        quantum_program.append(template_circuit, samplex=samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=(4, 3, 2), chunk_size=7)
+        quantum_program.append(
+            template_circuit,
+            samplex=samplex,
+            samplex_arguments={"parameter_values": parameter_values},
+            samplex_shape=(4, 3, 2),
+            chunk_size=7,
+        )
 
-        new_noise_models = [PauliLindbladMap.from_list([("YI", 0.03), ("IY", 0.01)]),
-                            PauliLindbladMap.from_list([("ZI", 0.025), ("XZ", 0.045)])]
-        quantum_program.append(template_circuit, samplex=samplex, samplex_arguments={"parameter_values": parameter_values, "pauli_lindblad_maps": {f"pl{i}": noise_model for i, noise_model in enumerate(new_noise_models)}})
+        new_noise_models = [
+            PauliLindbladMap.from_list([("YI", 0.03), ("IY", 0.01)]),
+            PauliLindbladMap.from_list([("ZI", 0.025), ("XZ", 0.045)]),
+        ]
+        quantum_program.append(
+            template_circuit,
+            samplex=samplex,
+            samplex_arguments={
+                "parameter_values": parameter_values,
+                "pauli_lindblad_maps": {
+                    f"pl{i}": noise_model for i, noise_model in enumerate(new_noise_models)
+                },
+            },
+        )
 
-        circuit_item = quantum_program.items[0]          
+        circuit_item = quantum_program.items[0]
         self.assertEqual(circuit_item.circuit, circuit1)
         self.assertTrue(np.array_equal(circuit_item.circuit_arguments, circuit_arguments))
         self.assertEqual(circuit_item.chunk_size, 6)
@@ -74,9 +97,10 @@ class TestQuantumProgram(IBMTestCase):
             self.assertEqual(
                 samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl{i}"], noise_model
             )
-   
+
         samplex_item_with_new_noise = quantum_program.items[2]
         for i, noise_model in enumerate(new_noise_models):
             self.assertEqual(
-                samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"], noise_model
+                samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"],
+                noise_model,
             )
