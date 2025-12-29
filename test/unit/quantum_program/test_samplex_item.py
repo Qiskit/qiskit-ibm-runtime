@@ -136,3 +136,21 @@ class TestSamplexItem(IBMTestCase):
         self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
         self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r0"], pauli_lindblad_maps["r0"])
         self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r1"], pauli_lindblad_maps["r1"])
+
+    def test_samplex_item_missing_pauli_lindblad_map_in_samplex_arguments(self):
+        """Test that ``SamplexItem`` raises an error when the samplex arguments don't contain
+        a Pauli-Lindblad map for a noise annotation."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl(), InjectNoise(ref="r0")]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl(), InjectNoise(ref="r1")]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
+        pauli_lindblad_maps = {"r0": PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)])}
+
+        with self.assertRaisesRegex(ValueError, "pauli_lindblad_maps.r1"):
+            SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values, "pauli_lindblad_maps": pauli_lindblad_maps})
