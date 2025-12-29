@@ -97,3 +97,21 @@ class TestSamplexItem(IBMTestCase):
         parameter_values = np.array([[3, 10], [4, 11], [5, 12]])
         with self.assertRaisesRegex(ValueError, "expects an array ending with shape"):
             SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values})
+
+    def test_samplex_item_no_samplex_arguments_for_parametric_circuit(self):
+        """Test that ``SamplexItem`` raises an error if the circuit has parameters
+        but the ``samplex_arguments`` parameter is unset."""
+        circuit = QuantumCircuit(1)
+        circuit.rx(Parameter("p"), 0)
+
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        with self.assertRaisesRegex(ValueError, "parameter values to use during sampling"):
+            SamplexItem(template_circuit, samplex)
