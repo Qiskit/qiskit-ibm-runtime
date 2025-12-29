@@ -65,3 +65,14 @@ class TestSamplexItem(IBMTestCase):
 
         with self.assertRaisesRegex(ValueError, "must be broadcastable"):
             SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=samplex_shape)
+   
+    def test_samplex_item_no_params(self):
+        """Test ``SamplexItem`` when there are no parameters."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+        SamplexItem(template_circuit, samplex)

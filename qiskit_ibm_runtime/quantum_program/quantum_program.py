@@ -145,7 +145,7 @@ class SamplexItem(QuantumProgramItem):
         super().__init__(circuit=circuit, chunk_size=chunk_size)
 
         # Calling bind() here will do all Samplex validation
-        inputs = samplex.inputs().make_broadcastable().bind(**samplex_arguments)
+        inputs = samplex.inputs().make_broadcastable().bind(**(samplex_arguments or {}))
 
         if not inputs.fully_bound:
             raise ValueError(
