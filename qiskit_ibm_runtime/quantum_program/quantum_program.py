@@ -154,14 +154,13 @@ class SamplexItem(QuantumProgramItem):
             )
 
         try:
-            samplex_shape = np.broadcast_shapes(samplex_shape or (), inputs.shape)
+            self._shape = np.broadcast_shapes(samplex_shape or (), inputs.shape)
         except ValueError as exc:
             raise ValueError(
                 f"The provided shape {samplex_shape} must be broadcastable with the shape implicit in "
                 f"the sample_arguments, which is {inputs.shape}."
             ) from exc
 
-        self._shape = np.broadcast_shapes(samplex_shape, inputs.shape)
         self.samplex = samplex
         self.samplex_arguments = inputs
 
