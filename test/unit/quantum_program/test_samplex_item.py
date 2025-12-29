@@ -14,9 +14,10 @@
 
 import numpy as np
 
-from samplomatic import build, Twirl
+from samplomatic import build, Twirl, InjectNoise
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
@@ -101,9 +102,6 @@ class TestSamplexItem(IBMTestCase):
     def test_samplex_item_no_samplex_arguments_for_parametric_circuit(self):
         """Test that ``SamplexItem`` raises an error if the circuit has parameters
         but the ``samplex_arguments`` parameter is unset."""
-        circuit = QuantumCircuit(1)
-        circuit.rx(Parameter("p"), 0)
-
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):
             circuit.rx(Parameter("p"), 0)
@@ -115,3 +113,26 @@ class TestSamplexItem(IBMTestCase):
 
         with self.assertRaisesRegex(ValueError, "parameter values to use during sampling"):
             SamplexItem(template_circuit, samplex)
+
+    def test_samplex_item_with_noise(self):
+        """Test ``SamplexItem`` with noise annotations."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl(), InjectNoise(ref="r0")]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl(), InjectNoise(ref="r1")]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
+        pauli_lindblad_maps = {"r0": PauliLindbladMap.from_list([("IX", 0.04), ("XX", 0.05)]), "r1": PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)])}
+
+        samplex_item = SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values, "pauli_lindblad_maps": pauli_lindblad_maps})
+        self.assertEqual(samplex_item.samplex, samplex)
+        self.assertEqual(samplex_item.circuit, template_circuit)
+        self.assertEqual(samplex_item.chunk_size, None)
+        self.assertEqual(samplex_item.shape, (3, 2))
+        self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
+        self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r0"], pauli_lindblad_maps["r0"])
+        self.assertEqual(samplex_item.samplex_arguments["pauli_lindblad_maps.r1"], pauli_lindblad_maps["r1"])
