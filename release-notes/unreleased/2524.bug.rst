@@ -1,0 +1,3 @@
+`.QiskitRuntimeService` will now check for both ``rzz`` and ``rx`` gates in the 
+backend's basis gates to decide whether to refresh the configuration or fetch 
+from cache
