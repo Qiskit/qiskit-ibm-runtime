@@ -14,6 +14,8 @@
 
 import numpy as np
 
+from samplomatic import build, Twirl
+
 from qiskit.circuit import QuantumCircuit, Parameter
 
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
@@ -27,3 +29,21 @@ class TestSamplexItem(IBMTestCase):
 
     def test_samplex_item(self):
         """Test ``SamplexItem`` for a valid input."""
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+
+        parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
+        samplex_shape = (30, 1, 2)
+
+        samplex_item = SamplexItem(template_circuit, samplex, samplex_arguments={"parameter_values": parameter_values}, samplex_shape=samplex_shape, chunk_size=7)
+        self.assertEqual(samplex_item.samplex, samplex)
+        self.assertEqual(samplex_item.circuit, template_circuit)
+        self.assertEqual(samplex_item.chunk_size, 7)
+        self.assertEqual(samplex_item.shape, (30, 3, 2))
+        self.assertTrue(np.array_equal(samplex_item.samplex_arguments["parameter_values"], parameter_values))
