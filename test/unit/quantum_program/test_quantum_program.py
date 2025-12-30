@@ -122,22 +122,22 @@ class TestQuantumProgram(IBMTestCase):
         template_circuit, samplex = build(circuit)
         parameter_values = np.array([1])
 
-        with self.assertRaisesRegex(ValueError, "'samplex_arguments' cannot be supplied when no samplex is given"):
+        with self.assertRaisesRegex(
+            ValueError, "'samplex_arguments' cannot be supplied when no samplex is given"
+        ):
             quantum_program.append(
                 template_circuit,
                 samplex_arguments={"parameter_values": parameter_values},
             )
 
-        with self.assertRaisesRegex(ValueError, "'samplex_shape' cannot be supplied when no samplex is given"):
-            quantum_program.append(
-                template_circuit,
-                samplex_shape=(1,)
-            )
+        with self.assertRaisesRegex(
+            ValueError, "'samplex_shape' cannot be supplied when no samplex is given"
+        ):
+            quantum_program.append(template_circuit, samplex_shape=(1,))
 
-        with self.assertRaisesRegex(ValueError, "'circuit_arguments' cannot be supplied when a samplex is given"):
+        with self.assertRaisesRegex(
+            ValueError, "'circuit_arguments' cannot be supplied when a samplex is given"
+        ):
             quantum_program.append(
-                template_circuit,
-                samplex=samplex,
-                circuit_arguments=parameter_values
+                template_circuit, samplex=samplex, circuit_arguments=parameter_values
             )
-
