@@ -13,14 +13,24 @@
 """Tests the quantum program converters."""
 
 import numpy as np
+from datetime import datetime
 
 from samplomatic import Twirl, InjectNoise, build
+
+from ibm_quantum_schemas.models.executor.version_0_1.models import (
+    QuantumProgramResultModel,
+    QuantumProgramResultItemModel,
+    ChunkPart,
+    ChunkSpan,
+    MetadataModel
+)
+from ibm_quantum_schemas.models.tensor_model import TensorModel
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.quantum_program.converters import quantum_program_to_0_1
+from qiskit_ibm_runtime.quantum_program.converters import quantum_program_to_0_1, quantum_program_result_from_0_1
 from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
 
 from ...ibm_test_case import IBMTestCase
@@ -30,7 +40,7 @@ class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
 
     def test_quantum_program_to_0_1(self):
-        """Test the function quantum_program_to_0_1"""
+        """Test the function ``quantum_program_to_0_1``"""
         shots = 100
 
         noise_models = [
@@ -109,7 +119,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             )
 
     def test_quantum_program_to_0_1_no_argument(self):
-        """Test the function quantum_program_to_0_1 when there are no circuit arguments, samplex
+        """Test the function ``quantum_program_to_0_1`` when there are no circuit arguments, samplex
         arguments, and chunk size"""
         quantum_program = QuantumProgram(100)
 
@@ -139,3 +149,30 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.shape, [])
         self.assertEqual(samplex_item_model.chunk_size, "auto")
         self.assertEqual(samplex_item_model.samplex_arguments, {})
+
+    def test_quantum_program_result_from_0_1(self):
+        """Test the function ``test_quantum_program_result_from_0_1``"""
+        meas1 = np.array([[False], [True], [True]])
+        meas2 = np.array([[True, True], [True, False], [False, False]])
+        meas_flips = np.array([[False, False]])
+        chunk_start = datetime(2025, 12, 30, 14, 10)
+        chunk_stop = datetime(2025, 12, 30, 14, 15)
+
+        chunk_model = ChunkSpan(start=chunk_start, stop=chunk_stop, parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)])
+        metadata_model = MetadataModel(chunk_timing=[chunk_model])
+        result1_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas1)})
+        result2_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas2), "measurement_flips.meas": TensorModel.from_numpy(meas_flips)})
+        result_model = QuantumProgramResultModel(data=[result1_model, result2_model], metadata=metadata_model)
+
+        result = quantum_program_result_from_0_1(result_model)
+        
+
+"""
+{'meas': array([[False],
+       [ True],
+       [ True]])}
+{'meas': array([[ True,  True],
+       [ True, False],
+       [False, False]]), 'measurement_flips.meas': array([[False, False]])}
+Metadata(chunk_timing=[ChunkSpan(start=datetime.datetime(2025, 12, 30, 14, 50, 11, 281281), stop=datetime.datetime(2025, 12, 30, 14, 50, 11, 463270), parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)])])
+"""
