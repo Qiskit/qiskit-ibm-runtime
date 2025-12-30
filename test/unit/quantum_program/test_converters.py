@@ -28,6 +28,7 @@ from ...ibm_test_case import IBMTestCase
 
 class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
+
     def test_quantum_program_to_0_1(self):
         """Test the function quantum_program_to_0_1"""
         shots = 100
@@ -79,7 +80,9 @@ class TestQuantumProgramConverters(IBMTestCase):
         circuit_item_model = quantum_program_model.items[0]
         self.assertEqual(circuit_item_model.item_type, "circuit")
         self.assertEqual(circuit_item_model.circuit.to_quantum_circuit(), circuit1)
-        self.assertTrue(np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments))
+        self.assertTrue(
+            np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments)
+        )
         self.assertEqual(circuit_item_model.chunk_size, 6)
 
         samplex_item_model = quantum_program_model.items[1]
@@ -96,13 +99,15 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_decoded, samplex)
 
         samplex_arguments_model = samplex_item_model.samplex_arguments
-        self.assertTrue(np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values))
+        self.assertTrue(
+            np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values)
+        )
         for i, noise_model in enumerate(noise_models):
             self.assertEqual(
                 samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map(),
                 noise_model,
             )
-        
+
     def test_quantum_program_to_0_1_no_argument(self):
         """Test the function quantum_program_to_0_1 when there are no circuit arguments, samplex
         arguments, and chunk size"""
@@ -134,4 +139,3 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.shape, [])
         self.assertEqual(samplex_item_model.chunk_size, "auto")
         self.assertEqual(samplex_item_model.samplex_arguments, {})
-       
