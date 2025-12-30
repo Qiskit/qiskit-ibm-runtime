@@ -103,3 +103,35 @@ class TestQuantumProgramConverters(IBMTestCase):
                 noise_model,
             )
         
+    def test_quantum_program_to_0_1_no_argument(self):
+        """Test the function quantum_program_to_0_1 when there are no circuit arguments, samplex
+        arguments, and chunk size"""
+        quantum_program = QuantumProgram(100)
+
+        circuit1 = QuantumCircuit(1)
+        quantum_program.append(circuit1)
+
+        circuit2 = QuantumCircuit(2)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.cx(0, 1)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.measure_all()
+
+        template_circuit, samplex = build(circuit2)
+        quantum_program.append(
+            template_circuit,
+            samplex=samplex,
+        )
+
+        params_model = quantum_program_to_0_1(quantum_program, ExecutorOptions())
+        quantum_program_model = params_model.quantum_program
+
+        circuit_item_model = quantum_program_model.items[0]
+        self.assertEqual(circuit_item_model.circuit_arguments.to_numpy().size, 0)
+        self.assertEqual(circuit_item_model.chunk_size, "auto")
+
+        samplex_item_model = quantum_program_model.items[1]
+        self.assertEqual(samplex_item_model.shape, [])
+        self.assertEqual(samplex_item_model.chunk_size, "auto")
+        self.assertEqual(samplex_item_model.samplex_arguments, {})
+       
