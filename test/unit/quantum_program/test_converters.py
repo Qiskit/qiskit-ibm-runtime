@@ -85,9 +85,15 @@ class TestQuantumProgramConverters(IBMTestCase):
         samplex_item_model = quantum_program_model.items[1]
         self.assertEqual(samplex_item_model.item_type, "samplex")
         self.assertEqual(samplex_item_model.circuit.to_quantum_circuit(), template_circuit)
-        self.assertEqual(samplex_item_model.samplex.to_samplex(), samplex)
         self.assertEqual(samplex_item_model.shape, [4, 3, 2])
         self.assertEqual(samplex_item_model.chunk_size, 7)
+
+        # TODO: don't refer to Samplex's private member `finalized`
+        # The solution is probably in samplomatic, in encoding and decoding `_finalized` when
+        # encoding and decoding a samplex.
+        samplex_decoded = samplex_item_model.samplex.to_samplex()
+        samplex_decoded._finalized = True
+        self.assertEqual(samplex_decoded, samplex)
 
         samplex_arguments_model = samplex_item_model.samplex_arguments
         self.assertTrue(np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values))
