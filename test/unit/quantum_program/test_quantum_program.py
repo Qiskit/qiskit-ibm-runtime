@@ -79,6 +79,8 @@ class TestQuantumProgram(IBMTestCase):
             },
         )
 
+        self.assertEqual(quantum_program.shots, shots)
+
         circuit_item = quantum_program.items[0]
         self.assertEqual(circuit_item.circuit, circuit1)
         self.assertTrue(np.array_equal(circuit_item.circuit_arguments, circuit_arguments))
@@ -104,3 +106,38 @@ class TestQuantumProgram(IBMTestCase):
                 samplex_item_with_new_noise.samplex_arguments[f"pauli_lindblad_maps.pl{i}"],
                 noise_model,
             )
+
+    def test_quantum_program_invalid_input_in_append(self):
+        """Test that an error is raised if the arguments of ``QuantumProgram.append
+        are not consistent about whether it's a circuit item or a samplex item."""
+        quantum_program = QuantumProgram(100)
+
+        circuit = QuantumCircuit(2)
+        with circuit.box(annotations=[Twirl()]):
+            circuit.rx(Parameter("p"), 0)
+            circuit.cx(0, 1)
+        with circuit.box(annotations=[Twirl(), InjectNoise(ref="pl1")]):
+            circuit.measure_all()
+
+        template_circuit, samplex = build(circuit)
+        parameter_values = np.array([1])
+
+        with self.assertRaisesRegex(ValueError, "'samplex_arguments' cannot be supplied when no samplex is given"):
+            quantum_program.append(
+                template_circuit,
+                samplex_arguments={"parameter_values": parameter_values},
+            )
+
+        with self.assertRaisesRegex(ValueError, "'samplex_shape' cannot be supplied when no samplex is given"):
+            quantum_program.append(
+                template_circuit,
+                samplex_shape=(1,)
+            )
+
+        with self.assertRaisesRegex(ValueError, "'circuit_arguments' cannot be supplied when a samplex is given"):
+            quantum_program.append(
+                template_circuit,
+                samplex=samplex,
+                circuit_arguments=parameter_values
+            )
+
