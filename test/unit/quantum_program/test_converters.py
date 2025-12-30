@@ -81,3 +81,19 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(circuit_item_model.circuit.to_quantum_circuit(), circuit1)
         self.assertTrue(np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments))
         self.assertEqual(circuit_item_model.chunk_size, 6)
+
+        samplex_item_model = quantum_program_model.items[1]
+        self.assertEqual(samplex_item_model.item_type, "samplex")
+        self.assertEqual(samplex_item_model.circuit.to_quantum_circuit(), template_circuit)
+        self.assertEqual(samplex_item_model.samplex.to_samplex(), samplex)
+        self.assertEqual(samplex_item_model.shape, [4, 3, 2])
+        self.assertEqual(samplex_item_model.chunk_size, 7)
+
+        samplex_arguments_model = samplex_item_model.samplex_arguments
+        self.assertTrue(np.array_equal(samplex_arguments_model["parameter_values"].to_numpy(), parameter_values))
+        for i, noise_model in enumerate(noise_models):
+            self.assertEqual(
+                samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map(),
+                noise_model,
+            )
+        
