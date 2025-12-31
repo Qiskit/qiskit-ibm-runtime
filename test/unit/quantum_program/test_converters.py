@@ -160,19 +160,18 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         chunk_model = ChunkSpan(start=chunk_start, stop=chunk_stop, parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)])
         metadata_model = MetadataModel(chunk_timing=[chunk_model])
-        result1_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas1)})
-        result2_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas2), "measurement_flips.meas": TensorModel.from_numpy(meas_flips)})
+        result1_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas1)}, metadata=None)
+        result2_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas2), "measurement_flips.meas": TensorModel.from_numpy(meas_flips)}, metadata=None)
         result_model = QuantumProgramResultModel(data=[result1_model, result2_model], metadata=metadata_model)
 
         result = quantum_program_result_from_0_1(result_model)
-        
 
-"""
-{'meas': array([[False],
-       [ True],
-       [ True]])}
-{'meas': array([[ True,  True],
-       [ True, False],
-       [False, False]]), 'measurement_flips.meas': array([[False, False]])}
-Metadata(chunk_timing=[ChunkSpan(start=datetime.datetime(2025, 12, 30, 14, 50, 11, 281281), stop=datetime.datetime(2025, 12, 30, 14, 50, 11, 463270), parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)])])
-"""
+        self.assertTrue(np.array_equal(result[0]["meas"], meas1))
+        self.assertTrue(np.array_equal(result[1]["meas"], meas2))
+        self.assertTrue(np.array_equal(result[1]["measurement_flips.meas"], meas_flips))
+        self.assertEqual(result.metadata.chunk_timing[0].start, chunk_start)
+        self.assertEqual(result.metadata.chunk_timing[0].stop, chunk_stop)
+        self.assertEqual(result.metadata.chunk_timing[0].parts[0].idx_item, 0)
+        self.assertEqual(result.metadata.chunk_timing[0].parts[0].size, 1)
+        self.assertEqual(result.metadata.chunk_timing[0].parts[1].idx_item, 1)
+        self.assertEqual(result.metadata.chunk_timing[0].parts[1].size, 1)
