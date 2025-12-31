@@ -118,7 +118,7 @@ class Executor:
             program_id=self._PROGRAM_ID,
             options=asdict(runtime_options),
             inputs=inputs,
-            result_decoder=_Decoder,
+            result_decoder=self._DECODER,
         )
 
     def run(self, program: QuantumProgram) -> RuntimeJobV2:
