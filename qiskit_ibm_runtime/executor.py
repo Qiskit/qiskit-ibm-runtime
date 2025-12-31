@@ -36,14 +36,6 @@ from .utils.default_session import get_cm_session
 logger = logging.getLogger()
 
 
-class _Decoder:
-    @classmethod
-    def decode(cls, data: str):  # type: ignore[no-untyped-def]
-        """Decode raw json to result type."""
-        obj = QuantumProgramResultModel.model_validate_json(data)
-        return quantum_program_result_from_0_1(obj)
-
-
 class Executor:
     """Executor for :class:`~.QuantumProgram`\\s."""
 
