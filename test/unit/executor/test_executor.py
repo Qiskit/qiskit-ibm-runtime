@@ -17,6 +17,7 @@ from unittest.mock import patch
 from test.utils import get_mocked_backend, get_mocked_session
 
 from qiskit_ibm_runtime.executor import Executor
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
 
@@ -34,7 +35,7 @@ class TestExecutor(IBMTestCase):
             patch.object(session.service, "_run", return_value="service"),
         ):
             executor = Executor(mode=session)
-            selected_run = executor.run([])
+            selected_run = executor.run(QuantumProgram(10))
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
@@ -43,5 +44,5 @@ class TestExecutor(IBMTestCase):
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             executor = Executor(mode=backend)
-            selected_run = executor.run([])
+            selected_run = executor.run(QuantumProgram(10))
             self.assertEqual(selected_run, "service")
