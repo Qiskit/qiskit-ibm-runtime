@@ -22,7 +22,7 @@ from ibm_quantum_schemas.models.executor.version_0_1.models import (
     QuantumProgramResultItemModel,
     ChunkPart,
     ChunkSpan,
-    MetadataModel
+    MetadataModel,
 )
 from ibm_quantum_schemas.models.tensor_model import TensorModel
 
@@ -30,7 +30,10 @@ from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.quantum_program.converters import quantum_program_to_0_1, quantum_program_result_from_0_1
+from qiskit_ibm_runtime.quantum_program.converters import (
+    quantum_program_to_0_1,
+    quantum_program_result_from_0_1,
+)
 from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
 
 from ...ibm_test_case import IBMTestCase
@@ -158,11 +161,25 @@ class TestQuantumProgramConverters(IBMTestCase):
         chunk_start = datetime(2025, 12, 30, 14, 10)
         chunk_stop = datetime(2025, 12, 30, 14, 15)
 
-        chunk_model = ChunkSpan(start=chunk_start, stop=chunk_stop, parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)])
+        chunk_model = ChunkSpan(
+            start=chunk_start,
+            stop=chunk_stop,
+            parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)],
+        )
         metadata_model = MetadataModel(chunk_timing=[chunk_model])
-        result1_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas1)}, metadata=None)
-        result2_model = QuantumProgramResultItemModel(results={"meas": TensorModel.from_numpy(meas2), "measurement_flips.meas": TensorModel.from_numpy(meas_flips)}, metadata=None)
-        result_model = QuantumProgramResultModel(data=[result1_model, result2_model], metadata=metadata_model)
+        result1_model = QuantumProgramResultItemModel(
+            results={"meas": TensorModel.from_numpy(meas1)}, metadata=None
+        )
+        result2_model = QuantumProgramResultItemModel(
+            results={
+                "meas": TensorModel.from_numpy(meas2),
+                "measurement_flips.meas": TensorModel.from_numpy(meas_flips),
+            },
+            metadata=None,
+        )
+        result_model = QuantumProgramResultModel(
+            data=[result1_model, result2_model], metadata=metadata_model
+        )
 
         result = quantum_program_result_from_0_1(result_model)
 
