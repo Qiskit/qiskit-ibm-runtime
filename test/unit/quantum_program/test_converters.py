@@ -12,8 +12,8 @@
 
 """Tests the quantum program converters."""
 
-import numpy as np
 from datetime import datetime
+import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
@@ -154,7 +154,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.samplex_arguments, {})
 
     def test_quantum_program_result_from_0_1(self):
-        """Test the function ``test_quantum_program_result_from_0_1``"""
+        """Test the function ``quantum_program_result_from_0_1``"""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
