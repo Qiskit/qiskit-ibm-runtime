@@ -17,7 +17,7 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
@@ -31,8 +31,8 @@ from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.converters import (
-    quantum_program_to_0_1,
-    quantum_program_result_from_0_1,
+    quantum_program_to_0_2,
+    quantum_program_result_from_0_2,
 )
 from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
 
@@ -42,8 +42,8 @@ from ...ibm_test_case import IBMTestCase
 class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
 
-    def test_quantum_program_to_0_1(self):
-        """Test the function ``quantum_program_to_0_1``"""
+    def test_quantum_program_to_0_2(self):
+        """Test the function ``quantum_program_to_0_2``"""
         shots = 100
 
         noise_models = [
@@ -81,9 +81,9 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         options = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
 
-        params_model = quantum_program_to_0_1(quantum_program, options)
+        params_model = quantum_program_to_0_2(quantum_program, options)
 
-        self.assertEqual(params_model.schema_version, "v0.1")
+        self.assertEqual(params_model.schema_version, "v0.2")
         self.assertEqual(params_model.options.init_qubits, False)
         self.assertEqual(params_model.options.rep_delay, None)
 
@@ -118,8 +118,8 @@ class TestQuantumProgramConverters(IBMTestCase):
                 noise_model,
             )
 
-    def test_quantum_program_to_0_1_no_argument(self):
-        """Test the function ``quantum_program_to_0_1`` when there are no circuit arguments, samplex
+    def test_quantum_program_to_0_2_no_argument(self):
+        """Test the function ``quantum_program_to_0_2`` when there are no circuit arguments, samplex
         arguments, and chunk size"""
         quantum_program = QuantumProgram(100)
 
@@ -138,7 +138,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             samplex=samplex,
         )
 
-        params_model = quantum_program_to_0_1(quantum_program, ExecutorOptions())
+        params_model = quantum_program_to_0_2(quantum_program, ExecutorOptions())
         quantum_program_model = params_model.quantum_program
 
         circuit_item_model = quantum_program_model.items[0]
@@ -150,8 +150,8 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.chunk_size, "auto")
         self.assertEqual(samplex_item_model.samplex_arguments, {})
 
-    def test_quantum_program_result_from_0_1(self):
-        """Test the function ``quantum_program_result_from_0_1``"""
+    def test_quantum_program_result_from_0_2(self):
+        """Test the function ``quantum_program_result_from_0_2``"""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
@@ -178,7 +178,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             data=[result1_model, result2_model], metadata=metadata_model
         )
 
-        result = quantum_program_result_from_0_1(result_model)
+        result = quantum_program_result_from_0_2(result_model)
 
         self.assertTrue(np.array_equal(result[0]["meas"], meas1))
         self.assertTrue(np.array_equal(result[1]["meas"], meas2))

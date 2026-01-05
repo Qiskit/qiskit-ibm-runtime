@@ -19,7 +19,7 @@ from dataclasses import asdict
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     ParamsModel,
     CircuitItemModel,
     SamplexItemModel,
@@ -29,7 +29,7 @@ from ibm_quantum_schemas.models.executor.version_0_1.models import (
 from ibm_quantum_schemas.models.pauli_lindblad_map_model import PauliLindbladMapModel
 from ibm_quantum_schemas.models.samplex_model import SamplexModelSSV1
 from ibm_quantum_schemas.models.tensor_model import F64TensorModel, TensorModel
-from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
+from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV17
 
 
 from .quantum_program import QuantumProgram, CircuitItem, SamplexItem
@@ -37,14 +37,14 @@ from .quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, 
 from ..options.executor_options import ExecutorOptions
 
 
-def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
-    """Convert a :class:`~.QuantumProgram` to a V0.1 model."""
+def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
+    """Convert a :class:`~.QuantumProgram` to a V0.2 model."""
     model_items = []
     for item in program.items:
         chunk_size = "auto" if item.chunk_size is None else item.chunk_size
         if isinstance(item, CircuitItem):
             model_item = CircuitItemModel(
-                circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit),
+                circuit=QpyModelV13ToV17.from_quantum_circuit(item.circuit),
                 circuit_arguments=F64TensorModel.from_numpy(item.circuit_arguments),
                 chunk_size=chunk_size,
             )
@@ -60,7 +60,7 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                     else:
                         arguments[name] = value
             model_item = SamplexItemModel(
-                circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit),
+                circuit=QpyModelV13ToV17.from_quantum_circuit(item.circuit),
                 samplex=SamplexModelSSV1.from_samplex(item.samplex, ssv=1),
                 samplex_arguments=arguments,
                 shape=item.shape,
@@ -76,8 +76,8 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
     )
 
 
-def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
-    """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
+def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> QuantumProgramResult:
+    """Convert a V0.2 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[
             ChunkSpan(

@@ -33,7 +33,7 @@ from ..runtime_job_v2 import RuntimeJobV2
 from ..session import Session
 from ..utils.default_session import get_cm_session
 from ..utils.utils import is_simulator
-from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
+from .converters.version_0_2 import noise_learner_v3_inputs_to_0_2
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
 
@@ -154,7 +154,7 @@ class NoiseLearnerV3:
             if configuration and not is_simulator(self._backend):
                 validate_options(self.options, configuration())
 
-        inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
+        inputs = noise_learner_v3_inputs_to_0_2(instructions, self.options).model_dump()
         inputs["version"] = 3  # TODO: this is a work-around for the dispatch
         runtime_options = self.options.to_runtime_options()
         runtime_options["backend"] = self._backend.name
