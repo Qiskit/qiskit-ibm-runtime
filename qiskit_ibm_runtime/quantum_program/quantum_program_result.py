@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterator
 from dataclasses import dataclass, field
 import datetime
 
@@ -75,7 +75,7 @@ class QuantumProgramResult:
         self._data = data
         self.metadata = metadata or Metadata()
 
-    def __iter__(self) -> Iterable[dict[str, np.ndarray]]:
+    def __iter__(self) -> Iterator[dict[str, np.ndarray]]:
         yield from self._data
 
     def __getitem__(self, idx: int) -> dict[str, np.ndarray]:
