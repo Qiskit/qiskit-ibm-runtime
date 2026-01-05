@@ -19,11 +19,11 @@ from typing import Dict
 
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
-from .converters.version_0_1 import noise_learner_v3_result_from_0_1
+from .converters.version_0_2 import noise_learner_v3_result_from_0_2
 
 logger = logging.getLogger(__name__)
 
-AVAILABLE_DECODERS = {"v0.1": noise_learner_v3_result_from_0_1}
+AVAILABLE_DECODERS = {"v0.2": noise_learner_v3_result_from_0_2}
 
 
 class NoiseLearnerV3ResultDecoder(ResultDecoder):

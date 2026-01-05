@@ -28,7 +28,7 @@ from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .qiskit_runtime_service import QiskitRuntimeService
 from .quantum_program import QuantumProgram
-from .quantum_program.converters import quantum_program_result_from_0_1, quantum_program_to_0_2
+from .quantum_program.converters import quantum_program_result_from_0_2, quantum_program_to_0_2
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
@@ -41,7 +41,7 @@ class _Decoder:
     def decode(cls, data: str):  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
         obj = QuantumProgramResultModel.model_validate_json(data)
-        return quantum_program_result_from_0_1(obj)
+        return quantum_program_result_from_0_2(obj)
 
 
 class Executor:
