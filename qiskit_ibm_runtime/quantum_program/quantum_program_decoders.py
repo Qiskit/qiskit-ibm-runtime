@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import Dict
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     QuantumProgramResultModel,
 )
 

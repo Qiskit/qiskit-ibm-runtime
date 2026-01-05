@@ -21,7 +21,7 @@ from typing import Any, Callable, List, Union
 from pydantic import Field, ValidationInfo, field_validator
 from qiskit.transpiler import CouplingMap
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
     OptionsModel,
 )
 

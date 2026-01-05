@@ -26,7 +26,7 @@ from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.transpiler.target import Target
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     QuantumProgramResultModel,
 )
 

@@ -17,7 +17,7 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
@@ -83,7 +83,7 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         params_model = quantum_program_to_0_2(quantum_program, options)
 
-        self.assertEqual(params_model.schema_version, "v0.1")
+        self.assertEqual(params_model.schema_version, "v0.2")
         self.assertEqual(params_model.options.init_qubits, False)
         self.assertEqual(params_model.options.rep_delay, None)
 

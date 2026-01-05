@@ -33,7 +33,7 @@ from ..runtime_job_v2 import RuntimeJobV2
 from ..session import Session
 from ..utils.default_session import get_cm_session
 from ..utils.utils import is_simulator
-from .converters.version_0_1 import noise_learner_v3_inputs_to_0_2
+from .converters.version_0_2 import noise_learner_v3_inputs_to_0_2
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
 

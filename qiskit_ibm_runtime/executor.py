@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     QuantumProgramResultModel,
 )
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
