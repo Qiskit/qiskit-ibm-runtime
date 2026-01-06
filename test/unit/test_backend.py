@@ -275,7 +275,7 @@ class TestBackend(IBMTestCase):
     def test_non_unitary_isa_operations(self):
         """Test handling of non-unitary ISA operations."""
         target = convert_to_target(FakeSherbrooke().configuration())
-        
+
         assert isinstance(target.get("reset"), dict)
         assert isinstance(target.get("measure"), dict)
         assert target.get("measure_2") is None
