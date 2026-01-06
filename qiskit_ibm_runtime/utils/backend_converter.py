@@ -79,8 +79,6 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             "Backend defaults have been completely from removed IBM Backends. They will be ignored."
         )
 
-    required = ["measure", "delay", "reset"]
-
     # Load qiskit object representation
     qiskit_inst_mapping = get_standard_gate_name_mapping()
     if custom_name_mapping:
@@ -104,11 +102,12 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
+    required = supported_instructions.intersection(("measure", "delay", "reset"))
     instruction_signatures = getattr(configuration, "instruction_signatures", [])
     gate_configs = {gate.name: gate for gate in configuration.gates}
     all_instructions = set.union(
         basis_gates,
-        set(required),
+        required,
         supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
 
