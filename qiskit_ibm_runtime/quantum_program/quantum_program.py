@@ -80,6 +80,8 @@ class CircuitItem(QuantumProgramItem):
         circuit_arguments: np.ndarray | None = None,
         chunk_size: int | None = None,
     ):
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
+
         if circuit_arguments is None and circuit.num_parameters:
             raise ValueError(
                 f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
@@ -97,7 +99,6 @@ class CircuitItem(QuantumProgramItem):
                 f"circuit, but found shape {circuit_arguments.shape} instead."
             )
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
         self.circuit_arguments = circuit_arguments
 
     @property
@@ -124,7 +125,7 @@ class SamplexItem(QuantumProgramItem):
         circuit: The circuit to be executed.
         samplex: A samplex to draw random parameters for the circuit.
         samplex_arguments: A map from argument names to argument values for the samplex.
-        shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
+        samplex_shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
             Non-trivial axes introduced by this extension enumerate randomizations.
         chunk_size: The maximum number of bound circuits in each shot loop execution, or
             ``None`` to use a server-side heuristic to optimize speed. When not executing
@@ -138,14 +139,13 @@ class SamplexItem(QuantumProgramItem):
         samplex: Samplex,
         *,
         samplex_arguments: dict[str, np.ndarray | PauliLindbladMap] | None = None,
-        shape: tuple[int, ...] | None = None,
+        samplex_shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
-        if not isinstance(circuit, QuantumCircuit):
-            raise ValueError(f"Expected {repr(circuit)} to be a QuantumCircuit.")
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
 
         # Calling bind() here will do all Samplex validation
-        inputs = samplex.inputs().make_broadcastable().bind(**samplex_arguments)
+        inputs = samplex.inputs().make_broadcastable().bind(**(samplex_arguments or {}))
 
         if not inputs.fully_bound:
             raise ValueError(
@@ -154,15 +154,13 @@ class SamplexItem(QuantumProgramItem):
             )
 
         try:
-            shape = np.broadcast_shapes(shape or (), inputs.shape)
+            self._shape = np.broadcast_shapes(samplex_shape or (), inputs.shape)
         except ValueError as exc:
             raise ValueError(
-                f"The provided shape {shape} must be broadcastable with the shape implicit in "
+                f"The provided shape {samplex_shape} must be broadcastable with the shape implicit in "
                 f"the sample_arguments, which is {inputs.shape}."
             ) from exc
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
-        self._shape = np.broadcast_shapes(shape, inputs.shape)
         self.samplex = samplex
         self.samplex_arguments = inputs
 
@@ -265,7 +263,7 @@ class QuantumProgram:
                     circuit,
                     samplex,
                     samplex_arguments=arguments,
-                    shape=shape,
+                    samplex_shape=shape,
                     chunk_size=chunk_size,
                 )
             )
