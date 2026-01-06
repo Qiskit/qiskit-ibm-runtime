@@ -187,4 +187,4 @@ class TestClientParameters(IBMTestCase):
             proxies=proxies,
             verify=verify,
             url_resolver=url_resolver,
-        )    
+        )
