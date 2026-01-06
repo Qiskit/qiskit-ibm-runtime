@@ -115,7 +115,9 @@ class NoiseLearnerV3:
             raise ValueError(
                 "A backend or session/batch must be specified, or a session/batch must be open."
             )
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = _get_mode_service_backend(  # type: ignore[assignment]
+            mode
+        )
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
