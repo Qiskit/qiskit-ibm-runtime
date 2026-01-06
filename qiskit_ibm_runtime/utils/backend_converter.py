@@ -102,6 +102,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
+    gate_configs = {gate.name: gate for gate in configuration.gates}
 
     # Instructions that are not defined in Qiskit, such as `measure_2`, are placed in
     # `instruction_signatures` (see below) and handled separately
@@ -110,8 +111,6 @@ def convert_to_target(  # type: ignore[no-untyped-def]
         supported_instructions.intersection({"measure", "delay", "reset"}),
         supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
-    gate_configs = {gate.name: gate for gate in configuration.gates}
-
     inst_name_map = {}
     faulty_ops = set()
     faulty_qubits = set()
@@ -282,7 +281,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
             )
 
-    for op in all_instructions.intersection({"measure", "delay", "reset"}):
+    for op in supported_instructions.intersection({"measure", "delay", "reset"}):
         # Map required ops to each operational qubit
         if prop_name_map[op] is None:
             prop_name_map[op] = {
