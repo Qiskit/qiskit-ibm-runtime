@@ -227,7 +227,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         self._skip_reset_qubits = skip_reset_qubits
         self._alignment = pulse_alignment
         self._coupling_map = coupling_map
-        self._coupling_coloring: dict | None = None
+        self._coupling_coloring: Union[dict, None] = None
         self._dd_barrier = dd_barrier
 
         if spacings is not None:
