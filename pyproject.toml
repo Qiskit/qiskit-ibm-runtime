@@ -65,7 +65,7 @@ disallow_incomplete_defs = true
 strict_optional = false
 show_error_codes = true
 no_site_packages = true
-disable_error_code = "import-untyped"
+disable_error_code = "import-untyped,annotation-unchecked"
 
 [[tool.mypy.overrides]]
 module = "test.*"

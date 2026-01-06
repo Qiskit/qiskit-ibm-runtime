@@ -10,13 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore[arg-type]
-
 """Noise learner V3 results."""
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Sequence, Union
 from numpy.typing import NDArray
 
 import numpy as np
@@ -57,7 +55,7 @@ class NoiseLearnerV3Result:
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._generators: list[QubitSparsePauliList] = []
         self._rates: NDArray[np.float64] = np.array([])
         self._rates_std: NDArray[np.float64] = np.array([])
@@ -70,7 +68,7 @@ class NoiseLearnerV3Result:
         rates: Iterable[float],
         rates_std: Optional[Iterable[float]] = None,
         metadata: Optional[Metadata] = None,
-    ):
+    ) -> NoiseLearnerV3Result:
         """
         Construct from a collection of generators and rates.
 
@@ -139,10 +137,11 @@ class NoiseLearnerV3Results:
 
     def to_dict(
         self,
-        instructions: Iterable[CircuitInstruction],
+        instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
         """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
+
         This function iterates over a sequence of instructions, extracts the ``ref`` value from the
         inject noise annotation of each instruction, and returns a dictionary mapping those refs
         to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in this
