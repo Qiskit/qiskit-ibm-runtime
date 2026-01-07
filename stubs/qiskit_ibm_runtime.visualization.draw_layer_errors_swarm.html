@@ -5,8 +5,8 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="qiskit_ibm_runtime.visualization.draw_zne_evs" href="qiskit_ibm_runtime.visualization.draw_zne_evs.html" /><link rel="prev" title="qiskit_ibm_runtime.visualization.draw_layer_error_map" href="qiskit_ibm_runtime.visualization.draw_layer_error_map.html" />
 
-    <!-- Generated with Sphinx 7.4.7 and Furo 2024.08.06 -->
-        <title>qiskit_ibm_runtime.visualization.draw_layer_errors_swarm - Qiskit Runtime IBM Client 0.43.1</title>
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>qiskit_ibm_runtime.visualization.draw_layer_errors_swarm - Qiskit Runtime IBM Client 0.44.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.43.1</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.43.1</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -258,6 +258,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertIdToDelay.html">ConvertIdToDelay</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertISAToClifford.html">ConvertISAToClifford</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.FoldRzzAngle.html">FoldRzzAngle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.transpiler.passes.ConvertToMidCircuitMeasure.html">ConvertToMidCircuitMeasure</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/qiskit_ibm_runtime.transpiler.passes.scheduling.html">Transpiler scheduling passes (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.transpiler.passes.scheduling</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Transpiler scheduling passes (qiskit_ibm_runtime.transpiler.passes.scheduling)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -336,7 +337,7 @@
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.DoubleSliceSpan.html">DoubleSliceSpan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpan.html">ExecutionSpan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ExecutionSpans.html">ExecutionSpans</a></li>
-<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ShapeType.html">qiskit_ibm_runtime.execution_span.ShapeType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.ShapeType.html">ShapeType</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.SliceSpan.html">SliceSpan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.execution_span.TwirledSliceSpan.html">TwirledSliceSpan</a></li>
 </ul>
@@ -353,6 +354,7 @@
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">qiskit_ibm_runtime.visualization.draw_layer_errors_swarm</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_evs.html">qiskit_ibm_runtime.visualization.draw_zne_evs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_zne_extrapolators.html">qiskit_ibm_runtime.visualization.draw_zne_extrapolators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing.html">qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../apidocs/models.html">Backend Objects (<code class="xref py py-mod docutils literal notranslate"><span class="pre">qiskit_ibm_runtime.models</span></code>)</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Backend Objects (qiskit_ibm_runtime.models)</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -432,23 +434,23 @@ overlaps between the markers.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layer_errors</strong> (<em>list</em><em>[</em><a class="reference internal" href="qiskit_ibm_runtime.utils.noise_learner_result.LayerError.html#qiskit_ibm_runtime.utils.noise_learner_result.LayerError" title="qiskit_ibm_runtime.utils.noise_learner_result.LayerError"><em>LayerError</em></a><em>]</em>) – The layer errors to draw.</p></li>
-<li><p><strong>num_bodies</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The weight of the generators to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if all the
+<li><p><strong>num_bodies</strong> (<em>int</em><em> | </em><em>None</em>) – The weight of the generators to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if all the
 generators should be included.</p></li>
-<li><p><strong>max_rate</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The largest rate to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no upper limit should be
+<li><p><strong>max_rate</strong> (<em>float</em><em> | </em><em>None</em>) – The largest rate to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no upper limit should be
 set.</p></li>
-<li><p><strong>min_rate</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The smallest rate to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no lower limit should be
+<li><p><strong>min_rate</strong> (<em>float</em><em> | </em><em>None</em>) – The smallest rate to include in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if no lower limit should be
 set.</p></li>
-<li><p><strong>connected</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>Union</em><em>[</em><em>Pauli</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em>) – A list of generators whose markers are to be connected by lines.</p></li>
-<li><p><strong>colors</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – A list of colors for the markers in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if these colors are to be
+<li><p><strong>connected</strong> (<em>list</em><em>[</em><em>Pauli</em><em> | </em><em>str</em><em>] </em><em>| </em><em>None</em>) – A list of generators whose markers are to be connected by lines.</p></li>
+<li><p><strong>colors</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – A list of colors for the markers in the plot, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if these colors are to be
 chosen automatically.</p></li>
-<li><p><strong>num_bins</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The number of bins to place the rates into when calculating the <code class="docutils literal notranslate"><span class="pre">x</span></code>-axis
+<li><p><strong>num_bins</strong> (<em>int</em><em> | </em><em>None</em>) – The number of bins to place the rates into when calculating the <code class="docutils literal notranslate"><span class="pre">x</span></code>-axis
 offsets.</p></li>
-<li><p><strong>opacities</strong> (<em>Union</em><em>[</em><em>float</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – A list of opacities for the markers.</p></li>
-<li><p><strong>names</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em>) – The names of the various layers as displayed in the legend. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, default
+<li><p><strong>opacities</strong> (<em>float</em><em> | </em><em>list</em><em>[</em><em>float</em><em>]</em>) – A list of opacities for the markers.</p></li>
+<li><p><strong>names</strong> (<em>list</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – The names of the various layers as displayed in the legend. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, default
 names are assigned based on the layers’ position inside the <code class="docutils literal notranslate"><span class="pre">layer_errors</span></code> list.</p></li>
-<li><p><strong>x_coo</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em>) – The <code class="docutils literal notranslate"><span class="pre">x</span></code>-axis coordinates of the vertical axes that the markers are drawn around, or
+<li><p><strong>x_coo</strong> (<em>list</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – The <code class="docutils literal notranslate"><span class="pre">x</span></code>-axis coordinates of the vertical axes that the markers are drawn around, or
 <code class="docutils literal notranslate"><span class="pre">None</span></code> if these axes should be placed at regular intervals.</p></li>
-<li><p><strong>marker_size</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – The size of the marker in the plot.</p></li>
+<li><p><strong>marker_size</strong> (<em>float</em><em> | </em><em>None</em>) – The size of the marker in the plot.</p></li>
 <li><p><strong>height</strong> (<em>int</em>) – The height of the returned figure.</p></li>
 <li><p><strong>width</strong> (<em>int</em>) – The width of the returned figure.</p></li>
 </ul>
@@ -536,8 +538,8 @@ names are assigned based on the layers’ position inside the <code class="docut
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=cf17243c"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/katex.min.js?v=48ec3933"></script>

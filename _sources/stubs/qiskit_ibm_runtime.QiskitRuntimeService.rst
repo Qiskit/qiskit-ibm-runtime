@@ -25,9 +25,7 @@
    .. automethod:: active_instance
    .. automethod:: backend
    .. automethod:: backends
-   .. automethod:: check_pending_jobs
    .. automethod:: delete_account
-   .. automethod:: delete_job
    .. automethod:: instances
    .. automethod:: job
    .. automethod:: jobs

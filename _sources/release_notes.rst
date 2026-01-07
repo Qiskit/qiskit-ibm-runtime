@@ -4,6 +4,39 @@ Qiskit Runtime IBM Client release notes
 
 .. towncrier release notes start
 
+0.44.0 (2025-12-16)
+===================
+
+New Features
+------------
+
+- When a job is submitted, there will now be warnings if the instance being used
+  has reached its limit. (`2458 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2458>`__)
+- Added a "Fake Nighthawk" (:class:`.FakeNighthawk`) backend to the :mod:`.fake_provider` module.
+
+  Its coupling map and basis gates match those of a real Nighthawk backend, but 
+  the properties are not  intended to represent typical Nighthawk error values. 
+  You can use this fake backend to, for example, transpile and optimize your 
+  circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
+  square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
+  600% improvement in circuit depth compared to a Heron backend. (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
+
+
+Bug Fixes
+---------
+
+- IAM authentification bug fix when using a proxy configuration specified in ``QiskitRuntimeService``. 
+  The patch injects the ``proxies`` and ``verify`` attributes from ``QiskitRuntimeService`` into ``IAMTokenManager`` when using cloud authentification (``CloudAuth``). (`2344 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2344>`__)
+
+
+Other Notes
+-----------
+
+- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with 
+  support for Python 3.9, have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
+- Added :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
+  This allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)
+
 0.43.1 (2025-10-23)
 ===================
 
@@ -124,7 +157,7 @@ New Features
   This function uses the new :class:`CircuitSchedule` class to load, parse, preprocess, 
   and trace the data for plotting using a Plotly supported interface. (`2328 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2328>`__)
 - Virtual private endpoints for IBM Quantum Platform are now supported.
-  Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/security/virtual-private-endpoints>`__. (`2367 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2367>`__)
+  Learn more in our `virtual private endpoints guide <https://quantum.cloud.ibm.com/docs/guides/virtual-private-endpoints>`__. (`2367 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2367>`__)
 - It is now possible to retrieve the job tags of a job without having to actually fetch 
   the job with :meth:`.QiskitRuntimeService.job`. (`2420 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2420>`__)
 - The :class:`.~ConvertISAToClifford` pass now supports Cliffordization of circuits containing fractional gates. (`2427 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2427>`__)
@@ -222,7 +255,7 @@ Upgrade Notes
 - Because of the sunset of IBM Quantum Platform Classic, the ``ibm_quantum`` channel is no
   longer supported from ``qiskit-ibm-runtime``. Saved ``ibm_quantum`` channel accounts and 
   data will not be accessible. Use the ``ibm_quantum_platform`` channel instead. See our 
-  `migration guide <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__
+  `migration guide <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__
   for more details. (`2289 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2289>`__)
 
 
@@ -332,7 +365,7 @@ New Features
 ------------
 
 - The following changes were made to support the upcoming 
-  `IBM Quantum platform migration <https://docs.quantum.ibm.com/migration-guides/classic-iqp-to-cloud-iqp>`__:
+  `IBM Quantum platform migration <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__:
 
   - A new channel type, ``ibm_quantum_platform``, has been introduced for service initialization  (``QiskitRuntimeService()``). 
     It joins the existing ``ibm_quantum`` (now deprecated) and ``ibm_cloud`` channels. By **default**, 
@@ -485,7 +518,7 @@ Deprecation Notes
 - The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July. 
   After this date, ``ibm_cloud``, ``ibm_quantum_platform``, and ``local`` will be the only valid channels. 
   For help migrating to the new IBM Quantum Platform on the 
-  ``ibm_cloud`` channel, read the `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/classic-iqp-to-cloud-iqp>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
+  ``ibm_cloud`` channel, read the `migration guide <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
 
 
 New Features
@@ -532,7 +565,7 @@ New Features
   -  The backend configuration class ``PulseBackendConfiguration`` has been removed, so all backends will now be returned as ``QasmBackendConfiguration``.
   - ``PulseDefaults`` (backend defaults) can still be retrieved but they are no longer necessary when creating a backend ``Target``. 
 
-  See the `Pulse migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/pulse-migration>`__ 
+  See the `Pulse migration guide <https://quantum.cloud.ibm.com/docs/guides/pulse-migration>`__ 
   for details. (`2116 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2116>`__)
 - Added a warning when a primitive is initialized outside of a session or batch context manager. 
   In this scenario, the job will run in job mode instead of the session or batch. (`2152 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2152>`__)
@@ -916,7 +949,7 @@ Upgrade Notes
 -------------
 
 - The V1 Primitives ``SamplerV1`` and ``EstimatorV1`` have been completely removed. Please see the
-  `migration guide <https://quantum.cloud.ibm.com/docs/migration-guides/v2-primitives>`__ and use the V2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
+  `migration guide <https://quantum.cloud.ibm.com/docs/guides/v2-primitives>`__ and use the V2 Primitives instead. (`1857 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1857>`__)
 - The ``service`` parameter is now required in ``Session.from_id()``. (`1868 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1868>`__)
 
 0.27.1 (2024-08-12)
