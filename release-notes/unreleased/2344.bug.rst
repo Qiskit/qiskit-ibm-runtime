@@ -1,0 +1,2 @@
+IAM authentification Bugfix when using a proxy configuration specified in ``QiskitRuntimeService``. 
+The patch injects the ``proxies`` and ``verify`` attributes from ``QiskitRuntimeService`` into ``IAMTokenManager`` when using cloud authentification (``CloudAuth``).
