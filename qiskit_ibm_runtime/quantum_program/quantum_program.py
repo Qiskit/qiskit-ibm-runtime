@@ -80,15 +80,14 @@ class CircuitItem(QuantumProgramItem):
         circuit_arguments: np.ndarray | None = None,
         chunk_size: int | None = None,
     ):
-        if circuit_arguments is None and circuit.num_parameters:
-            raise ValueError(
-                f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
-            )
-
         if circuit_arguments is None:
-            circuit_arguments = np.empty((circuit.num_parameters,), dtype=float)
-        else:
-            circuit_arguments = np.array(circuit_arguments, dtype=float)
+            if circuit.num_parameters:
+                raise ValueError(
+                    f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
+                )
+            circuit_arguments = []
+
+        circuit_arguments = np.array(circuit_arguments, dtype=float)
 
         if circuit_arguments.shape[-1] != circuit.num_parameters:
             raise ValueError(
