@@ -236,12 +236,9 @@ For example, in your github fork settings, add the environment you want to run t
 
 Please submit clean code and please make effort to follow existing
 conventions in order to keep it as readable as possible. We use:
-* [black] as the tool for ensuring consistent code formatting
-* [pylint] as a linter providing deeper analysis for potential style and
-  functionality issues, as well as good practices
-* [ruff] as an additional linter, introduced recently for additional style
-  and functionality checks
-* [mypy] as a static type checker for type hinting
+* [Pylint](https://www.pylint.org) linter
+* [PEP 8](https://www.python.org/dev/peps/pep-0008) style
+* [mypy](http://mypy-lang.org/) type hinting
 
 To ensure your changes respect the style guidelines, you can run the following
 commands:
@@ -251,13 +248,6 @@ make lint
 make style
 make mypy
 ```
-
-If `make style` results in an error, you can run `make black` for automatically
-update your code to conform to the style. Similarly, if `make lint` fails in the
-`ruff` check, you can run `make ruff` for attempting to apply automated fixes,
-if available. However, for a subset of the `ruff` errors, as well as for the
-`pylint` and `mypy` errors, you will have to fix the issues manually by updating
-your code.
 
 If you edit any documentation, refer to [IBM Quantum's writing style
 guide](https://github.com/IBM/ibm-quantum-style-guide). You can use
@@ -330,8 +320,3 @@ qiskit-bot should also automatically create the GitHub Release for you.
 
 Finally, you need to cherry-pick the release notes prep from `stable/*` to
 the `main` branch, such as from `stable/0.21` to `main`.
-
-[black]: https://github.com/psf/black
-[pylint]: https://www.pylint.org/
-[ruff]: https://github.com/astral-sh/ruff
-[mypy]: http://mypy-lang.org/

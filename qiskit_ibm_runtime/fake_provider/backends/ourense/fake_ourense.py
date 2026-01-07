@@ -28,7 +28,7 @@ class FakeOurenseV2(fake_backend.FakeBackendV2):
             2
     """
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_ourense.json"
-    props_filename = "props_ourense.json"
-    backend_name = "fake_ourense"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_ourense.json"  # type: ignore
+    props_filename = "props_ourense.json"  # type: ignore
+    backend_name = "fake_ourense"  # type: ignore

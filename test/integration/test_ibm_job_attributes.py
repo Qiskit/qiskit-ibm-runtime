@@ -129,7 +129,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
         tags_to_replace_subtests = [
             [],  # empty tags.
-            ["{}_new_tag_{}".format(uuid.uuid4().hex[:5], i) for i in range(2)],  # unique tags.
+            list("{}_new_tag_{}".format(uuid.uuid4().hex[:5], i) for i in range(2)),  # unique tags.
             initial_job_tags + ["foo"],
         ]
         for tags_to_replace in tags_to_replace_subtests:

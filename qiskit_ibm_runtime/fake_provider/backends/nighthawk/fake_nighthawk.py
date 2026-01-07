@@ -64,10 +64,10 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
     ```
     """
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_nighthawk.json"
-    props_filename = "props_nighthawk.json"
-    backend_name = "fake_nighthawk"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_nighthawk.json"  # type: ignore
+    props_filename = "props_nighthawk.json"  # type: ignore
+    backend_name = "fake_nighthawk"  # type: ignore
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
         # Only display the warning statement once

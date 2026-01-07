@@ -265,7 +265,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Test that use_fractional_gates = True raises error for unsupported backends"""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
+            if "rzz" in backend.basis_gates:
                 self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
             with self.assertRaises(
                 IBMInputValueError,

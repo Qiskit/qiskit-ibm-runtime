@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakePeekskill(fake_backend.FakeBackendV2):
     """A fake 27 qubit backend."""
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_peekskill.json"
-    props_filename = "props_peekskill.json"
-    backend_name = "fake_peekskill"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_peekskill.json"  # type: ignore
+    props_filename = "props_peekskill.json"  # type: ignore
+    backend_name = "fake_peekskill"  # type: ignore

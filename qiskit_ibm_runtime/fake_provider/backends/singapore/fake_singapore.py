@@ -32,7 +32,7 @@ class FakeSingaporeV2(fake_backend.FakeBackendV2):
         15 ↔ 16 ↔ 17 ↔ 18 ↔ 19
     """
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_singapore.json"
-    props_filename = "props_singapore.json"
-    backend_name = "fake_singapore"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_singapore.json"  # type: ignore
+    props_filename = "props_singapore.json"  # type: ignore
+    backend_name = "fake_singapore"  # type: ignore

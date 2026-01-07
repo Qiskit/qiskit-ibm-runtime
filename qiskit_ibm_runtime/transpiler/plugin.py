@@ -158,7 +158,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and "id" not in target:
+        if instruction_durations and not "id" in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
@@ -198,7 +198,7 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and "id" not in target:
+        if instruction_durations and not "id" in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.

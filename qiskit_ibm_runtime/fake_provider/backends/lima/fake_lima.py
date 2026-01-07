@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeLimaV2(fake_backend.FakeBackendV2):
     """A fake 5 qubit backend."""
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_lima.json"
-    props_filename = "props_lima.json"
-    backend_name = "fake_lima"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_lima.json"  # type: ignore
+    props_filename = "props_lima.json"  # type: ignore
+    backend_name = "fake_lima"  # type: ignore

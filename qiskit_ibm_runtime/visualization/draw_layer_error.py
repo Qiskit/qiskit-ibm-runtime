@@ -81,7 +81,7 @@ def draw_layer_error_map(
     xs = [col for _, col in coordinates]
 
     # A set of unique edges ``(i, j)``, with ``i < j``.
-    edges = {tuple(sorted(edge)) for edge in list(coupling_map)}
+    edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
 
     # The highest rate
     max_rate = 0

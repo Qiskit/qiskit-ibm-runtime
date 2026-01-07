@@ -241,8 +241,9 @@ if __name__ == '__main__':
                 cmd = ["python", temp_fp.name, encoded]
                 proc = subprocess.run(
                     cmd,
-                    capture_output=True,
-                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
                     check=True,
                 )
                 self.assertIn(operator.__class__.__name__, proc.stdout)

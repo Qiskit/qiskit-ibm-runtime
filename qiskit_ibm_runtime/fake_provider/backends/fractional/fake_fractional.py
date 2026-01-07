@@ -29,7 +29,7 @@ class FakeFractionalBackend(fake_backend.FakeBackendV2):
     * Gate properties of all instructions.
     """
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_fractional.json"
-    props_filename = "props_fractional.json"
-    backend_name = "fake_fractional"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_fractional.json"  # type: ignore
+    props_filename = "props_fractional.json"  # type: ignore
+    backend_name = "fake_fractional"  # type: ignore

@@ -34,7 +34,7 @@ class FakeParisV2(fake_backend.FakeBackendV2):
                        09                  20
     """
 
-    dirname = os.path.dirname(__file__)
-    conf_filename = "conf_paris.json"
-    props_filename = "props_paris.json"
-    backend_name = "fake_paris"
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_paris.json"  # type: ignore
+    props_filename = "props_paris.json"  # type: ignore
+    backend_name = "fake_paris"  # type: ignore

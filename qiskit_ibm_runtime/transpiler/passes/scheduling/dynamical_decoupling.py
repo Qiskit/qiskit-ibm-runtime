@@ -362,7 +362,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     if self._target:
                         try:
                             gate_length = self._target[gate.name].get((physical_index,)).duration
-                        except:  # pylint: disable=bare-except # noqa: E722 bare-except
+                        except:  # pylint: disable=bare-except
                             gate_length = None
                     else:
                         gate_length = self._durations.get(gate, physical_index)

@@ -299,7 +299,7 @@ def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
             if row_count == 0:
                 return []
             else:
-                return [resource["crn"] for resource in result["resources"]]
+                return list(map(lambda resource: resource["crn"], result["resources"]))
 
 
 def is_crn(locator: str) -> bool:

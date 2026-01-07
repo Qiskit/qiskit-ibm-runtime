@@ -64,7 +64,7 @@ def _get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -
 
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
-    elif isinstance(mode, IBMBackend):
+    elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
         if get_cm_session():
             logger.warning(
                 "A backend was passed in as the mode but a session context manager "
@@ -81,7 +81,7 @@ def _get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -
         return None, mode.service, mode
     elif isinstance(mode, BackendV2):
         return None, QiskitRuntimeLocalService(), mode
-    elif mode is not None:
+    elif mode is not None:  # type: ignore[unreachable]
         raise ValueError("mode must be of type Backend, Session, Batch or None")
     elif get_cm_session():
         mode = get_cm_session()

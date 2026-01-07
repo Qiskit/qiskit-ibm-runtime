@@ -20,7 +20,6 @@ import importlib
 import inspect
 import io
 import json
-import sys
 import warnings
 import zlib
 from datetime import date
@@ -30,6 +29,20 @@ from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
+
+try:
+    import scipy.sparse
+
+    HAS_SCIPY = True
+except ImportError:
+    HAS_SCIPY = False
+
+try:
+    import qiskit_aer
+
+    HAS_AER = True
+except ImportError:
+    HAS_AER = False
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -64,7 +77,6 @@ from qiskit.primitives.containers import (
     SamplerPubResult,
     PrimitiveResult,
 )
-from qiskit.utils import LazyImportTester
 
 from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
     ExtrapolatorType,
@@ -81,17 +93,6 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 from .noise_learner_result import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 14
-
-HAS_AER = LazyImportTester(
-    "qiskit_aer",
-    name="Qiskit Aer",
-    install="pip install qiskit-aer",
-)
-HAS_SCIPY = LazyImportTester(
-    "scipy",
-    name="Scipy",
-    install="pip install scipy",
-)
 
 
 def to_base64_string(data: str) -> str:
@@ -141,6 +142,7 @@ def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool 
     Returns:
         Deserialized data.
     """
+    buff = io.BytesIO()
     decoded = base64.standard_b64decode(data)
     if decompress:
         decoded = zlib.decompress(decoded)
@@ -265,7 +267,9 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: dump(data, buff, RuntimeEncoder, **kwargs),
+                serializer=lambda buff, data: dump(
+                    data, buff, RuntimeEncoder, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, Parameter):
@@ -285,7 +289,9 @@ class RuntimeEncoder(json.JSONEncoder):
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(data, buff, **kwargs),
+                serializer=lambda buff, data: dump(
+                    data, buff, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
         if isinstance(obj, ObservablesArray):
@@ -387,14 +393,8 @@ class RuntimeEncoder(json.JSONEncoder):
         if HAS_PAULI_LINDBLAD_MAP and isinstance(obj, PauliLindbladMap):
             out_val = {"paulis": obj.to_sparse_list(), "num_qubits": obj.num_qubits}
             return {"__type__": "PauliLindbladMap", "__value__": out_val}
-        if "qiskit_aer" in sys.modules:
-            # Guard import so qiskit_aer is not imported unnecessarily. If a
-            # NoiseModel instance has been created, qiskit_aer must already have
-            # been imported.
-            from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
-
-            if isinstance(obj, NoiseModel):
-                return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
+        if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
+            return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
             return {
                 "__type__": "settings",
@@ -412,15 +412,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if callable(obj):
             warnings.warn(f"Callable {obj} is not JSON serializable and will be set to None.")
             return None
-        if "scipy" in sys.modules:
-            # Guard import so scipy is not imported unnecessarily. If an
-            # spmatrix instance has been created, scipy must already have
-            # been imported.
-            from scipy.sparse import save_npz, spmatrix  # pylint: disable=import-outside-toplevel
-
-            if isinstance(obj, spmatrix):
-                value = _serialize_and_encode(obj, save_npz, compress=False)
-                return {"__type__": "spmatrix", "__value__": value}
+        if HAS_SCIPY and isinstance(obj, scipy.sparse.spmatrix):
+            value = _serialize_and_encode(obj, scipy.sparse.save_npz, compress=False)
+            return {"__type__": "spmatrix", "__value__": value}
         return super().default(obj)
 
 
@@ -478,12 +472,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Result":
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
-                if HAS_SCIPY:
-                    from scipy.sparse import load_npz  # pylint: disable=import-outside-toplevel
-
-                    return _decode_and_deserialize(obj_val, load_npz, False)
-                warnings.warn("Scipy is needed to restore sparse matrix.")
-                return obj_val
+                return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
             if obj_type == "ObservablesArray":
                 return ObservablesArray(obj_val)
             if obj_type == "BindingsArray":
@@ -564,11 +553,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return obj_val
             if obj_type == "NoiseModel":
                 if HAS_AER:
-                    # pylint: disable=import-outside-toplevel
-                    from qiskit_aer.noise import NoiseModel
-
-                    # pylint: enable=import-outside-toplevel
-                    return NoiseModel.from_dict(obj_val)
+                    return qiskit_aer.noise.NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
         return obj

@@ -22,7 +22,9 @@ class EstimatorResultDecoder(ResultDecoder):
     """Class used to decode estimator results"""
 
     @classmethod
-    def decode(cls, raw_result: str) -> PrimitiveResult:
+    def decode(  # type: ignore # pylint: disable=arguments-differ
+        cls, raw_result: str
+    ) -> PrimitiveResult:
         """Convert the result to EstimatorResult."""
         decoded: dict = super().decode(raw_result)
 

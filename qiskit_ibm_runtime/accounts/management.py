@@ -122,12 +122,12 @@ class AccountManager:
         }
 
         # load all account objects
-        all_account_objects = (
-            (
+        all_account_objects = map(
+            lambda kv: (
                 kv[0],
                 Account.from_saved_format(kv[1]),
-            )
-            for kv in filter_legacy_accounts_dict.items()
+            ),
+            filter_legacy_accounts_dict.items(),
         )
         # filter based on input parameters
         filtered_account_objects = dict(
