@@ -66,6 +66,14 @@ class EnvironmentOptions:
         standard retention behavior of the API.
     """
 
+    max_execution_time: Optional[float] = None
+    """Maximum execution time in seconds.
+    
+    This value bounds system execution time (not wall clock time). System execution time is the
+    amount of time that the system is dedicated to processing your job. If a job exceeds
+    this time limit, it is forcibly cancelled.
+    """
+
     image: Optional[str] = None
     r"""Runtime image used for this job."""
 
