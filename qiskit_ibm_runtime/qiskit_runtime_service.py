@@ -875,14 +875,12 @@ class QiskitRuntimeService:
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-        return dict(
-            map(
-                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
-                AccountManager.list(
-                    default=default, channel=channel, filename=filename, name=name
-                ).items(),
-            ),
-        )
+        return {
+            kv[0]: Account.to_saved_format(kv[1])
+            for kv in AccountManager.list(
+                default=default, channel=channel, filename=filename, name=name
+            ).items()
+        }
 
     def backend(
         self,
@@ -933,7 +931,7 @@ class QiskitRuntimeService:
 
         if use_fractional_gates:
             basis_gates = backends[0].basis_gates
-            if "rzz" not in basis_gates:
+            if "rzz" not in basis_gates and "rx" not in basis_gates:
                 # TODO suggest backends that support frac gates in error message
                 # via service.backends(use_fractional_gates=True)
                 raise IBMInputValueError(

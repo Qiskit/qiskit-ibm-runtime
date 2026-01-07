@@ -118,7 +118,7 @@ class BlockBasePadder(TransformationPass):
                 is inserted before this node is called.
         """
         if not self._schedule_idle_qubits:
-            self._idle_qubits = set(wire for wire in dag.idle_wires() if isinstance(wire, Qubit))
+            self._idle_qubits = {wire for wire in dag.idle_wires() if isinstance(wire, Qubit)}
         self._pre_runhook(dag)
 
         self._init_run(dag)
@@ -134,7 +134,7 @@ class BlockBasePadder(TransformationPass):
         """Setup for initial run."""
         self._node_start_time = self.property_set["node_start_time"].copy()
         self._node_block_dags = self.property_set["node_block_dags"]
-        self._idle_after = {bit: 0 for bit in dag.qubits}
+        self._idle_after = dict.fromkeys(dag.qubits, 0)
         self._current_block_idx = 0
         self._conditional_block = False
         self._block_duration = 0
@@ -586,7 +586,7 @@ class BlockBasePadder(TransformationPass):
             self._map_wires(node.cargs),
         )
         self._last_node_to_touch.update(
-            {bit: (new_node, self._block_dag) for bit in new_node.qargs + new_node.cargs}
+            dict.fromkeys(new_node.qargs + new_node.cargs, (new_node, self._block_dag))
         )
 
     def _terminate_block(self, block_duration: int, block_idx: int) -> None:
@@ -596,7 +596,7 @@ class BlockBasePadder(TransformationPass):
         # the conditional circuit block.
         self._block_duration = 0
         self._pad_until_block_end(block_duration, block_idx)
-        self._idle_after = {bit: 0 for bit in self._block_dag.qubits}
+        self._idle_after = dict.fromkeys(self._block_dag.qubits, 0)
 
     def _pad_until_block_end(self, block_duration: int, block_idx: int) -> None:
         # Add delays until the end of circuit.
