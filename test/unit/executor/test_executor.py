@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests the `NoiseLearnerV3` class."""
+"""Tests the `Executor` class."""
 
 from unittest.mock import patch
 
