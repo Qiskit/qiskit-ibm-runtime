@@ -66,7 +66,7 @@ class EnvironmentOptions:
         standard retention behavior of the API.
     """
 
-    max_execution_time: Optional[float] = None
+    max_execution_time: Optional[int] = None
     """Maximum execution time in seconds.
     
     This value bounds system execution time (not wall clock time). System execution time is the
