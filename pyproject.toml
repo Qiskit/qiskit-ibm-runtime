@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 version_file = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.43.1"
+fallback_version = "0.44.0"
 
 [tool.mypy]
 python_version = "3.10"
@@ -65,7 +65,7 @@ disallow_incomplete_defs = true
 strict_optional = false
 show_error_codes = true
 no_site_packages = true
-disable_error_code = "import-untyped,annotation-unchecked"
+disable_error_code = "import-untyped"
 
 [[tool.mypy.overrides]]
 module = "test.*"
