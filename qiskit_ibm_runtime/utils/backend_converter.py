@@ -42,6 +42,13 @@ from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
 
+NON_UNITARY_ISA_INSTRUCTIONS = frozenset(("measure", "delay", "reset"))
+"""The names of non-unitary Qiskit instructions.
+
+Not every backend supports the full set of non-unitary instructions. To know which instructions
+are supported by a given backend, one can inspect ``backend.supported_operations``.
+"""
+
 
 def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
@@ -108,7 +115,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # `instruction_signatures` (see below) and handled separately
     all_instructions = set.union(
         basis_gates,
-        supported_instructions.intersection({"measure", "delay", "reset"}),
+        supported_instructions.intersection(NON_UNITARY_ISA_INSTRUCTIONS),
         supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
     inst_name_map = {}
@@ -281,7 +288,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
             )
 
-    for op in supported_instructions.intersection({"measure", "delay", "reset"}):
+    for op in supported_instructions.intersection(NON_UNITARY_ISA_INSTRUCTIONS):
         # Map required ops to each operational qubit
         if prop_name_map[op] is None:
             prop_name_map[op] = {
