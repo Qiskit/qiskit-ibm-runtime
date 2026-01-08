@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- ``qiskit-ibm-runtime`` is now compatible with Qiskit 2.3.
+- ``qiskit-ibm-runtime`` is now compatible with Qiskit v2.3.
 - The ``delete_job()`` method has been reintroduced. (`2541 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2541>`__)
 
 
@@ -19,4 +19,4 @@ Other Notes
 -----------
 
 - The minimal version of Qiskit required is now ``2.0.0``, as the ``1.x`` Qiskit
-  series are no longer supported. (`2543 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2543>`__)
+  series is no longer supported. (`2543 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2543>`__)
