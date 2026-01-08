@@ -1,0 +1,15 @@
+0.45.0 (2026-01-08)
+===================
+
+Bug Fixes
+---------
+
+- Bugfix for :meth:`.QiskitRuntimeService.backend` when the flag ``use_fractional_gates=True``
+  checks for either or both ``Rx`` and ``Rzz`` gates as opposed to only ``Rzz`` gates in the backend basis. (`2520 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2520>`__)
+
+
+Other Notes
+-----------
+
+- The minimal version of Qiskit required is now ``2.0.0``, as the ``1.x`` Qiskit
+  series are no longer supported. (`2543 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2543>`__)
