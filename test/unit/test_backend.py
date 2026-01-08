@@ -272,6 +272,14 @@ class TestBackend(IBMTestCase):
         self.assertTrue(target.instruction_supported("reset"))
         self.assertTrue(target.instruction_supported(operation_class=Reset))
 
+    def test_non_unitary_isa_operations(self):
+        """Test handling of non-unitary ISA operations."""
+        target = convert_to_target(FakeSherbrooke().configuration())
+
+        assert isinstance(target.get("reset"), dict)
+        assert isinstance(target.get("measure"), dict)
+        assert target.get("measure_2") is None
+
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.
 
