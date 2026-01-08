@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.towncrier]
 single_file = false
@@ -139,7 +139,7 @@ dependencies = [
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
     "pydantic>=2.5.0",
-    "qiskit>=1.4.1",
+    "qiskit>=2.0.0",
     "packaging"
 ]
 
