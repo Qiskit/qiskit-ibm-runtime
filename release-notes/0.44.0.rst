@@ -1,6 +1,39 @@
 0.44.0 (2025-12-16)
 ===================
 
+Upgrade Notes
+-------------
+
+- If a backend that does not support fractional gates is requested by setting the flag
+  ``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`, 
+  an ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
+- The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the 
+  same runtime entrypoint URL (``https://quantum.cloud.ibm.com/api/v[x]``).
+  Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes 
+  that dependency and aligns URL generation across channels. There are no user-facing changes. (`2486 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2486>`__)
+- Impose a y-axis channel ordering for :meth:`draw_circuit_schedule_timing` according 
+  to the order of channels in the ``included_channels`` input argument. (`2492 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2492>`__)
+- Add a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that 
+  if set to ``True`` will merge instructions of the same type based on temporal continuity.
+
+  Example, 
+
+  .. code-block:: python
+
+      from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
+
+
+      job_result: SamplerPubResult = job.result()
+      circuit_schedule: str = job_result[0].metadata["compilation"]["scheduler_timing"]["timing"]
+
+      fig = draw_circuit_schedule_timing(
+          circuit_schedule=circuit_schedule,
+          merge_common_instructions=True
+          )
+
+      fig.show() (`2494 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2494>`__)
+
+
 New Features
 ------------
 
@@ -14,6 +47,67 @@ New Features
   circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
   square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
   600% improvement in circuit depth compared to a Heron backend. (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
+- The :mod:`.qiskit_ibm_runtime.transpiler.passes` module has been extended with a 
+  new transpiler pass: :class:`.ConvertMidCircMeas`. This pass detects non-terminal 
+  :class:`~qiskit.circuit.Measure` instructions in a circuit and converts them into 
+  mid-circuit measurement instructions supported by the target.
+  The pass is constructed with two arguments:
+
+  - ``target`` (required): The backend target defining supported instructions.
+  - ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use. 
+      Defaults to ``"measure_2"``. The name must follow the pattern "measure_[X]" (e.g., "measure_3", "measure_reset").
+
+  During initialization, the pass validates that the specified target supports the given 
+  mid-circuit measurement instruction on at least one qubit. If not, construction fails.
+  When executed, the pass:
+
+  - Runs on an already routed circuit.
+  - Replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
+  measurement instruction, provided the target supports it on the corresponding physical qubit.
+
+  It does not:
+
+  - Replace terminal measurements.
+  - Replace existing mid-circuit measurement instructions (e.g., "measure_2" -> "measure_3").
+  - Convert mid-circuit measurements back to terminal measurements.
+
+  Example usage::
+
+      from qiskit import QuantumCircuit
+      from qiskit.transpiler import PassManager
+      from qiskit.providers.fake_provider import GenericBackendV2
+      from qiskit_ibm_runtime.circuit import MidCircuitMeasure
+      from qiskit_ibm_runtime.transpiler.passes import ConvertToMidCircuitMeasure
+      from qiskit.transpiler.target import Target
+
+      # Fake target construction for demo purposes
+      mcm = MidCircuitMeasure()
+      target = GenericBackendV2(num_qubits=2, seed=0).target
+      target.add_instruction(mcm, {(i,): None for i in range(2)})
+
+     # Example usage
+     qc = QuantumCircuit(2, 2)
+     qc.measure(0, 0)
+     qc.cx(0,1)
+     qc.measure(1, 1)
+
+     my_pass = ConvertToMidCircuitMeasure(target)
+     pm = PassManager([my_pass])
+     new_qc = pm.run(qc)
+     print(new_qc)
+
+  Expected output::
+
+           ┌────────────┐
+      q_0: ┤0           ├──■─────
+           │            │┌─┴─┐┌─┐
+      q_1: ┤  Measure_2 ├┤ X ├┤M├
+           │            │└───┘└╥┘
+      c_0: ╡0           ╞══════╬═
+           └────────────┘      ║
+      c_1: ════════════════════╩═
+
+  (`2317 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2317>`__)
 
 
 Bug Fixes
