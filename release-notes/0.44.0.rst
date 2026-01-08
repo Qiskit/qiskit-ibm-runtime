@@ -6,17 +6,17 @@ Upgrade Notes
 
 - If a backend that does not support fractional gates is requested by setting the flag
   ``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`, 
-  an ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
+ ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
 - The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the 
   same runtime entrypoint URL (``https://quantum.cloud.ibm.com/api/v[x]``).
   Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes 
   that dependency and aligns URL generation across channels. There are no user-facing changes. (`2486 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2486>`__)
-- Impose a y-axis channel ordering for :meth:`draw_circuit_schedule_timing` according 
+- A y-axis channel ordering for :meth:`draw_circuit_schedule_timing` has now been imposed, according 
   to the order of channels in the ``included_channels`` input argument. (`2492 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2492>`__)
-- Add a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that 
-  if set to ``True`` will merge instructions of the same type based on temporal continuity.
+- Added a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that, 
+  if set to ``True``, will merge instructions of the same type based on temporal continuity.
 
-  Example, 
+  Example:
 
   .. code-block:: python
 
@@ -55,14 +55,14 @@ New Features
 
   - ``target`` (required): The backend target defining supported instructions.
   - ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use. 
-      Defaults to ``"measure_2"``. The name must follow the pattern "measure_[X]" (e.g., "measure_3", "measure_reset").
+      Defaults to ``"measure_2"``. The name must follow the pattern "measure_[X]" (for example, "measure_3", "measure_reset").
 
   During initialization, the pass validates that the specified target supports the given 
   mid-circuit measurement instruction on at least one qubit. If not, construction fails.
-  When executed, the pass:
+  When executed, the pass does the following:
 
-  - Runs on an already routed circuit.
-  - Replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
+  - It runs on an already routed circuit.
+  - It replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
   measurement instruction, provided the target supports it on the corresponding physical qubit.
 
   It does not:
