@@ -1,2 +1,0 @@
-The minimal version of Qiskit required is now ``2.0.0``, as the ``1.x`` Qiskit
-series are no longer supported.
