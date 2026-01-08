@@ -276,6 +276,31 @@ class TestIBMBackend(IBMIntegrationTestCase):
             ):
                 self.service.backend(backend.name, use_fractional_gates=True)
 
+    def test_backend_fractional_gates_cache_behavior(self):
+        """Test backend config cache/refresh logic for use_fractional_gates."""
+        try:
+            real_device_name = "ibm_miami"
+            backend_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+            backend_fg2 = self.service.backend(real_device_name, use_fractional_gates=True)
+            backend_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
+        except QiskitBackendNotFoundError:
+            self.skipTest("Real backend not available.")
+
+        self.assertIs(
+            backend_fg, backend_fg2,
+            "Cache was not used for repeated use_fractional_gates=True"
+        )
+
+        self.assertIsNot(
+            backend_fg, backend_no_fg,
+            "Config was not refreshed when use_fractional_gates changed"
+        )
+        
+        self.assertTrue(
+            "rx" in backend_fg.basis_gates or "rzz" in backend_fg.basis_gates,
+            f'basis_gates={backend_fg.basis_gates} does not contain "rx" or "rzz"'
+        )
+
     def test_renew_backend_properties(self):
         """Test renewed backend property"""
         name = self.backend.name
