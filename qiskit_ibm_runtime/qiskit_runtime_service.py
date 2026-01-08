@@ -724,11 +724,11 @@ class QiskitRuntimeService:
                 if (
                     (
                         use_fractional_gates
-                        and not any(fg not in config.basis_gates for fg in fractional_gates)
+                        and not any(fg in config.basis_gates for fg in fractional_gates)
                     )
                     or (
                         not use_fractional_gates
-                        and any(fg not in config.basis_gates for fg in fractional_gates)
+                        and any(fg in config.basis_gates for fg in fractional_gates)
                     )
                     or calibration_id
                 ):
