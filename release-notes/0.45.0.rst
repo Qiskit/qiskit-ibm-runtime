@@ -1,6 +1,12 @@
 0.45.0 (2026-01-08)
 ===================
 
+New Features
+------------
+
+- ``qiskit-ibm-runtime`` is now compatible with Qiskit 2.3.
+
+
 Bug Fixes
 ---------
 
