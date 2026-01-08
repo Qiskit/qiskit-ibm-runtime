@@ -1156,6 +1156,25 @@ class QiskitRuntimeService:
 
         return [self._decode_job(job) for job in job_responses]
 
+    def delete_job(self, job_id: str) -> None:
+        """Delete a runtime job.
+
+        Note that this operation cannot be reversed.
+
+        Args:
+            job_id: ID of the job to delete.
+
+        Raises:
+            RuntimeJobNotFound: The job doesn't exist.
+            IBMRuntimeError: Method is not supported.
+        """
+        try:
+            self._active_api_client.job_delete(job_id)
+        except RequestsApiError as ex:
+            if ex.status_code == 404:
+                raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
+            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
+
     def usage(self) -> dict[str, Any]:
         """Return usage information for the current active instance.
 

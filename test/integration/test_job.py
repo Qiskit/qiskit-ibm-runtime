@@ -15,8 +15,11 @@
 import random
 import time
 
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
 from qiskit_ibm_runtime.exceptions import (
     RuntimeInvalidStateError,
+    RuntimeJobNotFound,
 )
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
@@ -24,7 +27,7 @@ from ..decorators import run_integration_test, production_only
 from ..serialization import (
     SerializableClass,
 )
-from ..utils import cancel_job_safe, wait_for_status
+from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):
@@ -83,6 +86,35 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         with self.assertRaises(RuntimeInvalidStateError):
             job.cancel()
+
+    @run_integration_test
+    def test_delete_job(self, service):
+        """Test deleting a job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
+        sub_tests = ["DONE"]
+        for status in sub_tests:
+            with self.subTest(status=status):
+                job = self._run_program(service)
+                wait_for_status(job, status)
+                service.delete_job(job.job_id())
+                with self.assertRaises(RuntimeJobNotFound):
+                    service.job(job.job_id())
+
+    @run_integration_test
+    @production_only
+    def test_delete_job_queued(self, service):
+        """Test deleting a queued job."""
+        self.skipTest("Deleting jobs not supported on IBM Quantum Platform.")
+        real_device_name = get_real_device(service)
+        real_device = service.backend(real_device_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
+        isa_circuit = pm.run([bell()])
+        _ = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
+        job = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
+        wait_for_status(job, "QUEUED")
+        service.delete_job(job.job_id())
+        with self.assertRaises(RuntimeJobNotFound):
+            service.job(job.job_id())
 
     @run_integration_test
     def test_job_status(self, service):
