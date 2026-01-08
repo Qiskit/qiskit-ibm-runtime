@@ -139,7 +139,7 @@ dependencies = [
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
     "pydantic>=2.5.0",
-    "qiskit>=1.4.1",
+    "qiskit>=2.0.0",
     "packaging"
 ]
 
