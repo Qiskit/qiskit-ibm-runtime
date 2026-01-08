@@ -709,13 +709,19 @@ class QiskitRuntimeService:
             if backend_name in self._backend_configs:
                 config = self._backend_configs[backend_name]
 
-                fractional_gates = {"rzz","rx"}
+                fractional_gates = {"rzz", "rx"}
 
                 # if cached config does not match use_fractional_gates
                 # or calibration_id is passed in
                 if (
-                    (use_fractional_gates and not any(fg not in config.basis_gates for fg in fractional_gates))
-                    or (not use_fractional_gates and any(fg not in config.basis_gates for fg in fractional_gates))
+                    (
+                        use_fractional_gates
+                        and not any(fg not in config.basis_gates for fg in fractional_gates)
+                    )
+                    or (
+                        not use_fractional_gates
+                        and any(fg not in config.basis_gates for fg in fractional_gates)
+                    )
                     or calibration_id
                 ):
                     config = configuration_from_server_data(
