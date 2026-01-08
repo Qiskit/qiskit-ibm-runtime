@@ -46,7 +46,7 @@ class TestClientParameters(IBMTestCase):
         """Test using only proxy urls (no NTLM credentials)."""
         proxies_only_expected_result = {"verify": True, "proxies": self.mock_proxies_urls}
         proxies_only_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls})
+            proxies=ProxyConfiguration(**{"urls": self.mock_proxies_urls})  # type: ignore[arg-type]
         )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
@@ -59,14 +59,14 @@ class TestClientParameters(IBMTestCase):
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
-                "https://us-east.quantum-computing.cloud.ibm.com",
+                "https://quantum.cloud.ibm.com/api/v1",
             ),
             (
                 "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
                 None,
-                "https://my-region.quantum-computing.cloud.ibm.com",
+                "https://my-region.quantum.cloud.ibm.com/api/v1",
             ),
             (
                 "ibm_cloud",
@@ -119,7 +119,7 @@ class TestClientParameters(IBMTestCase):
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = self._get_client_params(
-            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)
+            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)  # type: ignore[arg-type]
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
 

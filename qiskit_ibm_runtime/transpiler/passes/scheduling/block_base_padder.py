@@ -12,7 +12,7 @@
 
 """Padding pass to fill timeslots for IBM (dynamic circuit) backends."""
 
-from typing import Dict, Iterable, List, Optional, Union, Set
+from collections.abc import Iterable
 
 from qiskit.circuit import (
     Qubit,
@@ -68,33 +68,33 @@ class BlockBasePadder(TransformationPass):
     def __init__(
         self,
         schedule_idle_qubits: bool = False,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
-        target: Optional[Target] = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ) -> None:
 
-        self._node_start_time = None
-        self._node_block_dags = None
-        self._idle_after: Optional[Dict[Qubit, int]] = None
+        self._node_start_time: dict[DAGNode, tuple[int, int]] | None = None
+        self._node_block_dags: dict[DAGNode, DAGCircuit] | None = None
+        self._idle_after: dict[Qubit, int] | None = None
         self._root_dag = None
-        self._dag = None
-        self._block_dag = None
-        self._prev_node: Optional[DAGNode] = None
-        self._wire_map: Optional[Dict[Bit, Bit]] = None
+        self._dag: DAGCircuit | None = None
+        self._block_dag: DAGCircuit | None = None
+        self._prev_node: DAGNode | None = None
+        self._wire_map: dict[Bit, Bit] | None = None
         self._block_duration = 0
         self._current_block_idx = 0
         self._conditional_block = False
-        self._bit_indices: Optional[Dict[Qubit, int]] = None
+        self._bit_indices: dict[Qubit, int] | None = None
         # Nodes that the scheduling of this node is tied to.
 
-        self._last_node_to_touch: Optional[Dict[Qubit, DAGNode]] = None
+        self._last_node_to_touch: dict[Qubit, DAGNode] | None = None
         # Last node to touch a bit
 
-        self._fast_path_nodes: Set[DAGNode] = set()
+        self._fast_path_nodes: set[DAGNode] = set()
 
-        self._dirty_qubits: Set[Qubit] = set()
+        self._dirty_qubits: set[Qubit] = set()
         # Qubits that are dirty in the circuit.
         self._schedule_idle_qubits = schedule_idle_qubits
-        self._idle_qubits: Set[Qubit] = set()
+        self._idle_qubits: set[Qubit] = set()
 
         # Block ordering callable
         self._block_ordering_callable = (
@@ -118,7 +118,7 @@ class BlockBasePadder(TransformationPass):
                 is inserted before this node is called.
         """
         if not self._schedule_idle_qubits:
-            self._idle_qubits = set(wire for wire in dag.idle_wires() if isinstance(wire, Qubit))
+            self._idle_qubits = {wire for wire in dag.idle_wires() if isinstance(wire, Qubit)}
         self._pre_runhook(dag)
 
         self._init_run(dag)
@@ -134,7 +134,7 @@ class BlockBasePadder(TransformationPass):
         """Setup for initial run."""
         self._node_start_time = self.property_set["node_start_time"].copy()
         self._node_block_dags = self.property_set["node_block_dags"]
-        self._idle_after = {bit: 0 for bit in dag.qubits}
+        self._idle_after = dict.fromkeys(dag.qubits, 0)
         self._current_block_idx = 0
         self._conditional_block = False
         self._block_duration = 0
@@ -156,7 +156,7 @@ class BlockBasePadder(TransformationPass):
         self,
         dag: DAGCircuit,
         pad_wires: bool = True,
-        wire_map: Optional[Dict[Qubit, Qubit]] = None,
+        wire_map: dict[Qubit, Qubit] | None = None,
         ignore_idle: bool = False,
     ) -> DAGCircuit:
         """Create an empty dag like the input dag."""
@@ -355,7 +355,7 @@ class BlockBasePadder(TransformationPass):
     def _visit_block(
         self,
         block: DAGCircuit,
-        wire_map: Dict[Qubit, Qubit],
+        wire_map: dict[Qubit, Qubit],
         pad_wires: bool = True,
         ignore_idle: bool = False,
     ) -> DAGCircuit:
@@ -586,7 +586,7 @@ class BlockBasePadder(TransformationPass):
             self._map_wires(node.cargs),
         )
         self._last_node_to_touch.update(
-            {bit: (new_node, self._block_dag) for bit in new_node.qargs + new_node.cargs}
+            dict.fromkeys(new_node.qargs + new_node.cargs, (new_node, self._block_dag))
         )
 
     def _terminate_block(self, block_duration: int, block_idx: int) -> None:
@@ -596,7 +596,7 @@ class BlockBasePadder(TransformationPass):
         # the conditional circuit block.
         self._block_duration = 0
         self._pad_until_block_end(block_duration, block_idx)
-        self._idle_after = {bit: 0 for bit in self._block_dag.qubits}
+        self._idle_after = dict.fromkeys(self._block_dag.qubits, 0)
 
     def _pad_until_block_end(self, block_duration: int, block_idx: int) -> None:
         # Add delays until the end of circuit.
@@ -621,8 +621,8 @@ class BlockBasePadder(TransformationPass):
         block_idx: int,
         t_start: int,
         oper: Instruction,
-        qubits: Union[Qubit, Iterable[Qubit]],
-        clbits: Union[Clbit, Iterable[Clbit]] = (),
+        qubits: Qubit | Iterable[Qubit],
+        clbits: Clbit | Iterable[Clbit] = (),
     ) -> DAGNode:
         """Add new operation to DAG with scheduled information.
 
@@ -647,7 +647,7 @@ class BlockBasePadder(TransformationPass):
         self.property_set["node_start_time"][new_node] = (block_idx, t_start)
         return new_node
 
-    def _map_wires(self, wires: Iterable[Bit]) -> List[Bit]:
+    def _map_wires(self, wires: Iterable[Bit]) -> list[Bit]:
         """Map the wires from the current block to the top-level block's wires.
 
         TODO: We should have an easier approach to wire mapping from the transpiler.

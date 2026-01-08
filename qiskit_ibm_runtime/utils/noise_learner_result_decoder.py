@@ -12,7 +12,6 @@
 
 """NoiseLearner result decoder."""
 
-from typing import Dict
 
 from .noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
 from .result_decoder import ResultDecoder
@@ -22,11 +21,9 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     """Class used to decode noise learner results"""
 
     @classmethod
-    def decode(  # type: ignore # pylint: disable=arguments-differ
-        cls, raw_result: str
-    ) -> NoiseLearnerResult:
+    def decode(cls, raw_result: str) -> NoiseLearnerResult:
         """Convert the result to NoiseLearnerResult."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         data = []
         for layer in decoded["data"]:

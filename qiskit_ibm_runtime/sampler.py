@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Union, Iterable
+from collections.abc import Iterable
 import logging
 
 
@@ -60,8 +60,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[Dict, SamplerOptions]] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | SamplerOptions | None = None,
     ):
         """Initializes the Sampler primitive.
 
@@ -108,7 +108,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
         validate_classical_registers(coerced_pubs)
 
-        return self._run(coerced_pubs)  # type: ignore[arg-type]
+        return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that primitive inputs (options) are valid
