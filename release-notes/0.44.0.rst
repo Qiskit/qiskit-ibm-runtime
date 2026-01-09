@@ -6,7 +6,7 @@ Upgrade Notes
 
 - If a backend that does not support fractional gates is requested by setting the flag
   ``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`, 
- ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
+  ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
 - The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the 
   same runtime entrypoint URL (``https://quantum.cloud.ibm.com/api/v[x]``).
   Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes 
@@ -16,7 +16,7 @@ Upgrade Notes
 - Added a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that, 
   if set to ``True``, will merge instructions of the same type based on temporal continuity.
 
-  Example:
+  Example (`2494 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2494>`__):
 
   .. code-block:: python
 
@@ -31,7 +31,7 @@ Upgrade Notes
           merge_common_instructions=True
           )
 
-      fig.show() (`2494 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2494>`__)
+      fig.show()
 
 
 New Features
@@ -63,7 +63,7 @@ New Features
 
   - It runs on an already routed circuit.
   - It replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
-  measurement instruction, provided the target supports it on the corresponding physical qubit.
+    measurement instruction, provided the target supports it on the corresponding physical qubit.
 
   It does not do the following:
 
@@ -71,7 +71,7 @@ New Features
   - It does not replace existing mid-circuit measurement instructions (for example, ``measure_2`` to ``measure_3``).
   - It does not convert mid-circuit measurements back to terminal measurements.
 
-  Example usage::
+  Example usage (`2317 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2317>`__)::
 
       from qiskit import QuantumCircuit
       from qiskit.transpiler import PassManager
@@ -106,8 +106,6 @@ New Features
       c_0: ╡0           ╞══════╬═
            └────────────┘      ║
       c_1: ════════════════════╩═
-
-  (`2317 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2317>`__)
 
 
 Bug Fixes
