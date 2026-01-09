@@ -75,8 +75,8 @@ class TestNoiseLearnerV3Result(IBMTestCase):
     def test_to_pauli_lindblad_map(self):
         """Test ``NoiseLearnerV3Result.to_pauli_lindblad_map``."""
         generators = [
-            QubitSparsePauliList.from_list(l)
-            for l in [
+            QubitSparsePauliList.from_list(list_)
+            for list_ in [
                 ["IX", "ZX"],
                 ["IY", "ZY"],
                 ["IZ"],
