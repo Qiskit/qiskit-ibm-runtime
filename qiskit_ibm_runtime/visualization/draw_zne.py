@@ -18,7 +18,6 @@ from itertools import product
 from typing import TYPE_CHECKING
 from collections.abc import Sequence
 import numpy as np
-
 from .utils import plotly_module
 from ..utils.estimator_pub_result import EstimatorPubResult
 

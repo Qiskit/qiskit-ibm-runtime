@@ -13,7 +13,7 @@
 """NoiseLearner result decoder."""
 
 
-from .noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
+from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
 
 
@@ -23,6 +23,15 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str) -> NoiseLearnerResult:
         """Convert the result to NoiseLearnerResult."""
+        if "schema_version" in raw_result:
+            # pylint: disable=import-outside-toplevel
+            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
+                NoiseLearnerV3ResultDecoder,
+            )
+
+            return NoiseLearnerV3ResultDecoder().decode(raw_result)
+
+        # Decode for legacy noise learner
         decoded: dict = super().decode(raw_result)
 
         data = []
