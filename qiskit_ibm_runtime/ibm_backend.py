@@ -168,7 +168,7 @@ class IBMBackend(Backend):
     def __init__(
         self,
         configuration: QasmBackendConfiguration,
-        service: "qiskit_runtime_service.QiskitRuntimeService",
+        service: qiskit_runtime_service.QiskitRuntimeService,
         api_client: RuntimeClient,
         instance: str | None = None,
         calibration_id: str | None = None,
@@ -321,7 +321,7 @@ class IBMBackend(Backend):
         return self._calibration_id
 
     @property
-    def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
+    def service(self) -> qiskit_runtime_service.QiskitRuntimeService:
         """Return the ``service`` object
 
         Returns:
@@ -504,7 +504,7 @@ class IBMBackend(Backend):
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
 
-    def __call__(self) -> "IBMBackend":
+    def __call__(self) -> IBMBackend:
         # For backward compatibility only, can be removed later.
         return self
 
@@ -542,7 +542,7 @@ class IBMBackend(Backend):
                     f"{instr} operating on a faulty edge {qubit_indices}"
                 )
 
-    def __deepcopy__(self, _memo: dict = None) -> "IBMBackend":
+    def __deepcopy__(self, _memo: dict = None) -> IBMBackend:
         cpy = IBMBackend(
             configuration=deepcopy(self.configuration()),
             service=self._service,
@@ -583,7 +583,7 @@ class IBMRetiredBackend(IBMBackend):
     def __init__(
         self,
         configuration: QasmBackendConfiguration,
-        service: "qiskit_runtime_service.QiskitRuntimeService",
+        service: qiskit_runtime_service.QiskitRuntimeService,
         api_client: RuntimeClient | None = None,
     ) -> None:
         """IBMRetiredBackend constructor.
@@ -620,7 +620,7 @@ class IBMRetiredBackend(IBMBackend):
         cls,
         backend_name: str,
         api: RuntimeClient | None = None,
-    ) -> "IBMRetiredBackend":
+    ) -> IBMRetiredBackend:
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(
             backend_name=backend_name,
