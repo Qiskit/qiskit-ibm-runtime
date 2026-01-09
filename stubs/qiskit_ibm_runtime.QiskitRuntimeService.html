@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Estimator" href="qiskit_ibm_runtime.Estimator.html" /><link rel="prev" title="Qiskit Runtime (qiskit_ibm_runtime)" href="../apidocs/runtime_service.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>QiskitRuntimeService - Qiskit Runtime IBM Client 0.44.0</title>
+        <title>QiskitRuntimeService - Qiskit Runtime IBM Client 0.45.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.45.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.45.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -417,7 +417,7 @@
 <h1>QiskitRuntimeService<a class="headerlink" href="#qiskitruntimeservice" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QiskitRuntimeService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L50-L1334"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QiskitRuntimeService</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L50-L1351"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for interacting with the Qiskit Runtime service.</p>
 <p>QiskitRuntimeService constructor.</p>
@@ -572,7 +572,7 @@ channel is set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.active_instance">
-<span class="sig-name descname"><span class="pre">active_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1313-L1315"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_instance" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">active_instance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1330-L1332"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.active_instance" title="Link to this definition">¶</a></dt>
 <dd><p>Return the crn of the current active instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -583,7 +583,7 @@ channel is set.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.backend">
-<span class="sig-name descname"><span class="pre">backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fractional_gates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L887-L943"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.backend" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">backend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_fractional_gates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L885-L941"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.backend" title="Link to this definition">¶</a></dt>
 <dd><p>Return a single backend matching the specified filtering.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -708,8 +708,29 @@ False if no account was found.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.delete_job">
+<span class="sig-name descname"><span class="pre">delete_job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1159-L1176"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_job" title="Link to this definition">¶</a></dt>
+<dd><p>Delete a runtime job.</p>
+<p>Note that this operation cannot be reversed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_id</strong> (<em>str</em>) – ID of the job to delete.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeJobNotFound</strong> – The job doesn’t exist.</p></li>
+<li><p><strong>IBMRuntimeError</strong> – Method is not supported.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.instances">
-<span class="sig-name descname"><span class="pre">instances</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1302-L1311"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.instances" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">instances</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1319-L1328"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.instances" title="Link to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>Return a list that contains a series of dictionaries with the</dt><dd><p>following instance identifiers per instance: “crn”, “plan”, “name”.</p>
 </dd>
@@ -726,7 +747,7 @@ False if no account was found.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.job">
-<span class="sig-name descname"><span class="pre">job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1035-L1066"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.job" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">job</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1033-L1064"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.job" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve a runtime job.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -749,7 +770,7 @@ False if no account was found.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.jobs">
-<span class="sig-name descname"><span class="pre">jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1068-L1159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.jobs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">jobs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_before</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descending</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1066-L1157"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.jobs" title="Link to this definition">¶</a></dt>
 <dd><p>Retrieve all runtime jobs, subject to optional filtering.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -789,7 +810,7 @@ creation date (i.e. newest first) until the limit is reached.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.least_busy">
-<span class="sig-name descname"><span class="pre">least_busy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_num_qubits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1234-L1300"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.least_busy" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">least_busy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_num_qubits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1251-L1317"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.least_busy" title="Link to this definition">¶</a></dt>
 <dd><p>Return the least busy available backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -862,7 +883,7 @@ will be prioritized if an instance is not passed in.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saved_accounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L857-L885"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saved_accounts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L857-L883"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.saved_accounts" title="Link to this definition">¶</a></dt>
 <dd><p>List the accounts saved on disk.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -887,7 +908,7 @@ will be prioritized if an instance is not passed in.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.QiskitRuntimeService.usage">
-<span class="sig-name descname"><span class="pre">usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1161-L1175"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.usage" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">usage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/qiskit_runtime_service.py#L1178-L1192"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.QiskitRuntimeService.usage" title="Link to this definition">¶</a></dt>
 <dd><p>Return usage information for the current active instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -967,6 +988,7 @@ will be prioritized if an instance is not passed in.</p></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.backend"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.backend()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.backends"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.backends()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_account"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.delete_account()</span></code></a></li>
+<li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.delete_job"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.delete_job()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.instances"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.instances()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.job"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.job()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.QiskitRuntimeService.jobs"><code class="docutils literal notranslate"><span class="pre">QiskitRuntimeService.jobs()</span></code></a></li>
@@ -987,7 +1009,7 @@ will be prioritized if an instance is not passed in.</p></li>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+</div><script src="../_static/documentation_options.js?v=13a4108a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

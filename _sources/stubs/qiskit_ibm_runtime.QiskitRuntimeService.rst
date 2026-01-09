@@ -26,6 +26,7 @@
    .. automethod:: backend
    .. automethod:: backends
    .. automethod:: delete_account
+   .. automethod:: delete_job
    .. automethod:: instances
    .. automethod:: job
    .. automethod:: jobs

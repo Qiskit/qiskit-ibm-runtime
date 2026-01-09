@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="RuntimeJobV2" href="qiskit_ibm_runtime.RuntimeJobV2.html" /><link rel="prev" title="Batch" href="qiskit_ibm_runtime.Batch.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>IBMBackend - Qiskit Runtime IBM Client 0.44.0</title>
+        <title>IBMBackend - Qiskit Runtime IBM Client 0.45.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.45.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.45.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -418,7 +418,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">IBMBackend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">service</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/ibm_backend.py#L75-L577"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.BackendV2" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BackendV2</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.BackendV2" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">BackendV2</span></code></a></p>
 <p>Backend class interfacing with an IBM Quantum backend.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -445,7 +445,7 @@ respectively:</p>
 <li><p>name: backend name.</p></li>
 <li><p>backend_version: backend version in the form X.Y.Z.</p></li>
 <li><p>num_qubits: number of qubits.</p></li>
-<li><p>target: A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p></li>
+<li><p>target: A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p></li>
 <li><p>basis_gates: list of basis gates names on the backend.</p></li>
 <li><p>gates: list of basis gates on the backend.</p></li>
 <li><p>local: backend is local or remote.</p></li>
@@ -537,7 +537,7 @@ form <code class="docutils literal notranslate"><span class="pre">{&quot;family&
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend.coupling_map">
 <span class="sig-name descname"><span class="pre">coupling_map</span></span><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend.coupling_map" title="Link to this definition">¶</a></dt>
-<dd><p>Return the <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CouplingMap</span></code></a> object</p>
+<dd><p>Return the <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">CouplingMap</span></code></a> object</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -576,7 +576,7 @@ be returned.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend.instruction_durations">
 <span class="sig-name descname"><span class="pre">instruction_durations</span></span><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend.instruction_durations" title="Link to this definition">¶</a></dt>
-<dd><p>Return the <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.InstructionDurations" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstructionDurations</span></code></a> object.</p>
+<dd><p>Return the <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.InstructionDurations" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstructionDurations</span></code></a> object.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -624,7 +624,7 @@ scheduling.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend.operations">
 <span class="sig-name descname"><span class="pre">operations</span></span><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend.operations" title="Link to this definition">¶</a></dt>
-<dd><p>A list of <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.Instruction" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a> instances that the backend supports.</p>
+<dd><p>A list of <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.Instruction" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Instruction</span></code></a> instances that the backend supports.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -667,7 +667,7 @@ method.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend.target">
 <span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend.target" title="Link to this definition">¶</a></dt>
-<dd><p>A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p>
+<dd><p>A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Target</p>
@@ -724,7 +724,7 @@ abstract interface.</p>
 <dd><p>Check if the input circuit uses faulty qubits or edges.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>circuit</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><em>QuantumCircuit</em></a>) – Circuit to check.</p>
+<dd class="field-odd"><p><strong>circuit</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><em>QuantumCircuit</em></a>) – Circuit to check.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If an instruction operating on a faulty qubit or edge is found.</p>
@@ -840,7 +840,7 @@ returned. If properties are missing for a qubit this can be
     qubit properties</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.QubitProperties" title="(in Qiskit v2.2)"><em>QubitProperties</em></a> | <em>List</em>[<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.QubitProperties" title="(in Qiskit v2.2)"><em>QubitProperties</em></a>]</p>
+<dd class="field-even"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.QubitProperties" title="(in Qiskit v2.3)"><em>QubitProperties</em></a> | <em>List</em>[<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.QubitProperties" title="(in Qiskit v2.3)"><em>QubitProperties</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -933,7 +933,7 @@ then the backend is accepting jobs but not processing them.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.IBMBackend.target_history">
 <span class="sig-name descname"><span class="pre">target_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datetime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/ibm_backend.py#L373-L383"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.IBMBackend.target_history" title="Link to this definition">¶</a></dt>
-<dd><p>A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p>
+<dd><p>A <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">qiskit.transpiler.Target</span></code></a> object for the backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Target with properties found on <cite>datetime</cite></p>
@@ -942,7 +942,7 @@ then the backend is accepting jobs but not processing them.</p>
 <dd class="field-even"><p><strong>datetime</strong> (<em>datetime</em><em> | </em><em>None</em>)</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.2)"><em>Target</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.Target" title="(in Qiskit v2.3)"><em>Target</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1055,7 +1055,7 @@ then the backend is accepting jobs but not processing them.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+</div><script src="../_static/documentation_options.js?v=13a4108a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

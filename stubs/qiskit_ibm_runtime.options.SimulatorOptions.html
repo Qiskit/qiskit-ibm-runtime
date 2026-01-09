@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Transpiler passes (qiskit_ibm_runtime.transpiler.passes)" href="../apidocs/transpiler.html" /><link rel="prev" title="EnvironmentOptions" href="qiskit_ibm_runtime.options.EnvironmentOptions.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>SimulatorOptions - Qiskit Runtime IBM Client 0.44.0</title>
+        <title>SimulatorOptions - Qiskit Runtime IBM Client 0.45.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.45.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.45.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -428,7 +428,7 @@ basis gates and coupling map of that backend.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>noise_model</strong> (<em>UnsetType</em><em> | </em><em>dict</em><em> | </em><em>NoiseModel</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>seed_simulator</strong> (<em>UnsetType</em><em> | </em><em>int</em>)</p></li>
-<li><p><strong>coupling_map</strong> (<em>UnsetType</em><em> | </em><em>list</em><em>[</em><em>list</em><em>[</em><em>int</em><em>]</em><em>] </em><em>| </em><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.2)"><em>CouplingMap</em></a>)</p></li>
+<li><p><strong>coupling_map</strong> (<em>UnsetType</em><em> | </em><em>list</em><em>[</em><em>list</em><em>[</em><em>int</em><em>]</em><em>] </em><em>| </em><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.3)"><em>CouplingMap</em></a>)</p></li>
 <li><p><strong>basis_gates</strong> (<em>UnsetType</em><em> | </em><em>list</em><em>[</em><em>str</em><em>]</em>)</p></li>
 </ul>
 </dd>
@@ -443,7 +443,7 @@ basis gates and coupling map of that backend.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.options.SimulatorOptions.coupling_map">
-<span class="sig-name descname"><span class="pre">coupling_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.2)"><span class="pre">CouplingMap</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.SimulatorOptions.coupling_map" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">coupling_map</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">UnsetType</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.transpiler.CouplingMap" title="(in Qiskit v2.3)"><span class="pre">CouplingMap</span></a></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Unset</span></em><a class="headerlink" href="#qiskit_ibm_runtime.options.SimulatorOptions.coupling_map" title="Link to this definition">¶</a></dt>
 <dd><p>Directed coupling map to target in mapping. If
 the coupling map is symmetric, both directions need to be specified.
 Each entry in the list specifies a directed two-qubit interaction,
@@ -474,7 +474,7 @@ local testing mode.</p>
 This method changes noise_model, coupling_map, basis_gates according to given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.BackendV2" title="(in Qiskit v2.2)"><em>BackendV2</em></a>) – backend to be set.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.providers.BackendV2" title="(in Qiskit v2.3)"><em>BackendV2</em></a>) – backend to be set.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>MissingOptionalLibraryError</strong> – if qiskit-aer is not found.</p>
@@ -565,7 +565,7 @@ This method changes noise_model, coupling_map, basis_gates according to given ba
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+</div><script src="../_static/documentation_options.js?v=13a4108a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

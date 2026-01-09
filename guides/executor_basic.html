@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Qiskit Runtime IBM Client release notes" href="../release_notes.html" /><link rel="prev" title="Guides" href="index.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>The Executor: A quick-start guide - Qiskit Runtime IBM Client 0.44.0</title>
+        <title>The Executor: A quick-start guide - Qiskit Runtime IBM Client 0.45.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.45.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.45.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -458,9 +458,9 @@ gates, and how to execute the program via the <a class="reference internal" href
 <a class="reference internal" href="../stubs/qiskit_ibm_runtime.quantum_program.QuantumProgramItem.html#qiskit_ibm_runtime.quantum_program.QuantumProgramItem" title="qiskit_ibm_runtime.quantum_program.QuantumProgramItem"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgramItem</span></code></a>s. Each of these items represents a
 different task for the <a class="reference internal" href="../stubs/qiskit_ibm_runtime.Executor.html#qiskit_ibm_runtime.Executor" title="qiskit_ibm_runtime.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a> to perform. Typically, each item owns:</p>
 <ul class="simple">
-<li><p>a <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> with static, non-parametrized gates;</p></li>
-<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with an array of parameter values;</p></li>
-<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with a
+<li><p>a <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> with static, non-parametrized gates;</p></li>
+<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with an array of parameter values;</p></li>
+<li><p>or a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>, together with a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code> to generate randomize arrays of parameter values.</p></li>
 </ul>
 <p>Let us take a closer look at each of these items and how to add them to a <a class="reference internal" href="../stubs/qiskit_ibm_runtime.quantum_program.QuantumProgram.html#qiskit_ibm_runtime.quantum_program.QuantumProgram" title="qiskit_ibm_runtime.quantum_program.QuantumProgram"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code></a>.</p>
@@ -495,7 +495,7 @@ transpiled according to the backend’s ISA.</p>
 <span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">isa_circuit</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We proceed to append a second item that contains a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>
+<p>We proceed to append a second item that contains a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>
 and an array containing <code class="docutils literal notranslate"><span class="pre">10</span></code> sets of parameter values. This amounts to a circuit task requiring a total
 of <code class="docutils literal notranslate"><span class="pre">10240</span></code> shots (namely <code class="docutils literal notranslate"><span class="pre">1024</span></code> per set of parameter values).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">qiskit.circuit</span><span class="w"> </span><span class="kn">import</span> <span class="n">Parameter</span>
@@ -526,7 +526,7 @@ of <code class="docutils literal notranslate"><span class="pre">10240</span></co
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Finally, in the next cell we append a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> and a
+<p>Finally, in the next cell we append a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a> and a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code>, which is responsible for generating randomized sets of
 parameters for the given circuit. As part of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Samplex</span></code> arguments,
 we provide <code class="docutils literal notranslate"><span class="pre">10</span></code> sets of parameters for the parametric gates in the original circuit.
@@ -725,7 +725,7 @@ the measurement twirling for the <code class="docutils literal notranslate"><spa
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+</div><script src="../_static/documentation_options.js?v=13a4108a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>

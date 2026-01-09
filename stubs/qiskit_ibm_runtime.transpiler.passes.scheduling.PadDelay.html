@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="PadDynamicalDecoupling" href="qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling.html" /><link rel="prev" title="DynamicCircuitInstructionDurations" href="qiskit_ibm_runtime.transpiler.passes.scheduling.DynamicCircuitInstructionDurations.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>PadDelay - Qiskit Runtime IBM Client 0.44.0</title>
+        <title>PadDelay - Qiskit Runtime IBM Client 0.45.0</title>
       <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3ee1c6c6" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/qiskit-sphinx-theme.css?v=8ff9dcb6" />
@@ -162,7 +162,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.44.0</div></a>
+      <a href="../index.html"><div class="brand">Qiskit Runtime IBM Client 0.45.0</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -186,7 +186,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
   
   
-  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.44.0</span>
+  <span class="sidebar-brand-text">Qiskit Runtime IBM Client 0.45.0</span>
   
 </a>
 <form class="sidebar-search-container" method="get" action="../search.html" role="search">
@@ -474,8 +474,8 @@ but cannot modify the property set (but it can be read).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>circuit</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><em>QuantumCircuit</em></a>) – The dag on which the pass is run.</p></li>
-<li><p><strong>property_set</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PropertySet" title="(in Qiskit v2.2)"><em>PropertySet</em></a><em> | </em><em>dict</em><em> | </em><em>None</em>) – Input/output property set. An analysis pass might change the property set
+<li><p><strong>circuit</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><em>QuantumCircuit</em></a>) – The dag on which the pass is run.</p></li>
+<li><p><strong>property_set</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PropertySet" title="(in Qiskit v2.3)"><em>PropertySet</em></a><em> | </em><em>dict</em><em> | </em><em>None</em>) – Input/output property set. An analysis pass might change the property set
 in-place.  If not given, the existing <code class="docutils literal notranslate"><span class="pre">property_set</span></code> attribute of the pass will
 be used (if set).</p></li>
 </ul>
@@ -485,7 +485,7 @@ be used (if set).</p></li>
 If analysis pass, the input circuit.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.2)"><em>QuantumCircuit</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><em>QuantumCircuit</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -498,7 +498,7 @@ If analysis pass, the input circuit.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>passmanager_ir</strong> (<em>Any</em>) – Qiskit IR to optimize.</p></li>
-<li><p><strong>state</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.2)"><em>PassManagerState</em></a>) – State associated with workflow execution by the pass manager itself.</p></li>
+<li><p><strong>state</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.3)"><em>PassManagerState</em></a>) – State associated with workflow execution by the pass manager itself.</p></li>
 <li><p><strong>callback</strong> (<em>Callable</em><em> | </em><em>None</em>) – A callback function which is caller per execution of optimization task.</p></li>
 </ul>
 </dd>
@@ -506,7 +506,7 @@ If analysis pass, the input circuit.</p>
 <dd class="field-even"><p>Optimized Qiskit IR and state of the workflow.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>tuple[<em>Any</em>, <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.2)"><em>PassManagerState</em></a>]</p>
+<dd class="field-odd"><p>tuple[<em>Any</em>, <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.3)"><em>PassManagerState</em></a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,7 +528,7 @@ If analysis pass, the input circuit.</p>
 <dd><p>Run the padding pass on <code class="docutils literal notranslate"><span class="pre">dag</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dag</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.dagcircuit.DAGCircuit" title="(in Qiskit v2.2)"><em>DAGCircuit</em></a>) – DAG to be checked.</p>
+<dd class="field-odd"><p><strong>dag</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.dagcircuit.DAGCircuit" title="(in Qiskit v2.3)"><em>DAGCircuit</em></a>) – DAG to be checked.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>DAG with idle time filled with instructions.</p>
@@ -550,7 +550,7 @@ If analysis pass, the input circuit.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>state</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.2)"><em>PassManagerState</em></a>) – Pass manager state to update.</p></li>
+<li><p><strong>state</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.3)"><em>PassManagerState</em></a>) – Pass manager state to update.</p></li>
 <li><p><strong>run_state</strong> (<em>RunState</em>) – Completion status of current task.</p></li>
 </ul>
 </dd>
@@ -558,7 +558,7 @@ If analysis pass, the input circuit.</p>
 <dd class="field-even"><p>Updated pass manager state.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.2)"><em>PassManagerState</em></a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.passmanager.PassManagerState" title="(in Qiskit v2.3)"><em>PassManagerState</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -645,7 +645,7 @@ If analysis pass, the input circuit.</p>
       
     </aside>
   </div>
-</div><script src="../_static/documentation_options.js?v=ef7e2566"></script>
+</div><script src="../_static/documentation_options.js?v=13a4108a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
