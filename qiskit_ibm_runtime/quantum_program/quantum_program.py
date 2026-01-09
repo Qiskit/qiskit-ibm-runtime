@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import Iterable, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterable
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
@@ -269,7 +270,7 @@ class QuantumProgram:
                 )
             )
 
-    def validate(self, backend: "IBMBackend") -> None:
+    def validate(self, backend: IBMBackend) -> None:
         """Validate this quantum program against the given backend."""
 
     def __repr__(self) -> str:

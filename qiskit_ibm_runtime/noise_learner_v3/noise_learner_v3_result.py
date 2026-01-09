@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Sequence, Union
+from typing import Union
+from collections.abc import Iterable, Sequence
 from numpy.typing import NDArray
 
 import numpy as np
@@ -66,8 +67,8 @@ class NoiseLearnerV3Result:
         cls,
         generators: Iterable[QubitSparsePauliList],
         rates: Iterable[float],
-        rates_std: Optional[Iterable[float]] = None,
-        metadata: Optional[Metadata] = None,
+        rates_std: Iterable[float] | None = None,
+        metadata: Metadata | None = None,
     ) -> NoiseLearnerV3Result:
         """
         Construct from a collection of generators and rates.
