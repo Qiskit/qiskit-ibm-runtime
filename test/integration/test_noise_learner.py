@@ -17,6 +17,7 @@ from copy import deepcopy
 from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime import RuntimeJobV2, Session, EstimatorV2
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
@@ -58,7 +59,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=self._backend, options=options)
 
-        job = learner.run(self.circuits)
+        try:
+            job = learner.run(self.circuits)
+        except IBMInputValueError as ex:
+            if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
+                self.skipTest("Backend does not meet requirements")
 
         self._verify(job, self.default_input_options, 3)
 
@@ -70,7 +75,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.layer_pair_depths = [0, 1]
         learner = NoiseLearner(mode=self._backend, options=options)
 
-        job = learner.run(self.circuits)
+        try:
+            job = learner.run(self.circuits)
+        except IBMInputValueError as ex:
+            if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
+                self.skipTest("Backend does not meet requirements")
 
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 1
@@ -84,7 +93,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options.max_layers_to_learn = 0
         learner = NoiseLearner(mode=self._backend, options=options)
 
-        job = learner.run(self.circuits)
+        try:
+            job = learner.run(self.circuits)
+        except IBMInputValueError as ex:
+            if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
+                self.skipTest("Backend does not meet requirements")
 
         self.assertEqual(job.result().data, [])
 
@@ -112,7 +125,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
         with Session(self._backend) as session:
             learner = NoiseLearner(mode=session, options=options)
-            learner_job = learner.run(self.circuits)
+            try:
+                learner_job = learner.run(self.circuits)
+            except IBMInputValueError as ex:
+                if "The instruction ecr on qubits (0, 1) is not supported" in ex.message:
+                    self.skipTest("Backend does not meet requirements")
             noise_model = learner_job.result()
             self.assertEqual(len(noise_model), 3)
 
