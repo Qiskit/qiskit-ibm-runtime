@@ -55,7 +55,7 @@ New Features
 
   - ``target`` (required): The backend target defining supported instructions.
   - ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use. 
-      Defaults to ``"measure_2"``. The name must follow the pattern "measure_[X]" (for example, "measure_3", "measure_reset").
+      Defaults to ``measure_2``. The name must follow the pattern ``measure_[X]`` (for example, ``measure_3``, ``measure_reset``).
 
   During initialization, the pass validates that the specified target supports the given 
   mid-circuit measurement instruction on at least one qubit. If not, construction fails.
@@ -65,11 +65,11 @@ New Features
   - It replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
   measurement instruction, provided the target supports it on the corresponding physical qubit.
 
-  It does not:
+  It does not do the following:
 
-  - Replace terminal measurements.
-  - Replace existing mid-circuit measurement instructions (e.g., "measure_2" -> "measure_3").
-  - Convert mid-circuit measurements back to terminal measurements.
+  - It does not replace terminal measurements.
+  - It does not replace existing mid-circuit measurement instructions (for example, ``measure_2`` to ``measure_3``).
+  - It does not convert mid-circuit measurements back to terminal measurements.
 
   Example usage::
 
