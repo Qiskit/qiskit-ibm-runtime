@@ -24,7 +24,7 @@ from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-MetadataLeafTypes = Union[int, str, float]
+MetadataLeafTypes = int | str | float
 MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]
 Metadata = dict[str, MetadataValue]
 
@@ -94,7 +94,7 @@ class NoiseLearnerV3Result:
         if len({len(obj._generators), len(obj._rates), len(obj._rates_std)}) != 1:
             raise ValueError("'generators', 'rates', and 'rates_std' must be of the same length.")
 
-        if len(set(generator.num_qubits for generator in obj._generators)) != 1:
+        if len({generator.num_qubits for generator in obj._generators}) != 1:
             raise ValueError("All the generators must have the same number of qubits.")
 
         return obj
