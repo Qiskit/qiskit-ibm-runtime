@@ -136,7 +136,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
 
-        return _decoder.decode(result_raw) if result_raw else None  # type: ignore
+        return _decoder.decode(result_raw) if result_raw else None
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -254,7 +254,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
-        if not self._backend:  # type: ignore
+        if not self._backend:
             self.wait_for_final_state(timeout=timeout)
             try:
                 raw_data = self._api_client.job_get(self.job_id())

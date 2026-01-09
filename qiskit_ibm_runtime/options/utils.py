@@ -96,7 +96,7 @@ def _to_obj(cls_, data):  # type: ignore
     )
 
 
-def merge_options(old_options: dict | "BaseOptions", new_options: dict | None = None) -> dict:
+def merge_options(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
     """Merge current options with the new ones.
 
     Args:
@@ -150,7 +150,7 @@ def merge_options(old_options: dict | "BaseOptions", new_options: dict | None = 
     return combined
 
 
-def merge_options_v2(old_options: dict | "BaseOptions", new_options: dict | None = None) -> dict:
+def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
     """Merge current options with the new ones for V2 primitives.
 
     Unlike ``merge_options``, this function does not attempt to
@@ -232,7 +232,7 @@ class UnsetType:
     def __repr__(self) -> str:
         return "Unset"
 
-    def __new__(cls) -> "UnsetType":
+    def __new__(cls) -> UnsetType:
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
         return cls._instance

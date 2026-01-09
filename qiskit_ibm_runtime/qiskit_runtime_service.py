@@ -875,14 +875,12 @@ class QiskitRuntimeService:
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-        return dict(
-            map(
-                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
-                AccountManager.list(
-                    default=default, channel=channel, filename=filename, name=name
-                ).items(),
-            ),
-        )
+        return {
+            kv[0]: Account.to_saved_format(kv[1])
+            for kv in AccountManager.list(
+                default=default, channel=channel, filename=filename, name=name
+            ).items()
+        }
 
     def backend(
         self,
@@ -933,7 +931,7 @@ class QiskitRuntimeService:
 
         if use_fractional_gates:
             basis_gates = backends[0].basis_gates
-            if "rzz" not in basis_gates:
+            if "rzz" not in basis_gates and "rx" not in basis_gates:
                 # TODO suggest backends that support frac gates in error message
                 # via service.backends(use_fractional_gates=True)
                 raise IBMInputValueError(
@@ -1157,6 +1155,25 @@ class QiskitRuntimeService:
             offset += len(job_page)
 
         return [self._decode_job(job) for job in job_responses]
+
+    def delete_job(self, job_id: str) -> None:
+        """Delete a runtime job.
+
+        Note that this operation cannot be reversed.
+
+        Args:
+            job_id: ID of the job to delete.
+
+        Raises:
+            RuntimeJobNotFound: The job doesn't exist.
+            IBMRuntimeError: Method is not supported.
+        """
+        try:
+            self._active_api_client.job_delete(job_id)
+        except RequestsApiError as ex:
+            if ex.status_code == 404:
+                raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
+            raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
     def usage(self) -> dict[str, Any]:
         """Return usage information for the current active instance.

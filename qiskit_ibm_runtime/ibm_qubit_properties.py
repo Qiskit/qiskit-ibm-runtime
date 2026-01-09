@@ -26,7 +26,7 @@ class IBMQubitProperties(QubitProperties):
         "operational",
     )
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
         t1=None,
         t2=None,
@@ -47,7 +47,7 @@ class IBMQubitProperties(QubitProperties):
         self.anharmonicity = anharmonicity
         self.operational = operational
 
-    def __repr__(self):  # type: ignore[no-untyped-def]
+    def __repr__(self):
         return (
             f"IBMQubitProperties(t1={self.t1}, t2={self.t2}, frequency={self.frequency}, "
             f"anharmonicity={self.anharmonicity})"

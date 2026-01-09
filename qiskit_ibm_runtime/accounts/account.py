@@ -186,7 +186,7 @@ class Account:
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum_platform"]):
+        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
                 f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
@@ -205,7 +205,7 @@ class Account:
         """Assert that the URL is valid."""
         try:
             urlparse(url)
-        except:
+        except:  # noqa: E722 bare-except
             raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
@@ -333,7 +333,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:
+            except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."

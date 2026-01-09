@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeCusco(fake_backend.FakeBackendV2):
     """A fake 127 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_cusco.json"  # type: ignore
-    props_filename = "props_cusco.json"  # type: ignore
-    backend_name = "fake_cusco"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_cusco.json"
+    props_filename = "props_cusco.json"
+    backend_name = "fake_cusco"

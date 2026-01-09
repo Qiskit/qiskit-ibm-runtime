@@ -34,7 +34,7 @@ class FakeCambridgeV2(fake_backend.FakeBackendV2):
         19 ↔ 20 ↔ 21 ↔ 22 ↔ 23 ↔ 24 ↔ 25 ↔ 26 ↔ 27
     """
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_cambridge.json"  # type: ignore
-    props_filename = "props_cambridge.json"  # type: ignore
-    backend_name = "fake_cambridge"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_cambridge.json"
+    props_filename = "props_cambridge.json"
+    backend_name = "fake_cambridge"

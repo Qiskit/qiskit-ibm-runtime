@@ -207,7 +207,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         self._node_start_time = {}
         self._node_stop_time = {}
-        self._bit_stop_times = {0: {q: 0 for q in dag.qubits + dag.clbits}}
+        self._bit_stop_times = {0: dict.fromkeys(dag.qubits + dag.clbits, 0)}
         self._current_block_measures = set()
         self._current_block_measures_has_reset = False
         self._node_tied_to = {}
@@ -284,9 +284,9 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         self._current_block_measures_has_reset = False
 
     def _current_block_measure_qargs(self) -> set[Qubit]:
-        return set(
+        return {
             qarg for measure in self._current_block_measures for qarg in self._map_qubits(measure)
-        )
+        }
 
     def _check_flush_measures(self, node: DAGNode) -> None:
         if self._current_block_measure_qargs() & set(self._map_qubits(node)):
@@ -639,7 +639,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 continue
             # Start with last time as the time to push to
             if block not in block_bit_times:
-                block_bit_times[block] = {q: self._max_block_t1[block] for q in self._dag.wires}
+                block_bit_times[block] = dict.fromkeys(self._dag.wires, self._max_block_t1[block])
 
             # Calculate the latest available time to push to collectively for tied nodes
             tied_nodes = self._node_tied_to.get(node, None)

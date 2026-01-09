@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 100
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.towncrier]
 single_file = false
@@ -50,7 +50,7 @@ zip-safe = false
 root = "."
 version_file = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.44.0"
+fallback_version = "0.45.0"
 
 [tool.mypy]
 python_version = "3.10"
@@ -74,6 +74,33 @@ disallow_untyped_defs = false
 
 [tool.coverage.run]
 source = ["qiskit_ibm_runtime"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    # Rules in alphabetic order
+    "C4",    # flake8-comprehensions
+    "E",     # pycodestyle
+    "F",     # pyflake
+    "G",     # flake8-logging-format
+    "T10",   # flake8-debugger
+    "UP",    # pyupgrade
+]
+ignore = [
+    "E501",  # line-too-long: black handles line length
+    "UP032", # f-string: requires manual revision of non f-string formatting
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "E402",   # module-import-not-at-top-of-file
+    "F401",   # unused-import
+    "F403",   # undefined-local-with-import-star
+]
+
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -113,7 +140,7 @@ dependencies = [
     "ibm-platform-services>=0.22.6",
     "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@d579621311e62b5c342e804a605e4e4e96d88811#egg=ibm-quantum-schemas",
     "pydantic>=2.5.0",
-    "qiskit>=1.4.1",
+    "qiskit>=2.0.0",
     "packaging",
     "pybase64>=1.0",
     "samplomatic>=0.13.0"
@@ -145,6 +172,7 @@ common = [
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
     "black~=24.1",
+    "ruff~=0.14.10",
     "coverage>=6.3",
     "pylatexenc",
     "scikit-learn",
@@ -171,4 +199,3 @@ dev = [
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]
-
