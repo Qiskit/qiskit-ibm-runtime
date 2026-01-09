@@ -1,2 +1,0 @@
-Bugfix for :meth:`.QiskitRuntimeService.backend` when the flag ``use_fractional_gates=True``
-checks for either or both ``Rx`` and ``Rzz`` gates as opposed to only ``Rzz`` gates in the backend basis.
