@@ -428,7 +428,7 @@ each given instruction.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mode</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>BackendV2</em><em>, </em><a class="reference internal" href="qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session" title="qiskit_ibm_runtime.Session"><em>Session</em></a><em>, </em><a class="reference internal" href="qiskit_ibm_runtime.Batch.html#qiskit_ibm_runtime.Batch" title="qiskit_ibm_runtime.Batch"><em>Batch</em></a><em>]</em><em>]</em>) – <p>The execution mode used to make the primitive query. It can be:</p>
+<li><p><strong>mode</strong> (<em>BackendV2</em><em> | </em><a class="reference internal" href="qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session" title="qiskit_ibm_runtime.Session"><em>Session</em></a><em> | </em><a class="reference internal" href="qiskit_ibm_runtime.Batch.html#qiskit_ibm_runtime.Batch" title="qiskit_ibm_runtime.Batch"><em>Batch</em></a><em> | </em><em>None</em>) – <p>The execution mode used to make the primitive query. It can be:</p>
 <ul>
 <li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Backend</span></code> if you are using job mode.</p></li>
 <li><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code> if you are using session execution mode.</p></li>
@@ -438,7 +438,7 @@ each given instruction.</p>
 <a class="reference external" href="https://quantum.cloud.ibm.com/docs/guides/execution-modes">Qiskit Runtime documentation</a>
 for more information about the execution modes.</p>
 </p></li>
-<li><p><strong>options</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerV3Options.html#qiskit_ibm_runtime.options.NoiseLearnerV3Options" title="qiskit_ibm_runtime.options.NoiseLearnerV3Options"><em>NoiseLearnerV3Options</em></a><em>]</em>) – The desired options.</p></li>
+<li><p><strong>options</strong> (<a class="reference internal" href="qiskit_ibm_runtime.options.NoiseLearnerV3Options.html#qiskit_ibm_runtime.options.NoiseLearnerV3Options" title="qiskit_ibm_runtime.options.NoiseLearnerV3Options"><em>NoiseLearnerV3Options</em></a><em> | </em><em>None</em>) – The desired options.</p></li>
 </ul>
 </dd>
 </dl>
