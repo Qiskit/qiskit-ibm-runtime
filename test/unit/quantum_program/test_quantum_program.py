@@ -131,7 +131,7 @@ class TestQuantumProgram(IBMTestCase):
             )
 
         with self.assertRaisesRegex(
-            ValueError, "'samplex_shape' cannot be supplied when no samplex is given"
+            ValueError, "'shape' cannot be supplied when no samplex is given"
         ):
             quantum_program.append(template_circuit, shape=(1,))
 

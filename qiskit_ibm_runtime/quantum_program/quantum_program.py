@@ -234,7 +234,7 @@ class QuantumProgram:
             samplex_arguments: A map from argument names to argument values for the samplex. If this
                 value is provided, a samplex must be present, and ``circuit_arguments`` must not be
                 supplied.
-            samplex_shape: A shape tuple to extend the implicit shape defined by
+            shape: A shape tuple to extend the implicit shape defined by
                 ``samplex_arguments``. Non-trivial axes introduced by this extension enumerate
                 randomizations. If this value is provided, a samplex must be present, and
                 ``circuit_arguments`` must not be supplied.
@@ -246,7 +246,7 @@ class QuantumProgram:
             if samplex_arguments is not None:
                 raise ValueError("'samplex_arguments' cannot be supplied when no samplex is given.")
             if shape is not None:
-                raise ValueError("'samplex_shape' cannot be supplied when no samplex is given.")
+                raise ValueError("'shape' cannot be supplied when no samplex is given.")
             self.items.append(
                 CircuitItem(
                     circuit,
