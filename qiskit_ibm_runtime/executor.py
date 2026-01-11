@@ -101,6 +101,7 @@ class Executor:
             job_tags=self.options.environment.job_tags,
             log_level=self.options.environment.log_level,
             private=self.options.environment.private,
+            max_execution_time=self.options.environment.max_execution_time,
         )
 
     def _run(self, params: BaseParamsModel) -> RuntimeJobV2:

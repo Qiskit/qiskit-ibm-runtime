@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
+from collections.abc import Iterable
 
 import math
 import numpy as np
@@ -30,7 +30,7 @@ class DoubleSliceSpan(ExecutionSpan):
     This type of execution span references pub result data by assuming that it is a sliceable
     portion of the data where the shots are the outermost slice and the rest of the data is
     flattened. Therefore, for each pub dependent on this span, the constructor accepts two
-    :class:`slice` objects, along with the corresponding shape of the data to be sliced; in contrast
+    :class:`slice` instances, along with the corresponding shape of the data to be sliced; in contrast
     to :class:`~.SliceSpan`, this class does not assume that *all* shots for a particular set of
     parameter values are contiguous in the array of data.
 
@@ -76,7 +76,7 @@ class DoubleSliceSpan(ExecutionSpan):
         mask.reshape(np.prod(shape[:-1], dtype=int), shape[-1])[(args_sl, shots_sl)] = True
         return mask
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "DoubleSliceSpan":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> DoubleSliceSpan:
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
         return DoubleSliceSpan(self.start, self.stop, slices)

@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     NoiseLearnerV3ResultModel,
@@ -46,7 +46,7 @@ def noise_learner_v3_inputs_to_0_1(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     return ParamsModel(
-        instructions=QpyModelV13ToV16.from_quantum_circuit(circuit),
+        instructions=QpyModelV13ToV16.from_quantum_circuit(circuit, qpy_version=16),
         options=options.to_options_model(),
     )
 

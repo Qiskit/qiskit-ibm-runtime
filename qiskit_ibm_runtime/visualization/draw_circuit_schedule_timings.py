@@ -24,10 +24,11 @@ if TYPE_CHECKING:
 
 
 def draw_circuit_schedule_timing(
-    circuit_schedule: str,
+    circuit_schedule: str | CircuitSchedule,
     included_channels: list = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
+    merge_common_instructions: bool = False,
     width: int = 1400,
 ) -> PlotlyFigure:
     r"""
@@ -35,10 +36,13 @@ def draw_circuit_schedule_timing(
 
     Args:
         circuit_schedule: The circuit schedule as a string as returned
-        from the compiler.
-        included_channels: A list of channels to include in the plot.
+            from the compiler or a `CircuitSchedule` object.
+        included_channels: A list of channels to include in the plot
+            and to order the y-axis accordingly.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
+        merge_common_instructions: If ``True``, merge instructions of the same type
+            based on temporal continuity.
         width: The width of the returned figure.
 
     Returns:
@@ -48,15 +52,24 @@ def draw_circuit_schedule_timing(
     fig = go.Figure(layout=go.Layout(width=width))
 
     # Get the scheduling data
-    schedule = CircuitSchedule(
-        circuit_schedule=circuit_schedule,
-    )
+    if isinstance(circuit_schedule, CircuitSchedule):
+        schedule = circuit_schedule
+    elif isinstance(circuit_schedule, str):
+        schedule = CircuitSchedule(
+            circuit_schedule=circuit_schedule,
+        )
+    else:
+        raise ValueError(
+            f"'circuit_schedule' is expected to be of type "
+            f"'str' or 'CircuitSchedule', instead got {type(circuit_schedule)}."
+        )
 
     # Process and filter
     schedule.preprocess(
         included_channels=included_channels,
         filter_awgr=filter_readout_channels,
         filter_barriers=filter_barriers,
+        merge_common_instructions=merge_common_instructions,
     )
 
     # Setup the figure
@@ -89,7 +102,7 @@ def draw_circuit_schedule_timing(
     )
     fig.update_layout(
         xaxis={
-            "rangeselector": {"buttons": list([])},
+            "rangeselector": {"buttons": []},
             "rangeslider": {"visible": True},
         }
     )
@@ -106,25 +119,23 @@ def draw_circuit_schedule_timing(
             {
                 "type": "dropdown",
                 "direction": "down",
-                "buttons": list(
-                    [
-                        {
-                            "args": [{"annotations": fig.layout.annotations}],
-                            "label": "Show Annotations",
-                            "method": "relayout",
-                        },
-                        {
-                            "args": [{"annotations": []}],
-                            "label": "Hide Annotations",
-                            "method": "relayout",
-                        },
-                    ]
-                ),
+                "buttons": [
+                    {
+                        "args": [{"annotations": fig.layout.annotations}],
+                        "label": "Show Annotations",
+                        "method": "relayout",
+                    },
+                    {
+                        "args": [{"annotations": []}],
+                        "label": "Hide Annotations",
+                        "method": "relayout",
+                    },
+                ],
                 "pad": {"r": 10, "t": 10},
                 "showactive": True,
                 "x": 0,
                 "xanchor": "left",
-                "y": 1.1,
+                "y": 1 + 1 / len(schedule.channels),
                 "yanchor": "top",
             }
         ]

@@ -27,7 +27,7 @@ from ..decorators import run_integration_test, production_only
 from ..serialization import (
     SerializableClass,
 )
-from ..utils import cancel_job_safe, wait_for_status, get_real_device, bell
+from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):

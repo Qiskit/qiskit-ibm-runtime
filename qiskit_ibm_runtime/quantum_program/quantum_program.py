@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import Iterable, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterable
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
@@ -82,15 +83,14 @@ class CircuitItem(QuantumProgramItem):
     ):
         super().__init__(circuit=circuit, chunk_size=chunk_size)
 
-        if circuit_arguments is None and circuit.num_parameters:
-            raise ValueError(
-                f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
-            )
-
         if circuit_arguments is None:
-            circuit_arguments = np.empty((circuit.num_parameters,), dtype=float)
-        else:
-            circuit_arguments = np.array(circuit_arguments, dtype=float)
+            if circuit.num_parameters:
+                raise ValueError(
+                    f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
+                )
+            circuit_arguments = []
+
+        circuit_arguments = np.array(circuit_arguments, dtype=float)
 
         if circuit_arguments.shape[-1] != circuit.num_parameters:
             raise ValueError(
@@ -268,7 +268,7 @@ class QuantumProgram:
                 )
             )
 
-    def validate(self, backend: "IBMBackend") -> None:
+    def validate(self, backend: IBMBackend) -> None:
         """Validate this quantum program against the given backend."""
 
     def __repr__(self) -> str:
