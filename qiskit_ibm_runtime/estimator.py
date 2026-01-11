@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, Dict, Union, Iterable
+from collections.abc import Iterable
 import logging
 
 from qiskit.providers import BackendV2
@@ -99,8 +99,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
-        options: Optional[Union[Dict, EstimatorOptions]] = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | EstimatorOptions | None = None,
     ):
         """Initializes the Estimator primitive.
 
@@ -113,7 +113,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
                 Refer to the
                 `Qiskit Runtime documentation
-                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_.
+                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
                 for more information about the ``Execution modes``.
 
             options: Estimator options, see :class:`EstimatorOptions` for detailed description.
@@ -147,7 +147,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
         validate_estimator_pubs(coerced_pubs)
-        return self._run(coerced_pubs)  # type: ignore[arg-type]
+        return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that primitive inputs (options) are valid

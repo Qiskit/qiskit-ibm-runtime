@@ -12,7 +12,6 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Dict, Union, Optional
 import logging
 import traceback
 
@@ -31,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 def configuration_from_server_data(
-    raw_config: Dict,
+    raw_config: dict,
     instance: str = "",
-    use_fractional_gates: Optional[bool] = False,
-) -> Optional[QasmBackendConfiguration]:
+    use_fractional_gates: bool | None = False,
+) -> QasmBackendConfiguration | None:
     """Create a backend configuration instance from raw server data.
 
     Args:
@@ -69,9 +68,7 @@ def configuration_from_server_data(
     return None
 
 
-def filter_raw_configuration(
-    raw_config: dict, use_fractional_gates: Optional[bool] = False
-) -> None:
+def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
     """Filter unwanted entries from raw configuration data
 
     Args:
@@ -105,7 +102,7 @@ def filter_raw_configuration(
 
 
 def properties_from_server_data(
-    properties: Dict, use_fractional_gates: Optional[bool] = False
+    properties: dict, use_fractional_gates: bool | None = False
 ) -> BackendProperties:
     """Decode backend properties.
 
@@ -143,7 +140,7 @@ def properties_from_server_data(
     return BackendProperties.from_dict(properties)
 
 
-def decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: dict) -> None:
     """Decode backend configuration.
 
     Args:
@@ -161,7 +158,7 @@ def decode_backend_configuration(config: Dict) -> None:
 _decode_backend_configuration = decode_backend_configuration
 
 
-def _to_complex(value: Union[List[float], complex]) -> complex:
+def _to_complex(value: list[float] | complex) -> complex:
     """Convert the input value to type ``complex``.
 
     Args:

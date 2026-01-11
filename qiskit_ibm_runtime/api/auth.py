@@ -12,13 +12,14 @@
 
 """Authentication helpers."""
 
-from typing import Dict
 
 import warnings
 from requests import PreparedRequest
 from requests.auth import AuthBase
 
 from ibm_cloud_sdk_core import IAMTokenManager
+
+from ..proxies import ProxyConfiguration
 from ..utils.utils import cname_from_crn
 
 CLOUD_IAM_URL = "iam.cloud.ibm.com"
@@ -28,14 +29,29 @@ STAGING_CLOUD_IAM_URL = "iam.test.cloud.ibm.com"
 class CloudAuth(AuthBase):
     """Attaches IBM Cloud Authentication to the given Request object."""
 
-    def __init__(self, api_key: str, crn: str, private: bool = False):
+    def __init__(
+        self,
+        api_key: str,
+        crn: str,
+        private: bool = False,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool = True,
+    ):
         self.crn = crn
         self.api_key = api_key
+        self.private = private
+        self.proxies = proxies
+        self.verify = verify
         iam_url = (
             f"https://{'private.' if private else ''}"
             f"{STAGING_CLOUD_IAM_URL if cname_from_crn(crn) == 'staging' else CLOUD_IAM_URL}"
         )
-        self.tm = IAMTokenManager(api_key, url=iam_url)
+        proxies_kwargs = {}
+        if proxies is not None:
+            proxies_kwargs = proxies.to_request_params()
+        self.tm = IAMTokenManager(
+            api_key, url=iam_url, disable_ssl_verification=not verify, **proxies_kwargs
+        )
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CloudAuth):
@@ -43,6 +59,9 @@ class CloudAuth(AuthBase):
                 [
                     self.api_key == other.api_key,
                     self.crn == other.crn,
+                    self.proxies.__eq__(other.proxies),
+                    self.private == other.private,
+                    self.verify == other.verify,
                 ]
             )
         return False
@@ -55,10 +74,13 @@ class CloudAuth(AuthBase):
         cpy = CloudAuth(
             api_key=self.api_key,
             crn=self.crn,
+            private=self.private,
+            proxies=self.proxies,
+            verify=self.verify,
         )
         return cpy
 
-    def get_headers(self) -> Dict:
+    def get_headers(self) -> dict:
         """Return authorization information to be stored in header."""
         try:
             access_token = self.tm.get_token()

@@ -10,13 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore[arg-type]
-
 """Noise learner V3 results."""
 
 from __future__ import annotations
 
-from typing import Iterable, Optional, Union
+from typing import Union
+from collections.abc import Iterable, Sequence
 from numpy.typing import NDArray
 
 import numpy as np
@@ -26,7 +25,7 @@ from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
-MetadataLeafTypes = Union[int, str, float]
+MetadataLeafTypes = int | str | float
 MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]
 Metadata = dict[str, MetadataValue]
 
@@ -57,7 +56,7 @@ class NoiseLearnerV3Result:
            `arXiv:2201.09866 [quant-ph] <https://arxiv.org/abs/2201.09866>`_
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._generators: list[QubitSparsePauliList] = []
         self._rates: NDArray[np.float64] = np.array([])
         self._rates_std: NDArray[np.float64] = np.array([])
@@ -68,9 +67,9 @@ class NoiseLearnerV3Result:
         cls,
         generators: Iterable[QubitSparsePauliList],
         rates: Iterable[float],
-        rates_std: Optional[Iterable[float]] = None,
-        metadata: Optional[Metadata] = None,
-    ):
+        rates_std: Iterable[float] | None = None,
+        metadata: Metadata | None = None,
+    ) -> NoiseLearnerV3Result:
         """
         Construct from a collection of generators and rates.
 
@@ -96,7 +95,7 @@ class NoiseLearnerV3Result:
         if len({len(obj._generators), len(obj._rates), len(obj._rates_std)}) != 1:
             raise ValueError("'generators', 'rates', and 'rates_std' must be of the same length.")
 
-        if len(set(generator.num_qubits for generator in obj._generators)) != 1:
+        if len({generator.num_qubits for generator in obj._generators}) != 1:
             raise ValueError("All the generators must have the same number of qubits.")
 
         return obj
@@ -139,7 +138,7 @@ class NoiseLearnerV3Results:
 
     def to_dict(
         self,
-        instructions: Iterable[CircuitInstruction],
+        instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
         """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.

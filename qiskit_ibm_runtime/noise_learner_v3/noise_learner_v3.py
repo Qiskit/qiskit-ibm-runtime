@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
 
 from qiskit.circuit import CircuitInstruction
 from qiskit.providers import BackendV2
@@ -74,8 +74,8 @@ class NoiseLearnerV3:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[NoiseLearnerV3Options] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: NoiseLearnerV3Options | None = None,
     ):
         self._session: BackendV2 | None = None
         self._backend: BackendV2
@@ -115,7 +115,9 @@ class NoiseLearnerV3:
             raise ValueError(
                 "A backend or session/batch must be specified, or a session/batch must be open."
             )
-        self._mode, self._service, self._backend = get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(  # type: ignore[assignment]
+            mode
+        )
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")

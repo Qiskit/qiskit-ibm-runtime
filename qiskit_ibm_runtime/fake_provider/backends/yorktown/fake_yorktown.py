@@ -30,7 +30,7 @@ class FakeYorktownV2(fake_backend.FakeBackendV2):
             4
     """
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_yorktown.json"  # type: ignore
-    props_filename = "props_yorktown.json"  # type: ignore
-    backend_name = "fake_yorktown"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_yorktown.json"
+    props_filename = "props_yorktown.json"
+    backend_name = "fake_yorktown"
