@@ -60,7 +60,7 @@ class TestQuantumProgram(IBMTestCase):
             template_circuit,
             samplex=samplex,
             samplex_arguments={"parameter_values": parameter_values},
-            samplex_shape=(4, 3, 2),
+            shape=(4, 3, 2),
             chunk_size=7,
         )
 
@@ -133,7 +133,7 @@ class TestQuantumProgram(IBMTestCase):
         with self.assertRaisesRegex(
             ValueError, "'samplex_shape' cannot be supplied when no samplex is given"
         ):
-            quantum_program.append(template_circuit, samplex_shape=(1,))
+            quantum_program.append(template_circuit, shape=(1,))
 
         with self.assertRaisesRegex(
             ValueError, "'circuit_arguments' cannot be supplied when a samplex is given"

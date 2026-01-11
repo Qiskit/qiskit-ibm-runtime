@@ -220,7 +220,7 @@ class QuantumProgram:
         samplex: Samplex | None = None,
         circuit_arguments: np.ndarray | None = None,
         samplex_arguments: dict[str, Any] | None = None,
-        samplex_shape: tuple[int, ...] | None = None,
+        shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ) -> None:
         """Append a new :class:`QuantumProgramItem` to this program.
@@ -245,7 +245,7 @@ class QuantumProgram:
         if samplex is None:
             if samplex_arguments is not None:
                 raise ValueError("'samplex_arguments' cannot be supplied when no samplex is given.")
-            if samplex_shape is not None:
+            if shape is not None:
                 raise ValueError("'samplex_shape' cannot be supplied when no samplex is given.")
             self.items.append(
                 CircuitItem(
@@ -265,7 +265,7 @@ class QuantumProgram:
                     circuit,
                     samplex,
                     samplex_arguments=arguments,
-                    shape=samplex_shape,
+                    shape=shape,
                     chunk_size=chunk_size,
                 )
             )
