@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import copy
 from dataclasses import asdict, fields
-from typing import Any, Callable, List, Union
+from typing import Any
+from collections.abc import Callable
 
 from pydantic import Field, ValidationInfo, field_validator
 from qiskit.transpiler import CouplingMap
@@ -76,22 +77,24 @@ class NoiseLearnerV3Options(BaseOptions):
         This field is ignored by TREX experiments.
     """
 
-    post_selection: Union[PostSelectionOptions, Dict] = Field(default_factory=PostSelectionOptions)
+    post_selection: PostSelectionOptions | Dict = Field(default_factory=PostSelectionOptions)
     r"""Options for post selecting the results of noise learning circuits.
     """
 
-    experimental: Union[UnsetType, dict] = Unset
+    experimental: UnsetType | dict = Unset
     r"""Experimental options. 
     
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    _ge0 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
+    _ge0 = make_constraint_validator(
+        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+    )
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
     @skip_unset_validation
-    def _nonnegative_list(cls, value: List[int], info: ValidationInfo) -> List[int]:
+    def _nonnegative_list(cls, value: list[int], info: ValidationInfo) -> list[int]:
         if any(i < 0 for i in value):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
         return value
@@ -144,9 +147,9 @@ class NoiseLearnerV3Options(BaseOptions):
     # Reason not to implement OptionsV3: I don't feel like committing to an API for it.
 
     # Options not really related to primitives.
-    max_execution_time: Union[UnsetType, int] = Unset
-    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
-    simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
+    max_execution_time: UnsetType | int = Unset
+    environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
+    simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""

@@ -12,7 +12,8 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Dict, Type, Union, Sequence, List, Literal, Tuple
+from typing import Any, Literal
+from collections.abc import Sequence
 from concurrent import futures
 import logging
 import time
@@ -23,7 +24,6 @@ from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
-from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
@@ -39,7 +39,7 @@ from .base_runtime_job import BaseRuntimeJob
 logger = logging.getLogger(__name__)
 
 JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
-API_TO_JOB_STATUS: Dict[str, JobStatus] = {
+API_TO_JOB_STATUS: dict[str, JobStatus] = {
     "QUEUED": "QUEUED",
     "RUNNING": "RUNNING",
     "COMPLETED": "DONE",
@@ -51,7 +51,7 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
     """Representation of a runtime V2 primitive execution."""
 
-    JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+    JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
 
     def __init__(
@@ -61,13 +61,13 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        creation_date: Optional[str] = None,
-        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
-        image: Optional[str] = "",
-        session_id: Optional[str] = None,
-        tags: Optional[List] = None,
-        version: Optional[int] = None,
-        private: Optional[bool] = False,
+        creation_date: str | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
+        image: str | None = "",
+        session_id: str | None = None,
+        tags: list | None = None,
+        version: int | None = None,
+        private: bool | None = False,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -105,8 +105,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
     def result(  # pylint: disable=arguments-differ
         self,
-        timeout: Optional[float] = None,
-        decoder: Optional[Type[ResultDecoder]] = None,
+        timeout: float | None = None,
+        decoder: type[ResultDecoder] | None = None,
     ) -> Any:
         """Return the results of the job.
 
@@ -136,7 +136,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
 
-        return _decoder.decode(result_raw) if result_raw else None  # type: ignore
+        return _decoder.decode(result_raw) if result_raw else None
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -162,7 +162,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self._set_status_and_error_message()
         return self._status
 
-    def _status_from_job_response(self, response: Dict) -> Union[JobStatus, str]:
+    def _status_from_job_response(self, response: dict) -> JobStatus | str:
         """Returns the job status from an API response.
 
         Args:
@@ -222,7 +222,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
     def wait_for_final_state(  # pylint: disable=arguments-differ
         self,
-        timeout: Optional[float] = None,
+        timeout: float | None = None,
     ) -> None:
         """Poll for the job status from the API until the status is in a final state.
 
@@ -248,13 +248,13 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 f"Timed out waiting for job to complete after {timeout} secs."
             )
 
-    def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
+    def backend(self, timeout: float | None = None) -> Backend | None:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
 
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
-        if not self._backend:  # type: ignore
+        if not self._backend:
             self.wait_for_final_state(timeout=timeout)
             try:
                 raw_data = self._api_client.job_get(self.job_id())

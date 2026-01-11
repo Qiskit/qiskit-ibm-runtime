@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 import logging
 
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
@@ -39,7 +40,7 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: dict = super().decode(raw_result)
+        decoded: dict[str, Any] = super().decode(raw_result)
 
         try:
             schema_version = decoded["schema_version"]

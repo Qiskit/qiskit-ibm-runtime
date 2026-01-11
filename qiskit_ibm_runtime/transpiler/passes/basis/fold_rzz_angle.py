@@ -12,7 +12,6 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple, Union
 from math import pi
 from operator import mod
 from itertools import chain
@@ -118,7 +117,7 @@ class FoldRzzAngle(TransformationPass):
         return modified
 
     @staticmethod
-    def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad1(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [0, pi/2].
 
         Circuit is not transformed - the Rzz gate is calibrated for the angle.
@@ -136,7 +135,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad2(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (pi/2, pi].
 
         Circuit is transformed into the following form:
@@ -183,7 +182,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad3(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [-pi, -pi/2].
 
         Circuit is transformed into following form:
@@ -219,7 +218,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad4(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (-pi/2, 0).
 
         Circuit is transformed into following form:
@@ -253,8 +252,8 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    primitive: BasePrimitiveV2, pub: Union[SamplerPubLike, EstimatorPubLike]
-) -> Union[SamplerPub, EstimatorPub]:
+    primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
+) -> SamplerPub | EstimatorPub:
     """
     Return a pub which is compatible with Rzz constraints.
 
