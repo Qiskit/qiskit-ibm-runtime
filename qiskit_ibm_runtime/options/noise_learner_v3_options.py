@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, fields
 
 from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
@@ -22,6 +22,7 @@ from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     OptionsModel as OptionsModel_0_1,
 )
 
+from ..runtime_options import RuntimeOptions
 from .environment_options import EnvironmentOptions
 from .options import BaseOptions
 from .post_selection_options import PostSelectionOptions
@@ -95,7 +96,7 @@ class NoiseLearnerV3Options(BaseOptions):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
         return value
 
-    def to_options_model(self, schema_version) -> BaseModel:
+    def to_options_model(self, schema_version: str) -> BaseModel:
         """Turn these options into an ``OptionsModel`` object.
 
         Filters out every irrelevant field and replaces ``Unset``\\s with ``None``\\s.
@@ -113,6 +114,27 @@ class NoiseLearnerV3Options(BaseOptions):
 
         remove_dict_unset_values(filtered_options)
         return options_model(**filtered_options)
+    
+    def to_runtime_options(self) -> dict:
+        """Turn these options into a dictionary of runtime options object.
+        Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
+        and replaces ``Unset``\\s with ``None``\\s.
+        """
+        options_dict = asdict(self)
+        environment = options_dict.get("environment")
+
+        filtered_options = {"max_execution_time": options_dict.get("max_execution_time", None)}
+        for fld in fields(RuntimeOptions):
+            if fld.name in environment:
+                filtered_options[fld.name] = environment[fld.name]
+
+        if "image" in options_dict:
+            filtered_options["image"] = options_dict["image"]
+        elif "image" in options_dict.get("experimental", {}):
+            filtered_options["image"] = options_dict["experimental"]["image"]
+
+        remove_dict_unset_values(filtered_options)
+        return filtered_options
 
     # The following code is copy/pasted from OptionsV2.
     # Reason not to use OptionsV2: As stated in the docstring, it is meant for v2 primitives, and
