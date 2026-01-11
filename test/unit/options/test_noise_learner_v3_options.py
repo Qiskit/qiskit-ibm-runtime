@@ -26,3 +26,10 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         options = NoiseLearnerV3Options(num_randomizations=15, experimental={"not": "me"})
         options_model = options.to_options_model("v0.1")
         self.assertEqual(options_model.num_randomizations, 15)
+
+    def test_to_options_model_invalid_schema_model(self):
+        """ Test that ``NoiseLearnerV3Options.to_options_model`` raises for a
+        non-existing schema version"""
+        options = NoiseLearnerV3Options(num_randomizations=15, experimental={"not": "me"})
+        with self.assertRaisesRegex(ValueError, "No option model found"):
+            options.to_options_model("non-existing schema version")
