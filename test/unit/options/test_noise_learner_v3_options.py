@@ -38,3 +38,11 @@ class TestNoiseLearnerV3Options(IBMTestCase):
 
         with self.assertRaisesRegex(ValueError, "No option model found"):
             options.to_options_model("non-existing schema version")
+
+    def test_to_runtime_options(self):
+        options = NoiseLearnerV3Options()
+        options.num_randomizations = 15
+        options.experimental = {}
+        #options.environment = {"private": True}
+        runtime_options = options.to_runtime_options()
+        print(runtime_options)

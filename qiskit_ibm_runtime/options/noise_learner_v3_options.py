@@ -123,7 +123,9 @@ class NoiseLearnerV3Options(BaseOptions):
         options_dict = asdict(self)
         environment = options_dict.get("environment")
 
-        filtered_options = {"max_execution_time": options_dict.get("max_execution_time", None)}
+        filtered_options = {}
+        filtered_options["max_execution_time"] = options_dict["max_execution_time"] if options_dict["max_execution_time"] != Unset else None
+
         for fld in fields(RuntimeOptions):
             if fld.name in environment:
                 filtered_options[fld.name] = environment[fld.name]
