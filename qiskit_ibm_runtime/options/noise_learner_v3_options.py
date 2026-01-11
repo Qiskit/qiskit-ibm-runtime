@@ -14,19 +14,14 @@
 
 from __future__ import annotations
 
-import copy
-from dataclasses import asdict, fields
-from typing import Any
-from collections.abc import Callable
+from dataclasses import asdict
 
 from pydantic import Field, ValidationInfo, field_validator
-from qiskit.transpiler import CouplingMap
 
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     OptionsModel,
 )
 
-from ..runtime_options import RuntimeOptions
 from .environment_options import EnvironmentOptions
 from .options import BaseOptions
 from .post_selection_options import PostSelectionOptions
@@ -36,10 +31,8 @@ from .utils import (
     Unset,
     UnsetType,
     make_constraint_validator,
-    merge_options_v2,
     primitive_dataclass,
     remove_dict_unset_values,
-    remove_empty_dict,
     skip_unset_validation,
 )
 
@@ -113,34 +106,6 @@ class NoiseLearnerV3Options(BaseOptions):
         remove_dict_unset_values(filtered_options)
         return OptionsModel(**filtered_options)
 
-    def to_runtime_options(self) -> dict:
-        """Turn these options into a dictionary of runtime options object.
-
-        Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
-        and replaces ``Unset``\\s with ``None``\\s.
-        """
-        options_dict = asdict(self)
-        environment = options_dict.get("environment")
-
-        filtered_options = {"max_execution_time": options_dict.get("max_execution_time", None)}
-        for fld in fields(RuntimeOptions):
-            if fld.name in environment:
-                filtered_options[fld.name] = environment[fld.name]
-
-        if "image" in options_dict:
-            filtered_options["image"] = options_dict["image"]
-        elif "image" in options_dict.get("experimental", {}):
-            filtered_options["image"] = options_dict["experimental"]["image"]
-
-        remove_dict_unset_values(filtered_options)
-        return filtered_options
-
-    def get_callback(self) -> Callable | None:
-        """Get the callback."""
-        options_dict = asdict(self)
-        remove_dict_unset_values(options_dict)
-        return options_dict.get("environment", {}).get("callback", None)
-
     # The following code is copy/pasted from OptionsV2.
     # Reason not to use OptionsV2: As stated in the docstring, it is meant for v2 primitives, and
     #     NoiseLearnerV3 is neither a primitive nor a v2.
@@ -150,71 +115,3 @@ class NoiseLearnerV3Options(BaseOptions):
     max_execution_time: UnsetType | int = Unset
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
-
-    def update(self, **kwargs: Any) -> None:
-        """Update the options."""
-
-        def _set_attr(_merged: dict) -> None:
-            for key, val in _merged.items():
-                if not key.startswith("_"):
-                    setattr(self, key, val)
-
-        merged = merge_options_v2(self, kwargs)
-        _set_attr(merged)
-
-    @staticmethod
-    def _get_program_inputs(options: dict) -> dict:
-        """Convert the input options to program compatible inputs.
-
-        Returns:
-            Inputs acceptable by primitives.
-        """
-
-        def _set_if_exists(name: str, _inputs: dict, _options: dict) -> None:
-            if name in _options:
-                _inputs[name] = _options[name]
-
-        options_copy = copy.deepcopy(options)
-        output_options: dict[str, Any] = {}
-        sim_options = options_copy.get("simulator", {})
-        coupling_map = sim_options.get("coupling_map", Unset)
-        # TODO: We can just move this to json encoder
-        if isinstance(coupling_map, CouplingMap):
-            sim_options["coupling_map"] = list(map(list, coupling_map.get_edges()))
-
-        for fld in [
-            "default_precision",
-            "default_shots",
-            "seed_estimator",
-            "dynamical_decoupling",
-            "resilience",
-            "twirling",
-            "simulator",
-            "execution",
-        ]:
-            _set_if_exists(fld, output_options, options_copy)
-
-        # Add arbitrary experimental options
-        experimental = options_copy.get("experimental", None)
-        if isinstance(experimental, dict):
-            new_keys = {}
-            for key in list(experimental.keys()):
-                if key not in output_options:
-                    new_keys[key] = experimental.pop(key)
-            output_options = merge_options_v2(output_options, experimental)
-            if new_keys:
-                output_options["experimental"] = new_keys
-
-        # Remove image
-        output_options.get("experimental", {}).pop("image", None)
-
-        remove_dict_unset_values(output_options)
-        remove_empty_dict(output_options)
-
-        inputs = {
-            "options": output_options,
-        }
-        if options_copy.get("resilience_level", Unset) != Unset:
-            inputs["resilience_level"] = options_copy["resilience_level"]
-
-        return inputs
