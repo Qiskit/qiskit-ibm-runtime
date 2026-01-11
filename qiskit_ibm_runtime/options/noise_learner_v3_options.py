@@ -121,22 +121,7 @@ class NoiseLearnerV3Options(BaseOptions):
         and replaces ``Unset``\\s with ``None``\\s.
         """
         options_dict = asdict(self)
-        environment = options_dict.get("environment")
-
-        filtered_options = {}
-        filtered_options["max_execution_time"] = options_dict["max_execution_time"] if options_dict["max_execution_time"] != Unset else None
-
-        for fld in fields(RuntimeOptions):
-            if fld.name in environment:
-                filtered_options[fld.name] = environment[fld.name]
-
-        if "image" in options_dict:
-            filtered_options["image"] = options_dict["image"]
-        elif "image" in options_dict.get("experimental", {}):
-            filtered_options["image"] = options_dict["experimental"]["image"]
-
-        remove_dict_unset_values(filtered_options)
-        return filtered_options
+        return self._get_runtime_options(options_dict)
 
     # The following code is copy/pasted from OptionsV2.
     # Reason not to use OptionsV2: As stated in the docstring, it is meant for v2 primitives, and
