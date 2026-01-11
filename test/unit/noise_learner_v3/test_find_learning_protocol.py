@@ -22,8 +22,8 @@ from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import (
 from ...ibm_test_case import IBMTestCase
 
 
-class TestConverters(IBMTestCase):
-    """Tests the converters for the noise learner v3 model."""
+class TestFindLearningProtocol(IBMTestCase):
+    """Tests the `find_learning_protocol` function."""
 
     def test_gate_instructions(self):
         """Test gate instructions."""

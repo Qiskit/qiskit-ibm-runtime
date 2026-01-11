@@ -42,6 +42,13 @@ from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 logger = logging.getLogger(__name__)
 
+NON_UNITARY_ISA_INSTRUCTIONS = frozenset(("measure", "delay", "reset"))
+"""The names of non-unitary Qiskit instructions.
+
+Not every backend supports the full set of non-unitary instructions. To know which instructions
+are supported by a given backend, one can inspect ``backend.supported_operations``.
+"""
+
 
 def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
@@ -79,8 +86,6 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             "Backend defaults have been completely from removed IBM Backends. They will be ignored."
         )
 
-    required = ["measure", "delay", "reset"]
-
     # Load qiskit object representation
     qiskit_inst_mapping = get_standard_gate_name_mapping()
     if custom_name_mapping:
@@ -104,16 +109,16 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     # Create instruction property placeholder from backend configuration
     basis_gates = set(getattr(configuration, "basis_gates", []))
     supported_instructions = set(getattr(configuration, "supported_instructions", []))
-    instruction_signatures = getattr(configuration, "instruction_signatures", [])
     gate_configs = {gate.name: gate for gate in configuration.gates}
+
+    # Instructions that are not defined in Qiskit, such as `measure_2`, are placed in
+    # `instruction_signatures` (see below) and handled separately
     all_instructions = set.union(
         basis_gates,
-        set(required),
+        supported_instructions.intersection(NON_UNITARY_ISA_INSTRUCTIONS),
         supported_instructions.intersection(CONTROL_FLOW_OP_NAMES),
     )
-
     inst_name_map = {}
-
     faulty_ops = set()
     faulty_qubits = set()
     unsupported_instructions = []
@@ -168,7 +173,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
         all_instructions.remove(name)
 
     # Create name to qiskit-ibm-runtime instruction object repr mapping
-
+    instruction_signatures = getattr(configuration, "instruction_signatures", [])
     for signature in instruction_signatures:
         name = signature.get("name")
         num_qubits = signature.get("num_qubits")
@@ -238,7 +243,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 ).items():  # type: ignore[arg-type, union-attr]
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
-                        or not properties.is_gate_operational(name, qubits)
+                        or not properties.is_gate_operational(name, qubits)  # type: ignore[arg-type]
                     ):
                         try:
                             # Qubits might be pre-defined by the gate config
@@ -283,7 +288,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                 duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
             )
 
-    for op in required:
+    for op in supported_instructions.intersection(NON_UNITARY_ISA_INSTRUCTIONS):
         # Map required ops to each operational qubit
         if prop_name_map[op] is None:
             prop_name_map[op] = {

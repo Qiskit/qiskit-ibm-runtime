@@ -20,7 +20,7 @@ from unittest import TestCase
 from unittest.util import safe_repr
 from contextlib import suppress
 from collections import defaultdict
-from typing import DefaultDict, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
@@ -40,13 +40,13 @@ class IBMTestCase(TestCase):
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
-    program_ids: Dict[str, str]
+    program_ids: dict[str, str]
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
+        filename = "{}.log".format(os.path.splitext(inspect.getfile(cls))[0])
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
@@ -159,10 +159,10 @@ class IBMTestCase(TestCase):
         if places is not None:
             if delta is not None:
                 raise TypeError("specify delta or places not both")
-            msg_suffix = " within %s places" % places
+            msg_suffix = " within {} places".format(places)
         else:
             delta = delta or 1e-8
-            msg_suffix = " within %s delta" % delta
+            msg_suffix = " within {} delta".format(delta)
 
         # Compare all keys in both dicts, populating error_msg.
         error_msg = ""
@@ -206,8 +206,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete: DefaultDict = defaultdict(list)
-        self.to_cancel: DefaultDict = defaultdict(list)
+        self.to_delete: defaultdict = defaultdict(list)
+        self.to_cancel: defaultdict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""
@@ -218,8 +218,6 @@ class IBMIntegrationTestCase(IBMTestCase):
         for job in self.to_cancel[service.channel]:
             with suppress(Exception):
                 job.cancel()
-            with suppress(Exception):
-                service.delete_job(job.job_id())
 
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):

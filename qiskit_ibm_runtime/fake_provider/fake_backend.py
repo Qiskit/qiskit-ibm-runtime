@@ -419,7 +419,7 @@ class FakeBackendV2(BackendV2):
                 " required to retrieve the real backend's current properties and settings."
             )
 
-        prod_name = self.backend_name.replace("fake", "ibm")
+        prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]
         try:
             backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
             real_backend = backends[0]

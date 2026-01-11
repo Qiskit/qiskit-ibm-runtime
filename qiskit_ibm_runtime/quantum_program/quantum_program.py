@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import Iterable, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
+from collections.abc import Iterable
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
@@ -80,15 +81,14 @@ class CircuitItem(QuantumProgramItem):
         circuit_arguments: np.ndarray | None = None,
         chunk_size: int | None = None,
     ):
-        if circuit_arguments is None and circuit.num_parameters:
-            raise ValueError(
-                f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
-            )
-
         if circuit_arguments is None:
-            circuit_arguments = np.empty((circuit.num_parameters,), dtype=float)
-        else:
-            circuit_arguments = np.array(circuit_arguments, dtype=float)
+            if circuit.num_parameters:
+                raise ValueError(
+                    f"{repr(circuit)} is parametric, but no 'circuit_arguments' were supplied."
+                )
+            circuit_arguments = []
+
+        circuit_arguments = np.array(circuit_arguments, dtype=float)
 
         if circuit_arguments.shape[-1] != circuit.num_parameters:
             raise ValueError(
@@ -259,7 +259,7 @@ class QuantumProgram:
                 raise ValueError("'circuit_arguments' cannot be supplied when a samplex is given.")
             # add the noise maps first so that samplex_arguments has the ability to overwrite them
             arguments = {"pauli_lindblad_maps": self.noise_maps}
-            arguments.update(samplex_arguments)
+            arguments.update(samplex_arguments or {})
             self.items.append(
                 SamplexItem(
                     circuit,
@@ -270,7 +270,7 @@ class QuantumProgram:
                 )
             )
 
-    def validate(self, backend: "IBMBackend") -> None:
+    def validate(self, backend: IBMBackend) -> None:
         """Validate this quantum program against the given backend."""
 
     def __repr__(self) -> str:

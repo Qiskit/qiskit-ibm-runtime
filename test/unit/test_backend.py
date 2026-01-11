@@ -272,6 +272,14 @@ class TestBackend(IBMTestCase):
         self.assertTrue(target.instruction_supported("reset"))
         self.assertTrue(target.instruction_supported(operation_class=Reset))
 
+    def test_non_unitary_isa_operations(self):
+        """Test handling of non-unitary ISA operations."""
+        target = convert_to_target(FakeSherbrooke().configuration())
+
+        assert isinstance(target.get("reset"), dict)
+        assert isinstance(target.get("measure"), dict)
+        assert target.get("measure_2") is None
+
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.
 
@@ -370,25 +378,23 @@ class TestBackend(IBMTestCase):
 
         backend = FakeMidcircuit()
 
-        self.assertEqual(set(backend.basis_gates), set(["id", "rz", "sx", "x", "cx"]))
+        self.assertEqual(set(backend.basis_gates), {"id", "rz", "sx", "x", "cx"})
         self.assertEqual(
             set(backend.operation_names),
-            set(
-                [
-                    "id",
-                    "cx",
-                    "sx",
-                    "rz",
-                    "delay",
-                    "measure",
-                    "measure_2",
-                    "x",
-                    "reset",
-                    "reset_2",
-                    "reset_3",
-                    "alternative_rx",
-                ]
-            ),
+            {
+                "id",
+                "cx",
+                "sx",
+                "rz",
+                "delay",
+                "measure",
+                "measure_2",
+                "x",
+                "reset",
+                "reset_2",
+                "reset_3",
+                "alternative_rx",
+            },
         )
         assert_props("measure_2", 3.142, None)
         assert_props("reset_2", None, 3.142e-08)

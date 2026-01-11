@@ -1,0 +1,32 @@
+0.44.0 (2025-12-16)
+===================
+
+New Features
+------------
+
+- When a job is submitted, there will now be warnings if the instance being used
+  has reached its limit. (`2458 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2458>`__)
+- Added a "Fake Nighthawk" (:class:`.FakeNighthawk`) backend to the :mod:`.fake_provider` module.
+
+  Its coupling map and basis gates match those of a real Nighthawk backend, but 
+  the properties are not  intended to represent typical Nighthawk error values. 
+  You can use this fake backend to, for example, transpile and optimize your 
+  circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
+  square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
+  600% improvement in circuit depth compared to a Heron backend. (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
+
+
+Bug Fixes
+---------
+
+- IAM authentification bug fix when using a proxy configuration specified in ``QiskitRuntimeService``. 
+  The patch injects the ``proxies`` and ``verify`` attributes from ``QiskitRuntimeService`` into ``IAMTokenManager`` when using cloud authentification (``CloudAuth``). (`2344 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2344>`__)
+
+
+Other Notes
+-----------
+
+- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with 
+  support for Python 3.9, have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
+- Added :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
+  This allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)

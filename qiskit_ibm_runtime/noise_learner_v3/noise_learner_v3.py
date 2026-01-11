@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
 
 from qiskit.circuit import CircuitInstruction
 from qiskit.providers import BackendV2
@@ -72,8 +72,8 @@ class NoiseLearnerV3:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[NoiseLearnerV3Options] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: NoiseLearnerV3Options | None = None,
     ):
         self._options = options or NoiseLearnerV3Options()
         if (
@@ -82,8 +82,10 @@ class NoiseLearnerV3:
         ):
             self._options.experimental = {}
 
-        self._session, self._service, self._backend = get_mode_service_backend(mode)
-        if isinstance(self._service, QiskitRuntimeLocalService):
+        self._session, self._service, self._backend = get_mode_service_backend(  # type: ignore[assignment]
+            mode
+        )
+        if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     @property

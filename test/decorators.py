@@ -15,7 +15,7 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Optional, List
+from collections.abc import Callable
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -79,8 +79,8 @@ def run_integration_test(func):
 
 
 def integration_test_setup(
-    supported_channel: Optional[List[str]] = None,
-    init_service: Optional[bool] = True,
+    supported_channel: list[str] | None = None,
+    init_service: bool | None = True,
 ) -> Callable:
     """Returns a decorator for integration test initialization.
 
@@ -140,7 +140,7 @@ class IntegrationTestDependencies:
     """Integration test dependencies."""
 
     service: QiskitRuntimeService
-    instance: Optional[str]
+    instance: str | None
     qpu: str
     token: str
     channel: str
@@ -148,10 +148,10 @@ class IntegrationTestDependencies:
 
 
 def integration_test_setup_with_backend(
-    backend_name: Optional[str] = None,
-    simulator: Optional[bool] = True,
-    min_num_qubits: Optional[int] = None,
-    staging: Optional[bool] = True,
+    backend_name: str | None = None,
+    simulator: bool | None = True,
+    min_num_qubits: int | None = None,
+    staging: bool | None = True,
 ) -> Callable:
     """Returns a decorator that retrieves the appropriate backend to use for testing.
 

@@ -28,7 +28,7 @@ class FakeBurlingtonV2(fake_backend.FakeBackendV2):
             2
     """
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_burlington.json"  # type: ignore
-    props_filename = "props_burlington.json"  # type: ignore
-    backend_name = "fake_burlington"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_burlington.json"
+    props_filename = "props_burlington.json"
+    backend_name = "fake_burlington"
