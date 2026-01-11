@@ -123,3 +123,12 @@ class NoiseLearnerV3Options(BaseOptions):
     max_execution_time: UnsetType | int = Unset
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
+
+    @staticmethod
+    def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitives.
+        """
+        raise NotImplementedError()
