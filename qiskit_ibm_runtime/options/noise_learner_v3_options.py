@@ -16,10 +16,10 @@ from __future__ import annotations
 
 from dataclasses import asdict
 
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
-    OptionsModel,
+    OptionsModel as OptionsModel_0_1,
 )
 
 from .environment_options import EnvironmentOptions
@@ -35,6 +35,9 @@ from .utils import (
     remove_dict_unset_values,
     skip_unset_validation,
 )
+
+
+AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1}
 
 
 @primitive_dataclass
@@ -92,19 +95,24 @@ class NoiseLearnerV3Options(BaseOptions):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
         return value
 
-    def to_options_model(self) -> OptionsModel:
+    def to_options_model(self, schema_version) -> BaseModel:
         """Turn these options into an ``OptionsModel`` object.
 
         Filters out every irrelevant field and replaces ``Unset``\\s with ``None``\\s.
         """
+        try:
+            options_model = AVAILABLE_OPTIONS_MODELS[schema_version]
+        except KeyError:
+            raise ValueError(f"No option model found for schema version {schema_version}.")
+
         options_dict = asdict(self)
 
         filtered_options = {}
-        for key in OptionsModel.model_fields:  # pylint: disable=not-an-iterable
+        for key in options_model.model_fields:  # pylint: disable=not-an-iterable
             filtered_options[key] = options_dict.get(key)
 
         remove_dict_unset_values(filtered_options)
-        return OptionsModel(**filtered_options)
+        return options_model(**filtered_options)
 
     # The following code is copy/pasted from OptionsV2.
     # Reason not to use OptionsV2: As stated in the docstring, it is meant for v2 primitives, and
