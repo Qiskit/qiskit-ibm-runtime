@@ -125,7 +125,7 @@ class SamplexItem(QuantumProgramItem):
         circuit: The circuit to be executed.
         samplex: A samplex to draw random parameters for the circuit.
         samplex_arguments: A map from argument names to argument values for the samplex.
-        samplex_shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
+        shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
             Non-trivial axes introduced by this extension enumerate randomizations.
         chunk_size: The maximum number of bound circuits in each shot loop execution, or
             ``None`` to use a server-side heuristic to optimize speed. When not executing
@@ -139,7 +139,7 @@ class SamplexItem(QuantumProgramItem):
         samplex: Samplex,
         *,
         samplex_arguments: dict[str, np.ndarray | PauliLindbladMap] | None = None,
-        samplex_shape: tuple[int, ...] | None = None,
+        shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
         super().__init__(circuit=circuit, chunk_size=chunk_size)
@@ -154,10 +154,10 @@ class SamplexItem(QuantumProgramItem):
             )
 
         try:
-            self._shape = np.broadcast_shapes(samplex_shape or (), inputs.shape)
+            self._shape = np.broadcast_shapes(shape or (), inputs.shape)
         except ValueError as exc:
             raise ValueError(
-                f"The provided shape {samplex_shape} must be broadcastable with the shape implicit in "
+                f"The provided shape {shape} must be broadcastable with the shape implicit in "
                 f"the sample_arguments, which is {inputs.shape}."
             ) from exc
 
@@ -263,7 +263,7 @@ class QuantumProgram:
                     circuit,
                     samplex,
                     samplex_arguments=arguments,
-                    samplex_shape=shape,
+                    shape=shape,
                     chunk_size=chunk_size,
                 )
             )

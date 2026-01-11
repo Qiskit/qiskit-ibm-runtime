@@ -40,13 +40,13 @@ class TestSamplexItem(IBMTestCase):
         template_circuit, samplex = build(circuit)
 
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        samplex_shape = (30, 1, 2)
+        shape = (30, 1, 2)
 
         samplex_item = SamplexItem(
             template_circuit,
             samplex,
             samplex_arguments={"parameter_values": parameter_values},
-            samplex_shape=samplex_shape,
+            shape=shape,
             chunk_size=7,
         )
         self.assertEqual(samplex_item.samplex, samplex)
@@ -70,14 +70,14 @@ class TestSamplexItem(IBMTestCase):
         template_circuit, samplex = build(circuit)
 
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        samplex_shape = (30, 2, 2)
+        shape = (30, 2, 2)
 
         with self.assertRaisesRegex(ValueError, "must be broadcastable"):
             SamplexItem(
                 template_circuit,
                 samplex,
                 samplex_arguments={"parameter_values": parameter_values},
-                samplex_shape=samplex_shape,
+                shape=shape,
             )
 
     def test_samplex_item_no_params(self):
