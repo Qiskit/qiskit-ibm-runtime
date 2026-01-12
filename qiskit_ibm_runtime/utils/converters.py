@@ -12,8 +12,6 @@
 
 """Utilities related to conversion."""
 
-from __future__ import annotations
-
 import re
 from datetime import datetime, timedelta, timezone
 from math import ceil
