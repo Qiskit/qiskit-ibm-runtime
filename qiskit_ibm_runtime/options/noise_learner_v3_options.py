@@ -98,7 +98,8 @@ class NoiseLearnerV3Options(BaseOptions):
 
     def to_options_model(self, schema_version: str) -> BaseModel:
         """Turn these options into an ``OptionsModel`` object.
-        Filters out every irrelevant field (i.e., those that are not fields of :class:`.OptionsModel`)."""
+        Filters out every irrelevant field (i.e., those that are not fields of :class:`.OptionsModel`).
+        """
         try:
             options_model = AVAILABLE_OPTIONS_MODELS[schema_version]
         except KeyError:
@@ -111,7 +112,7 @@ class NoiseLearnerV3Options(BaseOptions):
             filtered_options[key] = options_dict.get(key)
 
         return options_model(**filtered_options)
-    
+
     def to_runtime_options(self) -> dict:
         """Turn these options into a dictionary of runtime options object.
         Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
