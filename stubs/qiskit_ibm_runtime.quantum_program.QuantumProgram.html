@@ -442,17 +442,17 @@ circuit arguments provided.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>circuit</strong> (<a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><em>QuantumCircuit</em></a>) – The circuit of this item.</p></li>
-<li><p><strong>samplex</strong> (<em>Samplex</em><em> | </em><em>None</em>) – An (optional) samplex to draw random parameters for the circuit.</p></li>
+<li><p><strong>samplex</strong> (<em>Samplex</em><em> | </em><em>None</em>) – A samplex to draw random parameters for the circuit.</p></li>
 <li><p><strong>circuit_arguments</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em> | </em><em>None</em>) – Arguments for the parameters of the circuit. A real array where the
 last dimension matches the number of parameters in the circuit. Circuit execution
 will be broadcasted over the leading axes.</p></li>
-<li><p><strong>samplex_arguments</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><em>ndarray</em></a><em>] </em><em>| </em><em>None</em>) – A map from argument names to argument values for the samplex. If this
+<li><p><strong>samplex_arguments</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – A map from argument names to argument values for the samplex. If this
 value is provided, a samplex must be present, and <code class="docutils literal notranslate"><span class="pre">circuit_arguments</span></code> must not be
 supplied.</p></li>
-<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – A shape tuple to extend the implicit shape defined by <code class="docutils literal notranslate"><span class="pre">samplex_arguments</span></code>.
-Non-trivial axes introduced by this extension enumerate randomizations. If this
-value is provided, a samplex must be present, and <code class="docutils literal notranslate"><span class="pre">circuit_arguments</span></code> must not be
-supplied.</p></li>
+<li><p><strong>shape</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – A shape tuple to extend the implicit shape defined by
+<code class="docutils literal notranslate"><span class="pre">samplex_arguments</span></code>. Non-trivial axes introduced by this extension enumerate
+randomizations. If this value is provided, a samplex must be present, and
+<code class="docutils literal notranslate"><span class="pre">circuit_arguments</span></code> must not be supplied.</p></li>
 <li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of bound circuits in each shot loop execution, or
 <code class="docutils literal notranslate"><span class="pre">None</span></code> to use a server-side heuristic to optimize speed. When not executing
 in a session, the server-side heuristic is always used and this value is ignored.</p></li>
