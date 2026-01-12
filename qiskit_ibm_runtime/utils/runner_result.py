@@ -12,6 +12,8 @@
 
 """Circuit-runner result class"""
 
+from __future__ import annotations
+
 import json
 
 from qiskit.result import Result, QuasiDistribution
@@ -26,7 +28,7 @@ class RunnerResult(Result, ResultDecoder):
     """Result class for Qiskit Runtime program circuit-runner."""
 
     @classmethod
-    def decode(cls, data: str) -> "RunnerResult":
+    def decode(cls, data: str) -> RunnerResult:
         """Decoding for results from Qiskit runtime jobs."""
         return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 

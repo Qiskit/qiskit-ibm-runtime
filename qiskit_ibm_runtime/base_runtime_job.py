@@ -12,6 +12,8 @@
 
 """Base runtime job class."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 from collections.abc import Sequence
@@ -56,7 +58,7 @@ class BaseRuntimeJob(ABC):
         api_client: RuntimeClient,
         job_id: str,
         program_id: str,
-        service: "qiskit_runtime_service.QiskitRuntimeService",
+        service: qiskit_runtime_service.QiskitRuntimeService,
         creation_date: str | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",

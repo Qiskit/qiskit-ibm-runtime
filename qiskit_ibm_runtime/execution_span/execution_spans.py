@@ -12,6 +12,8 @@
 
 """ExecutionSpans"""
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import overload, TYPE_CHECKING
 from collections.abc import Iterable, Iterator

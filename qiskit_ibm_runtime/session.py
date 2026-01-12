@@ -12,6 +12,8 @@
 
 """Qiskit Runtime flexible session."""
 
+from __future__ import annotations
+
 from typing import Any
 from types import TracebackType
 from functools import wraps

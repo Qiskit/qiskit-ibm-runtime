@@ -12,6 +12,8 @@
 
 """SliceSpan"""
 
+from __future__ import annotations
+
 from datetime import datetime
 import math
 from collections.abc import Iterable
