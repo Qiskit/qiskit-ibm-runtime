@@ -12,6 +12,8 @@
 
 """Functions to visualize :class:`~.EstimatorPubResult` ZNE data."""
 
+from __future__ import annotations
+
 from itertools import product
 from typing import TYPE_CHECKING
 from collections.abc import Sequence

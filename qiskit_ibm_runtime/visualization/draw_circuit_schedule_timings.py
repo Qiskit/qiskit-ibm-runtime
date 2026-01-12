@@ -13,6 +13,8 @@
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 from ..utils.circuit_schedule import CircuitSchedule
 from .utils import plotly_module

@@ -12,6 +12,8 @@
 
 """Functions to visualize :class:`~.ExecutionSpans` objects."""
 
+from __future__ import annotations
+
 from itertools import cycle
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
