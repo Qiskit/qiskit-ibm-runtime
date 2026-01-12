@@ -137,7 +137,7 @@ class SamplexItem(QuantumProgramItem):
         circuit: QuantumCircuit,
         samplex: Samplex,
         *,
-        samplex_arguments: dict[str, np.ndarray | PauliLindbladMap] | None = None,
+        samplex_arguments: dict[str, Any] | None = None,
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
@@ -219,7 +219,7 @@ class QuantumProgram:
         *,
         samplex: Samplex | None = None,
         circuit_arguments: np.ndarray | None = None,
-        samplex_arguments: dict[str, np.ndarray] | None = None,
+        samplex_arguments: dict[str, Any] | None = None,
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ) -> None:
@@ -227,17 +227,17 @@ class QuantumProgram:
 
         Args:
             circuit: The circuit of this item.
-            samplex: An (optional) samplex to draw random parameters for the circuit.
+            samplex: A samplex to draw random parameters for the circuit.
             circuit_arguments: Arguments for the parameters of the circuit. A real array where the
                 last dimension matches the number of parameters in the circuit. Circuit execution
                 will be broadcasted over the leading axes.
             samplex_arguments: A map from argument names to argument values for the samplex. If this
                 value is provided, a samplex must be present, and ``circuit_arguments`` must not be
                 supplied.
-            shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
-                Non-trivial axes introduced by this extension enumerate randomizations. If this
-                value is provided, a samplex must be present, and ``circuit_arguments`` must not be
-                supplied.
+            shape: A shape tuple to extend the implicit shape defined by
+                ``samplex_arguments``. Non-trivial axes introduced by this extension enumerate
+                randomizations. If this value is provided, a samplex must be present, and
+                ``circuit_arguments`` must not be supplied.
             chunk_size: The maximum number of bound circuits in each shot loop execution, or
                 ``None`` to use a server-side heuristic to optimize speed. When not executing
                 in a session, the server-side heuristic is always used and this value is ignored.
