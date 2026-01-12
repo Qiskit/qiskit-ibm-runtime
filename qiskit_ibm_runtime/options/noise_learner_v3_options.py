@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, fields
+from dataclasses import asdict
 
 from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
@@ -22,7 +22,6 @@ from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     OptionsModel as OptionsModel_0_1,
 )
 
-from ..runtime_options import RuntimeOptions
 from .environment_options import EnvironmentOptions
 from .options import BaseOptions
 from .post_selection_options import PostSelectionOptions
@@ -33,7 +32,6 @@ from .utils import (
     UnsetType,
     make_constraint_validator,
     primitive_dataclass,
-    remove_dict_unset_values,
     skip_unset_validation,
 )
 
