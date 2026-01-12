@@ -64,8 +64,21 @@ class TestFakeBackends(IBMTestCase):
     @unpack
     def test_circuit_on_fake_backend_v2(self, backend, optimization_level):
         if not optionals.HAS_AER and backend.num_qubits > 20:
+            self.skipTest(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
+        if backend.name in {
+            "fake_almaden",
+            "fake_burlington",
+            "fake_cambridge",
+            "fake_essex",
+            "fake_johannesburg",
+            "fake_london",
+            "fake_poughkeepsie",
+            "fake_rochester",
+            "fake_singapore",
+        }:
             self.skipTest(
-                "Unable to run fake_backend {} without qiskit-aer".format(backend.backend_name)
+                f"Unable to run fake_backend {backend.backend_name} since its configuration does "
+                "not have a 'supported_instructions' attribute."
             )
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
