@@ -40,6 +40,7 @@ class TestNoiseLearnerV3Options(IBMTestCase):
             options.to_options_model("non-existing schema version")
 
     def test_to_runtime_options(self):
+        """Test the ``NoiseLearnerV3Options.to_runtime_options`` method."""
         options = NoiseLearnerV3Options()
         options.num_randomizations = 15
         options.environment = {"private": True}
