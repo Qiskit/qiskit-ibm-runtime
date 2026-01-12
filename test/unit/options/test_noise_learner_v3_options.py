@@ -42,7 +42,9 @@ class TestNoiseLearnerV3Options(IBMTestCase):
     def test_to_runtime_options(self):
         options = NoiseLearnerV3Options()
         options.num_randomizations = 15
-        options.experimental = {}
-        #options.environment = {"private": True}
+        options.environment = {"private": True}
+
         runtime_options = options.to_runtime_options()
-        print(runtime_options)
+        self.assertNotIn("num_randomizations", runtime_options)
+        self.assertEqual(runtime_options["private"], True)
+        self.assertEqual(runtime_options["max_execution_time"], None)

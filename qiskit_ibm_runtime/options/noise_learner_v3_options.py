@@ -98,9 +98,7 @@ class NoiseLearnerV3Options(BaseOptions):
 
     def to_options_model(self, schema_version: str) -> BaseModel:
         """Turn these options into an ``OptionsModel`` object.
-
-        Filters out every irrelevant field and replaces ``Unset``\\s with ``None``\\s.
-        """
+        Filters out every irrelevant field (i.e., those that are not fields of :class:`.OptionsModel`)."""
         try:
             options_model = AVAILABLE_OPTIONS_MODELS[schema_version]
         except KeyError:
@@ -112,7 +110,6 @@ class NoiseLearnerV3Options(BaseOptions):
         for key in options_model.model_fields:  # pylint: disable=not-an-iterable
             filtered_options[key] = options_dict.get(key)
 
-        remove_dict_unset_values(filtered_options)
         return options_model(**filtered_options)
     
     def to_runtime_options(self) -> dict:
