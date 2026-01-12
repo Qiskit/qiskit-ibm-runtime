@@ -116,8 +116,7 @@ class NoiseLearnerV3Options(BaseOptions):
         Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
         and replaces ``Unset``\\s with ``None``\\s.
         """
-        options_dict = asdict(self)
-        return self._get_runtime_options(options_dict)
+        return self._get_runtime_options(asdict(self))
 
     # The following code is copy/pasted from OptionsV2.
     # Reason not to use OptionsV2: As stated in the docstring, it is meant for v2 primitives, and
