@@ -13,8 +13,6 @@
 """Utilities for working with circuit schedule timing information returned
 from the Qiskit Runtime service."""
 
-from __future__ import annotations
-
 from itertools import cycle
 from typing import TYPE_CHECKING
 import numpy as np

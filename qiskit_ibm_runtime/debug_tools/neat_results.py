@@ -12,8 +12,6 @@
 
 """A class to store Neat results."""
 
-from __future__ import annotations
-
 from typing import Union, TypeAlias
 from collections.abc import Iterable
 from numpy.typing import ArrayLike
