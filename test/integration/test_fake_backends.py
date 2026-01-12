@@ -77,8 +77,8 @@ class TestFakeBackends(IBMTestCase):
             "fake_singapore",
         }:
             self.skipTest(
-                f"Unable to run fake_backend {backend.backend_name} as it does not contain "
-                "'measure' in the target."
+                f"Unable to run fake_backend {backend.backend_name} since its configuration does "
+                "not have a 'supported_instructions' attribute."
             )
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
