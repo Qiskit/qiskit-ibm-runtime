@@ -100,7 +100,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                     service.delete_job(job.job_id())
                 except IBMRuntimeError as ex:
                     if "403" in ex.message or "401" in ex.message:
-                        self.skipTest("Credentials do not have delete job priviledges")
+                        self.skipTest("Credentials do not have delete job privileges")
                 with self.assertRaises(RuntimeJobNotFound):
                     service.job(job.job_id())
 
@@ -119,7 +119,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             service.delete_job(job.job_id())
         except IBMRuntimeError as ex:
             if "403" in ex.message or "401" in ex.message:
-                self.skipTest("Credentials do not have delete job priviledges")
+                self.skipTest("Credentials do not have delete job privileges")
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
 
