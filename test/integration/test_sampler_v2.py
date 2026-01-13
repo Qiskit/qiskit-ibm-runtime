@@ -13,8 +13,6 @@
 """Tests for Sampler V2."""
 # pylint: disable=invalid-name
 
-from __future__ import annotations
-
 import unittest
 
 import numpy as np
