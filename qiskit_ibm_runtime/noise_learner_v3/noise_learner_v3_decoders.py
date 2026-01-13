@@ -14,7 +14,16 @@
 
 from __future__ import annotations
 
+from typing import Any
 import logging
+
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+    NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_1,
+)
+
+from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
+    NoiseLearnerV3Results,
+)
 
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
@@ -22,16 +31,16 @@ from .converters.version_0_1 import noise_learner_v3_result_from_0_1
 
 logger = logging.getLogger(__name__)
 
-AVAILABLE_DECODERS = {"v0.1": noise_learner_v3_result_from_0_1}
+AVAILABLE_DECODERS = {"v0.1": (noise_learner_v3_result_from_0_1, NoiseLearnerV3ResultsModel_0_1)}
 
 
 class NoiseLearnerV3ResultDecoder(ResultDecoder):
     """Decoder for noise learner V3."""
 
     @classmethod
-    def decode(cls, raw_result: str):  # type: ignore[no-untyped-def]
+    def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: dict[str, str] = super().decode(raw_result)
+        decoded: dict[str, Any] = super().decode(raw_result)
 
         try:
             schema_version = decoded["schema_version"]
@@ -39,8 +48,8 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
             raise ValueError("Missing schema version.")
 
         try:
-            decoder = AVAILABLE_DECODERS[schema_version]
+            decoder, model = AVAILABLE_DECODERS[schema_version]
         except KeyError:
             raise ValueError(f"No decoder found for schema version {schema_version}.")
 
-        return decoder(decoded)
+        return decoder(model.model_validate_json(raw_result))
