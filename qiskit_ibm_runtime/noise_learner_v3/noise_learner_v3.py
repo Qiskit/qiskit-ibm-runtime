@@ -22,17 +22,15 @@ from qiskit.providers import BackendV2
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
-from ..base_primitive import _get_mode_service_backend
+from ..base_primitive import get_mode_service_backend
 from ..batch import Batch
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
-from ..qiskit_runtime_service import QiskitRuntimeService
 from ..runtime_job_v2 import RuntimeJobV2
 
 # pylint: disable=unused-import,cyclic-import
 from ..session import Session
 from ..utils.default_session import get_cm_session
-from ..utils.utils import is_simulator
 from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
@@ -77,10 +75,6 @@ class NoiseLearnerV3:
         mode: BackendV2 | Session | Batch | None = None,
         options: NoiseLearnerV3Options | None = None,
     ):
-        self._session: BackendV2 | None = None
-        self._backend: BackendV2
-        self._service: QiskitRuntimeService
-
         self._options = options or NoiseLearnerV3Options()
         if (
             isinstance(self._options.experimental, UnsetType)
@@ -88,39 +82,12 @@ class NoiseLearnerV3:
         ):
             self._options.experimental = {}
 
-        if isinstance(mode, (Session, Batch)):
-            self._session = mode
-            self._backend = self._session._backend
-            self._service = self._session.service
-        elif open_session := get_cm_session():
-            if open_session != mode:
-                if open_session._backend != mode:
-                    raise ValueError(
-                        "The backend passed in to the primitive is different from the session "
-                        "backend. Please check which backend you intend to use or leave the mode "
-                        "parameter empty to use the session backend."
-                    )
-                logger.warning(
-                    "A backend was passed in as the mode but a session context manager "
-                    "is open so this job will run inside this session/batch "
-                    "instead of in job mode."
-                )
-            self._session = open_session
-            self._backend = self._session._backend
-            self._service = self._session.service
-        elif isinstance(mode, BackendV2):
-            self._backend = mode
-            self._service = self._backend.service
-        else:
-            raise ValueError(
-                "A backend or session/batch must be specified, or a session/batch must be open."
-            )
-        self._mode, self._service, self._backend = _get_mode_service_backend(  # type: ignore[assignment]
+        self._session, self._service, self._backend = get_mode_service_backend(
             mode
-        )
+        )  # type: ignore[assignment]
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
-            raise ValueError("``NoiseLearner`` not currently supported in local mode.")
+            raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     @property
     def options(self) -> NoiseLearnerV3Options:
@@ -146,15 +113,12 @@ class NoiseLearnerV3:
             IBMInputValueError: If an instruction cannot be learned by any of the supported learning
                 protocols.
         """
-        if self._backend:
-            target = getattr(self._backend, "target", None)
-            if target and not is_simulator(self._backend):
-                for instruction in instructions:
-                    validate_instruction(instruction, target)
+        if target := getattr(self._backend, "target", None):
+            for instruction in instructions:
+                validate_instruction(instruction, target)
 
-            configuration = getattr(self._backend, "configuration", None)
-            if configuration and not is_simulator(self._backend):
-                validate_options(self.options, configuration())
+        if configuration := getattr(self._backend, "configuration", None):
+            validate_options(self.options, configuration())
 
         inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
         inputs["version"] = 3  # TODO: this is a work-around for the dispatch
