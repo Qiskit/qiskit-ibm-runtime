@@ -12,8 +12,6 @@
 
 """Noise learner program."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
 from typing import Any

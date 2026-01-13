@@ -12,6 +12,8 @@
 
 """Qiskit runtime service."""
 
+from __future__ import annotations
+
 import logging
 import warnings
 from datetime import datetime
@@ -525,12 +527,12 @@ class QiskitRuntimeService:
         min_num_qubits: int | None = None,
         instance: str | None = None,
         dynamic_circuits: bool | None = None,
-        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
+        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
         *,
         use_fractional_gates: bool | None = False,
         calibration_id: str | None = None,
         **kwargs: Any,
-    ) -> list["ibm_backend.IBMBackend"]:
+    ) -> list[ibm_backend.IBMBackend]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -1252,7 +1254,7 @@ class QiskitRuntimeService:
         self,
         min_num_qubits: int | None = None,
         instance: str | None = None,
-        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
+        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.

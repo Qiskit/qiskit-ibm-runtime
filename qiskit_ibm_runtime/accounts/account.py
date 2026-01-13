@@ -12,6 +12,8 @@
 
 """Account related classes and functions."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 import logging
 from typing import Literal, Any, TypeAlias
@@ -81,7 +83,7 @@ class Account:
         return result
 
     @classmethod
-    def from_saved_format(cls, data: dict) -> "Account":
+    def from_saved_format(cls, data: dict) -> Account:
         """Creates an account instance from data saved on disk."""
         channel = data.get("channel")
         proxies = data.get("proxies")
@@ -120,7 +122,7 @@ class Account:
         region: str | None = None,
         plans_preference: list[str] | None = None,
         tags: list[str] | None = None,
-    ) -> "Account":
+    ) -> Account:
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAccount(
@@ -165,7 +167,7 @@ class Account:
             ]
         )
 
-    def validate(self) -> "Account":
+    def validate(self) -> Account:
         """Validates the account instance.
 
         Raises:

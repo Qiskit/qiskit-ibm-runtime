@@ -15,8 +15,6 @@ Converters from BackendConfiguration and BackendProperties
 model (BackendV1) to Target model (BackendV2).
 """
 
-from __future__ import annotations
-
 import logging
 import warnings
 from typing import Any
