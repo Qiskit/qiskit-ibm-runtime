@@ -26,6 +26,7 @@ from qiskit.circuit.library import (
     ECRGate,
 )
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
@@ -179,6 +180,12 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
             channel=self.dependencies.channel,
             url=self.dependencies.url,
         )
+
+        # This tests needs access to the real device, and it might not be available.
+        try:
+            service.backend("sherbrooke")
+        except QiskitBackendNotFoundError:
+            self.skipTest("Credentials do not have access to sherbrooke")
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(service)
