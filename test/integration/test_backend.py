@@ -288,14 +288,17 @@ class TestIBMBackend(IBMIntegrationTestCase):
         except QiskitBackendNotFoundError:
             self.skipTest("Real backend not available.")
 
-        self.assertIs(backend_fg, backend_fg2, "Cache was not used for repeated use_fractional_gates=True")
+        self.assertIs(
+            backend_fg, backend_fg2, "Cache was not used for repeated use_fractional_gates=True"
+        )
 
         self.assertIsNot(
-            backend_fg, backend_no_fg, "Configuration was not refreshed when use_fractional_gates changed"
+            backend_fg,
+            backend_no_fg,
+            "Configuration was not refreshed when use_fractional_gates changed",
         )
 
         self.assertIs(backend_no_fg, backend_no_fg2, "Cache was not used to create backend object")
-
 
         self.assertIs(
             backend_no_fg, backend_fg3, "Cache not used for repeated use_fractional_gates=True"
