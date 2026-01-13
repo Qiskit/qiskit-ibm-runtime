@@ -12,6 +12,8 @@
 
 """Qiskit runtime job."""
 
+from __future__ import annotations
+
 from typing import Any, Literal
 from collections.abc import Sequence
 from concurrent import futures
@@ -60,7 +62,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         api_client: RuntimeClient,
         job_id: str,
         program_id: str,
-        service: "qiskit_runtime_service.QiskitRuntimeService",
+        service: qiskit_runtime_service.QiskitRuntimeService,
         creation_date: str | None = None,
         result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         image: str | None = "",

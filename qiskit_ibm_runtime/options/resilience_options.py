@@ -12,6 +12,8 @@
 
 """Resilience options."""
 
+from __future__ import annotations
+
 from typing import Literal
 from collections.abc import Sequence
 from dataclasses import asdict
@@ -93,7 +95,7 @@ class ResilienceOptionsV2:
     """
 
     @model_validator(mode="after")
-    def _validate_options(self) -> "ResilienceOptionsV2":
+    def _validate_options(self) -> ResilienceOptionsV2:
         """Validate the model."""
         if not self.measure_mitigation and any(
             value != Unset

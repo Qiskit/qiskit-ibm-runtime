@@ -12,8 +12,6 @@
 
 """Runtime options that control the execution environment."""
 
-from __future__ import annotations
-
 import re
 import logging
 import warnings
