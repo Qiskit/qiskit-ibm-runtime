@@ -14,11 +14,8 @@
 # pylint: disable=missing-module-docstring
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
-from qiskit_ibm_runtime.fake_provider import (
-    FakeProviderForBackendV2,
-    FakeSherbrooke,
-)
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import production_only
 
