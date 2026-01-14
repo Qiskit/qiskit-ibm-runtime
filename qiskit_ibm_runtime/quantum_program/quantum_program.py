@@ -38,12 +38,22 @@ def _desc_arr(arr: Any) -> str:
 class QuantumProgramItem(abc.ABC):
     """An item of a :class:`QuantumProgram`.
 
+    Each item has a :attr:`shape` that determines the number of circuit executions. This shape
+    is computed by broadcasting the *extrinsic* shapes of all input arrays. Input arrays have
+    both extrinsic axes (leftmost, defining the sweep grid) and intrinsic axes (rightmost,
+    determined by the data type). For example, ``circuit_arguments`` for a circuit with ``n``
+    parameters has intrinsic shape ``(n,)``, so an array of shape ``(5, 3, n)`` has extrinsic
+    shape ``(5, 3)``.
+
+    Output arrays returned by the executor follow the same convention: extrinsic axes match
+    the item's :attr:`shape`, and intrinsic axes are determined by the output type (e.g.,
+    ``(num_shots, creg_size)`` for classical register data).
+
     Args:
         circuit: The circuit to be executed.
         chunk_size: The maximum number of bound circuits in each shot loop execution, or
             ``None`` to use a server-side heuristic to optimize speed. When not executing
             in a session, the server-side heuristic is always used and this value is ignored.
-            ignored.
     """
 
     def __init__(self, circuit: QuantumCircuit, chunk_size: int | None = None):
@@ -55,8 +65,8 @@ class QuantumProgramItem(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def shape(self) -> tuple[int]:
-        """The shape of this item when broadcasted over all arguments."""
+    def shape(self) -> tuple[int, ...]:
+        """The extrinsic shape of this item, i.e., the broadcasted extrinsic shapes of all inputs."""
 
     def size(self) -> int:
         """The total number elements in this item; the product of the entries of :attr:`~.shape`."""
@@ -68,7 +78,10 @@ class CircuitItem(QuantumProgramItem):
 
     Args:
         circuit: The circuit to be executed.
-        circuit_arguments: Arguments for the parameters of the circuit.
+        circuit_arguments: A real-valued array of parameter values for the circuit. The last axis
+            is intrinsic with size equal to the number of circuit parameters. Leading axes are
+            extrinsic and define the sweep grid. For example, shape ``(5, 3, n)`` means 5×3=15
+            configurations for a circuit with ``n`` parameters.
         chunk_size: The maximum number of bound circuits in each shot loop execution, or
             ``None`` to use a server-side heuristic to optimize speed. When not executing
             in a session, the server-side heuristic is always used and this value is ignored.
@@ -101,7 +114,7 @@ class CircuitItem(QuantumProgramItem):
         self.circuit_arguments = circuit_arguments
 
     @property
-    def shape(self) -> tuple[int]:
+    def shape(self) -> tuple[int, ...]:
         return self.circuit_arguments.shape[:-1]
 
     def __repr__(self) -> str:
@@ -123,9 +136,14 @@ class SamplexItem(QuantumProgramItem):
     Args:
         circuit: The circuit to be executed.
         samplex: A samplex to draw random parameters for the circuit.
-        samplex_arguments: A map from argument names to argument values for the samplex.
-        shape: A shape tuple to extend the implicit shape defined by ``samplex_arguments``.
-            Non-trivial axes introduced by this extension enumerate randomizations.
+        samplex_arguments: A map from argument names to argument values for the samplex. Each
+            argument array has intrinsic axes determined by its type (e.g., ``parameter_values``
+            has intrinsic shape ``(n,)`` for ``n`` parameters, while scalar inputs like
+            ``noise_scale`` have intrinsic shape ``()``). The extrinsic shapes of all arguments
+            are broadcasted together following NumPy conventions.
+        shape: A shape that the item's extrinsic shape must be broadcastable to. Axes where
+            ``shape`` exceeds the shape implicit in ``samplex_arguments`` enumerate independent
+            randomizations.
         chunk_size: The maximum number of bound circuits in each shot loop execution, or
             ``None`` to use a server-side heuristic to optimize speed. When not executing
             in a session, the server-side heuristic is always used and this value is
@@ -167,7 +185,7 @@ class SamplexItem(QuantumProgramItem):
         self.samplex_arguments = inputs
 
     @property
-    def shape(self) -> tuple[int]:
+    def shape(self) -> tuple[int, ...]:
         return self._shape
 
     def __repr__(self) -> str:
@@ -228,16 +246,16 @@ class QuantumProgram:
         Args:
             circuit: The circuit of this item.
             samplex: A samplex to draw random parameters for the circuit.
-            circuit_arguments: Arguments for the parameters of the circuit. A real array where the
-                last dimension matches the number of parameters in the circuit. Circuit execution
-                will be broadcasted over the leading axes.
-            samplex_arguments: A map from argument names to argument values for the samplex. If this
-                value is provided, a samplex must be present, and ``circuit_arguments`` must not be
-                supplied.
-            shape: A shape tuple to extend the implicit shape defined by
-                ``samplex_arguments``. Non-trivial axes introduced by this extension enumerate
-                randomizations. If this value is provided, a samplex must be present, and
-                ``circuit_arguments`` must not be supplied.
+            circuit_arguments: A real-valued array of parameter values for the circuit. The last
+                axis is intrinsic with size equal to the number of circuit parameters. Leading
+                axes are extrinsic and define the sweep grid. Cannot be used with ``samplex``.
+            samplex_arguments: A map from argument names to argument values for the samplex. Each
+                argument array has intrinsic axes determined by its type (e.g., ``parameter_values``
+                has intrinsic shape ``(n,)`` for ``n`` parameters). The extrinsic shapes of all
+                arguments are broadcasted together. Requires ``samplex``.
+            shape: A shape that the item's extrinsic shape must be broadcastable to. Axes where
+                ``shape`` exceeds the shape implicit in ``samplex_arguments`` enumerate independent
+                randomizations. Requires ``samplex``.
             chunk_size: The maximum number of bound circuits in each shot loop execution, or
                 ``None`` to use a server-side heuristic to optimize speed. When not executing
                 in a session, the server-side heuristic is always used and this value is ignored.
