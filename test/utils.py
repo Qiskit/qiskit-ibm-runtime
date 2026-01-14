@@ -89,7 +89,11 @@ def most_busy_backend(
     """
     backends = service.backends(simulator=False, operational=True, instance=instance)
     return max(
-        (b for b in backends if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"),
+        (
+            b
+            for b in backends
+            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
+        ),
         key=lambda b: b.status().pending_jobs,
     )
 
