@@ -22,8 +22,6 @@ from qiskit_ibm_runtime.fake_provider import (
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import production_only
 
-FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
-
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
