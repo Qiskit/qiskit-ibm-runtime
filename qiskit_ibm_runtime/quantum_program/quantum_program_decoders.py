@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
-    QuantumProgramResultModel,
+    QuantumProgramResultModel as QuantumProgramResultModel_0_1,
 )
 
 # pylint: disable=unused-import,cyclic-import
@@ -26,7 +26,7 @@ from .converters import quantum_program_result_from_0_1
 
 logger = logging.getLogger(__name__)
 
-AVAILABLE_DECODERS = {"v0.1": quantum_program_result_from_0_1}
+AVAILABLE_DECODERS = {"v0.1": (quantum_program_result_from_0_1, QuantumProgramResultModel_0_1)}
 
 
 class QuantumProgramResultDecoder(ResultDecoder):
@@ -43,8 +43,8 @@ class QuantumProgramResultDecoder(ResultDecoder):
             raise ValueError("Missing schema version.")
 
         try:
-            decoder = AVAILABLE_DECODERS[schema_version]
+            decoder, model = AVAILABLE_DECODERS[schema_version]
         except KeyError:
             raise ValueError(f"No decoder found for schema version {schema_version}.")
 
-        return decoder(QuantumProgramResultModel(**decoded))
+        return decoder(model.model_validate_json(raw_result))

@@ -17,9 +17,6 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
-    QuantumProgramResultModel,
-)
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
@@ -29,7 +26,8 @@ from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
-from .quantum_program.converters import quantum_program_result_from_0_1, quantum_program_to_0_1
+from .quantum_program.converters import quantum_program_to_0_1
+from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
@@ -37,19 +35,11 @@ from .utils.default_session import get_cm_session
 logger = logging.getLogger()
 
 
-class _Decoder:
-    @classmethod
-    def decode(cls, data: str):  # type: ignore[no-untyped-def]
-        """Decode raw json to result type."""
-        obj = QuantumProgramResultModel.model_validate_json(data)
-        return quantum_program_result_from_0_1(obj)
-
-
 class Executor:
     """Executor for :class:`~.QuantumProgram`\\s."""
 
     _PROGRAM_ID = "executor"
-    _DECODER = _Decoder
+    _DECODER = QuantumProgramResultDecoder
 
     def __init__(self, mode: IBMBackend | Session | Batch | None):
         self._options = ExecutorOptions()
@@ -98,7 +88,7 @@ class Executor:
             program_id=self._PROGRAM_ID,
             options=asdict(runtime_options),
             inputs=inputs,
-            result_decoder=_Decoder,
+            result_decoder=self._DECODER,
         )
 
     def run(self, program: QuantumProgram) -> RuntimeJobV2:
