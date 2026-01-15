@@ -1,4 +1,5 @@
-While creating backend objects, `.QiskitRuntimeService` used to check for only ``rzz`` gates in the backend's basis to decide whether to use cache or create a new backend object.
-Now `.QiskitRuntimeService` will now check for both ``rzz`` and ``rx`` gates in the 
+While creating backend objects, `.QiskitRuntimeService` used to check for only ``rzz`` 
+gates in the backend's basis to decide whether to use cache or create a new backend 
+object. Now `.QiskitRuntimeService` will check for both ``rzz`` and ``rx`` gates in the 
 backend's basis gates to decide whether to refresh the configuration or fetch 
 from cache.
