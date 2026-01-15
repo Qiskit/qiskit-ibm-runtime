@@ -61,6 +61,7 @@ class TestAccountClient(IBMTestCase):
 
         for err_resp in sub_tests:
             with self.subTest(response=err_resp):
+                # Use a new client for each request, for avoiding delay in second response.
                 client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
