@@ -183,9 +183,9 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
         # This tests needs access to the real device, and it might not be available.
         try:
-            service.backend("sherbrooke")
+            service.backend("ibm_sherbrooke")
         except QiskitBackendNotFoundError:
-            self.skipTest("Credentials do not have access to sherbrooke")
+            self.skipTest("Credentials do not have access to ibm_sherbrooke")
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(service)
