@@ -150,6 +150,9 @@ ibm_dynamic_circuits = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslati
 ibm_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMFractionalTranslationPlugin"
 ibm_dynamic_and_fractional = "qiskit_ibm_runtime.transpiler.plugin:IBMDynamicFractionalTranslationPlugin"
 
+[project.entry-points."console_scripts"]
+qiskit-ibm-runtime = "qiskit_ibm_runtime._cli:entry_point"
+
 [project.urls]
 documentation = "https://quantum.cloud.ibm.com/docs/"
 repository = "https://github.com/Qiskit/qiskit-ibm-runtime"
