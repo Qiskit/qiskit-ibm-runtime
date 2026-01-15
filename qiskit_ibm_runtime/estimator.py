@@ -151,7 +151,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """Validate that primitive inputs (options) are valid
 
         Raises:
-            ValidationError: if validation fails.
             ValueError: if validation fails.
         """
 
@@ -165,6 +164,13 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
             )
+
+        if isinstance(rep_delay := options.get("execution", {}).get("rep_delay"), (int, float)):
+            rep_delay_range = self._backend.configuration().rep_delay_range
+            if rep_delay < rep_delay_range[0] or rep_delay > rep_delay_range[1]:
+                raise ValueError(
+                    f"rep_delay {rep_delay} is not in the backend rep_delay_range {rep_delay_range}"
+                )
 
     @classmethod
     def _program_id(cls) -> str:
