@@ -13,6 +13,8 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 # pylint: disable=missing-module-docstring
 
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
@@ -41,6 +43,12 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
             channel=self.dependencies.channel,
             url=self.dependencies.url,
         )
+
+        # This tests needs access to the real device, and it might not be available.
+        try:
+            service.backend("ibm_sherbrooke")
+        except QiskitBackendNotFoundError:
+            self.skipTest("Credentials do not have access to ibm_sherbrooke")
 
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(service)
