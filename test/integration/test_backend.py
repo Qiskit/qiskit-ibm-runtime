@@ -300,8 +300,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
         self.assertIs(backend_no_fg, backend_no_fg2, "Cache was not used to create backend object")
 
-        self.assertIs(
-            backend_no_fg, backend_fg3, "Cache not used for repeated use_fractional_gates=True"
+        self.assertIsNot(
+            backend_no_fg2,
+            backend_fg3,
+            "Configuration was not refreshed when use_fractional_gates changed",
         )
 
     def test_renew_backend_properties(self):
