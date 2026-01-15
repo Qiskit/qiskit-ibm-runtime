@@ -19,11 +19,12 @@ import logging
 
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
 
+from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from .ibm_backend import IBMBackend
 from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
-from .qiskit_runtime_service import QiskitRuntimeService
 from .quantum_program import QuantumProgram
 from .quantum_program.converters import quantum_program_to_0_1
 from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
@@ -41,43 +42,11 @@ class Executor:
     _DECODER = QuantumProgramResultDecoder
 
     def __init__(self, mode: IBMBackend | Session | Batch | None):
-
-        self._session: Session | None = None
-        self._backend: IBMBackend
-        self._service: QiskitRuntimeService
-
         self._options = ExecutorOptions()
 
-        if isinstance(mode, (Session, Batch)):
-            self._session = mode
-            self._backend = self._session._backend
-            self._service = self._session.service
-
-        elif open_session := get_cm_session():
-            if open_session != mode:
-                if open_session._backend != mode:
-                    raise ValueError(
-                        "The backend passed in to the primitive is different from the session "
-                        "backend. Please check which backend you intend to use or leave the mode "
-                        "parameter empty to use the session backend."
-                    )
-                logger.warning(
-                    "A backend was passed in as the mode but a session context manager "
-                    "is open so this job will run inside this session/batch "
-                    "instead of in job mode."
-                )
-            self._session = open_session
-            self._backend = self._session._backend
-            self._service = self._session.service
-
-        elif isinstance(mode, IBMBackend):
-            self._backend = mode
-            self._service = self._backend.service
-
-        else:
-            raise ValueError(
-                "A backend or session/batch must be specified, or a session/batch must be open."
-            )
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
+        if isinstance(self._service, QiskitRuntimeLocalService):
+            raise ValueError("The executor is currently not supported in local mode.")
 
     @property
     def options(self) -> ExecutorOptions:
