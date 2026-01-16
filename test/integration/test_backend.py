@@ -304,7 +304,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             backend_no_fg2,
             backend_fg3,
             "Configuration was not refreshed when use_fractional_gates changed",
-        )
+        
 
     def test_renew_backend_properties(self):
         """Test renewed backend property"""
