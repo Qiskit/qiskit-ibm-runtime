@@ -28,9 +28,7 @@
    
    .. rubric:: Methods
    
-   .. automethod:: get_callback
    .. automethod:: to_options_model
    .. automethod:: to_runtime_options
-   .. automethod:: update
 
    

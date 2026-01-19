@@ -417,7 +417,7 @@
 <h1>NoiseLearnerV3Options<a class="headerlink" href="#noiselearnerv3options" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.options.NoiseLearnerV3Options">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoiseLearnerV3Options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shots_per_randomization=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_randomizations=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_pair_depths=(0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">32)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_selection=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental=Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_execution_time=Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L47-L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoiseLearnerV3Options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shots_per_randomization=128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_randomizations=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer_pair_depths=(0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">32)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_selection=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">experimental=Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_execution_time=Unset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">environment=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulator=&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L42-L138"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseOptions</span></code></p>
 <p>Options for <a class="reference internal" href="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.html#qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3" title="qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseLearnerV3</span></code></a>.</p>
 <p class="rubric">Attributes</p>
@@ -497,51 +497,29 @@ note in the docstring for <a class="reference internal" href="qiskit_ibm_runtime
 
 <p class="rubric">Methods</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.NoiseLearnerV3Options.get_callback">
-<span class="sig-name descname"><span class="pre">get_callback</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L138-L142"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.get_callback" title="Link to this definition">¶</a></dt>
-<dd><p>Get the callback.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Callable</em> | None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_options_model">
-<span class="sig-name descname"><span class="pre">to_options_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L102-L114"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_options_model" title="Link to this definition">¶</a></dt>
-<dd><p>Turn these options into an <code class="docutils literal notranslate"><span class="pre">OptionsModel</span></code> object.</p>
-<p>Filters out every irrelevant field and replaces <code class="docutils literal notranslate"><span class="pre">Unset</span></code>s with <code class="docutils literal notranslate"><span class="pre">None</span></code>s.</p>
+<span class="sig-name descname"><span class="pre">to_options_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema_version</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L97-L112"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_options_model" title="Link to this definition">¶</a></dt>
+<dd><p>Turn these options into an <code class="docutils literal notranslate"><span class="pre">OptionsModel</span></code> object.
+Filters out every irrelevant field (i.e., those that are not fields of <code class="xref py py-class docutils literal notranslate"><span class="pre">OptionsModel</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>OptionsModel</em></p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>schema_version</strong> (<em>str</em>)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>BaseModel</em></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_runtime_options">
-<span class="sig-name descname"><span class="pre">to_runtime_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L116-L136"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_runtime_options" title="Link to this definition">¶</a></dt>
-<dd><p>Turn these options into a dictionary of runtime options object.</p>
-<p>Filters out every irrelevant field (i.e., those that are not fields of <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeOptions</span></code>)
+<span class="sig-name descname"><span class="pre">to_runtime_options</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L114-L119"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_runtime_options" title="Link to this definition">¶</a></dt>
+<dd><p>Turn these options into a dictionary of runtime options object.
+Filters out every irrelevant field (i.e., those that are not fields of <code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeOptions</span></code>)
 and replaces <code class="docutils literal notranslate"><span class="pre">Unset</span></code>s with <code class="docutils literal notranslate"><span class="pre">None</span></code>s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="qiskit_ibm_runtime.options.NoiseLearnerV3Options.update">
-<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/options/noise_learner_v3_options.py#L154-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.update" title="Link to this definition">¶</a></dt>
-<dd><p>Update the options.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>kwargs</strong> (<em>Any</em>)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -585,7 +563,7 @@ and replaces <code class="docutils literal notranslate"><span class="pre">Unset<
             
             <a href="https://github.com/pradyunsg/furo">Furo</a>
             <div class="last-updated">
-              Last updated on 2026/01/15</div>
+              Last updated on 2026/01/19</div>
           </div>
           <div class="right-details">
             
@@ -616,10 +594,8 @@ and replaces <code class="docutils literal notranslate"><span class="pre">Unset<
 <li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.post_selection"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.post_selection</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.shots_per_randomization"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.shots_per_randomization</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.simulator"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.simulator</span></code></a></li>
-<li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.get_callback"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.get_callback()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_options_model"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.to_options_model()</span></code></a></li>
 <li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.to_runtime_options"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.to_runtime_options()</span></code></a></li>
-<li><a class="reference internal" href="#qiskit_ibm_runtime.options.NoiseLearnerV3Options.update"><code class="docutils literal notranslate"><span class="pre">NoiseLearnerV3Options.update()</span></code></a></li>
 </ul>
 </li>
 </ul>
