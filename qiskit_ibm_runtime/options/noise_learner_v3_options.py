@@ -135,4 +135,4 @@ class NoiseLearnerV3Options(BaseOptions):
         Returns:
             Inputs acceptable by primitives.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Not implemented by `NoiseLearnerV3Options`.")
