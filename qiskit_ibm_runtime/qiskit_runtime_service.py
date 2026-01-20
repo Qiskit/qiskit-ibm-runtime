@@ -862,7 +862,7 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            tags=tags,  # type: ignore[arg-type]
+            tags=tags,
         )
 
     @staticmethod
