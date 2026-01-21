@@ -337,9 +337,9 @@ class IBMBackend(Backend):
         gates properties (such as gate length and error), and other general
         properties of the backend.
 
-        The schema for backend properties can be found in
-        `Qiskit/ibm-quantum-schemas/backend_properties
-        <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_properties_schema.json>`_.
+        Information about backend properties can be found in the
+        `Get backend configuration REST API
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
         Args:
             refresh: If ``True``, re-query the server for the backend properties.
@@ -416,9 +416,9 @@ class IBMBackend(Backend):
         Backend configuration contains fixed information about the backend, such
         as its name, number of qubits, basis gates, coupling map, quantum volume, etc.
 
-        The schema for backend configuration can be found in
-        `Qiskit/ibm-quantum-schemas/backend_configuration
-        <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
+        Information about backend configuration can be found in the
+        `Get backend configuration REST API
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
         More details about backend configuration properties can be found here `QasmBackendConfiguration
         <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
