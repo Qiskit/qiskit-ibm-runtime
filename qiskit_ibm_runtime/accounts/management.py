@@ -52,7 +52,7 @@ class AccountManager:
         private_endpoint: bool | None = False,
         region: str | None = None,
         plans_preference: list[str] | None = None,
-        tags: str | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """Save account on disk."""
         channel = (
@@ -74,7 +74,7 @@ class AccountManager:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            tags=tags,  # type: ignore[arg-type]
+            tags=tags,
         )
         return save_config(
             filename=filename,

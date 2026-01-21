@@ -135,7 +135,7 @@ class Account:
                 region=region,
                 plans_preference=plans_preference,
                 channel=channel,
-                tags=tags,  # type: ignore[arg-type]
+                tags=tags,
             )
         else:
             raise InvalidAccountError(
@@ -245,7 +245,7 @@ class CloudAccount(Account):
         region: str | None = None,
         plans_preference: list[str] | None = None,
         channel: str | None = "ibm_quantum_platform",
-        tags: str | None = None,
+        tags: list[str] | None = None,
     ):
         """Account constructor.
 
@@ -269,7 +269,7 @@ class CloudAccount(Account):
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
-        self.tags = tags  # type: ignore[assignment]
+        self.tags = tags
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
