@@ -18,6 +18,7 @@ import keyword
 import logging
 import os
 import re
+import warnings
 from queue import Queue
 from threading import Condition
 from typing import Any
@@ -115,6 +116,15 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
         return (
             f"The circuit has {circuit.num_qubits} qubits "
             f"but the target system requires {target.num_qubits} qubits."
+        )
+
+    # Check if there are circuit.calibrations (only available in Qiskit < 2).
+    if getattr(circuit, "calibrations", None):
+        warnings.warn(
+            "Support for calibrations has been removed from Qiskit since 2.0, and from the IBM "
+            "Quantum platform. The calibrations specified in the circuit will not be taken into "
+            "account when the circuit is executed.",
+            UserWarning,
         )
 
     qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}

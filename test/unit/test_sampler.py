@@ -137,7 +137,7 @@ class TestSamplerV2(IBMTestCase):
                 )
 
     def test_sampler_validations(self):
-        """Test exceptions when failing client-side validations."""
+        """Test exceptions and warnings when failing client-side validations."""
         backend = get_mocked_backend()
         with Session(
             backend=backend,
@@ -159,6 +159,12 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaisesRegex(
                 ValueError, "Classical register names cannot be Python keywords"
             ):
+                inst.run([(circ,)])
+
+            circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(2))
+            # Mimic `circuit.add_calibrations()` result, only available in Qiskit < 2.
+            circ.calibrations = {"delay": {((0,), ()): None}}
+            with self.assertWarnsRegex(UserWarning, r"Support for calibrations has been removed"):
                 inst.run([(circ,)])
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
