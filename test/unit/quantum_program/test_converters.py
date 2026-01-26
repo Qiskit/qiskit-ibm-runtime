@@ -60,7 +60,9 @@ class TestQuantumProgramConverters(IBMTestCase):
         circuit1.rx(Parameter("p"), 0)
 
         circuit_arguments = np.array([[3], [4], [5]])
-        quantum_program.add_circuit_item(circuit1, circuit_arguments=circuit_arguments, chunk_size=6)
+        quantum_program.add_circuit_item(
+            circuit1, circuit_arguments=circuit_arguments, chunk_size=6
+        )
 
         circuit2 = QuantumCircuit(2)
         with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl0")]):
