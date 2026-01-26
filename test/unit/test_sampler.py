@@ -162,7 +162,7 @@ class TestSamplerV2(IBMTestCase):
                 inst.run([(circ,)])
 
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(2))
-            # Mimic `circuit.add_calibrations()` result, only available in Qiskit < 2.
+            # Mimic `circuit.add_calibrations()` effects, only available in Qiskit < 2.
             circ.calibrations = {"delay": {((0,), ()): None}}
             with self.assertWarnsRegex(UserWarning, r"Support for calibrations has been removed"):
                 inst.run([(circ,)])
