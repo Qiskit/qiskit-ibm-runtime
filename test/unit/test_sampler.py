@@ -13,7 +13,6 @@
 """Tests for sampler class."""
 
 from unittest.mock import MagicMock
-from warnings import catch_warnings
 
 from ddt import data, ddt, named_data, unpack
 from packaging.version import Version, parse as parse_version
