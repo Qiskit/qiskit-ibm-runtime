@@ -121,10 +121,10 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     # Check if there are circuit.calibrations (only available in Qiskit < 2).
     if getattr(circuit, "calibrations", None):
         warnings.warn(
-            "Support for calibrations has been removed from Qiskit since 2.0, and from the IBM "
-            "Quantum platform. The calibrations specified in the circuit will not be taken into "
-            "account when the circuit is executed.",
-            UserWarning,
+            "Submitting circuits with non-empty circuit.calibrations is deprecated and will be "
+            "removed in qiskit-ibm-provider 0.45.",
+            DeprecationWarning,
+            stacklevel=2,
         )
 
     qubit_map = {qubit: index for index, qubit in enumerate(circuit.qubits)}
