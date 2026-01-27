@@ -1,2 +1,2 @@
-When a circuit contains calibrations is executed, a warning is emitted to
+When a circuit that contains calibrations is executed, a warning is emitted to
 signal that the calibrations are not taken into account.
