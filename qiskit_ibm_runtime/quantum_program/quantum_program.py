@@ -211,7 +211,7 @@ class QuantumProgram:
         self.items: list[QuantumProgramItem] = list(items or [])
         self.noise_maps = noise_maps or {}
 
-    def add_circuit_item(
+    def append_circuit_item(
         self,
         circuit: QuantumCircuit,
         *,
@@ -237,7 +237,7 @@ class QuantumProgram:
             )
         )
 
-    def add_samplex_item(
+    def append_samplex_item(
         self,
         circuit: QuantumCircuit,
         *,

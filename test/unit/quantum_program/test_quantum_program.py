@@ -45,7 +45,7 @@ class TestQuantumProgram(IBMTestCase):
         circuit1.rx(Parameter("p"), 0)
 
         circuit_arguments = np.array([[3], [4], [5]])
-        quantum_program.add_circuit_item(
+        quantum_program.append_circuit_item(
             circuit1, circuit_arguments=circuit_arguments, chunk_size=6
         )
 
@@ -58,7 +58,7 @@ class TestQuantumProgram(IBMTestCase):
 
         template_circuit, samplex = build(circuit2)
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        quantum_program.add_samplex_item(
+        quantum_program.append_samplex_item(
             template_circuit,
             samplex=samplex,
             samplex_arguments={"parameter_values": parameter_values},
@@ -70,7 +70,7 @@ class TestQuantumProgram(IBMTestCase):
             PauliLindbladMap.from_list([("YI", 0.03), ("IY", 0.01)]),
             PauliLindbladMap.from_list([("ZI", 0.025), ("XZ", 0.045)]),
         ]
-        quantum_program.add_samplex_item(
+        quantum_program.append_samplex_item(
             template_circuit,
             samplex=samplex,
             samplex_arguments={

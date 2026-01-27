@@ -60,7 +60,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         circuit1.rx(Parameter("p"), 0)
 
         circuit_arguments = np.array([[3], [4], [5]])
-        quantum_program.add_circuit_item(
+        quantum_program.append_circuit_item(
             circuit1, circuit_arguments=circuit_arguments, chunk_size=6
         )
 
@@ -73,7 +73,7 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         template_circuit, samplex = build(circuit2)
         parameter_values = np.array([[[1], [2]], [[3], [4]], [[5], [6]]])
-        quantum_program.add_samplex_item(
+        quantum_program.append_samplex_item(
             template_circuit,
             samplex=samplex,
             samplex_arguments={"parameter_values": parameter_values},
@@ -126,7 +126,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program = QuantumProgram(100)
 
         circuit1 = QuantumCircuit(1)
-        quantum_program.add_circuit_item(circuit1)
+        quantum_program.append_circuit_item(circuit1)
 
         circuit2 = QuantumCircuit(2)
         with circuit2.box(annotations=[Twirl()]):
@@ -135,7 +135,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             circuit2.measure_all()
 
         template_circuit, samplex = build(circuit2)
-        quantum_program.add_samplex_item(
+        quantum_program.append_samplex_item(
             template_circuit,
             samplex=samplex,
         )
