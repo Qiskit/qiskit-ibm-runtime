@@ -162,21 +162,6 @@ class TestSamplerV2(IBMTestCase):
             ):
                 inst.run([(circ,)])
 
-    def test_sampler_validations_warnings(self):
-        """Test warnings during client-side validations."""
-        backend = get_mocked_backend()
-        with Session(
-            backend=backend,
-        ) as session:
-            inst = SamplerV2(mode=session)
-            circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(2))
-            # Mimic `circuit.add_calibrations()` effects, only available in Qiskit < 2.
-            circ.calibrations = {"delay": {((0,), ()): None}}
-            with catch_warnings(record=True) as warns:
-                inst.run([(circ,)])
-                warning_messages = "".join([str(warn.message) for warn in warns])
-                self.assertIn("Support for calibrations has been removed", warning_messages)
-
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend can run dynamic circuits."""
         service = FakeRuntimeService(
