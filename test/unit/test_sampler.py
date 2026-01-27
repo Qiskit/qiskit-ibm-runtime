@@ -137,7 +137,7 @@ class TestSamplerV2(IBMTestCase):
                 )
 
     def test_sampler_validations(self):
-        """Test exceptions and warnings when failing client-side validations."""
+        """Test exceptions when failing client-side validations."""
         backend = get_mocked_backend()
         with Session(
             backend=backend,
@@ -161,6 +161,19 @@ class TestSamplerV2(IBMTestCase):
             ):
                 inst.run([(circ,)])
 
+            circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(2))
+            # Mimic `circuit.add_calibrations()` effects, only available in Qiskit < 2.
+            circ.calibrations = {"delay": {((0,), ()): None}}
+            with self.assertWarnsRegex(UserWarning, r"Support for calibrations has been removed"):
+                inst.run([(circ,)])
+
+    def test_sampler_validations_warnings(self):
+        """Test warnings during client-side validations."""
+        backend = get_mocked_backend()
+        with Session(
+            backend=backend,
+        ) as session:
+            inst = SamplerV2(mode=session)
             circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(2))
             # Mimic `circuit.add_calibrations()` effects, only available in Qiskit < 2.
             circ.calibrations = {"delay": {((0,), ()): None}}
