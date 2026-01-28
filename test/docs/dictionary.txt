@@ -181,6 +181,7 @@ autoencoders
 backend's
 bilinearity
 bitstring
+boolean
 bool
 broadcastable
 colocated
@@ -233,6 +234,7 @@ qutrits
 recalibrated
 reuploading
 rustworkx
+samplex
 satisfiability
 serverless
 simulability

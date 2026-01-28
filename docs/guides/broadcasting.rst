@@ -1,4 +1,4 @@
-Broadcast semantics of the Executor
+Broadcast semantics of the executor
 ===================================
 
 This guide explains how the executor handles array inputs and outputs using broadcasting semantics.
@@ -24,7 +24,7 @@ you have a parametric circuit and want to run it with 5 different parameter conf
     circuit.rx(Parameter("c"), 2)
     circuit.measure_all()
 
-    # 5 different parameter configurations (shape: 5 configurations × 3 params)
+    # 5 different parameter configurations (shape: 5 configurations × 3 parameters)
     parameter_values = np.linspace(0, np.pi, 15).reshape(5, 3)
 
     program = QuantumProgram(shots=1024)
@@ -63,7 +63,7 @@ to match the other.
 
    * - Shape A
      - Shape B
-     - Broadcasted result
+     - Broadcast result
    * - ``(5,)``
      - ``(5,)``
      - ``(5,)`` — element-wise pairing
@@ -99,10 +99,10 @@ Input arrays in the executor have two kinds of axes:
    * - Input type
      - Intrinsic shape
      - Example full shape
-   * - Parameter values (n params)
+   * - Parameter values (n parameters)
      - ``(n,)``
-     - ``(5, 3)`` for 5 configurations, 3 params
-   * - Scalar inputs (e.g., noise scale)
+     - ``(5, 3)`` for 5 configurations, 3 parameters
+   * - Scalar inputs (for example, noise scale)
      - ``()``
      - ``(4,)`` for 4 configurations
    * - Observables (if applicable)
@@ -165,7 +165,7 @@ Here's how the shapes break down:
      - ``(3,)``
      - ``(3,)``
      - ``()``
-   * - **Broadcasted**
+   * - **Broadcast**
      - —
      - ``(4, 3)``
      - —
@@ -175,7 +175,7 @@ Output array shapes
 
 Output arrays follow the same extrinsic/intrinsic pattern:
 
-- **Extrinsic shape:** Matches the broadcasted shape of all inputs
+- **Extrinsic shape:** Matches the broadcast shape of all inputs
 - **Intrinsic shape:** Determined by the output type
 
 The most common output is bitstring data from measurements, which is 
@@ -198,7 +198,7 @@ formatted as an array of boolean values:
 Example: predicting output shapes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you provide inputs with extrinsic shapes ``(4, 1)`` and ``(3,)``, the broadcasted extrinsic
+If you provide inputs with extrinsic shapes ``(4, 1)`` and ``(3,)``, the broadcast extrinsic
 shape is ``(4, 3)``. For a circuit with 1024 shots and a 3-bit classical register:
 
 .. code-block:: python
@@ -220,7 +220,7 @@ Randomization and the ``shape`` parameter
 -----------------------------------------
 
 When using a samplex, each element of the extrinsic shape corresponds to an independent circuit
-execution. The samplex will typically inject randomness (e.g., twirling gates) into each
+execution. The samplex will typically inject randomness (for example, twirling gates) into each
 execution, so even without explicitly requesting multiple randomizations, each element naturally
 receives its own random realization.
 
@@ -269,7 +269,7 @@ Multiple randomization axes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can organize randomizations into a multi-dimensional grid. This is useful for structured
-analysis, e.g., separating randomizations by type or grouping them for statistical processing:
+analysis, for example, separating randomizations by type or grouping them for statistical processing:
 
 .. code-block:: python
 
