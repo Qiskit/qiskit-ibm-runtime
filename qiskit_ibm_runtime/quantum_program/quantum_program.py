@@ -94,6 +94,8 @@ class CircuitItem(QuantumProgramItem):
         circuit_arguments: np.ndarray | None = None,
         chunk_size: int | None = None,
     ):
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
+
         if circuit_arguments is None:
             if circuit.num_parameters:
                 raise ValueError(
@@ -110,7 +112,6 @@ class CircuitItem(QuantumProgramItem):
                 f"circuit, but found shape {circuit_arguments.shape} instead."
             )
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
         self.circuit_arguments = circuit_arguments
 
     @property
@@ -159,11 +160,10 @@ class SamplexItem(QuantumProgramItem):
         shape: tuple[int, ...] | None = None,
         chunk_size: int | None = None,
     ):
-        if not isinstance(circuit, QuantumCircuit):
-            raise ValueError(f"Expected {repr(circuit)} to be a QuantumCircuit.")
+        super().__init__(circuit=circuit, chunk_size=chunk_size)
 
         # Calling bind() here will do all Samplex validation
-        inputs = samplex.inputs().make_broadcastable().bind(**samplex_arguments)
+        inputs = samplex.inputs().make_broadcastable().bind(**(samplex_arguments or {}))
 
         if not inputs.fully_bound:
             raise ValueError(
@@ -172,15 +172,13 @@ class SamplexItem(QuantumProgramItem):
             )
 
         try:
-            shape = np.broadcast_shapes(shape or (), inputs.shape)
+            self._shape = np.broadcast_shapes(shape or (), inputs.shape)
         except ValueError as exc:
             raise ValueError(
                 f"The provided shape {shape} must be broadcastable with the shape implicit in "
                 f"the sample_arguments, which is {inputs.shape}."
             ) from exc
 
-        super().__init__(circuit=circuit, chunk_size=chunk_size)
-        self._shape = np.broadcast_shapes(shape, inputs.shape)
         self.samplex = samplex
         self.samplex_arguments = inputs
 
