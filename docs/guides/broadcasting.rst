@@ -24,7 +24,7 @@ you have a parametric circuit and want to run it with 5 different parameter conf
     circuit.rx(Parameter("c"), 2)
     circuit.measure_all()
 
-    # 5 different parameter configurations (shape: 5 configs × 3 params)
+    # 5 different parameter configurations (shape: 5 configurations × 3 params)
     parameter_values = np.linspace(0, np.pi, 15).reshape(5, 3)
 
     program = QuantumProgram(shots=1024)
@@ -101,10 +101,10 @@ Input arrays in the executor have two kinds of axes:
      - Example full shape
    * - Parameter values (n params)
      - ``(n,)``
-     - ``(5, 3)`` for 5 configs, 3 params
+     - ``(5, 3)`` for 5 configurations, 3 params
    * - Scalar inputs (e.g., noise scale)
      - ``()``
-     - ``(4,)`` for 4 configs
+     - ``(4,)`` for 4 configurations
    * - Observables (if applicable)
      - varies
      - depends on observable type
@@ -122,7 +122,7 @@ varying both parameter values and a noise scale factor:
 
     import numpy as np
 
-    # Parameter values: 4 configs along axis 0, intrinsic shape (2,)
+    # Parameter values: 4 configurations along axis 0, intrinsic shape (2,)
     # Full shape: (4, 1, 2) — the "1" allows broadcasting with noise_scale
     parameter_values = np.array([
         [[0.1, 0.2]],
@@ -131,7 +131,7 @@ varying both parameter values and a noise scale factor:
         [[0.7, 0.8]],
     ])  # shape (4, 1, 2)
 
-    # Noise scale: 3 configs, intrinsic shape () (scalar)
+    # Noise scale: 3 configurations, intrinsic shape () (scalar)
     # Full shape: (3,)
     noise_scale = np.array([0.8, 1.0, 1.2])  # shape (3,)
 
@@ -251,7 +251,7 @@ Single randomization axis
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run multiple randomizations per configuration, extend the shape with additional axes.
-For example, 20 randomizations for each of 10 parameter configs:
+For example, 20 randomizations for each of 10 parameter configurations:
 
 .. code-block:: python
 
@@ -261,7 +261,7 @@ For example, 20 randomizations for each of 10 parameter configs:
         samplex_arguments={
             "parameter_values": np.random.rand(10, 3),  # extrinsic (10,)
         },
-        shape=(20, 10),  # 20 randomizations × 10 configs
+        shape=(20, 10),  # 20 randomizations × 10 configurations
     )
     # Output shape for "meas": (20, 10, num_shots, creg_size)
 
@@ -279,7 +279,7 @@ analysis, e.g., separating randomizations by type or grouping them for statistic
         samplex_arguments={
             "parameter_values": np.random.rand(10, 3),  # extrinsic (10,)
         },
-        shape=(2, 14, 10),  # 2×14=28 randomizations per config, 10 configs
+        shape=(2, 14, 10),  # 2×14=28 randomizations per configuration, 10 configurations
     )
     # Output shape for "meas": (2, 14, 10, num_shots, creg_size)
 
@@ -304,25 +304,25 @@ The ``shape`` parameter must be broadcastable *from* your input extrinsic shapes
      - Result
    * - ``(10,)``
      - ``(10,)``
-     - 10 configs, 1 randomization each
+     - 10 configurations, 1 randomization each
    * - ``(10,)``
      - ``(5, 10)``
-     - 10 configs, 5 randomizations each
+     - 10 configurations, 5 randomizations each
    * - ``(10,)``
      - ``(2, 3, 10)``
-     - 10 configs, 2×3=6 randomizations each
+     - 10 configurations, 2×3=6 randomizations each
    * - ``(4, 1)``
      - ``(4, 5)``
-     - 4 configs, 5 randomizations each
+     - 4 configurations, 5 randomizations each
    * - ``(4, 3)``
      - ``(2, 4, 3)``
-     - 4×3=12 configs, 2 randomizations each
+     - 4×3=12 configurations, 2 randomizations each
    * - ``(4, 3)``
      - ``(2, 1, 3)``
-     - 4×3=12 configs, 2 randomizations each (the ``1`` expands to ``4``)
+     - 4×3=12 configurations, 2 randomizations each (the ``1`` expands to ``4``)
 
-Note that, as in the last example above, ``shape`` can contain size-1 dimensions that expand 
-to match input dimensions.
+Note that, as in the last example in the previous table, ``shape`` can contain size-1 dimensions
+that expand to match input dimensions.
 
 
 Indexing into results
@@ -387,7 +387,7 @@ size-1 axes:
 
 .. code-block:: python
 
-    # 4 parameter configs, 3 noise scales → 4×3 = 12 total configurations
+    # 4 parameter configurations, 3 noise scales → 4×3 = 12 total configurations
     parameter_values = np.random.rand(4, 1, 2)  # extrinsic (4, 1), intrinsic (2,)
     noise_scale = np.array([0.8, 1.0, 1.2])     # extrinsic (3,), intrinsic ()
 

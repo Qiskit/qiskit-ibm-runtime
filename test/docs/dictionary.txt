@@ -182,6 +182,7 @@ backend's
 bilinearity
 bitstring
 bool
+broadcastable
 colocated
 coprime
 decohere
@@ -223,6 +224,7 @@ qiskit
 quantizing
 quasiprobabilities
 quasiprobability
+randomizations
 qubit
 qubit's
 qubits
