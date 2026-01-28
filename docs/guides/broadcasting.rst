@@ -317,6 +317,13 @@ The ``shape`` parameter must be broadcastable *from* your input extrinsic shapes
    * - ``(4, 3)``
      - ``(2, 4, 3)``
      - 4×3=12 configs, 2 randomizations each
+   * - ``(4, 3)``
+     - ``(2, 1, 3)``
+     - 4×3=12 configs, 2 randomizations each (the ``1`` expands to ``4``)
+
+Note that, as in the last example above, ``shape`` can contain size-1 dimensions that expand 
+to match input dimensions.
+
 
 Indexing into results
 ~~~~~~~~~~~~~~~~~~~~~
