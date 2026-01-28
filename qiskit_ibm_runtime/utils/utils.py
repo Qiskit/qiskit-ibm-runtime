@@ -122,7 +122,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     if getattr(circuit, "calibrations", None):
         warnings.warn(
             "Submitting circuits with non-empty circuit.calibrations is deprecated and will be "
-            "removed in qiskit-ibm-provider 0.45.",
+            "removed in qiskit-ibm-runtime 0.45.",
             DeprecationWarning,
             stacklevel=2,
         )
