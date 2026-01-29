@@ -492,7 +492,7 @@ transpiled according to the backend’s ISA.</p>
 <span class="n">isa_circuit</span> <span class="o">=</span> <span class="n">preset_pass_manager</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
 
 <span class="c1"># Append the circuit to the program</span>
-<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">isa_circuit</span><span class="p">)</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append_circuit_item</span><span class="p">(</span><span class="n">isa_circuit</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>We proceed to append a second item that contains a parametrized <a class="reference external" href="https://quantum.cloud.ibm.com/docs/api/qiskit/qiskit.circuit.QuantumCircuit" title="(in Qiskit v2.3)"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumCircuit</span></code></a>
@@ -520,7 +520,7 @@ of <code class="docutils literal notranslate"><span class="pre">10240</span></co
 <span class="n">isa_circuit</span> <span class="o">=</span> <span class="n">preset_pass_manager</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
 
 <span class="c1"># Append the circuit and the parameter value to the program</span>
-<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append_circuit_item</span><span class="p">(</span>
     <span class="n">isa_circuit</span><span class="p">,</span>
     <span class="n">circuit_arguments</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># 10 sets of parameter values</span>
 <span class="p">)</span>
@@ -569,7 +569,7 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
 <span class="n">template</span><span class="p">,</span> <span class="n">samplex</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">boxed_circuit</span><span class="p">)</span>
 
 <span class="c1"># Append the template and samplex as a samplex item</span>
-<span class="n">program</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<span class="n">program</span><span class="o">.</span><span class="n">append_samplex_item</span><span class="p">(</span>
     <span class="n">template</span><span class="p">,</span>
     <span class="n">samplex</span><span class="o">=</span><span class="n">samplex</span><span class="p">,</span>
     <span class="n">samplex_arguments</span><span class="o">=</span><span class="p">{</span>
@@ -689,7 +689,7 @@ the measurement twirling for the <code class="docutils literal notranslate"><spa
             
             <a href="https://github.com/pradyunsg/furo">Furo</a>
             <div class="last-updated">
-              Last updated on 2026/01/19</div>
+              Last updated on 2026/01/29</div>
           </div>
           <div class="right-details">
             

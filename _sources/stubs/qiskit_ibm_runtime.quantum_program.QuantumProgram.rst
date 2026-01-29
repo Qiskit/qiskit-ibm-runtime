@@ -18,6 +18,8 @@
    .. rubric:: Methods
    
    .. automethod:: append
+   .. automethod:: append_circuit_item
+   .. automethod:: append_samplex_item
    .. automethod:: validate
 
    
