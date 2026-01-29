@@ -1,0 +1,8 @@
+0.44.1 (2026-01-29)
+===================
+
+Deprecation Notes
+-----------------
+
+- Submitting circuits with non-empty ``circuit.calibrations`` is deprecated and will
+  be removed in ``qiskit-ibm-runtime`` v0.45. (`2574 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2574>`__)
