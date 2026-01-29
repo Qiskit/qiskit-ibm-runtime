@@ -18,12 +18,12 @@ import abc
 import math
 from typing import TYPE_CHECKING, Any
 from collections.abc import Iterable
+import warnings
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
-
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
@@ -211,6 +211,67 @@ class QuantumProgram:
         self.items: list[QuantumProgramItem] = list(items or [])
         self.noise_maps = noise_maps or {}
 
+    def append_circuit_item(
+        self,
+        circuit: QuantumCircuit,
+        *,
+        circuit_arguments: np.ndarray | None = None,
+        chunk_size: int | None = None,
+    ) -> None:
+        """Append a new :class:`CircuitItem` to this program.
+
+        Args:
+            circuit: The circuit of this item.
+            circuit_arguments: Arguments for the parameters of the circuit. A real array where the
+                last dimension matches the number of parameters in the circuit. Circuit execution
+                will be broadcasted over the leading axes.
+            chunk_size: The maximum number of bound circuits in each shot loop execution, or
+                ``None`` to use a server-side heuristic to optimize speed. When not executing
+                in a session, the server-side heuristic is always used and this value is ignored.
+        """
+        self.items.append(
+            CircuitItem(
+                circuit,
+                circuit_arguments=circuit_arguments,
+                chunk_size=chunk_size,
+            )
+        )
+
+    def append_samplex_item(
+        self,
+        circuit: QuantumCircuit,
+        *,
+        samplex: Samplex,
+        samplex_arguments: dict[str, Any] | None = None,
+        shape: tuple[int, ...] | None = None,
+        chunk_size: int | None = None,
+    ) -> None:
+        """Append a new :class:`SamplexItem` to this program.
+
+        Args:
+            circuit: The circuit of this item.
+            samplex: A samplex to draw random parameters for the circuit.
+            samplex_arguments: A map from argument names to argument values for the samplex.
+            shape: A shape tuple to extend the implicit shape defined by
+                ``samplex_arguments``. Non-trivial axes introduced by this extension enumerate
+                randomizations.
+            chunk_size: The maximum number of bound circuits in each shot loop execution, or
+                ``None`` to use a server-side heuristic to optimize speed. When not executing
+                in a session, the server-side heuristic is always used and this value is ignored.
+        """
+        # add the noise maps first so that samplex_arguments has the ability to overwrite them
+        arguments = {"pauli_lindblad_maps": self.noise_maps}
+        arguments.update(samplex_arguments or {})
+        self.items.append(
+            SamplexItem(
+                circuit,
+                samplex,
+                samplex_arguments=arguments,
+                shape=shape,
+                chunk_size=chunk_size,
+            )
+        )
+
     def append(
         self,
         circuit: QuantumCircuit,
@@ -240,6 +301,14 @@ class QuantumProgram:
                 ``None`` to use a server-side heuristic to optimize speed. When not executing
                 in a session, the server-side heuristic is always used and this value is ignored.
         """
+        warnings.warn(
+            "The QuantumProgram.append method is deprecated "
+            "and will be removed no sooner than February 5, 2026. "
+            "Use the new methods append_circuit_item and append_samplex_item.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+
         if samplex is None:
             if samplex_arguments is not None:
                 raise ValueError("'samplex_arguments' cannot be supplied when no samplex is given.")
