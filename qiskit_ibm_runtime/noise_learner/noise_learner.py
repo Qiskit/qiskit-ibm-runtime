@@ -23,7 +23,7 @@ from qiskit.providers import BackendV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..base_primitive import _get_mode_service_backend
+from ..base_primitive import get_mode_service_backend
 from ..constants import DEFAULT_DECODERS
 from ..runtime_job_v2 import RuntimeJobV2
 from ..ibm_backend import IBMBackend
@@ -125,7 +125,7 @@ class NoiseLearner:
         mode: BackendV2 | Session | Batch | None = None,
         options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
     ):
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
 
