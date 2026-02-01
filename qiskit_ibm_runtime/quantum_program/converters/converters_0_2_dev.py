@@ -91,9 +91,8 @@ def quantum_program_result_from_0_2_dev(model: QuantumProgramResultModel) -> Qua
         ]
     )
 
-    result = QuantumProgramResult(
+    return QuantumProgramResult(
         data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
         metadata=metadata,
+        passthrough_data=model.passthrough_data,
     )
-    result.passthrough_data = model.passthrough_data
-    return result
