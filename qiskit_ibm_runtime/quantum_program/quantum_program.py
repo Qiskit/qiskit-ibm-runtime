@@ -25,6 +25,8 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
 
+from ..utils.datatree import DataTree
+
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
 
@@ -210,6 +212,7 @@ class QuantumProgram:
         self.shots = shots
         self.items: list[QuantumProgramItem] = list(items or [])
         self.noise_maps = noise_maps or {}
+        self.passthrough_data: DataTree = None
 
     def append_circuit_item(
         self,

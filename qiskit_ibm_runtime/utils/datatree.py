@@ -10,4 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from .converters_0_1 import quantum_program_to_0_1, quantum_program_result_from_0_1
+"""DataTree"""
+
+from __future__ import annotations
+
+from typing import TypeAlias
+import numpy as np
+
+
+DataTree = TypeAlias(
+    "DataTree",
+    list["DataTree"] | np.array | dict[str, "DataTree"] | str | float | int | bool | None,
+)
+"""Arbitrary nesting of lists and dicts with typed leaves."""
