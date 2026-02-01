@@ -32,9 +32,9 @@ from ibm_quantum_schemas.models.tensor_model import F64TensorModel, TensorModel
 from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 
 
-from .quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from .quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
-from ..options.executor_options import ExecutorOptions
+from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
+from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+from ...options.executor_options import ExecutorOptions
 
 
 def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
