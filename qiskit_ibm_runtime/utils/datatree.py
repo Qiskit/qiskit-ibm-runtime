@@ -15,11 +15,10 @@
 from __future__ import annotations
 
 from typing import TypeAlias
-import numpy as np
+from numpy.typing import NDArray
 
 
-DataTree = TypeAlias(
-    "DataTree",
-    list["DataTree"] | np.array | dict[str, "DataTree"] | str | float | int | bool | None,
-)
+DataTree: TypeAlias = (
+    list["DataTree"] | NDArray[float] | dict[str, "DataTree"] | str | float | int | bool | None,
+) # type: ignore
 """Arbitrary nesting of lists and dicts with typed leaves."""
