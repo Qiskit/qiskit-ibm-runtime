@@ -100,21 +100,7 @@ class TestConverters(IBMTestCase):
         ]
         rates = [0.1, 0.2]
 
-        metadata = {
-            "input_options": {
-                "shots_per_randomization": 3,
-                "num_randomizations": 8,
-                "layer_pair_depths": [0, 2, 6],
-                "post_selection": {
-                    "enable": True,
-                    "strategy": "edge",
-                    "x_pulse_type": "xslow",
-                },
-            }
-        }
-
         for metadatum in [
-            # {"learning_protocol": "trex", "post_selection": {"strategy": "edge"}},
             {
                 "learning_protocol": "trex",
                 "post_selection": {"fraction_kept": 1.2, "success_rates": {0: 1.0, 1: 0.9}},
@@ -125,7 +111,7 @@ class TestConverters(IBMTestCase):
             },
         ]:
             result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
-            results = NoiseLearnerV3Results([result], metadata)
+            results = NoiseLearnerV3Results([result], metadata={"key": "value"})
             with self.assertRaisesRegex(
                 ValidationError,
                 "1 validation error for NoiseLearnerV3ResultModel",
@@ -146,7 +132,7 @@ class TestConverters(IBMTestCase):
             },
         ]:
             result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
-            results = NoiseLearnerV3Results([result], metadata)
+            results = NoiseLearnerV3Results([result], metadata={"key": "value"})
             with self.assertRaisesRegex(
                 ValidationError, "1 validation error for NoiseLearnerV3ResultModel"
             ):
