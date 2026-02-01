@@ -176,8 +176,11 @@ class TestQuantumProgramConverters(IBMTestCase):
             },
             metadata={},
         )
+        passthrough_data = {"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
         result_model = QuantumProgramResultModel(
-            data=[result1_model, result2_model], metadata=metadata_model
+            data=[result1_model, result2_model],
+            metadata=metadata_model,
+            passthrough_data=passthrough_data,
         )
 
         result = quantum_program_result_from_0_2_dev(result_model)
@@ -185,6 +188,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertTrue(np.array_equal(result[0]["meas"], meas1))
         self.assertTrue(np.array_equal(result[1]["meas"], meas2))
         self.assertTrue(np.array_equal(result[1]["measurement_flips.meas"], meas_flips))
+        self.assertTrue(result.passthrough_data, passthrough_data)
         self.assertEqual(result.metadata.chunk_timing[0].start, chunk_start)
         self.assertEqual(result.metadata.chunk_timing[0].stop, chunk_stop)
         self.assertEqual(result.metadata.chunk_timing[0].parts[0].idx_item, 0)

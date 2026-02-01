@@ -19,6 +19,6 @@ from numpy.typing import NDArray
 
 
 DataTree: TypeAlias = (
-    list["DataTree"] | NDArray[float] | dict[str, "DataTree"] | str | float | int | bool | None,
-) # type: ignore
+    list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
+)
 """Arbitrary nesting of lists and dicts with typed leaves."""

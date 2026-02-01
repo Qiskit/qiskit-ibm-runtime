@@ -10,5 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Converters for executor."""
+
 from .converters_0_1 import quantum_program_to_0_1, quantum_program_result_from_0_1
 from .converters_0_2_dev import quantum_program_result_from_0_2_dev, quantum_program_to_0_2_dev
