@@ -255,11 +255,21 @@ class QuantumProgram:
         else:
             if circuit_arguments is not None:
                 raise ValueError("'circuit_arguments' cannot be supplied when a samplex is given.")
-            
+
             # add the noise maps first so that samplex_arguments has the ability to overwrite them
             plm_prefix = "pauli_lindblad_maps."
-            plm_spec_names = [spec.name[len(plm_prefix):] for spec in samplex.inputs().get_specs() if spec.name.startswith(plm_prefix)]
-            arguments = {"pauli_lindblad_maps": {noise_name: noise_model for noise_name, noise_model in self.noise_maps.items() if noise_name in plm_spec_names}}
+            plm_spec_names = [
+                spec.name[len(plm_prefix) :]
+                for spec in samplex.inputs().get_specs()
+                if spec.name.startswith(plm_prefix)
+            ]
+            arguments = {
+                "pauli_lindblad_maps": {
+                    noise_name: noise_model
+                    for noise_name, noise_model in self.noise_maps.items()
+                    if noise_name in plm_spec_names
+                }
+            }
 
             arguments.update(samplex_arguments or {})
             self.items.append(

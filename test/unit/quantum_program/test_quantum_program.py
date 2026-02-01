@@ -141,7 +141,7 @@ class TestQuantumProgram(IBMTestCase):
             quantum_program.append(
                 template_circuit, samplex=samplex, circuit_arguments=parameter_values
             )
-    
+
     def test_subset_of_noise_maps(self):
         """Test that `QuantumProgram` knows to handle the case where a specific samplex
         item uses only a subset of the program's noise maps."""
@@ -174,4 +174,6 @@ class TestQuantumProgram(IBMTestCase):
         self.assertEqual(samplex_item.circuit, template_circuit)
         self.assertEqual(samplex_item.chunk_size, 7)
         self.assertEqual(samplex_item.shape, (4, 3, 2))
-        self.assertEqual(samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl1"], noise_models[1])
+        self.assertEqual(
+            samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl1"], noise_models[1]
+        )
