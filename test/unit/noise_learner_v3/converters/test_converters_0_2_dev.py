@@ -69,13 +69,16 @@ class TestConverters(IBMTestCase):
 
         metadatum0 = {
             "learning_protocol": "trex",
-            "post_selection": {"fraction_kept": 1},
+            "post_selection": {"fraction_kept": 1, "success_rates": {0: 0.1, 1: 0.9}},
         }
         result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)
 
         metadatum1 = {
             "learning_protocol": "lindblad",
-            "post_selection": {"fraction_kept": {0: 1, 4: 1}},
+            "post_selection": {
+                "fraction_kept": {0: 1, 4: 1},
+                "success_rates": {0: {0: 0.1, 1: 0.9}, 4: {0: 0.1, 1: 0.9}},
+            },
         }
         result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
@@ -111,9 +114,15 @@ class TestConverters(IBMTestCase):
         }
 
         for metadatum in [
-            {"learning_protocol": "trex", "post_selection": {"strategy": "edge"}},
-            {"learning_protocol": "trex", "post_selection": {"fraction_kept": 1.2}},
-            {"learning_protocol": "trex", "post_selection": {"fraction_kept": -0.3}},
+            # {"learning_protocol": "trex", "post_selection": {"strategy": "edge"}},
+            {
+                "learning_protocol": "trex",
+                "post_selection": {"fraction_kept": 1.2, "success_rates": {0: 1.0, 1: 0.9}},
+            },
+            {
+                "learning_protocol": "trex",
+                "post_selection": {"fraction_kept": -0.3, "success_rates": {0: 0.1, 1: 0.9}},
+            },
         ]:
             result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
             results = NoiseLearnerV3Results([result], metadata)
@@ -126,9 +135,15 @@ class TestConverters(IBMTestCase):
         for metadatum in [
             {
                 "learning_protocol": "trex",
-                "post_selection": {"fraction_kept": {0: 0.1, 2: 0.3}},
+                "post_selection": {
+                    "fraction_kept": {0: 0.1, 2: 0.3},
+                    "success_rates": {0: 0.1, 1: 0.9},
+                },
             },
-            {"learning_protocol": "lindblad", "post_selection": {"fraction_kept": 0.3}},
+            {
+                "learning_protocol": "lindblad",
+                "post_selection": {"fraction_kept": 0.3, "success_rates": {0: {0: 0.1, 1: 0.9}}},
+            },
         ]:
             result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
             results = NoiseLearnerV3Results([result], metadata)

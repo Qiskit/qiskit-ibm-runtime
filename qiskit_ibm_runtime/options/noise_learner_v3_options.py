@@ -110,7 +110,8 @@ class NoiseLearnerV3Options(BaseOptions):
 
         filtered_options = {}
         for key in options_model.model_fields:  # pylint: disable=not-an-iterable
-            filtered_options[key] = options_dict.get(key)
+            if val := options_dict.get(key):
+                filtered_options[key] = val
 
         return options_model(**filtered_options)
 
