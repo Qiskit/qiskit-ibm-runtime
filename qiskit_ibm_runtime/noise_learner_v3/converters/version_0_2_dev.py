@@ -45,6 +45,9 @@ def noise_learner_v3_inputs_to_0_2_dev(
     for instr in instructions:
         circuit.append(instr, instr.qubits, instr.clbits)
 
+    print(options)
+    print(options.to_options_model("v0.2"))
+
     return ParamsModel(
         instructions=QpyModelV13ToV17.from_quantum_circuit(circuit, qpy_version=17),
         options=options.to_options_model("v0.2"),
@@ -57,11 +60,8 @@ def noise_learner_v3_inputs_from_0_2_dev(
     """Convert a V0.2 model to noise learner V3 inputs."""
     instructions = list(model.instructions.to_quantum_circuit())
 
-    options_dict = {key: val for key, val in model.options.model_dump().items() if val}
-    options_dict.pop("rep_delay", None)
-    options_dict.pop("init_qubits", None)
     options = NoiseLearnerV3Options(
-        **{key: val for key, val in options_dict.items() if val}
+        **{key: val for key, val in model.options.model_dump().items() if val is not None}
     )
     return instructions, options
 

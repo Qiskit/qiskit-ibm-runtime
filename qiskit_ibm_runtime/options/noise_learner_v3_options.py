@@ -75,6 +75,18 @@ class NoiseLearnerV3Options(BaseOptions):
         This field is ignored by TREX experiments.
     """
 
+    init_qubits: bool = True
+    r"""Whether to reset the qubits to the ground state for each shot."""
+
+    rep_delay: float | None = None
+    r"""The repetition delay.
+
+    This is the delay between the end of one circuit and the start of the next within a shot loop.
+    This is only supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must
+    be from the range supplied by ``backend.rep_delay_range``. When this value is ``None``, the
+    default value ``backend.default_rep_delay`` is used.
+    """
+
     post_selection: PostSelectionOptions | Dict = Field(default_factory=PostSelectionOptions)
     r"""Options for post selecting the results of noise learning circuits.
     """
@@ -110,8 +122,7 @@ class NoiseLearnerV3Options(BaseOptions):
 
         filtered_options = {}
         for key in options_model.model_fields:  # pylint: disable=not-an-iterable
-            if val := options_dict.get(key):
-                filtered_options[key] = val
+            filtered_options[key] = options_dict.get(key)
 
         return options_model(**filtered_options)
 

@@ -49,12 +49,19 @@ class TestConverters(IBMTestCase):
 
         options = NoiseLearnerV3Options()
         options.layer_pair_depths = [2, 4, 10]
+        options.init_qubits = False
+        options.rep_delay = 10**-6
         options.post_selection.enable = True
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
 
         encoded = noise_learner_v3_inputs_to_0_1(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_1(encoded)
+
+        # `init_qubits` and `rep_delay` are not part of the V0.1 model. Hence,
+        # the encoder ignores them, and the decoder resets them to the default value.
+        options.init_qubits = True
+        options.rep_delay = None
 
         assert decoded == (instructions, options)
 
