@@ -51,11 +51,11 @@ class TestQuantumProgramConverters(IBMTestCase):
             PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)]),
         ]
 
-        passthrough_data={"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
         quantum_program = QuantumProgram(
             shots=shots,
             noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
-            passthrough_data=passthrough_data,
+            meas_level="avg_kerneled",
+            passthrough_data={"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}},
         )
 
         circuit1 = QuantumCircuit(1)

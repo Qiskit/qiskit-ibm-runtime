@@ -74,6 +74,7 @@ def quantum_program_to_0_2_dev(program: QuantumProgram, options: ExecutorOptions
         quantum_program=QuantumProgramModel(
             shots=program.shots,
             items=model_items,
+            meas_level=program.meas_level,
             passthrough_data=program.passthrough_data,
         ),
         options=asdict(options.execution),  # type: ignore[call-overload]

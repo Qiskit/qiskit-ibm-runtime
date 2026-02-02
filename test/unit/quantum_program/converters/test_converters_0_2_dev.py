@@ -52,9 +52,11 @@ class TestQuantumProgramConverters(IBMTestCase):
         ]
 
         passthrough_data={"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
+        meas_level="avg_kerneled"
         quantum_program = QuantumProgram(
             shots=shots,
             noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
+            meas_level=meas_level,
             passthrough_data=passthrough_data,
         )
 
@@ -94,6 +96,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program_model = params_model.quantum_program
         self.assertEqual(quantum_program_model.shots, shots)
         self.assertEqual(quantum_program_model.passthrough_data, passthrough_data)
+        self.assertEqual(quantum_program_model.meas_level, meas_level)
 
         circuit_item_model = quantum_program_model.items[0]
         self.assertEqual(circuit_item_model.item_type, "circuit")

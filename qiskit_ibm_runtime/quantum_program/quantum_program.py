@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from collections.abc import Iterable
 import warnings
 
@@ -209,11 +209,13 @@ class QuantumProgram:
         shots: int,
         items: Iterable[QuantumProgramItem] | None = None,
         noise_maps: dict[str, PauliLindbladMap] | None = None,
+        meas_level: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
         passthrough_data: DataTree | None = None,
     ):
         self.shots = shots
         self.items: list[QuantumProgramItem] = list(items or [])
         self.noise_maps = noise_maps or {}
+        self.meas_level = meas_level
         self.passthrough_data = passthrough_data
 
     def append_circuit_item(
