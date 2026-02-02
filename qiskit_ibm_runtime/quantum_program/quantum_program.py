@@ -296,7 +296,7 @@ class QuantumProgram:
         chunk_size: int | None = None,
     ) -> None:
         """Append a new :class:`QuantumProgramItem` to this program.
-        
+
         Args:
             circuit: The circuit of this item.
             samplex: A samplex to draw random parameters for the circuit.
