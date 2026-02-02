@@ -88,7 +88,7 @@ transpiled according to the backend's ISA.
     isa_circuit = preset_pass_manager.run(circuit)
 
     # Append the circuit to the program
-    program.append(isa_circuit)
+    program.append_circuit_item(isa_circuit)
 
 We proceed to append a second item that contains a parametrized :class:`~qiskit.circuit.QuantumCircuit`
 and an array containing ``10`` sets of parameter values. This amounts to a circuit task requiring a total
@@ -118,7 +118,7 @@ of ``10240`` shots (namely ``1024`` per set of parameter values).
     isa_circuit = preset_pass_manager.run(circuit)
 
     # Append the circuit and the parameter value to the program
-    program.append(
+    program.append_circuit_item(
         isa_circuit,
         circuit_arguments=np.random.rand(10, 3),  # 10 sets of parameter values
     )
@@ -168,7 +168,7 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
     template, samplex = build(boxed_circuit)
 
     # Append the template and samplex as a samplex item
-    program.append(
+    program.append_samplex_item(
         template,
         samplex=samplex,
         samplex_arguments={  
