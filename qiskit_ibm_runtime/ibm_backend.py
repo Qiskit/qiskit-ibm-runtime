@@ -44,7 +44,10 @@ from .models import (
 )
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
-from .quantum_program.converters import quantum_program_to_0_2_dev, quantum_program_result_from_0_2_dev
+from .quantum_program.converters import (
+    quantum_program_to_0_2_dev,
+    quantum_program_result_from_0_2_dev,
+)
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import local_to_utc
 from .utils.backend_converter import convert_to_target
