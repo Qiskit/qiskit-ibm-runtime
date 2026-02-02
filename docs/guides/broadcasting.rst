@@ -216,6 +216,12 @@ shape is ``(4, 3)``. For a circuit with 1024 shots and a 3-bit classical registe
     # Access a specific configuration
     config_2_1 = meas_data[2, 1, :, :]  # shape (1024, 3)
 
+.. note::
+
+   Each configuration receives the full shot count specified in the quantum program. 
+   Shots are **not** divided among configurations—if you request 1024 shots and have 
+   10 configurations, each configuration runs 1024 shots (10,240 total shots executed).
+
 Randomization and the ``shape`` parameter
 -----------------------------------------
 
@@ -233,7 +239,19 @@ No explicit randomization axes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you omit ``shape`` (or set it to match your input shapes), you get one execution per
-input configuration. Each execution is still randomized by the samplex:
+input configuration. Each execution is still randomized by the samplex, but with only a
+single random realization you don't benefit from averaging over multiple randomizations.
+
+.. note::
+
+   If you're used to enabling twirling with a simple flag like ``twirling=True``, note that
+   the executor requires you to explicitly request multiple randomizations via ``shape`` to
+   allow your post-processing routines to get the benefits of averaging over multiple 
+   randomizations. A single randomization (the default when ``shape`` is omitted) applies 
+   random gates but typically offers no advantage over running the base circuit without 
+   randomization.
+
+The following example demonstrates the default behavior:
 
 .. code-block:: python
 
