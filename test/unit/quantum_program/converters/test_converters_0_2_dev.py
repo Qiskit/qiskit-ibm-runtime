@@ -23,6 +23,9 @@ from ibm_quantum_schemas.models.executor.version_0_2_dev.models import (
     ChunkPart,
     ChunkSpan,
     MetadataModel,
+    ItemMetadataModel,
+    SchedulerTimingModel,
+    StretchValueModel,
 )
 from ibm_quantum_schemas.models.tensor_model import TensorModel
 
@@ -51,8 +54,8 @@ class TestQuantumProgramConverters(IBMTestCase):
             PauliLindbladMap.from_list([("XI", 0.02), ("IZ", 0.035)]),
         ]
 
-        passthrough_data={"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
-        meas_level="avg_kerneled"
+        passthrough_data = {"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
+        meas_level = "avg_kerneled"
         quantum_program = QuantumProgram(
             shots=shots,
             noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
@@ -175,12 +178,23 @@ class TestQuantumProgramConverters(IBMTestCase):
         result1_model = QuantumProgramResultItemModel(
             results={"meas": TensorModel.from_numpy(meas1)}, metadata={}
         )
+        item2_metadata_model = ItemMetadataModel(
+            scheduler_timing=SchedulerTimingModel(timing="timing", circuit_duration=3),
+            stretch_values=[
+                StretchValueModel(
+                    name="delay_stretch",
+                    value=100,
+                    remainder=4,
+                    expanded_values=[(0, 100), (200, 104), (500, 100)],
+                )
+            ],
+        )
         result2_model = QuantumProgramResultItemModel(
             results={
                 "meas": TensorModel.from_numpy(meas2),
                 "measurement_flips.meas": TensorModel.from_numpy(meas_flips),
             },
-            metadata={},
+            metadata=item2_metadata_model,
         )
         passthrough_data = {"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}}
         result_model = QuantumProgramResultModel(
