@@ -142,5 +142,5 @@ class TestQuantumProgram(IBMTestCase):
         self.assertEqual(samplex_item.chunk_size, 7)
         self.assertEqual(samplex_item.shape, (4, 3, 2))
         self.assertEqual(
-            samplex_item.samplex_arguments[f"pauli_lindblad_maps.pl1"], noise_models[1]
+            samplex_item.samplex_arguments["pauli_lindblad_maps.pl1"], noise_models[1]
         )
