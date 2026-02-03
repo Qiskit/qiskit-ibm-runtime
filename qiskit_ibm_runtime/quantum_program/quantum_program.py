@@ -264,7 +264,8 @@ class QuantumProgram:
             "pauli_lindblad_maps": {
                 noise_name: noise_model
                 for noise_name, noise_model in self.noise_maps.items()
-                if f"pauli_lindblad_maps.{noise_name}" in samplex.inputs().get_specs()
+                if f"pauli_lindblad_maps.{noise_name}"
+                in [spec.name for spec in samplex.inputs().get_specs()]
             }
         }
 
@@ -337,7 +338,8 @@ class QuantumProgram:
                 "pauli_lindblad_maps": {
                     noise_name: noise_model
                     for noise_name, noise_model in self.noise_maps.items()
-                    if f"pauli_lindblad_maps.{noise_name}" in samplex.inputs().get_specs()
+                    if f"pauli_lindblad_maps.{noise_name}"
+                    in [spec.name for spec in samplex.inputs().get_specs()]
                 }
             }
 
