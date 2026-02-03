@@ -260,7 +260,15 @@ class QuantumProgram:
                 in a session, the server-side heuristic is always used and this value is ignored.
         """
         # add the noise maps first so that samplex_arguments has the ability to overwrite them
-        arguments = {"pauli_lindblad_maps": self.noise_maps}
+        arguments = {
+            "pauli_lindblad_maps": {
+                noise_name: noise_model
+                for noise_name, noise_model in self.noise_maps.items()
+                if f"pauli_lindblad_maps.{noise_name}"
+                in [spec.name for spec in samplex.inputs().get_specs()]
+            }
+        }
+
         arguments.update(samplex_arguments or {})
         self.items.append(
             SamplexItem(
@@ -324,8 +332,17 @@ class QuantumProgram:
         else:
             if circuit_arguments is not None:
                 raise ValueError("'circuit_arguments' cannot be supplied when a samplex is given.")
+
             # add the noise maps first so that samplex_arguments has the ability to overwrite them
-            arguments = {"pauli_lindblad_maps": self.noise_maps}
+            arguments = {
+                "pauli_lindblad_maps": {
+                    noise_name: noise_model
+                    for noise_name, noise_model in self.noise_maps.items()
+                    if f"pauli_lindblad_maps.{noise_name}"
+                    in [spec.name for spec in samplex.inputs().get_specs()]
+                }
+            }
+
             arguments.update(samplex_arguments or {})
             self.items.append(
                 SamplexItem(
