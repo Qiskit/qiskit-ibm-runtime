@@ -68,4 +68,4 @@ class PostSelectionOptions(BaseOptions):
         Returns:
             Inputs acceptable by primitives.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("Not implemented by `PostSelectionOptions`.")
