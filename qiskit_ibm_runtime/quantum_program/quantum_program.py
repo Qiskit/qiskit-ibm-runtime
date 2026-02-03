@@ -260,17 +260,11 @@ class QuantumProgram:
                 in a session, the server-side heuristic is always used and this value is ignored.
         """
         # add the noise maps first so that samplex_arguments has the ability to overwrite them
-        plm_prefix = "pauli_lindblad_maps."
-        plm_spec_names = [
-            spec.name[len(plm_prefix) :]
-            for spec in samplex.inputs().get_specs()
-            if spec.name.startswith(plm_prefix)
-        ]
         arguments = {
             "pauli_lindblad_maps": {
                 noise_name: noise_model
                 for noise_name, noise_model in self.noise_maps.items()
-                if noise_name in plm_spec_names
+                if f"pauli_lindblad_maps.{noise_name}" in samplex.inputs().get_specs()
             }
         }
 
