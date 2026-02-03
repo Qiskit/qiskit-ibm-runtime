@@ -80,7 +80,7 @@ class BaseOptions:
     @abstractmethod
     def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs."""
-        raise NotImplementedError()
+        raise NotImplementedError("Not implemented by `BaseOptions`.")
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
