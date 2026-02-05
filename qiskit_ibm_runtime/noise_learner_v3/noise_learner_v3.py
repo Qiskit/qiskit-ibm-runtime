@@ -146,6 +146,7 @@ class NoiseLearnerV3:
             options=runtime_options,
             inputs=inputs,
             result_decoder=self._DECODER,
+            calibration_id=getattr(self._backend, "calibration_id", None),
         )
 
     def backend(self) -> BackendV2:
