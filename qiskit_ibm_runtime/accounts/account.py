@@ -314,9 +314,10 @@ class CloudAccount(Account):
     def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
         iam_url = get_iam_api_url(self.url)
-        authenticator = IAMAuthenticator(self.token, url=iam_url)
+        authenticator = IAMAuthenticator(self.token, url=iam_url, disable_ssl_verification=(not self.verify))
         client = GlobalSearchV2(authenticator=authenticator)
-        catalog = GlobalCatalogV1(authenticator=authenticator)
+        catalog = GlobalCatalogV1(authenticator=authenticator,
+                                  disable_ssl_verification=(not self.verify))
         client.set_service_url(get_global_search_api_url(self.url))
         catalog.set_service_url(get_global_catalog_api_url(self.url))
         search_cursor = None
