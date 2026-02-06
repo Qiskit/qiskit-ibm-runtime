@@ -89,6 +89,7 @@ class Executor:
             options=asdict(runtime_options),
             inputs=inputs,
             result_decoder=self._DECODER,
+            calibration_id=getattr(self._backend, "calibration_id", None),
         )
 
     def run(self, program: QuantumProgram) -> RuntimeJobV2:
