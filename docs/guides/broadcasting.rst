@@ -66,16 +66,16 @@ to match the other.
      - Broadcast result
    * - ``(5,)``
      - ``(5,)``
-     - ``(5,)`` — element-wise pairing
+     - ``(5,)`` - element-wise pairing
    * - ``(3, 1)``
      - ``(4,)``
-     - ``(3, 4)`` — 3×4 grid of combinations
+     - ``(3, 4)`` - 3×4 grid of combinations
    * - ``(2, 1, 5)``
      - ``(3, 1)``
-     - ``(2, 3, 5)`` — all combinations across dimensions
+     - ``(2, 3, 5)`` - all combinations across dimensions
    * - ``(3,)``
      - ``(4,)``
-     - **Error** — incompatible shapes
+     - **Error** - incompatible shapes
 
 When shapes broadcast together, the result contains all combinations along dimensions where one
 input had size ``1``. This is how you create multi-dimensional parameter sweeps.
@@ -123,7 +123,7 @@ varying both parameter values and a noise scale factor:
     import numpy as np
 
     # Parameter values: 4 configurations along axis 0, intrinsic shape (2,)
-    # Full shape: (4, 1, 2) — the "1" allows broadcasting with noise_scale
+    # Full shape: (4, 1, 2) - the "1" allows broadcasting with noise_scale
     parameter_values = np.array([
         [[0.1, 0.2]],
         [[0.3, 0.4]],
@@ -166,9 +166,9 @@ Here's how the shapes break down:
      - ``(3,)``
      - ``()``
    * - **Broadcast**
-     - —
+     - -
      - ``(4, 3)``
-     - —
+     - -
 
 Output array shapes
 -------------------
@@ -206,7 +206,7 @@ shape is ``(4, 3)``. For a circuit with 1024 shots and a 3-bit classical registe
     # Input extrinsic shapes: (4, 1) and (3,) → (4, 3)
     # Output for classical register "meas":
     #   extrinsic: (4, 3)
-    #   intrinsic: (1024, 3)  — shots × bits
+    #   intrinsic: (1024, 3)  - shots × bits
     #   full shape: (4, 3, 1024, 3)
 
     result = executor.run(program).result()
@@ -219,7 +219,7 @@ shape is ``(4, 3)``. For a circuit with 1024 shots and a 3-bit classical registe
 .. note::
 
    Each configuration receives the full shot count specified in the quantum program. 
-   Shots are **not** divided among configurations—if you request 1024 shots and have 
+   Shots are **not** divided among configurations - if you request 1024 shots and have 
    10 configurations, each configuration runs 1024 shots (10,240 total shots executed).
 
 Randomization and the ``shape`` parameter
@@ -261,7 +261,7 @@ The following example demonstrates the default behavior:
         samplex_arguments={
             "parameter_values": np.random.rand(10, 3),  # extrinsic (10,)
         },
-        # shape defaults to (10,) — one randomized execution per config
+        # shape defaults to (10,) - one randomized execution per config
     )
     # Output shape for "meas": (10, num_shots, creg_size)
 
