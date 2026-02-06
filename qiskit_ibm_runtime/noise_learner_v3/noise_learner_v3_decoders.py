@@ -17,10 +17,10 @@ from __future__ import annotations
 from typing import Any
 import logging
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2_dev.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_1,
 )
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2_dev.models import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
 
