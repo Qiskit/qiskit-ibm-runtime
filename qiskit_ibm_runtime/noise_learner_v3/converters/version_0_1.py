@@ -25,6 +25,7 @@ from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 from ibm_quantum_schemas.models.tensor_model import F64TensorModel
 from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
+from ...utils.utils import get_qpy_version
 
 from ...options import NoiseLearnerV3Options
 from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
@@ -46,7 +47,7 @@ def noise_learner_v3_inputs_to_0_1(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     return ParamsModel(
-        instructions=QpyModelV13ToV16.from_quantum_circuit(circuit, qpy_version=16),
+        instructions=QpyModelV13ToV16.from_quantum_circuit(circuit, qpy_version=get_qpy_version(16)),
         options=options.to_options_model("v0.1"),
     )
 

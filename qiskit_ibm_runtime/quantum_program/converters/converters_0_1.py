@@ -18,6 +18,8 @@ from dataclasses import asdict
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
+from ...utils.utils import get_qpy_version
+
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
     ParamsModel,
@@ -44,7 +46,9 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
         chunk_size = "auto" if item.chunk_size is None else item.chunk_size
         if isinstance(item, CircuitItem):
             model_item = CircuitItemModel(
-                circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit, qpy_version=16),
+                circuit=QpyModelV13ToV16.from_quantum_circuit(
+                    item.circuit, qpy_version=get_qpy_version(16)
+                ),
                 circuit_arguments=F64TensorModel.from_numpy(item.circuit_arguments),
                 chunk_size=chunk_size,
             )
@@ -60,7 +64,9 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                     else:
                         arguments[name] = value
             model_item = SamplexItemModel(
-                circuit=QpyModelV13ToV16.from_quantum_circuit(item.circuit, qpy_version=16),
+                circuit=QpyModelV13ToV16.from_quantum_circuit(
+                    item.circuit, qpy_version=get_qpy_version(16)
+                ),
                 samplex=SamplexModelSSV1.from_samplex(item.samplex, ssv=1),
                 samplex_arguments=arguments,
                 shape=item.shape,
