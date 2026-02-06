@@ -33,7 +33,6 @@ from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV17
 from ...utils.utils import get_qpy_version
 
 
-
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
 from ...options.executor_options import ExecutorOptions

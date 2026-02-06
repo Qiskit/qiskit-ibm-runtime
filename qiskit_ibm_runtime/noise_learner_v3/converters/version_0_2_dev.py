@@ -47,7 +47,9 @@ def noise_learner_v3_inputs_to_0_2_dev(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     return ParamsModel(
-        instructions=QpyModelV13ToV17.from_quantum_circuit(circuit, qpy_version=get_qpy_version(17)),
+        instructions=QpyModelV13ToV17.from_quantum_circuit(
+            circuit, qpy_version=get_qpy_version(17)
+        ),
         options=options.to_options_model("v0.2"),
     )
 
