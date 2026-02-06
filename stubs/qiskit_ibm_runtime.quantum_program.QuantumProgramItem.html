@@ -372,6 +372,7 @@
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../guides/index.html"> Guides</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of  Guides</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../guides/executor_basic.html">The Executor: A quick-start guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../guides/broadcasting.html">Broadcast semantics of the executor</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../release_notes.html"> Release Notes</a></li>
@@ -417,17 +418,25 @@
 <h1>QuantumProgramItem<a class="headerlink" href="#quantumprogramitem" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.quantum_program.QuantumProgramItem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantumProgramItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L38-L63"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">QuantumProgramItem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L38-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>An item of a <a class="reference internal" href="qiskit_ibm_runtime.quantum_program.QuantumProgram.html#qiskit_ibm_runtime.quantum_program.QuantumProgram" title="qiskit_ibm_runtime.quantum_program.QuantumProgram"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantumProgram</span></code></a>.</p>
+<p>Each item has a <a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape" title="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a> that determines the number of circuit executions. This shape
+is computed by broadcasting the <em>extrinsic</em> shapes of all input arrays. Input arrays have
+both extrinsic axes (leftmost, defining the sweep grid) and intrinsic axes (rightmost,
+determined by the data type). For example, <code class="docutils literal notranslate"><span class="pre">circuit_arguments</span></code> for a circuit with <code class="docutils literal notranslate"><span class="pre">n</span></code>
+parameters has intrinsic shape <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>, so an array of shape <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">3,</span> <span class="pre">n)</span></code> has extrinsic
+shape <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">3)</span></code>.</p>
+<p>Output arrays returned by the executor follow the same convention: extrinsic axes match
+the item’s <a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape" title="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>, and intrinsic axes are determined by the output type (e.g.,
+<code class="docutils literal notranslate"><span class="pre">(num_shots,</span> <span class="pre">creg_size)</span></code> for classical register data).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>circuit</strong> (<em>QuantumCircuit</em>) – The circuit to be executed.</p></li>
 <li><p><strong>chunk_size</strong> (<em>int</em><em> | </em><em>None</em>) – The maximum number of bound circuits in each shot loop execution, or
 <code class="docutils literal notranslate"><span class="pre">None</span></code> to use a server-side heuristic to optimize speed. When not executing
-in a session, the server-side heuristic is always used and this value is ignored.
-ignored.</p></li>
+in a session, the server-side heuristic is always used and this value is ignored.</p></li>
 </ul>
 </dd>
 </dl>
@@ -435,13 +444,13 @@ ignored.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape">
 <span class="sig-name descname"><span class="pre">shape</span></span><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape" title="Link to this definition">¶</a></dt>
-<dd><p>The shape of this item when broadcasted over all arguments.</p>
+<dd><p>The extrinsic shape of this item, i.e., the broadcasted extrinsic shapes of all inputs.</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size">
-<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L61-L63"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/Qiskit/qiskit-ibm-runtime/tree/executor_preview/qiskit_ibm_runtime/quantum_program/quantum_program.py#L71-L73"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.size" title="Link to this definition">¶</a></dt>
 <dd><p>The total number elements in this item; the product of the entries of <a class="reference internal" href="#qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape" title="qiskit_ibm_runtime.quantum_program.QuantumProgramItem.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -489,7 +498,7 @@ ignored.</p></li>
             
             <a href="https://github.com/pradyunsg/furo">Furo</a>
             <div class="last-updated">
-              Last updated on 2026/02/05</div>
+              Last updated on 2026/02/06</div>
           </div>
           <div class="right-details">
             
