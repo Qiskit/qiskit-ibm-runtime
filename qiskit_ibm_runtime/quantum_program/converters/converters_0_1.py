@@ -18,8 +18,6 @@ from dataclasses import asdict
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
-from ...utils.utils import get_qpy_version
-
 
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
     ParamsModel,
@@ -37,6 +35,7 @@ from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
 from ...options.executor_options import ExecutorOptions
+from ...utils.utils import get_qpy_version
 
 
 def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:

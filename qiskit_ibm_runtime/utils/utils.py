@@ -45,15 +45,16 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 
-def get_qpy_version(max: int | None = None) -> int:
+def get_qpy_version(highest_value: int | None = None) -> int:
     """Returns the largest qpy version available with the installed version of Qiskit.
 
     Args:
-        highest: If it would return a qpy version larger than `max`, return `max` instead.
+        highest_value: If it would return a qpy version larger than `highest_value`, return
+            `highest_value` instead.
     """
-    if max is None:
+    if highest_value is None:
         return QPY_VERSION
-    return QPY_VERSION if QPY_VERSION <= max else max
+    return QPY_VERSION if QPY_VERSION <= highest_value else highest_value
 
 
 def is_simulator(backend: BackendV2) -> bool:
