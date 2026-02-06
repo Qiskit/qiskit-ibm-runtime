@@ -110,7 +110,7 @@ Input arrays in the executor have two kinds of axes:
      - depends on observable type
 
 **Key insight:** Broadcasting only applies to extrinsic axes. The intrinsic axes are always
-preserved as-is.
+preserved as - is.
 
 Example: understanding extrinsic shapes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,7 +245,7 @@ single random realization you don't benefit from averaging over multiple randomi
 .. note::
 
    If you're used to enabling twirling with a simple flag like ``twirling=True``, note that
-   the executor requires you to explicitly request multiple randomizations via ``shape`` to
+   the executor requires you to explicitly request multiple randomizations with the ``shape`` argument to
    allow your post-processing routines to get the benefits of averaging over multiple 
    randomizations. A single randomization (the default when ``shape`` is omitted) applies 
    random gates but typically offers no advantage over running the base circuit without 
