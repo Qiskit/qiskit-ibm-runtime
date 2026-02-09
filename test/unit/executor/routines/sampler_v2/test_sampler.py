@@ -13,12 +13,11 @@
 """Tests for executor-based SamplerV2."""
 
 import unittest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter, BoxOp
-from qiskit.primitives.base import BaseSamplerV2
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
@@ -32,11 +31,11 @@ def create_mock_backend():
     backend = MagicMock(spec=IBMBackend)
     backend.name = "fake_backend"
     backend._instance = "ibm-q/open/main"
-    
+
     # Mock the service
     service = MagicMock()
     backend.service = service
-    
+
     return backend
 
 

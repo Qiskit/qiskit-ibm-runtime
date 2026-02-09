@@ -91,12 +91,10 @@ class SamplerV2(BaseSamplerV2):
             mode: The execution mode (Backend, Session, or Batch).
         """
         BaseSamplerV2.__init__(self)
-        
+
         self._executor = Executor(mode=mode)
-        
-    def run(
-        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
-    ) -> RuntimeJobV2:
+
+    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
         Args:
@@ -116,7 +114,9 @@ class SamplerV2(BaseSamplerV2):
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         # Convert pubs to QuantumProgram
-        default_shots = shots if shots is not None else 4096 # TODO: Move to options once available. 
+        default_shots = (
+            shots if shots is not None else 4096
+        )  # TODO: Move to options once available.
         quantum_program = pubs_to_quantum_program(coerced_pubs, default_shots=default_shots)
 
         # Submit to executor
@@ -125,11 +125,11 @@ class SamplerV2(BaseSamplerV2):
             len(coerced_pubs),
             quantum_program.shots,
         )
-        
+
         return self._executor.run(quantum_program)
 
     @property
-    def options(self):
+    def options(self) -> None:
         """Return the options.
 
         Note:

@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 from qiskit.circuit import BoxOp, QuantumCircuit
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
