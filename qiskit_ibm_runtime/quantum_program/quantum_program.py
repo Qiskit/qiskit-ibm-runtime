@@ -18,7 +18,6 @@ import abc
 import math
 from typing import TYPE_CHECKING, Any
 from collections.abc import Iterable
-import warnings
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
