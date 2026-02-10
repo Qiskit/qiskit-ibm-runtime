@@ -8,9 +8,10 @@ Qiskit Runtime |release| API Docs Preview
 
    .. warning::
 
-      This is the documentation for a feature that is in beta and might not be stable. Please refer
-      to the `API Reference page <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime>`_
-      for documentation for stable releases.
+      This is the documentation for a feature that is in beta and might not be stable. Since
+      February 2026, the branch has been merged and the feature will be documented as part of the
+      regular `API Reference page <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime>`_
+      documentation.
 
 .. only:: not executor
 
