@@ -151,17 +151,6 @@ html_title = f"{project} {release}"
 html_last_updated_fmt = "%Y/%m/%d"
 html_sourcelink_suffix = ""
 
-
-# -----------------------------------------------------------------------------
-# `executor`-specific options
-# -----------------------------------------------------------------------------
-if "executor" in tags:
-    extensions += ["qiskit_sphinx_theme"]
-    html_theme = "qiskit-ecosystem"
-    html_theme_options = {
-        "sidebar_qiskit_ecosystem_member": False,
-    }
-
 # ----------------------------------------------------------------------------------
 # Source code links
 # ----------------------------------------------------------------------------------

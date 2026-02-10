@@ -49,7 +49,7 @@ class RuntimeSession(RestAdapterBase):
     ) -> dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")
-        payload = {}
+        payload: dict[str, str | int] = {}
         if mode:
             payload["mode"] = mode
         if backend:
@@ -57,7 +57,7 @@ class RuntimeSession(RestAdapterBase):
         if instance:
             payload["instance"] = instance
         if max_time:
-            payload["max_ttl"] = max_time  # type: ignore[assignment]
+            payload["max_ttl"] = max_time
         return self.session.post(url, json=payload, headers=self._HEADER_JSON_CONTENT).json()
 
     def cancel(self) -> None:

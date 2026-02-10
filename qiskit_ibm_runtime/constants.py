@@ -36,7 +36,7 @@ API_TO_JOB_ERROR_MESSAGE = {
     "Job was cancelled:\n{}",
 }
 
-DEFAULT_DECODERS = {
+DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "sampler": [ResultDecoder, SamplerResultDecoder],
     "estimator": [ResultDecoder, EstimatorResultDecoder],
     "executor": QuantumProgramResultDecoder,

@@ -12,7 +12,6 @@
 
 """General utility functions."""
 
-from __future__ import annotations
 import copy
 import keyword
 import logging

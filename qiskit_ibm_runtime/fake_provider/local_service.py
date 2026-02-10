@@ -12,8 +12,6 @@
 
 """Qiskit runtime service."""
 
-from __future__ import annotations
-
 import math
 import copy
 import logging

@@ -12,6 +12,8 @@
 
 """Qiskit runtime service."""
 
+from __future__ import annotations
+
 import logging
 import warnings
 from datetime import datetime
@@ -525,12 +527,12 @@ class QiskitRuntimeService:
         min_num_qubits: int | None = None,
         instance: str | None = None,
         dynamic_circuits: bool | None = None,
-        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
+        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
         *,
         use_fractional_gates: bool | None = False,
         calibration_id: str | None = None,
         **kwargs: Any,
-    ) -> list["ibm_backend.IBMBackend"]:
+    ) -> list[ibm_backend.IBMBackend]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -716,11 +718,20 @@ class QiskitRuntimeService:
         try:
             if backend_name in self._backend_configs:
                 config = self._backend_configs[backend_name]
+
+                fractional_gates = {"rzz", "rx"}
+
                 # if cached config does not match use_fractional_gates
                 # or calibration_id is passed in
                 if (
-                    (use_fractional_gates and "rzz" not in config.basis_gates)
-                    or (not use_fractional_gates and "rzz" in config.basis_gates)
+                    (
+                        use_fractional_gates
+                        and not any(fg in config.basis_gates for fg in fractional_gates)
+                    )
+                    or (
+                        not use_fractional_gates
+                        and any(fg in config.basis_gates for fg in fractional_gates)
+                    )
                     or calibration_id
                 ):
                     config = configuration_from_server_data(
@@ -851,7 +862,7 @@ class QiskitRuntimeService:
             private_endpoint=private_endpoint,
             region=region,
             plans_preference=plans_preference,
-            tags=tags,  # type: ignore[arg-type]
+            tags=tags,
         )
 
     @staticmethod
@@ -1252,7 +1263,7 @@ class QiskitRuntimeService:
         self,
         min_num_qubits: int | None = None,
         instance: str | None = None,
-        filters: Callable[["ibm_backend.IBMBackend"], bool] | None = None,
+        filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.

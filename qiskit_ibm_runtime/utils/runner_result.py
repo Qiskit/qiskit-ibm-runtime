@@ -12,6 +12,9 @@
 
 """Circuit-runner result class"""
 
+from __future__ import annotations
+
+from collections.abc import Iterable
 import json
 
 from qiskit.result import Result, QuasiDistribution
@@ -26,7 +29,7 @@ class RunnerResult(Result, ResultDecoder):
     """Result class for Qiskit Runtime program circuit-runner."""
 
     @classmethod
-    def decode(cls, data: str) -> "RunnerResult":
+    def decode(cls, data: str) -> RunnerResult:
         """Decoding for results from Qiskit runtime jobs."""
         return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
@@ -44,10 +47,11 @@ class RunnerResult(Result, ResultDecoder):
         Raises:
             QiskitError: If experiment result doesn't contain quasi-probability distribution.
         """
+        exp_keys: Iterable
         if experiment is None:
             exp_keys = range(len(self.results))
         else:
-            exp_keys = [experiment]  # type: ignore[assignment]
+            exp_keys = [experiment]
 
         dict_list = []
         for key in exp_keys:
