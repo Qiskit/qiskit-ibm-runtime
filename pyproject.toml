@@ -80,6 +80,7 @@ line-length = 100
 target-version = "py310"
 
 [tool.ruff.lint]
+future-annotations = true
 select = [
     # Rules in alphabetic order
     "C4",    # flake8-comprehensions

@@ -12,6 +12,8 @@
 
 """Runtime REST adapter."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 from typing import Any
@@ -39,7 +41,7 @@ class Runtime(RestAdapterBase):
         "cloud_usage": "/instances/usage",
     }
 
-    def program_job(self, job_id: str) -> "ProgramJob":
+    def program_job(self, job_id: str) -> ProgramJob:
         """Return an adapter for the job.
 
         Args:
@@ -50,7 +52,7 @@ class Runtime(RestAdapterBase):
         """
         return ProgramJob(self.session, job_id)
 
-    def runtime_session(self, session_id: str = None) -> "RuntimeSession":
+    def runtime_session(self, session_id: str = None) -> RuntimeSession:
         """Return an adapter for the session.
 
         Args:

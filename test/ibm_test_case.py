@@ -12,6 +12,8 @@
 
 """Custom TestCase for IBM Provider."""
 
+from __future__ import annotations
+
 import os
 import logging
 import inspect
@@ -177,7 +179,7 @@ class IBMTestCase(TestCase):
         else:
             return ""
 
-    def save_plotly_artifact(self, fig: "PlotlyFigure", name: str = None) -> str:
+    def save_plotly_artifact(self, fig: PlotlyFigure, name: str = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
         # nested folder path based on the test module, class, and method
         test_path = self.id().split(".")[1:]

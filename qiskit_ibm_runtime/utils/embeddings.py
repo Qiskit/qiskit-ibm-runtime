@@ -15,6 +15,8 @@
 Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
+from __future__ import annotations
+
 from collections.abc import Iterable, Sequence
 
 from qiskit.providers.backend import BackendV2
@@ -46,7 +48,7 @@ class Embedding:
         )
 
     @classmethod
-    def from_backend(cls, backend: BackendV2) -> "Embedding":
+    def from_backend(cls, backend: BackendV2) -> Embedding:
         r"""Generates an :class:`~.Embedding` object from a backend.
 
         Args:

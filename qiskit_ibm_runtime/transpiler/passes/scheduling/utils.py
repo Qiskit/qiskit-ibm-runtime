@@ -12,6 +12,8 @@
 
 """Utility functions for scheduling passes."""
 
+from __future__ import annotations
+
 import warnings
 from typing import TypeAlias
 from collections.abc import Callable, Generator
@@ -170,7 +172,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         super().__init__(instruction_durations=instruction_durations, dt=dt)
 
     @classmethod
-    def from_backend(cls, backend: Backend) -> "DynamicCircuitInstructionDurations":
+    def from_backend(cls, backend: Backend) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the backend.
         Args:
             backend: backend from which durations (gate lengths) and dt are extracted.
@@ -182,7 +184,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         return cls.from_target(backend.target)
 
     @classmethod
-    def from_target(cls, target: Target) -> "DynamicCircuitInstructionDurations":
+    def from_target(cls, target: Target) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the target.
         Args:
             target: target from which durations (gate lengths) and dt are extracted.
@@ -202,7 +204,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
 
     def update(
         self, inst_durations: InstructionDurationsType | None, dt: float = None
-    ) -> "DynamicCircuitInstructionDurations":
+    ) -> DynamicCircuitInstructionDurations:
         """Update self with inst_durations (inst_durations overwrite self). Overrides the default
         durations for certain hardcoded instructions.
 
