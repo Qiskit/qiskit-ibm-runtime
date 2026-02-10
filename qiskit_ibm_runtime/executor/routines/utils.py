@@ -18,8 +18,6 @@ from qiskit.circuit import BoxOp, QuantumCircuit
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from ...exceptions import IBMInputValueError
-from ...quantum_program import QuantumProgram
-from ...quantum_program.quantum_program import CircuitItem
 
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:
@@ -40,25 +38,27 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
             )
 
 
-def pubs_to_quantum_program(
-    pubs: list[SamplerPub], default_shots: int | None = None
-) -> QuantumProgram:
-    """Convert a list of SamplerPub objects to a QuantumProgram.
+def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = None) -> int:
+    """Extract and validate shots value from a list of SamplerPub objects.
+
+    This function determines the shots value by examining all pubs and ensures
+    that all pubs have the same number of shots. If a pub doesn't specify shots,
+    the default_shots value is used.
 
     Args:
-        pubs: List of sampler pubs to convert.
+        pubs: List of sampler pubs to extract shots from.
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
-        A QuantumProgram containing CircuitItem objects for each pub.
+        The validated shots value that all pubs share.
 
     Raises:
-        IBMInputValueError: If circuits contain boxes or if shots are not specified.
+        IBMInputValueError: If pubs list is empty, if shots are not specified
+            anywhere, or if pubs have different shot values.
     """
     if not pubs:
         raise IBMInputValueError("At least one pub must be provided.")
 
-    # Determine shots - all pubs should have the same shots value
     shots = None
     for pub in pubs:
         pub_shots = pub.shots if pub.shots is not None else default_shots
@@ -73,25 +73,6 @@ def pubs_to_quantum_program(
                 f"All pubs must have the same number of shots. Found {shots} and {pub_shots}."
             )
 
-    # Validate circuits don't contain boxes
-    for pub in pubs:
-        validate_no_boxes(pub.circuit)
-
-    # Create QuantumProgram with CircuitItem for each pub
-    items = []
-    for pub in pubs:
-        # Convert parameter values to numpy array
-        if pub.parameter_values.num_parameters > 0:
-            # Get the parameter values as a numpy array
-            param_values = pub.parameter_values.as_array()
-        else:
-            param_values = None
-
-        items.append(
-            CircuitItem(
-                circuit=pub.circuit,
-                circuit_arguments=param_values,
-            )
-        )
-
-    return QuantumProgram(shots=shots, items=items)
+    # Type checker: shots is guaranteed to be int here due to validation above
+    assert shots is not None
+    return shots

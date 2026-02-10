@@ -25,10 +25,52 @@ from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
 from ....session import Session
 from ....batch import Batch
+from ....quantum_program import QuantumProgram
+from ....quantum_program.quantum_program import CircuitItem
 
-from ..utils import pubs_to_quantum_program
+from ..utils import validate_no_boxes, extract_shots_from_pubs
 
 logger = logging.getLogger(__name__)
+
+
+def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> QuantumProgram:
+    """Convert a list of SamplerPub objects to a QuantumProgram.
+
+    Args:
+        pubs: List of sampler pubs to convert.
+        default_shots: Default number of shots if not specified in pubs.
+
+    Returns:
+        A QuantumProgram containing CircuitItem objects for each pub.
+
+    Raises:
+        IBMInputValueError: If circuits contain boxes or if shots are not specified.
+    """
+    # Extract and validate shots from pubs
+    shots = extract_shots_from_pubs(pubs, default_shots)
+
+    # Validate circuits don't contain boxes
+    for pub in pubs:
+        validate_no_boxes(pub.circuit)
+
+    # Create QuantumProgram with CircuitItem for each pub
+    items = []
+    for pub in pubs:
+        # Convert parameter values to numpy array
+        if pub.parameter_values.num_parameters > 0:
+            # Get the parameter values as a numpy array
+            param_values = pub.parameter_values.as_array()
+        else:
+            param_values = None
+
+        items.append(
+            CircuitItem(
+                circuit=pub.circuit,
+                circuit_arguments=param_values,
+            )
+        )
+
+    return QuantumProgram(shots=shots, items=items)
 
 
 class SamplerV2(BaseSamplerV2):
@@ -117,7 +159,7 @@ class SamplerV2(BaseSamplerV2):
         default_shots = (
             shots if shots is not None else 4096
         )  # TODO: Move to options once available.
-        quantum_program = pubs_to_quantum_program(coerced_pubs, default_shots=default_shots)
+        quantum_program = prepare(coerced_pubs, default_shots=default_shots)
 
         # Submit to executor
         logger.info(

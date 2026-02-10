@@ -13,19 +13,16 @@
 """Tests for executor-based SamplerV2 utility functions."""
 
 import unittest
-import numpy as np
 
 from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter, BoxOp
+from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.routines.utils import (
     validate_no_boxes,
-    pubs_to_quantum_program,
+    extract_shots_from_pubs,
 )
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
 
 
 class TestValidateNoBoxes(unittest.TestCase):
@@ -58,43 +55,34 @@ class TestValidateNoBoxes(unittest.TestCase):
         self.assertIn("not supported", str(context.exception))
 
 
-class TestPubsToQuantumProgram(unittest.TestCase):
-    """Tests for pubs_to_quantum_program function."""
+class TestExtractShotsFromPubs(unittest.TestCase):
+    """Tests for extract_shots_from_pubs function."""
 
-    def test_single_pub_no_parameters(self):
-        """Test conversion of a single pub without parameters."""
+    def test_single_pub_with_shots(self):
+        """Test extracting shots from a single pub with shots specified."""
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
         circuit.cx(0, 1)
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit, shots=1024)
-        program = pubs_to_quantum_program([pub])
+        shots = extract_shots_from_pubs([pub])
 
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertEqual(program.shots, 1024)
-        self.assertEqual(len(program.items), 1)
-        self.assertIsInstance(program.items[0], CircuitItem)
-        self.assertEqual(program.items[0].circuit, circuit)
+        self.assertEqual(shots, 1024)
 
-    def test_single_pub_with_parameters(self):
-        """Test conversion of a single pub with parameters."""
-        theta = Parameter("θ")
-        circuit = QuantumCircuit(1, 1)
-        circuit.rx(theta, 0)
+    def test_single_pub_with_default_shots(self):
+        """Test extracting shots using default_shots when pub doesn't specify."""
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
         circuit.measure_all()
 
-        param_values = np.array([[0.1], [0.2], [0.3]])
-        pub = SamplerPub.coerce((circuit, param_values), shots=2048)
-        program = pubs_to_quantum_program([pub])
+        pub = SamplerPub.coerce(circuit)  # No shots specified
+        shots = extract_shots_from_pubs([pub], default_shots=2048)
 
-        self.assertEqual(program.shots, 2048)
-        self.assertEqual(len(program.items), 1)
-        self.assertIsInstance(program.items[0], CircuitItem)
-        np.testing.assert_array_equal(program.items[0].circuit_arguments, param_values)
+        self.assertEqual(shots, 2048)
 
-    def test_multiple_pubs(self):
-        """Test conversion of multiple pubs."""
+    def test_multiple_pubs_same_shots(self):
+        """Test extracting shots from multiple pubs with same shots value."""
         circuit1 = QuantumCircuit(2, 2)
         circuit1.h(0)
         circuit1.measure_all()
@@ -107,23 +95,27 @@ class TestPubsToQuantumProgram(unittest.TestCase):
             SamplerPub.coerce(circuit1, shots=1024),
             SamplerPub.coerce(circuit2, shots=1024),
         ]
-        program = pubs_to_quantum_program(pubs)
+        shots = extract_shots_from_pubs(pubs)
 
-        self.assertEqual(program.shots, 1024)
-        self.assertEqual(len(program.items), 2)
-        self.assertEqual(program.items[0].circuit, circuit1)
-        self.assertEqual(program.items[1].circuit, circuit2)
+        self.assertEqual(shots, 1024)
 
-    def test_default_shots(self):
-        """Test that default shots are used when not specified in pub."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
+    def test_multiple_pubs_mixed_shots_sources(self):
+        """Test multiple pubs where some use default_shots and some specify shots."""
+        circuit1 = QuantumCircuit(1, 1)
+        circuit1.h(0)
+        circuit1.measure_all()
 
-        pub = SamplerPub.coerce(circuit)  # No shots specified
-        program = pubs_to_quantum_program([pub], default_shots=4096)
+        circuit2 = QuantumCircuit(1, 1)
+        circuit2.x(0)
+        circuit2.measure_all()
 
-        self.assertEqual(program.shots, 4096)
+        pubs = [
+            SamplerPub.coerce(circuit1, shots=512),
+            SamplerPub.coerce(circuit2),  # Will use default_shots
+        ]
+        shots = extract_shots_from_pubs(pubs, default_shots=512)
+
+        self.assertEqual(shots, 512)
 
     def test_mismatched_shots_raises_error(self):
         """Test that mismatched shots across pubs raises an error."""
@@ -141,9 +133,11 @@ class TestPubsToQuantumProgram(unittest.TestCase):
         ]
 
         with self.assertRaises(IBMInputValueError) as context:
-            pubs_to_quantum_program(pubs)
+            extract_shots_from_pubs(pubs)
 
         self.assertIn("same number of shots", str(context.exception))
+        self.assertIn("1024", str(context.exception))
+        self.assertIn("2048", str(context.exception))
 
     def test_no_shots_specified_raises_error(self):
         """Test that missing shots raises an error."""
@@ -154,29 +148,25 @@ class TestPubsToQuantumProgram(unittest.TestCase):
         pub = SamplerPub.coerce(circuit)  # No shots
 
         with self.assertRaises(IBMInputValueError) as context:
-            pubs_to_quantum_program([pub], default_shots=None)
+            extract_shots_from_pubs([pub], default_shots=None)
 
         self.assertIn("Shots must be specified", str(context.exception))
 
     def test_empty_pubs_raises_error(self):
         """Test that empty pubs list raises an error."""
         with self.assertRaises(IBMInputValueError) as context:
-            pubs_to_quantum_program([])
+            extract_shots_from_pubs([])
 
         self.assertIn("At least one pub", str(context.exception))
 
-    def test_pub_with_box_raises_error(self):
-        """Test that a pub with a BoxOp raises an error."""
-        inner_circuit = QuantumCircuit(2)
-        inner_circuit.h(0)
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.append(BoxOp(inner_circuit), [0, 1])
+    def test_pub_shots_overrides_default(self):
+        """Test that pub.shots takes precedence over default_shots."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit, shots=1024)
+        shots = extract_shots_from_pubs([pub], default_shots=2048)
 
-        with self.assertRaises(IBMInputValueError) as context:
-            pubs_to_quantum_program([pub])
-
-        self.assertIn("BoxOp", str(context.exception))
+        # Should use pub.shots (1024), not default_shots (2048)
+        self.assertEqual(shots, 1024)
