@@ -16,6 +16,8 @@ from typing import Any
 
 import dateutil.parser
 
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only
 
@@ -61,7 +63,12 @@ class TestSerialization(IBMIntegrationTestCase):
 
         for backend in backends:
             with self.subTest(backend=backend):
-                properties = backend.properties()
+                try:
+                    properties = backend.properties()
+                except RequestsApiError as ex:
+                    # Some backends might not be able to fetch properties.
+                    if ex.status_code == 404:
+                        properties = None
                 if properties:
                     self._verify_data(properties.to_dict(), good_keys)
 

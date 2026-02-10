@@ -12,8 +12,6 @@
 
 """Noise learner program."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
 from typing import Any
@@ -204,7 +202,7 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),  # type: ignore[arg-type]
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 

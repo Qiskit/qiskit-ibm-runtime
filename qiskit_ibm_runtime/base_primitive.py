@@ -12,7 +12,6 @@
 
 """Base class for Qiskit Runtime primitives."""
 
-from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TypeVar, Generic
 import logging
@@ -182,7 +181,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),  # type: ignore[arg-type]
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 

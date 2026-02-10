@@ -80,6 +80,7 @@ line-length = 100
 target-version = "py310"
 
 [tool.ruff.lint]
+future-annotations = true
 select = [
     # Rules in alphabetic order
     "C4",    # flake8-comprehensions
@@ -138,7 +139,7 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
-    "ibm-quantum-schemas @ git+https://github.com/Qiskit/ibm-quantum-schemas.git@d579621311e62b5c342e804a605e4e4e96d88811#egg=ibm-quantum-schemas",
+    "ibm-quantum-schemas>=0.1.20260129",
     "pydantic>=2.5.0",
     "qiskit>=2.0.0",
     "packaging",
