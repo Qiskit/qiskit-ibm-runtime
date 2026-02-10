@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def _get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
+def get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
     Session | Batch | None,
     QiskitRuntimeService | QiskitRuntimeLocalService | None,
     BackendV2 | None,
@@ -119,7 +119,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 
     def _run(self, pubs: list[EstimatorPub] | list[SamplerPub]) -> RuntimeJobV2:

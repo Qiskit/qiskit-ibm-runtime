@@ -181,7 +181,9 @@ autoencoders
 backend's
 bilinearity
 bitstring
+boolean
 bool
+broadcastable
 colocated
 coprime
 decohere
@@ -223,6 +225,7 @@ qiskit
 quantizing
 quasiprobabilities
 quasiprobability
+randomizations
 qubit
 qubit's
 qubits
@@ -231,6 +234,7 @@ qutrits
 recalibrated
 reuploading
 rustworkx
+samplex
 satisfiability
 serverless
 simulability
