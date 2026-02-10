@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2_dev.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
     ParamsModel,
@@ -34,7 +34,7 @@ from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
 )
 
 
-def noise_learner_v3_inputs_to_0_2_dev(
+def noise_learner_v3_inputs_to_0_2(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
 ) -> ParamsModel:
@@ -54,7 +54,7 @@ def noise_learner_v3_inputs_to_0_2_dev(
     )
 
 
-def noise_learner_v3_inputs_from_0_2_dev(
+def noise_learner_v3_inputs_from_0_2(
     model: ParamsModel,
 ) -> tuple[list[CircuitInstruction], NoiseLearnerV3Options]:
     """Convert a V0.2 model to noise learner V3 inputs."""
@@ -66,7 +66,7 @@ def noise_learner_v3_inputs_from_0_2_dev(
     return instructions, options
 
 
-def noise_learner_v3_result_to_0_2_dev(
+def noise_learner_v3_result_to_0_2(
     result: NoiseLearnerV3Results,
 ) -> NoiseLearnerV3ResultsModel:
     """Convert noise learner v3 results to a V0.2 model."""
@@ -84,7 +84,7 @@ def noise_learner_v3_result_to_0_2_dev(
     )
 
 
-def noise_learner_v3_result_from_0_2_dev(
+def noise_learner_v3_result_from_0_2(
     model: NoiseLearnerV3ResultsModel,
 ) -> NoiseLearnerV3Results:
     """Convert a V0.2 model to noise learner v3 results"""

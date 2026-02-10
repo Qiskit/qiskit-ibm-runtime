@@ -26,7 +26,7 @@ from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
-from .quantum_program.converters import quantum_program_to_0_2_dev
+from .quantum_program.converters import quantum_program_to_0_2
 from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
@@ -101,4 +101,4 @@ class Executor:
         Returns:
             A job.
         """
-        return self._run(quantum_program_to_0_2_dev(program, self.options))
+        return self._run(quantum_program_to_0_2(program, self.options))

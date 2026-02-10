@@ -19,7 +19,7 @@ from dataclasses import asdict
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
 
-from ibm_quantum_schemas.models.executor.version_0_2_dev.models import (
+from ibm_quantum_schemas.models.executor.version_0_2.models import (
     ParamsModel,
     CircuitItemModel,
     SamplexItemModel,
@@ -38,7 +38,7 @@ from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan,
 from ...options.executor_options import ExecutorOptions
 
 
-def quantum_program_to_0_2_dev(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
+def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
     """Convert a :class:`~.QuantumProgram` to a V0.2 model."""
     model_items = []
     for item in program.items:
@@ -86,7 +86,7 @@ def quantum_program_to_0_2_dev(program: QuantumProgram, options: ExecutorOptions
     )
 
 
-def quantum_program_result_from_0_2_dev(model: QuantumProgramResultModel) -> QuantumProgramResult:
+def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> QuantumProgramResult:
     """Convert a V0.2 model to a :class:`QuantumProgramResult`."""
     metadata = Metadata(
         chunk_timing=[

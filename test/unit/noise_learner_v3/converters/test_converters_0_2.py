@@ -17,11 +17,11 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
-from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_2_dev import (
-    noise_learner_v3_inputs_from_0_2_dev,
-    noise_learner_v3_inputs_to_0_2_dev,
-    noise_learner_v3_result_from_0_2_dev,
-    noise_learner_v3_result_to_0_2_dev,
+from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_2 import (
+    noise_learner_v3_inputs_from_0_2,
+    noise_learner_v3_inputs_to_0_2,
+    noise_learner_v3_result_from_0_2,
+    noise_learner_v3_result_to_0_2,
 )
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
     NoiseLearnerV3Result,
@@ -55,8 +55,8 @@ class TestConverters(IBMTestCase):
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
 
-        encoded = noise_learner_v3_inputs_to_0_2_dev(instructions, options)
-        decoded = noise_learner_v3_inputs_from_0_2_dev(encoded)
+        encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
+        decoded = noise_learner_v3_inputs_from_0_2(encoded)
 
         assert decoded == (instructions, options)
 
@@ -85,8 +85,8 @@ class TestConverters(IBMTestCase):
         result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
 
-        encoded = noise_learner_v3_result_to_0_2_dev(results)
-        decoded = noise_learner_v3_result_from_0_2_dev(encoded)
+        encoded = noise_learner_v3_result_to_0_2(results)
+        decoded = noise_learner_v3_result_from_0_2(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
             assert datum_in._generators == datum_out._generators
             assert np.allclose(datum_in._rates, datum_out._rates)
@@ -118,7 +118,7 @@ class TestConverters(IBMTestCase):
                 ValidationError,
                 "1 validation error for NoiseLearnerV3ResultModel",
             ):
-                noise_learner_v3_result_to_0_2_dev(results).model_dump()
+                noise_learner_v3_result_to_0_2(results).model_dump()
 
         for metadatum in [
             {
@@ -138,4 +138,4 @@ class TestConverters(IBMTestCase):
             with self.assertRaisesRegex(
                 ValidationError, "1 validation error for NoiseLearnerV3ResultModel"
             ):
-                noise_learner_v3_result_to_0_2_dev(results).model_dump()
+                noise_learner_v3_result_to_0_2(results).model_dump()

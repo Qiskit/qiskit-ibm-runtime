@@ -20,7 +20,7 @@ import logging
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_1,
 )
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2_dev.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
 
@@ -31,13 +31,13 @@ from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # typ
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
 from .converters.version_0_1 import noise_learner_v3_result_from_0_1
-from .converters.version_0_2_dev import noise_learner_v3_result_from_0_2_dev
+from .converters.version_0_2 import noise_learner_v3_result_from_0_2
 
 logger = logging.getLogger(__name__)
 
 AVAILABLE_DECODERS = {
     "v0.1": (noise_learner_v3_result_from_0_1, NoiseLearnerV3ResultsModel_0_1),
-    "v0.2": (noise_learner_v3_result_from_0_2_dev, NoiseLearnerV3ResultsModel_0_2),
+    "v0.2": (noise_learner_v3_result_from_0_2, NoiseLearnerV3ResultsModel_0_2),
 }
 
 
