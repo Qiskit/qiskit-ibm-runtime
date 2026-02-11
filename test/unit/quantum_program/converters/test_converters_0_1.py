@@ -36,7 +36,7 @@ from qiskit_ibm_runtime.quantum_program.converters import (
 )
 from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
 
-from ...ibm_test_case import IBMTestCase
+from ....ibm_test_case import IBMTestCase
 
 
 class TestQuantumProgramConverters(IBMTestCase):
@@ -54,6 +54,8 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program = QuantumProgram(
             shots=shots,
             noise_maps={f"pl{i}": noise_model for i, noise_model in enumerate(noise_models)},
+            meas_level="avg_kerneled",
+            passthrough_data={"main_branch": {"sub_branch1": 1.1, "sub_branch2": [1, 2]}},
         )
 
         circuit1 = QuantumCircuit(1)

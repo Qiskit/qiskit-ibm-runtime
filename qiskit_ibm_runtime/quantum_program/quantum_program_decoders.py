@@ -19,14 +19,21 @@ import logging
 from ibm_quantum_schemas.models.executor.version_0_1.models import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_1,
 )
+from ibm_quantum_schemas.models.executor.version_0_2_dev.models import (
+    QuantumProgramResultModel as QuantumProgramResultModel_0_2,
+)
 
 # pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
 from .converters import quantum_program_result_from_0_1
+from .converters import quantum_program_result_from_0_2_dev
 
 logger = logging.getLogger(__name__)
 
-AVAILABLE_DECODERS = {"v0.1": (quantum_program_result_from_0_1, QuantumProgramResultModel_0_1)}
+AVAILABLE_DECODERS = {
+    "v0.1": (quantum_program_result_from_0_1, QuantumProgramResultModel_0_1),
+    "v0.2": (quantum_program_result_from_0_2_dev, QuantumProgramResultModel_0_2),
+}
 
 
 class QuantumProgramResultDecoder(ResultDecoder):

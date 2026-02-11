@@ -16,12 +16,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2_dev.models import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
     ParamsModel,
 )
-from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
+from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV17
 from ibm_quantum_schemas.models.tensor_model import F64TensorModel
 from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
@@ -34,11 +34,11 @@ from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
 )
 
 
-def noise_learner_v3_inputs_to_0_1(
+def noise_learner_v3_inputs_to_0_2_dev(
     instructions: Iterable[CircuitInstruction],
     options: NoiseLearnerV3Options,
 ) -> ParamsModel:
-    """Convert noise learner V3 inputs a V0.1 model."""
+    """Convert noise learner V3 inputs a V0.2 model."""
     qubits = list({qubit for instr in instructions for qubit in instr.qubits})
     clbits = list({clbit for instr in instructions for clbit in instr.clbits})
 
@@ -47,28 +47,29 @@ def noise_learner_v3_inputs_to_0_1(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     return ParamsModel(
-        instructions=QpyModelV13ToV16.from_quantum_circuit(
-            circuit, qpy_version=get_qpy_version(16)
+        instructions=QpyModelV13ToV17.from_quantum_circuit(
+            circuit, qpy_version=get_qpy_version(17)
         ),
-        options=options.to_options_model("v0.1"),
+        options=options.to_options_model("v0.2"),
     )
 
 
-def noise_learner_v3_inputs_from_0_1(
+def noise_learner_v3_inputs_from_0_2_dev(
     model: ParamsModel,
 ) -> tuple[list[CircuitInstruction], NoiseLearnerV3Options]:
-    """Convert a V0.1 model to noise learner V3 inputs."""
+    """Convert a V0.2 model to noise learner V3 inputs."""
     instructions = list(model.instructions.to_quantum_circuit())
+
     options = NoiseLearnerV3Options(
         **{key: val for key, val in model.options.model_dump().items() if val is not None}
     )
     return instructions, options
 
 
-def noise_learner_v3_result_to_0_1(
+def noise_learner_v3_result_to_0_2_dev(
     result: NoiseLearnerV3Results,
 ) -> NoiseLearnerV3ResultsModel:
-    """Convert noise learner v3 results to a V0.1 model."""
+    """Convert noise learner v3 results to a V0.2 model."""
     return NoiseLearnerV3ResultsModel(
         data=[
             NoiseLearnerV3ResultModel(
@@ -83,10 +84,10 @@ def noise_learner_v3_result_to_0_1(
     )
 
 
-def noise_learner_v3_result_from_0_1(
+def noise_learner_v3_result_from_0_2_dev(
     model: NoiseLearnerV3ResultsModel,
 ) -> NoiseLearnerV3Results:
-    """Convert a V0.1 model to noise learner v3 results"""
+    """Convert a V0.2 model to noise learner v3 results"""
     return NoiseLearnerV3Results(
         data=[
             NoiseLearnerV3Result.from_generators(
