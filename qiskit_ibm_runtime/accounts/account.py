@@ -271,6 +271,7 @@ class CloudAccount(Account):
         self.plans_preference = plans_preference
         self.tags = tags
 
+
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
         return CloudAuth(
@@ -278,8 +279,19 @@ class CloudAccount(Account):
             crn=self.instance,
             private=self.private_endpoint,
             proxies=self.proxies,
-            verify=self.verify,
+            verify=self.verify
         )
+    
+    def get_iam_authentificator(self) -> IAMAuthenticator:
+        iam_url = get_iam_api_url(self.url)
+        proxies_kwargs = {}
+        if self.proxies is not None:
+            proxies_kwargs = self.proxies.to_request_params()
+        return IAMAuthenticator(
+            apikey=self.token,
+            url=iam_url,
+            disable_ssl_verification=not self.verify,
+            **proxies_kwargs)
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
@@ -313,8 +325,7 @@ class CloudAccount(Account):
 
     def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        iam_url = get_iam_api_url(self.url)
-        authenticator = IAMAuthenticator(self.token, url=iam_url)
+        authenticator = self.get_iam_authentificator()
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
         client.set_service_url(get_global_search_api_url(self.url))
