@@ -271,7 +271,6 @@ class CloudAccount(Account):
         self.plans_preference = plans_preference
         self.tags = tags
 
-
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
         return CloudAuth(
@@ -282,16 +281,20 @@ class CloudAccount(Account):
             verify=self.verify
         )
     
-    def get_iam_authentificator(self) -> IAMAuthenticator:
-        iam_url = get_iam_api_url(self.url)
+    def _get_proxies_kwargs(self) -> dict:
         proxies_kwargs = {}
         if self.proxies is not None:
             proxies_kwargs = self.proxies.to_request_params()
+        return proxies_kwargs
+    
+    def get_iam_authentificator(self) -> IAMAuthenticator:
+        iam_url = get_iam_api_url(self.url)
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
             disable_ssl_verification=not self.verify,
-            **proxies_kwargs)
+            **self._get_proxies_kwargs()
+            )
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
@@ -345,6 +348,8 @@ class CloudAccount(Account):
                     ],
                     search_cursor=search_cursor,
                     limit=100,
+                    verify=self.verify,
+                    **self._get_proxies_kwargs()
                 ).get_result()
             except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
@@ -358,7 +363,9 @@ class CloudAccount(Account):
                 allocations = item.get("doc", {}).get("extensions")
                 if allocations:
                     catalog_result = catalog.get_catalog_entry(
-                        id=item.get("service_plan_unique_id")
+                        id=item.get("service_plan_unique_id"),
+                        verify=self.verify,
+                        **self._get_proxies_kwargs()
                     ).get_result()
                     plan_name = (
                         catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")

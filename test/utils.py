@@ -16,12 +16,12 @@ import os
 import logging
 import time
 import itertools
+import socket
 import unittest
 from unittest import mock
 from typing import Any
 from datetime import datetime
 from ddt import data, unpack
-import socket
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
 from qiskit.compiler import transpile
@@ -478,6 +478,7 @@ def remap_observables(observables, isa_circuit):
     return out_obs
 
 def find_free_port():
+    """Return a port that is free to use on the machine"""
     s = socket.socket()
     s.bind(("", 0))
     port = s.getsockname()[1]
