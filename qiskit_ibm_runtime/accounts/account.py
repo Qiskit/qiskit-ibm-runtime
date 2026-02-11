@@ -363,7 +363,7 @@ class CloudAccount(Account):
                         # The catalog does not allow querying archived entries, returning 403.
                         logger.warning(
                             "The plan and pricing type for instance %s could not be retrieved.",
-                            item.get('crn')
+                            item.get("crn"),
                         )
                         plan_name = "unknown"
                         pricing_type = "unknown"
