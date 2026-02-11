@@ -21,12 +21,14 @@ from unittest import mock
 from typing import Any
 from datetime import datetime
 from ddt import data, unpack
+import socket
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
 from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
+
 from qiskit_ibm_runtime import (
     QiskitRuntimeService,
     Session,
@@ -474,6 +476,13 @@ def remap_observables(observables, isa_circuit):
             raise ValueError(f"Observable of type {type(obs)} is not supported.")
 
     return out_obs
+
+def find_free_port():
+    s = socket.socket()
+    s.bind(("", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
 
 
 class MockSession(Session):
