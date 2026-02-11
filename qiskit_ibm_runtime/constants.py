@@ -14,6 +14,7 @@
 
 from qiskit.providers.jobstatus import JobStatus
 
+from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
 from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
 from .utils.estimator_result_decoder import EstimatorResultDecoder
@@ -35,10 +36,21 @@ API_TO_JOB_ERROR_MESSAGE = {
     "Job was cancelled:\n{}",
 }
 
-DEFAULT_DECODERS = {
+DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "sampler": [ResultDecoder, SamplerResultDecoder],
     "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "executor": QuantumProgramResultDecoder,
     "noise-learner": NoiseLearnerResultDecoder,
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }
+
+DEFAULT_POST_SELECTION_SUFFIX = "_ps"
+"""
+The default suffix to append to the names of the classical registers used for post selection.
+"""
+
+DEFAULT_SPECTATOR_CREG_NAME = "spec"
+"""
+The default name of the classical register used for measuring spectator qubits.
+"""

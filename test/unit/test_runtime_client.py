@@ -48,7 +48,6 @@ class TestAccountClient(IBMTestCase):
 
     def test_client_error(self):
         """Test client error."""
-        client = self._get_client()
         self.fake_server = SimpleServer(handler_class=ClientErrorHandler)
         self.fake_server.start()
         # client.account_api.session.base_url = SimpleServer.URL
@@ -62,6 +61,8 @@ class TestAccountClient(IBMTestCase):
 
         for err_resp in sub_tests:
             with self.subTest(response=err_resp):
+                # Use a new client for each request, for avoiding delay in second response.
+                client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
                     client.backend_status("ibmq_qasm_simulator")

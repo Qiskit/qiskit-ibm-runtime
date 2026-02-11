@@ -18,39 +18,52 @@ import logging
 from typing import Any
 from datetime import datetime as python_datetime
 from copy import deepcopy
-from packaging.version import Version
 
-from qiskit import QuantumCircuit, __version__ as qiskit_version
+from packaging.version import Version
+from qiskit import QuantumCircuit
+from qiskit import __version__ as qiskit_version
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.transpiler.target import Target
 
-from .models import (
-    BackendStatus,
-    BackendProperties,
-    GateConfig,
-    QasmBackendConfiguration,
+from ibm_quantum_schemas.models.executor.version_0_1.models import (
+    QuantumProgramResultModel,
 )
 
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
-
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
     IBMBackendError,
 )
-from .utils.backend_converter import convert_to_target
-
-from .utils.backend_decoder import (
-    properties_from_server_data,
-    configuration_from_server_data,
+from .models import (
+    BackendProperties,
+    BackendStatus,
+    GateConfig,
+    QasmBackendConfiguration,
 )
+from .options.executor_options import ExecutorOptions
+from .quantum_program import QuantumProgram
+from .quantum_program.converters import quantum_program_to_0_1, quantum_program_result_from_0_1
+from .runtime_job_v2 import RuntimeJobV2
 from .utils import local_to_utc
+from .utils.backend_converter import convert_to_target
+from .utils.backend_decoder import (
+    configuration_from_server_data,
+    properties_from_server_data,
+)
+
 
 if Version(qiskit_version).major >= 2:
-    from qiskit.result import MeasLevel, MeasReturnType
+    from qiskit.result import (  # pylint: disable=ungrouped-imports
+        MeasLevel,
+        MeasReturnType,
+    )
 else:
-    from qiskit.qobj.utils import MeasLevel, MeasReturnType  # pylint: disable=import-error
+    from qiskit.qobj.utils import (  # pylint: disable=import-error
+        MeasLevel,
+        MeasReturnType,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -222,6 +235,58 @@ class IBMBackend(Backend):
                 "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
+    def submit(
+        self, program: QuantumProgram, options: ExecutorOptions | None = None
+    ) -> RuntimeJobV2:
+        """Submit a quantum program for execution.
+
+        Args:
+            program: The program to execute.
+            options: Execution options.
+
+        Returns:
+            A job.
+        """
+        options = options or ExecutorOptions()
+        program_id = "executor"
+        model = quantum_program_to_0_1(program, options)
+
+        params = model.model_dump()
+        params["version"] = 2  # TODO: this is a work-around for the dispatch while we use 'execute'
+        response = self._service._active_api_client._api.program_run(
+            program_id=program_id,
+            backend_name=self.name,
+            image=options.environment.image,
+            log_level=options.environment.log_level,
+            session_id=None,
+            job_tags=options.environment.job_tags,
+            max_execution_time=None,
+            start_session=False,
+            session_time=None,
+            params=params,
+        )
+
+        class Decoder:
+            """Decoder."""
+
+            @classmethod
+            def decode(cls, data: str):  # type: ignore[no-untyped-def]
+                """Decode."""
+                obj = QuantumProgramResultModel.model_validate_json(data)
+                return quantum_program_result_from_0_1(obj)
+
+        return RuntimeJobV2(
+            backend=self,
+            api_client=self._service._active_api_client,
+            job_id=response["id"],
+            program_id=program_id,
+            result_decoder=Decoder,  # type: ignore[arg-type]
+            image=options.environment.image,
+            service=self._service,
+            version=model.schema_version,
+            private=False,
+        )
+
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration and properties to Target object"""
         if refresh or not self._target:
@@ -339,9 +404,9 @@ class IBMBackend(Backend):
         gates properties (such as gate length and error), and other general
         properties of the backend.
 
-        The schema for backend properties can be found in
-        `Qiskit/ibm-quantum-schemas/backend_properties
-        <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_properties_schema.json>`_.
+        Information about backend properties can be found in the
+        `Get backend configuration REST API
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
         Args:
             refresh: If ``True``, re-query the server for the backend properties.
@@ -418,9 +483,9 @@ class IBMBackend(Backend):
         Backend configuration contains fixed information about the backend, such
         as its name, number of qubits, basis gates, coupling map, quantum volume, etc.
 
-        The schema for backend configuration can be found in
-        `Qiskit/ibm-quantum-schemas/backend_configuration
-        <https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/backend_configuration_schema.json>`_.
+        Information about backend configuration can be found in the
+        `Get backend configuration REST API
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
         More details about backend configuration properties can be found here `QasmBackendConfiguration
         <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.

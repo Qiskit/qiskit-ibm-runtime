@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]~=8.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -48,7 +48,7 @@ zip-safe = false
 
 [tool.setuptools_scm]
 root = "."
-write_to = "qiskit_ibm_runtime/VERSION.txt"
+version_file = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
 fallback_version = "0.45.0"
 
@@ -139,9 +139,12 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
+    "ibm-quantum-schemas>=0.1.20260129",
     "pydantic>=2.5.0",
     "qiskit>=2.0.0",
-    "packaging"
+    "packaging",
+    "pybase64>=1.0",
+    "samplomatic>=0.13.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
