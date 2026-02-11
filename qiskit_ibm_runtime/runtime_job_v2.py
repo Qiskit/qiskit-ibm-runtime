@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+from collections.abc import Callable
 from collections.abc import Sequence
 from concurrent import futures
 import logging
@@ -23,6 +24,7 @@ import time
 from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
+
 
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
@@ -37,6 +39,8 @@ from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob
+from .quantum_program.quantum_program_result import QuantumProgramResult
+from .quantum_program.post_processors import POST_PROCESSORS
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +74,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         tags: list | None = None,
         version: int | None = None,
         private: bool | None = False,
+        post_processor: str | None = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -86,6 +91,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             tags: Tags assigned to the job.
             version: Primitive version.
             private: Marks job as private.
+            post_processor: Post-processor name (str) to apply to results.
         """
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
@@ -104,20 +110,32 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             private=private,
         )
         self._status: JobStatus = "INITIALIZING"
+        self._post_processor = post_processor
 
     def result(  # pylint: disable=arguments-differ
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
+        post_processor: str | Callable[[Any, dict[str, Any]], Any] | None = None,
     ) -> Any:
         """Return the results of the job.
+
+        The result will be post-processed if it is a QuantumProgramResult and
+        a post-processor is configured, according to the following precedence:
+        1. post_processor parameter (if provided)
+        2. Job's stored post_processor (if set during job creation)
+        3. Post-processor specified in result's passthrough_data
+        4. No post-processing (return raw decoded result)
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            post_processor: Post-processor name (str) or callable to apply to results.
+                Only applies to QuantumProgramResult. If provided, takes precedence
+                over job's stored post_processor and passthrough_data.
 
         Returns:
-            Runtime job result.
+            Runtime job result (post-processed if applicable).
 
         Raises:
             RuntimeJobFailureError: If the job failed.
@@ -137,8 +155,73 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
+        result = _decoder.decode(result_raw) if result_raw else None
 
-        return _decoder.decode(result_raw) if result_raw else None
+        # Apply post-processing only if result is QuantumProgramResult
+        if result is not None:
+            result = self._apply_post_processing(result, post_processor)
+
+        return result
+
+    def _apply_post_processing(
+        self,
+        result: Any,
+        post_processor_override: str | Callable[[Any, dict[str, Any]], Any] | None = None,
+    ) -> Any:
+        """Apply post-processing to the decoded result.
+
+        Post-processing is only applied if the result is a QuantumProgramResult
+        (from Executor jobs). Other result types are returned unchanged.
+
+        Post-processing precedence:
+        1. post_processor_override parameter (if provided)
+        2. Job's stored _post_processor (if set during job creation)
+        3. Post-processor from result's passthrough_data (if available)
+        4. No post-processing (return result as-is)
+
+        Args:
+            result: The decoded result
+            post_processor_override: Optional post-processor to use, overriding defaults
+
+        Returns:
+            Post-processed result or original result if no post-processing applies
+        """
+
+        # Only apply post-processing to QuantumProgramResult
+        if not isinstance(result, QuantumProgramResult):
+            return result
+
+        # Determine which post-processor to use
+        post_processor_fn = None
+        metadata = {}
+
+        # Priority 1: Override parameter
+        if post_processor_override:
+            if isinstance(post_processor_override, str):
+                post_processor_fn = POST_PROCESSORS.get(post_processor_override)
+            else:
+                # Assume it's a callable
+                post_processor_fn = post_processor_override
+
+        # Priority 2: Job's stored post-processor
+        if not post_processor_fn and self._post_processor:
+            if isinstance(self._post_processor, str):
+                post_processor_fn = POST_PROCESSORS.get(self._post_processor)
+
+        # Priority 3: Post-processor from passthrough_data
+        if not post_processor_fn and result.passthrough_data:
+            post_processor_info = result.passthrough_data.get("post_processor")  # type: ignore[union-attr]
+            if post_processor_info:
+                processor_name = post_processor_info.get("name")  # type: ignore[union-attr]
+                if processor_name and isinstance(processor_name, str):
+                    post_processor_fn = POST_PROCESSORS.get(processor_name)
+                    metadata = post_processor_info.get("metadata", {})  # type: ignore[union-attr]
+
+        # Apply post-processing if we have a processor
+        if post_processor_fn:
+            return post_processor_fn(result, metadata)
+
+        return result
 
     def cancel(self) -> None:
         """Cancel the job.
