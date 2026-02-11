@@ -99,6 +99,23 @@ class Executor:
             program: The program to run.
 
         Returns:
-            A job.
+            A job with post-processor configured from passthrough_data (if present).
         """
-        return self._run(quantum_program_to_0_2_dev(program, self.options))
+        # Extract post-processor info from passthrough_data
+        post_processor_name = None
+        if program.passthrough_data and isinstance(program.passthrough_data, dict):
+            post_processor_info = program.passthrough_data.get("post_processor")
+            if post_processor_info and isinstance(post_processor_info, dict):
+                post_processor_name = post_processor_info.get("name")
+                if post_processor_name and not isinstance(post_processor_name, str):
+                    post_processor_name = None
+
+        # Submit job
+        job = self._run(quantum_program_to_0_2_dev(program, self.options))
+
+        # Set post-processor on job instance (from passthrough_data)
+        # User can override this later via result(post_processor=...)
+        if post_processor_name and isinstance(post_processor_name, str):
+            job._post_processor = post_processor_name
+
+        return job
