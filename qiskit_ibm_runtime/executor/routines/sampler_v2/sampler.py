@@ -41,7 +41,8 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
-        A QuantumProgram containing CircuitItem objects for each pub.
+        A QuantumProgram containing CircuitItem objects for each pub,
+        with passthrough_data configured for SamplerV2 post-processing.
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
@@ -70,7 +71,15 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
             )
         )
 
-    return QuantumProgram(shots=shots, items=items)
+    # Prepare passthrough_data with post-processor info
+    passthrough_data = {
+        "post_processor": {
+            "context": "sampler_v2",
+            "version": "v1",
+        },
+    }
+
+    return QuantumProgram(shots=shots, items=items, passthrough_data=passthrough_data)
 
 
 class SamplerV2(BaseSamplerV2):
