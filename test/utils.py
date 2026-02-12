@@ -135,10 +135,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
         raise
 
 
-def wait_for_status(job, status, poll_time=1, time_out=20):
+def wait_for_status(job, status: str, poll_time=1, time_out=20):
     """Wait for job to reach a certain status."""
     wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
+    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
