@@ -4,11 +4,11 @@
 Bug Fixes
 ---------
 
-- While creating backend objects, `.QiskitRuntimeService` used to check for only ``rzz`` 
+- While creating backend objects, `.QiskitRuntimeService` previously checked for only ``rzz`` 
   gates in the backend's basis gates to decide whether to use cache or create a new backend 
   object. Now `.QiskitRuntimeService` will check for both ``rzz`` and ``rx`` gates in the 
   backend's basis gates to decide whether to refresh the configuration or fetch 
   from cache. (`2524 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2524>`__)
-- The initilization of ``QiskitRuntimeService`` does no longer fail if retrieving
-  the catalog information of an instance is not possible (for example, due to the
+- The initialization of ``QiskitRuntimeService`` no longer fails if it is not possible
+  to retrieve the catalog information of an instance (for example, due to the
   instance being archived). (`2603 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2603>`__)
