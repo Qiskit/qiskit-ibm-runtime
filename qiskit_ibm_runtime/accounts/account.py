@@ -18,6 +18,7 @@ from typing import Literal, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_cloud_sdk_core import ApiException
 
 from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
@@ -344,15 +345,26 @@ class CloudAccount(Account):
                 # don't add instances without backend allocation
                 allocations = item.get("doc", {}).get("extensions")
                 if allocations:
-                    catalog_result = catalog.get_catalog_entry(
-                        id=item.get("service_plan_unique_id")
-                    ).get_result()
-                    plan_name = (
-                        catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
-                    )
-                    pricing_type = (
-                        catalog_result.get("metadata", {}).get("pricing", {}).get("type", "")
-                    )
+                    try:
+                        catalog_result = catalog.get_catalog_entry(
+                            id=item.get("service_plan_unique_id")
+                        ).get_result()
+                        plan_name = (
+                            catalog_result.get("overview_ui", {})
+                            .get("en", {})
+                            .get("display_name", "")
+                        )
+                        pricing_type = (
+                            catalog_result.get("metadata", {}).get("pricing", {}).get("type", "")
+                        )
+                    except (ApiException, KeyError):
+                        # The catalog does not allow querying archived entries, returning 403.
+                        logger.warning(
+                            "The plan and pricing type for instance %s could not be retrieved.",
+                            item.get("crn"),
+                        )
+                        plan_name = "unknown"
+                        pricing_type = "unknown"
                     crns.append(
                         {
                             "crn": item.get("crn"),
