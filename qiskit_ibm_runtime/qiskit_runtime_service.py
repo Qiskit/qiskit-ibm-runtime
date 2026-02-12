@@ -345,8 +345,9 @@ class QiskitRuntimeService:
                 filtered_groups, key=lambda d: plans.index(d["plan"])
             )
         else:
-            # if plans_preference is not set, prioritize free and trial plans
-            ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription"]
+            # If plans_preference is not set, prioritize free and trial plans.
+            # Note that `unknown` is not returned by the API but by `CloudAccount.list_instances()`
+            ordered_pricing_types = ["free", "trial", "paygo", "paid", "subscription", "unknown"]
             self._backend_instance_groups = sorted(
                 self._backend_instance_groups,
                 key=lambda d: ordered_pricing_types.index(d["pricing_type"]),

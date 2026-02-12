@@ -12,15 +12,23 @@
 
 """Testing simple primitive jobs for smoke tests."""
 
-from qiskit import QuantumCircuit
-from qiskit.primitives import PrimitiveResult
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit import QuantumCircuit, QuantumRegister
 from qiskit.circuit.library import real_amplitudes
+from qiskit.primitives import PrimitiveResult
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime import SamplerV2, EstimatorV2
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from samplomatic.transpiler import generate_boxing_pass_manager
+
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.utils.noise_learner_result import NoiseLearnerResult
+from qiskit_ibm_runtime.noise_learner_v3 import (
+    NoiseLearnerV3,
+    NoiseLearnerV3Result,
+    NoiseLearnerV3Results,
+)
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
+from qiskit_ibm_runtime.utils.noise_learner_result import NoiseLearnerResult
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -30,15 +38,17 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
     def setUp(self):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
-        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+        self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+        self.boxing_pm = generate_boxing_pass_manager()
+
         # bell circuit
         bell = QuantumCircuit(2, name="Bell")
         bell.h(0)
         bell.cx(0, 1)
         bell.measure_all()
-        self._isa_bell = pm.run(bell)
+        self._isa_bell = self.pm.run(bell)
         # estimator circuit
-        self._psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
+        self._psi1 = self.pm.run(real_amplitudes(num_qubits=2, reps=2))
         # noise learner circuit
         c1 = QuantumCircuit(2)
         c1.ecr(0, 1)
@@ -75,3 +85,22 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
         learner = NoiseLearner(mode=self._backend, options=options)
         job = learner.run(self._circuits)
         self.assertIsInstance(job.result(), NoiseLearnerResult)
+
+    def test_noise_learner_v3(self):
+        """Test noise learner V3 job."""
+        circuit = QuantumCircuit(QuantumRegister(3, "q"))
+        circuit.cz(0, 1)
+        circuit.cz(1, 2)
+        circuit.measure_all()
+
+        isa_circuit = self.pm.run(circuit)
+        boxed_circuit = self.boxing_pm.run(isa_circuit)
+
+        learner = NoiseLearnerV3(mode=self._backend)
+        instructions = [instr for instr in boxed_circuit if instr.operation.name == "box"]
+        job = learner.run(instructions)
+        results = job.result()
+
+        self.assertIsInstance(results, NoiseLearnerV3Results)
+        self.assertEqual(len(results), 3)
+        self.assertTrue(all(isinstance(res, NoiseLearnerV3Result) for res in results))

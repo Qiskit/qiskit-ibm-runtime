@@ -15,6 +15,7 @@ import inspect
 import os
 import re
 import sys
+import typing
 
 sys.path.insert(0, os.path.abspath("."))
 
@@ -63,6 +64,20 @@ nbsphinx_prolog = """
 vers = release.split(".")
 link_str = f" https://github.com/Qiskit/qiskit-ibm-runtime/blob/stable/{vers[0]}.{vers[1]}/docs/"
 nbsphinx_prolog += link_str + "{{ docname }}"
+
+
+# ----------------------------------------------------------------------------------
+# Patch 'Self' for Python < 3.11 if missing
+# ----------------------------------------------------------------------------------
+
+if not hasattr(typing, "Self"):
+    try:
+        from typing_extensions import Self
+    except ImportError:
+        class Self:
+            """Dummy fallback for 'Self' for older python versions."""
+            pass
+    typing.Self = Self
 
 # ----------------------------------------------------------------------------------
 # Intersphinx
@@ -135,7 +150,6 @@ html_title = f"{project} {release}"
 
 html_last_updated_fmt = "%Y/%m/%d"
 html_sourcelink_suffix = ""
-
 
 # ----------------------------------------------------------------------------------
 # Source code links
