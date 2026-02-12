@@ -37,10 +37,23 @@ from qiskit.circuit.library.standard_gates import (
     U1Gate,
     PhaseGate,
 )
+from qiskit.qpy import QPY_VERSION
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+
+
+def get_qpy_version(highest_value: int | None = None) -> int:
+    """Returns the largest qpy version available with the installed version of Qiskit.
+
+    Args:
+        highest_value: If it would return a qpy version larger than `highest_value`, return
+            `highest_value` instead.
+    """
+    if highest_value is None:
+        return QPY_VERSION
+    return QPY_VERSION if QPY_VERSION <= highest_value else highest_value
 
 
 def is_simulator(backend: BackendV2) -> bool:

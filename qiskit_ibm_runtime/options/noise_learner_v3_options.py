@@ -21,6 +21,9 @@ from pydantic import Field, ValidationInfo, field_validator, BaseModel
 from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
     OptionsModel as OptionsModel_0_1,
 )
+from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
+    OptionsModel as OptionsModel_0_2,
+)
 
 from .environment_options import EnvironmentOptions
 from .options import BaseOptions
@@ -36,7 +39,7 @@ from .utils import (
 )
 
 
-AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1}
+AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1, "v0.2": OptionsModel_0_2}
 
 
 @primitive_dataclass
@@ -70,6 +73,18 @@ class NoiseLearnerV3Options(BaseOptions):
     
     .. note::
         This field is ignored by TREX experiments.
+    """
+
+    init_qubits: bool = True
+    r"""Whether to reset the qubits to the ground state for each shot."""
+
+    rep_delay: float | None = None
+    r"""The repetition delay.
+
+    This is the delay between the end of one circuit and the start of the next within a shot loop.
+    This is only supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must
+    be from the range supplied by ``backend.rep_delay_range``. When this value is ``None``, the
+    default value ``backend.default_rep_delay`` is used.
     """
 
     post_selection: PostSelectionOptions | Dict = Field(default_factory=PostSelectionOptions)
