@@ -222,10 +222,10 @@ from .estimator import (  # pylint: disable=reimported
 )
 from .executor import Executor
 from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
-from .noise_learner import (
+from .noise_learner import (  # pylint: disable=reimported
     NoiseLearner,
     NoiseLearner as NoiseLearnerV2,
-)  # pylint: disable=reimported
+)
 from .noise_learner_v3 import NoiseLearnerV3
 from .options import (  # pylint: disable=reimported
     EstimatorOptions,

@@ -28,13 +28,13 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
 from ..runtime_job_v2 import RuntimeJobV2
 from ..utils.default_session import get_cm_session
+from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
+from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
+from .validation import validate_instruction, validate_options
 
 if TYPE_CHECKING:
     from ..batch import Batch
     from ..session import Session
-from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
-from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
-from .validation import validate_instruction, validate_options
 
 logger = logging.getLogger(__name__)
 
