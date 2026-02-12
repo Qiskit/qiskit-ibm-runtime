@@ -1,3 +1,0 @@
-The initilization of ``QiskitRuntimeService`` does no longer fail if retrieving
-the catalog information of an instance is not possible (for example, due to the
-instance being archived).
