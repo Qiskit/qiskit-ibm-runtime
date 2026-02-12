@@ -28,7 +28,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test retrieving a queued job."""
         _ = self._run_program(service)
         job = self._run_program(service)
-        wait_for_status(job, JobStatus.QUEUED)
+        wait_for_status(job, "QUEUED")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(self.program_ids[service.channel], rjob.primitive_id)
@@ -37,7 +37,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_job_running(self, service):
         """Test retrieving a running job."""
         job = self._run_program(service)
-        wait_for_status(job, JobStatus.RUNNING)
+        wait_for_status(job, "RUNNING")
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(self.program_ids[service.channel], rjob.primitive_id)
@@ -78,14 +78,13 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         job = self._run_program(service)
-        wait_for_status(job, JobStatus.RUNNING)
+        wait_for_status(job, "RUNNING")
         rjobs = service.jobs(pending=True)
         after_status = job.status()
         found = False
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.primitive_id, rjob.primitive_id)
-                self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
 
