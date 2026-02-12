@@ -28,6 +28,7 @@ VALID_PROXIES = {"https": "http://{}:{}".format(ADDRESS, PORT)}
 INVALID_PORT_PROXIES = {"https": "http://{}:{}".format(ADDRESS, "6666")}
 INVALID_ADDRESS_PROXIES = {"https": "http://{}:{}".format("invalid", PORT)}
 
+
 class TestProxies(IBMTestCase):
     """Tests for proxy capabilities."""
 
@@ -35,25 +36,20 @@ class TestProxies(IBMTestCase):
         super().setUp()
         # Command to start mitmproxy in non-interactive mode
         self.proc = subprocess.Popen(
-            [
-                "mitmdump",
-                "--ssl-insecure",
-                "--listen-port",
-                str(PORT),
-                "--listen-host",
-                ADDRESS
-            ],
+            ["mitmdump", "--ssl-insecure", "--listen-port", str(PORT), "--listen-host", ADDRESS],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
         time.sleep(0.5)
-        #Block all network flow outside of the proxy
+        # Block all network flow outside of the proxy
         self._original_connect = socket.socket.connect
+
         def blocking_connect(sock, address):
             if address != (ADDRESS, PORT):
                 raise RuntimeError(f"Blocked network access to {address}")
             return self._original_connect(sock, address)
+
         socket.socket.connect = blocking_connect
 
     def tearDown(self):
@@ -65,11 +61,15 @@ class TestProxies(IBMTestCase):
                 self.proc.wait(timeout=1)
             except subprocess.TimeoutExpired:
                 self.proc.kill()
-        #Restore old network config
+        # Restore old network config
         socket.socket.connect = self._original_connect
 
-    @integration_test_setup(supported_channel=["ibm_cloud", "ibm_quantum_platform"], init_service=False)
-    def test_proxies_qiskit_runtime_service(self, dependencies: IntegrationTestDependencies) -> None:
+    @integration_test_setup(
+        supported_channel=["ibm_cloud", "ibm_quantum_platform"], init_service=False
+    )
+    def test_proxies_qiskit_runtime_service(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument
         service = QiskitRuntimeService(
@@ -77,6 +77,6 @@ class TestProxies(IBMTestCase):
             token=dependencies.token,
             channel=dependencies.channel,
             verify=False,
-            proxies={ "urls": VALID_PROXIES }
+            proxies={"urls": VALID_PROXIES},
         )
         service.jobs(limit=1)

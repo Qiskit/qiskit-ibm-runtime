@@ -19,6 +19,7 @@ from collections.abc import Callable
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.accounts import ChannelType
 
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
@@ -143,7 +144,7 @@ class IntegrationTestDependencies:
     instance: str | None
     qpu: str
     token: str
-    channel: str
+    channel: ChannelType
     url: str
 
 

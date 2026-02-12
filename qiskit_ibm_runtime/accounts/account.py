@@ -279,24 +279,25 @@ class CloudAccount(Account):
             crn=self.instance,
             private=self.private_endpoint,
             proxies=self.proxies,
-            verify=self.verify
+            verify=self.verify,
         )
-    
+
     def _get_proxies_kwargs(self) -> dict:
         proxies_kwargs = {}
         if self.proxies is not None:
             proxies_kwargs = self.proxies.to_request_params()
         return proxies_kwargs
-    
+
     def get_iam_authentificator(self) -> IAMAuthenticator:
+        """Return the configured IAM Authentification service"""
         iam_url = get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
             disable_ssl_verification=not self.verify,
-            **proxies_kwargs
-            )
+            **proxies_kwargs,
+        )
 
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
@@ -352,7 +353,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                     verify=self.verify,
-                    **proxies_kwargs
+                    **proxies_kwargs,
                 ).get_result()
             except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
@@ -369,7 +370,7 @@ class CloudAccount(Account):
                         catalog_result = catalog.get_catalog_entry(
                             id=item.get("service_plan_unique_id"),
                             verify=self.verify,
-                            **proxies_kwargs
+                            **proxies_kwargs,
                         ).get_result()
                         plan_name = (
                             catalog_result.get("overview_ui", {})

@@ -477,6 +477,7 @@ def remap_observables(observables, isa_circuit):
 
     return out_obs
 
+
 def find_free_port():
     """Return a port that is free to use on the machine"""
     s = socket.socket()
