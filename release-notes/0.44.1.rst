@@ -1,0 +1,21 @@
+0.44.1 (2026-02-12)
+===================
+
+Deprecation Notes
+-----------------
+
+- Submitting circuits with non-empty ``circuit.calibrations`` is deprecated and will
+  be removed in ``qiskit-ibm-runtime`` v0.45. (`2574 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2574>`__)
+
+
+Bug Fixes
+---------
+
+- While creating backend objects, `.QiskitRuntimeService` previously checked for only ``rzz`` 
+  gates in the backend's basis gates to decide whether to use cache or create a new backend 
+  object. Now `.QiskitRuntimeService` will check for both ``rzz`` and ``rx`` gates in the 
+  backend's basis gates to decide whether to refresh the configuration or fetch 
+  from cache. (`2524 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2524>`__)
+- The initialization of ``QiskitRuntimeService`` no longer fails if it is not
+  possible to retrieve the catalog information of an instance (for example, due to the
+  instance being archived). (`2603 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2603>`__)
