@@ -40,7 +40,6 @@ from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob
 from .quantum_program.quantum_program_result import QuantumProgramResult
-from .quantum_program.post_processors import POST_PROCESSORS
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +73,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         tags: list | None = None,
         version: int | None = None,
         private: bool | None = False,
-        post_processor: str | None = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -91,7 +89,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             tags: Tags assigned to the job.
             version: Primitive version.
             private: Marks job as private.
-            post_processor: Post-processor name (str) to apply to results.
         """
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
@@ -110,29 +107,27 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             private=private,
         )
         self._status: JobStatus = "INITIALIZING"
-        self._post_processor = post_processor
 
     def result(  # pylint: disable=arguments-differ
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
-        post_processor: str | Callable[[Any, dict[str, Any]], Any] | None = None,
+        post_processor: Callable[[QuantumProgramResult], Any] | None = None,
     ) -> Any:
         """Return the results of the job.
 
         The result will be post-processed if it is a QuantumProgramResult and
         a post-processor is configured, according to the following precedence:
         1. post_processor parameter (if provided)
-        2. Job's stored post_processor (if set during job creation)
-        3. Post-processor specified in result's passthrough_data
-        4. No post-processing (return raw decoded result)
+        2. Post-processor specified in result's passthrough_data
+        3. No post-processing (return raw decoded result)
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            post_processor: Post-processor name (str) or callable to apply to results.
+            post_processor: Post-processor callable to apply to results.
                 Only applies to QuantumProgramResult. If provided, takes precedence
-                over job's stored post_processor and passthrough_data.
+                over post_processor specified in passthrough_data.
 
         Returns:
             Runtime job result (post-processed if applicable).
@@ -166,7 +161,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     def _apply_post_processing(
         self,
         result: Any,
-        post_processor_override: str | Callable[[Any, dict[str, Any]], Any] | None = None,
+        post_processor_override: Callable[[QuantumProgramResult], Any] | None = None,
     ) -> Any:
         """Apply post-processing to the decoded result.
 
@@ -175,9 +170,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         Post-processing precedence:
         1. post_processor_override parameter (if provided)
-        2. Job's stored _post_processor (if set during job creation)
-        3. Post-processor from result's passthrough_data (if available)
-        4. No post-processing (return result as-is)
+        2. Post-processor from result's passthrough_data (if available)
+        3. No post-processing (return result as-is)
 
         Args:
             result: The decoded result
@@ -193,33 +187,24 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         # Determine which post-processor to use
         post_processor_fn = None
-        metadata = {}
 
         # Priority 1: Override parameter
         if post_processor_override:
-            if isinstance(post_processor_override, str):
-                post_processor_fn = POST_PROCESSORS.get(post_processor_override)
-            else:
-                # Assume it's a callable
-                post_processor_fn = post_processor_override
+            post_processor_fn = post_processor_override
 
-        # Priority 2: Job's stored post-processor
-        if not post_processor_fn and self._post_processor:
-            if isinstance(self._post_processor, str):
-                post_processor_fn = POST_PROCESSORS.get(self._post_processor)
-
-        # Priority 3: Post-processor from passthrough_data
+        # Priority 2: Post-processor from passthrough_data
         if not post_processor_fn and result.passthrough_data:
-            post_processor_info = result.passthrough_data.get("post_processor")  # type: ignore[union-attr]
+            post_processor_info = result.passthrough_data.get("post_processor")
             if post_processor_info:
-                processor_name = post_processor_info.get("name")  # type: ignore[union-attr]
-                if processor_name and isinstance(processor_name, str):
-                    post_processor_fn = POST_PROCESSORS.get(processor_name)
-                    metadata = post_processor_info.get("metadata", {})  # type: ignore[union-attr]
+                context = post_processor_info.get("context")
+                if context == "sampler_v2" and (version := post_processor_info.get("version")):
+                    from .executor.routines import SAMPLER_POST_PROCESSORS
+
+                    post_processor_fn = SAMPLER_POST_PROCESSORS.get(version)
 
         # Apply post-processing if we have a processor
         if post_processor_fn:
-            return post_processor_fn(result, metadata)
+            return post_processor_fn(result)
 
         return result
 

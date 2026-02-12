@@ -18,8 +18,8 @@ import numpy as np
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, SamplerPubResult
 
-from qiskit_ibm_runtime.quantum_program.post_processors import (
-    quantum_program_result_to_sampler_v2,
+from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler_post_processors import (
+    sampler_v2_post_processor_v1,
 )
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     QuantumProgramResult,
@@ -42,10 +42,8 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
         # Apply post-processing
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify result type
         self.assertIsInstance(result, PrimitiveResult)
@@ -73,9 +71,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify both registers are present
         pub_result = result[0]
@@ -102,9 +98,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify number of pubs
         self.assertEqual(len(result), 3)
@@ -128,9 +122,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify shape
         pub_result = result[0]
@@ -144,10 +136,8 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
         with self.assertRaises(ValueError) as context:
-            quantum_program_result_to_sampler_v2(qp_result, metadata)
+            sampler_v2_post_processor_v1(qp_result)
 
         self.assertIn("no measurement data", str(context.exception).lower())
 
@@ -158,9 +148,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify metadata is present
         self.assertIn("quantum_program_metadata", result.metadata)
@@ -177,9 +165,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        metadata = {}
-
-        result = quantum_program_result_to_sampler_v2(qp_result, metadata)
+        result = sampler_v2_post_processor_v1(qp_result)
 
         # Verify custom register names are preserved
         pub_result = result[0]

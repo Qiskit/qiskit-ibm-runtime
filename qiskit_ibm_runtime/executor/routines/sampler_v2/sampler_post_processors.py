@@ -14,19 +14,18 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Callable
 
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from .quantum_program_result import QuantumProgramResult
+from ....quantum_program.quantum_program_result import QuantumProgramResult
 
-# Type alias for post-processor functions
-PostProcessorFunc = Callable[[QuantumProgramResult, dict[str, Any]], Any]
+# Type alias for sampler post-processor functions
+PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
 
-# Registry for post-processing functions
-POST_PROCESSORS: dict[str, PostProcessorFunc] = {}
+# Registry for sampler post-processing functions
+SAMPLER_POST_PROCESSORS: dict[str, PostProcessorFunc] = {}
 
 
 def register_post_processor(name: str) -> Callable[[PostProcessorFunc], PostProcessorFunc]:
@@ -37,26 +36,17 @@ def register_post_processor(name: str) -> Callable[[PostProcessorFunc], PostProc
 
     Returns:
         Decorator function
-
-    Example:
-        .. code-block:: python
-
-            @register_post_processor("quantum_program_result_to_sampler_v2")
-            def my_processor(qp_result, metadata):
-                ...
     """
 
     def decorator(func: PostProcessorFunc) -> PostProcessorFunc:
-        POST_PROCESSORS[name] = func
+        SAMPLER_POST_PROCESSORS[name] = func
         return func
 
     return decorator
 
 
-@register_post_processor("quantum_program_result_to_sampler_v2")
-def quantum_program_result_to_sampler_v2(
-    qp_result: QuantumProgramResult, metadata: dict[str, Any]
-) -> PrimitiveResult:
+@register_post_processor("v1")
+def sampler_v2_post_processor_v1(qp_result: QuantumProgramResult) -> PrimitiveResult:
     """Convert QuantumProgramResult to SamplerV2 PrimitiveResult.
 
     This function transforms the raw quantum program execution results into the
@@ -67,7 +57,6 @@ def quantum_program_result_to_sampler_v2(
         qp_result: The raw quantum program result containing measurement data.
             Each item in qp_result is a dictionary where keys are classical
             register names and values are numpy arrays of measurement data.
-        metadata: Additional metadata (currently unused, reserved for future use).
 
     Returns:
         PrimitiveResult containing SamplerPubResult objects with BitArray data

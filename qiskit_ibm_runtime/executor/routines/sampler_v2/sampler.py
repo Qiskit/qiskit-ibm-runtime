@@ -71,19 +71,15 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
             )
         )
 
-    # Prepare passthrough_data with primitive and post-processor info
+    # Prepare passthrough_data with post-processor info
     passthrough_data = {
-        "primitive": {
-            "name": "sampler_v2",
-            "version": 2,
-        },
         "post_processor": {
-            "name": "quantum_program_result_to_sampler_v2",
-            "metadata": {},
+            "context": "sampler_v2",
+            "version": "v1",
         },
     }
 
-    return QuantumProgram(shots=shots, items=items, passthrough_data=passthrough_data)  # type: ignore[arg-type]
+    return QuantumProgram(shots=shots, items=items, passthrough_data=passthrough_data)
 
 
 class SamplerV2(BaseSamplerV2):
