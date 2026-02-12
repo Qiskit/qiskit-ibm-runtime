@@ -199,3 +199,8 @@ dev = [
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]
+
+integration = [
+    "qiskit-ibm-runtime[dev]",
+    "qiskit-ibm-runtime[integration_test_proxy]"
+]
