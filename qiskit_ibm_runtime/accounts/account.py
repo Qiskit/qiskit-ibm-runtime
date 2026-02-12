@@ -289,11 +289,12 @@ class CloudAccount(Account):
     
     def get_iam_authentificator(self) -> IAMAuthenticator:
         iam_url = get_iam_api_url(self.url)
+        proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(
             apikey=self.token,
             url=iam_url,
             disable_ssl_verification=not self.verify,
-            **self._get_proxies_kwargs()
+            **proxies_kwargs
             )
 
     def resolve_crn(self) -> None:
@@ -335,6 +336,7 @@ class CloudAccount(Account):
         catalog.set_service_url(get_global_catalog_api_url(self.url))
         search_cursor = None
         all_crns = []
+        proxies_kwargs = self._get_proxies_kwargs()
         while True:
             try:
                 result = client.search(
@@ -349,7 +351,7 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                     verify=self.verify,
-                    **self._get_proxies_kwargs()
+                    **proxies_kwargs
                 ).get_result()
             except:  # noqa: E722 bare-except
                 raise InvalidAccountError(
@@ -365,7 +367,7 @@ class CloudAccount(Account):
                     catalog_result = catalog.get_catalog_entry(
                         id=item.get("service_plan_unique_id"),
                         verify=self.verify,
-                        **self._get_proxies_kwargs()
+                        **proxies_kwargs
                     ).get_result()
                     plan_name = (
                         catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
