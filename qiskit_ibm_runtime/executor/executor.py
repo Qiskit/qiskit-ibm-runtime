@@ -111,7 +111,7 @@ class Executor:
                     post_processor_name = None
 
         # Submit job
-        job = self._run(quantum_program_to_0_2_dev(program, self.options))
+        job = self._run(quantum_program_to_0_2(program, self.options))
 
         # Set post-processor on job instance (from passthrough_data)
         # User can override this later via result(post_processor=...)
