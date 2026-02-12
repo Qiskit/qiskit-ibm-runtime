@@ -164,7 +164,6 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 common = [
     "mypy==1.19.0",
     "pylint==3.0.0",
-    "mitmproxy",
     "nbqa==1.5.3",
     "matplotlib>=2.1",
     "jupyter",
@@ -192,6 +191,7 @@ documentation = [
 
 visualization = ["plotly>=5.23.0"]
 test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
+integration_test_proxy = ["mitmproxy"]
 
 dev = [
     "qiskit-ibm-runtime[test]",
