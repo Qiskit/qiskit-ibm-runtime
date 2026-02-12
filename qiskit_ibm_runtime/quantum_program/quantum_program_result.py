@@ -17,8 +17,9 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 import datetime
-
 import numpy as np
+
+from ..utils.datatree import DataTree
 
 
 @dataclass
@@ -69,11 +70,18 @@ class QuantumProgramResult:
     Args:
         data: A list of dictionaries with array-valued data.
         metadata: A dictionary of metadata.
+        passthrough_data: Arbitrary nested data passed through execution without modification.
     """
 
-    def __init__(self, data: list[dict[str, np.ndarray]], metadata: Metadata | None = None):
+    def __init__(
+        self,
+        data: list[dict[str, np.ndarray]],
+        metadata: Metadata | None = None,
+        passthrough_data: DataTree | None = None,
+    ):
         self._data = data
         self.metadata = metadata or Metadata()
+        self.passthrough_data = passthrough_data
 
     def __iter__(self) -> Iterator[dict[str, np.ndarray]]:
         yield from self._data

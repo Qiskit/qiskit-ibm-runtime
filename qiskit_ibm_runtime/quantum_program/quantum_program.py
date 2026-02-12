@@ -16,13 +16,15 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from collections.abc import Iterable
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
+
+from ..utils.datatree import DataTree
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
@@ -216,6 +218,7 @@ class QuantumProgram:
         shots: The number of shots for each circuit execution.
         items: Items that comprise the program.
         noise_maps: Noise maps to use with samplex items.
+        passthrough_data: Arbitrary nested data passed through execution without modification.
     """
 
     def __init__(
@@ -223,10 +226,14 @@ class QuantumProgram:
         shots: int,
         items: Iterable[QuantumProgramItem] | None = None,
         noise_maps: dict[str, PauliLindbladMap] | None = None,
+        meas_level: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
+        passthrough_data: DataTree | None = None,
     ):
         self.shots = shots
         self.items: list[QuantumProgramItem] = list(items or [])
         self.noise_maps = noise_maps or {}
+        self.meas_level = meas_level
+        self.passthrough_data = passthrough_data
 
     def append_circuit_item(
         self,
