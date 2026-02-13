@@ -36,16 +36,19 @@ logger = logging.getLogger()
 
 
 class Executor:
-    """Class for running :class:`~.QuantumProgram`\\s on Qiskit Runtime.
+    """Class for running :class:`~.QuantumProgram`\\s.
 
     The :meth:`run` method can be used to submit a quantum program to be executed on a backend.
 
     .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Executor
+        from qiskit_ibm_runtime import QiskitRuntimeService, Executor, QuantumProgram
 
         service = QiskitRuntimeService()
         backend = service.backend("ibm_boston")
+
+        program = QuantumProgram(shots=100)
+        ... # add program contents
 
         executor = Executor(backend)
         executor.options.environment.job_tags = ["my_tag"]
