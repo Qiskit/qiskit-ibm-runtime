@@ -36,13 +36,52 @@ logger = logging.getLogger()
 
 
 class Executor:
-    """Executor for :class:`~.QuantumProgram`\\s."""
+    """Class for running :class:`~.QuantumProgram`\\s on Qiskit Runtime.
+
+    The :meth:`run` method can be used to submit a quantum program to be executed on a backend.
+
+    .. code-block:: python
+
+        from qiskit_ibm_runtime import QiskitRuntimeService, Executor
+
+        service = QiskitRuntimeService()
+        backend = service.backend("ibm_boston")
+
+        executor = Executor(backend)
+        executor.options.environment.job_tags = ["my_tag"]
+        job = executor.run(program)
+
+    Args:
+        mode: The execution mode used to make the query. It can be:
+
+            * A :class:`IBMBackend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `Qiskit Runtime documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Executor options, see :class:`ExecutorOptions` for detailed description.
+            This can be an :class:`ExecutorOptions` instance or a dictionary that will be
+            used to construct one.
+
+    Raises:
+        TypeError: If ``options`` is not a valid type.
+        ValueError: If local mode is used.
+    """
 
     _PROGRAM_ID = "executor"
     _DECODER = QuantumProgramResultDecoder
 
-    def __init__(self, mode: IBMBackend | Session | Batch | None):
-        self._options = ExecutorOptions()
+    def __init__(
+        self,
+        mode: IBMBackend | Session | Batch | None,
+        *,
+        options: ExecutorOptions | dict | None = None,
+    ):
+        self.options = options if options is not None else ExecutorOptions()
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -52,6 +91,15 @@ class Executor:
     def options(self) -> ExecutorOptions:
         """The options of this executor."""
         return self._options
+
+    @options.setter
+    def options(self, options: ExecutorOptions | dict) -> None:
+        if isinstance(options, dict):
+            self._options = ExecutorOptions(**options)
+        elif isinstance(options, ExecutorOptions):
+            self._options = options
+        else:
+            raise TypeError(f"Expected ExecutorOptions or dict, got {type(options)}")
 
     def _runtime_options(self) -> RuntimeOptions:
         return RuntimeOptions(
