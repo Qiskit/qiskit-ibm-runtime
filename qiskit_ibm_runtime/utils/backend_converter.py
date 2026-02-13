@@ -50,7 +50,7 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 
 def convert_to_target(  # type: ignore[no-untyped-def]
     configuration: BackendConfiguration,
-    properties: BackendProperties = None,
+    properties: BackendProperties | None = None,
     *,
     include_control_flow: bool = True,
     include_fractional_gates: bool = True,
