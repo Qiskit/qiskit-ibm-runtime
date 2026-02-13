@@ -120,7 +120,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
     def __init__(
         self,
         durations: InstructionDurations = None,
-        dd_sequences: list[Gate] | list[list[Gate]] = None,
+        dd_sequences: list[Gate] | list[list[Gate]] | None = None,
         qubits: list[int] | None = None,
         spacings: list[list[float]] | list[float] | None = None,
         skip_reset_qubits: bool = True,

@@ -31,7 +31,7 @@ class FakeProviderForBackendV2:
     available in the :mod:`qiskit_ibm_runtime.fake_provider`.
     """
 
-    def backend(self, name: str = None, **kwargs: Any) -> FakeBackendV2:
+    def backend(self, name: str | None = None, **kwargs: Any) -> FakeBackendV2:
         """
         Filter backends in provider by name.
         """
@@ -45,7 +45,7 @@ class FakeProviderForBackendV2:
 
         return backend
 
-    def backends(self, name: str = None, **kwargs: Any) -> list[FakeBackendV2]:
+    def backends(self, name: str | None = None, **kwargs: Any) -> list[FakeBackendV2]:
         """Return all backends accessible via this account."""
         return self._backends
 

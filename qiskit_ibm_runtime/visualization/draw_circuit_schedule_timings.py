@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 def draw_circuit_schedule_timing(
     circuit_schedule: str | CircuitSchedule,
-    included_channels: list = None,
+    included_channels: list | None = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
     merge_common_instructions: bool = False,

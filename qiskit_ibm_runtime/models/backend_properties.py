@@ -296,8 +296,8 @@ class BackendProperties:
     def gate_property(
         self,
         gate: str,
-        qubits: int | Iterable[int] = None,
-        name: str = None,
+        qubits: int | Iterable[int] | None = None,
+        name: str | None = None,
     ) -> dict[tuple[int, ...], dict[str, PropertyT]] | dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given gate.
@@ -344,7 +344,7 @@ class BackendProperties:
                 faulty.append(gate)
         return faulty
 
-    def is_gate_operational(self, gate: str, qubits: int | Iterable[int] = None) -> bool:
+    def is_gate_operational(self, gate: str, qubits: int | Iterable[int] | None = None) -> bool:
         """
         Return the operational status of the given gate.
 
@@ -390,7 +390,7 @@ class BackendProperties:
     def qubit_property(
         self,
         qubit: int,
-        name: str = None,
+        name: str | None = None,
     ) -> dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given qubit.

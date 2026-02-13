@@ -51,7 +51,7 @@ class QiskitRuntimeLocalService:
         """
 
     def backend(
-        self, name: str = None, instance: str = None  # pylint: disable=unused-argument
+        self, name: str | None = None, instance: str | None = None  # pylint: disable=unused-argument
     ) -> FakeBackendV2:
         """Return a single fake backend matching the specified filters.
 
