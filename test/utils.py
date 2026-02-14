@@ -16,6 +16,7 @@ import os
 import logging
 import time
 import itertools
+import socket
 import unittest
 from unittest import mock
 from typing import Any
@@ -27,6 +28,7 @@ from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
+
 from qiskit_ibm_runtime import (
     QiskitRuntimeService,
     Session,
@@ -474,6 +476,15 @@ def remap_observables(observables, isa_circuit):
             raise ValueError(f"Observable of type {type(obs)} is not supported.")
 
     return out_obs
+
+
+def find_free_port():
+    """Return a port that is free to use on the machine"""
+    s = socket.socket()
+    s.bind(("", 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
 
 
 class MockSession(Session):
