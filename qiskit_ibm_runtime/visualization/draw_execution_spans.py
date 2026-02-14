@@ -55,7 +55,7 @@ def draw_execution_spans(
     common_start: bool = False,
     normalize_y: bool = False,
     line_width: int = 4,
-    show_legend: bool = None,
+    show_legend: bool | None = None,
 ) -> PlotlyFigure:
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 

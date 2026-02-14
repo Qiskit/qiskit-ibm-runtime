@@ -57,11 +57,11 @@ class PadDelay(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations = None,
+        durations: InstructionDurations | None = None,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
         block_ordering_callable: BlockOrderingCallableType | None = None,
-        target: Target = None,
+        target: Target | None = None,
     ):
         """Create new padding delay pass.
 

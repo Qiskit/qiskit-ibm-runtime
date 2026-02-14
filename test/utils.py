@@ -196,7 +196,7 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
     """Recursively determine whether the dictionaries have the same keys.
 
     Args:
