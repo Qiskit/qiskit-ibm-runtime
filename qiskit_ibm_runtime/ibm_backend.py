@@ -545,7 +545,7 @@ class IBMBackend(Backend):
                     f"{instr} operating on a faulty edge {qubit_indices}"
                 )
 
-    def __deepcopy__(self, _memo: dict = None) -> IBMBackend:
+    def __deepcopy__(self, _memo: dict | None = None) -> IBMBackend:
         cpy = IBMBackend(
             configuration=deepcopy(self.configuration()),
             service=self._service,

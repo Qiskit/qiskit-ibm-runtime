@@ -140,7 +140,7 @@ class CircuitSchedule:
         self,
         filter_awgr: bool = False,
         filter_barriers: bool = False,
-        included_channels: list = None,
+        included_channels: list | None = None,
         merge_common_instructions: bool = False,
     ) -> None:
         """Preprocess and filter the parsed circuit schedule data for visualization.
