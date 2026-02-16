@@ -13,3 +13,4 @@
 """Executor-based SamplerV2"""
 
 from .sampler import SamplerV2
+from .options import SamplerOptions

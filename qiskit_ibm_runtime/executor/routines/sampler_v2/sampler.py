@@ -13,6 +13,7 @@
 """Executor-based SamplerV2 primitive."""
 
 from __future__ import annotations
+from typing import Literal
 
 from collections.abc import Iterable
 import logging
@@ -29,13 +30,20 @@ from ....session import Session
 from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult
 from ....quantum_program.quantum_program import CircuitItem
+from ....options.executor_options import ExecutorOptions
+from ....options.utils import Unset
 
 from ..utils import validate_no_boxes, extract_shots_from_pubs
+from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
 
 
-def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> QuantumProgram:
+def prepare(
+    pubs: list[SamplerPub],
+    default_shots: int | None = None,
+    meas_level: Literal["classified", "kerneled", "avg_kerneled"] | None = None,
+) -> QuantumProgram:
     """Convert a list of SamplerPub objects to a QuantumProgram.
 
     Args:
@@ -81,7 +89,9 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
         },
     }
 
-    return QuantumProgram(shots=shots, items=items, passthrough_data=passthrough_data)
+    return QuantumProgram(
+        shots=shots, items=items, passthrough_data=passthrough_data, meas_level=meas_level
+    )
 
 
 class SamplerV2(BaseSamplerV2):
@@ -91,13 +101,25 @@ class SamplerV2(BaseSamplerV2):
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
-    **Current Limitations (Minimal Implementation):**
+    **Supported Options:**
 
-    - No options support (twirling, dynamical decoupling, etc.)
+    - ``default_shots``: Default number of shots (default: 4096)
+    - ``execution.init_qubits``: Whether to reset qubits (maps to executor)
+    - ``execution.rep_delay``: Repetition delay (maps to executor)
+    - ``environment.*``: Environment options (log_level, job_tags, private)
+    - ``max_execution_time``: Maximum execution time
+    - ``experimental.image``: Runtime image
+
+    **Unsupported Options (will raise NotImplementedError):**
+
+    - ``dynamical_decoupling``: Dynamical decoupling sequences
+    - ``twirling``: Pauli twirling
+    - ``simulator.*``: Simulator options
+    - ``experimental.*``: Other experimental options
+
+    **Other Limitations:**
+
     - Circuits must not contain BoxOp instructions
-    - Uses default shots if not specified in pubs
-
-    These limitations will be addressed in future phases of development.
 
     Example:
         .. code-block:: python
@@ -115,9 +137,11 @@ class SamplerV2(BaseSamplerV2):
             circuit.cx(0, 1)
             circuit.measure_all()
 
-            # Run the sampler
+            # Run the sampler with options
             sampler = SamplerV2(mode=backend)
-            job = sampler.run([circuit], shots=1024)
+            sampler.options.default_shots = 2048
+            sampler.options.execution.init_qubits = True
+            job = sampler.run([circuit])
             result = job.result()
 
     Args:
@@ -130,6 +154,8 @@ class SamplerV2(BaseSamplerV2):
             Refer to the `Qiskit Runtime documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
+
+        options: Sampler options. See :class:`SamplerOptions` for all available options.
     """
 
     version = 2
@@ -137,15 +163,25 @@ class SamplerV2(BaseSamplerV2):
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
+        options: SamplerOptions | dict | None = None,
     ):
         """Initialize the SamplerV2 primitive.
 
         Args:
             mode: The execution mode (Backend, Session, or Batch).
+            options: Options for the sampler. Can be a SamplerOptions instance or a dict.
         """
         BaseSamplerV2.__init__(self)
 
         self._executor = Executor(mode=mode)
+
+        # Initialize options
+        if options is None:
+            self._options = SamplerOptions()
+        elif isinstance(options, dict):
+            self._options = SamplerOptions(**options)
+        else:
+            self._options = options
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -154,7 +190,8 @@ class SamplerV2(BaseSamplerV2):
             pubs: An iterable of pub-like objects. For example, a list of circuits
                   or tuples ``(circuit, parameter_values)``.
             shots: The total number of shots to sample for each sampler pub that does
-                   not specify its own shots. If ``None``, a default value will be used.
+                   not specify its own shots. If ``None``, the value from
+                   ``options.default_shots`` will be used.
 
         Returns:
             The submitted job.
@@ -162,15 +199,24 @@ class SamplerV2(BaseSamplerV2):
         Raises:
             IBMInputValueError: If circuits contain BoxOp instructions or if
                                shots are not properly specified.
+            NotImplementedError: If unsupported options are enabled.
         """
+        # Map options to executor before running
+        self._map_options_to_executor()
+
         # Coerce pubs to SamplerPub objects
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
+        # Determine default shots: run parameter takes precedence over options.default_shots
+        default_shots = shots if shots is not None else self._options.default_shots
+
         # Convert pubs to QuantumProgram
-        default_shots = (
-            shots if shots is not None else 4096
-        )  # TODO: Move to options once available.
-        quantum_program = prepare(coerced_pubs, default_shots=default_shots)
+        meas_level = (
+            self._options.execution.meas_type
+            if self._options.execution.meas_type is not Unset
+            else None
+        )
+        quantum_program = prepare(coerced_pubs, default_shots=default_shots, meas_level=meas_level)
 
         # Submit to executor
         logger.info(
@@ -182,16 +228,75 @@ class SamplerV2(BaseSamplerV2):
         return self._executor.run(quantum_program)
 
     @property
-    def options(self) -> None:
+    def options(self) -> SamplerOptions:
         """Return the options.
 
-        Note:
-            Options are not yet supported in this minimal implementation.
-            This property is provided for interface compatibility.
+        Returns:
+            The sampler options.
         """
-        # Return a minimal options object for compatibility
-        # In future phases, this will return a proper SamplerOptions instance
-        return None
+        return self._options
+
+    def _map_options_to_executor(self) -> None:
+        """Map SamplerV2 options to Executor options.
+
+        This method maps the supported options from SamplerOptions to ExecutorOptions.
+        For options that don't have a one-to-one correspondence or are not yet supported,
+        it raises NotImplementedError.
+
+        Raises:
+            NotImplementedError: If unsupported options are enabled.
+        """
+        # Check for unsupported options and raise errors
+
+        # Dynamical decoupling - not supported yet
+        if self._options.dynamical_decoupling.enable:
+            raise NotImplementedError(
+                "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
+            )
+
+        # Twirling - not supported yet
+        if self._options.twirling.enable_gates or self._options.twirling.enable_measure:
+            raise NotImplementedError(
+                "Twirling is not yet supported in the executor-based SamplerV2."
+            )
+
+        # Experimental options (except 'image') - not supported yet
+        if self._options.experimental is not None:
+            if any(k != "image" for k in self._options.experimental.keys()):
+                raise NotImplementedError(
+                    "Experimental options (except image) are not supported in the "
+                    "executor-based SamplerV2."
+                )
+
+        # Map supported options to executor options
+        executor_options = ExecutorOptions()
+
+        # Map execution options
+        if (init_qubits := self._options.execution.init_qubits) is not Unset:
+            executor_options.execution.init_qubits = init_qubits
+
+        if (rep_delay := self._options.execution.rep_delay) is not Unset:
+            executor_options.execution.rep_delay = rep_delay
+
+        # Map environment options
+        executor_options.environment.log_level = self._options.environment.log_level
+
+        if (job_tags := self._options.environment.job_tags) is not None:
+            executor_options.environment.job_tags = job_tags
+
+        if (private := self._options.environment.private) is not None:
+            executor_options.environment.private = private
+
+        # Map max_execution_time
+        if (max_exec_time := self._options.max_execution_time) is not None:
+            executor_options.environment.max_execution_time = max_exec_time
+
+        # Map experimental.image if present
+        if self._options.experimental is not None and "image" in self._options.experimental:
+            executor_options.environment.image = self._options.experimental["image"]
+
+        # Update the executor's options
+        self._executor.options = executor_options
 
     @staticmethod
     def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
