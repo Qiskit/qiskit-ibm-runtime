@@ -30,7 +30,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
 
 class TestSamplerV2StaticMethod(unittest.TestCase):
     """Test SamplerV2.quantum_program_result_to_primitive_result() static method.
-    
+
     This class contains comprehensive tests for the static method that performs
     the actual conversion logic from QuantumProgramResult to PrimitiveResult.
     """
@@ -182,18 +182,21 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         num_shots = 10
         num_bits = 4
         # Create specific measurement data to verify integrity
-        meas_data = np.array([
-            [1, 0, 1, 0],
-            [0, 1, 0, 1],
-            [1, 1, 0, 0],
-            [0, 0, 1, 1],
-            [1, 0, 0, 1],
-            [0, 1, 1, 0],
-            [1, 1, 1, 1],
-            [0, 0, 0, 0],
-            [1, 0, 1, 1],
-            [0, 1, 0, 0],
-        ], dtype=np.uint8)
+        meas_data = np.array(
+            [
+                [1, 0, 1, 0],
+                [0, 1, 0, 1],
+                [1, 1, 0, 0],
+                [0, 0, 1, 1],
+                [1, 0, 0, 1],
+                [0, 1, 1, 0],
+                [1, 1, 1, 1],
+                [0, 0, 0, 0],
+                [1, 0, 1, 1],
+                [0, 1, 0, 0],
+            ],
+            dtype=np.uint8,
+        )
 
         qp_result = QuantumProgramResult(
             data=[{"meas": meas_data}],
@@ -206,7 +209,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         # Verify the BitArray contains the same data
         self.assertEqual(bit_array.num_shots, num_shots)
         self.assertEqual(bit_array.num_bits, num_bits)
-        
+
         # Convert back to bool array and compare
         reconstructed = bit_array.get_bitstrings()
         self.assertEqual(len(reconstructed), num_shots)
@@ -252,7 +255,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
 
 class TestSamplerV2PostProcessor(unittest.TestCase):
     """Test SamplerV2 post-processor function.
-    
+
     This class contains basic smoke tests to verify the post-processor function
     works correctly and delegates to the static method appropriately.
     """

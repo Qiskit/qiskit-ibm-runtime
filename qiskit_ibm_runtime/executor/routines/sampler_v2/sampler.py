@@ -196,10 +196,10 @@ class SamplerV2(BaseSamplerV2):
     @staticmethod
     def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
         """Convert QuantumProgramResult to PrimitiveResult.
-        
+
         Args:
             result: The (possibly post-processed) quantum program result.
-                
+
         Returns:
             PrimitiveResult containing SamplerPubResult objects.
 
