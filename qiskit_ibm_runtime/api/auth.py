@@ -72,7 +72,7 @@ class CloudAuth(AuthBase):
         r.headers.update(self.get_headers())
         return r
 
-    def __deepcopy__(self, _memo: dict = None) -> CloudAuth:
+    def __deepcopy__(self, _memo: dict | None = None) -> CloudAuth:
         cpy = CloudAuth(
             api_key=self.api_key,
             crn=self.crn,

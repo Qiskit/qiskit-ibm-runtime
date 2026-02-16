@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from qiskit.circuit import CircuitInstruction
 from qiskit.providers import BackendV2
@@ -23,17 +24,17 @@ from qiskit.providers import BackendV2
 from qiskit_ibm_runtime.options.utils import UnsetType
 
 from ..base_primitive import get_mode_service_backend
-from ..batch import Batch
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
 from ..runtime_job_v2 import RuntimeJobV2
-
-# pylint: disable=unused-import,cyclic-import
-from ..session import Session
 from ..utils.default_session import get_cm_session
 from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
+
+if TYPE_CHECKING:
+    from ..batch import Batch
+    from ..session import Session
 
 logger = logging.getLogger(__name__)
 

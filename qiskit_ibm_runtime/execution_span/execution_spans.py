@@ -119,7 +119,7 @@ class ExecutionSpans:
         return obj
 
     def draw(
-        self, name: str = None, normalize_y: bool = False, line_width: int = 4
+        self, name: str | None = None, normalize_y: bool = False, line_width: int = 4
     ) -> PlotlyFigure:
         """Draw these execution spans.
 

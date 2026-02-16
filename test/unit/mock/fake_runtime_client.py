@@ -391,7 +391,7 @@ class BaseFakeRuntimeClient:
             status = self._get_job(job_id).status()
 
     # pylint: disable=unused-argument
-    def _get_job(self, job_id: str, exclude_params: bool = None) -> Any:
+    def _get_job(self, job_id: str, exclude_params: bool | None = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
@@ -418,7 +418,7 @@ class BaseFakeRuntimeClient:
 
     # pylint: disable=unused-argument
     def backend_properties(
-        self, backend_name: str, datetime: Any = None, calibration_id: str = None
+        self, backend_name: str, datetime: Any = None, calibration_id: str | None = None
     ) -> dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:

@@ -34,7 +34,7 @@ class RunnerResult(Result, ResultDecoder):
         return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
     def get_quasiprobabilities(
-        self, experiment: int | list = None
+        self, experiment: int | list | None = None
     ) -> QuasiDistribution | list[QuasiDistribution]:
         """Get quasiprobabilites associated with one or more experiments.
 

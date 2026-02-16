@@ -111,11 +111,11 @@ class RuntimeClient(BaseBackendClient):
 
     def jobs_get(
         self,
-        limit: int = None,
-        skip: int = None,
-        backend_name: str = None,
-        pending: bool = None,
-        program_id: str = None,
+        limit: int | None = None,
+        skip: int | None = None,
+        backend_name: str | None = None,
+        pending: bool | None = None,
+        program_id: str | None = None,
         job_tags: list[str] | None = None,
         session_id: str | None = None,
         created_after: python_datetime | None = None,

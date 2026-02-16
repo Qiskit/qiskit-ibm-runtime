@@ -42,7 +42,7 @@ class ProgramJob(RestAdapterBase):
         """
         super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
 
-    def get(self, exclude_params: bool = None) -> dict:
+    def get(self, exclude_params: bool | None = None) -> dict:
         """Return program job information.
 
         Args:
