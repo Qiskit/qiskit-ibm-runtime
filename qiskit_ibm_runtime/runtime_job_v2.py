@@ -194,13 +194,19 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         # Priority 2: Post-processor from passthrough_data
         if not post_processor_fn and result.passthrough_data:
-            post_processor_info = result.passthrough_data.get("post_processor")
-            if post_processor_info:
-                context = post_processor_info.get("context")
-                if context == "sampler_v2" and (version := post_processor_info.get("version")):
-                    from .executor.routines import SAMPLER_POST_PROCESSORS
-
-                    post_processor_fn = SAMPLER_POST_PROCESSORS.get(version)
+            if (post_processor_info := result.passthrough_data.get("post_processor")):
+                if post_processor_info.get("context") == "sampler_v2":
+                    # A post processor must be defined to maintain the contracts.
+                    try:
+                        version = post_processor_info["version"]
+                    except KeyError:
+                        raise ValueError("Could not determine a post-processor version.")
+                        
+                    from .executor.routines.sampler_v2.sampler_post_processors import SAMPLER_POST_PROCESSORS
+                    try:
+                        post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+                    except KeyError:
+                        raise ValueError(f"No post-processor found for version {version}.")
 
         # Apply post-processing if we have a processor
         if post_processor_fn:

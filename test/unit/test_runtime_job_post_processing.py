@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     QuantumProgramResult,
     Metadata,
 )
-from qiskit_ibm_runtime.executor.routines import SAMPLER_POST_PROCESSORS
+from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler_post_processors import SAMPLER_POST_PROCESSORS
 
 
 class TestRuntimeJobPostProcessing(unittest.TestCase):
@@ -168,7 +168,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         self.assertEqual(processed, qp_result)
 
     def test_passthrough_data_missing_version(self):
-        """Test that passthrough_data without version is ignored."""
+        """Test that passthrough_data without version raises ValueError for sampler_v2."""
         job = self._create_job()
         qp_result = QuantumProgramResult(
             data=[{"c": np.array([[0, 1]])}],
@@ -181,9 +181,11 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             },
         )
 
-        # Should return unchanged since version is missing
-        processed = job._apply_post_processing(qp_result, None)
-        self.assertEqual(processed, qp_result)
+        # Should raise ValueError since version is required for sampler_v2 context
+        with self.assertRaises(ValueError) as context:
+            job._apply_post_processing(qp_result, None)
+        
+        self.assertIn("Could not determine a post-processor version", str(context.exception))
 
     def test_post_processing_error_propagation(self):
         """Test that post-processing errors are propagated."""

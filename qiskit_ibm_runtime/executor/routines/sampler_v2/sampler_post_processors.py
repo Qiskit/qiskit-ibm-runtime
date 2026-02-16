@@ -17,9 +17,9 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from qiskit.primitives import PrimitiveResult
-from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 from ....quantum_program.quantum_program_result import QuantumProgramResult
+from .sampler import SamplerV2
 
 # Type alias for sampler post-processor functions
 PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
@@ -46,7 +46,7 @@ def register_post_processor(name: str) -> Callable[[PostProcessorFunc], PostProc
 
 
 @register_post_processor("v1")
-def sampler_v2_post_processor_v1(qp_result: QuantumProgramResult) -> PrimitiveResult:
+def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert QuantumProgramResult to SamplerV2 PrimitiveResult.
 
     This function transforms the raw quantum program execution results into the
@@ -54,40 +54,12 @@ def sampler_v2_post_processor_v1(qp_result: QuantumProgramResult) -> PrimitiveRe
     containers for each pub.
 
     Args:
-        qp_result: The raw quantum program result containing measurement data.
-            Each item in qp_result is a dictionary where keys are classical
-            register names and values are numpy arrays of measurement data.
+        result: The raw quantum program result containing measurement data.
 
     Returns:
-        PrimitiveResult containing SamplerPubResult objects with BitArray data
-
-    Raises:
-        ValueError: If data is malformed or inconsistent
+        PrimitiveResult containing SamplerPubResult objects.
     """
-    # Build SamplerPubResult for each pub
-    pub_results = []
-    for idx, item_data in enumerate(qp_result):
-        # Validate that measurement data exists
-        if not item_data:
-            raise ValueError(f"Pub {idx} has no measurement data")
 
-        # Infer pub_shape from the first classical register's data
-        # meas_data shape: (...pub_shape..., num_shots, num_bits)
-        first_meas_data = next(iter(item_data.values()))
-        pub_shape = first_meas_data.shape[:-2]
+    # In the future post processing will happen here. (For example, measurement twirling)
 
-        # Create BitArray for each classical register found in the data
-        bit_arrays = {}
-        for creg_name, meas_data in item_data.items():
-            # Create BitArray from measurement data (bit array format)
-            # meas_data shape: (..., num_shots, num_clbits)
-            bit_array = BitArray.from_bool_array(meas_data)
-            bit_arrays[creg_name] = bit_array
-
-        data_bin = DataBin(**bit_arrays, shape=pub_shape)
-
-        pub_result = SamplerPubResult(data=data_bin, metadata={})
-        pub_results.append(pub_result)
-
-    # Create and return PrimitiveResult with preserved metadata
-    return PrimitiveResult(pub_results, metadata={"quantum_program_metadata": qp_result.metadata})
+    return SamplerV2.quantum_program_result_to_primitive_result(result)

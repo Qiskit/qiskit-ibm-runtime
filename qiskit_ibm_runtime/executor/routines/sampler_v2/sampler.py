@@ -20,12 +20,14 @@ import logging
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 from qiskit.providers import BackendV2
+from qiskit.primitives import PrimitiveResult
+from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
 from ....session import Session
 from ....batch import Batch
-from ....quantum_program import QuantumProgram
+from ....quantum_program import QuantumProgram, QuantumProgramResult
 from ....quantum_program.quantum_program import CircuitItem
 
 from ..utils import validate_no_boxes, extract_shots_from_pubs
@@ -190,3 +192,44 @@ class SamplerV2(BaseSamplerV2):
         # Return a minimal options object for compatibility
         # In future phases, this will return a proper SamplerOptions instance
         return None
+
+    @staticmethod
+    def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
+        """Convert QuantumProgramResult to PrimitiveResult.
+        
+        Args:
+            result: The (possibly post-processed) quantum program result.
+                
+        Returns:
+            PrimitiveResult containing SamplerPubResult objects.
+
+        Raises:
+            ValueError: If data is malformed or inconsistent
+        """
+        # Build SamplerPubResult for each pub
+        pub_results = []
+        for idx, item_data in enumerate(result):
+            # Validate that measurement data exists
+            if not item_data:
+                raise ValueError(f"Pub {idx} has no measurement data")
+
+            # Infer pub_shape from the first classical register's data
+            # meas_data shape: (...pub_shape..., num_shots, num_bits)
+            first_meas_data = next(iter(item_data.values()))
+            pub_shape = first_meas_data.shape[:-2]
+
+            # Create BitArray for each classical register found in the data
+            bit_arrays = {}
+            for creg_name, meas_data in item_data.items():
+                # Create BitArray from measurement data (bit array format)
+                # meas_data shape: (..., num_shots, num_clbits)
+                bit_array = BitArray.from_bool_array(meas_data)
+                bit_arrays[creg_name] = bit_array
+
+            data_bin = DataBin(**bit_arrays, shape=pub_shape)
+
+            pub_result = SamplerPubResult(data=data_bin, metadata={})
+            pub_results.append(pub_result)
+
+        # Create and return PrimitiveResult with preserved metadata
+        return PrimitiveResult(pub_results, metadata={"quantum_program_metadata": result.metadata})
