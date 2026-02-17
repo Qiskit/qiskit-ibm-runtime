@@ -23,6 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
 from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler import prepare
+from qiskit_ibm_runtime.executor.routines.sampler_v2.options import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -519,13 +520,15 @@ class TestPrepare(unittest.TestCase):
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit, shots=1024)
-        program = prepare([pub])
+        options = SamplerOptions()
+        program, executor_options = prepare([pub], options)
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertEqual(program.shots, 1024)
         self.assertEqual(len(program.items), 1)
         self.assertIsInstance(program.items[0], CircuitItem)
         self.assertEqual(program.items[0].circuit, circuit)
+        self.assertIsNotNone(executor_options)
 
     def test_single_pub_with_parameters(self):
         """Test conversion of a single pub with parameters."""
@@ -536,12 +539,14 @@ class TestPrepare(unittest.TestCase):
 
         param_values = np.array([[0.1], [0.2], [0.3]])
         pub = SamplerPub.coerce((circuit, param_values), shots=2048)
-        program = prepare([pub])
+        options = SamplerOptions()
+        program, executor_options = prepare([pub], options)
 
         self.assertEqual(program.shots, 2048)
         self.assertEqual(len(program.items), 1)
         self.assertIsInstance(program.items[0], CircuitItem)
         np.testing.assert_array_equal(program.items[0].circuit_arguments, param_values)
+        self.assertIsNotNone(executor_options)
 
     def test_multiple_pubs(self):
         """Test conversion of multiple pubs."""
@@ -557,12 +562,14 @@ class TestPrepare(unittest.TestCase):
             SamplerPub.coerce(circuit1, shots=1024),
             SamplerPub.coerce(circuit2, shots=1024),
         ]
-        program = prepare(pubs)
+        options = SamplerOptions()
+        program, executor_options = prepare(pubs, options)
 
         self.assertEqual(program.shots, 1024)
         self.assertEqual(len(program.items), 2)
         self.assertEqual(program.items[0].circuit, circuit1)
         self.assertEqual(program.items[1].circuit, circuit2)
+        self.assertIsNotNone(executor_options)
 
     def test_default_shots(self):
         """Test that default shots are used when not specified in pub."""
@@ -571,9 +578,11 @@ class TestPrepare(unittest.TestCase):
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit)  # No shots specified
-        program = prepare([pub], default_shots=4096)
+        options = SamplerOptions()
+        program, executor_options = prepare([pub], options, default_shots=4096)
 
         self.assertEqual(program.shots, 4096)
+        self.assertIsNotNone(executor_options)
 
     def test_mismatched_shots_raises_error(self):
         """Test that mismatched shots across pubs raises an error."""
@@ -589,9 +598,10 @@ class TestPrepare(unittest.TestCase):
             SamplerPub.coerce(circuit1, shots=1024),
             SamplerPub.coerce(circuit2, shots=2048),
         ]
+        options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare(pubs)
+            prepare(pubs, options)
 
         self.assertIn("same number of shots", str(context.exception))
 
@@ -602,21 +612,242 @@ class TestPrepare(unittest.TestCase):
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit)  # No shots
+        options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], default_shots=None)
+            prepare([pub], options, default_shots=None)
 
         self.assertIn("Shots must be specified", str(context.exception))
 
     def test_empty_pubs_raises_error(self):
         """Test that empty pubs list raises an error."""
+        options = SamplerOptions()
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([])
+            prepare([], options)
 
         self.assertIn("At least one pub", str(context.exception))
 
     def test_pub_with_box_raises_error(self):
         """Test that a pub with a BoxOp raises an error."""
+
+
+class TestPrepareOptionsHandling(unittest.TestCase):
+    """Tests for options handling in prepare() function."""
+
+    def test_prepare_returns_executor_options(self):
+        """Test that prepare returns both QuantumProgram and ExecutorOptions."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+
+        result = prepare([pub], options)
+
+        # Should return a tuple
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(len(result), 2)
+
+        quantum_program, executor_options = result
+        self.assertIsInstance(quantum_program, QuantumProgram)
+        self.assertIsNotNone(executor_options)
+
+    def test_prepare_maps_execution_options(self):
+        """Test that prepare correctly maps execution options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.execution.init_qubits = False
+        options.execution.rep_delay = 0.0005
+
+        _, executor_options = prepare([pub], options)
+
+        self.assertEqual(executor_options.execution.init_qubits, False)
+        self.assertEqual(executor_options.execution.rep_delay, 0.0005)
+
+    def test_prepare_maps_environment_options(self):
+        """Test that prepare correctly maps environment options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.environment.log_level = "DEBUG"
+        options.environment.job_tags = ["test", "prepare"]
+        options.environment.private = True
+
+        _, executor_options = prepare([pub], options)
+
+        self.assertEqual(executor_options.environment.log_level, "DEBUG")
+        self.assertEqual(executor_options.environment.job_tags, ["test", "prepare"])
+        self.assertEqual(executor_options.environment.private, True)
+
+    def test_prepare_maps_max_execution_time(self):
+        """Test that prepare correctly maps max_execution_time."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.max_execution_time = 500
+
+        _, executor_options = prepare([pub], options)
+
+        self.assertEqual(executor_options.environment.max_execution_time, 500)
+
+    def test_prepare_maps_experimental_image(self):
+        """Test that prepare correctly maps experimental.image."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.experimental = {"image": "custom-runtime:v2"}
+
+        _, executor_options = prepare([pub], options)
+
+        self.assertEqual(executor_options.environment.image, "custom-runtime:v2")
+
+    def test_prepare_extracts_meas_level_from_options(self):
+        """Test that prepare extracts meas_level from options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.execution.meas_type = "kerneled"
+
+        quantum_program, _ = prepare([pub], options)
+
+        self.assertEqual(quantum_program.meas_level, "kerneled")
+
+    def test_prepare_uses_default_meas_level_when_unset(self):
+        """Test that prepare uses 'classified' as default when meas_type is not set."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        # Don't set meas_type, it should default to Unset
+
+        quantum_program, _ = prepare([pub], options)
+
+        self.assertEqual(quantum_program.meas_level, "classified")
+
+    def test_prepare_validates_dynamical_decoupling(self):
+        """Test that prepare raises error for dynamical_decoupling."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.dynamical_decoupling.enable = True
+
+        with self.assertRaises(NotImplementedError) as context:
+            prepare([pub], options)
+
+        self.assertIn("Dynamical decoupling", str(context.exception))
+
+    def test_prepare_validates_twirling_gates(self):
+        """Test that prepare raises error for twirling.enable_gates."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+
+        with self.assertRaises(NotImplementedError) as context:
+            prepare([pub], options)
+
+        self.assertIn("Twirling", str(context.exception))
+
+    def test_prepare_validates_twirling_measure(self):
+        """Test that prepare raises error for twirling.enable_measure."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.twirling.enable_measure = True
+
+        with self.assertRaises(NotImplementedError) as context:
+            prepare([pub], options)
+
+        self.assertIn("Twirling", str(context.exception))
+
+    def test_prepare_validates_experimental_options(self):
+        """Test that prepare raises error for unsupported experimental options."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.experimental = {"unsupported_key": "value"}
+
+        with self.assertRaises(NotImplementedError) as context:
+            prepare([pub], options)
+
+        self.assertIn("Experimental options", str(context.exception))
+
+    def test_prepare_allows_experimental_image(self):
+        """Test that prepare allows experimental.image."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.experimental = {"image": "allowed:v1"}
+
+        # Should not raise
+        _, executor_options = prepare([pub], options)
+        self.assertEqual(executor_options.environment.image, "allowed:v1")
+
+    def test_prepare_all_options_together(self):
+        """Test that prepare correctly handles all supported options together."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=2048)
+        options = SamplerOptions()
+        options.execution.init_qubits = False
+        options.execution.rep_delay = 0.0003
+        options.execution.meas_type = "avg_kerneled"
+        options.environment.log_level = "INFO"
+        options.environment.job_tags = ["comprehensive", "test"]
+        options.environment.private = True
+        options.max_execution_time = 800
+        options.experimental = {"image": "full-test:v1"}
+
+        quantum_program, executor_options = prepare([pub], options)
+
+        # Verify QuantumProgram
+        self.assertEqual(quantum_program.shots, 2048)
+        self.assertEqual(quantum_program.meas_level, "avg_kerneled")
+
+        # Verify ExecutorOptions
+        self.assertEqual(executor_options.execution.init_qubits, False)
+        self.assertEqual(executor_options.execution.rep_delay, 0.0003)
+        self.assertEqual(executor_options.environment.log_level, "INFO")
+        self.assertEqual(executor_options.environment.job_tags, ["comprehensive", "test"])
+        self.assertEqual(executor_options.environment.private, True)
+        self.assertEqual(executor_options.environment.max_execution_time, 800)
+        self.assertEqual(executor_options.environment.image, "full-test:v1")
         inner_circuit = QuantumCircuit(2)
         inner_circuit.h(0)
 
@@ -625,8 +856,9 @@ class TestPrepare(unittest.TestCase):
         circuit.measure_all()
 
         pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub])
+            prepare([pub], options)
 
         self.assertIn("BoxOp", str(context.exception))

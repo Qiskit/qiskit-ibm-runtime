@@ -15,21 +15,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import cast
 
 from ....options.dynamical_decoupling_options import DynamicalDecouplingOptions
 from ....options.twirling_options import TwirlingOptions
 from ....options.sampler_execution_options import SamplerExecutionOptionsV2
 from ....options.environment_options import EnvironmentOptions
-from ....options.simulator_options import SimulatorOptions
+from ....options.executor_options import ExecutorOptions
+from ....options.utils import Unset
 
 
 @dataclass
 class SamplerOptions:
     """Options for the executor-based SamplerV2.
-
-    This class provides the same interface as the old SamplerOptions but is designed
-    to work with the executor-based implementation. It reuses the existing option
-    sub-classes from qiskit_ibm_runtime.options.
 
     Args:
         default_shots: The default number of shots to use if none are specified in the
@@ -45,8 +43,6 @@ class SamplerOptions:
             execution time (not wall clock time). Inherited from OptionsV2.
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options. Inherited from OptionsV2.
-        simulator: Simulator options. See :class:`SimulatorOptions` for all
-            available options. Inherited from OptionsV2.
     """
 
     default_shots: int | None = 4096
@@ -60,4 +56,37 @@ class SamplerOptions:
     # Inherited from OptionsV2
     max_execution_time: int | None = None
     environment: EnvironmentOptions = field(default_factory=EnvironmentOptions)
-    simulator: SimulatorOptions = field(default_factory=SimulatorOptions)
+
+    def to_executor_options(self) -> ExecutorOptions:
+        """Map SamplerOptions to ExecutorOptions.
+
+        Returns:
+            ExecutorOptions: Mapped executor options.
+        """
+        executor_options = ExecutorOptions()
+
+        # Map execution options
+        if self.execution.init_qubits is not Unset:
+            executor_options.execution.init_qubits = cast(bool, self.execution.init_qubits)
+
+        if self.execution.rep_delay is not Unset:
+            executor_options.execution.rep_delay = cast(float, self.execution.rep_delay)
+
+        # Map environment options
+        executor_options.environment.log_level = self.environment.log_level
+
+        if (job_tags := self.environment.job_tags) is not None:
+            executor_options.environment.job_tags = job_tags
+
+        if (private := self.environment.private) is not None:
+            executor_options.environment.private = private
+
+        # Map max_execution_time
+        if (max_exec_time := self.max_execution_time) is not None:
+            executor_options.environment.max_execution_time = max_exec_time
+
+        # Map experimental.image if present
+        if self.experimental is not None and "image" in self.experimental:
+            executor_options.environment.image = self.experimental["image"]
+
+        return executor_options

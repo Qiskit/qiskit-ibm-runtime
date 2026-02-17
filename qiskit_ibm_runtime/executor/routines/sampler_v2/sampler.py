@@ -13,10 +13,10 @@
 """Executor-based SamplerV2 primitive."""
 
 from __future__ import annotations
-from typing import Literal
 
 from collections.abc import Iterable
 import logging
+from typing import Literal, cast
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -41,21 +41,24 @@ logger = logging.getLogger(__name__)
 
 def prepare(
     pubs: list[SamplerPub],
+    options: SamplerOptions,
     default_shots: int | None = None,
-    meas_level: Literal["classified", "kerneled", "avg_kerneled"] | None = None,
-) -> QuantumProgram:
-    """Convert a list of SamplerPub objects to a QuantumProgram.
+) -> tuple[QuantumProgram, ExecutorOptions]:
+    """Convert a list of SamplerPub objects to a QuantumProgram and map options.
 
     Args:
         pubs: List of sampler pubs to convert.
+        options: SamplerOptions to validate and map to ExecutorOptions.
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
-        A QuantumProgram containing CircuitItem objects for each pub,
-        with passthrough_data configured for SamplerV2 post-processing.
+        A tuple containing:
+        - QuantumProgram with CircuitItem objects for each pub
+        - ExecutorOptions mapped from SamplerOptions
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
+        NotImplementedError: If unsupported options are enabled.
     """
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
@@ -63,6 +66,22 @@ def prepare(
     # Validate circuits don't contain boxes
     for pub in pubs:
         validate_no_boxes(pub.circuit)
+
+    # Validate options
+    if options.dynamical_decoupling.enable:
+        raise NotImplementedError(
+            "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
+        )
+
+    if options.twirling.enable_gates or options.twirling.enable_measure:
+        raise NotImplementedError("Twirling is not yet supported in the executor-based SamplerV2.")
+
+    if options.experimental is not None:
+        if any(k != "image" for k in options.experimental.keys()):
+            raise NotImplementedError(
+                "Experimental options (except image) are not supported in the "
+                "executor-based SamplerV2."
+            )
 
     # Create QuantumProgram with CircuitItem for each pub
     items = []
@@ -89,9 +108,22 @@ def prepare(
         },
     }
 
-    return QuantumProgram(
+    # Extract meas_level from options
+    meas_level: Literal["classified", "kerneled", "avg_kerneled"] = (
+        cast(Literal["classified", "kerneled", "avg_kerneled"], options.execution.meas_type)
+        if options.execution.meas_type is not Unset
+        else "classified"
+    )
+
+    # Create QuantumProgram
+    quantum_program = QuantumProgram(
         shots=shots, items=items, passthrough_data=passthrough_data, meas_level=meas_level
     )
+
+    # Map options to executor options
+    executor_options = options.to_executor_options()
+
+    return quantum_program, executor_options
 
 
 class SamplerV2(BaseSamplerV2):
@@ -114,7 +146,6 @@ class SamplerV2(BaseSamplerV2):
 
     - ``dynamical_decoupling``: Dynamical decoupling sequences
     - ``twirling``: Pauli twirling
-    - ``simulator.*``: Simulator options
     - ``experimental.*``: Other experimental options
 
     **Other Limitations:**
@@ -199,22 +230,19 @@ class SamplerV2(BaseSamplerV2):
                                shots are not properly specified.
             NotImplementedError: If unsupported options are enabled.
         """
-        # Map options to executor before running
-        self._map_options_to_executor()
-
         # Coerce pubs to SamplerPub objects
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else self._options.default_shots
 
-        # Convert pubs to QuantumProgram
-        meas_level = (
-            self._options.execution.meas_type
-            if self._options.execution.meas_type is not Unset
-            else None
+        # Convert pubs to QuantumProgram and map options
+        quantum_program, executor_options = prepare(
+            coerced_pubs, options=self._options, default_shots=default_shots
         )
-        quantum_program = prepare(coerced_pubs, default_shots=default_shots, meas_level=meas_level)
+
+        # Set executor options
+        self._executor.options = executor_options
 
         # Submit to executor
         logger.info(
@@ -233,68 +261,6 @@ class SamplerV2(BaseSamplerV2):
             The sampler options.
         """
         return self._options
-
-    def _map_options_to_executor(self) -> None:
-        """Map SamplerV2 options to Executor options.
-
-        This method maps the supported options from SamplerOptions to ExecutorOptions.
-        For options that don't have a one-to-one correspondence or are not yet supported,
-        it raises NotImplementedError.
-
-        Raises:
-            NotImplementedError: If unsupported options are enabled.
-        """
-        # Check for unsupported options and raise errors
-
-        # Dynamical decoupling - not supported yet
-        if self._options.dynamical_decoupling.enable:
-            raise NotImplementedError(
-                "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
-            )
-
-        # Twirling - not supported yet
-        if self._options.twirling.enable_gates or self._options.twirling.enable_measure:
-            raise NotImplementedError(
-                "Twirling is not yet supported in the executor-based SamplerV2."
-            )
-
-        # Experimental options (except 'image') - not supported yet
-        if self._options.experimental is not None:
-            if any(k != "image" for k in self._options.experimental.keys()):
-                raise NotImplementedError(
-                    "Experimental options (except image) are not supported in the "
-                    "executor-based SamplerV2."
-                )
-
-        # Map supported options to executor options
-        executor_options = ExecutorOptions()
-
-        # Map execution options
-        if (init_qubits := self._options.execution.init_qubits) is not Unset:
-            executor_options.execution.init_qubits = init_qubits
-
-        if (rep_delay := self._options.execution.rep_delay) is not Unset:
-            executor_options.execution.rep_delay = rep_delay
-
-        # Map environment options
-        executor_options.environment.log_level = self._options.environment.log_level
-
-        if (job_tags := self._options.environment.job_tags) is not None:
-            executor_options.environment.job_tags = job_tags
-
-        if (private := self._options.environment.private) is not None:
-            executor_options.environment.private = private
-
-        # Map max_execution_time
-        if (max_exec_time := self._options.max_execution_time) is not None:
-            executor_options.environment.max_execution_time = max_exec_time
-
-        # Map experimental.image if present
-        if self._options.experimental is not None and "image" in self._options.experimental:
-            executor_options.environment.image = self._options.experimental["image"]
-
-        # Update the executor's options
-        self._executor.options = executor_options
 
     @staticmethod
     def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
