@@ -87,7 +87,7 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
 class SamplerV2(BaseSamplerV2):
     """Executor-based Sampler primitive for Qiskit Runtime.
 
-    This is a new implementation of SamplerV2 built on top of the Executor primitive,
+    This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
@@ -131,8 +131,6 @@ class SamplerV2(BaseSamplerV2):
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
     """
-
-    version = 2
 
     def __init__(
         self,
