@@ -97,7 +97,7 @@ def prepare(
 class SamplerV2(BaseSamplerV2):
     """Executor-based Sampler primitive for Qiskit Runtime.
 
-    This is a new implementation of SamplerV2 built on top of the Executor primitive,
+    This is an implementation of SamplerV2 built on top of the Executor primitive,
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
@@ -157,8 +157,6 @@ class SamplerV2(BaseSamplerV2):
 
         options: Sampler options. See :class:`SamplerOptions` for all available options.
     """
-
-    version = 2
 
     def __init__(
         self,
