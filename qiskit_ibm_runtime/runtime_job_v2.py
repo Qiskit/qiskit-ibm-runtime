@@ -193,12 +193,14 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             post_processor_fn = post_processor_override
 
         # Priority 2: Post-processor from passthrough_data
-        if not post_processor_fn and result.passthrough_data:
-            if post_processor_info := result.passthrough_data.get("post_processor"):
+        if not post_processor_fn and isinstance(result.passthrough_data, dict):
+            if isinstance(
+                post_processor_info := result.passthrough_data.get("post_processor"), dict
+            ):
                 if post_processor_info.get("context") == "sampler_v2":
                     # A post processor must be defined to maintain the contracts.
                     try:
-                        version = post_processor_info["version"]
+                        version = str(post_processor_info["version"])
                     except KeyError:
                         raise ValueError("Could not determine a post-processor version.")
 
