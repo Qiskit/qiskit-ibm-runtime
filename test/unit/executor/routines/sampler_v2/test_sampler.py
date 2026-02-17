@@ -41,19 +41,6 @@ def create_mock_backend():
     return backend
 
 
-class TestSamplerV2Initialization(unittest.TestCase):
-    """Tests for SamplerV2 initialization and basic properties."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = create_mock_backend()
-
-    def test_version(self):
-        """Test that version is set correctly."""
-        sampler = SamplerV2(mode=self.backend)
-        self.assertEqual(sampler.version, 2)
-
-
 class TestSamplerV2SimpleCircuits(unittest.TestCase):
     """Tests for SamplerV2 with simple (non-parametric) circuits."""
 

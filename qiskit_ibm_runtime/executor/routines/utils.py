@@ -59,20 +59,10 @@ def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = 
     if not pubs:
         raise IBMInputValueError("At least one pub must be provided.")
 
-    shots = None
-    for pub in pubs:
-        pub_shots = pub.shots if pub.shots is not None else default_shots
-        if pub_shots is None:
-            raise IBMInputValueError(
-                "Shots must be specified either in the pub or as default_shots."
-            )
-        if shots is None:
-            shots = pub_shots
-        elif shots != pub_shots:
-            raise IBMInputValueError(
-                f"All pubs must have the same number of shots. Found {shots} and {pub_shots}."
-            )
-
-    # Type checker: shots is guaranteed to be int here due to validation above
-    assert shots is not None
-    return shots
+    pub_shots = {pub.shots or default_shots for pub in pubs}
+    if None in pub_shots:
+        raise IBMInputValueError("Shots must be specified either in the pub or as default_shots.")
+    pub_shots = {s for s in pub_shots if s is not None}  # For mypy typing
+    if len(pub_shots) != 1:
+        raise IBMInputValueError(f"All pubs must have the same number of shots. Found: {pub_shots}")
+    return next(iter(pub_shots))
