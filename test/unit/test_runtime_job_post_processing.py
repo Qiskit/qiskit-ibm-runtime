@@ -52,7 +52,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         SAMPLER_POST_PROCESSORS["failing_version"] = self._failing_processor
 
     @staticmethod
-    def _simple_processor(qp_result): # pylint: disable=unused-argument
+    def _simple_processor(qp_result):  # pylint: disable=unused-argument
         """Simple test processor that returns a fixed string."""
         return "processed_result"
 
@@ -100,7 +100,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         qp_result = QuantumProgramResult(data=[{"c": np.array([[0, 1]])}], metadata=Metadata())
 
         # Define override processor inline for this specific test
-        def override_proc(qp_result): # pylint: disable=unused-argument
+        def override_proc(qp_result):  # pylint: disable=unused-argument
             return "override_result"
 
         processed = job._apply_post_processing(qp_result, override_proc)
@@ -141,7 +141,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         )
 
         # Test 1: Override takes precedence over passthrough_data
-        def override_proc(qp_result): # pylint: disable=unused-argument
+        def override_proc(qp_result):  # pylint: disable=unused-argument
             return "override"
 
         processed = job._apply_post_processing(qp_result_with_passthrough, override_proc)
@@ -214,7 +214,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         job._final_result_decoder = mock_decoder  # type: ignore[assignment]
 
         # Define test processor inline for this specific test
-        def test_proc(qp_result): # pylint: disable=unused-argument
+        def test_proc(qp_result):  # pylint: disable=unused-argument
             return "param_result"
 
         result = job.result(post_processor=test_proc)

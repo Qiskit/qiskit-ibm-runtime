@@ -202,7 +202,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                     except KeyError:
                         raise ValueError("Could not determine a post-processor version.")
 
-                    from .executor.routines.sampler_v2.sampler_post_processors import (
+                    # TODO: Circular import issue. Consider changing file structure.
+                    from .executor.routines.sampler_v2.sampler_post_processors import (  # pylint: disable=import-outside-toplevel
                         SAMPLER_POST_PROCESSORS,
                     )
 
