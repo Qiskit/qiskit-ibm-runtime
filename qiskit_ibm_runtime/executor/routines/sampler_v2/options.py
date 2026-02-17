@@ -31,7 +31,7 @@ class SamplerOptions:
 
     Args:
         default_shots: The default number of shots to use if none are specified in the
-            PUBs or in the run method. Default: 4096.
+            PUBs or in the run method.
         dynamical_decoupling: Suboptions for dynamical decoupling. See
             :class:`DynamicalDecouplingOptions` for all available options.
         execution: Execution time options. See :class:`SamplerExecutionOptionsV2`
