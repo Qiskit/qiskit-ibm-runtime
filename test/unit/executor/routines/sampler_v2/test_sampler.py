@@ -23,7 +23,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
 from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler import prepare
-from qiskit_ibm_runtime.executor.routines.sampler_v2.options import SamplerOptions
+from qiskit_ibm_runtime.executor.routines.options import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
 from qiskit_ibm_runtime.ibm_backend import IBMBackend

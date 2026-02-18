@@ -15,7 +15,7 @@
 import unittest
 from ddt import ddt, data
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2.options import SamplerOptions
+from qiskit_ibm_runtime.executor.routines.options import SamplerOptions
 
 
 @ddt

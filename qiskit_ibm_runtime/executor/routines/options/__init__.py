@@ -10,7 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based SamplerV2"""
+"""Shared options for executor routines."""
 
-from .sampler import SamplerV2
-from ..options import SamplerOptions
+from .sampler_options import SamplerOptions

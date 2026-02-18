@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 import logging
-from typing import Literal, cast
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -31,10 +30,9 @@ from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult
 from ....quantum_program.quantum_program import CircuitItem
 from ....options.executor_options import ExecutorOptions
-from ....options.utils import Unset
 
 from ..utils import validate_no_boxes, extract_shots_from_pubs
-from .options import SamplerOptions
+from ..options.sampler_options import SamplerOptions
 
 logger = logging.getLogger(__name__)
 
@@ -108,16 +106,12 @@ def prepare(
         },
     }
 
-    # Extract meas_level from options
-    meas_level: Literal["classified", "kerneled", "avg_kerneled"] = (
-        cast(Literal["classified", "kerneled", "avg_kerneled"], options.execution.meas_type)
-        if options.execution.meas_type is not Unset
-        else "classified"
-    )
-
     # Create QuantumProgram
     quantum_program = QuantumProgram(
-        shots=shots, items=items, passthrough_data=passthrough_data, meas_level=meas_level
+        shots=shots,
+        items=items,
+        passthrough_data=passthrough_data,
+        meas_level=options.execution.meas_type,
     )
 
     # Map options to executor options

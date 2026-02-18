@@ -14,15 +14,44 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import cast
+from dataclasses import dataclass, field, asdict
+from typing import Literal
 
-from ....options.dynamical_decoupling_options import DynamicalDecouplingOptions
-from ....options.twirling_options import TwirlingOptions
-from ....options.sampler_execution_options import SamplerExecutionOptionsV2
-from ....options.environment_options import EnvironmentOptions
+from .dynamical_decoupling_options import DynamicalDecouplingOptions
+from .twirling_options import TwirlingOptions
+from .environment_options import EnvironmentOptions
 from ....options.executor_options import ExecutorOptions
-from ....options.utils import Unset
+
+from ....options.executor_options import ExecutionOptions
+
+
+@dataclass
+class SamplerExecutionOptions(ExecutionOptions):
+    """Execution options for the sampler primitive.
+
+    Args:
+        init_qubits: Whether to reset the qubits to the ground state for each shot.
+            Inherited from :class:`ExecutionOptions`.
+        rep_delay: The repetition delay. Inherited from :class:`ExecutionOptions`.
+        meas_type: How to process and return measurement results. This option sets
+            the return type of all classical registers in all sampler pub results.
+
+            * ``"classified"``: Returns a BitArray with classified measurement outcomes.
+            * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
+              trace, in arbitrary units.
+            * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
+              in arbitrary units.
+    """
+
+    meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
+
+    def to_executor_execution_options(self) -> ExecutionOptions:
+        """Convert to execution options.
+
+        This drops the `meas_type` field, which is passed as part of the QuantumProgram."""
+        fields = asdict(self)
+        fields.pop("meas_type")
+        return ExecutionOptions(**fields)
 
 
 @dataclass
@@ -49,11 +78,10 @@ class SamplerOptions:
     dynamical_decoupling: DynamicalDecouplingOptions = field(
         default_factory=DynamicalDecouplingOptions
     )
-    execution: SamplerExecutionOptionsV2 = field(default_factory=SamplerExecutionOptionsV2)
+    execution: SamplerExecutionOptions = field(default_factory=SamplerExecutionOptions)
     twirling: TwirlingOptions = field(default_factory=TwirlingOptions)
     experimental: dict | None = None
 
-    # Inherited from OptionsV2
     max_execution_time: int | None = None
     environment: EnvironmentOptions = field(default_factory=EnvironmentOptions)
 
@@ -66,26 +94,14 @@ class SamplerOptions:
         executor_options = ExecutorOptions()
 
         # Map execution options
-        if self.execution.init_qubits is not Unset:
-            executor_options.execution.init_qubits = cast(bool, self.execution.init_qubits)
-
-        if self.execution.rep_delay is not Unset:
-            executor_options.execution.rep_delay = cast(float, self.execution.rep_delay)
+        executor_options.execution = self.execution.to_executor_execution_options()
 
         # Map environment options
-        executor_options.environment.log_level = self.environment.log_level
+        executor_options.environment = self.environment.to_executor_environment_options()
 
-        if (job_tags := self.environment.job_tags) is not None:
-            executor_options.environment.job_tags = job_tags
-
-        if (private := self.environment.private) is not None:
-            executor_options.environment.private = private
-
-        # Map max_execution_time
         if (max_exec_time := self.max_execution_time) is not None:
             executor_options.environment.max_execution_time = max_exec_time
 
-        # Map experimental.image if present
         if self.experimental is not None and "image" in self.experimental:
             executor_options.environment.image = self.experimental["image"]
 
