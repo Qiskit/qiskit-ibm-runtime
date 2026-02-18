@@ -99,6 +99,29 @@ class TestExecutorOptions(IBMTestCase):
         self.assertEqual(executor.options.environment.log_level, "WARNING")
         self.assertFalse(executor.options.execution.init_qubits)
 
+    def test_experimental_options_default_empty(self):
+        """Test that experimental options default to empty dict."""
+        executor = Executor(mode=get_mocked_backend())
+        self.assertEqual(executor.options.experimental, {})
+
+    def test_experimental_options_from_dict(self):
+        """Test constructing with experimental options in dict."""
+        opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
+        executor = Executor(mode=get_mocked_backend(), options=opts_dict)
+        self.assertEqual(executor.options.experimental, {"foo": "bar", "baz": 123})
+
+    def test_experimental_options_from_instance(self):
+        """Test constructing with an ExecutorOptions instance with experimental options."""
+        opts = ExecutorOptions(experimental={"custom_key": "custom_value"})
+        executor = Executor(mode=get_mocked_backend(), options=opts)
+        self.assertEqual(executor.options.experimental, {"custom_key": "custom_value"})
+
+    def test_experimental_options_setter(self):
+        """Test setting experimental options via the setter."""
+        executor = Executor(mode=get_mocked_backend())
+        executor.options = {"experimental": {"test": "value"}}
+        self.assertEqual(executor.options.experimental, {"test": "value"})
+
 
 class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""
