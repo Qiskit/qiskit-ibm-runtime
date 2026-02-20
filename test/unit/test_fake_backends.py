@@ -25,6 +25,8 @@ from qiskit.circuit.library import (
     CZGate,
     ECRGate,
 )
+from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+from qiskit.transpiler import InstructionProperties, Target
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
@@ -120,7 +122,21 @@ class TestFakeBackends(IBMTestCase):
             config_dict = configuration.to_dict()
             roundtrip_config = configuration.from_dict(config_dict)
             self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
+            
+    @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
+    def test_backend_full_two_qubit_gate_mapping(self, backend):
+        gate_map = get_standard_gate_name_mapping()
+        target = backend.target
 
+        two_qubit_gate_properties: list[dict[tuple[int, int], InstructionProperties]] = [
+            properties for gate_name, properties in target.items() 
+            if gate_name in gate_map and gate_map[gate_name].num_qubits == 2
+        ]
+        for properties in two_qubit_gate_properties:
+            for (qubit_i, qubit_j) in properties.keys():
+                self.assertTrue((qubit_j, qubit_i) in properties, f"Missing 2 qubit gate between qubits {qubit_j} and {qubit_i} in backend {backend.backend_name}")
+                    
+                    
     def test_delay_circuit(self):
         backend = FakeMumbaiV2()
         qc = QuantumCircuit(2)  # pylint: disable=invalid-name

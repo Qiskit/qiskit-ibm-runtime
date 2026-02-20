@@ -80,7 +80,7 @@ class FakeBackendsTest(IBMTestCase):
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
         self.assertEqual(backend.name, backend_name)
-
+        
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
         """
