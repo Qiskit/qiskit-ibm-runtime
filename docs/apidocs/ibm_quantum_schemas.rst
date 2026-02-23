@@ -2,7 +2,7 @@
 IBM Quantum Schemas (:mod:`ibm_quantum_schemas`)
 ************************************************
 
-The ``ibm_quantum_schemas`` package contains the Pydantic models that describe the inputs and
+The ``ibm_quantum_schemas`` package contains the ``Pydantic`` models that describe the inputs and
 outputs of IBM Quantum primitives and programs, to allow easier programmatic interfacing from
 Python.
 
