@@ -7,6 +7,9 @@
 
 .. currentmodule:: {{ module }}
 
+{% if fullname.startswith('ibm_quantum_schemas') %}
+.. autopydantic_model:: {{ objname }}
+{% else %}
 .. autoclass:: {{ objname }}
    :no-members:
    :no-inherited-members:
@@ -36,3 +39,4 @@
 
    {% endif %}
 {% endblock %}
+{% endif %}

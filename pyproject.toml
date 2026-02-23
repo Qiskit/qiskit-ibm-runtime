@@ -188,6 +188,7 @@ documentation = [
     "sphinx-autodoc-typehints<=1.19.2",
     "jupyter-sphinx",
     "sphinxcontrib-katex==0.9.9",
+    "autodoc_pydantic==2.2.0",
     "packaging",
 ]
 

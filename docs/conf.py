@@ -42,6 +42,7 @@ extensions = [
     "nbsphinx",
     "sphinxcontrib.katex",
     "matplotlib.sphinxext.plot_directive",
+    "sphinxcontrib.autodoc_pydantic",
 ]
 templates_path = ["_templates"]
 
@@ -110,6 +111,14 @@ autodoc_type_aliases = {
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 
+# Disable jsonschema preview, as some models cannot be serializable.
+autodoc_pydantic_model_show_json = False
+
+# Disable field summary, as it uses the full module name, causing long lines.
+autodoc_pydantic_model_show_field_summary = False
+
+# Disable validator summary, as we are hiding the field summary.
+autodoc_pydantic_model_show_validator_summary = False
 
 # If true, figures, tables and code-blocks are automatically numbered if they
 # have a caption.
