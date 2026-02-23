@@ -97,7 +97,7 @@ intersphinx_mapping = {
 
 autosummary_generate = True
 autosummary_generate_overwrite = False
-autoclass_content = "both"
+autoclass_content = "class"
 autodoc_typehints = "description"
 autodoc_default_options = {
     "inherited-members": None,

@@ -12,6 +12,7 @@
    :no-inherited-members:
    :no-special-members:
    :show-inheritance:
+   :class-doc-from: both
 
 {% block attributes_summary %}
    {% if attributes %}
