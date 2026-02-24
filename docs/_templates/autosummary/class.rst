@@ -17,6 +17,8 @@
    :show-inheritance:
    :class-doc-from: both
 
+{% if fullname not in ['qiskit_ibm_runtime.Estimator', 'qiskit_ibm_runtime.Sampler'] %}
+{# Skip problematic re-imports, as autodoc cannot resolve the references to attributes / methods #}
 {% block attributes_summary %}
    {% if attributes %}
    .. rubric:: Attributes
@@ -39,4 +41,5 @@
 
    {% endif %}
 {% endblock %}
+{% endif %}
 {% endif %}
