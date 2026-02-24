@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 # -- Path setup --------------------------------------------------------------
+import importlib
 import inspect
 import os
 import re
@@ -29,6 +30,8 @@ language = "en"
 version = ""
 # The full version, including alpha/beta/rc tags
 release = '0.45.0'
+# The version of `ibm-quantum-schemas`
+ibm_quantum_schemas_release = importlib.metadata.version("ibm-quantum-schemas")
 
 # -- General configuration ---------------------------------------------------
 
@@ -192,17 +195,26 @@ GITHUB_BRANCH = determine_github_branch()
 
 
 def linkcode_resolve(domain, info):
-    if domain != "py":
-        return None
-
-    module_name = info["module"]
-    module = sys.modules.get(module_name)
-    if module is None or "qiskit_ibm_runtime" not in module_name:
-        return None
-
     def is_valid_code_object(obj):
         return inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
 
+    if domain != "py":
+        return None
+
+    # Find the module name, and do not return a link if not a known module.
+    module_name = info["module"]
+    module = sys.modules.get(module_name)
+    if module is None:
+        return None
+    else:
+        if "qiskit_ibm_runtime" in module_name:
+            package_name = "qiskit_ibm_runtime"
+        elif "ibm_quantum_schemas" in module_name:
+            package_name = "ibm_quantum_schemas"
+        else:
+            return None
+
+    # Get a reference to the object.
     obj = module
     for part in info["fullname"].split("."):
         try:
@@ -218,14 +230,14 @@ def linkcode_resolve(domain, info):
         if not is_valid_code_object(obj):
             return None
 
+    # Get the file name and the line numbers for the object.
     try:
         full_file_name = inspect.getsourcefile(obj)
     except TypeError:
         return None
-    if full_file_name is None or "/qiskit_ibm_runtime/" not in full_file_name:
+    if full_file_name is None or f"/{package_name}/" not in full_file_name:
         return None
-    file_name = full_file_name.split("/qiskit_ibm_runtime/")[-1]
-
+    file_name = full_file_name.split(f"/{package_name}/")[-1]
     try:
         source, lineno = inspect.getsourcelines(obj)
     except (OSError, TypeError):
@@ -233,4 +245,11 @@ def linkcode_resolve(domain, info):
     else:
         ending_lineno = lineno + len(source) - 1
         linespec = f"#L{lineno}-L{ending_lineno}"
-    return f"https://github.com/Qiskit/qiskit-ibm-runtime/tree/{GITHUB_BRANCH}/qiskit_ibm_runtime/{file_name}{linespec}"
+
+    # Build and return the GitHub URL.
+    if package_name == "ibm_quantum_schemas":
+        prefix = f"https://github.com/Qiskit/ibm-quantum-schemas/tree/{ibm_quantum_schemas_release}"
+    else:
+        prefix = f"https://github.com/Qiskit/qiskit-ibm-runtime/tree/{GITHUB_BRANCH}"
+
+    return f"{prefix}/{package_name}/{file_name}{linespec}"
