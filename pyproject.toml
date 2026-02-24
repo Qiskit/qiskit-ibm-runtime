@@ -183,7 +183,7 @@ common = [
 
 documentation = [
     "nbsphinx",
-    "Sphinx>=9",
+    "Sphinx>=8,<9",
     "sphinx-automodapi",
     "sphinx-autodoc-typehints<=1.19.2",
     "jupyter-sphinx",

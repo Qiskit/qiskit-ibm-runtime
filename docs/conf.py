@@ -106,7 +106,7 @@ autosummary_generate_overwrite = False
 autoclass_content = "class"
 autodoc_typehints = "description"
 autodoc_default_options = {
-    "inherited-members": None,
+    "inherited-members": "BaseModel",
     "show-inheritance": True,
 }
 autodoc_type_aliases = {
