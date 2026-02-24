@@ -69,6 +69,8 @@ vers = release.split(".")
 link_str = f" https://github.com/Qiskit/qiskit-ibm-runtime/blob/stable/{vers[0]}.{vers[1]}/docs/"
 nbsphinx_prolog += link_str + "{{ docname }}"
 
+# Make `ibm_quantum_schemas_version` available to the `.rst` files.
+rst_epilog = f".. |ibm_quantum_schemas_version| replace:: ``{ibm_quantum_schemas_release}``"
 
 # ----------------------------------------------------------------------------------
 # Patch 'Self' for Python < 3.11 if missing
