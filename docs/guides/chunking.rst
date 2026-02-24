@@ -295,29 +295,3 @@ Each :class:`~.qiskit_ibm_runtime.quantum_program.ChunkPart` contains:
 
 This is useful for understanding how the executor distributed work across shot loops, diagnosing
 performance issues, and verifying that chunk sizes behaved as expected.
-
-Summary
--------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
-
-   * - Concept
-     - Description
-   * - Chunk
-     - A group of bound circuits executed together in a single shot loop.
-   * - ``chunk_size``
-     - The number of bound circuits from an item in each shot loop. Set to ``None`` for
-       auto-chunking.
-   * - Auto-chunking
-     - A server-side heuristic that selects chunk sizes to fill shot loops as much as possible
-       while keeping sizes proportional to item sizes.
-   * - Cost functions
-     - System-defined functions (for example, instruction counts, circuit counts) that measure
-       the cost of a shot loop. Each must stay within its limit.
-   * - Session mode
-     - The only mode where manual ``chunk_size`` values are respected.
-   * - Chunk timing
-     - Per-chunk start/stop timestamps and item breakdowns, available in
-       ``result.metadata.chunk_timing``.
