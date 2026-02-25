@@ -14,8 +14,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
 from typing import Literal
+
+from dataclasses import asdict
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .twirling_options import TwirlingOptions
@@ -75,15 +78,15 @@ class SamplerOptions:
     """
 
     default_shots: int | None = 4096
-    dynamical_decoupling: DynamicalDecouplingOptions = field(
+    dynamical_decoupling: DynamicalDecouplingOptions = Field(
         default_factory=DynamicalDecouplingOptions
     )
-    execution: SamplerExecutionOptions = field(default_factory=SamplerExecutionOptions)
-    twirling: TwirlingOptions = field(default_factory=TwirlingOptions)
+    execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
+    twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     experimental: dict | None = None
 
     max_execution_time: int | None = None
-    environment: EnvironmentOptions = field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map SamplerOptions to ExecutorOptions.
