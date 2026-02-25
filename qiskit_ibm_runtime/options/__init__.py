@@ -61,6 +61,7 @@ Base primitive options
 
    EstimatorOptions
    SamplerOptions
+   ExecutorOptions
 
 
 Suboptions
@@ -71,12 +72,14 @@ Suboptions
    :nosignatures:
 
    NoiseLearnerOptions
+   NoiseLearnerV3Options
    DynamicalDecouplingOptions
    ResilienceOptionsV2
    LayerNoiseLearningOptions
    MeasureNoiseLearningOptions
    PecOptions
    ZneOptions
+   PostSelectionOptions
    TwirlingOptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
