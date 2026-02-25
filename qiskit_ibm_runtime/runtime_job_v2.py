@@ -116,11 +116,10 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     ) -> Any:
         """Return the results of the job.
 
-        The result will be post-processed if it is a QuantumProgramResult and
-        a post-processor is configured, according to the following precedence:
-        1. post_processor parameter (if provided)
-        2. Post-processor specified in result's passthrough_data
-        3. No post-processing (return raw decoded result)
+        If the decoded job results are of type QuantumProgramResult, and if a post processor is specified (explicitly by the users, or via the results' passthrough data),
+        the results are post-processed before being returned. If
+        provided, the user-specified `post_processor` takes precedence over the post processor specified in the 
+        passthrough data.
 
         Args:
             timeout: Number of seconds to wait for job.

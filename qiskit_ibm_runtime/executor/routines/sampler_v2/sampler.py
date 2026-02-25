@@ -226,5 +226,4 @@ class SamplerV2(BaseSamplerV2):
             pub_result = SamplerPubResult(data=data_bin, metadata={})
             pub_results.append(pub_result)
 
-        # Create and return PrimitiveResult with preserved metadata
         return PrimitiveResult(pub_results, metadata={"quantum_program_metadata": result.metadata})
