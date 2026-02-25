@@ -126,7 +126,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
             post_processor: Post-processor callable to apply to results.
                 Only applies to QuantumProgramResult. If provided, takes precedence
-                over post_processor specified in passthrough_data.
+                over ``post_processor`` specified in ``passthrough_data``.
 
         Returns:
             Runtime job result (post-processed if applicable).
@@ -168,8 +168,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         (from Executor jobs). Other result types are returned unchanged.
 
         Post-processing precedence:
-        1. post_processor_override parameter (if provided)
-        2. Post-processor from result's passthrough_data (if available)
+        1. ``post_processor_override`` parameter (if provided)
+        2. Post-processor from result's ``passthrough_data`` (if available)
         3. No post-processing (return result as-is)
 
         Args:
