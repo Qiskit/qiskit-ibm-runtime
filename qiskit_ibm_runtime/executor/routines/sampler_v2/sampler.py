@@ -216,11 +216,8 @@ class SamplerV2(BaseSamplerV2):
             first_meas_data = next(iter(item_data.values()))
             pub_shape = first_meas_data.shape[:-2]
 
-            # Create BitArray for each classical register found in the data
             bit_arrays = {}
             for creg_name, meas_data in item_data.items():
-                # Create BitArray from measurement data (bit array format)
-                # meas_data shape: (..., num_shots, num_clbits)
                 bit_array = BitArray.from_bool_array(meas_data)
                 bit_arrays[creg_name] = bit_array
 
