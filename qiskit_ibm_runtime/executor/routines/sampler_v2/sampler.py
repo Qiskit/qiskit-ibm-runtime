@@ -22,16 +22,17 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 from qiskit.providers import BackendV2
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
+from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic import build
 
 from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
 from ....session import Session
 from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult
-from ....quantum_program.quantum_program import CircuitItem
+from ....quantum_program.quantum_program import CircuitItem, SamplexItem
 from ....options.executor_options import ExecutorOptions
-
-from ..utils import validate_no_boxes, extract_shots_from_pubs
+from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
 from ..options.sampler_options import SamplerOptions
 
 logger = logging.getLogger(__name__)
@@ -58,21 +59,12 @@ def prepare(
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
         NotImplementedError: If unsupported options are enabled.
     """
-    # Extract and validate shots from pubs
-    shots = extract_shots_from_pubs(pubs, default_shots)
-
-    # Validate circuits don't contain boxes
-    for pub in pubs:
-        validate_no_boxes(pub.circuit)
 
     # Validate options
     if options.dynamical_decoupling.enable:
         raise NotImplementedError(
             "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
         )
-
-    if options.twirling.enable_gates or options.twirling.enable_measure:
-        raise NotImplementedError("Twirling is not yet supported in the executor-based SamplerV2.")
 
     if options.experimental is not None:
         if any(k != "image" for k in options.experimental.keys()):
@@ -81,22 +73,79 @@ def prepare(
                 "executor-based SamplerV2."
             )
 
-    # Create QuantumProgram with CircuitItem for each pub
-    items = []
-    for pub in pubs:
-        # Convert parameter values to numpy array
-        if pub.parameter_values.num_parameters > 0:
-            # Get the parameter values as a numpy array
-            param_values = pub.parameter_values.as_array()
-        else:
-            param_values = None
+    # Extract and validate shots from pubs
+    shots = extract_shots_from_pubs(pubs, default_shots)
 
-        items.append(
-            CircuitItem(
-                circuit=pub.circuit,
-                circuit_arguments=param_values,
+    twirling_options = options.twirling
+    # Check if twirling is enabled
+    twirling_enabled = twirling_options is not None and (
+        twirling_options.enable_gates or twirling_options.enable_measure
+    )
+    # Create items based on whether twirling is enabled
+    items = []
+    program_shots = shots  # Default: use pub shots
+
+    if not twirling_enabled:
+        # No twirling path: validate no boxes, create CircuitItem objects
+        for pub in pubs:
+            validate_no_boxes(pub.circuit)
+
+            # Convert parameter values to numpy array
+            if pub.parameter_values.num_parameters > 0:
+                param_values = pub.parameter_values.as_array()
+            else:
+                param_values = None
+
+            items.append(
+                CircuitItem(
+                    circuit=pub.circuit,
+                    circuit_arguments=param_values,
+                )
             )
+    else:
+        # Twirling path: create SamplexItem objects
+
+        # Calculate twirling shots parameters
+        num_rand, shots_per_rand = calculate_twirling_shots(
+            shots,
+            twirling_options.num_randomizations,
+            twirling_options.shots_per_randomization,
         )
+
+        # QuantumProgram.shots should be shots_per_randomization
+        program_shots = shots_per_rand
+
+        # Create boxing pass manager with twirling options
+        boxing_pm = generate_boxing_pass_manager(
+            enable_gates=bool(twirling_options.enable_gates),
+            enable_measures=bool(twirling_options.enable_measure),
+            twirling_strategy=twirling_options.strategy.replace("-", "_"),
+        )
+
+        for pub in pubs:
+            boxed_circuit = boxing_pm.run(pub.circuit)
+            template_circuit, samplex = build(boxed_circuit)
+
+            # Prepare samplex_arguments
+            if pub.parameter_values.num_parameters > 0:
+                param_array = pub.parameter_values.as_array()
+                samplex_args = {"parameter_values": param_array}
+                # Shape should be (num_rand,) + parameter_sweep_shape
+                param_shape = param_array.shape[:-1]  # Remove last dimension (num_parameters)
+                item_shape = (num_rand,) + param_shape
+            else:
+                samplex_args = {}
+                item_shape = (num_rand,)
+
+            # Create SamplexItem
+            items.append(
+                SamplexItem(
+                    circuit=template_circuit,
+                    samplex=samplex,
+                    samplex_arguments=samplex_args,
+                    shape=item_shape,
+                )
+            )
 
     # Prepare passthrough_data with post-processor info
     passthrough_data = {
@@ -108,7 +157,7 @@ def prepare(
 
     # Create QuantumProgram
     quantum_program = QuantumProgram(
-        shots=shots,
+        shots=program_shots,
         items=items,
         passthrough_data=passthrough_data,
         meas_level=options.execution.meas_type,
@@ -132,6 +181,7 @@ class SamplerV2(BaseSamplerV2):
     - ``default_shots``: Default number of shots (default: 4096)
     - ``execution.init_qubits``: Whether to reset qubits (maps to executor)
     - ``execution.rep_delay``: Repetition delay (maps to executor)
+    - ``twirling.*``: Twirling options (see :class:`TwirlingOptions`)
     - ``environment.*``: Environment options (log_level, job_tags, private)
     - ``max_execution_time``: Maximum execution time
     - ``experimental.image``: Runtime image
@@ -139,12 +189,11 @@ class SamplerV2(BaseSamplerV2):
     **Unsupported Options (will raise NotImplementedError):**
 
     - ``dynamical_decoupling``: Dynamical decoupling sequences
-    - ``twirling``: Pauli twirling
     - ``experimental.*``: Other experimental options
 
     **Other Limitations:**
 
-    - Circuits must not contain BoxOp instructions
+    - When twirling is disabled, circuits must not contain BoxOp instructions
 
     Example:
         .. code-block:: python
