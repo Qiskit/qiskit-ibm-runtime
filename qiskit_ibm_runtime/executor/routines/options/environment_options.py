@@ -14,8 +14,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
 from typing import Literal
+
+from pydantic import Field
+from pydantic.dataclasses import dataclass
+
 from ....options.executor_options import EnvironmentOptions as ExecutorEnvironemntOptions
 
 
@@ -37,9 +40,13 @@ class EnvironmentOptions:
     """
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "WARNING"
-    job_tags: list[str] = field(default_factory=list)
+    job_tags: list[str] = Field(default_factory=list)
     private: bool = False
 
     def to_executor_environment_options(self) -> ExecutorEnvironemntOptions:
         """Converts the environment options to executor environment options."""
-        return ExecutorEnvironemntOptions(**asdict(self))
+        return ExecutorEnvironemntOptions(
+            log_level=self.log_level,
+            job_tags=self.job_tags,
+            private=self.private,
+        )
