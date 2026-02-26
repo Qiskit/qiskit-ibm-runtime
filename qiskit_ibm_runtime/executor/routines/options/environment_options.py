@@ -48,4 +48,4 @@ class EnvironmentOptions:
             log_level=self.log_level,
             job_tags=self.job_tags,
             private=self.private,
-        )
+        )  # type: ignore[call-arg]

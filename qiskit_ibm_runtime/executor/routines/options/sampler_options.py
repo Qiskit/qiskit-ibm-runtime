@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from dataclasses import asdict
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
@@ -52,7 +51,7 @@ class SamplerExecutionOptions(ExecutionOptions):
         """Convert to execution options.
 
         This drops the `meas_type` field, which is passed as part of the QuantumProgram."""
-        fields = asdict(self)
+        fields = dict(vars(self))
         fields.pop("meas_type")
         return ExecutionOptions(**fields)
 
