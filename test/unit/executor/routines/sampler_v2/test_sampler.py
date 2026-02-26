@@ -788,21 +788,6 @@ class TestPrepareOptionsHandling(unittest.TestCase):
 
         self.assertIn("Twirling", str(context.exception))
 
-    def test_prepare_validates_experimental_options(self):
-        """Test that prepare raises error for unsupported experimental options."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.experimental = {"unsupported_key": "value"}
-
-        with self.assertRaises(NotImplementedError) as context:
-            prepare([pub], options)
-
-        self.assertIn("Experimental options", str(context.exception))
-
     def test_prepare_allows_experimental_image(self):
         """Test that prepare allows experimental.image."""
         circuit = QuantumCircuit(1, 1)

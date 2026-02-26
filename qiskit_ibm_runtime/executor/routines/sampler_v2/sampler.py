@@ -75,13 +75,6 @@ def prepare(
     if options.twirling.enable_gates or options.twirling.enable_measure:
         raise NotImplementedError("Twirling is not yet supported in the executor-based SamplerV2.")
 
-    if options.experimental is not None:
-        if any(k != "image" for k in options.experimental.keys()):
-            raise NotImplementedError(
-                "Experimental options (except image) are not supported in the "
-                "executor-based SamplerV2."
-            )
-
     # Create QuantumProgram with CircuitItem for each pub
     items = []
     for pub in pubs:
