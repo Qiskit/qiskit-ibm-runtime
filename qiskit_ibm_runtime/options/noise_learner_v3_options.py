@@ -111,7 +111,8 @@ class NoiseLearnerV3Options(BaseOptions):
 
     def to_options_model(self, schema_version: str) -> BaseModel:
         """Turn these options into an ``OptionsModel`` object.
-        Filters out every irrelevant field (i.e., those that are not fields of :class:`.OptionsModel`).
+
+        Filters out every irrelevant field (i.e., those that are not fields of ``OptionsModel``).
         """
         try:
             options_model = AVAILABLE_OPTIONS_MODELS[schema_version]
@@ -128,6 +129,7 @@ class NoiseLearnerV3Options(BaseOptions):
 
     def to_runtime_options(self) -> dict:
         """Turn these options into a dictionary of runtime options object.
+
         Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
         and replaces ``Unset``\\s with ``None``\\s.
         """
