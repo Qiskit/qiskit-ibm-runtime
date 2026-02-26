@@ -20,12 +20,14 @@ import logging
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 from qiskit.providers import BackendV2
+from qiskit.primitives import PrimitiveResult
+from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
 from ....session import Session
 from ....batch import Batch
-from ....quantum_program import QuantumProgram
+from ....quantum_program import QuantumProgram, QuantumProgramResult
 from ....quantum_program.quantum_program import CircuitItem
 
 from ..utils import validate_no_boxes, extract_shots_from_pubs
@@ -41,7 +43,8 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
-        A QuantumProgram containing CircuitItem objects for each pub.
+        A QuantumProgram containing CircuitItem objects for each pub,
+        with passthrough_data configured for SamplerV2 post-processing.
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
@@ -70,7 +73,15 @@ def prepare(pubs: list[SamplerPub], default_shots: int | None = None) -> Quantum
             )
         )
 
-    return QuantumProgram(shots=shots, items=items)
+    # Prepare passthrough_data with post-processor info
+    passthrough_data = {
+        "post_processor": {
+            "context": "sampler_v2",
+            "version": "v1",
+        },
+    }
+
+    return QuantumProgram(shots=shots, items=items, passthrough_data=passthrough_data)
 
 
 class SamplerV2(BaseSamplerV2):
@@ -179,3 +190,40 @@ class SamplerV2(BaseSamplerV2):
         # Return a minimal options object for compatibility
         # In future phases, this will return a proper SamplerOptions instance
         return None
+
+    @staticmethod
+    def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
+        """Convert QuantumProgramResult to PrimitiveResult.
+
+        Args:
+            result: The (possibly post-processed) quantum program result.
+
+        Returns:
+            PrimitiveResult containing SamplerPubResult objects.
+
+        Raises:
+            ValueError: If data is malformed or inconsistent
+        """
+        # Build SamplerPubResult for each pub
+        pub_results = []
+        for idx, item_data in enumerate(result):
+            # Validate that measurement data exists
+            if not item_data:
+                raise ValueError(f"Pub {idx} has no measurement data")
+
+            # Infer pub_shape from the first classical register's data
+            # meas_data shape: (...pub_shape..., num_shots, num_bits)
+            first_meas_data = next(iter(item_data.values()))
+            pub_shape = first_meas_data.shape[:-2]
+
+            bit_arrays = {}
+            for creg_name, meas_data in item_data.items():
+                bit_array = BitArray.from_bool_array(meas_data)
+                bit_arrays[creg_name] = bit_array
+
+            data_bin = DataBin(**bit_arrays, shape=pub_shape)
+
+            pub_result = SamplerPubResult(data=data_bin, metadata={})
+            pub_results.append(pub_result)
+
+        return PrimitiveResult(pub_results, metadata={"quantum_program_metadata": result.metadata})
