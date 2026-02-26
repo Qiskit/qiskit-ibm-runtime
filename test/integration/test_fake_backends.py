@@ -24,7 +24,7 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.fake_provider import FakeSherbrooke, FakeProviderForBackendV2
+from qiskit_ibm_runtime.fake_provider import FakeVigoV2, FakeSherbrooke, FakeProviderForBackendV2
 
 from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
 from ..decorators import production_only
