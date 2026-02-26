@@ -51,7 +51,7 @@ class TestFakeBackends(IBMTestCase):
         cls.circuit.h(1)
         cls.circuit.x(0)
         cls.circuit.x(1)
-        cls.circuit.measure_all()
+        cls.circuit.measure_active()
 
     @data(*[be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1])
     def test_circuit_on_fake_backend_v2(self, backend):
@@ -71,7 +71,7 @@ class TestFakeBackends(IBMTestCase):
     @data(0, 1, 2, 3)
     def test_circuit_on_fake_backend_v2_with_optimization_level(self, optimization_level):
         """Test running a circuit in a fake backend with different optimization level."""
-        backend = FakeSherbrooke()
+        backend = FakeVigoV2()
         backend.set_options(seed_simulator=42)
         pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
         isa_circuit = pm.run(self.circuit)
