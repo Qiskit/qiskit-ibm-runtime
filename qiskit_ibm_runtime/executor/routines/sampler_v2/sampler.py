@@ -29,7 +29,7 @@ from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
 from ....session import Session
 from ....batch import Batch
-from ....quantum_program import QuantumProgram, QuantumProgramResult
+from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
 from ....quantum_program.quantum_program import CircuitItem, SamplexItem
 from ....options.executor_options import ExecutorOptions
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
@@ -83,7 +83,7 @@ def prepare(
         twirling_options.enable_gates or twirling_options.enable_measure
     )
     # Create items based on whether twirling is enabled
-    items = []
+    items: list[QuantumProgramItem] = []
     program_shots = shots  # Default: use pub shots
 
     if not twirling_enabled:
