@@ -110,6 +110,7 @@ jobs:
           flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
           parallel: true
           file: coverage.lcov
+          fail-on-error: false
   integration-tests:
     if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
@@ -157,3 +158,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+          fail-on-error: false
