@@ -75,6 +75,13 @@ def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) ->
             raise ValueError(f"Item {item} is not valid.")
         model_items.append(model_item)
 
+    # Build options dict starting with execution options
+    options_dict = asdict(options.execution)  # type: ignore[call-overload]
+
+    # Add experimental options if provided
+    if options.experimental:
+        options_dict["experimental"] = options.experimental
+
     return ParamsModel(
         quantum_program=QuantumProgramModel(
             shots=program.shots,
@@ -82,7 +89,7 @@ def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) ->
             meas_level=program.meas_level,
             passthrough_data=program.passthrough_data,
         ),
-        options=asdict(options.execution),  # type: ignore[call-overload]
+        options=options_dict,
     )
 
 

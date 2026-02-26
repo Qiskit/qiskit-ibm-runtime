@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from dataclasses import asdict
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
@@ -48,11 +47,11 @@ class SamplerExecutionOptions(ExecutionOptions):
 
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
 
-    def to_executor_execution_options(self) -> ExecutionOptions:
+    def to_executor_options(self) -> ExecutionOptions:
         """Convert to execution options.
 
         This drops the `meas_type` field, which is passed as part of the QuantumProgram."""
-        fields = asdict(self)
+        fields = dict(vars(self))
         fields.pop("meas_type")
         return ExecutionOptions(**fields)
 
@@ -89,23 +88,23 @@ class SamplerOptions:
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
 
     def to_executor_options(self) -> ExecutorOptions:
-        """Map SamplerOptions to ExecutorOptions.
+        """Map SamplerOptions to ExecutorOptions, , ignoring all irrelevant fields.
 
         Returns:
             ExecutorOptions: Mapped executor options.
         """
         executor_options = ExecutorOptions()
 
-        # Map execution options
-        executor_options.execution = self.execution.to_executor_execution_options()
+        executor_options.execution = self.execution.to_executor_options()
+        executor_options.environment = self.environment.to_executor_options()
 
-        # Map environment options
-        executor_options.environment = self.environment.to_executor_environment_options()
-
-        if (max_exec_time := self.max_execution_time) is not None:
-            executor_options.environment.max_execution_time = max_exec_time
+        if self.max_execution_time is not None:
+            executor_options.environment.max_execution_time = self.max_execution_time
 
         if self.experimental is not None and "image" in self.experimental:
             executor_options.environment.image = self.experimental["image"]
+
+        if self.experimental is not None:
+            executor_options.experimental.update(self.experimental)
 
         return executor_options

@@ -19,34 +19,33 @@ from typing import Literal
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ....options.executor_options import EnvironmentOptions as ExecutorEnvironemntOptions
+from ....options.executor_options import EnvironmentOptions as ExecutorEnvironmentOptions
 
 
 @dataclass
 class EnvironmentOptions:
-    """Options related to the execution environment.
-
-    Args:
-        log_level: Logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-        job_tags: Tags to be assigned to the job. The tags can subsequently be used
-            as a filter in job queries.
-        private: Whether the job is marked as private. When set to ``True``,
-            input parameters are not returned, and the results can only be read once.
-            After the job is completed, input parameters are deleted from the service.
-            After the results are read, these are also deleted from the service.
-            When set to ``False``, the input parameters and results follow the
-            standard retention behavior of the API.
-    """
+    """Options related to the execution environment."""
 
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "WARNING"
-    job_tags: list[str] = Field(default_factory=list)
-    private: bool = False
+    """Logging level to set in the execution environment. The valid
+    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``."""
 
-    def to_executor_environment_options(self) -> ExecutorEnvironemntOptions:
+    job_tags: list[str] = Field(default_factory=list)
+    """Tags to be assigned to the job. The tags can subsequently be used
+    as a filter in job queries."""
+
+    private: bool = False
+    """Whether the job is marked as private. When set to ``True``,
+    input parameters are not returned, and the results can only be read once.
+    After the job is completed, input parameters are deleted from the service.
+    After the results are read, these are also deleted from the service.
+    When set to ``False``, the input parameters and results follow the
+    standard retention behavior of the API."""
+
+    def to_executor_options(self) -> ExecutorEnvironmentOptions:
         """Converts the environment options to executor environment options."""
-        return ExecutorEnvironemntOptions(
+        return ExecutorEnvironmentOptions(
             log_level=self.log_level,
             job_tags=self.job_tags,
             private=self.private,
-        )
+        )  # type: ignore[call-arg]

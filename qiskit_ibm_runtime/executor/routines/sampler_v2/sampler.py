@@ -52,7 +52,8 @@ def prepare(
 
     Returns:
         A tuple containing:
-        - QuantumProgram with CircuitItem objects for each pub
+        - QuantumProgram with CircuitItem objects for each pub,
+            with passthrough_data configured for SamplerV2 post-processing
         - ExecutorOptions mapped from SamplerOptions
 
     Raises:
@@ -184,11 +185,12 @@ class SamplerV2(BaseSamplerV2):
     - ``twirling.*``: Twirling options (see :class:`TwirlingOptions`)
     - ``environment.*``: Environment options (log_level, job_tags, private)
     - ``max_execution_time``: Maximum execution time
-    - ``experimental.image``: Runtime image
+    - ``experimental``: Experimental options (including image)
 
     **Unsupported Options (will raise NotImplementedError):**
 
     - ``dynamical_decoupling``: Dynamical decoupling sequences
+    - ``twirling``: Pauli twirling
     - ``experimental.*``: Other experimental options
 
     **Other Limitations:**

@@ -21,35 +21,38 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class TwirlingOptions:
-    """Twirling options.
-
-    Args:
-        enable_gates: Whether to apply 2-qubit Clifford gate twirling.
-        enable_measure: Whether to enable twirling of measurement instructions.
-            Twirling is only applied to measurements that are not involved in a
-            conditional block. The default value depends on the primitive:
-            ``True`` for Estimator, ``False`` for Sampler.
-        num_randomizations: The number of random samples to use when twirling or
-            performing sampled mitigation. If ``"auto"``, the value is determined
-            automatically based on the input PUB and other options.
-        shots_per_randomization: The number of shots to run for each random sample.
-            If ``"auto"``, the value is determined automatically based on the input
-            PUB and other options.
-        strategy: Specify the strategy of twirling qubits in identified layers of
-            2-qubit twirled gates.
-
-            * ``"active"``: Only the instruction qubits in each individual twirled
-              layer will be twirled.
-            * ``"active-circuit"``: The union of all instruction qubits in the circuit
-              will be twirled in each twirled layer.
-            * ``"active-accum"``: The union of instructions qubits in the circuit up to
-              the current twirled layer will be twirled in each individual twirled layer.
-            * ``"all"``: All qubits in the input circuit will be twirled in each
-              twirled layer.
-    """
+    """Twirling options."""
 
     enable_gates: bool = False
+    """Whether to apply 2-qubit Clifford gate twirling."""
+
     enable_measure: bool | None = None
+    """Whether to enable twirling of measurement instructions.
+    Twirling is only applied to measurements that are not involved in a
+    conditional block. The default value depends on the primitive:
+    ``True`` for Estimator, ``False`` for Sampler.
+    """
     num_randomizations: int | Literal["auto"] = "auto"
+    """The number of random samples to use when twirling or
+    performing sampled mitigation. If ``"auto"``, the value is determined
+    automatically based on the input PUB and other options."""
+
     shots_per_randomization: int | Literal["auto"] = "auto"
+    """The number of shots to run for each random sample.
+    If ``"auto"``, the value is determined automatically based on the input
+    PUB and other options.
+    """
+
     strategy: Literal["active", "active-accum", "active-circuit", "all"] = "active-accum"
+    """Specify the strategy of twirling qubits in identified layers of
+    2-qubit twirled gates.
+
+      * ``"active"``: Only the instruction qubits in each individual twirled
+        layer will be twirled.
+      * ``"active-circuit"``: The union of all instruction qubits in the circuit
+        will be twirled in each twirled layer.
+      * ``"active-accum"``: The union of instructions qubits in the circuit up to
+        the current twirled layer will be twirled in each individual twirled layer.
+      * ``"all"``: All qubits in the input circuit will be twirled in each
+        twirled layer.
+    """

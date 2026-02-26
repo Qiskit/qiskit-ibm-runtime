@@ -152,5 +152,12 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         # Image should still be mapped
         self.assertEqual(executor_options.environment.image, "test:v1")
 
+    def test_experimental_dict_carry_over(self):
+        """Test that experimental dict is carried over to executor options."""
+        options = SamplerOptions()
+        options.experimental = {"custom_key": "custom_value", "another_key": 123}
+        executor_options = options.to_executor_options()
 
-# Made with Bob
+        # Check that experimental dict is carried over
+        self.assertEqual(executor_options.experimental["custom_key"], "custom_value")
+        self.assertEqual(executor_options.experimental["another_key"], 123)
