@@ -135,13 +135,12 @@ class SamplerV2(BaseSamplerV2):
     - ``execution.rep_delay``: Repetition delay (maps to executor)
     - ``environment.*``: Environment options (log_level, job_tags, private)
     - ``max_execution_time``: Maximum execution time
-    - ``experimental.image``: Runtime image
+    - ``experimental``: Experimental options (including image)
 
     **Unsupported Options (will raise NotImplementedError):**
 
     - ``dynamical_decoupling``: Dynamical decoupling sequences
     - ``twirling``: Pauli twirling
-    - ``experimental.*``: Other experimental options
 
     **Other Limitations:**
 
