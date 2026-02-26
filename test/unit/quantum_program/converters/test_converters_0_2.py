@@ -88,13 +88,17 @@ class TestQuantumProgramConverters(IBMTestCase):
             chunk_size=7,
         )
 
-        options = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
+        experimental_opts = {"custom_option": "test_value", "another_key": 123}
+        options = ExecutorOptions(
+            execution=ExecutionOptions(init_qubits=False), experimental=experimental_opts
+        )
 
         params_model = quantum_program_to_0_2(quantum_program, options)
 
         self.assertEqual(params_model.schema_version, "v0.2")
         self.assertEqual(params_model.options.init_qubits, False)
         self.assertEqual(params_model.options.rep_delay, None)
+        self.assertEqual(params_model.options.experimental, experimental_opts)
 
         quantum_program_model = params_model.quantum_program
         self.assertEqual(quantum_program_model.shots, shots)

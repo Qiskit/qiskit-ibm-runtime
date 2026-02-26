@@ -51,7 +51,8 @@ def prepare(
 
     Returns:
         A tuple containing:
-        - QuantumProgram with CircuitItem objects for each pub
+        - QuantumProgram with CircuitItem objects for each pub,
+            with passthrough_data configured for SamplerV2 post-processing
         - ExecutorOptions mapped from SamplerOptions
 
     Raises:
