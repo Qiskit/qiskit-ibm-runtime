@@ -21,15 +21,7 @@ from pydantic.dataclasses import dataclass
 
 @dataclass
 class DynamicalDecouplingOptions:
-    """Options for dynamical decoupling (DD).
-
-    Args:
-        enable:
-        sequence_type:
-        extra_slack_distribution:
-        scheduling_method:
-        skip_reset_qubits:
-    """
+    """Options for dynamical decoupling (DD)."""
 
     enable: bool = False
     """Whether to enable DD as specified by the other options in this class."""
@@ -53,6 +45,7 @@ class DynamicalDecouplingOptions:
     """
     scheduling_method: Literal["alap", "asap"] = "alap"
     """Whether to schedule gates as soon as ("asap") or as late as ("alap") possible."""
+    
     skip_reset_qubits: bool = False
     """Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
     Since qubits in the ground state are less susceptible to decoherence, it can be beneficial
