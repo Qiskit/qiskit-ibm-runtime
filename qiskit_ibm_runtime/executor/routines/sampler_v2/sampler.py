@@ -190,8 +190,6 @@ class SamplerV2(BaseSamplerV2):
     **Unsupported Options (will raise NotImplementedError):**
 
     - ``dynamical_decoupling``: Dynamical decoupling sequences
-    - ``twirling``: Pauli twirling
-    - ``experimental.*``: Other experimental options
 
     **Other Limitations:**
 
