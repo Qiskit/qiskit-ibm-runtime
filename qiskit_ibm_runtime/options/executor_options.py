@@ -86,3 +86,6 @@ class ExecutorOptions:
 
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
     """Low-level execution options."""
+
+    experimental: dict = Field(default_factory=dict)
+    """Experimental options that are passed to the executor."""
