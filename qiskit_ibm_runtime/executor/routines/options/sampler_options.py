@@ -101,11 +101,12 @@ class SamplerOptions:
         executor_options = ExecutorOptions()
 
         executor_options.environment = self.environment.to_executor_options()
+        executor_options.execution = self.execution.to_executor_options()
+
         executor_options.environment.max_execution_time = self.max_execution_time
+
         if self.experimental:
             executor_options.environment.image = self.experimental.pop("image", None)
-
-        executor_options.execution = self.execution.to_executor_options()
-        executor_options.experimental.update(self.experimental)
+            executor_options.experimental.update(self.experimental)
 
         return executor_options
