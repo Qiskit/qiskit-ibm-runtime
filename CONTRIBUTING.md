@@ -37,10 +37,6 @@ pip install -e ".[visualization]"
 ``` {.bash}
 pip install -e ".[dev]"
 ```
-- Install the integration tests dependencies
-``` {.bash}
-pip install -e ".[integration]"
-```
 
 ### Open an issue
 

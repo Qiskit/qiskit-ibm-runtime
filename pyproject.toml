@@ -83,12 +83,13 @@ target-version = "py310"
 future-annotations = true
 select = [
     # Rules in alphabetic order
-    "C4",    # flake8-comprehensions
-    "E",     # pycodestyle
-    "F",     # pyflake
-    "G",     # flake8-logging-format
-    "T10",   # flake8-debugger
-    "UP",    # pyupgrade
+    "C4",     # flake8-comprehensions
+    "E",      # pycodestyle
+    "F",      # pyflake
+    "G",      # flake8-logging-format
+    "T10",    # flake8-debugger
+    "UP",     # pyupgrade
+    "RUF013", # implicit-optional
 ]
 ignore = [
     "E501",  # line-too-long: black handles line length
@@ -164,6 +165,7 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 common = [
     "mypy==1.19.0",
     "pylint==3.0.0",
+    "pproxy==2.7.8",
     "nbqa==1.5.3",
     "matplotlib>=2.1",
     "jupyter",
@@ -191,16 +193,10 @@ documentation = [
 
 visualization = ["plotly>=5.23.0"]
 test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
-integration_test_proxy = ["mitmproxy"]
 
 dev = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
-]
-
-integration = [
-    "qiskit-ibm-runtime[dev]",
-    "qiskit-ibm-runtime[integration_test_proxy]"
 ]
