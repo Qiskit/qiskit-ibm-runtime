@@ -36,6 +36,7 @@ class DynamicalDecouplingOptions:
 
     extra_slack_distribution: Literal["middle", "edges"] = "middle"
     """Where to put extra timing delays due to rounding issues.
+    
     Rounding issues arise because the discrete time step ``dt`` of the system cannot
     be divided.
 
@@ -43,9 +44,10 @@ class DynamicalDecouplingOptions:
     * ``"edges"``: Divide the extra slack as evenly as possible into intervals at beginning
         and end of the sequence.
     """
+
     scheduling_method: Literal["alap", "asap"] = "alap"
     """Whether to schedule gates as soon as ("asap") or as late as ("alap") possible."""
-    
+
     skip_reset_qubits: bool = False
     """Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
     Since qubits in the ground state are less susceptible to decoherence, it can be beneficial
