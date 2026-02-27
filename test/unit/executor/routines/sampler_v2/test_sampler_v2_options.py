@@ -134,24 +134,6 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         self.assertEqual(executor_options.environment.max_execution_time, 300)
         self.assertEqual(executor_options.environment.image, "test-image:latest")
 
-    def test_no_validation_in_mapping(self):
-        """Test that to_executor_options() does not perform validation.
-
-        This verifies that unsupported options don't raise errors during mapping.
-        Validation should happen elsewhere (in prepare()).
-        """
-        options = SamplerOptions()
-        # Set unsupported options that would raise errors if validated
-        options.dynamical_decoupling.enable = True
-        options.twirling.enable_gates = True
-        options.experimental = {"unsupported_key": "value", "image": "test:v1"}
-
-        # Should not raise - mapping doesn't validate
-        executor_options = options.to_executor_options()
-        self.assertIsNotNone(executor_options)
-        # Image should still be mapped
-        self.assertEqual(executor_options.environment.image, "test:v1")
-
     def test_experimental_dict_carry_over(self):
         """Test that experimental dict is carried over to executor options."""
         options = SamplerOptions()

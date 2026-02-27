@@ -71,7 +71,6 @@ def prepare(
     shots = extract_shots_from_pubs(pubs, default_shots)
 
     twirling_options = options.twirling
-    # Check if twirling is enabled
     twirling_enabled = twirling_options is not None and (
         twirling_options.enable_gates or twirling_options.enable_measure
     )
@@ -99,17 +98,14 @@ def prepare(
     else:
         # Twirling path: create SamplexItem objects
 
-        # Calculate twirling shots parameters
         num_rand, shots_per_rand = calculate_twirling_shots(
             shots,
             twirling_options.num_randomizations,
             twirling_options.shots_per_randomization,
         )
 
-        # QuantumProgram.shots should be shots_per_randomization
         program_shots = shots_per_rand
 
-        # Create boxing pass manager with twirling options
         boxing_pm = generate_boxing_pass_manager(
             enable_gates=bool(twirling_options.enable_gates),
             enable_measures=bool(twirling_options.enable_measure),
@@ -141,7 +137,6 @@ def prepare(
                 )
             )
 
-    # Prepare passthrough_data with post-processor info
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
