@@ -20,3 +20,4 @@
    debug_tools
    visualization
    models
+   ibm_quantum_schemas
