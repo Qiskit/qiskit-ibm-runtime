@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+from collections.abc import Callable
 from collections.abc import Sequence
 from concurrent import futures
 import logging
@@ -23,6 +24,7 @@ import time
 from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
+
 
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
@@ -37,6 +39,7 @@ from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob
+from .quantum_program.quantum_program_result import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -109,15 +112,24 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
+        post_processor: Callable[[QuantumProgramResult], Any] | None = None,
     ) -> Any:
         """Return the results of the job.
+
+        If the decoded job results are of type QuantumProgramResult, and if a post processor is specified
+        (explicitly by the users, or via the results' passthrough data), the results are post-processed
+        before being returned. If provided, the user-specified `post_processor` takes precedence over the
+        post processor specified in the passthrough data.
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            post_processor: Post-processor callable to apply to results.
+                Only applies to QuantumProgramResult. If provided, takes precedence
+                over ``post_processor`` specified in ``passthrough_data``.
 
         Returns:
-            Runtime job result.
+            Runtime job result (post-processed if applicable).
 
         Raises:
             RuntimeJobFailureError: If the job failed.
@@ -137,8 +149,75 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
+        result = _decoder.decode(result_raw) if result_raw else None
 
-        return _decoder.decode(result_raw) if result_raw else None
+        # Apply post-processing only if result is QuantumProgramResult
+        if result is not None:
+            result = self._apply_post_processing(result, post_processor)
+
+        return result
+
+    def _apply_post_processing(
+        self,
+        result: Any,
+        post_processor_override: Callable[[QuantumProgramResult], Any] | None = None,
+    ) -> Any:
+        """Apply post-processing to the decoded result.
+
+        Post-processing is only applied if the result is a QuantumProgramResult
+        (from Executor jobs). Other result types are returned unchanged.
+
+        Post-processing precedence:
+        1. ``post_processor_override`` parameter (if provided)
+        2. Post-processor from result's ``passthrough_data`` (if available)
+        3. No post-processing (return result as-is)
+
+        Args:
+            result: The decoded result
+            post_processor_override: Optional post-processor to use, overriding defaults
+
+        Returns:
+            Post-processed result or original result if no post-processing applies
+        """
+
+        # Only apply post-processing to QuantumProgramResult
+        if not isinstance(result, QuantumProgramResult):
+            return result
+
+        # Determine which post-processor to use
+        post_processor_fn = None
+
+        # Priority 1: Override parameter
+        if post_processor_override:
+            post_processor_fn = post_processor_override
+
+        # Priority 2: Post-processor from passthrough_data
+        if not post_processor_fn and isinstance(result.passthrough_data, dict):
+            if isinstance(
+                post_processor_info := result.passthrough_data.get("post_processor"), dict
+            ):
+                if post_processor_info.get("context") == "sampler_v2":
+                    # A post processor must be defined to maintain the contracts.
+                    try:
+                        version = str(post_processor_info["version"])
+                    except KeyError:
+                        raise ValueError("Could not determine a post-processor version.")
+
+                    # TODO: Circular import issue. Consider changing file structure.
+                    from .executor.routines.sampler_v2.sampler_post_processors import (  # pylint: disable=import-outside-toplevel
+                        SAMPLER_POST_PROCESSORS,
+                    )
+
+                    try:
+                        post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+                    except KeyError:
+                        raise ValueError(f"No post-processor found for version {version}.")
+
+        # Apply post-processing if we have a processor
+        if post_processor_fn:
+            return post_processor_fn(result)
+
+        return result
 
     def cancel(self) -> None:
         """Cancel the job.
