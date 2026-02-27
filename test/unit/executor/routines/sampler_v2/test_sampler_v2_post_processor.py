@@ -301,3 +301,74 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].data.meas.num_bits, 2)
         self.assertEqual(result[1].data.meas.num_bits, 3)
+
+    def test_post_processor_applies_bit_flips(self):
+        """Test that post-processor applies measurement twirling bit flips via XOR."""
+        num_shots = 10
+        num_bits = 3
+
+        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+        bit_flips = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+
+        # Store original data to verify XOR
+        original_meas = meas_data.copy()
+
+        qp_result = QuantumProgramResult(
+            data=[{"measurement_flips.meas": bit_flips, "meas": meas_data}],
+            metadata=Metadata(),
+        )
+
+        result = sampler_v2_post_processor_v1(qp_result)
+
+        # Verify measurement_flips register was removed
+        self.assertNotIn("measurement_flips.meas", result[0].data)
+        self.assertIn("meas", result[0].data)
+
+        # Verify the data in qp_result was XORed
+        expected_data = original_meas ^ bit_flips
+        np.testing.assert_array_equal(qp_result[0]["meas"], expected_data)
+
+    def test_post_processor_bit_flips_multiple_registers(self):
+        """Test bit flips with multiple classical registers."""
+        num_shots = 5
+        meas_data_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
+        meas_data_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
+        bit_flips_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
+        bit_flips_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
+
+        qp_result = QuantumProgramResult(
+            data=[
+                {
+                    "measurement_flips.c1": bit_flips_c1,
+                    "c1": meas_data_c1,
+                    "measurement_flips.c2": bit_flips_c2,
+                    "c2": meas_data_c2,
+                }
+            ],
+            metadata=Metadata(),
+        )
+
+        result = sampler_v2_post_processor_v1(qp_result)
+
+        # Verify flip registers removed
+        self.assertIn("c1", result[0].data)
+        self.assertIn("c2", result[0].data)
+        self.assertNotIn("measurement_flips.c1", result[0].data)
+        self.assertNotIn("measurement_flips.c2", result[0].data)
+
+    def test_post_processor_no_bit_flips(self):
+        """Test that post-processor works when no bit flips are present."""
+        num_shots = 10
+        num_bits = 3
+        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+
+        qp_result = QuantumProgramResult(
+            data=[{"meas": meas_data}],
+            metadata=Metadata(),
+        )
+
+        result = sampler_v2_post_processor_v1(qp_result)
+
+        self.assertIsInstance(result, PrimitiveResult)
+        self.assertEqual(len(result), 1)
+        self.assertIn("meas", result[0].data)
