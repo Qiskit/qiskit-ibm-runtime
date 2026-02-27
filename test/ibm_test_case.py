@@ -62,7 +62,7 @@ class IBMTestCase(TestCase):
         )
 
         # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
+        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit")
 
         # Ensure the artifact directory exists
         os.makedirs(cls.ARTIFACT_DIR, exist_ok=True)
