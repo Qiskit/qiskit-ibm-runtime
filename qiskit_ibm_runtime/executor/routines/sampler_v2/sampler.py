@@ -67,12 +67,6 @@ def prepare(
             "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
         )
 
-    if options.experimental is not None:
-        if any(k != "image" for k in options.experimental.keys()):
-            raise NotImplementedError(
-                "Experimental options (except image) are not supported in the "
-                "executor-based SamplerV2."
-            )
 
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
