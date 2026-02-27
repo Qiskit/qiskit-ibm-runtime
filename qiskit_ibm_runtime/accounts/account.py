@@ -318,6 +318,7 @@ class CloudAccount(Account):
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
+        catalog.set_disable_ssl_verification(not self.verify)
         client.set_service_url(get_global_search_api_url(self.url))
         catalog.set_service_url(get_global_catalog_api_url(self.url))
         search_cursor = None
