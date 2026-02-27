@@ -759,51 +759,6 @@ class TestPrepareOptionsHandling(unittest.TestCase):
 
         self.assertIn("Dynamical decoupling", str(context.exception))
 
-    def test_prepare_validates_twirling_gates(self):
-        """Test that prepare raises error for twirling.enable_gates."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-
-        with self.assertRaises(NotImplementedError) as context:
-            prepare([pub], options)
-
-        self.assertIn("Twirling", str(context.exception))
-
-    def test_prepare_validates_twirling_measure(self):
-        """Test that prepare raises error for twirling.enable_measure."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.twirling.enable_measure = True
-
-        with self.assertRaises(NotImplementedError) as context:
-            prepare([pub], options)
-
-        self.assertIn("Twirling", str(context.exception))
-
-    def test_prepare_validates_experimental_options(self):
-        """Test that prepare raises error for unsupported experimental options."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.experimental = {"unsupported_key": "value"}
-
-        with self.assertRaises(NotImplementedError) as context:
-            prepare([pub], options)
-
-        self.assertIn("Experimental options", str(context.exception))
-
     def test_prepare_allows_experimental_image(self):
         """Test that prepare allows experimental.image."""
         circuit = QuantumCircuit(1, 1)

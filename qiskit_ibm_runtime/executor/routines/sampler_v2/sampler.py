@@ -67,7 +67,6 @@ def prepare(
             "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
         )
 
-
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
 
