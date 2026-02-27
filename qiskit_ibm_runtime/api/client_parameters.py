@@ -27,7 +27,7 @@ class ClientParameters:
         self,
         channel: str,
         token: str,
-        url: str = None,
+        url: str | None = None,
         instance: str | None = None,
         proxies: ProxyConfiguration | None = None,
         verify: bool = True,

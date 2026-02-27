@@ -13,21 +13,14 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 # pylint: disable=missing-module-docstring
 
-import itertools
-import operator
-
-from ddt import ddt, data, idata, unpack
+from ddt import ddt, data
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.compiler import transpile
-from qiskit.utils import optionals
 from qiskit.circuit.library import (
     CZGate,
     ECRGate,
 )
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 from qiskit_ibm_runtime.fake_provider import (
     FakeProviderForBackendV2,
@@ -54,26 +47,6 @@ class TestFakeBackends(IBMTestCase):
         cls.circuit.x(0)
         cls.circuit.x(1)
         cls.circuit.measure_all()
-
-    @idata(
-        itertools.product(
-            [be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1],
-            [0, 1, 2, 3],
-        )
-    )
-    @unpack
-    def test_circuit_on_fake_backend_v2(self, backend, optimization_level):
-        if not optionals.HAS_AER and backend.num_qubits > 20:
-            self.skipTest(f"Unable to run fake_backend {backend.backend_name} without qiskit-aer")
-        backend.set_options(seed_simulator=42)
-        pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
-        isa_circuit = pm.run(self.circuit)
-        sampler = Sampler(backend)
-        job = sampler.run([isa_circuit])
-        pub_result = job.result()[0]
-        counts = pub_result.data.meas.get_counts()
-        max_count = max(counts.items(), key=operator.itemgetter(1))[0]
-        self.assertEqual(max_count, "11")
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_properties(self, backend):

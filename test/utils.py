@@ -136,10 +136,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
         raise
 
 
-def wait_for_status(job, status, poll_time=1, time_out=20):
+def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
     """Wait for job to reach a certain status."""
     wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
+    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
@@ -197,7 +197,7 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
     """Recursively determine whether the dictionaries have the same keys.
 
     Args:

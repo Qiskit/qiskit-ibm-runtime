@@ -119,8 +119,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
     def __init__(
         self,
-        durations: InstructionDurations = None,
-        dd_sequences: list[Gate] | list[list[Gate]] = None,
+        durations: InstructionDurations | None = None,
+        dd_sequences: list[Gate] | list[list[Gate]] | None = None,
         qubits: list[int] | None = None,
         spacings: list[list[float]] | list[float] | None = None,
         skip_reset_qubits: bool = True,
@@ -128,7 +128,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         extra_slack_distribution: str = "middle",
         sequence_min_length_ratios: int | list[int] | None = None,
         insert_multiple_cycles: bool = False,
-        coupling_map: CouplingMap = None,
+        coupling_map: CouplingMap | None = None,
         alt_spacings: list[list[float]] | list[float] | None = None,
         schedule_idle_qubits: bool = False,
         dd_barrier: str | None = None,

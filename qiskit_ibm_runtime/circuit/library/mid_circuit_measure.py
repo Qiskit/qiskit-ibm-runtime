@@ -22,7 +22,7 @@ class MidCircuitMeasure(Instruction):
     mid-circuit measurement instruction implementation on hardware.
     """
 
-    def __init__(self, name: str = "measure_2", label: str = None) -> None:
+    def __init__(self, name: str = "measure_2", label: str | None = None) -> None:
         if not name.startswith("measure_"):
             raise ValueError(
                 "Invalid name for mid-circuit measure instruction."
