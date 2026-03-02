@@ -61,7 +61,7 @@ class Nduv:
                 output by :func:`to_dict`.
 
         Returns:
-            Nduv: The Nduv from the input dictionary.
+            The Nduv from the input dictionary.
         """
         return cls(**data)
 
@@ -69,7 +69,7 @@ class Nduv:
         """Return a dictionary format representation of the object.
 
         Returns:
-            dict: The dictionary form of the Nduv.
+            The dictionary form of the Nduv.
         """
         out_dict = {
             "date": self.date,
@@ -130,7 +130,7 @@ class GateProperties:
                 output by :func:`to_dict`.
 
         Returns:
-            GateProperties: The Nduv from the input dictionary.
+            The Nduv from the input dictionary.
         """
         in_data: dict[Any, Any] = {}
         for key, value in data.items():
@@ -144,7 +144,7 @@ class GateProperties:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
-            dict: The dictionary form of the Gate.
+            The dictionary form of the Gate.
         """
         out_dict: dict[str, Any] = {
             "qubits": self.qubits,
@@ -241,7 +241,7 @@ class BackendProperties:
                 the same format as output by :meth:`to_dict`.
 
         Returns:
-            BackendProperties: The BackendProperties from the input dictionary.
+            The BackendProperties from the input dictionary.
         """
         in_data = copy.copy(data)
         backend_name = in_data.pop("backend_name")
@@ -263,7 +263,7 @@ class BackendProperties:
         """Return a dictionary format representation of the BackendProperties.
 
         Returns:
-            dict: The dictionary form of the BackendProperties.
+            The dictionary form of the BackendProperties.
         """
         out_dict: dict = {
             "backend_name": self.backend_name,
@@ -347,7 +347,7 @@ class BackendProperties:
             qubits: The qubit to find the operational status for.
 
         Returns:
-            bool: Operational status of the given gate. True if the gate is operational,
+            Operational status of the given gate. True if the gate is operational,
             False otherwise.
         """
         properties = self.gate_property(gate, qubits)

@@ -251,8 +251,7 @@ class FakeBackendV2(BackendV2):
         backend.
 
         Returns:
-            qiskit.providers.Options: A options object with
-                default values set
+            An options object with default values set
         """
         if _optionals.HAS_AER:
             from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
@@ -298,7 +297,7 @@ class FakeBackendV2(BackendV2):
                 object.
 
         Returns:
-            Job: The job object for the run
+            The job object for the run
         """
         if self.sim is None:
             self._setup_sim()

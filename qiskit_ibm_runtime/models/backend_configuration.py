@@ -84,7 +84,7 @@ class GateConfig:
                 as output by :func:`to_dict`.
 
         Returns:
-            GateConfig: The GateConfig from the input dictionary.
+            The GateConfig from the input dictionary.
         """
         return cls(**data)
 
@@ -92,7 +92,7 @@ class GateConfig:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
-            dict: The dictionary form of the GateConfig.
+            The dictionary form of the GateConfig.
         """
         out_dict: dict[str, Any] = {
             "name": self.name,
@@ -156,7 +156,7 @@ class UchannelLO:
             format as output by :func:`to_dict`.
 
         Returns:
-            UchannelLO: The UchannelLO from the input dictionary.
+            The UchannelLO from the input dictionary.
         """
         return cls(**data)
 
@@ -164,7 +164,7 @@ class UchannelLO:
         """Return a dictionary format representation of the UChannelLO.
 
         Returns:
-            dict: The dictionary form of the UChannelLO.
+            The dictionary form of the UChannelLO.
         """
         out_dict: dict[str, Any] = {
             "q": self.q,
@@ -385,7 +385,7 @@ class QasmBackendConfiguration:
             as output by :func:`to_dict`.
 
         Returns:
-            GateConfig: The GateConfig from the input dictionary.
+            The GateConfig from the input dictionary.
         """
         in_data: dict[str, Any] = copy.copy(data)
         gates = [GateConfig.from_dict(x) for x in in_data.pop("gates")]
@@ -396,7 +396,7 @@ class QasmBackendConfiguration:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
-            dict: The dictionary form of the GateConfig.
+            The dictionary form of the GateConfig.
         """
         out_dict: dict[str, Any] = {
             "backend_name": self.backend_name,

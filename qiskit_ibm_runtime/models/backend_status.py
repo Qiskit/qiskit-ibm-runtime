@@ -60,7 +60,7 @@ class BackendStatus:
                 as output by :func:`to_dict`.
 
         Returns:
-            BackendStatus: The BackendStatus from the input dictionary.
+            The BackendStatus from the input dictionary.
         """
         return cls(**data)
 
@@ -68,7 +68,7 @@ class BackendStatus:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
-            dict: The dictionary form of the QobjHeader.
+            The dictionary form of the QobjHeader.
         """
         return self.__dict__
 
