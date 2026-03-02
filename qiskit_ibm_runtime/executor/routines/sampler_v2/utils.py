@@ -19,10 +19,13 @@ from typing import Any
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
 
+from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerOptions
+from qiskit_ibm_runtime.executor.routines.utils import calculate_twirling_shots
+
 
 def executor_metadata_to_sampler_metadata_v1(
     metadata: Metadata,
-    twirling: bool,
+    options: SamplerOptions,
     pubs_shapes: list[tuple[int, ...]],
     shots: int,
 ) -> dict[str, Any]:
@@ -33,13 +36,24 @@ def executor_metadata_to_sampler_metadata_v1(
 
     Args:
         metadata: The executor metadata.
-        twirling: Whether the sampler job requested twirling.
+        options: The options of the sampler job.
         pubs_shapes: The shapes of the PUBs in the sampler job.
         shots: The shots per sampler PUB.
 
     Returns:
         A dictionary of metadata compatible with the format expected for a SamplerV2 job.
     """
+    twirl = options.twirling.enable_gates or options.twirling.enable_measure
+    num_randomizations = (
+        0
+        if twirl is False
+        else calculate_twirling_shots(
+            shots,
+            options.twirling.num_randomizations,
+            options.twirling.shots_per_randomization,
+        )
+    )
+
     spans = []
     for span in metadata.chunk_timing:
         _validate_chunk_span(span, pubs_shapes)
@@ -51,8 +65,9 @@ def executor_metadata_to_sampler_metadata_v1(
             slice_stop = slice_start + part.size
             slices_latest_stop[part.idx_item] = slice_stop
 
-            if twirling:
+            if options.twirling.enable_gates or options.twirling.enable_measure:
                 slices[part.idx_item] = (
+                    (num_randomizations,),
                     pubs_shapes[part.idx_item] + (part.size,),
                     True,
                     slice(slice_start, slice_stop),
