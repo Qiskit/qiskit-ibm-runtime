@@ -37,15 +37,23 @@ def executor_metadata_to_sampler_metadata_v1(
             slice_stop = slice_start + part.size
             slices_latest_stop[part.idx_item] = slice_stop
 
-            slices[part.idx_item] = (
-                pubs_shapes[part.idx_item] + (shots,),
-                slice(slice_start, slice_stop),
-                slice(0, shots),
-            )
-        if twirling:
-            spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
-        else:
-            spans.append(DoubleSliceSpan(span.start, span.stop, slices))
+            if twirling:
+                slices[part.idx_item] = (
+                    pubs_shapes[part.idx_item] + (part.size,),
+                    True,
+                    slice(slice_start, slice_stop),
+                    slice(0, shots),
+                    shots,
+                )
+                spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
+            else:
+                slices[part.idx_item] = (
+                    pubs_shapes[part.idx_item] + (shots,),
+                    slice(slice_start, slice_stop),
+                    slice(0, shots),
+                )
+                spans.append(DoubleSliceSpan(span.start, span.stop, slices))
+
     return {"execution": {"execution_spans": spans}}
 
 def validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
