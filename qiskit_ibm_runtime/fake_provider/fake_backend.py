@@ -290,9 +290,7 @@ class FakeBackendV2(BackendV2):
         FakeBackendV2.
 
         Args:
-            run_input (QuantumCircuit or list): An
-                individual or a list of
-                :class:`~qiskit.circuit.QuantumCircuit`
+            run_input: An individual or a list of :class:`~qiskit.circuit.QuantumCircuit`
             options: Any kwarg options to pass to the backend for running the
                 config. If a key is also present in the options
                 attribute/object then the expectation is that the value

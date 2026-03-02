@@ -42,10 +42,10 @@ class Nduv:
         """Initialize a new name-date-unit-value object
 
         Args:
-            date (datetime.datetime): Date field
-            name (str): Name field
-            unit (str): Nduv unit
-            value (float): The value of the Nduv
+            date: Date field
+            name: Name field
+            unit: Nduv unit
+            value: The value of the Nduv
         """
         self.date = date
         self.name = name
@@ -57,9 +57,8 @@ class Nduv:
         """Create a new Nduv object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the Nduv to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the Nduv to create. It will be in the same format as
+                output by :func:`to_dict`.
 
         Returns:
             Nduv: The Nduv from the input dictionary.
@@ -105,10 +104,9 @@ class GateProperties:
         """Initialize a new :class:`GateProperties` object
 
         Args:
-            qubits (list): A list of integers representing qubits
-            gate (str): The gates name
-            parameters (list): List of :class:`Nduv` instances for the
-                name-date-unit-value for the gate
+            qubits: A list of integers representing qubits
+            gate: The gates name
+            parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
             kwargs: Optional additional fields
         """
         self._data = {}
@@ -128,9 +126,8 @@ class GateProperties:
         """Create a new Gate object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the Gate to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the Gate to create. It will be in the same format as
+                output by :func:`to_dict`.
 
         Returns:
             GateProperties: The Nduv from the input dictionary.
@@ -191,16 +188,13 @@ class BackendProperties:
         """Initialize a BackendProperties instance.
 
         Args:
-            backend_name (str): Backend name.
-            backend_version (str): Backend version in the form X.Y.Z.
-            last_update_date (datetime.datetime or str): Last date/time that a property was
-                updated. If specified as a ``str``, it must be in ISO format.
-            qubits (list): System qubit parameters as a list of lists of
-                           :class:`Nduv` instances
-            gates (list): System gate parameters as a list of :class:`GateProperties`
-                          objects
-            general (list): General parameters as a list of :class:`Nduv`
-                            objects
+            backend_name: Backend name.
+            backend_version: Backend version in the form X.Y.Z.
+            last_update_date: Last date/time that a property was updated. If specified as a
+                ``str``, it must be in ISO format.
+            qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
+            gates: System gate parameters as a list of :class:`GateProperties` objects
+            general: General parameters as a list of :class:`Nduv` objects
             kwargs: optional additional fields
         """
         self._data = {}
@@ -243,7 +237,7 @@ class BackendProperties:
         """Create a new BackendProperties object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the BackendProperties to create.  It will be in
+            data: A dictionary representing the BackendProperties to create.  It will be in
                 the same format as output by :meth:`to_dict`.
 
         Returns:
