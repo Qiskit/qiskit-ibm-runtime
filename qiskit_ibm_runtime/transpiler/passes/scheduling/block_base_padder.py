@@ -111,7 +111,7 @@ class BlockBasePadder(TransformationPass):
             dag: DAG to be checked.
 
         Returns:
-            DAGCircuit: DAG with idle time filled with instructions.
+            DAG with idle time filled with instructions.
 
         Raises:
             TranspilerError: When a particular node is not scheduled, likely some transform pass
