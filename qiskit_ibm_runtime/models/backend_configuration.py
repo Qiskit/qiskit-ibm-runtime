@@ -153,7 +153,7 @@ class UchannelLO:
 
         Args:
             data: A dictionary representing the UChannelLO to create. It will be in the same
-            format as output by :func:`to_dict`.
+                format as output by :func:`to_dict`.
 
         Returns:
             The UchannelLO from the input dictionary.
@@ -382,7 +382,7 @@ class QasmBackendConfiguration:
 
         Args:
             data: A dictionary representing the GateConfig to create. It will be in the same format
-            as output by :func:`to_dict`.
+                as output by :func:`to_dict`.
 
         Returns:
             The GateConfig from the input dictionary.
