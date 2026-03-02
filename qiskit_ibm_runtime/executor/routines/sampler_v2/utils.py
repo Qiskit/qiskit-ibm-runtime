@@ -19,19 +19,33 @@ from typing import Any
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
 
+
 def executor_metadata_to_sampler_metadata_v1(
     metadata: Metadata,
     twirling: bool,
     pubs_shapes: list[tuple[int, ...]],
     shots: int,
 ) -> dict[str, Any]:
-    """"""
+    """Helper to map result metadata for executor job to result metadata for sampler jobs.
+
+    This function is meant to be used when post-processing results for an executor job triggered
+    by a SamplerV2.
+
+    Args:
+        metadata: The executor metadata.
+        twirling: Whether the sampler job requested twirling.
+        pubs_shapes: The shapes of the PUBs in the sampler job.
+        shots: The shots per sampler PUB.
+
+    Returns:
+        A dictionary of metadata compatible with the format expected for a SamplerV2 job.
+    """
     spans = []
     for span in metadata.chunk_timing:
-        validate_chunk_span(span, pubs_shapes)
+        _validate_chunk_span(span, pubs_shapes)
 
         slices = {}
-        slices_latest_stop: dict[int, int]  = defaultdict(int)
+        slices_latest_stop: dict[int, int] = defaultdict(int)
         for part in span.parts:
             slice_start = slices_latest_stop[part.idx_item]
             slice_stop = slice_start + part.size
@@ -56,8 +70,7 @@ def executor_metadata_to_sampler_metadata_v1(
 
     return {"execution": {"execution_spans": spans}}
 
-def validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
-    """"""
+
+def _validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
     if max({part.idx_item for part in span.parts}) >= len(pubs_shapes):
         raise ValueError("Not enough pub shapes.")
-
