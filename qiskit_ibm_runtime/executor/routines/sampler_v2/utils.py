@@ -16,52 +16,40 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from qiskit_ibm_runtime.execution_span import DoubleSliceSpan
+from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
-
-from ..options import SamplerOptions
 
 def executor_metadata_to_sampler_metadata_v1(
     metadata: Metadata,
     twirling: bool,
-    pubs_shapes: tuple[int, ...],
+    pubs_shapes: list[tuple[int, ...]],
     shots: int,
 ) -> dict[str, Any]:
     """"""
     spans = []
-    if twirling:
-        pass
-    else:
-        # for span in await self.client.execution_spans(execute_request):
-        #     slices = {}
-        #     for idx, (arg_sl, shots_sl) in span.execution_slices.items():
-        #         pub = subset.pubs[idx]
-        #         slices[subset.idxs[idx]] = (
-        #             pub.shape + (pub.shots,),
-        #             slice(arg_sl.start, arg_sl.stop),
-        #             slice(shots_sl.start, shots_sl.stop),
-        #         )
-        #     spans.append(DoubleSliceSpan(span.start, span.end, slices))
-        for span in metadata.chunk_timing:
-            validate_chunk_span(span, pubs_shapes)
+    for span in metadata.chunk_timing:
+        validate_chunk_span(span, pubs_shapes)
 
-            slices = {}
-            slices_latest_stop: dict[int, int]  = defaultdict(int)
-            for part in span.parts:
-                slice_start = slices_latest_stop[part.idx_item]
-                slice_stop = slice_start + part.size
-                slices_latest_stop[part.idx_item] = slice_stop
+        slices = {}
+        slices_latest_stop: dict[int, int]  = defaultdict(int)
+        for part in span.parts:
+            slice_start = slices_latest_stop[part.idx_item]
+            slice_stop = slice_start + part.size
+            slices_latest_stop[part.idx_item] = slice_stop
 
-                slices[part.idx_item] = (
-                    pubs_shapes + (shots,),
-                    slice(slice_start, slice_stop),
-                    slice(0, shots),
-                )
+            slices[part.idx_item] = (
+                pubs_shapes[part.idx_item] + (shots,),
+                slice(slice_start, slice_stop),
+                slice(0, shots),
+            )
+        if twirling:
+            spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
+        else:
             spans.append(DoubleSliceSpan(span.start, span.stop, slices))
     return {"execution": {"execution_spans": spans}}
 
 def validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
     """"""
-    if max(span.parts) >= len(pubs_shapes):
+    if max({part.idx_item for part in span.parts}) >= len(pubs_shapes):
         raise ValueError("Not enough pub shapes.")
 
