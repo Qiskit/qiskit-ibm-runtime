@@ -97,16 +97,16 @@ def prepare(
         # Twirling path: create SamplexItem objects
         num_rand, shots_per_rand = calculate_twirling_shots(
             shots,
-            twirling_options.num_randomizations,
-            twirling_options.shots_per_randomization,
+            options.twirling.num_randomizations,
+            options.twirling.shots_per_randomization,
         )
 
         program_shots = shots_per_rand
 
         boxing_pm = generate_boxing_pass_manager(
-            enable_gates=bool(twirling_options.enable_gates),
-            enable_measures=bool(twirling_options.enable_measure),
-            twirling_strategy=twirling_options.strategy.replace("-", "_"),
+            enable_gates=bool(options.twirling.enable_gates),
+            enable_measures=bool(options.twirling.enable_measure),
+            twirling_strategy=options.twirling.strategy.replace("-", "_"),
         )
 
         for pub in pubs:
