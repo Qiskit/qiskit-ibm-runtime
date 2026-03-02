@@ -95,7 +95,6 @@ def prepare(
             )
     else:
         # Twirling path: create SamplexItem objects
-
         num_rand, shots_per_rand = calculate_twirling_shots(
             shots,
             twirling_options.num_randomizations,
