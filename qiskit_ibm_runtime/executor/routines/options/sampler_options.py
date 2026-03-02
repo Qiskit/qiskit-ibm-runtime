@@ -58,34 +58,39 @@ class SamplerExecutionOptions(ExecutionOptions):
 
 @dataclass
 class SamplerOptions:
-    """Options for the executor-based SamplerV2.
-
-    Args:
-        default_shots: The default number of shots to use if none are specified in the
-            PUBs or in the run method.
-        dynamical_decoupling: Suboptions for dynamical decoupling. See
-            :class:`DynamicalDecouplingOptions` for all available options.
-        execution: Execution time options. See :class:`SamplerExecutionOptionsV2`
-            for all available options.
-        twirling: Pauli twirling options. See :class:`TwirlingOptions` for all
-            available options.
-        experimental: Experimental options as a dictionary.
-        max_execution_time: Maximum execution time in seconds, based on system
-            execution time (not wall clock time). Inherited from OptionsV2.
-        environment: Options related to the execution environment. See
-            :class:`EnvironmentOptions` for all available options. Inherited from OptionsV2.
-    """
+    """Options for the executor-based SamplerV2."""
 
     default_shots: int | None = 4096
+    """The default number of shots to use if none are specified in the PUBs or in the run method."""
+
     dynamical_decoupling: DynamicalDecouplingOptions = Field(
         default_factory=DynamicalDecouplingOptions
     )
+    """Suboptions for dynamical decoupling.
+    
+    See :class:`DynamicalDecouplingOptions` for all available options.
+    """
+
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
+    """Execution options.
+    
+    See :class:`SamplerExecutionOptionsV2` for all available options."""
+
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
+    """Pauli twirling options.
+    
+    See :class:`TwirlingOptions` for all available options.
+    """
+
     experimental: dict | None = None
+    """Experimental options."""
 
     max_execution_time: int | None = None
+    """Maximum execution time in seconds, based on system execution time (not wall clock time).
+    """
+
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    """Options related to the execution environment."""
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map SamplerOptions to ExecutorOptions, , ignoring all irrelevant fields.
@@ -95,16 +100,13 @@ class SamplerOptions:
         """
         executor_options = ExecutorOptions()
 
-        executor_options.execution = self.execution.to_executor_options()
         executor_options.environment = self.environment.to_executor_options()
+        executor_options.execution = self.execution.to_executor_options()
 
-        if self.max_execution_time is not None:
-            executor_options.environment.max_execution_time = self.max_execution_time
+        executor_options.environment.max_execution_time = self.max_execution_time
 
-        if self.experimental is not None and "image" in self.experimental:
-            executor_options.environment.image = self.experimental["image"]
-
-        if self.experimental is not None:
+        if self.experimental:
+            executor_options.environment.image = self.experimental.pop("image", None)
             executor_options.experimental.update(self.experimental)
 
         return executor_options
