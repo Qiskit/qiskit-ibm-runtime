@@ -60,6 +60,13 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         PrimitiveResult containing SamplerPubResult objects.
     """
 
-    # In the future post processing will happen here. (For example, measurement twirling)
+    # Apply measurement twirling bit flips
+    prefix = "measurement_flips."
+    for item in result:
+        for key in list(item.keys()):
+            if key.startswith(prefix):
+                item[key[len(prefix) :]] ^= item.pop(key)
+    # TODO: This could fail if the user manually specifies a register starting with the prefix.
+    # TODO: To conform with legacy SamplerV2, randomization axes need to be flattened.
 
     return SamplerV2.quantum_program_result_to_primitive_result(result)
