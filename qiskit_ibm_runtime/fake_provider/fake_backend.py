@@ -22,7 +22,7 @@ import os
 
 from qiskit import QuantumCircuit
 
-from qiskit.providers import BackendV2
+from qiskit.providers import BackendV2, Job
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
@@ -274,7 +274,7 @@ class FakeBackendV2(BackendV2):
         else:
             return None
 
-    def run(self, run_input, **options):  # type: ignore
+    def run(self, run_input: QuantumCircuit | list[QuantumCircuit], **options: dict) -> Job:
         """Run on the fake backend using a simulator.
 
         This method runs circuit jobs (an individual or a list of QuantumCircuit)
@@ -301,8 +301,8 @@ class FakeBackendV2(BackendV2):
         """
         if self.sim is None:
             self._setup_sim()
-        self.sim._options = self._options
-        job = self.sim.run(run_input, **options)
+        self.sim._options = self._options  # type: ignore[attr-defined]
+        job = self.sim.run(run_input, **options)  # type: ignore[attr-defined]
         return job
 
     def _get_noise_model_from_backend_v2(  # type: ignore
