@@ -70,10 +70,8 @@ def prepare(
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
 
-    twirling_options = options.twirling
-    twirling_enabled = twirling_options is not None and (
-        twirling_options.enable_gates or twirling_options.enable_measure
-    )
+    twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
+
     # Create items based on whether twirling is enabled
     items: list[QuantumProgramItem] = []
     program_shots = shots  # Default: use pub shots
