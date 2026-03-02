@@ -65,7 +65,7 @@ def executor_metadata_to_sampler_metadata_v1(
             slice_stop = slice_start + part.size
             slices_latest_stop[part.idx_item] = slice_stop
 
-            if options.twirling.enable_gates or options.twirling.enable_measure:
+            if twirl:
                 slices[part.idx_item] = (
                     (num_randomizations,),
                     pubs_shapes[part.idx_item] + (part.size,),
