@@ -93,6 +93,11 @@ def prepare(
                     circuit_arguments=param_values,
                 )
             )
+
+        post_processor_data: dict = {
+            "context": "sampler_v2",
+            "version": "v1",
+        }
     else:
         # Twirling path: create SamplexItem objects
         num_rand, shots_per_rand = calculate_twirling_shots(
@@ -109,6 +114,7 @@ def prepare(
             twirling_strategy=options.twirling.strategy.replace("-", "_"),
         )
 
+        pub_shapes: list[list[int]] = []
         for pub in pubs:
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
@@ -122,6 +128,7 @@ def prepare(
                 item_shape = (num_rand,) + param_shape
             else:
                 samplex_args = {}
+                param_shape = ()
                 item_shape = (num_rand,)
 
             # Create SamplexItem
@@ -133,12 +140,16 @@ def prepare(
                     shape=item_shape,
                 )
             )
+            pub_shapes.append(list(param_shape))
 
-    passthrough_data = {
-        "post_processor": {
+        post_processor_data = {
             "context": "sampler_v2",
             "version": "v1",
-        },
+            "pub_shapes": pub_shapes,
+        }
+
+    passthrough_data = {
+        "post_processor": post_processor_data,
     }
 
     # Create QuantumProgram

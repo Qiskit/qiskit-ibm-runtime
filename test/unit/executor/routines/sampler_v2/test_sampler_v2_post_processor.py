@@ -372,3 +372,129 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertIsInstance(result, PrimitiveResult)
         self.assertEqual(len(result), 1)
         self.assertIn("meas", result[0].data)
+
+
+class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
+    """Test that sampler_v2_post_processor_v1 flattens twirling axes correctly.
+
+    When twirling is enabled, the executor returns data with shape
+    ``(num_rand, *pub_shape, shots_per_rand, num_bits)``. The post-processor
+    must flatten this to ``(*pub_shape, total_shots, num_bits)`` using the
+    ``pub_shapes`` stored in ``passthrough_data``.
+    """
+
+    def _make_result(self, data, pub_shapes=None):
+        """Helper to build a QuantumProgramResult with optional pub_shapes passthrough."""
+        passthrough_data = None
+        if pub_shapes is not None:
+            passthrough_data = {
+                "post_processor": {
+                    "context": "sampler_v2",
+                    "version": "v1",
+                    "pub_shapes": pub_shapes,
+                }
+            }
+        return QuantumProgramResult(
+            data=data,
+            metadata=Metadata(),
+            passthrough_data=passthrough_data,
+        )
+
+    def test_twirled_no_sweep_flattened(self):
+        """Twirled non-parametric pub: (num_rand, shots_per_rand, bits) -> (total_shots, bits)."""
+        num_rand, shots_per_rand, num_bits = 4, 64, 3
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
+        )
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=[[]])
+        )
+        bit_array = result[0].data.meas
+        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
+        self.assertEqual(bit_array.num_bits, num_bits)
+        self.assertEqual(result[0].data.shape, ())
+
+    def test_twirled_1d_sweep_flattened(self):
+        """Twirled 1-D parametric pub: (num_rand, 3, shots_per_rand, bits) -> (3, total_shots, bits)."""
+        num_rand, sweep, shots_per_rand, num_bits = 4, 3, 64, 2
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, sweep, shots_per_rand, num_bits), dtype=np.uint8
+        )
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=[[sweep]])
+        )
+        bit_array = result[0].data.meas
+        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
+        self.assertEqual(bit_array.num_bits, num_bits)
+        self.assertEqual(result[0].data.shape, (sweep,))
+
+    def test_twirled_2d_sweep_flattened(self):
+        """Twirled 2-D parametric pub.
+
+        (num_rand, 5, 3, shots_per_rand, bits) -> (5, 3, total_shots, bits)."""
+        num_rand, s1, s2, shots_per_rand, num_bits = 4, 5, 3, 64, 2
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, s1, s2, shots_per_rand, num_bits), dtype=np.uint8
+        )
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=[[s1, s2]])
+        )
+        bit_array = result[0].data.meas
+        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
+        self.assertEqual(bit_array.num_bits, num_bits)
+        self.assertEqual(result[0].data.shape, (s1, s2))
+
+    def test_twirled_data_values_preserved(self):
+        """Flattening must preserve data values (just reshape, not reorder)."""
+        num_rand, shots_per_rand, num_bits = 2, 3, 2
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
+        )
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=[[]])
+        )
+        expected_flat = meas_data.reshape(num_rand * shots_per_rand, num_bits)
+        reconstructed = result[0].data.meas.to_bool_array()
+        np.testing.assert_array_equal(reconstructed, expected_flat.astype(bool))
+
+    def test_non_twirled_no_reshape_when_pub_shapes_absent(self):
+        """Without pub_shapes in passthrough_data, no flattening is performed."""
+        num_shots, num_bits = 100, 3
+        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+        # No pub_shapes → passthrough_data is None
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=None)
+        )
+        bit_array = result[0].data.meas
+        self.assertEqual(bit_array.num_shots, num_shots)
+        self.assertEqual(bit_array.num_bits, num_bits)
+
+    def test_wrong_pub_shape_raises_error(self):
+        """If pub_shape dimensions don't match data, a ValueError is raised."""
+        with self.assertRaises(ValueError):
+            sampler_v2_post_processor_v1(
+                self._make_result(
+                    [{"meas": np.random.randint(0, 2, size=(4, 7, 64, 3), dtype=np.uint8)}],
+                    pub_shapes=[[5]],
+                )
+            )
+
+    def test_multiple_pubs_mixed_twirled(self):
+        """Multiple pubs: each pub is flattened according to its own pub_shape."""
+        num_rand, shots_per_rand, num_bits = 4, 64, 2
+        # Pub 0: non-parametric twirled → (num_rand, shots_per_rand, bits)
+        meas0 = np.random.randint(0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8)
+        # Pub 1: 1-D sweep twirled → (num_rand, 3, shots_per_rand, bits)
+        meas1 = np.random.randint(
+            0, 2, size=(num_rand, 3, shots_per_rand, num_bits), dtype=np.uint8
+        )
+        result = sampler_v2_post_processor_v1(
+            self._make_result(
+                [{"meas": meas0}, {"meas": meas1}],
+                pub_shapes=[[], [3]],
+            )
+        )
+        self.assertEqual(result[0].data.meas.num_shots, num_rand * shots_per_rand)
+        self.assertEqual(result[0].data.shape, ())
+        self.assertEqual(result[1].data.meas.num_shots, num_rand * shots_per_rand)
+        self.assertEqual(result[1].data.shape, (3,))
