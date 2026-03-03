@@ -184,7 +184,9 @@ class SamplerV2(BaseSamplerV2):
 
     You can inject a custom prepare function to replace the default conversion logic
     from SamplerPub objects to QuantumProgram. The custom function must have the
-    following signature::
+    following signature:
+    
+    ```python
 
         def my_prepare(
             pubs: list[SamplerPub],
@@ -192,6 +194,7 @@ class SamplerV2(BaseSamplerV2):
             default_shots: int | None = None,
         ) -> tuple[QuantumProgram, ExecutorOptions]:
             ...
+    ```
 
     The custom function can be provided either at initialization via the ``prepare_fn``
     parameter or later via the ``prepare_fn`` property. Set to ``None`` to restore
@@ -243,9 +246,7 @@ class SamplerV2(BaseSamplerV2):
 
         options: Sampler options. See :class:`SamplerOptions` for all available options.
         prepare_fn: Optional custom prepare function to replace the default conversion
-            logic. Must have signature ``(pubs, options, default_shots) ->
-            (QuantumProgram, ExecutorOptions)``. Pass ``None`` to use the default prepare
-            function.
+            logic.
     """
 
     def __init__(
