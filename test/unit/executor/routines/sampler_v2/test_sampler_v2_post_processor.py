@@ -13,6 +13,8 @@
 """Unit tests for SamplerV2 post-processor and static conversion method."""
 
 import unittest
+from dataclasses import asdict
+
 import numpy as np
 
 from qiskit.primitives import PrimitiveResult
@@ -22,6 +24,7 @@ from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
 from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler_post_processors import (
     sampler_v2_post_processor_v1,
 )
+from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     QuantumProgramResult,
     Metadata,
@@ -392,9 +395,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             twirling_enabled: Explicitly set twirling state. If None and pub_shapes
                 is provided, defaults to True.
         """
-        from dataclasses import asdict
-        from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions
-
         passthrough_data = None
         if pub_shapes is not None or twirling_enabled is not None:
             # Determine if twirling should be enabled
@@ -503,9 +503,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
 
     def test_error_when_twirling_enabled_but_pub_shapes_missing(self):
         """Verify error is raised when twirling is enabled but pub_shapes is missing."""
-        from dataclasses import asdict
-        from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions
-
         num_rand, shots_per_rand, num_bits = 4, 64, 2
         meas_data = np.random.randint(
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
