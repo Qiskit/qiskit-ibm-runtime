@@ -1053,11 +1053,11 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         circuit.h(0)
         circuit.measure_all()
 
-        # Create sampler without custom prepare_fn
+        # Create sampler without custom custom_prepare
         sampler = SamplerV2(mode=self.backend)
 
         # Verify the default prepare function is set
-        self.assertIs(sampler.prepare_fn, prepare)
+        self.assertIs(sampler.custom_prepare, prepare)
 
         # Run and verify it works
         sampler.run([circuit], shots=1024)
@@ -1065,7 +1065,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_custom_prepare_fn_via_constructor(self, mock_run):
-        """Test that custom prepare_fn passed to __init__ is called instead of default."""
+        """Test that custom custom_prepare passed to __init__ is called instead of default."""
         mock_run.return_value = MagicMock()
 
         circuit = QuantumCircuit(1, 1)
@@ -1080,11 +1080,11 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
             # Call the real prepare to get valid return values
             return prepare(pubs, options, default_shots)
 
-        # Create sampler with custom prepare_fn
-        sampler = SamplerV2(mode=self.backend, prepare_fn=custom_prepare)
+        # Create sampler with custom custom_prepare
+        sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
 
         # Verify custom function is set
-        self.assertIs(sampler.prepare_fn, custom_prepare)
+        self.assertIs(sampler.custom_prepare, custom_prepare)
 
         # Run and verify custom function was called
         sampler.run([circuit], shots=1024)
@@ -1093,7 +1093,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_custom_prepare_fn_via_property_setter(self, mock_run):
-        """Test that custom prepare_fn set via property is called."""
+        """Test that custom custom_prepare set via property is called."""
         mock_run.return_value = MagicMock()
 
         circuit = QuantumCircuit(1, 1)
@@ -1109,10 +1109,10 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
 
         # Create sampler without custom fn, then set it via property
         sampler = SamplerV2(mode=self.backend)
-        sampler.prepare_fn = custom_prepare
+        sampler.custom_prepare = custom_prepare
 
         # Verify custom function is set
-        self.assertIs(sampler.prepare_fn, custom_prepare)
+        self.assertIs(sampler.custom_prepare, custom_prepare)
 
         # Run and verify custom function was called
         sampler.run([circuit], shots=1024)
@@ -1137,7 +1137,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
             received_args["default_shots"] = default_shots
             return prepare(pubs, options, default_shots)
 
-        sampler = SamplerV2(mode=self.backend, prepare_fn=custom_prepare)
+        sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
         sampler.run([circuit], shots=2048)
 
         # Verify arguments
@@ -1158,7 +1158,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_restore_default_by_setting_none(self, mock_run):
-        """Test that setting prepare_fn = None restores the default prepare."""
+        """Test that setting custom_prepare = None restores the default prepare."""
         mock_run.return_value = MagicMock()
 
         circuit = QuantumCircuit(1, 1)
@@ -1170,14 +1170,14 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
             return prepare(pubs, options, default_shots)
 
         # Create sampler with custom fn
-        sampler = SamplerV2(mode=self.backend, prepare_fn=custom_prepare)
-        self.assertIs(sampler.prepare_fn, custom_prepare)
+        sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
+        self.assertIs(sampler.custom_prepare, custom_prepare)
 
         # Restore default by setting to None
-        sampler.prepare_fn = None
+        sampler.custom_prepare = None
 
         # Verify default is restored
-        self.assertIs(sampler.prepare_fn, prepare)
+        self.assertIs(sampler.custom_prepare, prepare)
 
         # Run and verify it works
         sampler.run([circuit], shots=1024)
@@ -1199,7 +1199,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
             qp.shots = 9999
             return qp, exec_opts
 
-        sampler = SamplerV2(mode=self.backend, prepare_fn=custom_prepare)
+        sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
         sampler.run([circuit], shots=1024)
 
         # Verify executor.run was called with our modified QuantumProgram
@@ -1208,21 +1208,21 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 9999)
 
     def test_prepare_fn_setter_validates_callable(self):
-        """Test that prepare_fn setter raises TypeError for non-callable values."""
+        """Test that custom_prepare setter raises TypeError for non-callable values."""
         sampler = SamplerV2(mode=self.backend)
 
         # Try to set non-callable values
         with self.assertRaises(TypeError) as context:
-            sampler.prepare_fn = "not a function"
+            sampler.custom_prepare = "not a function"
         self.assertIn("callable", str(context.exception).lower())
 
         with self.assertRaises(TypeError) as context:
-            sampler.prepare_fn = 123
+            sampler.custom_prepare = 123
         self.assertIn("callable", str(context.exception).lower())
 
         with self.assertRaises(TypeError) as context:
-            sampler.prepare_fn = {"key": "value"}
+            sampler.custom_prepare = {"key": "value"}
         self.assertIn("callable", str(context.exception).lower())
 
         # None should be allowed (restores default)
-        sampler.prepare_fn = None  # Should not raise
+        sampler.custom_prepare = None  # Should not raise

@@ -185,7 +185,7 @@ class SamplerV2(BaseSamplerV2):
     You can inject a custom prepare function to replace the default conversion logic
     from SamplerPub objects to QuantumProgram. The custom function must have the
     following signature:
-    
+
     ```python
 
         def my_prepare(
@@ -196,8 +196,8 @@ class SamplerV2(BaseSamplerV2):
             ...
     ```
 
-    The custom function can be provided either at initialization via the ``prepare_fn``
-    parameter or later via the ``prepare_fn`` property. Set to ``None`` to restore
+    The custom function can be provided either at initialization via the ``custom_prepare``
+    parameter or later via the ``custom_prepare`` property. Set to ``None`` to restore
     the default prepare function.
 
     Example:
@@ -229,9 +229,9 @@ class SamplerV2(BaseSamplerV2):
                 ...
                 return quantum_program, executor_options
 
-            sampler = SamplerV2(mode=backend, prepare_fn=my_prepare)
+            sampler = SamplerV2(mode=backend, custom_prepare=my_prepare)
             # Or set it later:
-            # sampler.prepare_fn = my_prepare
+            # sampler.custom_prepare = my_prepare
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
@@ -245,7 +245,7 @@ class SamplerV2(BaseSamplerV2):
             for more information about execution modes.
 
         options: Sampler options. See :class:`SamplerOptions` for all available options.
-        prepare_fn: Optional custom prepare function to replace the default conversion
+        custom_prepare: Optional custom prepare function to replace the default conversion
             logic.
     """
 
@@ -253,7 +253,7 @@ class SamplerV2(BaseSamplerV2):
         self,
         mode: BackendV2 | Session | Batch | None = None,
         options: SamplerOptions | dict | None = None,
-        prepare_fn: (
+        custom_prepare: (
             Callable[
                 [list[SamplerPub], SamplerOptions, int | None],
                 tuple[QuantumProgram, ExecutorOptions],
@@ -266,7 +266,7 @@ class SamplerV2(BaseSamplerV2):
         Args:
             mode: The execution mode (Backend, Session, or Batch).
             options: Options for the sampler. Can be a SamplerOptions instance or a dict.
-            prepare_fn: Optional custom prepare function. Pass None to use the default.
+            custom_prepare: Optional custom prepare function. Pass None to use the default.
         """
         BaseSamplerV2.__init__(self)
 
@@ -281,7 +281,7 @@ class SamplerV2(BaseSamplerV2):
             self._options = options
 
         # Initialize prepare function
-        self._prepare_fn = prepare_fn if prepare_fn is not None else prepare
+        self._prepare = custom_prepare if custom_prepare is not None else prepare
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -308,7 +308,7 @@ class SamplerV2(BaseSamplerV2):
         default_shots = shots if shots is not None else self._options.default_shots
 
         # Convert pubs to QuantumProgram and map options using the prepare function
-        quantum_program, executor_options = self._prepare_fn(
+        quantum_program, executor_options = self._prepare(
             coerced_pubs, self._options, default_shots
         )
 
@@ -334,7 +334,7 @@ class SamplerV2(BaseSamplerV2):
         return self._options
 
     @property
-    def prepare_fn(
+    def custom_prepare(
         self,
     ) -> Callable[
         [list[SamplerPub], SamplerOptions, int | None], tuple[QuantumProgram, ExecutorOptions]
@@ -344,10 +344,10 @@ class SamplerV2(BaseSamplerV2):
         Returns:
             The currently active prepare function.
         """
-        return self._prepare_fn
+        return self._prepare
 
-    @prepare_fn.setter
-    def prepare_fn(
+    @custom_prepare.setter
+    def custom_prepare(
         self,
         fn: (
             Callable[
@@ -366,8 +366,8 @@ class SamplerV2(BaseSamplerV2):
             TypeError: If fn is not None and not callable.
         """
         if fn is not None and not callable(fn):
-            raise TypeError(f"prepare_fn must be callable or None, got {type(fn).__name__}")
-        self._prepare_fn = fn if fn is not None else prepare
+            raise TypeError(f"custom_prepare must be callable or None, got {type(fn).__name__}")
+        self._prepare = fn if fn is not None else prepare
 
     @staticmethod
     def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
