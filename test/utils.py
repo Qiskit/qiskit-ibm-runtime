@@ -18,7 +18,7 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Any
 from datetime import datetime
 from ddt import data, unpack
 
@@ -72,7 +72,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
 
 def most_busy_backend(
     service: QiskitRuntimeService,
-    instance: Optional[str] = None,
+    instance: str | None = None,
 ) -> IBMBackend:
     """Return the most busy backend for the provider given.
 
@@ -89,7 +89,11 @@ def most_busy_backend(
     """
     backends = service.backends(simulator=False, operational=True, instance=instance)
     return max(
-        (b for b in backends if b.configuration().n_qubits >= 5),
+        (
+            b
+            for b in backends
+            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
+        ),
         key=lambda b: b.status().pending_jobs,
     )
 
@@ -131,10 +135,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
         raise
 
 
-def wait_for_status(job, status, poll_time=1, time_out=20):
+def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
     """Wait for job to reach a certain status."""
     wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
+    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
@@ -158,7 +162,7 @@ def mock_wait_for_final_state(service, job):
     )
 
 
-def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
+def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
@@ -192,7 +196,7 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
     """Recursively determine whether the dictionaries have the same keys.
 
     Args:
@@ -218,9 +222,9 @@ def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool
 
 def create_faulty_backend(
     model_backend: Backend,
-    faulty_qubit: Optional[int] = None,
-    faulty_edge: Optional[tuple] = None,
-    faulty_q1_property: Optional[int] = None,
+    faulty_qubit: int | None = None,
+    faulty_edge: tuple | None = None,
+    faulty_q1_property: int | None = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -279,8 +283,8 @@ def create_faulty_backend(
 
 def get_mocked_backend(
     name: str = "ibm_gotham",
-    configuration: Optional[Dict] = None,
-    properties: Optional[Dict] = None,
+    configuration: dict | None = None,
+    properties: dict | None = None,
 ) -> IBMBackend:
     """Return a mock backend."""
 
@@ -298,7 +302,9 @@ def get_mocked_backend(
     mock_api_client.backend_properties = lambda *args, **kwargs: properties
     mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
     mock_backend = IBMBackend(
-        configuration=configuration, service=mock_service, api_client=mock_api_client
+        configuration=configuration,  # type: ignore[arg-type]
+        service=mock_service,
+        api_client=mock_api_client,
     )
     mock_backend.name = name
     mock_backend._instance = None
@@ -473,5 +479,5 @@ def remap_observables(observables, isa_circuit):
 class MockSession(Session):
     """Mock for session class"""
 
-    _circuits_map: Dict[str, QuantumCircuit] = {}
+    _circuits_map: dict[str, QuantumCircuit] = {}
     _instance = None

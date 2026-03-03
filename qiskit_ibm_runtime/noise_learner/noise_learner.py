@@ -12,11 +12,10 @@
 
 """Noise learner program."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any
+from collections.abc import Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -24,7 +23,7 @@ from qiskit.providers import BackendV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..base_primitive import _get_mode_service_backend
+from ..base_primitive import get_mode_service_backend
 from ..constants import DEFAULT_DECODERS
 from ..runtime_job_v2 import RuntimeJobV2
 from ..ibm_backend import IBMBackend
@@ -123,10 +122,10 @@ class NoiseLearner:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
     ):
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
 
@@ -137,7 +136,7 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
+    def run(self, circuits: Iterable[QuantumCircuit | EstimatorPubLike]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
@@ -224,7 +223,7 @@ class NoiseLearner:
         return self._backend
 
     def _set_options(
-        self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
+        self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
         """
         Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
@@ -234,7 +233,7 @@ class NoiseLearner:
         elif isinstance(options, NoiseLearnerOptions):
             self._options = replace(options)
         elif isinstance(options, EstimatorOptions):
-            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr, arg-type]
             d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
             d["max_execution_time"] = options.max_execution_time
             d["simulator"] = options.simulator

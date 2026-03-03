@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Optional, Union, Callable, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
 import functools
 import copy
 from dataclasses import is_dataclass, asdict
@@ -95,9 +96,7 @@ def _to_obj(cls_, data):  # type: ignore
     )
 
 
-def merge_options(
-    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
-) -> dict:
+def merge_options(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
     """Merge current options with the new ones.
 
     Args:
@@ -110,7 +109,7 @@ def merge_options(
         TypeError: if input type is invalid.
     """
 
-    def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
+    def _update_options(old: dict, new: dict, matched: dict | None = None) -> None:
         if not new and not matched:
             return
         matched = matched or {}
@@ -151,9 +150,7 @@ def merge_options(
     return combined
 
 
-def merge_options_v2(
-    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
-) -> dict:
+def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None = None) -> dict:
     """Merge current options with the new ones for V2 primitives.
 
     Unlike ``merge_options``, this function does not attempt to
@@ -235,7 +232,7 @@ class UnsetType:
     def __repr__(self) -> str:
         return "Unset"
 
-    def __new__(cls) -> "UnsetType":
+    def __new__(cls) -> UnsetType:
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
         return cls._instance

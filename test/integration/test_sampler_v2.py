@@ -13,8 +13,6 @@
 """Tests for Sampler V2."""
 # pylint: disable=invalid-name
 
-from __future__ import annotations
-
 import unittest
 
 import numpy as np
@@ -30,6 +28,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -482,7 +481,11 @@ class TestSampler(IBMIntegrationTestCase):
         bell, _, _ = self._cases[1]
         bell = transpile(bell, self._backend)
         job = sampler.run([bell])
-        result = job.result()
+        try:
+            result = job.result()
+        except RuntimeJobFailureError as ex:
+            if "Error code 6050" in ex.message:
+                self.skipTest("Backend cannot be used for this test")
         self._verify_result_type(result, num_pubs=1)
 
     def _verify_result_type(self, result, num_pubs, targets=None):

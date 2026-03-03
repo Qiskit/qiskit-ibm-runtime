@@ -26,6 +26,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import Session, Batch
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -650,3 +651,46 @@ class TestPrimitivesV2(IBMTestCase):
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
         )
+
+
+class TestGetModeServiceBackend(IBMTestCase):
+    """Test the function ``get_mode_service_backend``."""
+
+    def test_mode_is_backend(self):
+        """Test ``get_mode_service_backend`` when the input mode is an ``IBMBackend``."""
+        backend = get_mocked_backend()
+        service = backend.service
+        result = get_mode_service_backend(mode=backend)
+        self.assertEqual(result[0], None)
+        self.assertEqual(result[1], service)
+        self.assertEqual(result[2], backend)
+
+    def test_mode_is_session(self):
+        """Test ``get_mode_service_backend`` when the input mode is a session."""
+        backend_name = "ibm_hello"
+        session = get_mocked_session(get_mocked_backend(backend_name))
+        result = get_mode_service_backend(mode=session)
+        self.assertEqual(result[0], session)
+        self.assertEqual(result[1], session.service)
+        self.assertEqual(result[2].name, backend_name)
+
+    def test_session_context_manager(self):
+        """Test ``get_mode_service_backend`` inside a session context manager."""
+        backend = get_mocked_backend()
+        service = backend.service
+        with Session(backend=backend) as session:
+            result = get_mode_service_backend()
+            self.assertEqual(result[0], session)
+            self.assertEqual(result[1], service)
+            self.assertEqual(result[2], backend)
+
+    def test_mode_is_backend_inside_session_context_manager(self):
+        """Test ``get_mode_service_backend`` inside a session context manager,
+        when the input mode is an ``IBMBackend``."""
+        backend = get_mocked_backend()
+        service = backend.service
+        with Session(backend=backend) as session:
+            result = get_mode_service_backend(mode=backend)
+            self.assertEqual(result[0], session)
+            self.assertEqual(result[1], service)
+            self.assertEqual(result[2], backend)

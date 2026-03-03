@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 import math
 import numpy as np
@@ -92,7 +92,7 @@ class TwirledSliceSpan(ExecutionSpan):
         # merge twirling axis and shots axis before returning
         return mask.reshape((*shape[:-2], math.prod(shape[-2:])))
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "TwirledSliceSpan":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> TwirledSliceSpan:
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
         return type(self)(self.start, self.stop, slices)

@@ -12,9 +12,11 @@
 
 """Runtime REST adapter."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Union, Optional
+from typing import Any
 import json
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
@@ -39,7 +41,7 @@ class Runtime(RestAdapterBase):
         "cloud_usage": "/instances/usage",
     }
 
-    def program_job(self, job_id: str) -> "ProgramJob":
+    def program_job(self, job_id: str) -> ProgramJob:
         """Return an adapter for the job.
 
         Args:
@@ -50,7 +52,7 @@ class Runtime(RestAdapterBase):
         """
         return ProgramJob(self.session, job_id)
 
-    def runtime_session(self, session_id: str = None) -> "RuntimeSession":
+    def runtime_session(self, session_id: str | None = None) -> RuntimeSession:
         """Return an adapter for the session.
 
         Args:
@@ -64,18 +66,18 @@ class Runtime(RestAdapterBase):
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
-        params: Dict,
-        image: Optional[str] = None,
-        log_level: Optional[str] = None,
-        session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = False,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
-    ) -> Dict:
+        backend_name: str | None,
+        params: dict,
+        image: str | None = None,
+        log_level: str | None = None,
+        session_id: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = False,
+        session_time: int | None = None,
+        private: bool | None = False,
+        calibration_id: str | None = None,
+    ) -> dict:
         """Execute the program.
 
         Args:
@@ -96,7 +98,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "program_id": program_id,
             "params": params,
         }
@@ -126,17 +128,17 @@ class Runtime(RestAdapterBase):
 
     def jobs_get(
         self,
-        limit: int = None,
-        skip: int = None,
-        backend_name: str = None,
-        pending: bool = None,
-        program_id: str = None,
-        job_tags: Optional[List[str]] = None,
-        session_id: Optional[str] = None,
-        created_after: Optional[datetime] = None,
-        created_before: Optional[datetime] = None,
+        limit: int | None = None,
+        skip: int | None = None,
+        backend_name: str | None = None,
+        pending: bool | None = None,
+        program_id: str | None = None,
+        job_tags: list[str] | None = None,
+        session_id: str | None = None,
+        created_after: datetime | None = None,
+        created_before: datetime | None = None,
         descending: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Get a list of job data.
 
         Args:
@@ -161,7 +163,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Union[int, str, List[str]]] = {}
+        payload: dict[str, int | str | list[str]] = {}
         payload["exclude_params"] = "true"
         if limit:
             payload["limit"] = limit
@@ -198,8 +200,8 @@ class Runtime(RestAdapterBase):
 
     def backends(
         self,
-        timeout: Optional[float] = None,
-    ) -> Dict[str, Any]:
+        timeout: float | None = None,
+    ) -> dict[str, Any]:
         """Return a list of IBM backends.
 
         Args:
@@ -211,7 +213,7 @@ class Runtime(RestAdapterBase):
         url = self.get_url("backends")
         return self.session.get(url, timeout=timeout, headers=self._HEADER_JSON_ACCEPT).json()
 
-    def cloud_usage(self) -> Dict[str, Any]:
+    def cloud_usage(self) -> dict[str, Any]:
         """Return cloud instance usage information.
 
         Returns:

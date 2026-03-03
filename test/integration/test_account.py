@@ -12,11 +12,13 @@
 
 """Integration tests for account management."""
 
-from typing import Dict
+from unittest.mock import patch
+
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
+from ibm_cloud_sdk_core import ApiException
 from ibm_platform_services import (
     ResourceControllerV2,
     GlobalSearchV2,
@@ -35,7 +37,7 @@ from ..decorators import IntegrationTestDependencies
 
 def _get_service_instance_name_for_crn(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance name and account id for a given CRN.
 
     Note: production code computes the inverse mapping. This function is needed for integration test
@@ -51,7 +53,7 @@ def _get_service_instance_name_for_crn(
 
 def _get_instance_tags(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance tags for a given crn."""
     authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
     client = GlobalSearchV2(authenticator=authenticator)
@@ -300,6 +302,26 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertTrue(usage)
         self.assertIsInstance(usage["usage_remaining_seconds"], int)
         self.assertIsInstance(usage, dict)
+
+    def test_instances_archived(self):
+        """Test that archived instances are available to the user."""
+        with patch(
+            "ibm_platform_services.GlobalCatalogV1.get_catalog_entry"
+        ) as get_catalog_entry_mock:
+            get_catalog_entry_mock.side_effect = ApiException(403)
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+            )
+            instances = service.instances()
+            self.assertTrue(instances)
+            self.assertTrue(
+                all(
+                    instance["plan"] == "unknown" and instance["pricing_type"] == "unknown"
+                    for instance in instances
+                )
+            )
 
 
 class TestIntegrationAccount(IBMIntegrationTestCase):

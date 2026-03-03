@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeBogotaV2(fake_backend.FakeBackendV2):
     """A fake 5 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_bogota.json"  # type: ignore
-    props_filename = "props_bogota.json"  # type: ignore
-    backend_name = "fake_bogota"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_bogota.json"
+    props_filename = "props_bogota.json"
+    backend_name = "fake_bogota"

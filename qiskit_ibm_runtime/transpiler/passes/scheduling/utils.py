@@ -12,8 +12,11 @@
 
 """Utility functions for scheduling passes."""
 
+from __future__ import annotations
+
 import warnings
-from typing import Callable, Generator, Optional, Tuple, Union
+from typing import TypeAlias
+from collections.abc import Callable, Generator
 from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
@@ -47,8 +50,8 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
     @lru_cache(maxsize=8192)
     def _emit(
         node: DAGOpNode,
-        grouped_measure: Tuple[DAGOpNode],
-        block_triggers: Tuple[DAGOpNode],
+        grouped_measure: tuple[DAGOpNode],
+        block_triggers: tuple[DAGOpNode],
     ) -> bool:
         """Should we emit this node?"""
         for measure in grouped_measure:
@@ -130,11 +133,9 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
     _emit.cache_clear()
 
 
-InstrKey = Union[
-    Tuple[str, None, None],
-    Tuple[str, Tuple[int], None],
-    Tuple[str, Tuple[int], Tuple[Parameter]],
-]
+InstrKey: TypeAlias = (
+    tuple[str, None, None] | tuple[str, tuple[int], None] | tuple[str, tuple[int], tuple[Parameter]]
+)
 
 
 class DynamicCircuitInstructionDurations(InstructionDurations):
@@ -151,8 +152,8 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
 
     def __init__(
         self,
-        instruction_durations: Optional[InstructionDurationsType] = None,
-        dt: float = None,
+        instruction_durations: InstructionDurationsType | None = None,
+        dt: float | None = None,
         enable_patching: bool = True,
     ):
         """Dynamic circuit instruction durations."""
@@ -171,24 +172,24 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         super().__init__(instruction_durations=instruction_durations, dt=dt)
 
     @classmethod
-    def from_backend(cls, backend: Backend) -> "DynamicCircuitInstructionDurations":
+    def from_backend(cls, backend: Backend) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the backend.
         Args:
             backend: backend from which durations (gate lengths) and dt are extracted.
         Returns:
-            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+            The InstructionDurations constructed from backend.
         """
 
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)
 
     @classmethod
-    def from_target(cls, target: Target) -> "DynamicCircuitInstructionDurations":
+    def from_target(cls, target: Target) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the target.
         Args:
             target: target from which durations (gate lengths) and dt are extracted.
         Returns:
-            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+            The InstructionDurations constructed from backend.
         """
 
         instruction_durations_dict = target.durations().duration_by_name_qubits
@@ -202,8 +203,8 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         return cls(instruction_durations, dt=dt)
 
     def update(
-        self, inst_durations: Optional[InstructionDurationsType], dt: float = None
-    ) -> "DynamicCircuitInstructionDurations":
+        self, inst_durations: InstructionDurationsType | None, dt: float | None = None
+    ) -> DynamicCircuitInstructionDurations:
         """Update self with inst_durations (inst_durations overwrite self). Overrides the default
         durations for certain hardcoded instructions.
 
@@ -212,7 +213,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             dt: Sampling duration in seconds of the target backend.
 
         Returns:
-            InstructionDurations: The updated InstructionDurations.
+            The updated InstructionDurations.
 
         Raises:
             TranspilerError: If the format of instruction_durations is invalid.
@@ -292,7 +293,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             # Fall back to reset key if measure not available
             self._convert_and_patch_key(key)
 
-    def _get_duration(self, key: InstrKey) -> Tuple[int, str]:
+    def _get_duration(self, key: InstrKey) -> tuple[int, str]:
         """Handling for the complicated structure of this class.
 
         TODO: This class implementation should be simplified in Qiskit. Too many edge cases.

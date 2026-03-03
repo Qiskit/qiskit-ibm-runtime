@@ -189,6 +189,7 @@ Classes
    EstimatorV2
    Sampler
    SamplerV2
+   Executor
    Session
    Batch
    IBMBackend
@@ -208,6 +209,8 @@ from .utils.json import RuntimeEncoder, RuntimeDecoder
 from .session import Session  # pylint: disable=cyclic-import
 from .batch import Batch  # pylint: disable=cyclic-import
 
+from .quantum_program import QuantumProgram
+
 from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
@@ -216,9 +219,18 @@ from .estimator import (  # pylint: disable=reimported
     EstimatorV2,
     EstimatorV2 as Estimator,
 )
+from .executor import Executor
 from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
+from .noise_learner import (  # pylint: disable=reimported
+    NoiseLearner,
+    NoiseLearner as NoiseLearnerV2,
+)
+from .noise_learner_v3 import NoiseLearnerV3
 from .options import (  # pylint: disable=reimported
     EstimatorOptions,
+    ExecutorOptions,
+    NoiseLearnerOptions,
+    NoiseLearnerV3Options,
     SamplerOptions,
     OptionsV2,
     OptionsV2 as Options,
@@ -235,12 +247,3 @@ QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
-
-if sys.version_info < (3, 10):
-    warnings.warn(
-        "Using qiskit-ibm-runtime with Python 3.9 is deprecated as of the 0.41.0 release. "
-        "Support for running qiskit-ibm-runtime with Python 3.9 will be removed in a future "
-        "release.",
-        DeprecationWarning,
-        stacklevel=2,
-    )

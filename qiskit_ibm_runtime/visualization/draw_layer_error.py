@@ -13,7 +13,7 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Any, Dict, Optional, Tuple, Union, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
@@ -29,14 +29,14 @@ if TYPE_CHECKING:
 
 def draw_layer_error_map(
     layer_error: LayerError,
-    embedding: Union[Embedding, BackendV2],
+    embedding: Embedding | BackendV2,
     colorscale: str = "Bluered",
     color_no_data: str = "lightgray",
     color_out_of_scale: str = "lightgreen",
     num_edge_segments: int = 16,
     edge_width: float = 4,
     height: int = 500,
-    highest_rate: Optional[float] = None,
+    highest_rate: float | None = None,
     background_color: str = "white",
     radius: float = 0.25,
     width: int = 800,
@@ -81,7 +81,7 @@ def draw_layer_error_map(
     xs = [col for _, col in coordinates]
 
     # A set of unique edges ``(i, j)``, with ``i < j``.
-    edges = set(tuple(sorted(edge)) for edge in list(coupling_map))
+    edges = {tuple(sorted(edge)) for edge in list(coupling_map)}
 
     # The highest rate
     max_rate = 0
@@ -89,7 +89,7 @@ def draw_layer_error_map(
     # Initialize a dictionary of one-qubit errors
     qubits = layer_error.qubits
     error_1q = layer_error.error.restrict_num_bodies(1)
-    rates_1q: Dict[int, Dict[str, float]] = {qubit: {} for qubit in qubits}
+    rates_1q: dict[int, dict[str, float]] = {qubit: {} for qubit in qubits}
     for pauli, rate in zip(error_1q.generators, error_1q.rates):
         qubit_idx = np.where(pauli.x | pauli.z)[0][0]
         rates_1q[qubits[qubit_idx]][str(pauli[qubit_idx])] = rate
@@ -97,7 +97,7 @@ def draw_layer_error_map(
 
     # Initialize a dictionary of two-qubit errors
     error_2q = layer_error.error.restrict_num_bodies(2)
-    rates_2q: Dict[Tuple[int, ...], Dict[str, float]] = {edge: {} for edge in edges}
+    rates_2q: dict[tuple[int, ...], dict[str, float]] = {edge: {} for edge in edges}
     for pauli, rate in zip(error_2q.generators, error_2q.rates):
         err_idxs = tuple(sorted([i for i, q in enumerate(pauli) if str(q) != "I"]))
         edge = (qubits[err_idxs[0]], qubits[err_idxs[1]])
@@ -266,16 +266,16 @@ def draw_layer_error_map(
 
 def draw_layer_errors_swarm(
     layer_errors: list[LayerError],
-    num_bodies: Optional[int] = None,
-    max_rate: Optional[float] = None,
-    min_rate: Optional[float] = None,
-    connected: Optional[list[Union[Pauli, str]]] = None,
-    colors: Optional[list[str]] = None,
-    num_bins: Optional[int] = None,
-    opacities: Union[float, list[float]] = 0.4,
-    names: Optional[list[str]] = None,
-    x_coo: Optional[list[float]] = None,
-    marker_size: Optional[float] = None,
+    num_bodies: int | None = None,
+    max_rate: float | None = None,
+    min_rate: float | None = None,
+    connected: list[Pauli | str] | None = None,
+    colors: list[str] | None = None,
+    num_bins: int | None = None,
+    opacities: float | list[float] = 0.4,
+    names: list[str] | None = None,
+    x_coo: list[float] | None = None,
+    marker_size: float | None = None,
     height: int = 500,
     width: int = 800,
 ) -> PlotlyFigure:

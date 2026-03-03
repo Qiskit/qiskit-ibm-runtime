@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Sampler Execution options."""
-from typing import Literal, Union
+from typing import Literal
 from .execution_options import ExecutionOptionsV2
 from .utils import primitive_dataclass, Unset, UnsetType
 
@@ -22,7 +22,7 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
     for the sampler primitive.
     """
 
-    meas_type: Union[UnsetType, Literal["classified", "kerneled", "avg_kerneled"]] = Unset
+    meas_type: UnsetType | Literal["classified", "kerneled", "avg_kerneled"] = Unset
     r"""How to process and return measurement results.
 
     This option sets the return type of all classical registers in all

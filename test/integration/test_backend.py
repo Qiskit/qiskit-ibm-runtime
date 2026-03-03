@@ -261,6 +261,51 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertIn("rzz", real_device_fg.basis_gates)
         self.assertNotIn("rzz", real_device_no_fg.basis_gates)
 
+    def test_backend_fractional_gates_error(self):
+        """Test that use_fractional_gates = True raises error for unsupported backends"""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
+                self.skipTest(f"Backend {backend.name} supports fractional gates, no error.")
+            with self.assertRaises(
+                IBMInputValueError,
+                msg=(
+                    f"Backend '{backend.name}' does not support fractional gates, "
+                    "but use_fractional_gates was set to True."
+                ),
+            ):
+                self.service.backend(backend.name, use_fractional_gates=True)
+
+    def test_backend_fractional_gates_cache_behavior(self):
+        """Test backend config cache/refresh logic for use_fractional_gates."""
+        try:
+            real_device_name = "ibm_miami"
+            backend_fg = self.service.backend(real_device_name, use_fractional_gates=True)
+            backend_fg2 = self.service.backend(real_device_name, use_fractional_gates=True)
+            backend_no_fg = self.service.backend(real_device_name, use_fractional_gates=False)
+            backend_no_fg2 = self.service.backend(real_device_name, use_fractional_gates=False)
+            backend_fg3 = self.service.backend(real_device_name, use_fractional_gates=True)
+        except QiskitBackendNotFoundError:
+            self.skipTest("Real backend not available.")
+
+        self.assertIs(
+            backend_fg, backend_fg2, "Cache was not used for repeated use_fractional_gates=True"
+        )
+
+        self.assertIsNot(
+            backend_fg,
+            backend_no_fg,
+            "Configuration was not refreshed when use_fractional_gates changed",
+        )
+
+        self.assertIs(backend_no_fg, backend_no_fg2, "Cache was not used to create backend object")
+
+        self.assertIsNot(
+            backend_no_fg2,
+            backend_fg3,
+            "Configuration was not refreshed when use_fractional_gates changed",
+        )
+
     def test_renew_backend_properties(self):
         """Test renewed backend property"""
         name = self.backend.name

@@ -19,12 +19,11 @@ Example::
 
 import os
 import subprocess
-from typing import List
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def _minimal_ext_cmd(cmd: List[str]) -> bytes:
+def _minimal_ext_cmd(cmd: list[str]) -> bytes:
     # construct minimal environment
     env = {}
     for k in ["SYSTEMROOT", "PATH"]:
@@ -60,7 +59,7 @@ def git_version() -> str:
     return git_revision
 
 
-with open(os.path.join(ROOT_DIR, "VERSION.txt"), "r", encoding="utf-8") as version_file:
+with open(os.path.join(ROOT_DIR, "VERSION.txt"), encoding="utf-8") as version_file:
     VERSION = version_file.read().strip()
 
 

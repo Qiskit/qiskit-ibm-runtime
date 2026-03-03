@@ -12,23 +12,25 @@
 
 """Methods for checking if we are inside a Session context manager"""
 
+from __future__ import annotations
+
 from contextvars import ContextVar
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .session import Session
 
 # Default session
-_DEFAULT_SESSION: ContextVar[Optional["Session"]] = ContextVar("_DEFAULT_SESSION", default=None)
+_DEFAULT_SESSION: ContextVar[Session | None] = ContextVar("_DEFAULT_SESSION", default=None)
 _IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
 
 
-def set_cm_session(session: Optional["Session"]) -> None:
+def set_cm_session(session: Session | None) -> None:
     """Set the context manager session."""
     _DEFAULT_SESSION.set(session)
     _IN_SESSION_CM.set(session is not None)
 
 
-def get_cm_session() -> "Session":
+def get_cm_session() -> Session:
     """Return the context managed session."""
     return _DEFAULT_SESSION.get()

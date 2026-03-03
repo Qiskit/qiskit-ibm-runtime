@@ -14,7 +14,7 @@
 """Backend Configuration Classes."""
 import datetime
 import copy
-from typing import Dict, List, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 
@@ -36,32 +36,29 @@ class GateConfig:
     def __init__(
         self,
         name: str,
-        parameters: List[str],
+        parameters: list[str],
         qasm_def: str,
-        coupling_map: list = None,
-        latency_map: list = None,
-        conditional: bool = None,
-        description: str = None,
+        coupling_map: list | None = None,
+        latency_map: list | None = None,
+        conditional: bool | None = None,
+        description: str | None = None,
     ):
         """Initialize a GateConfig object
 
         Args:
-            name (str): the gate name as it will be referred to in OpenQASM.
-            parameters (list): variable names for the gate parameters (if any)
-                               as a list of strings.
-            qasm_def (str): definition of this gate in terms of OpenQASM 2 primitives U and CX.
-            coupling_map (list): An optional coupling map for the gate. In
-                the form of a list of lists of integers representing the qubit
-                groupings which are coupled by this gate.
-            latency_map (list): An optional map of latency for the gate. In the
-                the form of a list of lists of integers of either 0 or 1
-                representing an array of dimension
-                len(coupling_map) X n_registers that specifies the register
-                latency (1: fast, 0: slow) conditional operations on the gate
-            conditional (bool): Optionally specify whether this gate supports
-                conditional operations (true/false). If this is not specified,
-                then the gate inherits the conditional property of the backend.
-            description (str): Description of the gate operation
+            name: the gate name as it will be referred to in OpenQASM.
+            parameters: variable names for the gate parameters (if any) as a list of strings.
+            qasm_def: definition of this gate in terms of OpenQASM 2 primitives U and CX.
+            coupling_map: An optional coupling map for the gate. In the form of a list of lists of
+                integers representing the qubit groupings which are coupled by this gate.
+            latency_map: An optional map of latency for the gate. In the the form of a list of
+                lists of integers of either 0 or 1 representing an array of dimension
+                len(coupling_map) X n_registers that specifies the register latency
+                (1: fast, 0: slow) conditional operations on the gate.
+            conditional: Optionally specify whether this gate supports conditional operations
+                (true/false). If this is not specified, then the gate inherits the conditional
+                property of the backend.
+            description: Description of the gate operation
         """
 
         self.name = name
@@ -79,26 +76,25 @@ class GateConfig:
             self.description = description
 
     @classmethod
-    def from_dict(cls: Type[GateConfigT], data: Dict[str, Any]) -> GateConfigT:
+    def from_dict(cls: type[GateConfigT], data: dict[str, Any]) -> GateConfigT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the GateConfig to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the GateConfig to create. It will be in the same format
+                as output by :func:`to_dict`.
 
         Returns:
-            GateConfig: The GateConfig from the input dictionary.
+            The GateConfig from the input dictionary.
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
-            dict: The dictionary form of the GateConfig.
+            The dictionary form of the GateConfig.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "name": self.name,
             "parameters": self.parameters,
             "qasm_def": self.qasm_def,
@@ -140,8 +136,8 @@ class UchannelLO:
         """Initialize a UchannelLOSchema object
 
         Args:
-            q (int): Qubit that scale corresponds too. Must be >= 0.
-            scale (complex): Scale factor for qubit frequency.
+            q: Qubit that scale corresponds too. Must be >= 0.
+            scale: Scale factor for qubit frequency.
 
         Raises:
             QiskitError: If q is < 0
@@ -152,26 +148,25 @@ class UchannelLO:
         self.scale = scale
 
     @classmethod
-    def from_dict(cls: Type[UchannelLOT], data: Dict[str, Any]) -> UchannelLOT:
+    def from_dict(cls: type[UchannelLOT], data: dict[str, Any]) -> UchannelLOT:
         """Create a new UchannelLO object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the UChannelLO to
-                create. It will be in the same format as output by
-                :func:`to_dict`.
+            data: A dictionary representing the UChannelLO to create. It will be in the same
+                format as output by :func:`to_dict`.
 
         Returns:
-            UchannelLO: The UchannelLO from the input dictionary.
+            The UchannelLO from the input dictionary.
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the UChannelLO.
 
         Returns:
-            dict: The dictionary form of the UChannelLO.
+            The dictionary form of the UChannelLO.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "q": self.q,
             "scale": self.scale,
         }
@@ -203,7 +198,7 @@ class QasmBackendConfiguration:
         memory: backend supports memory.
     """
 
-    _data: Dict[Any, Any] = {}
+    _data: dict[Any, Any] = {}
 
     def __init__(
         self,
@@ -218,83 +213,80 @@ class QasmBackendConfiguration:
         open_pulse: bool,
         memory: bool,
         coupling_map: list,
-        meas_levels: List[int] = None,
-        meas_kernels: List[str] = None,
-        discriminators: List[str] = None,
-        meas_map: list = None,
-        supported_instructions: List[str] = None,
+        meas_levels: list[int] | None = None,
+        meas_kernels: list[str] | None = None,
+        discriminators: list[str] | None = None,
+        meas_map: list | None = None,
+        supported_instructions: list[str] | None = None,
         dynamic_reprate_enabled: bool = False,
-        rep_delay_range: List[float] = None,
-        default_rep_delay: float = None,
-        sample_name: str = None,
-        n_registers: int = None,
-        register_map: list = None,
-        configurable: bool = None,
-        credits_required: bool = None,
-        online_date: datetime.datetime = None,
-        display_name: str = None,
-        description: str = None,
-        tags: list = None,
-        dt: float = None,
-        dtm: float = None,
-        processor_type: dict = None,
-        parametric_pulses: list = None,
+        rep_delay_range: list[float] | None = None,
+        default_rep_delay: float | None = None,
+        sample_name: str | None = None,
+        n_registers: int | None = None,
+        register_map: list | None = None,
+        configurable: bool | None = None,
+        credits_required: bool | None = None,
+        online_date: datetime.datetime | None = None,
+        display_name: str | None = None,
+        description: str | None = None,
+        tags: list | None = None,
+        dt: float | None = None,
+        dtm: float | None = None,
+        processor_type: dict | None = None,
+        parametric_pulses: list | None = None,
         **kwargs: Any,
     ):
         """Initialize a QasmBackendConfiguration Object
 
         Args:
-            backend_name (str): The backend name
-            backend_version (str): The backend version in the form X.Y.Z
-            n_qubits (int): the number of qubits for the backend
-            basis_gates (list): The list of strings for the basis gates of the
-                backends
-            gates (list): The list of GateConfig objects for the basis gates of
+            backend_name: The backend name
+            backend_version: The backend version in the form X.Y.Z
+            n_qubits: the number of qubits for the backend
+            basis_gates: The list of strings for the basis gates of the backends
+            gates: The list of GateConfig objects for the basis gates of
                 the backend
-            local (bool): True if the backend is local or False if remote
-            simulator (bool): True if the backend is a simulator
-            conditional (bool): True if the backend supports conditional
-                operations
-            open_pulse (bool): True if the backend supports OpenPulse
-            memory (bool): True if the backend supports memory
-            coupling_map (list): The coupling map for the device
+            local: True if the backend is local or False if remote
+            simulator: True if the backend is a simulator
+            conditional: True if the backend supports conditional operations
+            open_pulse: True if the backend supports OpenPulse
+            memory: True if the backend supports memory
+            coupling_map: The coupling map for the device
             meas_levels: Supported measurement levels.
             meas_kernels: Supported measurement kernels.
             discriminators: Supported discriminators.
-            meas_map (list): Grouping of measurement which are multiplexed
-            supported_instructions (List[str]): Instructions supported by the backend.
-            dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
+            meas_map: Grouping of measurement which are multiplexed
+            supported_instructions: Instructions supported by the backend.
+            dynamic_reprate_enabled: whether delay between programs can be set dynamically
                 (ie via ``rep_delay``). Defaults to False.
-            rep_delay_range (List[float]): 2d list defining supported range of repetition
-                delays for backend in μs. First entry is lower end of the range, second entry is
-                higher end of the range. Optional, but will be specified when
+            rep_delay_range: 2d list defining supported range of repetition delays for backend in
+                μs. First entry is lower end of the range, second entry is higher end of the range.
+                Optional, but will be specified when ``dynamic_reprate_enabled=True``.
+            default_rep_delay: Value of ``rep_delay`` if not specified by user and
                 ``dynamic_reprate_enabled=True``.
-            default_rep_delay (float): Value of ``rep_delay`` if not specified by user and
-                ``dynamic_reprate_enabled=True``.
-            sample_name (str): Sample name for the backend
-            n_registers (int): Number of register slots available for feedback
+            sample_name: Sample name for the backend
+            n_registers: Number of register slots available for feedback
                 (if conditional is True)
-            register_map (list): An array of dimension n_qubits X
+            register_map: An array of dimension n_qubits X
                 n_registers that specifies whether a qubit can store a
                 measurement in a certain register slot.
-            configurable (bool): True if the backend is configurable, if the
+            configurable: True if the backend is configurable, if the
                 backend is a simulator
-            credits_required (bool): True if backend requires credits to run a
+            credits_required: True if backend requires credits to run a
                 job.
-            online_date (datetime.datetime): The date that the device went online
-            display_name (str): Alternate name field for the backend
-            description (str): A description for the backend
-            tags (list): A list of string tags to describe the backend
-            dt (float): Qubit drive channel timestep in nanoseconds.
-            dtm (float): Measurement drive channel timestep in nanoseconds.
-            processor_type (dict): Processor type for this backend. A dictionary of the
+            online_date: The date that the device went online
+            display_name: Alternate name field for the backend
+            description: A description for the backend
+            tags: A list of string tags to describe the backend
+            dt: Qubit drive channel timestep in nanoseconds.
+            dtm: Measurement drive channel timestep in nanoseconds.
+            processor_type: Processor type for this backend. A dictionary of the
                 form ``{"family": <str>, "revision": <str>, segment: <str>}`` such as
                 ``{"family": "Canary", "revision": "1.0", segment: "A"}``.
 
                 - family: Processor family of this backend.
                 - revision: Revision version of this processor.
                 - segment: Segment this processor belongs to within a larger chip.
-            parametric_pulses (list): A list of pulse shapes which are supported on the backend.
+            parametric_pulses: A list of pulse shapes which are supported on the backend.
                 For example: ``['gaussian', 'constant']``
 
             **kwargs: optional fields
@@ -384,29 +376,29 @@ class QasmBackendConfiguration:
 
     @classmethod
     def from_dict(
-        cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]
+        cls: type[QasmBackendConfigurationT], data: dict[str, Any]
     ) -> QasmBackendConfigurationT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the GateConfig to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the GateConfig to create. It will be in the same format
+                as output by :func:`to_dict`.
+
         Returns:
-            GateConfig: The GateConfig from the input dictionary.
+            The GateConfig from the input dictionary.
         """
-        in_data: Dict[str, Any] = copy.copy(data)
+        in_data: dict[str, Any] = copy.copy(data)
         gates = [GateConfig.from_dict(x) for x in in_data.pop("gates")]
         in_data["gates"] = gates
         return cls(**in_data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
-            dict: The dictionary form of the GateConfig.
+            The dictionary form of the GateConfig.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "backend_name": self.backend_name,
             "backend_version": self.backend_version,
             "n_qubits": self.n_qubits,

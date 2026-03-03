@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 from datetime import datetime
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +24,7 @@ import numpy.typing as npt
 
 # Python 3.8 does not recognize tuple[<something],
 # in spite of `from __future__ import annotations`
-ShapeType = Tuple[int, ...]
+ShapeType = tuple[int, ...]
 """A shape tuple representing some nd-array shape."""
 
 
@@ -125,7 +125,7 @@ class ExecutionSpan(abc.ABC):
         return not pub_idx.isdisjoint(self.pub_idxs)
 
     @abc.abstractmethod
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "ExecutionSpan":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpan:
         """Return a new span whose slices are filtered to the provided pub indices.
 
         For example, if this span contains slice information for pubs with indices 1, 3, 4 and

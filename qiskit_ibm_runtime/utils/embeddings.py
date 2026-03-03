@@ -15,7 +15,9 @@
 Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
 """
 
-from typing import Iterable, List, Tuple, Union, Sequence
+from __future__ import annotations
+
+from collections.abc import Iterable, Sequence
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -33,8 +35,8 @@ class Embedding:
 
     def __init__(
         self,
-        coordinates: List[Tuple[int, int]],
-        coupling_map: Union[List[Tuple[int, int]], CouplingMap],
+        coordinates: list[tuple[int, int]],
+        coupling_map: list[tuple[int, int]] | CouplingMap,
     ) -> None:
         num_qubits = len(coordinates)
         if any(q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map):
@@ -46,7 +48,7 @@ class Embedding:
         )
 
     @classmethod
-    def from_backend(cls, backend: BackendV2) -> "Embedding":
+    def from_backend(cls, backend: BackendV2) -> Embedding:
         r"""Generates an :class:`~.Embedding` object from a backend.
 
         Args:
@@ -69,7 +71,7 @@ class Embedding:
         return cls(coordinates, coupling_map)
 
     @property
-    def coordinates(self) -> List[Tuple[int, int]]:
+    def coordinates(self) -> list[tuple[int, int]]:
         r"""
         The coordinates in this embedding.
         """
@@ -85,7 +87,7 @@ class Embedding:
 
 def _heavy_hex_coords(
     rows: Sequence[Iterable[int]], row_major: bool = True
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Generate heavy hex coordinates for the given rows.
 
     Args:
@@ -112,7 +114,7 @@ def _heavy_hex_coords(
     return coordinates
 
 
-def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
+def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
     r"""
     Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
 

@@ -18,7 +18,7 @@ from ..session import RetrySession
 class RestAdapterBase:
     """Base class for REST adapters."""
 
-    URL_MAP = {}  # type: ignore[var-annotated]
+    URL_MAP: dict[str, str] = {}
     """Mapping between the internal name of an endpoint and the actual URL."""
 
     _HEADER_JSON_CONTENT = {"Content-Type": "application/json"}

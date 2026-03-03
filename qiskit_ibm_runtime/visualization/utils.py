@@ -15,8 +15,6 @@
 Utility functions for visualizing qiskit-ibm-runtime's objects.
 """
 
-from __future__ import annotations
-
 import importlib
 from types import ModuleType
 

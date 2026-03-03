@@ -12,8 +12,6 @@
 
 """Fake ibm_quantum_platform AuthClient."""
 
-from typing import Dict, Union, Optional
-
 
 class BaseFakeAuthClient:
     """Base class for faking the runtime client."""
@@ -22,7 +20,7 @@ class BaseFakeAuthClient:
         """Initialize a auth runtime client."""
         pass
 
-    def user_urls(self) -> Dict[str, Union[str, Dict]]:
+    def user_urls(self) -> dict[str, str | dict]:
         """Retrieve the API URLs from the authentication service.
 
         Returns:
@@ -39,7 +37,7 @@ class BaseFakeAuthClient:
             "services": {"runtime": "http://127.0.0.1"},
         }
 
-    def api_version(self) -> Dict[str, Union[str, bool]]:
+    def api_version(self) -> dict[str, str | bool]:
         """Return the version of the API.
 
         Returns:
@@ -47,7 +45,7 @@ class BaseFakeAuthClient:
         """
         return {"new_api": True, "api-auth": "0.1"}
 
-    def current_access_token(self) -> Optional[str]:
+    def current_access_token(self) -> str | None:
         """Return the current access token.
 
         Returns:
@@ -55,7 +53,7 @@ class BaseFakeAuthClient:
         """
         return "123"
 
-    def current_service_urls(self) -> Dict[str, str]:
+    def current_service_urls(self) -> dict[str, str]:
         """Return the current service URLs.
 
         Returns:

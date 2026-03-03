@@ -12,13 +12,12 @@
 
 """Qiskit runtime service."""
 
-from __future__ import annotations
-
 import math
 import copy
 import logging
 import warnings
-from typing import Callable, Dict, List, Literal, Optional
+from typing import Literal
+from collections.abc import Callable
 
 from qiskit.primitives import (
     BackendEstimatorV2,
@@ -50,7 +49,9 @@ class QiskitRuntimeLocalService:
         """
 
     def backend(
-        self, name: str = None, instance: str = None  # pylint: disable=unused-argument
+        self,
+        name: str | None = None,
+        instance: str | None = None,  # pylint: disable=unused-argument
     ) -> FakeBackendV2:
         """Return a single fake backend matching the specified filters.
 
@@ -58,17 +59,17 @@ class QiskitRuntimeLocalService:
             name: The name of the backend.
 
         Returns:
-            Backend: A backend matching the filtering.
+            A backend matching the filtering.
         """
         return self.backends(name=name)[0]
 
     def backends(
         self,
-        name: Optional[str] = None,
-        min_num_qubits: Optional[int] = None,
-        dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
-    ) -> List[FakeBackendV2]:
+        name: str | None = None,
+        min_num_qubits: int | None = None,
+        dynamic_circuits: bool | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
+    ) -> list[FakeBackendV2]:
         """Return all the available fake backends, subject to optional filtering.
 
         Args:
@@ -126,8 +127,8 @@ class QiskitRuntimeLocalService:
 
     def least_busy(
         self,
-        min_num_qubits: Optional[int] = None,
-        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+        min_num_qubits: int | None = None,
+        filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
         """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
@@ -145,9 +146,9 @@ class QiskitRuntimeLocalService:
     def _run(
         self,
         program_id: Literal["sampler", "estimator"],
-        inputs: Dict,
-        options: Dict,
-        calibration_id: Optional[str],
+        inputs: dict,
+        options: dict,
+        calibration_id: str | None,
     ) -> PrimitiveJob:
         """Execute the runtime program.
 

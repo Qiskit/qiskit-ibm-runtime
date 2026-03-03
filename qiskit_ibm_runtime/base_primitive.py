@@ -12,9 +12,8 @@
 
 """Base class for Qiskit Runtime primitives."""
 
-from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Union, TypeVar, Generic, Type
+from typing import TypeVar, Generic
 import logging
 from dataclasses import asdict, replace
 
@@ -46,10 +45,10 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] = None) -> tuple[
-    Union[Session, Batch, None],
-    Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
-    Union[BackendV2, None],
+def get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
+    Session | Batch | None,
+    QiskitRuntimeService | QiskitRuntimeLocalService | None,
+    BackendV2 | None,
 ]:
     """
     A utility function that returns mode, service, and backend for a given execution mode.
@@ -64,7 +63,7 @@ def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] =
 
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
-    elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+    elif isinstance(mode, IBMBackend):
         if get_cm_session():
             logger.warning(
                 "A backend was passed in as the mode but a session context manager "
@@ -81,7 +80,7 @@ def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] =
         return None, mode.service, mode
     elif isinstance(mode, BackendV2):
         return None, QiskitRuntimeLocalService(), mode
-    elif mode is not None:  # type: ignore[unreachable]
+    elif mode is not None:
         raise ValueError("mode must be of type Backend, Session, Batch or None")
     elif get_cm_session():
         mode = get_cm_session()
@@ -96,13 +95,13 @@ def _get_mode_service_backend(mode: Optional[Union[BackendV2, Session, Batch]] =
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: Type[OptionsT] = OptionsV2  # type: ignore[assignment]
+    _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
-        options: Optional[Union[Dict, OptionsT]] = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | OptionsT | None = None,
     ):
         """Initializes the primitive.
 
@@ -120,10 +119,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 
-    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
+    def _run(self, pubs: list[EstimatorPub] | list[SamplerPub]) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:
@@ -194,7 +193,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         )
 
     @property
-    def mode(self) -> Optional[Session | Batch]:
+    def mode(self) -> Session | Batch | None:
         """Return the execution mode used by this primitive.
 
         Returns:
@@ -211,7 +210,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         """Return the backend the primitive query will be run on."""
         return self._backend
 
-    def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
+    def _set_options(self, options: dict | OptionsT | None = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()

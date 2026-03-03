@@ -12,7 +12,7 @@
 
 """Options for dynamical decoupling."""
 
-from typing import Union, Literal
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass
 
@@ -21,12 +21,12 @@ from .utils import Unset, UnsetType, primitive_dataclass
 class DynamicalDecouplingOptions:
     """Options for dynamical decoupling (DD)."""
 
-    enable: Union[UnsetType, bool] = Unset
+    enable: UnsetType | bool = Unset
     r"""Whether to enable DD as specified by the other options in this class.
 
         Default: ``False``.
     """
-    sequence_type: Union[UnsetType, Literal["XX", "XpXm", "XY4"]] = Unset
+    sequence_type: UnsetType | Literal["XX", "XpXm", "XY4"] = Unset
     r"""Which dynamical decoupling sequence to use. 
     
         Default: ``"XX"``.
@@ -36,7 +36,7 @@ class DynamicalDecouplingOptions:
         * ``"XY4"``: use the sequence
           ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``    
     """
-    extra_slack_distribution: Union[UnsetType, Literal["middle", "edges"]] = Unset
+    extra_slack_distribution: UnsetType | Literal["middle", "edges"] = Unset
     r"""Where to put extra timing delays due to rounding issues.
         Rounding issues arise because the discrete time step ``dt`` of the system cannot
         be divided. This option takes following values. 
@@ -47,13 +47,13 @@ class DynamicalDecouplingOptions:
         * ``"edges"``: Divide the extra slack as evenly as possible into intervals at
           beginning and end of the sequence.
     """
-    scheduling_method: Union[UnsetType, Literal["alap", "asap"]] = Unset
+    scheduling_method: UnsetType | Literal["alap", "asap"] = Unset
     r"""Whether to schedule gates as soon as ("asap") or
         as late as ("alap") possible. 
 
         Default: ``"alap"``.
     """
-    skip_reset_qubits: Union[UnsetType, bool] = Unset
+    skip_reset_qubits: UnsetType | bool = Unset
     r"""Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
 
         Since qubits in the ground state are less susceptible to decoherence, it can be beneficial

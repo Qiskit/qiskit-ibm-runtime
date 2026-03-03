@@ -22,7 +22,7 @@ import os
 
 from qiskit import QuantumCircuit
 
-from qiskit.providers import BackendV2
+from qiskit.providers import BackendV2, Job
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
@@ -251,8 +251,7 @@ class FakeBackendV2(BackendV2):
         backend.
 
         Returns:
-            qiskit.providers.Options: A options object with
-                default values set
+            An options object with default values set
         """
         if _optionals.HAS_AER:
             from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
@@ -275,7 +274,7 @@ class FakeBackendV2(BackendV2):
         else:
             return None
 
-    def run(self, run_input, **options):  # type: ignore
+    def run(self, run_input: QuantumCircuit | list[QuantumCircuit], **options: dict) -> Job:
         """Run on the fake backend using a simulator.
 
         This method runs circuit jobs (an individual or a list of QuantumCircuit)
@@ -290,9 +289,7 @@ class FakeBackendV2(BackendV2):
         FakeBackendV2.
 
         Args:
-            run_input (QuantumCircuit or list): An
-                individual or a list of
-                :class:`~qiskit.circuit.QuantumCircuit`
+            run_input: An individual or a list of :class:`~qiskit.circuit.QuantumCircuit`
             options: Any kwarg options to pass to the backend for running the
                 config. If a key is also present in the options
                 attribute/object then the expectation is that the value
@@ -300,12 +297,12 @@ class FakeBackendV2(BackendV2):
                 object.
 
         Returns:
-            Job: The job object for the run
+            The job object for the run
         """
         if self.sim is None:
             self._setup_sim()
-        self.sim._options = self._options
-        job = self.sim.run(run_input, **options)
+        self.sim._options = self._options  # type: ignore[attr-defined]
+        job = self.sim.run(run_input, **options)  # type: ignore[attr-defined]
         return job
 
     def _get_noise_model_from_backend_v2(  # type: ignore
@@ -419,7 +416,7 @@ class FakeBackendV2(BackendV2):
                 " required to retrieve the real backend's current properties and settings."
             )
 
-        prod_name = self.backend_name.replace("fake", "ibm")
+        prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]
         try:
             backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
             real_backend = backends[0]

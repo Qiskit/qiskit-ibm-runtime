@@ -14,14 +14,15 @@
 
 import copy
 import datetime
-from typing import Any, Iterable, Tuple, Union, Dict, TypeVar, Type, List
+from typing import Any, TypeVar
+from collections.abc import Iterable
 import dateutil.parser
 
 from qiskit.utils.units import apply_prefix
 
 from .exceptions import BackendPropertyError
 
-PropertyT = Tuple[Any, datetime.datetime]
+PropertyT = tuple[Any, datetime.datetime]
 NduvT = TypeVar("NduvT", bound="Nduv")
 GatePropertiesT = TypeVar("GatePropertiesT", bound="GateProperties")
 BackendPropertiesT = TypeVar("BackendPropertiesT", bound="BackendProperties")
@@ -41,10 +42,10 @@ class Nduv:
         """Initialize a new name-date-unit-value object
 
         Args:
-            date (datetime.datetime): Date field
-            name (str): Name field
-            unit (str): Nduv unit
-            value (float): The value of the Nduv
+            date: Date field
+            name: Name field
+            unit: Nduv unit
+            value: The value of the Nduv
         """
         self.date = date
         self.name = name
@@ -52,24 +53,23 @@ class Nduv:
         self.value = value
 
     @classmethod
-    def from_dict(cls: Type[NduvT], data: Dict[str, Any]) -> NduvT:
+    def from_dict(cls: type[NduvT], data: dict[str, Any]) -> NduvT:
         """Create a new Nduv object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the Nduv to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the Nduv to create. It will be in the same format as
+                output by :func:`to_dict`.
 
         Returns:
-            Nduv: The Nduv from the input dictionary.
+            The Nduv from the input dictionary.
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the object.
 
         Returns:
-            dict: The dictionary form of the Nduv.
+            The dictionary form of the Nduv.
         """
         out_dict = {
             "date": self.date,
@@ -98,16 +98,15 @@ class GateProperties:
         parameters: parameters.
     """
 
-    _data: Dict[Any, Any] = {}
+    _data: dict[Any, Any] = {}
 
-    def __init__(self, qubits: List[int], gate: str, parameters: List[Nduv], **kwargs: Any) -> None:
+    def __init__(self, qubits: list[int], gate: str, parameters: list[Nduv], **kwargs: Any) -> None:
         """Initialize a new :class:`GateProperties` object
 
         Args:
-            qubits (list): A list of integers representing qubits
-            gate (str): The gates name
-            parameters (list): List of :class:`Nduv` objects for the
-                name-date-unit-value for the gate
+            qubits: A list of integers representing qubits
+            gate: The gates name
+            parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
             kwargs: Optional additional fields
         """
         self._data = {}
@@ -123,18 +122,17 @@ class GateProperties:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls: Type[GatePropertiesT], data: Dict[str, Any]) -> GatePropertiesT:
+    def from_dict(cls: type[GatePropertiesT], data: dict[str, Any]) -> GatePropertiesT:
         """Create a new Gate object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the Gate to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the Gate to create. It will be in the same format as
+                output by :func:`to_dict`.
 
         Returns:
-            GateProperties: The Nduv from the input dictionary.
+            The Nduv from the input dictionary.
         """
-        in_data: Dict[Any, Any] = {}
+        in_data: dict[Any, Any] = {}
         for key, value in data.items():
             if key == "parameters":
                 in_data[key] = list(map(Nduv.from_dict, value))
@@ -142,13 +140,13 @@ class GateProperties:
                 in_data[key] = value
         return cls(**in_data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
-            dict: The dictionary form of the Gate.
+            The dictionary form of the Gate.
         """
-        out_dict: Dict[str, Any] = {
+        out_dict: dict[str, Any] = {
             "qubits": self.qubits,
             "gate": self.gate,
             "parameters": [x.to_dict() for x in self.parameters],
@@ -181,7 +179,7 @@ class BackendProperties:
         self,
         backend_name: str,
         backend_version: str,
-        last_update_date: Union[datetime.datetime, str],
+        last_update_date: datetime.datetime | str,
         qubits: list,
         gates: list,
         general: list,
@@ -190,16 +188,13 @@ class BackendProperties:
         """Initialize a BackendProperties instance.
 
         Args:
-            backend_name (str): Backend name.
-            backend_version (str): Backend version in the form X.Y.Z.
-            last_update_date (datetime.datetime or str): Last date/time that a property was
-                updated. If specified as a ``str``, it must be in ISO format.
-            qubits (list): System qubit parameters as a list of lists of
-                           :class:`Nduv` objects
-            gates (list): System gate parameters as a list of :class:`GateProperties`
-                          objects
-            general (list): General parameters as a list of :class:`Nduv`
-                            objects
+            backend_name: Backend name.
+            backend_version: Backend version in the form X.Y.Z.
+            last_update_date: Last date/time that a property was updated. If specified as a
+                ``str``, it must be in ISO format.
+            qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
+            gates: System gate parameters as a list of :class:`GateProperties` objects
+            general: General parameters as a list of :class:`Nduv` objects
             kwargs: optional additional fields
         """
         self._data = {}
@@ -238,15 +233,15 @@ class BackendProperties:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls: Type[BackendPropertiesT], data: dict) -> BackendPropertiesT:
+    def from_dict(cls: type[BackendPropertiesT], data: dict) -> BackendPropertiesT:
         """Create a new BackendProperties object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the BackendProperties to create.  It will be in
+            data: A dictionary representing the BackendProperties to create.  It will be in
                 the same format as output by :meth:`to_dict`.
 
         Returns:
-            BackendProperties: The BackendProperties from the input dictionary.
+            The BackendProperties from the input dictionary.
         """
         in_data = copy.copy(data)
         backend_name = in_data.pop("backend_name")
@@ -268,7 +263,7 @@ class BackendProperties:
         """Return a dictionary format representation of the BackendProperties.
 
         Returns:
-            dict: The dictionary form of the BackendProperties.
+            The dictionary form of the BackendProperties.
         """
         out_dict: dict = {
             "backend_name": self.backend_name,
@@ -295,13 +290,9 @@ class BackendProperties:
     def gate_property(
         self,
         gate: str,
-        qubits: Union[int, Iterable[int]] = None,
-        name: str = None,
-    ) -> Union[
-        Dict[Tuple[int, ...], Dict[str, PropertyT]],
-        Dict[str, PropertyT],
-        PropertyT,
-    ]:
+        qubits: int | Iterable[int] | None = None,
+        name: str | None = None,
+    ) -> dict[tuple[int, ...], dict[str, PropertyT]] | dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given gate.
 
@@ -347,7 +338,7 @@ class BackendProperties:
                 faulty.append(gate)
         return faulty
 
-    def is_gate_operational(self, gate: str, qubits: Union[int, Iterable[int]] = None) -> bool:
+    def is_gate_operational(self, gate: str, qubits: int | Iterable[int] | None = None) -> bool:
         """
         Return the operational status of the given gate.
 
@@ -356,15 +347,15 @@ class BackendProperties:
             qubits: The qubit to find the operational status for.
 
         Returns:
-            bool: Operational status of the given gate. True if the gate is operational,
+            Operational status of the given gate. True if the gate is operational,
             False otherwise.
         """
         properties = self.gate_property(gate, qubits)
         if "operational" in properties:
-            return bool(properties["operational"][0])  # type: ignore[index, misc]
+            return bool(properties["operational"][0])  # type: ignore[index, call-overload]
         return True  # if property operational not existent, then True.
 
-    def gate_error(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
+    def gate_error(self, gate: str, qubits: int | Iterable[int]) -> float:
         """
         Return gate error estimates from backend properties.
 
@@ -377,7 +368,7 @@ class BackendProperties:
         """
         return self.gate_property(gate, qubits, "gate_error")[0]  # type: ignore[index, return-value]
 
-    def gate_length(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
+    def gate_length(self, gate: str, qubits: int | Iterable[int]) -> float:
         """
         Return the duration of the gate in units of seconds.
 
@@ -393,11 +384,8 @@ class BackendProperties:
     def qubit_property(
         self,
         qubit: int,
-        name: str = None,
-    ) -> Union[
-        Dict[str, PropertyT],
-        PropertyT,
-    ]:
+        name: str | None = None,
+    ) -> dict[str, PropertyT] | PropertyT:
         """
         Return the property of the given qubit.
 
@@ -494,7 +482,7 @@ class BackendProperties:
         """
         properties = self.qubit_property(qubit)
         if "operational" in properties:
-            return bool(properties["operational"][0])  # type: ignore[index, return-value, misc]
+            return bool(properties["operational"][0])  # type: ignore[index, call-overload]
         return True  # if property operational not existent, then True.
 
     def _apply_prefix(self, value: float, unit: str) -> float:

@@ -44,5 +44,5 @@ Upgrade Notes
 
       * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
         the same performance management product accessible directly through Q-CTRL. 
-        You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-authenticate-with-ibm-credentials>`__
+        You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-migrate-from-performance-management-on-ibm-cloud>`__
         to Fire Opal. (`1966 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1966>`__)
