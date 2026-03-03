@@ -21,6 +21,7 @@ from qiskit.primitives import PrimitiveResult
 
 from ....quantum_program.quantum_program_result import QuantumProgramResult
 from .sampler import SamplerV2
+from ..options.sampler_options import SamplerOptions
 
 # Type alias for sampler post-processor functions
 PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
@@ -103,9 +104,9 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     ``num_randomizations`` axis. This function flattens that axis together with the
     ``shots_per_randomization`` axis into a single ``total_shots`` axis.
 
-    Flattening is performed only when ``pub_shapes`` is present in
-    ``result.passthrough_data["post_processor"]``. If it is absent, the data is
-    passed through unchanged.
+    Flattening is performed when twirling is enabled (determined by checking the
+    ``options`` field in ``result.passthrough_data["post_processor"]``). The
+    ``pub_shapes`` field provides the parameter sweep shape for each pub.
 
     Args:
         result: The raw quantum program result containing measurement data.
@@ -122,17 +123,38 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
                 item[key[len(prefix) :]] ^= item.pop(key)
     # TODO: This could fail if the user manually specifies a register starting with the prefix.
 
-    # Flatten randomization axes when pub_shapes are provided (twirling path).
+    # Flatten randomization axes when twirling is enabled.
     pub_shapes: list[list[int]] | None = None
+    twirling_enabled = False
     passthrough = result.passthrough_data
     if isinstance(passthrough, dict):
         post_processor_data = passthrough.get("post_processor")
         if isinstance(post_processor_data, dict):
-            raw_pub_shapes = post_processor_data.get("pub_shapes")
-            if isinstance(raw_pub_shapes, list):
-                pub_shapes = raw_pub_shapes  # type: ignore[assignment]
+            # Reconstruct SamplerOptions from the options dictionary
+            options_dict = post_processor_data.get("options")
+            if isinstance(options_dict, dict):
+                try:
+                    options = SamplerOptions(**options_dict)
+                    twirling_enabled = (
+                        options.twirling.enable_gates or options.twirling.enable_measure
+                    )
+                except (TypeError, ValueError):
+                    # If reconstruction fails, fall back to checking pub_shapes presence
+                    pass
 
-    if pub_shapes is not None:
+            # Get pub_shapes if twirling is enabled
+            if twirling_enabled:
+                raw_pub_shapes = post_processor_data.get("pub_shapes")
+                if isinstance(raw_pub_shapes, list):
+                    pub_shapes = raw_pub_shapes  # type: ignore[assignment]
+                else:
+                    raise ValueError(
+                        "Twirling is enabled in options but 'pub_shapes' is missing from "
+                        "passthrough_data. This indicates a mismatch between the execution "
+                        "configuration and the result data."
+                    )
+
+    if twirling_enabled and pub_shapes is not None:
         for idx, item in enumerate(result):
             pub_shape = tuple(pub_shapes[idx])
             _flatten_twirling_axes(item, pub_shape)

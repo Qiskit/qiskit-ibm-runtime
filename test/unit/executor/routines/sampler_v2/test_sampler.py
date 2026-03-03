@@ -1097,3 +1097,61 @@ class TestPrepareTwirling(unittest.TestCase):
         pub_shapes = qp.passthrough_data["post_processor"]["pub_shapes"]
         self.assertEqual(pub_shapes[0], [])  # non-parametric pub
         self.assertEqual(pub_shapes[1], [2])  # parametric pub with sweep shape (2,)
+
+    def test_prepare_includes_options_in_passthrough_data(self):
+        """Test that prepare() includes options dictionary in passthrough_data."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.default_shots = 2048
+        options.twirling.enable_gates = True
+        options.twirling.strategy = "all"
+        options.execution.meas_type = "kerneled"
+        options.environment.log_level = "DEBUG"
+
+        qp, _ = prepare([pub], options, default_shots=1024)
+
+        # Verify options dictionary is present in passthrough_data
+        self.assertIn("post_processor", qp.passthrough_data)
+        self.assertIn("options", qp.passthrough_data["post_processor"])
+
+        options_dict = qp.passthrough_data["post_processor"]["options"]
+
+        # Verify it's a dictionary with expected structure
+        self.assertIsInstance(options_dict, dict)
+        self.assertIn("default_shots", options_dict)
+        self.assertIn("twirling", options_dict)
+        self.assertIn("execution", options_dict)
+        self.assertIn("environment", options_dict)
+
+        # Verify custom values are preserved
+        self.assertEqual(options_dict["default_shots"], 2048)
+        self.assertEqual(options_dict["twirling"]["enable_gates"], True)
+        self.assertEqual(options_dict["twirling"]["strategy"], "all")
+        self.assertEqual(options_dict["execution"]["meas_type"], "kerneled")
+        self.assertEqual(options_dict["environment"]["log_level"], "DEBUG")
+
+    def test_prepare_includes_options_without_twirling(self):
+        """Test that prepare() includes options even when twirling is disabled."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+        options.default_shots = 512
+        # Twirling disabled (default)
+
+        qp, _ = prepare([pub], options, default_shots=1024)
+
+        # Verify options dictionary is present even without twirling
+        self.assertIn("post_processor", qp.passthrough_data)
+        self.assertIn("options", qp.passthrough_data["post_processor"])
+
+        options_dict = qp.passthrough_data["post_processor"]["options"]
+        self.assertIsInstance(options_dict, dict)
+        self.assertEqual(options_dict["default_shots"], 512)
+        self.assertEqual(options_dict["twirling"]["enable_gates"], False)

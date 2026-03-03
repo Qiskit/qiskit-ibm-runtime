@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import asdict
 import logging
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -97,6 +98,7 @@ def prepare(
         post_processor_data: dict = {
             "context": "sampler_v2",
             "version": "v1",
+            "options": asdict(options),  # type: ignore[call-overload]
         }
     else:
         # Twirling path: create SamplexItem objects
@@ -146,6 +148,7 @@ def prepare(
             "context": "sampler_v2",
             "version": "v1",
             "pub_shapes": pub_shapes,
+            "options": asdict(options),  # type: ignore[call-overload]
         }
 
     passthrough_data = {

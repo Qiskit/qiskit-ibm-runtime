@@ -383,17 +383,39 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, pub_shapes=None):
-        """Helper to build a QuantumProgramResult with optional pub_shapes passthrough."""
+    def _make_result(self, data, pub_shapes=None, twirling_enabled=None):
+        """Helper to build a QuantumProgramResult with optional pub_shapes passthrough.
+
+        Args:
+            data: Measurement data for the result
+            pub_shapes: Optional pub shapes (implies twirling if provided)
+            twirling_enabled: Explicitly set twirling state. If None and pub_shapes
+                is provided, defaults to True.
+        """
+        from dataclasses import asdict
+        from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions
+
         passthrough_data = None
-        if pub_shapes is not None:
-            passthrough_data = {
-                "post_processor": {
-                    "context": "sampler_v2",
-                    "version": "v1",
-                    "pub_shapes": pub_shapes,
-                }
+        if pub_shapes is not None or twirling_enabled is not None:
+            # Determine if twirling should be enabled
+            if twirling_enabled is None:
+                twirling_enabled = pub_shapes is not None
+
+            # Create options with appropriate twirling setting
+            options = SamplerOptions()
+            if twirling_enabled:
+                options.twirling.enable_gates = True
+
+            post_processor_data = {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
             }
+            if pub_shapes is not None:
+                post_processor_data["pub_shapes"] = pub_shapes
+
+            passthrough_data = {"post_processor": post_processor_data}
+
         return QuantumProgramResult(
             data=data,
             metadata=Metadata(),
@@ -478,6 +500,41 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
                     pub_shapes=[[5]],
                 )
             )
+
+    def test_error_when_twirling_enabled_but_pub_shapes_missing(self):
+        """Verify error is raised when twirling is enabled but pub_shapes is missing."""
+        from dataclasses import asdict
+        from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions
+
+        num_rand, shots_per_rand, num_bits = 4, 64, 2
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
+        )
+
+        # Create options with twirling enabled
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options_dict = asdict(options)
+
+        # Build result with options but WITHOUT pub_shapes
+        post_processor_data = {
+            "context": "sampler_v2",
+            "version": "v1",
+            "options": options_dict,
+            # Intentionally omit pub_shapes
+        }
+        qp_result = QuantumProgramResult(
+            data=[{"meas": meas_data}],
+            metadata=Metadata(),
+            passthrough_data={"post_processor": post_processor_data},
+        )
+
+        # Should raise ValueError
+        with self.assertRaises(ValueError) as context:
+            sampler_v2_post_processor_v1(qp_result)
+
+        self.assertIn("pub_shapes", str(context.exception))
+        self.assertIn("Twirling is enabled", str(context.exception))
 
     def test_multiple_pubs_mixed_twirled(self):
         """Multiple pubs: each pub is flattened according to its own pub_shape."""
