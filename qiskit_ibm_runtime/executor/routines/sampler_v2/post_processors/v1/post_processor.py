@@ -13,6 +13,7 @@
 """Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
 
 from __future__ import annotations
+from typing import cast
 
 import numpy as np
 from qiskit.primitives import PrimitiveResult
@@ -99,41 +100,32 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
                 item[key[len(prefix) :]] ^= item.pop(key)
     # TODO: This could fail if the user manually specifies a register starting with the prefix.
 
-    # Flatten randomization axes when twirling is enabled.
-    pub_shapes: list[list[int]] | None = None
-    twirling_enabled = False
-    passthrough = result.passthrough_data
-    if isinstance(passthrough, dict):
-        post_processor_data = passthrough.get("post_processor")
-        if isinstance(post_processor_data, dict):
-            # Reconstruct SamplerOptions from the options dictionary
-            options_dict = post_processor_data.get("options")
-            if isinstance(options_dict, dict):
-                try:
-                    options = SamplerOptions(**options_dict)
-                    twirling_enabled = (
-                        options.twirling.enable_gates or options.twirling.enable_measure
-                    )
-                except (TypeError, ValueError):
-                    # If reconstruction fails, fall back to checking pub_shapes presence
-                    pass
+    if not isinstance(result.passthrough_data, dict):
+        raise ValueError(
+            "Wrong type for passthrough data: Expected a 'dict', found "
+            f"'{type(result.passthrough_data)}'."
+        )
 
-            # Get pub_shapes if twirling is enabled
-            if twirling_enabled:
-                raw_pub_shapes = post_processor_data.get("pub_shapes")
-                if isinstance(raw_pub_shapes, list):
-                    pub_shapes = raw_pub_shapes  # type: ignore[assignment]
-                else:
-                    raise ValueError(
-                        "Twirling is enabled in options but 'pub_shapes' is missing from "
-                        "passthrough_data. This indicates a mismatch between the execution "
-                        "configuration and the result data."
-                    )
+    passthrough = cast(dict, result.passthrough_data or {})
+    if (post_processor_data := passthrough.get("post_processor", None)) is None:
+        raise ValueError("Missing 'post_processor'.")
+    if (options_dict := post_processor_data.get("options", None)) is None:
+        raise ValueError("Missing 'options'.")
+    if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
+        raise ValueError("Missing 'pub_shapes'.")
+    if len(pub_shapes) != len(result):
+        raise ValueError(f"Expected 'pub_shape' of lenght {len(result)}, found {len(pub_shapes)}.")
 
-    if twirling_enabled and pub_shapes is not None:
-        for idx, item in enumerate(result):
-            pub_shape = tuple(pub_shapes[idx])
-            _flatten_twirling_axes(item, pub_shape)
+    try:
+        options = SamplerOptions(**options_dict)
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Couldn't initialize SamplerOptions from 'options_dict'.") from ex
+
+    if not (options.twirling.enable_gates or options.twirling.enable_measure):
+        return SamplerV2.quantum_program_result_to_primitive_result(result)
+
+    for item, shape in zip(result, pub_shapes):
+        _flatten_twirling_axes(item, shape)
 
     sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result)
     sampler_result.metadata = executor_metadata_to_sampler_metadata(
