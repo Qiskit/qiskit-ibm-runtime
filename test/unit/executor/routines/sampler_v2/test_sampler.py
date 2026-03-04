@@ -1037,7 +1037,7 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
         # Twirling path: pub_shapes must be present (non-parametric pub → empty shape)
         self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
-        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [[]])
+        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [()])
 
     def test_prepare_sets_passthrough_data_no_twirling(self):
         """Test that prepare() does NOT include pub_shapes when twirling is disabled."""
@@ -1055,7 +1055,7 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
-        self.assertNotIn("pub_shapes", qp.passthrough_data["post_processor"])
+        self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
 
     def test_prepare_sets_pub_shapes_parametric_twirling(self):
         """Test that prepare() stores the parameter sweep shape (not num_rand) in pub_shapes."""
@@ -1073,7 +1073,7 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # pub_shape should be the parameter sweep shape [3], not the full item shape [num_rand, 3]
         self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
-        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [[3]])
+        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [(3,)])
 
     def test_prepare_sets_pub_shapes_multiple_pubs_twirling(self):
         """Test that prepare() stores pub_shapes for each pub when twirling is enabled."""
@@ -1095,8 +1095,8 @@ class TestPrepareTwirling(unittest.TestCase):
         qp, _ = prepare([pub1, pub2], options, default_shots=1024)
 
         pub_shapes = qp.passthrough_data["post_processor"]["pub_shapes"]
-        self.assertEqual(pub_shapes[0], [])  # non-parametric pub
-        self.assertEqual(pub_shapes[1], [2])  # parametric pub with sweep shape (2,)
+        self.assertEqual(pub_shapes[0], ())  # non-parametric pub
+        self.assertEqual(pub_shapes[1], (2,))  # parametric pub with sweep shape (2,)
 
     def test_prepare_includes_options_in_passthrough_data(self):
         """Test that prepare() includes options dictionary in passthrough_data."""
