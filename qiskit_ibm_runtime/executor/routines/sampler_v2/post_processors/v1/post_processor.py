@@ -24,6 +24,7 @@ from ....options.sampler_options import SamplerOptions
 from ..utils import register_post_processor
 from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
 
+
 def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading num_randomizations axis into the shots axis in-place.
 
@@ -121,15 +122,12 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     except (TypeError, ValueError) as ex:
         raise ValueError("Couldn't initialize SamplerOptions from 'options_dict'.") from ex
 
-    if not (options.twirling.enable_gates or options.twirling.enable_measure):
-        return SamplerV2.quantum_program_result_to_primitive_result(result)
+    if options.twirling.enable_gates or options.twirling.enable_measure:
+        for item, shape in zip(result, pub_shapes):
+            _flatten_twirling_axes(item, shape)
 
-    for item, shape in zip(result, pub_shapes):
-        _flatten_twirling_axes(item, shape)
-
-    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result)
-    sampler_result.metadata = executor_metadata_to_sampler_metadata(
-        result.metadata, options, pub_shapes
-    )
+    shots = next(iter({array.shape[-2] for array in result[0].values()}))
+    metadata = executor_metadata_to_sampler_metadata(result.metadata, options, pub_shapes, shots)
+    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result, metadata)
 
     return sampler_result
