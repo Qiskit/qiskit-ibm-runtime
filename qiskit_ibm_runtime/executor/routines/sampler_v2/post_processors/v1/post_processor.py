@@ -114,6 +114,8 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         raise ValueError("Missing 'options'.")
     if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
         raise ValueError("Missing 'pub_shapes'.")
+    if len(pub_shapes) != len(result):
+        raise ValueError(f"Expected 'pub_shape' of lenght {len(result)}, found {len(pub_shapes)}.")
 
     try:
         options = SamplerOptions(**options_dict)
