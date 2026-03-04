@@ -418,6 +418,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         meas_data = np.random.randint(
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
+        assert False
         result = sampler_v2_post_processor_v1(self._make_result([{"meas": meas_data}]))
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)

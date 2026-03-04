@@ -102,20 +102,23 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     # TODO: This could fail if the user manually specifies a register starting with the prefix.
 
     if not isinstance(result.passthrough_data, dict):
-        raise ValueError
+        raise ValueError(
+            "Wrong type for passthrough data: Expected a 'dict', found "
+            f"'{type(result.passthrough_data)}'."
+        )
 
     passthrough = cast(dict, result.passthrough_data or {})
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
-        raise ValueError
+        raise ValueError("Missing 'post_processor'.")
     if (options_dict := post_processor_data.get("options", None)) is None:
-        raise ValueError
+        raise ValueError("Missing 'options'.")
     if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
-        raise ValueError
+        raise ValueError("Missing 'pub_shapes'.")
 
     try:
         options = SamplerOptions(**options_dict)
-    except (TypeError, ValueError):
-        raise ValueError
+    except (TypeError, ValueError) as ex:
+        raise ValueError("Couldn't initialize SamplerOptions from 'options_dict'.") from ex
 
     if not (options.twirling.enable_gates or options.twirling.enable_measure):
         return SamplerV2.quantum_program_result_to_primitive_result(result)
