@@ -386,7 +386,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, pub_shapes=None, twirling_enabled=None):
+    def _make_result(self, data, pub_shapes=None, twirling_enabled=False):
         """Helper to build a QuantumProgramResult with optional pub_shapes passthrough.
 
         Args:
@@ -395,26 +395,16 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             twirling_enabled: Explicitly set twirling state. If None and pub_shapes
                 is provided, defaults to True.
         """
-        passthrough_data = None
-        if pub_shapes is not None or twirling_enabled is not None:
-            # Determine if twirling should be enabled
-            if twirling_enabled is None:
-                twirling_enabled = pub_shapes is not None
-
-            # Create options with appropriate twirling setting
-            options = SamplerOptions()
-            if twirling_enabled:
-                options.twirling.enable_gates = True
-
-            post_processor_data = {
+        options = SamplerOptions()
+        options.twirling.enable_gates = twirling_enabled
+        passthrough_data = {
+            "post_processor": {
                 "context": "sampler_v2",
                 "version": "v1",
                 "options": asdict(options),
+                "pub_shapes": pub_shapes if pub_shapes else [()],
             }
-            if pub_shapes is not None:
-                post_processor_data["pub_shapes"] = pub_shapes
-
-            passthrough_data = {"post_processor": post_processor_data}
+        }
 
         return QuantumProgramResult(
             data=data,
@@ -428,9 +418,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         meas_data = np.random.randint(
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
-        result = sampler_v2_post_processor_v1(
-            self._make_result([{"meas": meas_data}], pub_shapes=[[]])
-        )
+        result = sampler_v2_post_processor_v1(self._make_result([{"meas": meas_data}]))
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
         self.assertEqual(bit_array.num_bits, num_bits)

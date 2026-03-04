@@ -94,12 +94,6 @@ def prepare(
                     circuit_arguments=param_values,
                 )
             )
-
-        post_processor_data: dict = {
-            "context": "sampler_v2",
-            "version": "v1",
-            "options": asdict(options),  # type: ignore[call-overload]
-        }
     else:
         # Twirling path: create SamplexItem objects
         num_rand, shots_per_rand = calculate_twirling_shots(
