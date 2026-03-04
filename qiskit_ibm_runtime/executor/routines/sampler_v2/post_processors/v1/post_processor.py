@@ -20,9 +20,8 @@ from qiskit.primitives import PrimitiveResult
 from ......quantum_program.quantum_program_result import QuantumProgramResult
 from ...sampler import SamplerV2
 from ....options.sampler_options import SamplerOptions
-
 from ..utils import register_post_processor
-
+from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
 
 def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading num_randomizations axis into the shots axis in-place.
@@ -136,4 +135,9 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
             pub_shape = tuple(pub_shapes[idx])
             _flatten_twirling_axes(item, pub_shape)
 
-    return SamplerV2.quantum_program_result_to_primitive_result(result)
+    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result)
+    sampler_result.metadata = executor_metadata_to_sampler_metadata(
+        result.metadata, options, pub_shapes
+    )
+
+    return sampler_result

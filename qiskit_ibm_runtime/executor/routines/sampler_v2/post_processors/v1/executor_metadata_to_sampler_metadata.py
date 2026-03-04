@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerOptions
 from qiskit_ibm_runtime.executor.routines.utils import calculate_twirling_shots
 
 
-def executor_metadata_to_sampler_metadata_v1(
+def executor_metadata_to_sampler_metadata(
     metadata: Metadata,
     options: SamplerOptions,
     pubs_shapes: list[tuple[int, ...]],
