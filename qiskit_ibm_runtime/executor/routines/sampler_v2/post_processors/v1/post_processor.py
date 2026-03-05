@@ -122,10 +122,8 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     except (TypeError, ValueError) as ex:
         raise ValueError("Couldn't initialize SamplerOptions from 'options_dict'.") from ex
 
-    if not (options.twirling.enable_gates or options.twirling.enable_measure):
-        return SamplerV2.quantum_program_result_to_primitive_result(result)
-
-    for item, shape in zip(result, pub_shapes):
-        _flatten_twirling_axes(item, shape)
+    if options.twirling.enable_gates or options.twirling.enable_measure:
+        for item, shape in zip(result, pub_shapes):
+            _flatten_twirling_axes(item, tuple(shape))
 
     return SamplerV2.quantum_program_result_to_primitive_result(result)

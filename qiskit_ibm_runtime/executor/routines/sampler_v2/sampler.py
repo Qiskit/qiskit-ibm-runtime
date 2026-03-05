@@ -141,7 +141,7 @@ def prepare(
             "context": "sampler_v2",
             "version": "v1",
             "options": asdict(options),  # type: ignore[call-overload]
-            "pub_shapes": [pub.shape for pub in pubs],
+            "pub_shapes": tuple(pub.shape for pub in pubs),
         }
     }
 
