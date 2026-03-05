@@ -111,7 +111,7 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (options_dict := post_processor_data.get("options", None)) is None:
-        raise ValueError("Missing 'options'.")
+        raise ValueError("Missing 'options' in passthrough data.")
     if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
         raise ValueError("Missing 'pub_shapes'.")
     if len(pub_shapes) != len(result):
