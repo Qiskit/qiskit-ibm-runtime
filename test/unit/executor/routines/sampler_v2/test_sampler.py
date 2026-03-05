@@ -13,7 +13,7 @@
 """Tests for executor-based SamplerV2."""
 
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from qiskit import QuantumCircuit
@@ -1371,10 +1371,10 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify generate_dd_pass_manager was called
         mock_generate_dd_pm.assert_called_once()
         call_args = mock_generate_dd_pm.call_args
-        
+
         # Check that backend was passed
         self.assertEqual(call_args[1]["backend"], self.backend)
-        
+
         # Check that DD options were passed
         dd_options = call_args[1]["options"]
         self.assertTrue(dd_options.enable)
@@ -1465,7 +1465,7 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
 
         # Verify generate_dd_pass_manager was called
         mock_generate_dd_pm.assert_called_once()
-        
+
         # Verify the pass manager's run method was called
         # (DD is applied to the template circuit in twirling path)
         mock_pm.run.assert_called()
@@ -1476,11 +1476,11 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         qc = QuantumCircuit(2, 2)
         qc.h(0)
         qc.measure(0, 0)
-        
+
         # Add control flow operation (if_test)
-        with qc.if_test((0, 1)):
+        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
             qc.x(1)
-        
+
         qc.measure(1, 1)
 
         # Create sampler with DD enabled
@@ -1490,10 +1490,11 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify that running with DD enabled raises ValueError
         with self.assertRaises(ValueError) as context:
             sampler.run([qc], shots=1024)
-        
+
         # Check the error message
-        self.assertIn("Dynamical decoupling is not compatible with dynamic circuits",
-                      str(context.exception))
+        self.assertIn(
+            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
+        )
 
     def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
         """Test that DD raises ValueError when one of multiple circuits has control flow."""
@@ -1507,7 +1508,7 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         circuit2 = QuantumCircuit(2, 2)
         circuit2.h(0)
         circuit2.measure(0, 0)
-        with circuit2.if_test((0, 1)):
+        with circuit2.if_test((0, 1)):  # pylint: disable=not-context-manager
             circuit2.x(1)
         circuit2.measure(1, 1)
 
@@ -1518,8 +1519,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify that running with DD enabled raises ValueError
         with self.assertRaises(ValueError) as context:
             sampler.run([circuit1, circuit2], shots=1024)
-        
-        # Check the error message
-        self.assertIn("Dynamical decoupling is not compatible with dynamic circuits",
-                      str(context.exception))
 
+        # Check the error message
+        self.assertIn(
+            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
+        )
