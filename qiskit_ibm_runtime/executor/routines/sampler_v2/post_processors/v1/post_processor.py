@@ -109,14 +109,13 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
 
     passthrough = cast(dict, result.passthrough_data or {})
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
-        raise ValueError("Missing 'post_processor'.")
+        raise ValueError("Missing 'post_processor' in passthrough data.")
     if (options_dict := post_processor_data.get("options", None)) is None:
-        raise ValueError("Missing 'options'.")
+        raise ValueError("Missing 'options' in passthrough data.")
     if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
-        raise ValueError("Missing 'pub_shapes'.")
+        raise ValueError("Missing 'pub_shapes' in passthrough data.")
     if len(pub_shapes) != len(result):
-        raise ValueError(f"Expected 'pub_shape' of lenght {len(result)}, found {len(pub_shapes)}.")
-    
+        raise ValueError(f"Expected 'pub_shape' of length {len(result)}, found {len(pub_shapes)}.")
     pub_shapes = [tuple(pub_shape) for pub_shape in pub_shapes]
 
     try:
