@@ -11,8 +11,9 @@
 # that they have been altered from the originals.
 
 """Tests for ``executor_metadata_to_sampler_metadata``."""
-
 from __future__ import annotations
+
+import pytest
 from collections import defaultdict
 from typing import Any
 from datetime import datetime
@@ -119,3 +120,37 @@ def test_with_twirling():
         == sum(part.size for part in chunk_timing[1].parts)
         * options.twirling.shots_per_randomization
     )
+
+
+def test_incorrect_pub_shapes_raises():
+    """Test that an error is raised when pub shapes is of incorrect lenght."""
+    chunk_timing = [
+        ChunkSpan(
+            start=datetime(2025, 12, 30, 14, 10),
+            stop=datetime(2025, 12, 30, 14, 15),
+            parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
+        ),
+        ChunkSpan(
+            start=datetime(2025, 12, 30, 14, 10),
+            stop=datetime(2025, 12, 30, 14, 15),
+            parts=[ChunkPart(idx_item=0, size=5)],
+        ),
+    ]
+    metadata = Metadata(chunk_timing=chunk_timing)
+
+    pub_shapes = [
+        (3, 5),
+    ]
+
+    options = SamplerOptions()
+    options.twirling.enable_gates = False
+    options.twirling.enable_measure = False
+
+    with pytest.raises(ValueError, match="Not enough pub shapes."):
+        executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
+
+    options = SamplerOptions()
+    options.twirling.enable_gates = True
+
+    with pytest.raises(ValueError, match="Not enough pub shapes."):
+        executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
