@@ -10,26 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Executor-based SamplerV2 V2."""
-# pylint: disable=invalid-name
+"""Tests for Executor-based SamplerV2."""
 
-import unittest
 from ddt import data, ddt, unpack
 
 import numpy as np
 
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
+from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
-from qiskit.circuit.library import real_amplitudes, UnitaryGate
 from qiskit.primitives import PrimitiveResult, PubResult
 from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
-from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2, SamplerOptions
-from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from ....ibm_test_case import IBMIntegrationTestCase
 
