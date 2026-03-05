@@ -126,8 +126,9 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         for item, shape in zip(result, pub_shapes):
             _flatten_twirling_axes(item, shape)
 
+    # Compute the shots from the second-to-last axis of the result arrays
     shots = next(iter({array.shape[-2] for array in result[0].values()}))
     metadata = executor_metadata_to_sampler_metadata(result.metadata, options, pub_shapes, shots)
-    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result, metadata)
 
+    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result, metadata)
     return sampler_result

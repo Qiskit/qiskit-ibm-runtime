@@ -43,47 +43,95 @@ def executor_metadata_to_sampler_metadata(
     Returns:
         A dictionary of metadata compatible with the format expected for a SamplerV2 job.
     """
-    twirl = options.twirling.enable_gates or options.twirling.enable_measure
-    num_randomizations = (
-        0
-        if twirl is False
-        else calculate_twirling_shots(
-            shots,
-            options.twirling.num_randomizations,
-            options.twirling.shots_per_randomization,
-        )
+    if options.twirling.enable_gates or options.twirling.enable_measure:
+        spans = _spans_for_twirled_execution(metadata, options, pubs_shapes, shots)
+    else:
+        spans = _spans_for_untwirled_execution(metadata, pubs_shapes, shots)
+
+    return {"execution": {"execution_spans": spans}}
+
+
+def _spans_for_twirled_execution(
+    metadata: Metadata,
+    options: SamplerOptions,
+    pubs_shapes: list[tuple[int, ...]],
+    shots: int,
+) -> list[TwirledSliceSpanV2]:
+    """Helper to compute spans when twirling is ON."""
+    num_randomizations, shots_per_randomization = calculate_twirling_shots(
+        shots,
+        options.twirling.num_randomizations,
+        options.twirling.shots_per_randomization,
     )
 
     spans = []
     for span in metadata.chunk_timing:
         _validate_chunk_span(span, pubs_shapes)
 
+        # The dictionary of slices required to initialize a ``TwirledSliceSpanV2``
         slices = {}
+
+        # A map from part indices to the latest element included in a slice
         slices_latest_stop: dict[int, int] = defaultdict(int)
+
         for part in span.parts:
             slice_start = slices_latest_stop[part.idx_item]
             slice_stop = slice_start + part.size
             slices_latest_stop[part.idx_item] = slice_stop
 
-            if twirl:
-                slices[part.idx_item] = (
-                    (num_randomizations,),
-                    pubs_shapes[part.idx_item] + (part.size,),
-                    True,
-                    slice(slice_start, slice_stop),
-                    slice(0, shots),
-                    shots,
-                )
-                spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
-            else:
-                slices[part.idx_item] = (
-                    pubs_shapes[part.idx_item] + (shots,),
-                    slice(slice_start, slice_stop),
-                    slice(0, shots),
-                )
-                spans.append(DoubleSliceSpan(span.start, span.stop, slices))
+            # a shape tuple including a twirling axis, and where the last axis is shots per randomization
+            twirled_shape = (
+                (num_randomizations,) + pubs_shapes[part.idx_item] + (shots_per_randomization,)
+            )
 
-    return {"execution": {"execution_spans": spans}}
+            # whether ``num_randomizations`` is at the front of the tuple, as opposed to right before the
+            # ``shots`` axis at the end
+            at_front = True
+
+            # a slice of an array of shape ``twirled_shape[:-1]``, flattened
+            shape_slice = slice(slice_start, slice_stop)
+
+            # a slice of ``twirled_shape[-1]``
+            shots_slice = slice(0, shots)
+
+            # the number of shots requested for the pub
+            pub_shots = shots
+
+            slices[part.idx_item] = (twirled_shape, at_front, shape_slice, shots_slice, pub_shots)
+
+        spans.append(TwirledSliceSpanV2(span.start, span.stop, slices))
+
+    return spans
+
+
+def _spans_for_untwirled_execution(
+    metadata: Metadata,
+    pubs_shapes: list[tuple[int, ...]],
+    shots: int,
+) -> list[DoubleSliceSpan]:
+    """Helper to compute spans when twirling is OFF."""
+    spans = []
+    for span in metadata.chunk_timing:
+        _validate_chunk_span(span, pubs_shapes)
+
+        # The dictionary of slices required to initialize a ``DoubleSliceSpan``
+        slices = {}
+
+        # A map from part indices to the latest element included in a slice
+        slices_latest_stop: dict[int, int] = defaultdict(int)
+
+        for part in span.parts:
+            slice_start = slices_latest_stop[part.idx_item]
+            slice_stop = slice_start + part.size
+            slices_latest_stop[part.idx_item] = slice_stop
+
+            shape_tuple = pubs_shapes[part.idx_item] + (shots,)
+            flat_shape_slice = slice(slice_start, slice_stop)
+            shots_slice = slice(0, shots)
+            slices[part.idx_item] = (shape_tuple, flat_shape_slice, shots_slice)
+        spans.append(DoubleSliceSpan(span.start, span.stop, slices))
+
+    return spans
 
 
 def _validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
