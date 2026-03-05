@@ -10,19 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# pylint: disable=line-too-long
+
 """Tests for ``executor_metadata_to_sampler_metadata``."""
 from __future__ import annotations
 
-import pytest
-from collections import defaultdict
-from typing import Any
 from datetime import datetime
+import pytest
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
 
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerOptions
-from qiskit_ibm_runtime.executor.routines.utils import calculate_twirling_shots
 
 from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v1.executor_metadata_to_sampler_metadata import (
     executor_metadata_to_sampler_metadata,

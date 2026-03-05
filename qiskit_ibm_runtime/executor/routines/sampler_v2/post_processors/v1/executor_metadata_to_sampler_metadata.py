@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import Any
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
@@ -43,6 +44,7 @@ def executor_metadata_to_sampler_metadata(
     Returns:
         A dictionary of metadata compatible with the format expected for a SamplerV2 job.
     """
+    spans: Sequence[TwirledSliceSpanV2 | DoubleSliceSpan] = []
     if options.twirling.enable_gates or options.twirling.enable_measure:
         spans = _spans_for_twirled_execution(metadata, options, pubs_shapes, shots)
     else:
@@ -134,6 +136,6 @@ def _spans_for_untwirled_execution(
     return spans
 
 
-def _validate_chunk_span(span: ChunkSpan, pubs_shapes: tuple[int, ...]) -> None:
+def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) -> None:
     if max({part.idx_item for part in span.parts}) >= len(pubs_shapes):
         raise ValueError("Not enough pub shapes.")
