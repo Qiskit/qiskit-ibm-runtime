@@ -11,3 +11,10 @@
 # that they have been altered from the originals.
 
 """Tests for SamplerV2 post-processors."""
+
+from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors import SAMPLER_POST_PROCESSORS
+
+
+def test_available_post_processors():
+    """Test the available post-processors."""
+    assert "v1" in SAMPLER_POST_PROCESSORS
