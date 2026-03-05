@@ -138,9 +138,7 @@ def test_incorrect_pub_shapes_raises():
     ]
     metadata = Metadata(chunk_timing=chunk_timing)
 
-    pub_shapes = [
-        (3, 5),
-    ]
+    pub_shapes = [(3, 5)]
 
     options = SamplerOptions()
     options.twirling.enable_gates = False
