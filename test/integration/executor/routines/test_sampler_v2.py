@@ -36,11 +36,7 @@ class TestSampler(IBMIntegrationTestCase):
         super().setUp()
         self.backend = self.service.backend(self.dependencies.qpu)
 
-        self.fake_backend = FakeManilaV2()
-        self._shots = 10000
-        self._options = {"default_shots": 10000}
-        pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
-        self.pm = pm
+        self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
     def test_sample_run_multiple_circuits(self):
         """Test SamplerV2.run() with multiple circuits."""
