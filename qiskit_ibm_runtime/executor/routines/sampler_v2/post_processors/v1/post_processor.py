@@ -116,6 +116,8 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         raise ValueError("Missing 'pub_shapes'.")
     if len(pub_shapes) != len(result):
         raise ValueError(f"Expected 'pub_shape' of lenght {len(result)}, found {len(pub_shapes)}.")
+    
+    pub_shapes = [tuple(pub_shape) for pub_shape in pub_shapes]
 
     try:
         options = SamplerOptions(**options_dict)
@@ -124,7 +126,7 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
 
     if options.twirling.enable_gates or options.twirling.enable_measure:
         for item, shape in zip(result, pub_shapes):
-            _flatten_twirling_axes(item, tuple(shape))
+            _flatten_twirling_axes(item, shape)
 
     # Compute the shots from the second-to-last axis of the result arrays
     shots = next(iter({array.shape[-2] for array in result[0].values()}))
