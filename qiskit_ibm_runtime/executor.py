@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import logging
 
 from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
@@ -29,7 +28,6 @@ from .quantum_program import QuantumProgram
 from .quantum_program.converters import quantum_program_to_0_2
 from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
-from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
 
 logger = logging.getLogger()
@@ -104,24 +102,21 @@ class Executor:
         else:
             raise TypeError(f"Expected ExecutorOptions or dict, got {type(options)}")
 
-    def _runtime_options(self) -> RuntimeOptions:
-        return RuntimeOptions(
-            backend=self._backend.name,
-            image=self.options.environment.image,
-            job_tags=self.options.environment.job_tags,
-            log_level=self.options.environment.log_level,
-            private=self.options.environment.private,
-            max_execution_time=self.options.environment.max_execution_time,
-        )
-
     def _run(self, params: BaseParamsModel) -> RuntimeJobV2:
-        runtime_options = self._runtime_options()
+        runtime_options = {
+            "backend": self._backend.name,
+            "image": self.options.environment.image,
+            "job_tags": self.options.environment.job_tags,
+            "log_level": self.options.environment.log_level,
+            "private": self.options.environment.private,
+            "max_execution_time": self.options.environment.max_execution_time,
+        }
 
         if self._session:
             run = self._session._run
         else:
             run = self._service._run
-            runtime_options.instance = self._backend._instance
+            runtime_options["instance"] = self._backend._instance
 
             if get_cm_session():
                 logger.warning(
@@ -137,7 +132,7 @@ class Executor:
 
         return run(
             program_id=self._PROGRAM_ID,
-            options=asdict(runtime_options),
+            options=runtime_options,
             inputs=inputs,
             result_decoder=self._DECODER,
             calibration_id=getattr(self._backend, "calibration_id", None),
