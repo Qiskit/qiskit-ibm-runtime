@@ -93,8 +93,8 @@ class BaseOptions:
         environment = options_copy.get("environment") or {}
         out = {"max_execution_time": options_copy.get("max_execution_time", None)}
 
-        for fld in environment:
-            out[fld] = environment[fld]
+        for field in environment:
+            out[field] = environment[field]
 
         if "image" in options_copy:
             out["image"] = options_copy["image"]

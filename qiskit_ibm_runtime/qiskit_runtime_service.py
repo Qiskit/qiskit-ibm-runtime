@@ -984,7 +984,7 @@ class QiskitRuntimeService:
             IBMRuntimeError: An error occurred running the program.
         """
         self._check_instance_usage()
-        backend = options["backend"]
+        backend = options.get("backend")
         if isinstance(backend, str):
             backend = self.backend(name=backend)
 
