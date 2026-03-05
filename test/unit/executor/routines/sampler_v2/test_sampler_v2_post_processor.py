@@ -21,7 +21,7 @@ from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, SamplerPubResult
 
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
-from qiskit_ibm_runtime.executor.routines.sampler_v2.sampler_post_processors import (
+from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v1 import (
     sampler_v2_post_processor_v1,
 )
 from qiskit_ibm_runtime.executor.routines.options.sampler_options import SamplerOptions

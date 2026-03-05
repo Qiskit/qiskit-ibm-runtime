@@ -14,37 +14,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import numpy as np
 from qiskit.primitives import PrimitiveResult
 
-from ....quantum_program.quantum_program_result import QuantumProgramResult
-from .sampler import SamplerV2
-from ..options.sampler_options import SamplerOptions
+from ......quantum_program.quantum_program_result import QuantumProgramResult
+from ...sampler import SamplerV2
+from ....options.sampler_options import SamplerOptions
 
-# Type alias for sampler post-processor functions
-PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
-
-# Registry for sampler post-processing functions
-SAMPLER_POST_PROCESSORS: dict[str, PostProcessorFunc] = {}
-
-
-def register_post_processor(name: str) -> Callable[[PostProcessorFunc], PostProcessorFunc]:
-    """Decorator to register post-processing functions.
-
-    Args:
-        name: Unique identifier for the post-processor
-
-    Returns:
-        Decorator function
-    """
-
-    def decorator(func: PostProcessorFunc) -> PostProcessorFunc:
-        SAMPLER_POST_PROCESSORS[name] = func
-        return func
-
-    return decorator
+from ..utils import register_post_processor
 
 
 def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
