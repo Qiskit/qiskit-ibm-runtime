@@ -124,7 +124,7 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
 
     if options.twirling.enable_gates or options.twirling.enable_measure:
         for item, shape in zip(result, pub_shapes):
-            _flatten_twirling_axes(item, shape)
+            _flatten_twirling_axes(item, tuple(shape))
 
     # Compute the shots from the second-to-last axis of the result arrays
     shots = next(iter({array.shape[-2] for array in result[0].values()}))
