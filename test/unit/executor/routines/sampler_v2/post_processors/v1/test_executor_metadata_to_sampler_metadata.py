@@ -15,8 +15,8 @@
 """Tests for ``executor_metadata_to_sampler_metadata``."""
 from __future__ import annotations
 
+import unittest
 from datetime import datetime
-import pytest
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
@@ -28,126 +28,131 @@ from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v1.executor
 )
 
 
-def test_without_twirling():
-    """Test mapping metadata when twirling is OFF."""
-    chunk_timing = [
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
-        ),
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=5)],
-        ),
-    ]
-    metadata = Metadata(chunk_timing=chunk_timing)
+class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
+    """Tests for ``executor_metadata_to_sampler_metadata``."""
 
-    pub_shapes = [(3, 5), (20,)]
+    def test_without_twirling(self):
+        """Test mapping metadata when twirling is OFF."""
+        chunk_timing = [
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
+            ),
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=5)],
+            ),
+        ]
+        metadata = Metadata(chunk_timing=chunk_timing)
 
-    options = SamplerOptions()
-    options.twirling.enable_gates = False
-    options.twirling.enable_measure = False
+        pub_shapes = [(3, 5), (20,)]
 
-    shots = 1000
+        options = SamplerOptions()
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
 
-    sampler_metadata = executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, shots)
+        shots = 1000
 
-    spans = sampler_metadata["execution"]["execution_spans"]
-    assert all(isinstance(span, DoubleSliceSpan) for span in spans)
-    assert len(spans) == 2
+        sampler_metadata = executor_metadata_to_sampler_metadata(
+            metadata, options, pub_shapes, shots
+        )
 
-    assert spans[0].start == chunk_timing[0].start
-    assert spans[0].stop == chunk_timing[0].stop
-    assert spans[0].pub_idxs == [0, 1]
-    assert spans[0].size == sum(part.size for part in chunk_timing[0].parts) * shots
+        spans = sampler_metadata["execution"]["execution_spans"]
+        self.assertTrue(all(isinstance(span, DoubleSliceSpan) for span in spans))
+        self.assertEqual(len(spans), 2)
 
-    assert spans[1].start == chunk_timing[1].start
-    assert spans[1].stop == chunk_timing[1].stop
-    assert spans[1].pub_idxs == [0]
-    assert spans[1].size == sum(part.size for part in chunk_timing[1].parts) * shots
+        self.assertEqual(spans[0].start, chunk_timing[0].start)
+        self.assertEqual(spans[0].stop, chunk_timing[0].stop)
+        self.assertEqual(spans[0].pub_idxs, [0, 1])
+        self.assertEqual(spans[0].size, sum(part.size for part in chunk_timing[0].parts) * shots)
 
+        self.assertEqual(spans[1].start, chunk_timing[1].start)
+        self.assertEqual(spans[1].stop, chunk_timing[1].stop)
+        self.assertEqual(spans[1].pub_idxs, [0])
+        self.assertEqual(spans[1].size, sum(part.size for part in chunk_timing[1].parts) * shots)
 
-def test_with_twirling():
-    """Test mapping metadata when twirling is ON."""
-    chunk_timing = [
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
-        ),
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=5)],
-        ),
-    ]
-    metadata = Metadata(chunk_timing=chunk_timing)
+    def test_with_twirling(self):
+        """Test mapping metadata when twirling is ON."""
+        chunk_timing = [
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
+            ),
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=5)],
+            ),
+        ]
+        metadata = Metadata(chunk_timing=chunk_timing)
 
-    pub_shapes = [(3, 5), (20,)]
+        pub_shapes = [(3, 5), (20,)]
 
-    options = SamplerOptions()
-    options.twirling.enable_gates = True
-    options.twirling.enable_measure = False
-    options.twirling.num_randomizations = 5
-    options.twirling.shots_per_randomization = 7
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options.twirling.enable_measure = False
+        options.twirling.num_randomizations = 5
+        options.twirling.shots_per_randomization = 7
 
-    shots = options.twirling.num_randomizations * options.twirling.shots_per_randomization
+        shots = options.twirling.num_randomizations * options.twirling.shots_per_randomization
 
-    sampler_metadata = executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, shots)
+        sampler_metadata = executor_metadata_to_sampler_metadata(
+            metadata, options, pub_shapes, shots
+        )
 
-    spans = sampler_metadata["execution"]["execution_spans"]
-    assert all(isinstance(span, TwirledSliceSpanV2) for span in spans)
+        spans = sampler_metadata["execution"]["execution_spans"]
+        self.assertTrue(all(isinstance(span, TwirledSliceSpanV2) for span in spans))
 
-    assert len(spans) == 2
+        self.assertEqual(len(spans), 2)
 
-    assert spans[0].start == chunk_timing[0].start
-    assert spans[0].stop == chunk_timing[0].stop
-    assert spans[0].pub_idxs == [0, 1]
-    assert (
-        spans[0].size
-        == sum(part.size for part in chunk_timing[0].parts)
-        * options.twirling.shots_per_randomization
-    )
+        self.assertEqual(spans[0].start, chunk_timing[0].start)
+        self.assertEqual(spans[0].stop, chunk_timing[0].stop)
+        self.assertEqual(spans[0].pub_idxs, [0, 1])
+        self.assertEqual(
+            spans[0].size,
+            sum(part.size for part in chunk_timing[0].parts)
+            * options.twirling.shots_per_randomization,
+        )
 
-    assert spans[1].start == chunk_timing[1].start
-    assert spans[1].stop == chunk_timing[1].stop
-    assert spans[1].pub_idxs == [0]
-    assert (
-        spans[1].size
-        == sum(part.size for part in chunk_timing[1].parts)
-        * options.twirling.shots_per_randomization
-    )
+        self.assertEqual(spans[1].start, chunk_timing[1].start)
+        self.assertEqual(spans[1].stop, chunk_timing[1].stop)
+        self.assertEqual(spans[1].pub_idxs, [0])
+        self.assertEqual(
+            spans[1].size,
+            sum(part.size for part in chunk_timing[1].parts)
+            * options.twirling.shots_per_randomization,
+        )
 
+    def test_incorrect_pub_shapes_raises(self):
+        """Test that an error is raised when pub shapes is of incorrect lenght."""
+        chunk_timing = [
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
+            ),
+            ChunkSpan(
+                start=datetime(2025, 12, 30, 14, 10),
+                stop=datetime(2025, 12, 30, 14, 15),
+                parts=[ChunkPart(idx_item=0, size=5)],
+            ),
+        ]
+        metadata = Metadata(chunk_timing=chunk_timing)
 
-def test_incorrect_pub_shapes_raises():
-    """Test that an error is raised when pub shapes is of incorrect lenght."""
-    chunk_timing = [
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=10), ChunkPart(idx_item=1, size=20)],
-        ),
-        ChunkSpan(
-            start=datetime(2025, 12, 30, 14, 10),
-            stop=datetime(2025, 12, 30, 14, 15),
-            parts=[ChunkPart(idx_item=0, size=5)],
-        ),
-    ]
-    metadata = Metadata(chunk_timing=chunk_timing)
+        pub_shapes = [(3, 5)]
 
-    pub_shapes = [(3, 5)]
+        options = SamplerOptions()
+        options.twirling.enable_gates = False
+        options.twirling.enable_measure = False
 
-    options = SamplerOptions()
-    options.twirling.enable_gates = False
-    options.twirling.enable_measure = False
+        with self.assertRaisesRegex(ValueError, expected_regex="Not enough pub shapes."):
+            executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
 
-    with pytest.raises(ValueError, match="Not enough pub shapes."):
-        executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
 
-    options = SamplerOptions()
-    options.twirling.enable_gates = True
-
-    with pytest.raises(ValueError, match="Not enough pub shapes."):
-        executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
+        with self.assertRaisesRegex(ValueError, expected_regex="Not enough pub shapes."):
+            executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
