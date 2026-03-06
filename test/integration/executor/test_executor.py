@@ -12,8 +12,6 @@
 
 """Tests for Executor."""
 
-from ddt import ddt
-
 import numpy as np
 
 from qiskit import QuantumCircuit
@@ -28,7 +26,6 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgramResult
 from ...ibm_test_case import IBMIntegrationTestCase
 
 
-@ddt
 class TestExecutor(IBMIntegrationTestCase):
     """Test Executor."""
 
