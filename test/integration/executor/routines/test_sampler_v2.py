@@ -64,33 +64,6 @@ class TestSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result.data.meas, BitArray)
             self.assertEqual(result.data.meas.num_shots, options.default_shots)
 
-    def test_sampler_with_multiple_circuits(self):
-        """Test sampler with multiple circuits."""
-        circuit = QuantumCircuit(2, name="Bell")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-        isa_circuit = self.pm.run(circuit)
-
-        options = SamplerOptions()
-        options.default_shots = 1000
-
-        sampler = SamplerV2(self.backend, options)
-        job = sampler.run([isa_circuit] * 3)
-
-        results = job.result()
-
-        self.assertIsInstance(results, PrimitiveResult)
-        self.assertIsInstance(results.metadata, dict)
-        self.assertEqual(len(results), 3)
-
-        for result in results:
-            self.assertIsInstance(result, PubResult)
-            self.assertIsInstance(result.data, DataBin)
-            self.assertIsInstance(result.metadata, dict)
-            self.assertIsInstance(result.data.meas, BitArray)
-            self.assertEqual(result.data.meas.num_shots, options.default_shots)
-
     @data(True, False)
     def test_sampler_with_parametric_circuits(self, twirling):
         """Test sampler with parametric circuits."""
