@@ -12,15 +12,12 @@
 
 """Tests for Executor."""
 
-from ddt import data, ddt, unpack
+from ddt import ddt
 
 import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
-from qiskit.primitives import PrimitiveResult, PubResult
-from qiskit.primitives.containers import BitArray
-from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
