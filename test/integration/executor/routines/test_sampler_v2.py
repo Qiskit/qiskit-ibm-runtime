@@ -38,7 +38,7 @@ class TestSampler(IBMIntegrationTestCase):
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
     def test_sample_run_multiple_circuits(self):
-        """Test SamplerV2.run() with multiple circuits."""
+        """Test sampler with multiple circuits."""
         circuit = QuantumCircuit(2, name="Bell")
         circuit.h(0)
         circuit.cx(0, 1)
