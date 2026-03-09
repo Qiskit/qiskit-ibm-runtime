@@ -21,8 +21,6 @@ from datetime import datetime
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerOptions
-
 from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v1.executor_metadata_to_sampler_metadata import (
     executor_metadata_to_sampler_metadata,
 )
@@ -49,14 +47,8 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
 
         pub_shapes = [(3, 5), (20,)]
 
-        options = SamplerOptions()
-        options.twirling.enable_gates = False
-        options.twirling.enable_measure = False
-
-        shots = 1000
-
         sampler_metadata = executor_metadata_to_sampler_metadata(
-            metadata, options, pub_shapes, shots
+            metadata, 0, shots := 1000, pub_shapes
         )
 
         spans = sampler_metadata["execution"]["execution_spans"]
@@ -88,19 +80,8 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
             ),
         ]
         metadata = Metadata(chunk_timing=chunk_timing)
-
-        pub_shapes = [(3, 5), (20,)]
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-        options.twirling.enable_measure = False
-        options.twirling.num_randomizations = 5
-        options.twirling.shots_per_randomization = 7
-
-        shots = options.twirling.num_randomizations * options.twirling.shots_per_randomization
-
         sampler_metadata = executor_metadata_to_sampler_metadata(
-            metadata, options, pub_shapes, shots
+            metadata, 5, shots_per_randomization := 7, [(3, 5), (20,)]
         )
 
         spans = sampler_metadata["execution"]["execution_spans"]
@@ -113,8 +94,7 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
         self.assertEqual(spans[0].pub_idxs, [0, 1])
         self.assertEqual(
             spans[0].size,
-            sum(part.size for part in chunk_timing[0].parts)
-            * options.twirling.shots_per_randomization,
+            sum(part.size for part in chunk_timing[0].parts) * shots_per_randomization,
         )
 
         self.assertEqual(spans[1].start, chunk_timing[1].start)
@@ -122,8 +102,7 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
         self.assertEqual(spans[1].pub_idxs, [0])
         self.assertEqual(
             spans[1].size,
-            sum(part.size for part in chunk_timing[1].parts)
-            * options.twirling.shots_per_randomization,
+            sum(part.size for part in chunk_timing[1].parts) * shots_per_randomization,
         )
 
     def test_incorrect_pub_shapes_raises(self):
@@ -144,15 +123,8 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
 
         pub_shapes = [(3, 5)]
 
-        options = SamplerOptions()
-        options.twirling.enable_gates = False
-        options.twirling.enable_measure = False
+        with self.assertRaisesRegex(ValueError, expected_regex="Not enough pub shapes."):
+            executor_metadata_to_sampler_metadata(metadata, 0, 1000, pub_shapes)
 
         with self.assertRaisesRegex(ValueError, expected_regex="Not enough pub shapes."):
-            executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-
-        with self.assertRaisesRegex(ValueError, expected_regex="Not enough pub shapes."):
-            executor_metadata_to_sampler_metadata(metadata, options, pub_shapes, 1000)
+            executor_metadata_to_sampler_metadata(metadata, 2, 1000, pub_shapes)

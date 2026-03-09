@@ -20,15 +20,12 @@ from typing import Any
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerOptions
-from qiskit_ibm_runtime.executor.routines.utils import calculate_twirling_shots
-
 
 def executor_metadata_to_sampler_metadata(
     metadata: Metadata,
-    options: SamplerOptions,
-    pubs_shapes: list[tuple[int, ...]],
+    num_randomizations: int,
     shots: int,
+    pubs_shapes: list[tuple[int, ...]],
 ) -> dict[str, Any]:
     """Helper to map result metadata for executor job to result metadata for sampler jobs.
 
@@ -37,35 +34,31 @@ def executor_metadata_to_sampler_metadata(
 
     Args:
         metadata: The executor metadata.
-        options: The options of the sampler job.
+        num_randomizations: The number of randomizations per PUB, where ``0`` means that twirling
+            was not enabled.
+        shots: The shots per PUB. This corresponds to ``pub.shots`` if twirling was not enabled,
+            and to ``shots_per_randomization`` if twirling was enabled.
         pubs_shapes: The shapes of the PUBs in the sampler job.
-        shots: The shots per sampler PUB.
 
     Returns:
         A dictionary of metadata compatible with the format expected for a SamplerV2 job.
     """
     spans: Sequence[TwirledSliceSpanV2 | DoubleSliceSpan] = []
-    if options.twirling.enable_gates or options.twirling.enable_measure:
-        spans = _spans_for_twirled_execution(metadata, options, pubs_shapes, shots)
+    if num_randomizations != 0:
+        spans = _spans_for_twirled_execution(metadata, num_randomizations, shots, pubs_shapes)
     else:
-        spans = _spans_for_untwirled_execution(metadata, pubs_shapes, shots)
+        spans = _spans_for_untwirled_execution(metadata, shots, pubs_shapes)
 
     return {"execution": {"execution_spans": spans}}
 
 
 def _spans_for_twirled_execution(
     metadata: Metadata,
-    options: SamplerOptions,
+    num_randomizations: int,
+    shots_per_randomization: int,
     pubs_shapes: list[tuple[int, ...]],
-    shots: int,
 ) -> list[TwirledSliceSpanV2]:
     """Helper to compute spans when twirling is ON."""
-    num_randomizations, shots_per_randomization = calculate_twirling_shots(
-        shots,
-        options.twirling.num_randomizations,
-        options.twirling.shots_per_randomization,
-    )
-
     spans = []
     for span in metadata.chunk_timing:
         _validate_chunk_span(span, pubs_shapes)
@@ -94,10 +87,10 @@ def _spans_for_twirled_execution(
             shape_slice = slice(slice_start, slice_stop)
 
             # a slice of ``twirled_shape[-1]``
-            shots_slice = slice(0, shots)
+            shots_slice = slice(0, shots_per_randomization)
 
             # the number of shots requested for the pub
-            pub_shots = shots
+            pub_shots = num_randomizations * shots_per_randomization
 
             slices[part.idx_item] = (twirled_shape, at_front, shape_slice, shots_slice, pub_shots)
 
@@ -108,8 +101,8 @@ def _spans_for_twirled_execution(
 
 def _spans_for_untwirled_execution(
     metadata: Metadata,
-    pubs_shapes: list[tuple[int, ...]],
     shots: int,
+    pubs_shapes: list[tuple[int, ...]],
 ) -> list[DoubleSliceSpan]:
     """Helper to compute spans when twirling is OFF."""
     spans = []
