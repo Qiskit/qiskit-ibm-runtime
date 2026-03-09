@@ -59,15 +59,15 @@ def _spans_for_twirled_execution(
     pubs_shapes: list[tuple[int, ...]],
 ) -> list[TwirledSliceSpanV2]:
     """Helper to compute spans when twirling is ON."""
+    # A map from part indices to the latest element included in a slice
+    slices_latest_stop: dict[int, int] = defaultdict(int)
+
     spans = []
     for span in metadata.chunk_timing:
         _validate_chunk_span(span, pubs_shapes)
 
         # The dictionary of slices required to initialize a ``TwirledSliceSpanV2``
         slices = {}
-
-        # A map from part indices to the latest element included in a slice
-        slices_latest_stop: dict[int, int] = defaultdict(int)
 
         for part in span.parts:
             slice_start = slices_latest_stop[part.idx_item]
@@ -105,16 +105,15 @@ def _spans_for_untwirled_execution(
     pubs_shapes: list[tuple[int, ...]],
 ) -> list[DoubleSliceSpan]:
     """Helper to compute spans when twirling is OFF."""
+    # A map from part indices to the latest element included in a slice
+    slices_latest_stop: dict[int, int] = defaultdict(int)
+
     spans = []
     for span in metadata.chunk_timing:
         _validate_chunk_span(span, pubs_shapes)
 
         # The dictionary of slices required to initialize a ``DoubleSliceSpan``
         slices = {}
-
-        # A map from part indices to the latest element included in a slice
-        slices_latest_stop: dict[int, int] = defaultdict(int)
-
         for part in span.parts:
             slice_start = slices_latest_stop[part.idx_item]
             slice_stop = slice_start + part.size

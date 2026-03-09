@@ -45,25 +45,29 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
         ]
         metadata = Metadata(chunk_timing=chunk_timing)
 
-        pub_shapes = [(3, 5), (20,)]
-
         sampler_metadata = executor_metadata_to_sampler_metadata(
-            metadata, 0, shots := 1000, pub_shapes
+            metadata, 0, shots := 1000, pubs_shapes := [(3, 5), (20,)]
         )
 
         spans = sampler_metadata["execution"]["execution_spans"]
-        self.assertTrue(all(isinstance(span, DoubleSliceSpan) for span in spans))
-        self.assertEqual(len(spans), 2)
 
-        self.assertEqual(spans[0].start, chunk_timing[0].start)
-        self.assertEqual(spans[0].stop, chunk_timing[0].stop)
-        self.assertEqual(spans[0].pub_idxs, [0, 1])
-        self.assertEqual(spans[0].size, sum(part.size for part in chunk_timing[0].parts) * shots)
-
-        self.assertEqual(spans[1].start, chunk_timing[1].start)
-        self.assertEqual(spans[1].stop, chunk_timing[1].stop)
-        self.assertEqual(spans[1].pub_idxs, [0])
-        self.assertEqual(spans[1].size, sum(part.size for part in chunk_timing[1].parts) * shots)
+        expected_spans = [
+            DoubleSliceSpan(
+                chunk_timing[0].start,
+                chunk_timing[0].stop,
+                data_slices={
+                    0: (pubs_shapes[0] + (shots,), slice(0, 10), slice(0, shots)),
+                    1: (pubs_shapes[1] + (shots,), slice(0, 20), slice(0, shots)),
+                },
+            ),
+            DoubleSliceSpan(
+                chunk_timing[1].start,
+                chunk_timing[1].stop,
+                data_slices={
+                    0: (pubs_shapes[0] + (shots,), slice(10, 15), slice(0, shots)),
+                },
+            ),
+        ]
 
     def test_with_twirling(self):
         """Test mapping metadata when twirling is ON."""
@@ -81,29 +85,47 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
         ]
         metadata = Metadata(chunk_timing=chunk_timing)
         sampler_metadata = executor_metadata_to_sampler_metadata(
-            metadata, 5, shots_per_randomization := 7, [(3, 5), (20,)]
+            metadata, num_randomizations := 5, shots_per_randomization := 7, [(3, 5), (20,)]
         )
 
         spans = sampler_metadata["execution"]["execution_spans"]
-        self.assertTrue(all(isinstance(span, TwirledSliceSpanV2) for span in spans))
 
-        self.assertEqual(len(spans), 2)
-
-        self.assertEqual(spans[0].start, chunk_timing[0].start)
-        self.assertEqual(spans[0].stop, chunk_timing[0].stop)
-        self.assertEqual(spans[0].pub_idxs, [0, 1])
-        self.assertEqual(
-            spans[0].size,
-            sum(part.size for part in chunk_timing[0].parts) * shots_per_randomization,
-        )
-
-        self.assertEqual(spans[1].start, chunk_timing[1].start)
-        self.assertEqual(spans[1].stop, chunk_timing[1].stop)
-        self.assertEqual(spans[1].pub_idxs, [0])
-        self.assertEqual(
-            spans[1].size,
-            sum(part.size for part in chunk_timing[1].parts) * shots_per_randomization,
-        )
+        expected_spans = [
+            TwirledSliceSpanV2(
+                chunk_timing[0].start,
+                chunk_timing[0].stop,
+                {
+                    0: (
+                        (num_randomizations, 3, 5, shots_per_randomization),
+                        True,
+                        slice(0, 10),
+                        slice(0, 7),
+                        35,
+                    ),
+                    1: (
+                        (num_randomizations, 20, shots_per_randomization),
+                        True,
+                        slice(0, 20),
+                        slice(0, 7),
+                        35,
+                    ),
+                },
+            ),
+            TwirledSliceSpanV2(
+                chunk_timing[1].start,
+                chunk_timing[1].stop,
+                {
+                    0: (
+                        (num_randomizations, 3, 5, shots_per_randomization),
+                        True,
+                        slice(10, 15),
+                        slice(0, 7),
+                        35,
+                    )
+                },
+            ),
+        ]
+        self.assertEqual(spans, expected_spans)
 
     def test_incorrect_pub_shapes_raises(self):
         """Test that an error is raised when pub shapes is of incorrect lenght."""
