@@ -101,6 +101,11 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
                 item[key[len(prefix) :]] ^= item.pop(key)
     # TODO: This could fail if the user manually specifies a register starting with the prefix.
 
+    # Compute the shots from the second-to-last axis of the result arrays
+    if len(set_pubs_shots := {array.shape[-2] for array in result[0].values()}) != 1:
+        raise ValueError("Unable to uniquely identity the shots per PUB.")
+    shots = next(iter(set_pubs_shots))
+
     if not isinstance(result.passthrough_data, dict):
         raise ValueError(
             "Wrong type for passthrough data: Expected a 'dict', found "
@@ -127,8 +132,6 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         for item, shape in zip(result, pub_shapes):
             _flatten_twirling_axes(item, shape)
 
-    # Compute the shots from the second-to-last axis of the result arrays
-    shots = next(iter({array.shape[-2] for array in result[0].values()}))
     metadata = executor_metadata_to_sampler_metadata(result.metadata, options, pub_shapes, shots)
 
     sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result, metadata)
