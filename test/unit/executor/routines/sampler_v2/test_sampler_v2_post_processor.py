@@ -609,3 +609,61 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         self.assertEqual(result[0].data.shape, ())
         self.assertEqual(result[1].data.meas.num_shots, num_rand * shots_per_rand)
         self.assertEqual(result[1].data.shape, (3,))
+
+    def test_twirled_axis_ordering_preserved(self):
+        """Test that parameter sweep axes are not mixed with randomization axes during flattening."""
+        num_rand, sweep, shots_per_rand, num_bits = 2, 3, 2, 1
+
+        # Create data where each (rand, param) combination has a unique pattern
+        # This allows us to verify that parameter indices are preserved
+        meas_data = np.zeros((num_rand, sweep, shots_per_rand, num_bits), dtype=np.uint8)
+
+        # Fill with identifiable patterns:
+        # rand0, param0: all 0s
+        # rand0, param1: all 1s
+        # rand0, param2: all 0s
+        # rand1, param0: all 1s
+        # rand1, param1: all 0s
+        # rand1, param2: all 1s
+        for r in range(num_rand):
+            for p in range(sweep):
+                # Alternate pattern based on (r + p) % 2
+                meas_data[r, p, :, :] = (r + p) % 2
+
+        result = sampler_v2_post_processor_v1(
+            self._make_result([{"meas": meas_data}], pub_shapes=[(sweep,)], twirling_enabled=True)
+        )
+
+        bit_array = result[0].data.meas
+        reconstructed = bit_array.to_bool_array()
+
+        # Verify shape is correct
+        self.assertEqual(reconstructed.shape, (sweep, num_rand * shots_per_rand, num_bits))
+
+        # Verify that each parameter index contains the correct merged randomizations
+        # For param0: should have rand0 shots (all 0s) followed by rand1 shots (all 1s)
+        param0_shots = reconstructed[0, :, 0]
+        np.testing.assert_array_equal(
+            param0_shots[:shots_per_rand], np.zeros(shots_per_rand, dtype=bool)
+        )
+        np.testing.assert_array_equal(
+            param0_shots[shots_per_rand:], np.ones(shots_per_rand, dtype=bool)
+        )
+
+        # For param1: should have rand0 shots (all 1s) followed by rand1 shots (all 0s)
+        param1_shots = reconstructed[1, :, 0]
+        np.testing.assert_array_equal(
+            param1_shots[:shots_per_rand], np.ones(shots_per_rand, dtype=bool)
+        )
+        np.testing.assert_array_equal(
+            param1_shots[shots_per_rand:], np.zeros(shots_per_rand, dtype=bool)
+        )
+
+        # For param2: should have rand0 shots (all 0s) followed by rand1 shots (all 1s)
+        param2_shots = reconstructed[2, :, 0]
+        np.testing.assert_array_equal(
+            param2_shots[:shots_per_rand], np.zeros(shots_per_rand, dtype=bool)
+        )
+        np.testing.assert_array_equal(
+            param2_shots[shots_per_rand:], np.ones(shots_per_rand, dtype=bool)
+        )

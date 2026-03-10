@@ -66,7 +66,11 @@ def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ..
             shots_per_rand = data.shape[len(pub_shape) + 1]
             total_shots = num_rand * shots_per_rand
             num_bits = data.shape[-1]
-            item[creg_name] = data.reshape(*pub_shape, total_shots, num_bits)
+            # Move num_rand axis to be adjacent to shots_per_rand before reshaping
+            # to avoid mixing randomization indices with parameter sweep indices
+            data_reordered = np.moveaxis(data, 0, len(pub_shape))
+            # Now shape is (*pub_shape, num_rand, shots_per_rand, num_bits)
+            item[creg_name] = data_reordered.reshape(*pub_shape, total_shots, num_bits)
         # else: already the correct non-twirled shape — no reshape needed
 
 
