@@ -69,6 +69,8 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
             ),
         ]
 
+        self.assertEqual(spans, expected_spans)
+
     def test_with_twirling(self):
         """Test mapping metadata when twirling is ON."""
         chunk_timing = [
@@ -125,6 +127,7 @@ class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
                 },
             ),
         ]
+
         self.assertEqual(spans, expected_spans)
 
     def test_incorrect_pub_shapes_raises(self):
