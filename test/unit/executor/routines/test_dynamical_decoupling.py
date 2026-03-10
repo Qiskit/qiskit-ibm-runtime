@@ -15,7 +15,8 @@
 import unittest
 import numpy as np
 
-from qiskit.circuit.library import RZGate, XGate
+from qiskit.circuit import Delay, Parameter, QuantumCircuit
+from qiskit.circuit.library import Measure, RZGate, XGate
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import (
     ALAPScheduleAnalysis,
@@ -30,17 +31,17 @@ from qiskit_ibm_runtime.executor.routines.options.dynamical_decoupling_options i
     DynamicalDecouplingOptions,
 )
 from qiskit_ibm_runtime.executor.routines.dynamical_decoupling import (
-    _make_dd_sequence,
+    make_dd_sequence,
     generate_dd_pass_manager,
 )
 
 
 class TestMakeDDSequence(unittest.TestCase):
-    """Tests for _make_dd_sequence function."""
+    """Tests for make_dd_sequence function."""
 
     def test_xx_sequence(self):
         """Test XX sequence generation."""
-        dd_sequence, spacing = _make_dd_sequence("XX")
+        dd_sequence, spacing = make_dd_sequence("XX")
 
         # Check dd_sequence
         self.assertEqual(len(dd_sequence), 2)
@@ -56,7 +57,7 @@ class TestMakeDDSequence(unittest.TestCase):
 
     def test_xpxm_sequence(self):
         """Test XpXm sequence generation."""
-        dd_sequence, spacing = _make_dd_sequence("XpXm")
+        dd_sequence, spacing = make_dd_sequence("XpXm")
 
         # Check dd_sequence: [XGate(), RZGate(π), XGate(), RZGate(-π)]
         self.assertEqual(len(dd_sequence), 4)
@@ -81,7 +82,7 @@ class TestMakeDDSequence(unittest.TestCase):
 
     def test_xy4_sequence(self):
         """Test XY4 sequence generation."""
-        dd_sequence, spacing = _make_dd_sequence("XY4")
+        dd_sequence, spacing = make_dd_sequence("XY4")
 
         # XY4 has 4 sequences: [_xp, _yp, _xm, _ym]
         # _xp has 1 gate, _yp has 3 gates, _xm has 3 gates, _ym has 3 gates
@@ -103,7 +104,7 @@ class TestMakeDDSequence(unittest.TestCase):
     def test_invalid_sequence_type(self):
         """Test that invalid sequence type raises ValueError."""
         with self.assertRaises(ValueError) as context:
-            _make_dd_sequence("INVALID")
+            make_dd_sequence("INVALID")
 
         self.assertIn("Unknown sequence", str(context.exception))
 
@@ -273,3 +274,53 @@ class TestGenerateDDPassManager(unittest.TestCase):
             generate_dd_pass_manager(backend=MockBackend(), options=options)  # type: ignore
 
         self.assertIn("must have a target", str(context.exception))
+
+    def test_pass_manager_applies_xx_sequence_correctly(self):
+        """Test that XX DD sequence is applied correctly to circuit."""
+        backend = FakeManilaV2()
+        options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
+        pm = generate_dd_pass_manager(backend=backend, options=options)
+
+        # Create test circuit with idle time on qubit 2
+        circuit = QuantumCircuit(3)
+        circuit.cx(0, 1)
+        circuit.rz(Parameter("a"), 2)
+        circuit.measure_all()
+
+        # Run pass manager
+        result_circuit = pm.run(circuit)
+
+        cx_duration_seconds = backend.target["cx"][(0, 1)].duration
+        x_duration_seconds = backend.target["x"][(2,)].duration
+        dt = backend.target.dt
+        granualrity = backend.target.granularity
+        cx_duration_dt = int(cx_duration_seconds / dt)
+        x_duration_dt = int(x_duration_seconds / dt)
+
+        # Verify DD sequence on qubit 2
+        expected_stream = [Delay, XGate, Delay, XGate, Delay, RZGate, Measure]
+        expected_iter = iter(expected_stream)
+
+        # Collect delays on qubit 2
+        delays_q2 = []
+
+        for instruction in result_circuit:
+            if instruction.qubits == (circuit.qubits[2],):
+                self.assertIsInstance(instruction.operation, next(expected_iter))
+                if isinstance(instruction.operation, Delay):
+                    delays_q2.append(instruction.operation.duration)
+
+        self.assertEqual(len(delays_q2), 3)
+
+        # Verify the duration of the 3 delays + 2 x gates sum to CX duration (idle time on qubit 2)
+        total_delay = sum(delays_q2)
+        total_dd_duration = total_delay + 2 * x_duration_dt
+        self.assertEqual(total_dd_duration, cx_duration_dt)
+
+        # For XX sequence, spacing is [0.25, 0.5, 0.25] of total delay time, but granularity is enforced.
+        self.assertAlmostEqual(
+            delays_q2[0], np.floor(total_delay * 0.25 / granualrity) * granualrity
+        )
+        self.assertAlmostEqual(
+            delays_q2[2], np.floor(total_delay * 0.25 / granualrity) * granualrity
+        )

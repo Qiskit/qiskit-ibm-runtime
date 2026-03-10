@@ -31,7 +31,7 @@ from qiskit.transpiler.passes import (
 from .options.dynamical_decoupling_options import DynamicalDecouplingOptions
 
 
-def _make_dd_sequence(
+def make_dd_sequence(
     sequence_type: Literal["XX", "XpXm", "XY4"],
 ) -> tuple[list[Gate], list[float]]:
     """Generate DD gate sequence and spacing from sequence type.
@@ -102,7 +102,7 @@ def generate_dd_pass_manager(
         ValueError: If backend doesn't have a target or if invalid options are provided.
     """
     # Generate dd_sequence and spacing from options
-    dd_sequence, spacing = _make_dd_sequence(options.sequence_type)
+    dd_sequence, spacing = make_dd_sequence(options.sequence_type)
 
     target = backend.target
     if target is None:
