@@ -19,6 +19,7 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter, BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
@@ -28,6 +29,7 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
 
 def create_mock_backend():
@@ -39,6 +41,7 @@ def create_mock_backend():
     # Mock the service
     service = MagicMock()
     backend.service = service
+    backend.target = FakeManilaV2().target
 
     return backend
 
@@ -522,7 +525,7 @@ class TestPrepare(unittest.TestCase):
 
         pub = SamplerPub.coerce(circuit, shots=1024)
         options = SamplerOptions()
-        program, executor_options = prepare([pub], options)
+        program, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertIsInstance(program, QuantumProgram)
         self.assertEqual(program.shots, 1024)
@@ -541,7 +544,7 @@ class TestPrepare(unittest.TestCase):
         param_values = np.array([[0.1], [0.2], [0.3]])
         pub = SamplerPub.coerce((circuit, param_values), shots=2048)
         options = SamplerOptions()
-        program, executor_options = prepare([pub], options)
+        program, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(program.shots, 2048)
         self.assertEqual(len(program.items), 1)
@@ -564,7 +567,7 @@ class TestPrepare(unittest.TestCase):
             SamplerPub.coerce(circuit2, shots=1024),
         ]
         options = SamplerOptions()
-        program, executor_options = prepare(pubs, options)
+        program, executor_options = prepare(pubs, options, FakeManilaV2())
 
         self.assertEqual(program.shots, 1024)
         self.assertEqual(len(program.items), 2)
@@ -580,7 +583,7 @@ class TestPrepare(unittest.TestCase):
 
         pub = SamplerPub.coerce(circuit)  # No shots specified
         options = SamplerOptions()
-        program, executor_options = prepare([pub], options, default_shots=4096)
+        program, executor_options = prepare([pub], options, FakeManilaV2(), default_shots=4096)
 
         self.assertEqual(program.shots, 4096)
         self.assertIsNotNone(executor_options)
@@ -602,7 +605,7 @@ class TestPrepare(unittest.TestCase):
         options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare(pubs, options)
+            prepare(pubs, options, FakeManilaV2())
 
         self.assertIn("same number of shots", str(context.exception))
 
@@ -616,7 +619,7 @@ class TestPrepare(unittest.TestCase):
         options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], options, default_shots=None)
+            prepare([pub], options, FakeManilaV2(), default_shots=None)
 
         self.assertIn("Shots must be specified", str(context.exception))
 
@@ -624,7 +627,7 @@ class TestPrepare(unittest.TestCase):
         """Test that empty pubs list raises an error."""
         options = SamplerOptions()
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([], options)
+            prepare([], options, FakeManilaV2())
 
         self.assertIn("At least one pub", str(context.exception))
 
@@ -644,7 +647,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         pub = SamplerPub.coerce(circuit, shots=1024)
         options = SamplerOptions()
 
-        result = prepare([pub], options)
+        result = prepare([pub], options, FakeManilaV2())
 
         # Should return a tuple
         self.assertIsInstance(result, tuple)
@@ -665,7 +668,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options.execution.init_qubits = False
         options.execution.rep_delay = 0.0005
 
-        _, executor_options = prepare([pub], options)
+        _, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(executor_options.execution.init_qubits, False)
         self.assertEqual(executor_options.execution.rep_delay, 0.0005)
@@ -682,7 +685,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options.environment.job_tags = ["test", "prepare"]
         options.environment.private = True
 
-        _, executor_options = prepare([pub], options)
+        _, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(executor_options.environment.log_level, "DEBUG")
         self.assertEqual(executor_options.environment.job_tags, ["test", "prepare"])
@@ -698,7 +701,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options = SamplerOptions()
         options.max_execution_time = 500
 
-        _, executor_options = prepare([pub], options)
+        _, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(executor_options.environment.max_execution_time, 500)
 
@@ -712,7 +715,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options = SamplerOptions()
         options.experimental = {"image": "custom-runtime:v2"}
 
-        _, executor_options = prepare([pub], options)
+        _, executor_options = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(executor_options.environment.image, "custom-runtime:v2")
 
@@ -726,7 +729,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options = SamplerOptions()
         options.execution.meas_type = "kerneled"
 
-        quantum_program, _ = prepare([pub], options)
+        quantum_program, _ = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(quantum_program.meas_level, "kerneled")
 
@@ -740,24 +743,9 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options = SamplerOptions()
         # Don't set meas_type, it should default to Unset
 
-        quantum_program, _ = prepare([pub], options)
+        quantum_program, _ = prepare([pub], options, FakeManilaV2())
 
         self.assertEqual(quantum_program.meas_level, "classified")
-
-    def test_prepare_validates_dynamical_decoupling(self):
-        """Test that prepare raises error for dynamical_decoupling."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.dynamical_decoupling.enable = True
-
-        with self.assertRaises(NotImplementedError) as context:
-            prepare([pub], options)
-
-        self.assertIn("Dynamical decoupling", str(context.exception))
 
     def test_prepare_allows_experimental_image(self):
         """Test that prepare allows experimental.image."""
@@ -770,7 +758,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options.experimental = {"image": "allowed:v1"}
 
         # Should not raise
-        _, executor_options = prepare([pub], options)
+        _, executor_options = prepare([pub], options, FakeManilaV2())
         self.assertEqual(executor_options.environment.image, "allowed:v1")
 
     def test_prepare_all_options_together(self):
@@ -790,7 +778,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options.max_execution_time = 800
         options.experimental = {"image": "full-test:v1"}
 
-        quantum_program, executor_options = prepare([pub], options)
+        quantum_program, executor_options = prepare([pub], options, FakeManilaV2())
 
         # Verify QuantumProgram
         self.assertEqual(quantum_program.shots, 2048)
@@ -815,7 +803,7 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         options = SamplerOptions()
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], options)
+            prepare([pub], options, FakeManilaV2())
         self.assertIn("BoxOp", str(context.exception))
 
 
@@ -835,7 +823,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options.twirling.enable_gates = True
 
         # Call prepare
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify SamplexItem was created
         self.assertEqual(len(qp.items), 1)
@@ -870,7 +858,7 @@ class TestPrepareTwirling(unittest.TestCase):
                 options.twirling.enable_gates = enable_gates
                 options.twirling.enable_measure = enable_measure
 
-                prepare([pub], options, default_shots=1024)
+                prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
                 # Verify boxing PM was called with correct parameters
                 mock_boxing_pm.assert_called_once()
@@ -901,7 +889,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        prepare([pub], options, default_shots=1024)
+        prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify build was called with boxed circuit
         mock_build.assert_called_once_with(boxed_circuit)
@@ -937,7 +925,7 @@ class TestPrepareTwirling(unittest.TestCase):
                 options.twirling.num_randomizations = num_rand
                 options.twirling.shots_per_randomization = shots_per_rand
 
-                qp, _ = prepare([pub], options, default_shots=pub_shots)
+                qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=pub_shots)
 
                 # Verify QuantumProgram shots (should be shots_per_randomization)
                 self.assertEqual(qp.shots, expected_qp_shots)
@@ -969,7 +957,7 @@ class TestPrepareTwirling(unittest.TestCase):
                 options.twirling.enable_gates = True
                 options.twirling.strategy = strategy
 
-                prepare([pub], options, default_shots=1024)
+                prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
                 # Verify strategy was passed (with hyphen replaced by underscore)
                 call_kwargs = mock_boxing_pm.call_args[1]
@@ -988,7 +976,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify SamplexItem was created with parameter values
 
@@ -1014,7 +1002,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub1, pub2], options, default_shots=1024)
+        qp, _ = prepare([pub1, pub2], options, FakeManilaV2(), default_shots=1024)
 
         # Verify both pubs were processed
         self.assertEqual(len(qp.items), 2)
@@ -1029,7 +1017,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify passthrough_data contains post-processor info
         self.assertIn("post_processor", qp.passthrough_data)
@@ -1049,7 +1037,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         # Twirling disabled (default)
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify passthrough_data contains post-processor info but no pub_shapes
         self.assertIn("post_processor", qp.passthrough_data)
@@ -1069,7 +1057,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # pub_shape should be the parameter sweep shape [3], not the full item shape [num_rand, 3]
         self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
@@ -1092,7 +1080,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options = SamplerOptions()
         options.twirling.enable_gates = True
 
-        qp, _ = prepare([pub1, pub2], options, default_shots=1024)
+        qp, _ = prepare([pub1, pub2], options, FakeManilaV2(), default_shots=1024)
 
         pub_shapes = qp.passthrough_data["post_processor"]["pub_shapes"]
         self.assertEqual(pub_shapes[0], ())  # non-parametric pub
@@ -1112,7 +1100,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options.execution.meas_type = "kerneled"
         options.environment.log_level = "DEBUG"
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
@@ -1145,7 +1133,7 @@ class TestPrepareTwirling(unittest.TestCase):
         options.default_shots = 512
         # Twirling disabled (default)
 
-        qp, _ = prepare([pub], options, default_shots=1024)
+        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
         # Verify options dictionary is present even without twirling
         self.assertIn("post_processor", qp.passthrough_data)
@@ -1195,10 +1183,10 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         # Create a custom prepare function
         custom_prepare_called = []
 
-        def custom_prepare(pubs, options, default_shots=None):
+        def custom_prepare(pubs, options, backend, default_shots=None):
             custom_prepare_called.append(True)
             # Call the real prepare to get valid return values
-            return prepare(pubs, options, default_shots)
+            return prepare(pubs, options, backend, default_shots)
 
         # Create sampler with custom custom_prepare
         sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
@@ -1223,9 +1211,9 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         # Create a custom prepare function
         custom_prepare_called = []
 
-        def custom_prepare(pubs, options, default_shots=None):
+        def custom_prepare(pubs, options, backend, default_shots=None):
             custom_prepare_called.append(True)
-            return prepare(pubs, options, default_shots)
+            return prepare(pubs, options, backend, default_shots)
 
         # Create sampler without custom fn, then set it via property
         sampler = SamplerV2(mode=self.backend)
@@ -1251,11 +1239,12 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         # Track arguments passed to custom prepare
         received_args = {}
 
-        def custom_prepare(pubs, options, default_shots=None):
+        def custom_prepare(pubs, options, backend, default_shots=None):
             received_args["pubs"] = pubs
             received_args["options"] = options
+            received_args["backend"] = backend
             received_args["default_shots"] = default_shots
-            return prepare(pubs, options, default_shots)
+            return prepare(pubs, options, backend, default_shots)
 
         sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
         sampler.run([circuit], shots=2048)
@@ -1286,8 +1275,8 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         circuit.measure_all()
 
         # Custom prepare function
-        def custom_prepare(pubs, options, default_shots=None):
-            return prepare(pubs, options, default_shots)
+        def custom_prepare(pubs, options, backend, default_shots=None):
+            return prepare(pubs, options, backend, default_shots)
 
         # Create sampler with custom fn
         sampler = SamplerV2(mode=self.backend, custom_prepare=custom_prepare)
@@ -1313,8 +1302,8 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         circuit.measure_all()
 
         # Custom prepare that modifies the quantum program
-        def custom_prepare(pubs, options, default_shots=None):
-            qp, exec_opts = prepare(pubs, options, default_shots)
+        def custom_prepare(pubs, options, backend, default_shots=None):
+            qp, exec_opts = prepare(pubs, options, backend, default_shots)
             # Modify shots to verify our custom function's output is used
             qp.shots = 9999
             return qp, exec_opts
@@ -1346,3 +1335,192 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
 
         # None should be allowed (restores default)
         sampler.custom_prepare = None  # Should not raise
+
+
+class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
+    """Tests for SamplerV2 with dynamical decoupling enabled."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.backend = create_mock_backend()
+
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
+    def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_generate_dd_pm):
+        """Test that DD pass manager is generated and used when DD is enabled."""
+        # Setup mock pass manager
+        mock_pm = MagicMock(spec=PassManager)
+        mock_pm.run.return_value = QuantumCircuit(2, 2)  # Return a circuit
+        mock_generate_dd_pm.return_value = mock_pm
+        mock_run.return_value = MagicMock()
+
+        # Create a simple circuit
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        # Create sampler with DD enabled
+        sampler = SamplerV2(mode=self.backend)
+        sampler.options.dynamical_decoupling.enable = True
+        sampler.options.dynamical_decoupling.sequence_type = "XX"
+
+        # Run the sampler
+        sampler.run([circuit], shots=1024)
+
+        # Verify generate_dd_pass_manager was called
+        mock_generate_dd_pm.assert_called_once()
+        call_args = mock_generate_dd_pm.call_args
+
+        # Check that backend was passed
+        self.assertEqual(call_args[1]["backend"], self.backend)
+
+        # Check that DD options were passed
+        dd_options = call_args[1]["options"]
+        self.assertTrue(dd_options.enable)
+        self.assertEqual(dd_options.sequence_type, "XX")
+
+        # Verify the pass manager's run method was called on the circuit
+        mock_pm.run.assert_called()
+
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
+    def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_generate_dd_pm):
+        """Test that DD pass manager is not generated when DD is disabled."""
+        mock_run.return_value = MagicMock()
+
+        # Create a simple circuit
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        # Create sampler with DD disabled (default)
+        sampler = SamplerV2(mode=self.backend)
+        self.assertFalse(sampler.options.dynamical_decoupling.enable)
+
+        # Run the sampler
+        sampler.run([circuit], shots=1024)
+
+        # Verify generate_dd_pass_manager was NOT called
+        mock_generate_dd_pm.assert_not_called()
+
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
+    def test_dd_applied_to_multiple_circuits(self, mock_run, mock_generate_dd_pm):
+        """Test that DD is applied to all circuits when multiple pubs are provided."""
+        # Setup mock pass manager
+        mock_pm = MagicMock(spec=PassManager)
+        mock_pm.run.return_value = QuantumCircuit(2, 2)
+        mock_generate_dd_pm.return_value = mock_pm
+        mock_run.return_value = MagicMock()
+
+        # Create multiple circuits
+        circuit1 = QuantumCircuit(2, 2)
+        circuit1.h(0)
+        circuit1.measure_all()
+
+        circuit2 = QuantumCircuit(3, 3)
+        circuit2.h([0, 1, 2])
+        circuit2.measure_all()
+
+        # Create sampler with DD enabled
+        sampler = SamplerV2(mode=self.backend)
+        sampler.options.dynamical_decoupling.enable = True
+        sampler.options.dynamical_decoupling.sequence_type = "XY4"
+
+        # Run the sampler with multiple circuits
+        sampler.run([circuit1, circuit2], shots=2048)
+
+        # Verify generate_dd_pass_manager was called once
+        mock_generate_dd_pm.assert_called_once()
+
+        # Verify the pass manager's run method was called for each circuit
+        self.assertEqual(mock_pm.run.call_count, 2)
+
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
+    def test_dd_with_twirling_enabled(self, mock_run, mock_generate_dd_pm):
+        """Test that DD pass manager is called when both DD and twirling are enabled."""
+        # Setup mock pass manager
+        mock_pm = MagicMock(spec=PassManager)
+        mock_pm.run.return_value = QuantumCircuit(2, 2)
+        mock_generate_dd_pm.return_value = mock_pm
+        mock_run.return_value = MagicMock()
+
+        # Create a simple circuit
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        # Create sampler with both DD and twirling enabled
+        sampler = SamplerV2(mode=self.backend)
+        sampler.options.dynamical_decoupling.enable = True
+        sampler.options.dynamical_decoupling.sequence_type = "XpXm"
+        sampler.options.twirling.enable_gates = True
+
+        # Run the sampler
+        sampler.run([circuit], shots=1024)
+
+        # Verify generate_dd_pass_manager was called
+        mock_generate_dd_pm.assert_called_once()
+
+        # Verify the pass manager's run method was called
+        # (DD is applied to the template circuit in twirling path)
+        mock_pm.run.assert_called()
+
+    def test_dd_raises_error_with_control_flow(self):
+        """Test that DD raises ValueError when circuit has control flow operations."""
+        # Create a circuit with control flow (if_test)
+        qc = QuantumCircuit(2, 2)
+        qc.h(0)
+        qc.measure(0, 0)
+
+        # Add control flow operation (if_test)
+        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+            qc.x(1)
+
+        qc.measure(1, 1)
+
+        # Create sampler with DD enabled
+        sampler = SamplerV2(mode=self.backend)
+        sampler.options.dynamical_decoupling.enable = True
+
+        # Verify that running with DD enabled raises ValueError
+        with self.assertRaises(ValueError) as context:
+            sampler.run([qc], shots=1024)
+
+        # Check the error message
+        self.assertIn(
+            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
+        )
+
+    def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
+        """Test that DD raises ValueError when one of multiple circuits has control flow."""
+        # Create a simple circuit without control flow
+        circuit1 = QuantumCircuit(2, 2)
+        circuit1.h(0)
+        circuit1.cx(0, 1)
+        circuit1.measure_all()
+
+        # Create a circuit with control flow
+        circuit2 = QuantumCircuit(2, 2)
+        circuit2.h(0)
+        circuit2.measure(0, 0)
+        with circuit2.if_test((0, 1)):  # pylint: disable=not-context-manager
+            circuit2.x(1)
+        circuit2.measure(1, 1)
+
+        # Create sampler with DD enabled
+        sampler = SamplerV2(mode=self.backend)
+        sampler.options.dynamical_decoupling.enable = True
+
+        # Verify that running with DD enabled raises ValueError
+        with self.assertRaises(ValueError) as context:
+            sampler.run([circuit1, circuit2], shots=1024)
+
+        # Check the error message
+        self.assertIn(
+            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
+        )

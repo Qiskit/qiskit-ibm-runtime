@@ -29,6 +29,7 @@ from samplomatic import build
 
 from ....runtime_job_v2 import RuntimeJobV2
 from ....executor import Executor
+from ..dynamical_decoupling import generate_dd_pass_manager
 from ....session import Session
 from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 def prepare(
     pubs: list[SamplerPub],
     options: SamplerOptions,
+    backend: BackendV2,
     default_shots: int | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a list of SamplerPub objects to a QuantumProgram and map options.
@@ -50,6 +52,7 @@ def prepare(
     Args:
         pubs: List of sampler pubs to convert.
         options: SamplerOptions to validate and map to ExecutorOptions.
+        backend: Backend to use for dynamical decoupling timing information.
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
@@ -60,19 +63,28 @@ def prepare(
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
-        NotImplementedError: If unsupported options are enabled.
+        ValueError: If dynamical decoupling is enabled with dynamic circuits.
     """
-
-    # Validate options
-    if options.dynamical_decoupling.enable:
-        raise NotImplementedError(
-            "Dynamical decoupling is not yet supported in the executor-based SamplerV2."
-        )
 
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
 
     twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
+
+    # Create DD pass manager if enabled
+    dd_pass_manager = None
+    if options.dynamical_decoupling.enable:
+        # Validate that circuits don't have control flow (dynamic circuits)
+        for pub in pubs:
+            if pub.circuit.has_control_flow_op():
+                raise ValueError(
+                    "Dynamical decoupling is not compatible with dynamic circuits "
+                    "(circuits with control flow operations)."
+                )
+        dd_pass_manager = generate_dd_pass_manager(
+            backend=backend,
+            options=options.dynamical_decoupling,
+        )
 
     # Create items based on whether twirling is enabled
     items: list[QuantumProgramItem] = []
@@ -83,6 +95,11 @@ def prepare(
         for pub in pubs:
             validate_no_boxes(pub.circuit)
 
+            # Apply DD if enabled
+            circuit = pub.circuit
+            if dd_pass_manager is not None:
+                circuit = dd_pass_manager.run(circuit)
+
             # Convert parameter values to numpy array
             if pub.parameter_values.num_parameters > 0:
                 param_values = pub.parameter_values.as_array()
@@ -91,7 +108,7 @@ def prepare(
 
             items.append(
                 CircuitItem(
-                    circuit=pub.circuit,
+                    circuit=circuit,
                     circuit_arguments=param_values,
                 )
             )
@@ -114,6 +131,10 @@ def prepare(
         for pub in pubs:
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
+
+            # Apply DD to template circuit if enabled
+            if dd_pass_manager is not None:
+                template_circuit = dd_pass_manager.run(template_circuit)
 
             # Prepare samplex_arguments
             if pub.parameter_values.num_parameters > 0:
@@ -167,23 +188,10 @@ class SamplerV2(BaseSamplerV2):
     enabling transparent client-side processing with faster feedback loops and greater
     user control.
 
-    **Supported Options:**
-
-    - ``default_shots``: Default number of shots (default: 4096)
-    - ``execution.init_qubits``: Whether to reset qubits (maps to executor)
-    - ``execution.rep_delay``: Repetition delay (maps to executor)
-    - ``twirling.*``: Twirling options (see :class:`TwirlingOptions`)
-    - ``environment.*``: Environment options (log_level, job_tags, private)
-    - ``max_execution_time``: Maximum execution time
-    - ``experimental``: Experimental options (including image)
-
-    **Unsupported Options (will raise NotImplementedError):**
-
-    - ``dynamical_decoupling``: Dynamical decoupling sequences
-
-    **Other Limitations:**
+    **Limitations:**
 
     - When twirling is disabled, circuits must not contain BoxOp instructions
+    - Dynamical decoupling is incompatible with dynamic circuits.
 
     **Custom Prepare Function:**
 
@@ -196,6 +204,7 @@ class SamplerV2(BaseSamplerV2):
         def my_prepare(
             pubs: list[SamplerPub],
             options: SamplerOptions,
+            backend: BackendV2,
             default_shots: int | None = None,
         ) -> tuple[QuantumProgram, ExecutorOptions]:
             ...
@@ -260,7 +269,7 @@ class SamplerV2(BaseSamplerV2):
         options: SamplerOptions | dict | None = None,
         custom_prepare: (
             Callable[
-                [list[SamplerPub], SamplerOptions, int | None],
+                [list[SamplerPub], SamplerOptions, BackendV2, int | None],
                 tuple[QuantumProgram, ExecutorOptions],
             ]
             | None
@@ -302,6 +311,7 @@ class SamplerV2(BaseSamplerV2):
             The submitted job.
 
         Raises:
+            ValueError: If backend is not provided.
             IBMInputValueError: If circuits contain BoxOp instructions or if
                                shots are not properly specified.
             NotImplementedError: If unsupported options are enabled.
@@ -312,9 +322,17 @@ class SamplerV2(BaseSamplerV2):
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else self._options.default_shots
 
+        # Get backend from executor
+        backend = self._executor._backend
+        if backend is None:
+            raise ValueError(
+                "Backend is required for SamplerV2. "
+                "Please provide a backend when initializing the sampler."
+            )
+
         # Convert pubs to QuantumProgram and map options using the prepare function
         quantum_program, executor_options = self._prepare(
-            coerced_pubs, self._options, default_shots
+            coerced_pubs, self._options, backend, default_shots
         )
 
         # Set executor options
@@ -342,7 +360,8 @@ class SamplerV2(BaseSamplerV2):
     def custom_prepare(
         self,
     ) -> Callable[
-        [list[SamplerPub], SamplerOptions, int | None], tuple[QuantumProgram, ExecutorOptions]
+        [list[SamplerPub], SamplerOptions, BackendV2, int | None],
+        tuple[QuantumProgram, ExecutorOptions],
     ]:
         """Return the prepare function.
 
@@ -356,7 +375,7 @@ class SamplerV2(BaseSamplerV2):
         self,
         fn: (
             Callable[
-                [list[SamplerPub], SamplerOptions, int | None],
+                [list[SamplerPub], SamplerOptions, BackendV2, int | None],
                 tuple[QuantumProgram, ExecutorOptions],
             ]
             | None
