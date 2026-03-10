@@ -26,26 +26,26 @@ class TwirlingOptions:
     enable_gates: bool = False
     """Whether to apply 2-qubit Clifford gate twirling."""
 
-    enable_measure: bool | None = None
+    enable_measure: bool = False
     """Whether to enable twirling of measurement instructions.
-    Twirling is only applied to measurements that are not involved in a
-    conditional block. The default value depends on the primitive:
-    ``True`` for Estimator, ``False`` for Sampler.
+    
+    Twirling is only applied to measurements that are not involved in a conditional block.
     """
+
     num_randomizations: int | Literal["auto"] = "auto"
-    """The number of random samples to use when twirling or
-    performing sampled mitigation. If ``"auto"``, the value is determined
-    automatically based on the input PUB and other options."""
+    """The number of random samples to use when twirling or performing sampled mitigation.
+    
+    If ``"auto"``, the value is determined automatically based on the input PUB and other options.
+    """
 
     shots_per_randomization: int | Literal["auto"] = "auto"
     """The number of shots to run for each random sample.
-    If ``"auto"``, the value is determined automatically based on the input
-    PUB and other options.
+    
+    If ``"auto"``, the value is determined automatically based on the input PUB and other options.
     """
 
     strategy: Literal["active", "active-accum", "active-circuit", "all"] = "active-accum"
-    """Specify the strategy of twirling qubits in identified layers of
-    2-qubit twirled gates.
+    """Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
 
       * ``"active"``: Only the instruction qubits in each individual twirled
         layer will be twirled.
