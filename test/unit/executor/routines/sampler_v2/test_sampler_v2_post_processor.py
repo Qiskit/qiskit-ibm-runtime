@@ -74,9 +74,21 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         meas_data_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
         meas_data_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [(), ()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
             data=[{"c1": meas_data_c1, "c2": meas_data_c2}],
             metadata=Metadata(),
+            passthrough_data=passthrough_data,
         )
 
         result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
@@ -269,9 +281,19 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         num_bits = 3
         meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}],
-            metadata=Metadata(),
+            data=[{"c": meas_data}], metadata=Metadata(), passthrough_data=passthrough_data
         )
 
         # Apply post-processing
@@ -290,12 +312,24 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         meas_data_1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
         meas_data_2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [(), ()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
             data=[
                 {"meas": meas_data_1},
                 {"meas": meas_data_2},
             ],
             metadata=Metadata(),
+            passthrough_data=passthrough_data,
         )
 
         result = sampler_v2_post_processor_v1(qp_result)
@@ -316,9 +350,21 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         # Store original data to verify XOR
         original_meas = meas_data.copy()
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
             data=[{"measurement_flips.meas": bit_flips, "meas": meas_data}],
             metadata=Metadata(),
+            passthrough_data=passthrough_data,
         )
 
         result = sampler_v2_post_processor_v1(qp_result)
@@ -339,6 +385,17 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         bit_flips_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
         bit_flips_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
             data=[
                 {
@@ -349,6 +406,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 }
             ],
             metadata=Metadata(),
+            passthrough_data=passthrough_data,
         )
 
         result = sampler_v2_post_processor_v1(qp_result)
@@ -365,9 +423,19 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         num_bits = 3
         meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
 
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v1",
+                "options": asdict(options),
+                "pub_shapes": [()],
+            }
+        }
+
         qp_result = QuantumProgramResult(
-            data=[{"meas": meas_data}],
-            metadata=Metadata(),
+            data=[{"meas": meas_data}], metadata=Metadata(), passthrough_data=passthrough_data
         )
 
         result = sampler_v2_post_processor_v1(qp_result)
@@ -386,7 +454,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, pub_shapes=None, twirling_enabled=None):
+    def _make_result(self, data, pub_shapes=None, twirling_enabled=False):
         """Helper to build a QuantumProgramResult with optional pub_shapes passthrough.
 
         Args:
@@ -395,26 +463,16 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             twirling_enabled: Explicitly set twirling state. If None and pub_shapes
                 is provided, defaults to True.
         """
-        passthrough_data = None
-        if pub_shapes is not None or twirling_enabled is not None:
-            # Determine if twirling should be enabled
-            if twirling_enabled is None:
-                twirling_enabled = pub_shapes is not None
-
-            # Create options with appropriate twirling setting
-            options = SamplerOptions()
-            if twirling_enabled:
-                options.twirling.enable_gates = True
-
-            post_processor_data = {
+        options = SamplerOptions()
+        options.twirling.enable_gates = twirling_enabled
+        passthrough_data = {
+            "post_processor": {
                 "context": "sampler_v2",
                 "version": "v1",
                 "options": asdict(options),
+                "pub_shapes": pub_shapes if pub_shapes else [()],
             }
-            if pub_shapes is not None:
-                post_processor_data["pub_shapes"] = pub_shapes
-
-            passthrough_data = {"post_processor": post_processor_data}
+        }
 
         return QuantumProgramResult(
             data=data,
@@ -429,7 +487,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v1(
-            self._make_result([{"meas": meas_data}], pub_shapes=[[]])
+            self._make_result([{"meas": meas_data}], pub_shapes=[()], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
@@ -443,7 +501,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             0, 2, size=(num_rand, sweep, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v1(
-            self._make_result([{"meas": meas_data}], pub_shapes=[[sweep]])
+            self._make_result([{"meas": meas_data}], pub_shapes=[(sweep,)], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
@@ -459,7 +517,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             0, 2, size=(num_rand, s1, s2, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v1(
-            self._make_result([{"meas": meas_data}], pub_shapes=[[s1, s2]])
+            self._make_result([{"meas": meas_data}], pub_shapes=[(s1, s2)], twirling_enabled=True)
         )
         bit_array = result[0].data.meas
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
@@ -473,7 +531,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
         )
         result = sampler_v2_post_processor_v1(
-            self._make_result([{"meas": meas_data}], pub_shapes=[[]])
+            self._make_result([{"meas": meas_data}], pub_shapes=[()], twirling_enabled=True)
         )
         expected_flat = meas_data.reshape(num_rand * shots_per_rand, num_bits)
         reconstructed = result[0].data.meas.to_bool_array()
@@ -497,7 +555,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             sampler_v2_post_processor_v1(
                 self._make_result(
                     [{"meas": np.random.randint(0, 2, size=(4, 7, 64, 3), dtype=np.uint8)}],
-                    pub_shapes=[[5]],
+                    pub_shapes=[(5), (5,)],
                 )
             )
 
@@ -531,7 +589,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             sampler_v2_post_processor_v1(qp_result)
 
         self.assertIn("pub_shapes", str(context.exception))
-        self.assertIn("Twirling is enabled", str(context.exception))
 
     def test_multiple_pubs_mixed_twirled(self):
         """Multiple pubs: each pub is flattened according to its own pub_shape."""
@@ -544,8 +601,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         )
         result = sampler_v2_post_processor_v1(
             self._make_result(
-                [{"meas": meas0}, {"meas": meas1}],
-                pub_shapes=[[], [3]],
+                [{"meas": meas0}, {"meas": meas1}], pub_shapes=[(), (3,)], twirling_enabled=True
             )
         )
         self.assertEqual(result[0].data.meas.num_shots, num_rand * shots_per_rand)
