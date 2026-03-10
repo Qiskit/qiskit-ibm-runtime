@@ -61,7 +61,7 @@ class QiskitRuntimeLocalService:
             name: The name of the backend.
 
         Returns:
-            Backend: A backend matching the filtering.
+            A backend matching the filtering.
         """
         return self.backends(name=name)[0]
 
