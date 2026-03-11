@@ -10,11 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Runtime options that control the execution environment."""
+"""(DEPRECATED) Runtime options that control the execution environment."""
 
 import re
 import logging
-import warnings
 from dataclasses import dataclass
 
 from qiskit.providers.backend import Backend
@@ -25,7 +24,11 @@ from .utils import validate_job_tags
 
 @dataclass(init=False)
 class RuntimeOptions:
-    """(DEPRECATED) Class for representing generic runtime execution options."""
+    """(DEPRECATED) Class for representing generic runtime execution options.
+
+    The ``RuntimeOptions`` class is deprecated. This class was originally only used to support
+    custom programs, it should not import imported externally.
+    """
 
     backend: str | Backend | None = None
     image: str | None = None
@@ -73,13 +76,6 @@ class RuntimeOptions:
                 When set to false, the input parameters and results follow the
                 standard retention behavior of the API.
         """
-
-        warnings.warn(
-            "The RuntimeOptions class is deprecated. This class was originally only used to support "
-            "custom programs, it should not import imported externally.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
         self.backend = backend
         self.image = image
         self.log_level = log_level
