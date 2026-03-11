@@ -23,13 +23,13 @@ from ...exceptions import IBMInputValueError
 
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:
-    """Validate that a circuit contains no BoxOp instructions.
+    """Validate that a circuit contains no :class:`~qiskit.circuit.BoxOp` instructions.
 
     Args:
         circuit: The circuit to validate.
 
     Raises:
-        IBMInputValueError: If the circuit contains BoxOp instructions.
+        IBMInputValueError: If the circuit contains :class:`~qiskit.circuit.BoxOp` instructions.
     """
     for instruction in circuit.data:
         if isinstance(instruction.operation, BoxOp):
@@ -41,7 +41,8 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
 
 
 def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = None) -> int:
-    """Extract and validate shots value from a list of SamplerPub objects.
+    """Extract and validate shots value from a list of
+    :class:`~qiskit.primitives.containers.sampler_pub.SamplerPub` objects.
 
     This function determines the shots value by examining all pubs and ensures
     that all pubs have the same number of shots. If a pub doesn't specify shots,

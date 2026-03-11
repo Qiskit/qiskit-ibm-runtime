@@ -43,7 +43,12 @@ class EnvironmentOptions:
     standard retention behavior of the API."""
 
     def to_executor_options(self) -> ExecutorEnvironmentOptions:
-        """Converts the environment options to executor environment options."""
+        """Converts the environment options to executor environment options.
+
+        Returns:
+            :class:`qiskit_ibm_runtime.options.executor_options.EnvironmentOptions`:
+                The converted executor environment options.
+        """
         return ExecutorEnvironmentOptions(
             log_level=self.log_level,
             job_tags=self.job_tags,
