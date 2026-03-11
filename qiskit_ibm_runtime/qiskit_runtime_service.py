@@ -920,7 +920,7 @@ class QiskitRuntimeService:
             calibration_id: The calibration id used for instantiating the backend.
 
         Returns:
-            Backend: A backend matching the filtering.
+            A backend matching the filtering.
 
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.

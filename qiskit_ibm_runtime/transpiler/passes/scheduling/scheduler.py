@@ -343,7 +343,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         """Run the ALAPSchedule pass on `dag`.
 
         Args:
-            dag (DAGCircuit): DAG to schedule.
+            dag: DAG to schedule.
 
         Raises:
             TranspilerError: if the circuit is not mapped on physical qubits.
@@ -469,7 +469,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         """Run the ASAPSchedule pass on `dag`.
 
         Args:
-            dag (DAGCircuit): DAG to schedule.
+            dag: DAG to schedule.
 
         Raises:
             TranspilerError: if the circuit is not mapped on physical qubits.

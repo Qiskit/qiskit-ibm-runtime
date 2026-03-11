@@ -177,7 +177,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         Args:
             backend: backend from which durations (gate lengths) and dt are extracted.
         Returns:
-            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+            The InstructionDurations constructed from backend.
         """
 
         # Get durations from target if BackendV2
@@ -189,7 +189,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         Args:
             target: target from which durations (gate lengths) and dt are extracted.
         Returns:
-            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+            The InstructionDurations constructed from backend.
         """
 
         instruction_durations_dict = target.durations().duration_by_name_qubits
@@ -213,7 +213,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             dt: Sampling duration in seconds of the target backend.
 
         Returns:
-            InstructionDurations: The updated InstructionDurations.
+            The updated InstructionDurations.
 
         Raises:
             TranspilerError: If the format of instruction_durations is invalid.

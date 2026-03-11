@@ -140,7 +140,7 @@ dependencies = [
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "ibm-platform-services>=0.22.6",
-    "ibm-quantum-schemas>=0.2.20260209",
+    "ibm-quantum-schemas>=0.3.20260226",
     "pydantic>=2.5.0",
     "qiskit>=2.0.0",
     "packaging",
@@ -183,11 +183,12 @@ common = [
 
 documentation = [
     "nbsphinx",
-    "Sphinx>=6",
+    "Sphinx>=8,<9",
     "sphinx-automodapi",
     "sphinx-autodoc-typehints<=1.19.2",
     "jupyter-sphinx",
     "sphinxcontrib-katex==0.9.9",
+    "autodoc_pydantic==2.2.0",
     "packaging",
 ]
 
