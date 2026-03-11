@@ -56,12 +56,11 @@ class BackendStatus:
         """Create a new BackendStatus object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the BaseBakend to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the BaseBakend to create. It will be in the same format
+                as output by :func:`to_dict`.
 
         Returns:
-            BackendStatus: The BackendStatus from the input dictionary.
+            The BackendStatus from the input dictionary.
         """
         return cls(**data)
 
@@ -69,7 +68,7 @@ class BackendStatus:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
-            dict: The dictionary form of the QobjHeader.
+            The dictionary form of the QobjHeader.
         """
         return self.__dict__
 

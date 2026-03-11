@@ -288,8 +288,7 @@ class BaseRuntimeJob(ABC):
         """Return the runtime image used for the job.
 
         Returns:
-            Runtime image: image_name:tag or "" if the default
-            image is used.
+            The runtime image ``image_name:tag`` or ``""`` if the default image is used.
         """
         return self._image
 
