@@ -130,7 +130,7 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
     # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
     if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
-        raise ValueError("Unable to uniquely identity the shots per PUB.")
+        raise ValueError("Unable to uniquely identify the shots per PUB.")
     shots = next(iter(set_shots))
 
     # Compute the ``num_randomizations`` from the left-most axis of the result arrays
