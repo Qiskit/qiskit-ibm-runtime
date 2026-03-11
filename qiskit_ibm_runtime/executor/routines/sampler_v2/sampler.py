@@ -60,7 +60,7 @@ def prepare(
     Returns:
         A tuple containing:
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
-            with passthrough_data configured for 
+            with passthrough_data configured for
             :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2` post-processing.
         - :class:`~qiskit_ibm_runtime.options.executor_options.ExecutorOptions` mapped from
             :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`.

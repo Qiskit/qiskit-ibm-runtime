@@ -72,7 +72,7 @@ class SamplerOptions:
     See
     :class:`~qiskit_ibm_runtime.executor.routines.options.dynamical_decoupling_options.DynamicalDecouplingOptions`
     for all available options.
-    """ # pylint: disable=line-too-long
+    """  # pylint: disable=line-too-long
 
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
