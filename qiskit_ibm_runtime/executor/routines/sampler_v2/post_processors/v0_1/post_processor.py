@@ -19,7 +19,6 @@ from qiskit.primitives import PrimitiveResult
 
 from ......quantum_program.quantum_program_result import QuantumProgramResult
 from ...sampler import SamplerV2
-from ....options.sampler_options import SamplerOptions
 from ..utils import register_post_processor
 from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
 from .flatten_twirling_axes import flatten_twirling_axes
@@ -65,18 +64,11 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     passthrough = cast(dict, result.passthrough_data or {})
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
-    if (options_dict := post_processor_data.get("options", None)) is None:
-        raise ValueError("Missing 'options' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
         raise ValueError("Missing 'twirling' in passthrough data.")
 
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
-
-    try:
-        options = SamplerOptions(**options_dict)
-    except (TypeError, ValueError) as ex:
-        raise ValueError("Couldn't initialize SamplerOptions from 'options_dict'.") from ex
 
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
     # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
@@ -85,14 +77,14 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     shots = next(iter(set_shots))
 
     # Compute the ``num_randomizations`` from the left-most axis of the result arrays
-    if options.twirling.enable_gates or options.twirling.enable_measure:
+    if twirling:
         if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
             raise ValueError("Unable to uniquely identity the number of randomizations.")
         num_randomizations = next(iter(set_num_randomizations))
     else:
         num_randomizations = 0
 
-    if options.twirling.enable_gates or options.twirling.enable_measure:
+    if twirling:
         for item, shape in zip(result, pub_shapes):
             flatten_twirling_axes(item, shape)
 

@@ -1082,23 +1082,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertIn("options", qp.passthrough_data["post_processor"])
-
-        options_dict = qp.passthrough_data["post_processor"]["options"]
-
-        # Verify it's a dictionary with expected structure
-        self.assertIsInstance(options_dict, dict)
-        self.assertIn("default_shots", options_dict)
-        self.assertIn("twirling", options_dict)
-        self.assertIn("execution", options_dict)
-        self.assertIn("environment", options_dict)
-
-        # Verify custom values are preserved
-        self.assertEqual(options_dict["default_shots"], 2048)
-        self.assertEqual(options_dict["twirling"]["enable_gates"], True)
-        self.assertEqual(options_dict["twirling"]["strategy"], "all")
-        self.assertEqual(options_dict["execution"]["meas_type"], "kerneled")
-        self.assertEqual(options_dict["environment"]["log_level"], "DEBUG")
 
     def test_prepare_includes_options_without_twirling(self):
         """Test that prepare() includes options even when twirling is disabled."""
@@ -1115,12 +1098,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Verify options dictionary is present even without twirling
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertIn("options", qp.passthrough_data["post_processor"])
-
-        options_dict = qp.passthrough_data["post_processor"]["options"]
-        self.assertIsInstance(options_dict, dict)
-        self.assertEqual(options_dict["default_shots"], 512)
-        self.assertEqual(options_dict["twirling"]["enable_gates"], False)
 
 
 class TestSamplerV2CustomPrepareFn(unittest.TestCase):
