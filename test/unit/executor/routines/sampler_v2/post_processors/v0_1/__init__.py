@@ -10,6 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""V1 post processor for executor-based SamplerV2"""
-
-from .post_processor import sampler_v2_post_processor_v1
+"""Tests for v0.1 post-processors."""

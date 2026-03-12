@@ -14,4 +14,4 @@
 
 from .utils import SAMPLER_POST_PROCESSORS
 
-from .v1.post_processor import sampler_v2_post_processor_v1
+from .v0_1.post_processor import sampler_v2_post_processor_v0_1

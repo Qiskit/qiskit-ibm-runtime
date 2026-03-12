@@ -48,7 +48,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         self.original_processors = SAMPLER_POST_PROCESSORS.copy()
 
         # Register generic test post-processors (reusable with any version)
-        SAMPLER_POST_PROCESSORS["v1"] = self._simple_processor
+        SAMPLER_POST_PROCESSORS["v0.1"] = self._simple_processor
         SAMPLER_POST_PROCESSORS["failing_version"] = self._failing_processor
 
     @staticmethod
@@ -115,12 +115,12 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             passthrough_data={
                 "post_processor": {
                     "context": "sampler_v2",
-                    "version": "v1",
+                    "version": "v0.1",
                 }
             },
         )
 
-        # Apply with passthrough_data (uses pre-registered "v1" processor)
+        # Apply with passthrough_data (uses pre-registered "v0.1" processor)
         processed = job._apply_post_processing(qp_result, None)
         self.assertEqual(processed, "processed_result")
 
@@ -135,7 +135,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             passthrough_data={
                 "post_processor": {
                     "context": "sampler_v2",
-                    "version": "v1",
+                    "version": "v0.1",
                 }
             },
         )
@@ -160,7 +160,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             passthrough_data={
                 "post_processor": {
                     "context": "wrong_context",
-                    "version": "v1",
+                    "version": "v0.1",
                 }
             },
         )

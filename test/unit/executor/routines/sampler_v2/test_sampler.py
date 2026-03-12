@@ -1022,7 +1022,7 @@ class TestPrepareTwirling(unittest.TestCase):
         # Verify passthrough_data contains post-processor info
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
+        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         # Twirling path: twirling flag must be True
         self.assertIn("twirling", qp.passthrough_data["post_processor"])
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
@@ -1042,7 +1042,7 @@ class TestPrepareTwirling(unittest.TestCase):
         # Verify passthrough_data contains post-processor info with twirling=False
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
+        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         self.assertIn("twirling", qp.passthrough_data["post_processor"])
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], False)
 
