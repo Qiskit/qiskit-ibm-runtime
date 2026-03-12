@@ -15,7 +15,6 @@
 from __future__ import annotations
 from typing import cast
 
-import numpy as np
 from qiskit.primitives import PrimitiveResult
 
 from ......quantum_program.quantum_program_result import QuantumProgramResult
@@ -23,55 +22,7 @@ from ...sampler import SamplerV2
 from ....options.sampler_options import SamplerOptions
 from ..utils import register_post_processor
 from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
-
-
-def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
-    """Flatten the leading num_randomizations axis into the shots axis in-place.
-
-    When twirling is enabled, the executor returns measurement data with shape
-    ``(num_rand, *pub_shape, shots_per_rand, num_bits)``. This function reshapes
-    each array to ``(*pub_shape, total_shots, num_bits)`` where
-    ``total_shots = num_rand * shots_per_rand``.
-
-    If the data does not have the expected twirled shape (i.e. its ndim equals
-    ``len(pub_shape) + 2`` rather than ``len(pub_shape) + 3``), it is left
-    unchanged.
-
-    Args:
-        item: Dictionary mapping classical register names to measurement arrays.
-            Modified in-place.
-        pub_shape: The parameter-sweep shape of the pub (without the leading
-            ``num_rand`` axis), e.g. ``()`` for a non-parametric pub or
-            ``(3,)`` for a 1-D parameter sweep.
-
-    Raises:
-        ValueError: If the data has the expected twirled ndim but the middle
-            dimensions do not match ``pub_shape``.
-    """
-    # NOTE: This assumes a single num_randomization axis, which is the existing practice.
-    # In theory, one could set more than one such axes.
-    expected_non_twirled_ndim = len(pub_shape) + 2  # (*pub_shape, shots, bits)
-    for creg_name, data in list(item.items()):
-        if data.ndim == expected_non_twirled_ndim + 1:
-            # Twirled shape: (num_rand, *pub_shape, shots_per_rand, num_bits)
-            # Validate that the middle dimensions match pub_shape
-            actual_pub_shape = data.shape[1 : 1 + len(pub_shape)]
-            if actual_pub_shape != pub_shape:
-                raise ValueError(
-                    f"Classical register '{creg_name}': expected pub shape {pub_shape} "
-                    f"in dimensions [1:{1 + len(pub_shape)}] of data with shape {data.shape}, "
-                    f"but found {actual_pub_shape}."
-                )
-            num_rand = data.shape[0]
-            shots_per_rand = data.shape[len(pub_shape) + 1]
-            total_shots = num_rand * shots_per_rand
-            num_bits = data.shape[-1]
-            # Move num_rand axis to be adjacent to shots_per_rand before reshaping
-            # to avoid mixing randomization indices with parameter sweep indices
-            data_reordered = np.moveaxis(data, 0, len(pub_shape))
-            # Now shape is (*pub_shape, num_rand, shots_per_rand, num_bits)
-            item[creg_name] = data_reordered.reshape(*pub_shape, total_shots, num_bits)
-        # else: already the correct non-twirled shape — no reshape needed
+from .flatten_twirling_axes import flatten_twirling_axes
 
 
 @register_post_processor("v1")
@@ -143,7 +94,7 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
 
     if options.twirling.enable_gates or options.twirling.enable_measure:
         for item, shape in zip(result, pub_shapes):
-            _flatten_twirling_axes(item, shape)
+            flatten_twirling_axes(item, shape)
 
     metadata = executor_metadata_to_sampler_metadata(
         result.metadata, num_randomizations, shots, pub_shapes
