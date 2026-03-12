@@ -17,7 +17,6 @@ from __future__ import annotations
 import numpy as np
 
 
-
 def flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading num_randomizations axis into the shots axis in-place.
 
