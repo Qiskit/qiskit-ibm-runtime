@@ -18,6 +18,7 @@ Utility class to represent an embedding of a set of qubits in a two-dimensional 
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from itertools import product
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -114,6 +115,21 @@ def _heavy_hex_coords(
     return coordinates
 
 
+def _square_lattice_coords(num_rows: int, num_cols: int) -> list[tuple[int, int]]:
+    """Generate square lattice coordinates.
+
+    Indexing starts at the top left, and is row major.
+
+    Args:
+        num_rows: The number of rows in the lattice.
+        num_cols: The number of columns in the lattice.
+
+    Returns:
+        A list of qubit coordinates, where list position corresponds with qubit index.
+    """
+    return list(product(range(num_rows), range(num_cols)))
+
+
 def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
     r"""
     Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
@@ -183,6 +199,9 @@ def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
         r = [range(11), [2, 6, 10]]
         rows = [range(10), [0, 4, 8]] + r + [range(11), [0, 4, 8]] + r + [range(1, 11)]
         return _heavy_hex_coords(rows, True)
+
+    if num_qubits == 120:
+        return _square_lattice_coords(12, 10)
 
     if num_qubits == 127:
         r1 = [range(15), [2, 6, 10, 14]]
