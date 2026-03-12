@@ -76,11 +76,13 @@ def _flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ..
 
 @register_post_processor("v1")
 def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert QuantumProgramResult to SamplerV2 PrimitiveResult.
+    """Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
+    for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
 
     This function transforms the raw quantum program execution results into the
-    format expected by SamplerV2, creating BitArray objects and SamplerPubResult
-    containers for each pub.
+    format expected by :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`,
+    creating :class:`~qiskit.primitives.containers.BitArray` objects and
+    :class:`~qiskit.primitives.containers.SamplerPubResult` containers for each pub.
 
     When twirling is enabled, the executor returns measurement data with a leading
     ``num_randomizations`` axis. This function flattens that axis together with the
@@ -94,7 +96,8 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         result: The raw quantum program result containing measurement data.
 
     Returns:
-        PrimitiveResult containing SamplerPubResult objects.
+        :class:`~qiskit.primitives.PrimitiveResult` containing
+        :class:`~qiskit.primitives.containers.SamplerPubResult` objects.
     """
 
     # Apply measurement twirling bit flips

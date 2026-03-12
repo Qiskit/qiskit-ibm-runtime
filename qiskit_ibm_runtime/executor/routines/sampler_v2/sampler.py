@@ -46,19 +46,24 @@ def prepare(
     backend: BackendV2,
     default_shots: int | None = None,
 ) -> tuple[QuantumProgram, ExecutorOptions]:
-    """Convert a list of SamplerPub objects to a QuantumProgram and map options.
+    """Convert a list of :class:`~qiskit.primitives.containers.sampler_pub.SamplerPub`
+    objects to a :class:`~.QuantumProgram` and map options.
 
     Args:
         pubs: List of sampler pubs to convert.
-        options: SamplerOptions to validate and map to ExecutorOptions.
+        options: :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`
+            to validate and map to
+            :class:`~qiskit_ibm_runtime.options.executor_options.ExecutorOptions`.
         backend: Backend to use for dynamical decoupling timing information.
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
         A tuple containing:
-        - QuantumProgram with CircuitItem objects for each pub,
-            with passthrough_data configured for SamplerV2 post-processing
-        - ExecutorOptions mapped from SamplerOptions
+        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
+            with passthrough_data configured for
+            :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2` post-processing.
+        - :class:`~qiskit_ibm_runtime.options.executor_options.ExecutorOptions` mapped from
+            :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`.
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
@@ -218,7 +223,7 @@ class SamplerV2(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
+            from qiskit_ibm_runtime.executor.routines import SamplerV2
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -237,7 +242,7 @@ class SamplerV2(BaseSamplerV2):
             result = job.result()
 
             # Example with custom prepare function
-            def my_prepare(pubs, options, default_shots=None):
+            def my_prepare(pubs, options, backend, default_shots=None):
                 # Custom logic here
                 ...
                 return quantum_program, executor_options
@@ -249,15 +254,17 @@ class SamplerV2(BaseSamplerV2):
     Args:
         mode: The execution mode used to make the primitive query. It can be:
 
-            * A :class:`Backend` if you are using job mode.
-            * A :class:`Session` if you are using session execution mode.
-            * A :class:`Batch` if you are using batch execution mode.
+            * A :class:`~qiskit.providers.BackendV2` if you are using job mode.
+            * A :class:`~qiskit_ibm_runtime.Session` if you are using session execution mode.
+            * A :class:`~qiskit_ibm_runtime.Batch` if you are using batch execution mode.
 
             Refer to the `Qiskit Runtime documentation
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options. See :class:`SamplerOptions` for all available options.
+        options: Sampler options.
+            See :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`
+            for all available options.
         custom_prepare: Optional custom prepare function to replace the default conversion
             logic.
     """
@@ -277,8 +284,11 @@ class SamplerV2(BaseSamplerV2):
         """Initialize the SamplerV2 primitive.
 
         Args:
-            mode: The execution mode (Backend, Session, or Batch).
-            options: Options for the sampler. Can be a SamplerOptions instance or a dict.
+            mode: The execution mode (:class:`~qiskit.providers.BackendV2`,
+                :class:`~.Session`, or :class:`~.Batch`).
+            options: Options for the sampler. Can be a
+                :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`
+                instance or a dict.
             custom_prepare: Optional custom prepare function. Pass None to use the default.
         """
         BaseSamplerV2.__init__(self)
@@ -311,7 +321,7 @@ class SamplerV2(BaseSamplerV2):
 
         Raises:
             ValueError: If backend is not provided.
-            IBMInputValueError: If circuits contain BoxOp instructions or if
+            IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions or if
                                shots are not properly specified.
             NotImplementedError: If unsupported options are enabled.
         """
@@ -394,13 +404,14 @@ class SamplerV2(BaseSamplerV2):
 
     @staticmethod
     def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
-        """Convert QuantumProgramResult to PrimitiveResult.
+        """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
 
         Args:
             result: The (possibly post-processed) quantum program result.
 
         Returns:
-            PrimitiveResult containing SamplerPubResult objects.
+            :class:`~qiskit.primitives.PrimitiveResult` containing
+                :class:`~qiskit.primitives.containers.SamplerPubResult` objects.
 
         Raises:
             ValueError: If data is malformed or inconsistent

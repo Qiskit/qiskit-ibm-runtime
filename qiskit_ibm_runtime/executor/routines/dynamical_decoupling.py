@@ -36,7 +36,8 @@ def make_dd_sequence(
 ) -> tuple[list[Gate], list[float]]:
     """Generate DD gate sequence and spacing from sequence type.
 
-    Converts DD sequence type into gate sequences and spacing for PadDynamicalDecoupling.
+    Converts DD sequence type into gate sequences and spacing for
+    :class:`~qiskit.transpiler.passes.PadDynamicalDecoupling`.
 
     Args:
         sequence_type: Type of DD sequence ("XX", "XpXm", or "XY4").
@@ -87,8 +88,9 @@ def generate_dd_pass_manager(
 ) -> PassManager:
     """Create a pass manager that applies dynamical decoupling.
 
-    This function creates a Qiskit PassManager that schedules circuits and applies
-    dynamical decoupling sequences in idle periods based on the provided options.
+    This function creates a Qiskit :class:`~qiskit.transpiler.PassManager` that
+    schedules circuits and applies dynamical decoupling sequences in idle periods
+    based on the provided options.
 
     Args:
         backend: Backend to extract timing information from (target, instruction durations,
@@ -96,7 +98,7 @@ def generate_dd_pass_manager(
         options: DD options containing sequence type and other parameters.
 
     Returns:
-        PassManager configured for dynamical decoupling.
+        :class:`~qiskit.transpiler.PassManager` configured for dynamical decoupling.
 
     Raises:
         ValueError: If backend doesn't have a target or if invalid options are provided.
