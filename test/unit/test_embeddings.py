@@ -31,6 +31,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakePerth,
     FakeRochesterV2,
     FakeMarrakesh,
+    FakeTorino,
 )
 from qiskit_ibm_runtime.utils.embeddings import Embedding
 
@@ -281,8 +282,31 @@ class TestCoordinates(IBMTestCase):
         )
         self.assertListEqual(embedding.coordinates, exp)
 
+    def test_133(self):
+        r"""Test for 133-qubit lattices."""
+        embedding = Embedding.from_backend(FakeTorino())
+        exp = ascii_to_coords(
+            """
+        xxxxxxxxxxxxxxx
+        x   x   x   x
+        xxxxxxxxxxxxxxx
+          x   x   x   x
+        xxxxxxxxxxxxxxx
+        x   x   x   x
+        xxxxxxxxxxxxxxx
+          x   x   x   x
+        xxxxxxxxxxxxxxx
+        x   x   x   x
+        xxxxxxxxxxxxxxx
+          x   x   x   x
+        xxxxxxxxxxxxxxx
+        x   x   x   x
+        """
+        )
+        self.assertListEqual(embedding.coordinates, exp)
+
     def test_156(self):
-        r"""Test for 127-qubit lattices."""
+        r"""Test for 156-qubit lattices."""
         embedding = Embedding.from_backend(FakeMarrakesh())
         exp = ascii_to_coords(
             """
