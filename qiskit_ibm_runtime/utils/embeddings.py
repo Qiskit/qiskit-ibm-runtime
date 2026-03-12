@@ -209,4 +209,16 @@ def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
         rows = [range(14), [0, 4, 8, 12]] + r1 + r2 + r1 + r2 + r1 + [range(1, 15)]
         return _heavy_hex_coords(rows, True)
 
+    if num_qubits == 133:
+        r1 = [range(15), [0, 4, 8, 12]]
+        r2 = [range(15), [2, 6, 10, 14]]
+        rows = (r1 + r2) * 3 + r1
+        return _heavy_hex_coords(rows, True)
+
+    if num_qubits == 156:
+        r1 = [range(16), [3, 7, 11, 15]]
+        r2 = [range(16), [1, 5, 9, 13]]
+        rows = (r1 + r2) * 3 + r1 + [range(16)]
+        return _heavy_hex_coords(rows, True)
+
     raise ValueError(f"Coordinates for {num_qubits}-qubit CPU are unknown.")
