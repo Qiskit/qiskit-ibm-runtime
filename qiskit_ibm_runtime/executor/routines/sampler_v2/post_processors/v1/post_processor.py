@@ -67,11 +67,11 @@ def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResul
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (options_dict := post_processor_data.get("options", None)) is None:
         raise ValueError("Missing 'options' in passthrough data.")
-    if (pub_shapes := post_processor_data.get("pub_shapes", None)) is None:
-        raise ValueError("Missing 'pub_shapes' in passthrough data.")
-    if len(pub_shapes) != len(result):
-        raise ValueError(f"Expected 'pub_shape' of length {len(result)}, found {len(pub_shapes)}.")
-    pub_shapes = [tuple(pub_shape) for pub_shape in pub_shapes]
+    if (twirling := post_processor_data.get("twirling", None)) is None:
+        raise ValueError("Missing 'twirling' in passthrough data.")
+
+    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
+    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
     try:
         options = SamplerOptions(**options_dict)

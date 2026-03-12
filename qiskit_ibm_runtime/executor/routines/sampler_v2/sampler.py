@@ -163,7 +163,7 @@ def prepare(
             "context": "sampler_v2",
             "version": "v1",
             "options": asdict(options),  # type: ignore[call-overload]
-            "pub_shapes": [tuple(pub.shape) for pub in pubs],
+            "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
         }
     }
 
