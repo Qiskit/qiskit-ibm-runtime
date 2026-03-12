@@ -168,10 +168,11 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        metadata = {"metadata": "val"}
+        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result, metadata)
 
         # Verify metadata is present
-        self.assertIn("quantum_program_metadata", result.metadata)
+        self.assertEqual(result.metadata, metadata)
 
     def test_different_register_names(self):
         """Test that any register name works (not hardcoded)."""
