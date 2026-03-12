@@ -161,7 +161,7 @@ def prepare(
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
-            "version": "v1",
+            "version": "v0.1",
             "options": asdict(options),  # type: ignore[call-overload]
             "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
         }

@@ -25,8 +25,8 @@ from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_
 from .flatten_twirling_axes import flatten_twirling_axes
 
 
-@register_post_processor("v1")
-def sampler_v2_post_processor_v1(result: QuantumProgramResult) -> PrimitiveResult:
+@register_post_processor("v0.1")
+def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert QuantumProgramResult to SamplerV2 PrimitiveResult.
 
     This function transforms the raw quantum program execution results into the
