@@ -30,7 +30,7 @@ from ibm_quantum_schemas.models.pauli_lindblad_map_model import PauliLindbladMap
 from ibm_quantum_schemas.models.samplex_model import SamplexModelSSV1ToSSV2
 from ibm_quantum_schemas.models.tensor_model import F64TensorModel, TensorModel
 from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV17
-from ...utils.utils import get_qpy_version
+from ...utils.utils import get_qpy_version, get_ssv_version
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
@@ -66,7 +66,7 @@ def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) ->
                 circuit=QpyModelV13ToV17.from_quantum_circuit(
                     item.circuit, qpy_version=get_qpy_version(17)
                 ),
-                samplex=SamplexModelSSV1ToSSV2.from_samplex(item.samplex, ssv=2),
+                samplex=SamplexModelSSV1ToSSV2.from_samplex(item.samplex, ssv=get_ssv_version(2)),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,
