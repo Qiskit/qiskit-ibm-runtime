@@ -47,7 +47,7 @@ from samplomatic.ssv import SSV
 
 
 def get_ssv_version(highest_value: int | None = None) -> int:
-    """Returns the largest Samplex Serialization Version version available with the installed version of Samplomatic.
+    """Returns the largest SSV available with the installed version of Samplomatic.
 
     Args:
         highest_value: If it would return an ssv version larger than `highest_value`, return
