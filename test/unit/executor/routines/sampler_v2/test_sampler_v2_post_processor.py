@@ -70,9 +70,14 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
 
     def test_single_pub_multiple_registers(self):
         """Test conversion with single pub and multiple classical registers."""
-        num_shots = 50
-        meas_data_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        meas_data_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
+        num_rands = 10
+        num_shots_per_rand = 10
+        meas_data_c1 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
+        )
+        meas_data_c2 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
+        )
 
         options = SamplerOptions()
         options.twirling.enable_gates = True
@@ -283,13 +288,13 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
 
         options = SamplerOptions()
-        options.twirling.enable_gates = True
+        options.twirling.enable_gates = False
         passthrough_data = {
             "post_processor": {
                 "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
-                "twirling": True,
+                "twirling": False,
             }
         }
 
@@ -309,9 +314,14 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_with_multiple_pubs(self):
         """Test that post-processor handles multiple pubs correctly."""
-        num_shots = 50
-        meas_data_1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        meas_data_2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
+        num_rands = 10
+        num_shots_per_rand = 5
+        meas_data_1 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
+        )
+        meas_data_2 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
+        )
 
         options = SamplerOptions()
         options.twirling.enable_gates = True
@@ -342,11 +352,16 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_applies_bit_flips(self):
         """Test that post-processor applies measurement twirling bit flips via XOR."""
-        num_shots = 10
+        num_rands = 10
+        num_shots_per_rand = 10
         num_bits = 3
 
-        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
-        bit_flips = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+        meas_data = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, num_bits), dtype=np.uint8
+        )
+        bit_flips = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, num_bits), dtype=np.uint8
+        )
 
         # Store original data to verify XOR
         original_meas = meas_data.copy()
@@ -374,17 +389,28 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertNotIn("measurement_flips.meas", result[0].data)
         self.assertIn("meas", result[0].data)
 
-        # Verify the data in qp_result was XORed
+        # Verify the data in qp_result was XORed (and flattened)
         expected_data = original_meas ^ bit_flips
-        np.testing.assert_array_equal(qp_result[0]["meas"], expected_data)
+        np.testing.assert_array_equal(
+            qp_result[0]["meas"], expected_data.reshape(num_shots_per_rand * num_rands, num_bits)
+        )
 
     def test_post_processor_bit_flips_multiple_registers(self):
         """Test bit flips with multiple classical registers."""
-        num_shots = 5
-        meas_data_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        meas_data_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
-        bit_flips_c1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        bit_flips_c2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
+        num_rands = 5
+        num_shots_per_rand = 5
+        meas_data_c1 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
+        )
+        meas_data_c2 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
+        )
+        bit_flips_c1 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
+        )
+        bit_flips_c2 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
+        )
 
         options = SamplerOptions()
         options.twirling.enable_gates = True
@@ -420,9 +446,12 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_no_bit_flips(self):
         """Test that post-processor works when no bit flips are present."""
-        num_shots = 10
+        num_rands = 5
+        num_shots_per_rand = 10
         num_bits = 3
-        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+        meas_data = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, num_bits), dtype=np.uint8
+        )
 
         options = SamplerOptions()
         options.twirling.enable_gates = True
