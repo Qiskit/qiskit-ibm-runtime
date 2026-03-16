@@ -56,13 +56,10 @@ def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = 
         The validated shots value that all pubs share.
 
     Raises:
-        IBMInputValueError: If pubs list is empty, if shots are not specified
+        IBMInputValueError: If shots are not specified
             anywhere, or if pubs have different shot values.
     """
-    if not pubs:
-        raise IBMInputValueError("At least one pub must be provided.")
-
-    pub_shots = {pub.shots or default_shots for pub in pubs}
+    pub_shots = {pub.shots or default_shots for pub in pubs} if pubs else {default_shots}
     if None in pub_shots:
         raise IBMInputValueError("Shots must be specified either in the pub or as default_shots.")
     pub_shots = {s for s in pub_shots if s is not None}  # For mypy typing
