@@ -46,6 +46,8 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     Returns:
         PrimitiveResult containing SamplerPubResult objects.
     """
+    if len(result) == 0:
+        return PrimitiveResult([])
 
     # Apply measurement twirling bit flips
     prefix = "measurement_flips."

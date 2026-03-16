@@ -392,25 +392,6 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         self.assertEqual(quantum_program.shots, 2048)
 
 
-class TestSamplerV2ErrorConditions(unittest.TestCase):
-    """Tests for error conditions in SamplerV2."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.backend = create_mock_backend()
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_empty_pubs_raises_error(self, mock_run):
-        """Test that empty pubs list raises an error."""
-        sampler = SamplerV2(mode=self.backend)
-
-        with self.assertRaises(IBMInputValueError) as context:
-            sampler.run([], shots=1024)
-
-        self.assertIn("At least one pub", str(context.exception))
-        mock_run.assert_not_called()
-
-
 class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
     """Tests verifying the integrity of QuantumProgram objects created by SamplerV2."""
 
@@ -623,16 +604,21 @@ class TestPrepare(unittest.TestCase):
 
         self.assertIn("Shots must be specified", str(context.exception))
 
-    def test_empty_pubs_raises_error(self):
-        """Test that empty pubs list raises an error."""
-        options = SamplerOptions()
-        with self.assertRaises(IBMInputValueError) as context:
-            prepare([], options, FakeManilaV2())
-
-        self.assertIn("At least one pub", str(context.exception))
-
     def test_pub_with_box_raises_error(self):
         """Test that a pub with a BoxOp raises an error."""
+        circuit = QuantumCircuit(2, 2)
+        with circuit.box():
+            circuit.x(0)
+        circuit.measure_all()
+
+        pub = SamplerPub.coerce(circuit, shots=1024)
+        options = SamplerOptions()
+
+        with self.assertRaises(IBMInputValueError) as context:
+            prepare([pub], options, FakeManilaV2())
+
+        self.assertIn("BoxOp", str(context.exception))
+        self.assertIn("not supported", str(context.exception))
 
 
 class TestPrepareOptionsHandling(unittest.TestCase):
@@ -792,19 +778,6 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         self.assertEqual(executor_options.environment.private, True)
         self.assertEqual(executor_options.environment.max_execution_time, 800)
         self.assertEqual(executor_options.environment.image, "full-test:v1")
-        inner_circuit = QuantumCircuit(2)
-        inner_circuit.h(0)
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.append(BoxOp(inner_circuit), [0, 1])
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-
-        with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], options, FakeManilaV2())
-        self.assertIn("BoxOp", str(context.exception))
 
 
 class TestPrepareTwirling(unittest.TestCase):
