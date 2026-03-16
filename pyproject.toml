@@ -145,7 +145,7 @@ dependencies = [
     "qiskit>=2.0.0",
     "packaging",
     "pybase64>=1.0",
-    "samplomatic>=0.13.0,<0.17"
+    "samplomatic>=0.13.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
