@@ -15,8 +15,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import asdict
 import logging
+from typing import Any
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -165,9 +165,8 @@ def prepare(
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
-            "version": "v1",
-            "options": asdict(options),  # type: ignore[call-overload]
-            "pub_shapes": [tuple(pub.shape) for pub in pubs],
+            "version": "v0.1",
+            "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
         }
     }
 
@@ -403,11 +402,15 @@ class SamplerV2(BaseSamplerV2):
         self._prepare = fn if fn is not None else prepare
 
     @staticmethod
-    def quantum_program_result_to_primitive_result(result: QuantumProgramResult) -> PrimitiveResult:
+    def quantum_program_result_to_primitive_result(
+        result: QuantumProgramResult,
+        metadata: dict[str, Any] | None = None,
+    ) -> PrimitiveResult:
         """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
 
         Args:
             result: The (possibly post-processed) quantum program result.
+            metadata: The metadata to attach to the result.
 
         Returns:
             :class:`~qiskit.primitives.PrimitiveResult` containing
@@ -438,4 +441,4 @@ class SamplerV2(BaseSamplerV2):
             pub_result = SamplerPubResult(data=data_bin, metadata={})
             pub_results.append(pub_result)
 
-        return PrimitiveResult(pub_results, metadata={"quantum_program_metadata": result.metadata})
+        return PrimitiveResult(pub_results, metadata=metadata or {})

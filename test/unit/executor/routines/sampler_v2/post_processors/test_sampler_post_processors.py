@@ -17,4 +17,4 @@ from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors import SAMP
 
 def test_available_post_processors():
     """Test the available post-processors."""
-    assert "v1" in SAMPLER_POST_PROCESSORS
+    assert "v0.1" in SAMPLER_POST_PROCESSORS

@@ -1022,13 +1022,13 @@ class TestPrepareTwirling(unittest.TestCase):
         # Verify passthrough_data contains post-processor info
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
-        # Twirling path: pub_shapes must be present (non-parametric pub → empty shape)
-        self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
-        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [()])
+        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
+        # Twirling path: twirling flag must be True
+        self.assertIn("twirling", qp.passthrough_data["post_processor"])
+        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
 
     def test_prepare_sets_passthrough_data_no_twirling(self):
-        """Test that prepare() does NOT include pub_shapes when twirling is disabled."""
+        """Test that prepare() sets twirling flag to False when twirling is disabled."""
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
@@ -1039,14 +1039,15 @@ class TestPrepareTwirling(unittest.TestCase):
 
         qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
-        # Verify passthrough_data contains post-processor info but no pub_shapes
+        # Verify passthrough_data contains post-processor info with twirling=False
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v1")
-        self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
+        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
+        self.assertIn("twirling", qp.passthrough_data["post_processor"])
+        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], False)
 
-    def test_prepare_sets_pub_shapes_parametric_twirling(self):
-        """Test that prepare() stores the parameter sweep shape (not num_rand) in pub_shapes."""
+    def test_prepare_sets_passthrough_data_parametric_twirling(self):
+        """Test that prepare() sets twirling flag for parametric circuits with twirling enabled."""
         theta = Parameter("θ")
         circuit = QuantumCircuit(1, 1)
         circuit.rx(theta, 0)
@@ -1059,32 +1060,9 @@ class TestPrepareTwirling(unittest.TestCase):
 
         qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
-        # pub_shape should be the parameter sweep shape [3], not the full item shape [num_rand, 3]
-        self.assertIn("pub_shapes", qp.passthrough_data["post_processor"])
-        self.assertEqual(qp.passthrough_data["post_processor"]["pub_shapes"], [(3,)])
-
-    def test_prepare_sets_pub_shapes_multiple_pubs_twirling(self):
-        """Test that prepare() stores pub_shapes for each pub when twirling is enabled."""
-        theta = Parameter("θ")
-        circuit1 = QuantumCircuit(1, 1)
-        circuit1.h(0)
-        circuit1.measure_all()
-
-        circuit2 = QuantumCircuit(1, 1)
-        circuit2.rx(theta, 0)
-        circuit2.measure_all()
-
-        param_values = np.array([[0.5], [1.0]])  # shape (2, 1)
-        pub1 = SamplerPub.coerce(circuit1, shots=1024)
-        pub2 = SamplerPub.coerce((circuit2, param_values), shots=1024)
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-
-        qp, _ = prepare([pub1, pub2], options, FakeManilaV2(), default_shots=1024)
-
-        pub_shapes = qp.passthrough_data["post_processor"]["pub_shapes"]
-        self.assertEqual(pub_shapes[0], ())  # non-parametric pub
-        self.assertEqual(pub_shapes[1], (2,))  # parametric pub with sweep shape (2,)
+        # Verify twirling flag is set (pub_shapes will be computed in post-processor)
+        self.assertIn("twirling", qp.passthrough_data["post_processor"])
+        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
 
     def test_prepare_includes_options_in_passthrough_data(self):
         """Test that prepare() includes options dictionary in passthrough_data."""
@@ -1104,23 +1082,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertIn("options", qp.passthrough_data["post_processor"])
-
-        options_dict = qp.passthrough_data["post_processor"]["options"]
-
-        # Verify it's a dictionary with expected structure
-        self.assertIsInstance(options_dict, dict)
-        self.assertIn("default_shots", options_dict)
-        self.assertIn("twirling", options_dict)
-        self.assertIn("execution", options_dict)
-        self.assertIn("environment", options_dict)
-
-        # Verify custom values are preserved
-        self.assertEqual(options_dict["default_shots"], 2048)
-        self.assertEqual(options_dict["twirling"]["enable_gates"], True)
-        self.assertEqual(options_dict["twirling"]["strategy"], "all")
-        self.assertEqual(options_dict["execution"]["meas_type"], "kerneled")
-        self.assertEqual(options_dict["environment"]["log_level"], "DEBUG")
 
     def test_prepare_includes_options_without_twirling(self):
         """Test that prepare() includes options even when twirling is disabled."""
@@ -1137,12 +1098,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Verify options dictionary is present even without twirling
         self.assertIn("post_processor", qp.passthrough_data)
-        self.assertIn("options", qp.passthrough_data["post_processor"])
-
-        options_dict = qp.passthrough_data["post_processor"]["options"]
-        self.assertIsInstance(options_dict, dict)
-        self.assertEqual(options_dict["default_shots"], 512)
-        self.assertEqual(options_dict["twirling"]["enable_gates"], False)
 
 
 class TestSamplerV2CustomPrepareFn(unittest.TestCase):
