@@ -35,8 +35,7 @@ class TwirlingOptions:
     Default:
     - For the Sampler: ``False``.
     - For the Estimator: If ``enables_gates`` is ``Unset``, it is determined by the server according to the
-      resilience level: it is ``False`` for resilience levels 0 and 1, and ``True`` for resilience
-      level 2.
+      resilience level: it is ``False`` for resilience levels 0 and 1, and ``True`` for resilience level 2.
     """
 
     enable_measure: UnsetType | bool = Unset
@@ -46,8 +45,7 @@ class TwirlingOptions:
     Default:
     - For the Sampler: ``False``.
     - For the Estimator: If ``enable_measure`` is ``Unset``, it is determined by the server according to the
-      resilience level: it is ``False`` for resilience level 0, and ``True`` for resilience
-      levels 1 and 2.
+      resilience level: it is ``False`` for resilience level 0, and ``True`` for resilience levels 1 and 2.
     """
 
     num_randomizations: UnsetType | int | Literal["auto"] = Unset
