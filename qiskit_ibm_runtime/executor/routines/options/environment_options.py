@@ -46,8 +46,7 @@ class EnvironmentOptions:
         """Converts the environment options to executor environment options.
 
         Returns:
-            :class:`qiskit_ibm_runtime.options.executor_options.EnvironmentOptions`:
-                The converted executor environment options.
+            The converted executor environment options.
         """
         return ExecutorEnvironmentOptions(
             log_level=self.log_level,
