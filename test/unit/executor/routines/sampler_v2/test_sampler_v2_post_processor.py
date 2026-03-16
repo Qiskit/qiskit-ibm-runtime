@@ -445,6 +445,23 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertIn("meas", result[0].data)
 
+    def test_post_processor_empty_result(self):
+        """Test that post-processor returns empty PrimitiveResult when input is empty."""
+        # Create an empty QuantumProgramResult
+        qp_result = QuantumProgramResult(
+            data=[],
+            metadata=Metadata(),
+        )
+
+        # Apply post-processing
+        result = sampler_v2_post_processor_v0_1(qp_result)
+
+        # Verify empty result is returned
+        self.assertIsInstance(result, PrimitiveResult)
+        self.assertEqual(len(result), 0)
+        # Verify metadata is empty
+        self.assertEqual(result.metadata, {})
+
 
 class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     """Test that sampler_v2_post_processor_v0_1 flattens twirling axes correctly.

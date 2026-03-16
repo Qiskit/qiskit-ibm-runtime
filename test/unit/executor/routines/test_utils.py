@@ -152,13 +152,6 @@ class TestExtractShotsFromPubs(unittest.TestCase):
 
         self.assertIn("Shots must be specified", str(context.exception))
 
-    def test_empty_pubs_raises_error(self):
-        """Test that empty pubs list raises an error."""
-        with self.assertRaises(IBMInputValueError) as context:
-            extract_shots_from_pubs([])
-
-        self.assertIn("At least one pub", str(context.exception))
-
     def test_pub_shots_overrides_default(self):
         """Test that pub.shots takes precedence over default_shots."""
         circuit = QuantumCircuit(1, 1)
@@ -170,3 +163,9 @@ class TestExtractShotsFromPubs(unittest.TestCase):
 
         # Should use pub.shots (1024), not default_shots (2048)
         self.assertEqual(shots, 1024)
+
+    def test_empty_pubs_returns_default_shots(self):
+        """Test that empty pubs list returns default_shots."""
+        shots = extract_shots_from_pubs([], default_shots=4096)
+
+        self.assertEqual(shots, 4096)
