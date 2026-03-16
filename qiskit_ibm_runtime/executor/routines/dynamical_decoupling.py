@@ -98,7 +98,7 @@ def generate_dd_pass_manager(
         options: DD options containing sequence type and other parameters.
 
     Returns:
-        :class:`~qiskit.transpiler.PassManager` configured for dynamical decoupling.
+        A pass manager configured for dynamical decoupling.
 
     Raises:
         ValueError: If backend doesn't have a target or if invalid options are provided.

@@ -100,7 +100,7 @@ class SamplerOptions:
         """Map SamplerOptions to ExecutorOptions, , ignoring all irrelevant fields.
 
         Returns:
-            :class:`~.ExecutorOptions`: Mapped executor options.
+            Mapped executor options.
         """
         executor_options = ExecutorOptions()
 

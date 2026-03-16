@@ -38,7 +38,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         result: The raw quantum program result containing measurement data.
 
     Returns:
-        A :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2` primitive result.
+        Primitive result for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
     """
 
     # Apply measurement twirling bit flips

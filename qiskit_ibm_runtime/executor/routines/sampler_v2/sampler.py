@@ -413,8 +413,7 @@ class SamplerV2(BaseSamplerV2):
             metadata: The metadata to attach to the result.
 
         Returns:
-            :class:`~qiskit.primitives.PrimitiveResult` containing
-                :class:`~qiskit.primitives.containers.SamplerPubResult` objects.
+            The converted primitive result.
 
         Raises:
             ValueError: If data is malformed or inconsistent
