@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import asdict
 import logging
 
-from ibm_quantum_schemas.models.base_params_model import BaseParamsModel
+from ibm_quantum_schemas.common.version_0_1 import BaseParamsModel
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService

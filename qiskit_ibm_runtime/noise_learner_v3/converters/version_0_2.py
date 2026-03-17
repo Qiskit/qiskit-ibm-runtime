@@ -16,13 +16,12 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
+from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
     ParamsModel,
 )
-from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV17
-from ibm_quantum_schemas.models.tensor_model import F64TensorModel
+from ibm_quantum_schemas.common.version_0_1 import QpyModelV13ToV17, F64TensorModel
 from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 from ...utils.utils import get_qpy_version
