@@ -26,25 +26,19 @@ from .flatten_twirling_axes import flatten_twirling_axes
 
 @register_post_processor("v0.1")
 def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert QuantumProgramResult to SamplerV2 PrimitiveResult.
+    """Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
+    for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
 
     This function transforms the raw quantum program execution results into the
-    format expected by SamplerV2, creating BitArray objects and SamplerPubResult
-    containers for each pub.
-
-    When twirling is enabled, the executor returns measurement data with a leading
-    ``num_randomizations`` axis. This function flattens that axis together with the
-    ``shots_per_randomization`` axis into a single ``total_shots`` axis.
-
-    Flattening is performed when twirling is enabled (determined by checking the
-    ``options`` field in ``result.passthrough_data["post_processor"]``). The
-    ``pub_shapes`` field provides the parameter sweep shape for each pub.
+    format expected by :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`,
+    creating :class:`~qiskit.primitives.containers.BitArray` objects and
+    :class:`~qiskit.primitives.containers.SamplerPubResult` containers for each pub.
 
     Args:
         result: The raw quantum program result containing measurement data.
 
     Returns:
-        PrimitiveResult containing SamplerPubResult objects.
+        Primitive result for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
     """
     if len(result) == 0:
         return PrimitiveResult([])
