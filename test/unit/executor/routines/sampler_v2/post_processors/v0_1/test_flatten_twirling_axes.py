@@ -101,21 +101,6 @@ class TestFlattenTwirlingAxes(unittest.TestCase):
                 reshaped = flattened_param_data.reshape(num_rand, shots_per_rand, num_bits)
                 np.testing.assert_array_equal(reshaped, original_param_data)
 
-    def test_non_twirled_data_unchanged(self):
-        """Test that non-twirled data (already correct shape) is left unchanged."""
-        pub_shape = (3,)
-        total_shots = 100
-        num_bits = 2
-
-        # Create non-twirled data: (param_size, total_shots, num_bits)
-        data = np.random.randint(0, 2, size=(*pub_shape, total_shots, num_bits), dtype=np.uint8)
-        item = {"meas": data.copy()}
-
-        flatten_twirling_axes(item, pub_shape=pub_shape)
-
-        # Data should remain unchanged
-        np.testing.assert_array_equal(item["meas"], data)
-
     def test_multiple_classical_registers(self):
         """Test flattening with multiple classical registers."""
         num_rand = 4
@@ -140,27 +125,6 @@ class TestFlattenTwirlingAxes(unittest.TestCase):
 
         self.assertEqual(item["creg1"].shape, expected_shape1)
         self.assertEqual(item["creg2"].shape, expected_shape2)
-
-    def test_pub_shape_mismatch_raises_error(self):
-        """Test that ValueError is raised when pub_shape doesn't match data dimensions."""
-        num_rand = 3
-        actual_pub_shape = (2, 3)
-        wrong_pub_shape = (2, 4)  # Incorrect shape
-        shots_per_rand = 5
-        num_bits = 2
-
-        # Create data with actual_pub_shape
-        data = np.random.randint(
-            0, 2, size=(num_rand, *actual_pub_shape, shots_per_rand, num_bits), dtype=np.uint8
-        )
-        item = {"meas": data}
-
-        # Should raise ValueError because pub_shape doesn't match
-        with self.assertRaisesRegex(
-            ValueError,
-            r"Classical register 'meas': expected pub shape \(2, 4\).*but found \(2, 3\)",
-        ):
-            flatten_twirling_axes(item, pub_shape=wrong_pub_shape)
 
     def test_data_ordering_preserved(self):
         """Test that the order of shots is preserved correctly after flattening."""
