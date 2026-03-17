@@ -38,7 +38,7 @@ from ibm_quantum_schemas.common.version_0_1 import (
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
 from ...options.executor_options import ExecutorOptions
-from ...utils.utils import get_qpy_version
+from ...utils.utils import get_qpy_version, get_ssv_version
 
 
 def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
@@ -69,7 +69,7 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
                 circuit=QpyModelV13ToV16.from_quantum_circuit(
                     item.circuit, qpy_version=get_qpy_version(16)
                 ),
-                samplex=SamplexModelSSV1.from_samplex(item.samplex, ssv=1),
+                samplex=SamplexModelSSV1.from_samplex(item.samplex, ssv=get_ssv_version(1)),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,

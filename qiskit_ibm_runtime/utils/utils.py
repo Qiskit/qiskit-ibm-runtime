@@ -43,6 +43,20 @@ from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+from samplomatic.ssv import SSV
+
+
+def get_ssv_version(highest_value: int | None = None) -> int:
+    """Returns the largest SSV available with the installed version of Samplomatic.
+
+    Args:
+        highest_value: If it would return an ssv version larger than `highest_value`, return
+            `highest_value` instead.
+    """
+    if highest_value is None:
+        return SSV
+    return SSV if SSV <= highest_value else highest_value
+
 
 def get_qpy_version(highest_value: int | None = None) -> int:
     """Returns the largest qpy version available with the installed version of Qiskit.
