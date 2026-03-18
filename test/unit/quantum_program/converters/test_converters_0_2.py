@@ -244,11 +244,12 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         options = ExecutorOptions()
         options.execution.init_qubits = False
+        options.experimental = {"key": "value"}
 
         params_model = quantum_program_to_0_2(quantum_program, options)
         quantum_program_out, options_out = quantum_program_from_0_2(params_model)
 
-        assert options_out, options.execution
+        assert options_out == options
 
         items = quantum_program_out.items
         assert len(items) == 2

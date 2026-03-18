@@ -34,11 +34,11 @@ from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
-from ...options.executor_options import ExecutorOptions, ExecutionOptions
+from ...options.executor_options import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 
 
-def quantum_program_from_0_1(model: ParamsModel) -> tuple[QuantumProgram, ExecutionOptions]:
+def quantum_program_from_0_1(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a V0.1 model to a pair of program and options."""
     program_model = model.quantum_program
     items: list[CircuitItem | SamplexItem] = []
@@ -83,9 +83,9 @@ def quantum_program_from_0_1(model: ParamsModel) -> tuple[QuantumProgram, Execut
 
     quantum_program = QuantumProgram(shots=program_model.shots, items=items)
 
-    options = ExecutionOptions()
-    options.init_qubits = model.options.init_qubits
-    options.rep_delay = model.options.rep_delay
+    options = ExecutorOptions()
+    options.execution.init_qubits = model.options.init_qubits
+    options.execution.rep_delay = model.options.rep_delay
 
     return quantum_program, options
 

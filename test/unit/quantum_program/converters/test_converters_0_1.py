@@ -222,7 +222,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         params_model = quantum_program_to_0_1(quantum_program, options)
         quantum_program_out, options_out = quantum_program_from_0_1(params_model)
 
-        assert options_out, options.execution
+        assert options_out == options
 
         items = quantum_program_out.items
         assert len(items) == 2
