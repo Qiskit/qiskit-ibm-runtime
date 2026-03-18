@@ -154,7 +154,7 @@ def _is_isa_instruction(instruction: CircuitInstruction, target: Target) -> str:
                 name := op.name,
                 qargs := tuple(box_qubit_map[box_qubit] for box_qubit in op.qubits),
             )
-            and op.name != "barrier"
+            and op.name not in {"barrier", "store"}
         ):
             return f"The instruction {op.name} on qubits {qargs} is not supported by the target system."
 
