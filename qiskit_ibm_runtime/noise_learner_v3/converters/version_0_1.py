@@ -21,7 +21,7 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     NoiseLearnerV3ResultsModel,
     ParamsModel,
 )
-from ibm_quantum_schemas.common.version_0_1 import QpyModelV13ToV16, F64TensorModel
+from ibm_quantum_schemas.common import QpyModelV13ToV16, F64TensorModel
 from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 from ...utils.utils import get_qpy_version

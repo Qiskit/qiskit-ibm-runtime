@@ -24,7 +24,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     ChunkSpan,
     MetadataModel,
 )
-from ibm_quantum_schemas.common.version_0_1 import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap

@@ -26,7 +26,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramModel,
     QuantumProgramResultModel,
 )
-from ibm_quantum_schemas.common.version_0_1 import (
+from ibm_quantum_schemas.common import (
     PauliLindbladMapModel,
     SamplexModelSSV1,
     F64TensorModel,

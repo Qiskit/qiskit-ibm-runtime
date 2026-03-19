@@ -23,7 +23,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     ChunkSpan,
     MetadataModel,
 )
-from ibm_quantum_schemas.common.version_0_1 import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 
