@@ -38,6 +38,59 @@ from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan,
 from ...options.executor_options import ExecutorOptions
 
 
+def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:
+    """Convert a V0.2 model to a pair of program and options."""
+    program_model = model.quantum_program
+    items: list[CircuitItem | SamplexItem] = []
+    for model_item in program_model.items:
+        chunk_size = None if model_item.chunk_size == "auto" else model_item.chunk_size
+
+        if model_item.item_type == "circuit":
+            circuit = model_item.circuit.to_quantum_circuit(use_cached=True)
+            circuit_arguments = model_item.circuit_arguments.to_numpy()
+
+            items.append(
+                CircuitItem(
+                    circuit=circuit,
+                    circuit_arguments=circuit_arguments,
+                    chunk_size=chunk_size,
+                )
+            )
+        elif model_item.item_type == "samplex":
+            circuit = model_item.circuit.to_quantum_circuit(use_cached=True)
+            samplex = model_item.samplex.to_samplex(use_cached=True)
+
+            samplex_arguments = samplex.inputs().make_broadcastable()
+            for name, value in model_item.samplex_arguments.items():
+                if isinstance(value, TensorModel):
+                    samplex_arguments[name] = value.to_numpy()
+                elif isinstance(value, PauliLindbladMapModel):
+                    samplex_arguments[name] = value.to_pauli_lindblad_map()
+                else:
+                    samplex_arguments[name] = value
+
+            items.append(
+                SamplexItem(
+                    circuit=circuit,
+                    samplex=samplex,
+                    samplex_arguments=samplex_arguments,
+                    chunk_size=chunk_size,
+                    shape=tuple(model_item.shape),
+                )
+            )
+        else:
+            raise ValueError("Unexpected model item type.")
+
+    quantum_program = QuantumProgram(shots=program_model.shots, items=items)
+
+    options = ExecutorOptions()
+    options.execution.init_qubits = model.options.init_qubits
+    options.execution.rep_delay = model.options.rep_delay
+    options.experimental = model.options.experimental
+
+    return quantum_program, options
+
+
 def quantum_program_to_0_2(program: QuantumProgram, options: ExecutorOptions) -> ParamsModel:
     """Convert a :class:`~.QuantumProgram` to a V0.2 model."""
     model_items = []
