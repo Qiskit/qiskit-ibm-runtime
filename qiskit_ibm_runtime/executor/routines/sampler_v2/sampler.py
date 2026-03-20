@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 import logging
-from typing import Any
+from typing import Any, Literal
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -167,6 +167,7 @@ def prepare(
             "context": "sampler_v2",
             "version": "v0.1",
             "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
+            "meas_type": options.execution.meas_type,
         }
     }
 
@@ -405,12 +406,19 @@ class SamplerV2(BaseSamplerV2):
     def quantum_program_result_to_primitive_result(
         result: QuantumProgramResult,
         metadata: dict[str, Any] | None = None,
+        meas_type: Literal["classified", "kerneled"] = "classified",
     ) -> PrimitiveResult:
         """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
 
         Args:
             result: The (possibly post-processed) quantum program result.
             metadata: The metadata to attach to the result.
+            meas_type: How to process and return measurement results. This option sets the return
+                type of all classical registers in all sampler pub results.
+
+            * ``"classified"``: Returns a BitArray with classified measurement outcomes.
+            * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
+              trace, in arbitrary units.
 
         Returns:
             The converted primitive result.
@@ -430,12 +438,15 @@ class SamplerV2(BaseSamplerV2):
             first_meas_data = next(iter(item_data.values()))
             pub_shape = first_meas_data.shape[:-2]
 
-            bit_arrays = {}
+            arrays = {}
             for creg_name, meas_data in item_data.items():
-                bit_array = BitArray.from_bool_array(meas_data)
-                bit_arrays[creg_name] = bit_array
+                if meas_type == "classified":
+                    array = BitArray.from_bool_array(meas_data)
+                elif meas_type == "kerneled":
+                    array = meas_data
+                arrays[creg_name] = array
 
-            data_bin = DataBin(**bit_arrays, shape=pub_shape)
+            data_bin = DataBin(**arrays, shape=pub_shape)
 
             pub_result = SamplerPubResult(data=data_bin, metadata={})
             pub_results.append(pub_result)
