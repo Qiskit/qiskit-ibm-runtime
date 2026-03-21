@@ -16,10 +16,10 @@ from __future__ import annotations
 
 import logging
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_1,
 )
-from ibm_quantum_schemas.models.executor.version_0_2.models import (
+from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_2,
 )
 

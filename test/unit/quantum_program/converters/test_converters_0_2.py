@@ -17,7 +17,7 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.models.executor.version_0_2.models import (
+from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
@@ -27,7 +27,7 @@ from ibm_quantum_schemas.models.executor.version_0_2.models import (
     SchedulerTimingModel,
     StretchValueModel,
 )
-from ibm_quantum_schemas.models.tensor_model import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap

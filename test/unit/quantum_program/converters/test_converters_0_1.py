@@ -17,14 +17,14 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
     ChunkSpan,
     MetadataModel,
 )
-from ibm_quantum_schemas.models.tensor_model import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap
