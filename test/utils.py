@@ -27,7 +27,6 @@ from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
-
 from qiskit_ibm_runtime import (
     QiskitRuntimeService,
     Session,
