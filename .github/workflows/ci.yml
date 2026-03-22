@@ -26,10 +26,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python 3.10
+      - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: 3.9
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -48,10 +48,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Python 3.10
+      - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: 3.9
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -80,11 +80,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: [3.9, '3.10', '3.11', '3.12', '3.13']
         os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
         exclude:
           - os: "macos-latest"
-            python-version: '3.10'
+            python-version: 3.9
     env:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
@@ -110,7 +110,6 @@ jobs:
           flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
           parallel: true
           file: coverage.lcov
-          fail-on-error: false
   integration-tests:
     if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
@@ -121,7 +120,7 @@ jobs:
       # avoid cancellation of in-progress jobs if any matrix job fails
       fail-fast: false
       matrix:
-        python-version: [ '3.10' ]
+        python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
         environment: ["ibm-cloud-production" ]
     environment: ${{ matrix.environment }}
@@ -158,4 +157,3 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
-          fail-on-error: false
