@@ -1,3 +1,4 @@
-The method `.accounts.CloudAccount.resolve_crn ` did not inject proxy and ssl_verification
-arguments to outgoing request. Added the arguments to `GlobalSearchV2`, `GlobalCatalogV1` 
-and `IAMAuthenticator` services.
+The ``proxies`` and ``ssl_verification`` arguments for ``QiskitRuntimeService``
+are nowpropagated to the underlying HTTP requests to ```GlobalSearchV2``,
+``GlobalCatalogV1`` and ``IAMAuthenticator`` services, allowing to instantiate
+``QiskitRuntimeService`` correctly when using a proxy.
