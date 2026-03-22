@@ -7,12 +7,18 @@
 
 .. currentmodule:: {{ module }}
 
+{% if fullname.startswith('ibm_quantum_schemas') %}
+.. autopydantic_model:: {{ objname }}
+{% else %}
 .. autoclass:: {{ objname }}
    :no-members:
    :no-inherited-members:
    :no-special-members:
    :show-inheritance:
+   :class-doc-from: both
 
+{% if fullname not in ['qiskit_ibm_runtime.Estimator', 'qiskit_ibm_runtime.Sampler'] %}
+{# Skip problematic re-imports, as autodoc cannot resolve the references to attributes / methods #}
 {% block attributes_summary %}
    {% if attributes %}
    .. rubric:: Attributes
@@ -35,3 +41,5 @@
 
    {% endif %}
 {% endblock %}
+{% endif %}
+{% endif %}

@@ -26,7 +26,7 @@ from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.transpiler.target import Target
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
@@ -328,7 +328,7 @@ class IBMBackend(Backend):
         """Return the ``service`` object
 
         Returns:
-            service: instance of QiskitRuntimeService
+            An instance of QiskitRuntimeService
         """
         return self._service
 
@@ -337,7 +337,7 @@ class IBMBackend(Backend):
         """Return the system time resolution of output signals
 
         Returns:
-            dtm: The output signal timestep in seconds.
+            The output signal timestep in seconds.
         """
         return self._configuration.dtm
 
@@ -358,7 +358,7 @@ class IBMBackend(Backend):
         scheduling.
 
         Returns:
-            meas_map: The grouping of measurements which are multiplexed
+            The grouping of measurements which are multiplexed
         """
         return self._configuration.meas_map
 

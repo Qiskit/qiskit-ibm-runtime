@@ -1,4 +1,4 @@
-.. automodule:: qiskit_ibm_runtime.noise_learner_v3
+.. automodule:: ibm_quantum_schemas.executor.version_0_2
    :no-members:
    :no-inherited-members:
    :no-special-members:

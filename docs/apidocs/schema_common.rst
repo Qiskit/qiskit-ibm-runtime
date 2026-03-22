@@ -1,4 +1,4 @@
-.. automodule:: qiskit_ibm_runtime.quantum_program
+.. automodule:: ibm_quantum_schemas.common
    :no-members:
    :no-inherited-members:
    :no-special-members:
