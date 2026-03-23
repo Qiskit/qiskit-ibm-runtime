@@ -4,4 +4,4 @@
 Bug Fixes
 ---------
 
-- Corrected an issue where setuptools_scm was mistakenly pinned to ~=8.0 in the previous release. Restored the original version constraint to >=6.2.
+- Corrected an issue where setuptools_scm was mistakenly pinned to ``~=8.0`` in the previous release. Restored the original version constraint to ``>=6.2``.
