@@ -193,7 +193,10 @@ documentation = [
 ]
 
 visualization = ["plotly>=5.23.0"]
-test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
+test = [
+    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
+    "pytest>=9,<10",
+]
 
 dev = [
     "qiskit-ibm-runtime[test]",

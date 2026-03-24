@@ -26,19 +26,19 @@ style:
 	black --check qiskit_ibm_runtime test
 
 unit-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
+	pytest -v -s test/unit
 
 integration-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/integration
+	pytest -v -s test/integration
 
 smoke-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/smoke
+	pytest -v -s test/smoke
 
 docs-test:
 	./test/docs/vale.sh
 
 unit-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
+	coverage run -m pytest -v -s test/unit
 	coverage lcov
 
 black:
