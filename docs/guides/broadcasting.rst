@@ -178,7 +178,7 @@ Output arrays follow the same extrinsic/intrinsic pattern:
 - **Extrinsic shape:** Matches the broadcast shape of all inputs
 - **Intrinsic shape:** Determined by the output type
 
-The most common output is bitstring data from measurements, which is 
+The most common output is bitstring data from measurements, which is
 formatted as an array of boolean values:
 
 .. list-table:: Intrinsic shapes of common outputs
@@ -218,8 +218,8 @@ shape is ``(4, 3)``. For a circuit with 1024 shots and a 3-bit classical registe
 
 .. note::
 
-   Each configuration receives the full shot count specified in the quantum program. 
-   Shots are **not** divided among configurations - if you request 1024 shots and have 
+   Each configuration receives the full shot count specified in the quantum program.
+   Shots are **not** divided among configurations - if you request 1024 shots and have
    10 configurations, each configuration runs 1024 shots (10,240 total shots executed).
 
 Randomization and the ``shape`` parameter
@@ -246,9 +246,9 @@ single random realization you don't benefit from averaging over multiple randomi
 
    If you're used to enabling twirling with a simple flag like ``twirling=True``, note that
    the executor requires you to explicitly request multiple randomizations with the ``shape`` argument to
-   allow your post-processing routines to get the benefits of averaging over multiple 
-   randomizations. A single randomization (the default when ``shape`` is omitted) applies 
-   random gates but typically offers no advantage over running the base circuit without 
+   allow your post-processing routines to get the benefits of averaging over multiple
+   randomizations. A single randomization (the default when ``shape`` is omitted) applies
+   random gates but typically offers no advantage over running the base circuit without
    randomization.
 
 The following example demonstrates the default behavior:

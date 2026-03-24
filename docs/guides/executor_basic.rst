@@ -1,5 +1,5 @@
 The Executor: A quick-start guide
-================================= 
+=================================
 
 This guide provides a basic overview of the :class:`~.Executor`, a runtime program that allows
 executing :class:`~.QuantumProgram`\s on IBM backends. At the end of this guide, you will
@@ -171,7 +171,7 @@ to arrange the randomized parameter sets in an array of be arranged in an array 
     program.append_samplex_item(
         template,
         samplex=samplex,
-        samplex_arguments={  
+        samplex_arguments={
             # the arguments required by the samplex.sample method
             "parameter_values": np.random.rand(10, 3),
         },
@@ -194,7 +194,7 @@ In the cell below we initialize an :class:`~.Executor` and leave the default opt
 Next, we use the :meth:`~.Executor.run` method to submit the job.
 
     .. code-block:: python
-        
+
         job = executor.run(program)
 
         # Retrieve the result
@@ -215,10 +215,10 @@ The first item in ``result`` contains the results of running the first task in t
 the circuit with static gates. It contains a single key, ``'meas'``, corresponding to the name of the
 classical register in the input circuit. The ``'meas'`` key is mapped to the results collected for this
 classical registers, stored in an ``np.ndarray`` of shape ``(1024, 3)``. The first axis
-is over shots, the second is over bits in the classical register.    
+is over shots, the second is over bits in the classical register.
 
     .. code-block:: python
-        
+
         # Access the results of the classical register of task #0
         result_0 = result[0]["meas"]
         print(f"Result shape: {result_0.shape}")
@@ -226,10 +226,10 @@ is over shots, the second is over bits in the classical register.
 The second item contains the results of running the second task in the program, namely
 the circuit with parametrized gates. Again, it contains a single key, ``'meas'``, mapped to a
 ``np.ndarray`` of shape ``(1024, 10, 3)``. The central axis is over parameter sets, while the first
-and last are again over shots and bits respectively.  
+and last are again over shots and bits respectively.
 
     .. code-block:: python
-        
+
         # Access the results of the classical register of task #1
         result_1 = result[1]["meas"]
         print(f"Result shape: {result_1.shape}")
@@ -240,11 +240,11 @@ that classical register), it contains ``'measurement_flips.meas'``, namely the b
 the measurement twirling for the ``'meas'`` register.
 
     .. code-block:: python
-        
+
         # Access the results of the classical register of task #2
         result_2 = result[2]["meas"]
         print(f"Result shape: {result_2.shape}")
-        
+
         # Access the bit-flip corrections
         flips_2 = result[2]["measurement_flips.meas"]
         print(f"Result shape: {result_0.shape}")

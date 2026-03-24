@@ -6,16 +6,16 @@ Deprecation Notes
 
 - `backend.run() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/ibm-backend#run>`__ has been deprecated. Please use the primitives instead. More details
   can be found in the `migration guide <https://github.com/Qiskit/documentation/blob/2d2c2fcad47dd9e7ac1cc6807527dfccd796ea24/docs/migration-guides/qiskit-runtime.mdx>`__ . (`1561 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1561>`__)
-- In a future release, the ``service`` parameter in `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__ 
+- In a future release, the ``service`` parameter in `from_id() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#from_id>`__
   will be required. (`1311 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1311>`__)
 
 New Features
 ------------
 
 - Printing :class:`.Options` and :class:`.OptionsV2` will now be formatted as a table. (`1490 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1490>`__)
-- Add ``block_ordering_callable`` argument to 
-  :class:`.BlockBasePadder`, :class:`.PadDynamicalDecoupling`, :class:`.PadDelay`, and 
-  :class:`.BaseDynamicCircuitAnalysis`. This allows the user to construct blocks using an algorithm of their 
+- Add ``block_ordering_callable`` argument to
+  :class:`.BlockBasePadder`, :class:`.PadDynamicalDecoupling`, :class:`.PadDelay`, and
+  :class:`.BaseDynamicCircuitAnalysis`. This allows the user to construct blocks using an algorithm of their
   choosing. No assumptions or checks are made on the validity of the output that the ``block_ordering_callable`` produces. The motivation for this argument is
   that for some families of circuits, the existing function ``block_order_op_nodes`` can be very slow. (`1531 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1531>`__)
 - The Sampler and Estimator V2 Primitives have been enhanced to incorporate custom validation procedures when
@@ -24,19 +24,19 @@ New Features
   inadvertently disabling Q-CTRL's performance enhancements. (`1550 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1550>`__)
 - :class:`.SamplerV2` now supports twirling.
   Twirling will only be applied to those measurement registers not involved within a conditional logic. (`1557 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1557>`__)
-- Session `details() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#details>`__ 
-  now includes a new field, ``usage_time``. Usage is defined as the time a quantum system 
+- Session `details() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/session#details>`__
+  now includes a new field, ``usage_time``. Usage is defined as the time a quantum system
   is committed to complete a job. (`1567 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1567>`__)
 
 
 Bug Fixes
 ---------
 
-- :class:`.RuntimeJobV2` will no longer 
-  error when the API returns an unknown status. Instead, the status 
+- :class:`.RuntimeJobV2` will no longer
+  error when the API returns an unknown status. Instead, the status
   from the API will directly be returned. (`1476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1476>`__)
 - Fixed a bug where custom headers were not being sent in the ``/jobs`` request. (`1508 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1508>`__)
 - Fixed a bug with encoding/decoding ``ParameterExpression``. (`1521 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1521>`__)
-- Fixed an issue where the `in_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job-v2#in_final_state>`__ 
+- Fixed an issue where the `in_final_state() <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-job-v2#in_final_state>`__
   method in :class:`.RuntimeJobV2` would not
   update the status when called. (`1547 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1547>`__)

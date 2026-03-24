@@ -84,8 +84,8 @@ class ZneOptions:
     amplifier: (
         UnsetType | Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
     ) = Unset
-    r"""Which technique to use for amplifying noise. 
-    
+    r"""Which technique to use for amplifying noise.
+
         One of:
 
             * `"gate_folding"` (default) uses 2-qubit gate folding to amplify noise. If the noise
@@ -97,10 +97,10 @@ class ZneOptions:
             * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
                 factor requires amplifying only a subset of the gates, then these gates are selected
                 from the back of the topologically ordered DAG circuit.
-            * `"pea"` uses a technique called Probabilistic Error Amplification 
-                (`PEA <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify noise. When this 
-                option is selected, gate twirling will always be used whether or not it has been 
-                enabled in the options. In this technique, the twirled noise model of each each unique 
+            * `"pea"` uses a technique called Probabilistic Error Amplification
+                (`PEA <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify noise. When this
+                option is selected, gate twirling will always be used whether or not it has been
+                enabled in the options. In this technique, the twirled noise model of each each unique
                 layer of entangling gates in your ISA circuits is learned beforehand, see
                 :class:`~.LayerNoiseLearningOptions` for relevant learning options. Once complete,
                 your circuits are executed at each noise factor, where every entangling layer of
@@ -108,8 +108,8 @@ class ZneOptions:
                 proportional to the corresponding learned noise model.
     """
     noise_factors: UnsetType | Sequence[float] = Unset
-    r""" noise_factors: Noise factors to use for noise amplification. 
-         
+    r""" noise_factors: Noise factors to use for noise amplification.
+
     Default: ``(1, 3, 5)``.
     """
     extrapolator: UnsetType | ExtrapolatorType | Sequence[ExtrapolatorType] = Unset
@@ -117,7 +117,7 @@ class ZneOptions:
 
         The available options are:
 
-            * ``"exponential"``, which fits the data using an exponential decaying function 
+            * ``"exponential"``, which fits the data using an exponential decaying function
               defined as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)` is the
               value at zero noise (:math:`x=0`) and :math:`\tau>0` is a positive rate.
             * ``"double_exponential"``, which uses a sum of two exponential as in Ref. 1.

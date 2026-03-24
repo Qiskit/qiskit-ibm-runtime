@@ -45,8 +45,8 @@ class SimulatorOptions:
         Default: ``None``.
     """
     seed_simulator: UnsetType | int = Unset
-    r"""Random seed to control sampling. 
-    
+    r"""Random seed to control sampling.
+
         Default: ``None``.
     """
     coupling_map: UnsetType | list[list[int]] | CouplingMap = Unset
@@ -54,13 +54,13 @@ class SimulatorOptions:
         the coupling map is symmetric, both directions need to be specified.
         Each entry in the list specifies a directed two-qubit interaction,
         e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
-    
+
         Default: ``None``, which implies no connectivity constraints.
     """
     basis_gates: UnsetType | list[str] = Unset
     r"""List of basis gate names to unroll to. For example,
         ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
-        
+
         Default: all basis gates supported by the simulator.
     """
 

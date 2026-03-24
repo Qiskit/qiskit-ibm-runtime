@@ -47,18 +47,18 @@ pip install -e ".[dev]"
 
 Before pushing your contribution please ensure that:
 
-1. The code follows the code style of this project. For convenience, you can 
+1. The code follows the code style of this project. For convenience, you can
    check [Style guide](#style-guide)
 2. If it makes sense, add tests that cover the new changes.
 3. All tests pass. For convenience, you can verify the [Test Types](#test).
 4. The documentation has been updated accordingly. In particular, if a
    function or class has been modified during your contribution, please update
-   the *docstring* accordingly. For convenience, you can check [Building the 
+   the *docstring* accordingly. For convenience, you can check [Building the
    Documentation Locally](#building-documentation-locally).
 
 ### Pull request creation
 
-When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal 
+When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal
 etc), please ensure that you add a release note.
 
 ### Changelog generation
@@ -168,7 +168,7 @@ sure they're included with the code in your PR.
 
 You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
-running `pipx install towncrier`. 
+running `pipx install towncrier`.
 
 Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the file `unreleased.rst` to Git!
 
@@ -187,12 +187,12 @@ and the release notes in particular will be located at
 ### Test
 
 #### Test Types
-There are three different types of tests in `qiskit-ibm-runtime`. The 
-implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) 
+There are three different types of tests in `qiskit-ibm-runtime`. The
+implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html)
 Unit testing framework.
 
 ##### 1. Unit tests
-Run locally without connecting to an external system. They are short-running, 
+Run locally without connecting to an external system. They are short-running,
 stable and give a basic level of confidence during development.
 
 To execute all unit tests, run:
@@ -201,9 +201,9 @@ make unit-test
 ```
 
 ##### 2. Integration tests
-Executed against an external system configured via a (token, instance, url) 
+Executed against an external system configured via a (token, instance, url)
 tuple. Detailed coverage of happy and non-happy paths. They are long-running and
-unstable at times. A successful test run gives a high level of confidence that 
+unstable at times. A successful test run gives a high level of confidence that
 client and APIs work well together.
 
 To execute all integration tests, run
@@ -228,7 +228,7 @@ QISKIT_IBM_QPU=...                                              # The Quantum Pr
 To enable test cases against external system in your private fork, make sure to set above values as
 [encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
-upon. 
+upon.
 
 For example, in your github fork settings, add the environment you want to run tests on (ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
 

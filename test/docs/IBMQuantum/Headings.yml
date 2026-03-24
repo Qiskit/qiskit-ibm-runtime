@@ -25,4 +25,4 @@ exceptions:
   - Cloud
   - Spectroscopic Eigensolver Algorithm
   - Variational Quantum Eigensolver
-  - (\d+)\. 
+  - (\d+)\.
