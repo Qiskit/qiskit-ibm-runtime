@@ -302,7 +302,9 @@ def make_constraint_validator(
     return validator
 
 
-def match_max_execution_time_and_max_usage(instance: Any) -> Any:
+def match_max_execution_time_and_max_usage(
+    instance: Any, comparator: None | UnsetType = None
+) -> Any:
     """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`.
 
     This is a convenience function that should be removed once `max_execution_time` is
@@ -311,8 +313,8 @@ def match_max_execution_time_and_max_usage(instance: Any) -> Any:
     max_execution_time = instance.max_execution_time
     max_usage = instance.max_usage
 
-    if max_usage is not None:
-        if max_execution_time is not None:
+    if max_usage is not comparator:
+        if max_execution_time is not comparator:
             warnings.warn(
                 f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
                 DeprecationWarning,
@@ -321,7 +323,7 @@ def match_max_execution_time_and_max_usage(instance: Any) -> Any:
 
         instance.max_execution_time = max_usage
     else:
-        if max_execution_time is not None:
+        if max_execution_time is not comparator:
             warnings.warn(
                 f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
                 DeprecationWarning,

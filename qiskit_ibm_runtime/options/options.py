@@ -165,7 +165,7 @@ class OptionsV2(BaseOptions):
 
     def __post_init__(self) -> None:
         """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
-        match_max_execution_time_and_max_usage(self)
+        match_max_execution_time_and_max_usage(self, Unset)
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
