@@ -20,6 +20,7 @@ from qiskit.providers.backend import Backend
 
 from .exceptions import IBMInputValueError
 from .utils import validate_job_tags
+from .options.utils import match_max_execution_time_and_max_usage
 
 
 @dataclass(init=False)
@@ -92,11 +93,7 @@ class RuntimeOptions:
         self.session_time = session_time
         self.private = private
 
-        if max_usage is not None:
-            self.max_execution_time = max_usage
-        else:
-            if max_execution_time is not None:
-                self.max_usage = max_execution_time
+        match_max_execution_time_and_max_usage(self)
 
     def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
         """Validate options.

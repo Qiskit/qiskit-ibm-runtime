@@ -14,16 +14,11 @@
 
 from __future__ import annotations
 
-import warnings
 from pydantic.dataclasses import dataclass
 from pydantic import Field, model_validator
 
 from .environment_options import LogLevelType
-
-MAX_EXECUTION_TIME_DEPRECATION_MSG = (
-    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
-    "be removed in a future release. Use `max_usage` instead."
-)
+from .utils import match_max_execution_time_and_max_usage
 
 
 @dataclass
@@ -92,29 +87,7 @@ class EnvironmentOptions:
     @model_validator(mode="after")
     def match_max_execution_time_and_max_usage(self) -> EnvironmentOptions:
         """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
-        max_execution_time = self.max_execution_time
-        max_usage = self.max_usage
-
-        if max_usage is not None:
-            if max_execution_time is not None:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-            self.max_execution_time = max_usage
-        else:
-            if max_execution_time is not None:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-                self.max_usage = max_execution_time
-
-        return self
+        return match_max_execution_time_and_max_usage(self)
 
 
 @dataclass

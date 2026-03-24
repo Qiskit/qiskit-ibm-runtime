@@ -17,7 +17,6 @@ from typing import Any
 from collections.abc import Iterable
 from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
-import warnings
 
 from qiskit.transpiler import CouplingMap
 from pydantic import Field
@@ -30,15 +29,11 @@ from .utils import (
     merge_options_v2,
     primitive_dataclass,
     remove_empty_dict,
+    match_max_execution_time_and_max_usage,
 )
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
 from ..runtime_options import RuntimeOptions
-
-MAX_EXECUTION_TIME_DEPRECATION_MSG = (
-    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
-    "be removed in a future release. Use `max_usage` instead."
-)
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
@@ -170,27 +165,7 @@ class OptionsV2(BaseOptions):
 
     def __post_init__(self) -> None:
         """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
-        max_execution_time = self.max_execution_time
-        max_usage = self.max_usage
-
-        if max_usage != Unset:
-            if max_execution_time != Unset:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-            self.max_execution_time = max_usage
-        else:
-            if max_execution_time != Unset:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-                self.max_usage = max_execution_time
+        match_max_execution_time_and_max_usage(self)
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

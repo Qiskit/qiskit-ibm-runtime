@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-import warnings
 
 from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
@@ -37,15 +36,11 @@ from .utils import (
     make_constraint_validator,
     primitive_dataclass,
     skip_unset_validation,
+    match_max_execution_time_and_max_usage,
 )
 
 
 AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1, "v0.2": OptionsModel_0_2}
-
-MAX_EXECUTION_TIME_DEPRECATION_MSG = (
-    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
-    "be removed in a future release. Use `max_usage` instead."
-)
 
 
 @primitive_dataclass
@@ -171,24 +166,4 @@ class NoiseLearnerV3Options(BaseOptions):
 
     def __post_init__(self) -> None:
         """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
-        max_execution_time = self.max_execution_time
-        max_usage = self.max_usage
-
-        if max_usage != Unset:
-            if max_execution_time != Unset:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-            self.max_execution_time = max_usage
-        else:
-            if max_execution_time != Unset:
-                warnings.warn(
-                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
-
-                self.max_usage = max_execution_time
+        match_max_execution_time_and_max_usage(self)

@@ -252,6 +252,7 @@ class NoiseLearner:
         ignored_names = [
             "_VERSION",
             "max_execution_time",
+            "max_usage",
             "environment",
         ]
 
