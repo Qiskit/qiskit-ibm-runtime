@@ -118,7 +118,7 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = generate_preset_pass_manager(
             optimization_level=0,
             backend=FakeFractionalBackend(),
-            translation_method="ibm_fractional",
+            translation_method="ibm_dynamic_and_fractional",
         )
         isa_circ = pm.run(circ)
 
