@@ -98,7 +98,7 @@ class BaseOptions:
         options_copy = copy.deepcopy(options)
         remove_dict_unset_values(options_copy)
         environment = options_copy.get("environment") or {}
-        out = {"max_execution_time": options_copy.get("max_execution_time", None)}
+        out = {"max_usage": options_copy.get("max_usage", None)}
 
         for fld in fields(RuntimeOptions):
             if fld.name in environment:

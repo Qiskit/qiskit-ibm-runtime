@@ -41,7 +41,8 @@ class TestOptionsV2(IBMTestCase):
             log_level="DEBUG",
             instance="crn",
             job_tags=["foo", "bar"],
-            max_execution_time=600,
+            max_usage=600,
+            # max_execution_time=600,
         )
         partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
 

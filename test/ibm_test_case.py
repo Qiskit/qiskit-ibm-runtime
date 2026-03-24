@@ -263,7 +263,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         backend=None,
         log_level=None,
         job_tags=None,
-        max_execution_time=None,
+        max_usage=None,
         session_id=None,
         start_session=False,
     ):
@@ -285,7 +285,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "backend": backend_name,
             "log_level": log_level,
             "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
+            "max_usage": max_usage,
         }
         if pid == "sampler":
             sampler = SamplerV2(mode=backend)

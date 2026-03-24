@@ -94,7 +94,7 @@ class BaseFakeRuntimeJob:
         job_tags=None,
         log_level=None,
         session_id=None,
-        max_execution_time=None,
+        max_usage=None,
         start_session=None,
     ):
         """Initialize a fake job."""
@@ -108,7 +108,7 @@ class BaseFakeRuntimeJob:
         self._job_tags = job_tags
         self.log_level = log_level
         self._session_id = session_id
-        self._max_execution_time = max_execution_time
+        self._max_usage = max_usage
         self._start_session = start_session
         self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
@@ -288,7 +288,7 @@ class BaseFakeRuntimeClient:
         log_level: str | None,
         session_id: str | None = None,
         job_tags: list[str] | None = None,
-        max_execution_time: int | None = None,
+        max_usage: int | None = None,
         start_session: bool | None = None,
         session_time: int | None = None,
         private: int | None = False,  # pylint: disable=unused-argument
@@ -313,7 +313,7 @@ class BaseFakeRuntimeClient:
             log_level=log_level,
             session_id=session_id,
             job_tags=job_tags,
-            max_execution_time=max_execution_time,
+            max_usage=max_usage,
             start_session=start_session,
             **self._job_kwargs,
         )

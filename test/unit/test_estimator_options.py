@@ -125,7 +125,7 @@ class TestEstimatorOptions(IBMTestCase):
         twirling = {"enable_gates": True, "enable_measure": True, "strategy": "all"}
 
         opt = EstimatorOptions(
-            max_execution_time=100,
+            max_usage=100,
             environment=environment,
             simulator=simulator,
             default_precision=0.5,
@@ -188,7 +188,7 @@ class TestEstimatorOptions(IBMTestCase):
 
     @data(
         {"resilience_level": 2},
-        {"max_execution_time": 200},
+        {"max_usage": 200},
         {"resilience_level": 2},
         {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {"resilience_level": 2, "default_shots": 2048},

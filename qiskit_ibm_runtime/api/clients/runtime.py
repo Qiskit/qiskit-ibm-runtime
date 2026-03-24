@@ -56,7 +56,7 @@ class RuntimeClient(BaseBackendClient):
         log_level: str | None,
         session_id: str | None,
         job_tags: list[str] | None = None,
-        max_execution_time: int | None = None,
+        max_usage: int | None = None,
         start_session: bool | None = False,
         session_time: int | None = None,
         private: bool | None = False,
@@ -72,7 +72,7 @@ class RuntimeClient(BaseBackendClient):
             log_level: Log level to use.
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
-            max_execution_time: Maximum execution time in seconds.
+            max_usage: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
@@ -89,7 +89,7 @@ class RuntimeClient(BaseBackendClient):
             log_level=log_level,
             session_id=session_id,
             job_tags=job_tags,
-            max_execution_time=max_execution_time,
+            max_usage=max_usage,
             start_session=start_session,
             session_time=session_time,
             private=private,

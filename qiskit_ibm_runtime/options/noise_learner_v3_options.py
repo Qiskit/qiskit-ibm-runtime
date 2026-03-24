@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import warnings
 
 from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
@@ -40,6 +41,11 @@ from .utils import (
 
 
 AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1, "v0.2": OptionsModel_0_2}
+
+MAX_EXECUTION_TIME_DEPRECATION_MSG = (
+    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
+    "be removed in a future release. Use `max_usage` instead."
+)
 
 
 @primitive_dataclass
@@ -142,6 +148,15 @@ class NoiseLearnerV3Options(BaseOptions):
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
+
+    max_usage: UnsetType | int = Unset
+    """Maximum usage in seconds.
+
+    This value bounds system usage (not wall clock time). System usage is the amount of time that
+    the system is dedicated to processing your job. If a job exceeds this time limit, it is
+    forcibly cancelled.
+    """
+
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
 
@@ -153,3 +168,27 @@ class NoiseLearnerV3Options(BaseOptions):
             Inputs acceptable by primitives.
         """
         raise NotImplementedError("Not implemented by `NoiseLearnerV3Options`.")
+
+    def __post_init__(self) -> None:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        max_execution_time = self.max_execution_time
+        max_usage = self.max_usage
+
+        if max_usage != Unset:
+            if max_execution_time != Unset:
+                warnings.warn(
+                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+            self.max_execution_time = max_usage
+        else:
+            if max_execution_time != Unset:
+                warnings.warn(
+                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+                self.max_usage = max_execution_time
