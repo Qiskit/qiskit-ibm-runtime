@@ -17,6 +17,7 @@ from typing import Any
 from collections.abc import Iterable
 from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
+import warnings
 
 from qiskit.transpiler import CouplingMap
 from pydantic import Field
@@ -33,6 +34,11 @@ from .utils import (
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
 from ..runtime_options import RuntimeOptions
+
+MAX_EXECUTION_TIME_DEPRECATION_MSG = (
+    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
+    "be removed in a future release. Use `max_usage` instead."
+)
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
@@ -116,33 +122,40 @@ class BaseOptions:
 
 @primitive_dataclass
 class OptionsV2(BaseOptions):
-    """Base primitive options, used by v2 primitives.
-
-    Args:
-        max_execution_time: Maximum execution time in seconds, which is based
-            on system execution time (not wall clock time). System execution time is
-            the amount of time that the system is dedicated to processing your job.
-            If a job exceeds this time limit, it is forcibly cancelled.
-            Simulator jobs continue to use wall clock time.
-
-            Refer to the
-            `Max execution time documentation
-            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            for more information.
-
-        environment: Options related to the execution environment. See
-            :class:`EnvironmentOptions` for all available options.
-
-        simulator: Simulator options. See
-            :class:`SimulatorOptions` for all available options.
-    """
+    """Base primitive options, used by v2 primitives."""
 
     _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
+    """Maximum execution time in seconds.
+
+    Maximum execution time in seconds, which is based on system execution time (not wall clock
+    time). System execution time is the amount of time that the system is dedicated to processing
+    your job. If a job exceeds this time limit, it is forcibly cancelled. Simulator jobs continue
+    to use wall clock time.
+
+    Refer to the `Max execution time documentation
+    <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_ for more information.
+    """
+
+    max_usage: UnsetType | int = Unset
+    """Maximum usage time in seconds.
+
+    Maximum usage in seconds, which is based on system execution time (not wall clock time). System
+    execution time is the amount of time that the system is dedicated to processing your job. If a
+    job exceeds this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
+    clock time.
+    """
+
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
+    """Options related to the execution environment.
+
+    See :class:`EnvironmentOptions` for all available options.
+    """
+
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
+    """Simulator options. See :class:`SimulatorOptions` for all available options."""
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
@@ -154,6 +167,30 @@ class OptionsV2(BaseOptions):
 
         merged = merge_options_v2(self, kwargs)
         _set_attr(merged)
+
+    def __post_init__(self) -> None:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        max_execution_time = self.max_execution_time
+        max_usage = self.max_usage
+
+        if max_usage != Unset:
+            if max_execution_time != Unset:
+                warnings.warn(
+                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+            self.max_execution_time = max_usage
+        else:
+            if max_execution_time != Unset:
+                warnings.warn(
+                    f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+
+                self.max_usage = max_execution_time
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
