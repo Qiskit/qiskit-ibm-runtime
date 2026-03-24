@@ -69,7 +69,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
             if not is_valid_image(options):
                 image_line = line_index - len(options)
                 invalid_images.append(
-                    f"- Error in line {image_line}: {lines[image_line-1].strip()}"
+                    f"- Error in line {image_line}: {lines[image_line - 1].strip()}"
                 )
 
         image_found = is_image(line)

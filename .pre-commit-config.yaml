@@ -7,3 +7,8 @@ repos:
         exclude: .json
       - id: check-yaml
         exclude: ^test/docs/IBMQuantum/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.10
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
