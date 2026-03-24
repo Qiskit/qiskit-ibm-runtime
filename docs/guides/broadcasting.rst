@@ -410,4 +410,3 @@ size-1 axes:
     noise_scale = np.array([0.8, 1.0, 1.2])     # extrinsic (3,), intrinsic ()
 
     # Broadcasted extrinsic shape: (4, 3)
-
