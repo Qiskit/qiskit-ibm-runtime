@@ -16,14 +16,14 @@ from datetime import datetime
 import json
 import numpy as np
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
     ChunkSpan,
     MetadataModel,
 )
-from ibm_quantum_schemas.models.tensor_model import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
 

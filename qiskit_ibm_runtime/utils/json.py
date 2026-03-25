@@ -80,7 +80,7 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 from .noise_learner_result import NoiseLearnerResult
 
-SERVICE_MAX_SUPPORTED_QPY_VERSION = 14
+SERVICE_MAX_SUPPORTED_QPY_VERSION = 17
 
 HAS_AER = LazyImportTester(
     "qiskit_aer",

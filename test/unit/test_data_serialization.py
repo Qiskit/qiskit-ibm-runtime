@@ -15,6 +15,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import warnings
 from datetime import datetime
@@ -238,7 +239,7 @@ if __name__ == '__main__':
             with self.subTest(operator=operator):
                 encoded = json.dumps(operator, cls=RuntimeEncoder)
                 self.assertIsInstance(encoded, str)
-                cmd = ["python", temp_fp.name, encoded]
+                cmd = [sys.executable, temp_fp.name, encoded]
                 proc = subprocess.run(
                     cmd,
                     capture_output=True,

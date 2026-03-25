@@ -17,6 +17,6 @@ Python.
    executor_0_2
    noise_learner_v3_0_1
    noise_learner_v3_0_2
-   schema_models
+   schema_common
 
 .. _separate dependency: https://pypi.org/project/ibm-quantum-schemas/
