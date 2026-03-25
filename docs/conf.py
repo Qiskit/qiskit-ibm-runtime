@@ -1,4 +1,4 @@
-# This code is a Qiskit project.
+# This code is part of Qiskit.
 #
 # (C) Copyright IBM 2022.
 #

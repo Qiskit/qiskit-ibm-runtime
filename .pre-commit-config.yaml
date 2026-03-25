@@ -16,3 +16,10 @@ repos:
     hooks:
       - id: ruff-check
         args: [ --fix ]
+  - repo: local
+    hooks:
+      - id: verify-headers
+        name: Verify headers
+        entry: tools/verify_headers.py
+        language: python
+        types: [file, python]
