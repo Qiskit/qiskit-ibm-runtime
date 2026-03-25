@@ -18,20 +18,6 @@ repos:
         args: [ --fix ]
   - repo: local
     hooks:
-      - id: verify-headers
-        name: Verify copyright headers
-        entry: tools/verify_headers.py
-        language: python
-        types: [file, python]
-  - repo: local
-    hooks:
-      - id: verify-images
-        name: Verify alt text in images
-        entry: tools/verify_images.py
-        language: python
-        types: [file, python]
-  - repo: local
-    hooks:
       # Invoke the locally installed mypy binary, ensuring it runs over all files.
       - id: mypy
         name: mypy
@@ -39,3 +25,13 @@ repos:
         pass_filenames: false
         language: system
         require_serial: true
+      - id: verify-headers
+        name: Verify copyright headers
+        entry: tools/verify_headers.py
+        language: python
+        types: [file, python]
+      - id: verify-images
+        name: Verify alt text in images
+        entry: tools/verify_images.py
+        language: python
+        types: [file, python]
