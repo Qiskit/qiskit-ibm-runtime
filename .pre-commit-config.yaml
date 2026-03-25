@@ -19,7 +19,14 @@ repos:
   - repo: local
     hooks:
       - id: verify-headers
-        name: Verify headers
+        name: Verify copyright headers
         entry: tools/verify_headers.py
+        language: python
+        types: [file, python]
+  - repo: local
+    hooks:
+      - id: verify-images
+        name: Verify alt text in images
+        entry: tools/verify_images.py
         language: python
         types: [file, python]
