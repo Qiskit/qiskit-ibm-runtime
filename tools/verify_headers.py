@@ -66,7 +66,11 @@ def validate_header(file_path):
     if not lines[start + 2].startswith("# (C) Copyright IBM 20"):
         return (file_path, False, "Header copyright line not found")
     if "".join(lines[start + 3 : start + 11]) != apache_text:
-        return (file_path, False, "Header apache text string doesn't match:\n {}".format(apache_text))
+        return (
+            file_path,
+            False,
+            "Header apache text string doesn't match:\n {}".format(apache_text),
+        )
     return (file_path, True, None)
 
 
