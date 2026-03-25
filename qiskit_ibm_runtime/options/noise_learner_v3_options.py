@@ -18,10 +18,10 @@ from dataclasses import asdict
 
 from pydantic import Field, ValidationInfo, field_validator, BaseModel
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     OptionsModel as OptionsModel_0_1,
 )
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
+from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     OptionsModel as OptionsModel_0_2,
 )
 
