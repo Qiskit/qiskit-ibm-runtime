@@ -322,7 +322,13 @@ class Session:
         return self._service  # type: ignore[return-value]
 
     @classmethod
-    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> Session:
+    def from_id(
+        cls,
+        session_id: str,
+        service: QiskitRuntimeService,
+        use_fractional_gates: bool = False,
+        calibration_id: str | None = None,
+    ) -> Session:
         """Construct a Session object with a given ``session_id``. For example:
 
         .. code-block::
@@ -335,9 +341,13 @@ class Session:
             new_session = Session.from_id(existing_session_id, service)
 
         Args:
-            session_id: the id of the session to be created. This must be an already
+            session_id: The id of the session to be created. This must be an already
                 existing session id.
-            service: instance of the ``QiskitRuntimeService`` class.
+            service: Instance of the ``QiskitRuntimeService`` class.
+            use_fractional_gates: Whether or not to allow fractional gates for the backend
+                that is used to create the session.
+            calibration_id: The calibration id for the backend that is used to create the
+                session.
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist.
@@ -370,7 +380,11 @@ class Session:
             raise IBMRuntimeError(
                 "The backend of this session is unknown. Try running a job first."
             )
-        backend = service.backend(backend_name)
+        backend = service.backend(
+            backend_name,
+            use_fractional_gates=use_fractional_gates,
+            calibration_id=calibration_id,
+        )
         mode = response.get("mode")
         state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
