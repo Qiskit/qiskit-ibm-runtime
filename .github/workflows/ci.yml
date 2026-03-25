@@ -86,7 +86,7 @@ jobs:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
-      PYTEST_ADDOPTS: "--durations=0"
+      PYTEST_ADDOPTS: "--durations=10"
     steps:
       - uses: actions/checkout@v4
         with:
