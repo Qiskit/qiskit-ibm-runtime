@@ -54,6 +54,7 @@ fallback_version = "0.46.1"
 
 [tool.mypy]
 python_version = "3.10"
+packages = ["qiskit_ibm_runtime", "test"]
 namespace_packages = true
 ignore_missing_imports = true
 warn_redundant_casts = true

@@ -20,7 +20,7 @@ lint:
 	tools/verify_images.py
 
 mypy:
-	mypy --module qiskit_ibm_runtime --package test
+	mypy
 
 style:
 	black --check qiskit_ibm_runtime test
