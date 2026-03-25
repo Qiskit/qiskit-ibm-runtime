@@ -25,10 +25,10 @@ from itertools import chain
 import numpy as np
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
-from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from ibm_platform_services import ResourceControllerV2
 from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Instruction
@@ -344,7 +344,7 @@ def default_runtime_url_resolver(
     url: str,
     instance: str,
     private_endpoint: bool = False,
-    channel: str = "ibm_quantum_platform",  # pylint: disable=unused-argument
+    channel: str = "ibm_quantum_platform",
 ) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
@@ -562,7 +562,6 @@ class RefreshQueue(Queue):
         Args:
             item: Item to put into the queue.
         """
-        # pylint: disable=arguments-differ
 
         with self.condition:
             if self.full():

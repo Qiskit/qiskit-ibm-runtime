@@ -37,7 +37,6 @@ class TestAccountClient(IBMTestCase):
 
     def _get_client(self):
         """Helper for instantiating an RuntimeClient."""
-        # pylint: disable=no-value-for-parameter
         params = ClientParameters(
             channel="ibm_quantum_platform",
             url=SimpleServer.URL,

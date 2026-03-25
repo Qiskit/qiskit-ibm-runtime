@@ -10,7 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=no-name-in-module
 """
 Base class for dummy backends.
 """
@@ -99,7 +98,7 @@ class FakeBackendV2(BackendV2):
 
     def _setup_sim(self) -> None:
         if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
+            from qiskit_aer import AerSimulator
 
             self.sim = AerSimulator()
             if self.target and self._props_dict:
@@ -131,9 +130,7 @@ class FakeBackendV2(BackendV2):
         return "qasm3" in supported_features
 
     def _load_json(self, filename: str) -> dict:
-        with open(  # pylint: disable=unspecified-encoding
-            os.path.join(self.dirname, filename)
-        ) as f_json:
+        with open(os.path.join(self.dirname, filename)) as f_json:
             the_json = json.load(f_json)
         return the_json
 
@@ -172,7 +169,7 @@ class FakeBackendV2(BackendV2):
         """Return the backend configuration."""
         return BackendConfiguration.from_dict(self._conf_dict)
 
-    def check_faulty(self, circuit: QuantumCircuit) -> None:  # pylint: disable=redefined-outer-name
+    def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
 
         Args:
@@ -254,7 +251,7 @@ class FakeBackendV2(BackendV2):
             An options object with default values set
         """
         if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
+            from qiskit_aer import AerSimulator
 
             return AerSimulator._default_options()
         else:
@@ -320,14 +317,14 @@ class FakeBackendV2(BackendV2):
         from a BackendV2 object.
         """
 
-        from qiskit.circuit import Delay  # pylint: disable=import-outside-toplevel
-        from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
-        from qiskit_aer.noise.device.models import (  # pylint: disable=import-outside-toplevel
+        from qiskit.circuit import Delay
+        from qiskit_aer.noise import NoiseModel
+        from qiskit_aer.noise.device.models import (
             _excited_population,
             basic_device_gate_errors,
             basic_device_readout_errors,
         )
-        from qiskit_aer.noise.passes import (  # pylint: disable=import-outside-toplevel
+        from qiskit_aer.noise.passes import (
             RelaxationNoisePass,
         )
 
@@ -337,7 +334,7 @@ class FakeBackendV2(BackendV2):
         properties = BackendProperties.from_dict(self._props_dict)
         basis_gates = self.configuration().basis_gates
         num_qubits = self.num_qubits
-        dt = self.dt  # pylint: disable=invalid-name
+        dt = self.dt
 
         noise_model = NoiseModel(basis_gates=basis_gates)
 
@@ -458,5 +455,5 @@ class FakeBackendV2(BackendV2):
                 self.backend_name,
             )
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))

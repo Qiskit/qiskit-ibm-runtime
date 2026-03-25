@@ -15,14 +15,14 @@
 from unittest.mock import patch
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
 from ibm_cloud_sdk_core import ApiException
 from ibm_platform_services import (
     ResourceControllerV2,
     GlobalSearchV2,
-)  # pylint: disable=import-error
+)
 
 from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService

@@ -16,7 +16,7 @@
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.utils import optionals
-from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
+from qiskit.transpiler import CouplingMap
 
 from pydantic import field_validator
 
@@ -74,7 +74,7 @@ class SimulatorOptions:
                     "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
                 )
 
-            from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+            from qiskit_aer.noise import (
                 NoiseModel as AerNoiseModel,
             )
 
@@ -99,7 +99,7 @@ class SimulatorOptions:
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
             )
 
-        from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+        from qiskit_aer.noise import (
             NoiseModel as AerNoiseModel,
         )
 

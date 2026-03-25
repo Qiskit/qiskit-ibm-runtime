@@ -85,7 +85,7 @@ class RuntimeOptions:
         self.session_time = session_time
         self.private = private
 
-    def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
+    def validate(self, channel: str) -> None:
         """Validate options.
 
         Args:

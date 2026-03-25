@@ -183,7 +183,7 @@ class ZneOptions:
             if isinstance(extrapolator, str)
             else extrapolator
         )
-        for extrap in extrapolators:  # pylint: disable=not-an-iterable
+        for extrap in extrapolators:
             if len(noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
                 raise ValueError(
                     f"{extrap} requires at least {required_factors[extrap]} noise_factors"
