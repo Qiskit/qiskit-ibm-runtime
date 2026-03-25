@@ -86,6 +86,7 @@ jobs:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "--durations=0"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,8 +101,6 @@ jobs:
           pip install -e '.[dev]'
       - name: Run unit tests
         run: make unit-test-coverage
-        env:
-          PYTEST_ADDOPTS: "--color=yes"
       - name: Report coverage to coveralls.io
         uses: coverallsapp/github-action@v2
         with:

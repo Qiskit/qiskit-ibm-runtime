@@ -14,17 +14,17 @@
 .PHONY: unit-test integration-test smoke-test docs-test unit-test-coverage
 
 unit-test:
-	pytest -v -s test/unit
+	pytest test/unit
 
 integration-test:
-	pytest -v -s test/integration
+	pytest test/integration
 
 smoke-test:
-	pytest -v -s test/smoke
+	pytest test/smoke
 
 docs-test:
 	./test/docs/vale.sh
 
 unit-test-coverage:
-	coverage run -m pytest -v -s test/unit
+	coverage run -m pytest test/unit
 	coverage lcov
