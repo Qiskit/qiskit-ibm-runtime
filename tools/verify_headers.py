@@ -21,7 +21,7 @@ import re
 pep263 = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 
 
-def discover_files(code_paths):
+def discover_files(code_paths: list[str]) -> list[str]:
     out_paths = []
     for path in code_paths:
         if os.path.isfile(path):
@@ -35,7 +35,7 @@ def discover_files(code_paths):
     return out_paths
 
 
-def validate_header(file_path):
+def validate_header(file_path: str) -> tuple[str, bool, str]:
     header = """# This code is part of Qiskit.
 #
 """
@@ -74,7 +74,7 @@ def validate_header(file_path):
     return (file_path, True, None)
 
 
-def main():
+def main() -> None:
     default_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qiskit"
     )

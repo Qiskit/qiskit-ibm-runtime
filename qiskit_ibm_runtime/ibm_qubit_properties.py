@@ -28,12 +28,12 @@ class IBMQubitProperties(QubitProperties):
 
     def __init__(
         self,
-        t1=None,
-        t2=None,
-        frequency=None,
-        anharmonicity=None,
-        operational=True,
-    ):
+        t1: float | None = None,
+        t2: float | None = None,
+        frequency: float | None = None,
+        anharmonicity: float | None = None,
+        operational: bool = True,
+    ) -> None:
         """Create a new ``IBMQubitProperties`` object
 
         Args:
@@ -47,7 +47,7 @@ class IBMQubitProperties(QubitProperties):
         self.anharmonicity = anharmonicity
         self.operational = operational
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"IBMQubitProperties(t1={self.t1}, t2={self.t2}, frequency={self.frequency}, "
             f"anharmonicity={self.anharmonicity})"

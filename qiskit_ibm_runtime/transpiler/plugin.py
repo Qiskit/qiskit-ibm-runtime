@@ -122,7 +122,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     dynamic circuits is not assumed.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         issue_deprecation_msg(
             msg="Since backends now support running jobs that contain both "
             "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",

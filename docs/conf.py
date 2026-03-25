@@ -81,12 +81,12 @@ if not hasattr(typing, "Self"):
         from typing_extensions import Self
     except ImportError:
 
-        class Self:
+        class Self:  # type: ignore[no-redef]
             """Dummy fallback for 'Self' for older python versions."""
 
             pass
 
-    typing.Self = Self
+    typing.Self = Self  # type: ignore[attr-defined]
 
 # ----------------------------------------------------------------------------------
 # Intersphinx
@@ -199,8 +199,8 @@ def determine_github_branch() -> str:
 GITHUB_BRANCH = determine_github_branch()
 
 
-def linkcode_resolve(domain, info):
-    def is_valid_code_object(obj):
+def linkcode_resolve(domain: str, info: dict) -> str | None:
+    def is_valid_code_object(obj: typing.Any) -> bool:
         return inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
 
     if domain != "py":

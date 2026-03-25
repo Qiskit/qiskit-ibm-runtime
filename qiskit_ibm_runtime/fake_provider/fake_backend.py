@@ -58,15 +58,15 @@ class FakeBackendV2(BackendV2):
     """
 
     # directory and file names for real backend snapshots.
-    dirname = None
-    conf_filename = None
-    props_filename = None
-    backend_name = None
+    dirname: str | None = None
+    conf_filename: str | None = None
+    props_filename: str | None = None
+    backend_name: str | None = None
 
     def __init__(self) -> None:
         """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
-        self._props_dict = None
+        self._props_dict: dict | None = None
         super().__init__(
             provider=None,
             name=self._conf_dict.get("backend_name"),
@@ -75,7 +75,7 @@ class FakeBackendV2(BackendV2):
             backend_version=self._conf_dict.get("backend_version"),
         )
         self._target = None
-        self.sim = None
+        self.sim: BackendV2 | None = None
 
     def __getattr__(self, name: str) -> Any:
         """Gets attribute from self or configuration
