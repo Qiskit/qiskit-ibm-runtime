@@ -46,8 +46,10 @@ class ResilienceOptionsV2:
         If you enable measurement mitigation, you can fine-tune its noise learning
         by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
         for all measurement mitigation noise learning options.
-
-        Default: True.
+        
+        If ``measure_mitigation`` is ``Unset``, it is determined by the server according to the
+        resilience level: it is ``False`` for resilience level 0, and ``True`` for resilience
+        levels 1 and 2.
     """
     measure_noise_learning: MeasureNoiseLearningOptions | Dict = Field(
         default_factory=MeasureNoiseLearningOptions
@@ -60,7 +62,9 @@ class ResilienceOptionsV2:
         If you enable ZNE, you can fine-tune its options by using :attr:`~zne`.
         See :class:`ZneOptions` for additional ZNE related options.
 
-        Default: False.
+        If ``zne_mitigation`` is ``Unset``, it is determined by the server according to the
+        resilience level: it is ``False`` for resilience levels 0 and 1, and ``True`` for resilience
+        level 2.
     """
     zne: ZneOptions | Dict = Field(default_factory=ZneOptions)
     r"""Additional zero-noise extrapolation mitigation options.

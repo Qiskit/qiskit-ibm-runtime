@@ -1,0 +1,4 @@
+Added ability to specify ``calibration_id`` and ``use_fractional_gates`` when initializing a session from a ``session_id``.
+This fixes known bugs, namely that instantiating a ``Session`` object via ``from_id`` does not preserve the value of
+``calibration_id`` set during the initial instantiation of the original ``Session`` nor the the value of ``use_fractional_gates``
+set during the initial instantiation of the backend.

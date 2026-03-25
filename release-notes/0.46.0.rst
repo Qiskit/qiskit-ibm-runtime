@@ -1,0 +1,7 @@
+0.46.0 (2026-03-23)
+===================
+
+Other Notes
+-----------
+
+- The minimal version of Qiskit required is now ``2.2.0``. (`2689 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2689>`__)
