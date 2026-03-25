@@ -12,9 +12,9 @@
 
 """Tests for Session classession."""
 
-from ddt import ddt, data
 
 from unittest.mock import MagicMock
+from ddt import ddt, data
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
@@ -112,7 +112,9 @@ class TestSession(IBMTestCase):
         """Create session with given session_id"""
         service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
-        session = Session.from_id(session_id=session_id, service=service, calibration_id=calibration_id)
+        session = Session.from_id(
+            session_id=session_id, service=service, calibration_id=calibration_id
+        )
         session._run(program_id="foo", inputs={})
         session._create_session = MagicMock()
         self.assertTrue(session._create_session.assert_not_called)
