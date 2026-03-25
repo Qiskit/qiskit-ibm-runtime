@@ -326,7 +326,7 @@ class Session:
         cls,
         session_id: str,
         service: QiskitRuntimeService,
-        use_fractional_gates: bool | None = False,
+        use_fractional_gates: bool = False,
         calibration_id: str | None = None,
     ) -> Session:
         """Construct a Session object with a given ``session_id``. For example:
