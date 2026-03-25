@@ -11,19 +11,7 @@
 # that they have been altered from the originals.
 
 
-.PHONY: lint style test mypy test1 test2 test3
-
-lint:
-	ruff check qiskit_ibm_runtime test
-	pylint -rn qiskit_ibm_runtime test
-	tools/verify_headers.py qiskit_ibm_runtime test
-	tools/verify_images.py
-
-mypy:
-	mypy
-
-style:
-	black --check qiskit_ibm_runtime test
+.PHONY: unit-test integration-test smoke-test docs-test unit-test-coverage
 
 unit-test:
 	pytest -v -s test/unit
@@ -40,9 +28,3 @@ docs-test:
 unit-test-coverage:
 	coverage run -m pytest -v -s test/unit
 	coverage lcov
-
-black:
-	black qiskit_ibm_runtime test
-
-ruff:
-	ruff check qiskit_ibm_runtime test --fix

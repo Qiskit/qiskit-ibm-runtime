@@ -13,30 +13,30 @@ directory = "release-notes/unreleased"
 title_format = "{version} ({project_date})"
 issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{issue}>`__"
 
-    [[tool.towncrier.type]]
-    directory = "upgrade"
-    name = "Upgrade Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "upgrade"
+name = "Upgrade Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "deprecation"
-    name = "Deprecation Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "Deprecation Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "feat"
-    name = "New Features"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "feat"
+name = "New Features"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "bug"
-    name = "Bug Fixes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "bug"
+name = "Bug Fixes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "other"
-    name = "Other Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other Notes"
+showcontent = true
 
 [tool.setuptools.packages.find]
 exclude = ["test*"]
@@ -180,7 +180,11 @@ common = [
     "pylatexenc",
     "scikit-learn",
     "setuptools",
-    "pre-commit",
+]
+
+qa = [
+    "mypy==1.19.0",
+    "pre-commit>=4",
 ]
 
 documentation = [
@@ -203,6 +207,7 @@ test = [
 dev = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
+    "qiskit-ibm-runtime[qa]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]

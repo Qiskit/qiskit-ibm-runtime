@@ -33,13 +33,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev]'
-      - name: Run black
-        run: make style
-      - name: Run lint
-        run: make lint
-      - name: Run mypy
-        run: make mypy
+          pip install -e '.[qa]'
+      - name: Run pre-comming
+        run: pre-commit run
+      - uses: pre-commit/action@v3.0.1
   documentation:
     if: github.repository_owner == 'Qiskit'
     name: Build documentation
