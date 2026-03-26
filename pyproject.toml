@@ -181,7 +181,7 @@ common = [
     "setuptools",
 ]
 
-qa = [
+style = [
     "mypy==1.19.0",
     "pre-commit>=4",
 ]
@@ -206,7 +206,7 @@ test = [
 dev = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
-    "qiskit-ibm-runtime[qa]",
+    "qiskit-ibm-runtime[style]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]

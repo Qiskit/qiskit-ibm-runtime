@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[qa]'
+          pip install -e '.[style]'
       - name: Run pre-comming
         run: pre-commit run
       - uses: pre-commit/action@v3.0.1
