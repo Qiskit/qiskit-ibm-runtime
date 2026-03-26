@@ -77,7 +77,7 @@ class IBMTestCase(TestCase):
         if logger.level is logging.NOTSET:
             try:
                 logger.setLevel(cls.log.level)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
                     logger,
@@ -200,7 +200,6 @@ class IBMIntegrationTestCase(IBMTestCase):
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
@@ -228,8 +227,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls.program_ids = {}
         cls.sim_backends = {}

@@ -55,7 +55,6 @@ class QiskitRuntimeService:
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         channel = kwargs.get("channel", None)
         if channel == "local":
-            # pylint: disable=import-outside-toplevel
             from .fake_provider.local_service import QiskitRuntimeLocalService
 
             return super().__new__(QiskitRuntimeLocalService)
@@ -302,7 +301,7 @@ class QiskitRuntimeService:
             self._backends_list = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             logger.warning("Invalid instance %s", instance)
             return []
 
@@ -521,7 +520,6 @@ class QiskitRuntimeService:
         """
         return self._api_clients
 
-    # pylint: disable=arguments-differ
     def backends(
         self,
         name: str | None = None,
@@ -756,7 +754,7 @@ class QiskitRuntimeService:
                 # but that doesn't work with new IQP since we different api clients are being used
 
                 self._backend_configs[backend_name] = config
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
 
@@ -1324,7 +1322,7 @@ class QiskitRuntimeService:
             # We don't know whether or not the backend has a valid config
             try:
                 return self.backend(name=back["name"])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 

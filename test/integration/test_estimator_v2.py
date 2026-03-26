@@ -39,7 +39,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
 
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         H2 = SparsePauliOp.from_list([("IZ", 1)]).apply_layout(psi2.layout)
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)]).apply_layout(psi1.layout)

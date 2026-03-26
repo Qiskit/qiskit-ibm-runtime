@@ -256,7 +256,6 @@ class LayerError:
             # Draw the layer error on embedding2
             layer_error.draw_map(embedding2)
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
 
         from ..visualization import draw_layer_error_map
 
@@ -321,7 +320,6 @@ class LayerError:
             height: The height of the returned figure.
             width: The width of the returned figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
 
         from ..visualization import draw_layer_errors_swarm
 

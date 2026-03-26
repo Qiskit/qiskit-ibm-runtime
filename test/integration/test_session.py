@@ -41,7 +41,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
 
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         theta1 = [0, 1, 1, 2, 3, 5]
 

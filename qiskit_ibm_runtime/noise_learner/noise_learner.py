@@ -37,7 +37,6 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..qiskit_runtime_service import QiskitRuntimeService
 
 
-# pylint: disable=unused-import,cyclic-import
 from ..session import Session
 from ..batch import Batch
 

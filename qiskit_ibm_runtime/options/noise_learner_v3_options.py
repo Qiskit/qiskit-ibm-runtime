@@ -67,11 +67,11 @@ class NoiseLearnerV3Options(BaseOptions):
 
     layer_pair_depths: list[int] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
     r"""The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
-    
+
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
     the noise learning implementation. For example, a value of ``3`` corresponds to 6 repetitions
     of the layer of interest.
-    
+
     .. note::
         This field is ignored by TREX experiments.
     """
@@ -93,8 +93,8 @@ class NoiseLearnerV3Options(BaseOptions):
     """
 
     experimental: UnsetType | dict = Unset
-    r"""Experimental options. 
-    
+    r"""Experimental options.
+
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
@@ -123,7 +123,7 @@ class NoiseLearnerV3Options(BaseOptions):
         options_dict = asdict(self)
 
         filtered_options = {}
-        for key in options_model.model_fields:  # pylint: disable=not-an-iterable
+        for key in options_model.model_fields:
             filtered_options[key] = options_dict.get(key)
 
         return options_model(**filtered_options)

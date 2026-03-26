@@ -61,7 +61,7 @@ class TestOptionsV2(IBMTestCase):
     def test_kwargs_options(self, opt_cls):
         """Test specifying arbitrary options."""
         with self.assertRaises(ValidationError) as exc:
-            _ = opt_cls(foo="foo")  # pylint: disable=unexpected-keyword-arg
+            _ = opt_cls(foo="foo")
         self.assertIn("foo", str(exc.exception))
 
     @data(EstimatorOptions, SamplerOptions)

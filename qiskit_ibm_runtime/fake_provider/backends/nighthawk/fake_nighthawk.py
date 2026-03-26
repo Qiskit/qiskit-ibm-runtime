@@ -71,7 +71,7 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
         # Only display the warning statement once
-        global DISPLAY_WARNING  # pylint: disable=global-statement
+        global DISPLAY_WARNING
         if DISPLAY_WARNING:
             warnings.warn(
                 "Properties of fake_nighthawk are not intended to represent "

@@ -26,7 +26,6 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
 from .utils import validate_estimator_pubs
 
-# pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
 

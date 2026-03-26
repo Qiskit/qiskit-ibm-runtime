@@ -119,7 +119,7 @@ class BaseOptions:
 class OptionsV2(BaseOptions):
     """Base primitive options, used by v2 primitives."""
 
-    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
+    _VERSION: int = Field(2, frozen=True)
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset

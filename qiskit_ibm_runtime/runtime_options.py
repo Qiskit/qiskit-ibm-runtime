@@ -95,7 +95,7 @@ class RuntimeOptions:
 
         match_max_execution_time_and_max_usage(self)
 
-    def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
+    def validate(self, channel: str) -> None:
         """Validate options.
 
         Args:

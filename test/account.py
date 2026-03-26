@@ -28,8 +28,6 @@ from qiskit_ibm_runtime.accounts.account import (
 class custom_envs(ContextDecorator):
     """Context manager that modifies environment variables."""
 
-    # pylint: disable=invalid-name
-
     def __init__(self, new_environ):
         """custom_envs constructor.
 
@@ -51,8 +49,6 @@ class custom_envs(ContextDecorator):
 
 class no_envs(ContextDecorator):
     """Context manager that disables environment variables."""
-
-    # pylint: disable=invalid-name
 
     def __init__(self, vars_to_remove):
         """no_envs constructor.
@@ -77,8 +73,6 @@ class no_envs(ContextDecorator):
 class no_file(ContextDecorator):
     """Context manager that disallows access to a file."""
 
-    # pylint: disable=invalid-name
-
     def __init__(self, filename):
         self.filename = filename
         # Store the original `os.path.isfile` function, for mocking.
@@ -100,8 +94,6 @@ class no_file(ContextDecorator):
 
 class temporary_account_config_file(ContextDecorator):
     """Context manager that uses a temporary json file."""
-
-    # pylint: disable=invalid-name
 
     def __init__(self, contents=None, **kwargs):
         # Create a temporary file with the contents.

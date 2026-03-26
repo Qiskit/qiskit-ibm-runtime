@@ -82,7 +82,7 @@ class BaseFakeRuntimeJob:
 
     _job_progress = ["QUEUED", "RUNNING", "COMPLETED"]
 
-    _executor = ThreadPoolExecutor()  # pylint: disable=bad-option-value,consider-using-with
+    _executor = ThreadPoolExecutor()
 
     def __init__(
         self,
@@ -248,7 +248,6 @@ class BaseFakeRuntimeClient:
         instance=None,
     ):
         """Initialize a fake runtime client."""
-        # pylint: disable=unused-argument
         self._jobs = {}
         self._job_classes = job_classes or []
         self._final_status = final_status
@@ -291,8 +290,8 @@ class BaseFakeRuntimeClient:
         max_usage: int | None = None,
         start_session: bool | None = None,
         session_time: int | None = None,
-        private: int | None = False,  # pylint: disable=unused-argument
-        calibration_id: str | None = None,  # pylint: disable=unused-argument
+        private: int | None = False,
+        calibration_id: str | None = None,
     ) -> dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -390,7 +389,6 @@ class BaseFakeRuntimeClient:
         while status not in final_states:
             status = self._get_job(job_id).status()
 
-    # pylint: disable=unused-argument
     def _get_job(self, job_id: str, exclude_params: bool | None = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
@@ -401,7 +399,6 @@ class BaseFakeRuntimeClient:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
-    # pylint: disable=unused-argument
     def backend_configuration(
         self,
         backend_name: str,
@@ -416,7 +413,6 @@ class BaseFakeRuntimeClient:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
-    # pylint: disable=unused-argument
     def backend_properties(
         self, backend_name: str, datetime: Any = None, calibration_id: str | None = None
     ) -> dict[str, Any]:
@@ -427,7 +423,6 @@ class BaseFakeRuntimeClient:
             return ret.copy()
         return None
 
-    # pylint: disable=unused-argument
     def create_session(
         self,
         backend: str | None = None,

@@ -54,7 +54,6 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_channel=["ibm_cloud"])
     def test_proxies_cloud_runtime_client(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using RuntimeClient."""
-        # pylint: disable=unused-argument
         params = dependencies.service._client_params
         params.proxies = ProxyConfiguration(urls=VALID_PROXIES)
         client = RuntimeClient(params)

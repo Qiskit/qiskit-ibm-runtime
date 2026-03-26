@@ -34,9 +34,6 @@ from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
 from .....ibm_test_case import IBMTestCase
 
 
-# pylint: disable=not-context-manager
-
-
 @ddt
 class TestFoldRzzAngle(IBMTestCase):
     """Test FoldRzzAngle pass"""

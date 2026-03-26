@@ -81,7 +81,7 @@ def _get_client_header() -> str:
                 version_info += "*"
 
             pkg_versions[pkg_name] = version_info
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
     return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
@@ -192,7 +192,7 @@ class RetrySession(Session):
         """RetrySession destructor. Closes the session."""
         try:
             self.close()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             # ignore errors that may happen during cleanup
             pass
 
@@ -254,7 +254,6 @@ class RetrySession(Session):
             RequestsApiError: If the request failed.
             IBMNotAuthorizedError: If the auth token is invalid.
         """
-        # pylint: disable=arguments-differ
         if bare:
             final_url = url
             # Explicitly pass `None` as the `access_token` param, disabling it.
@@ -341,7 +340,7 @@ class RetrySession(Session):
                         "Response uber-trace-id: %s",
                         ex.response.headers["uber-trace-id"],
                     )
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
             if status_code == 401:
@@ -393,7 +392,7 @@ class RetrySession(Session):
                         method.upper(),
                         request_data_to_log,
                     )
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 # Catch general exception so as not to disturb the program if filtering fails.
                 logger.info("Filtering failed when logging request information: %s", str(ex))
 
