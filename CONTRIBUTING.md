@@ -262,8 +262,14 @@ as readable as possible. We use:
 * [mypy] as a static type checker for type hinting
 * [pre-commit] for automating running the above tools
 
-To ensure your changes respect the style guidelines, you can run the following command, which will
-also be run by our CI when pushing to the repository:
+To ensure your changes respect the style guidelines, you can install the `pre-commit` hooks:
+
+```sh
+pre-commit install
+```
+
+In this way, they will run automatically with every commit. You can also run them manually with the
+following command:
 
 ```sh
 pre-commit run
