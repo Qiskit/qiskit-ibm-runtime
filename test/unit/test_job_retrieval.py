@@ -47,7 +47,7 @@ class TestRetrieveJobs(IBMTestCase):
 
         jobs = []
         for _ in range(25):
-            jobs.append(run_program(service, program_id))
+            jobs.append(run_program(service, program_id, final_status="COMPLETED"))
         rjobs = service.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
@@ -59,7 +59,7 @@ class TestRetrieveJobs(IBMTestCase):
         jobs = []
         job_count = 25
         for _ in range(job_count):
-            jobs.append(run_program(service, program_id))
+            jobs.append(run_program(service, program_id, final_status="COMPLETED"))
 
         limits = [21, 30]
         for limit in limits:
@@ -74,7 +74,7 @@ class TestRetrieveJobs(IBMTestCase):
 
         jobs = []
         for _ in range(5):
-            jobs.append(run_program(service, program_id))
+            jobs.append(run_program(service, program_id, final_status="COMPLETED"))
         rjobs = service.jobs(skip=4)
         self.assertEqual(1, len(rjobs))
 
@@ -97,7 +97,7 @@ class TestRetrieveJobs(IBMTestCase):
 
         jobs = []
         for _ in range(10):
-            jobs.append(run_program(service, program_id))
+            jobs.append(run_program(service, program_id, final_status="COMPLETED"))
         rjobs = service.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
