@@ -40,8 +40,8 @@ class EstimatorOptions(OptionsV2):
         call that does not specify one.
         Each Estimator PUB can specify its own precision. If the ``run()`` method
         is given a precision, then that value is used for all PUBs in the ``run()``
-        call that do not specify their own. 
-        
+        call that do not specify their own.
+
         Default: 0.015625 (1 / sqrt(4096)).
     """
     default_shots: UnsetType | int | None = Unset
@@ -80,8 +80,8 @@ class EstimatorOptions(OptionsV2):
         Default: 1.
     """
     seed_estimator: UnsetType | int = Unset
-    r"""Seed used to control sampling. 
-    
+    r"""Seed used to control sampling.
+
         Default: ``None``.
     """
     dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(

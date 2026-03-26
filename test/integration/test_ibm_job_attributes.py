@@ -44,7 +44,6 @@ class TestIBMJobAttributes(IBMTestCase):
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service

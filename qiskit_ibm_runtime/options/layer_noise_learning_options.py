@@ -64,15 +64,15 @@ class LayerNoiseLearningOptions:
         If there are more unique layers present, then some layers will not be learned or
         mitigated. The learned layers are prioritized based on the number of times they
         occur in a set of run Estimator PUBs, and for equally occurring layers are
-        further sorted by the number of two-qubit gates in the layer. 
-        
+        further sorted by the number of two-qubit gates in the layer.
+
         Default: 4.
     """
     shots_per_randomization: UnsetType | int = Unset
     r"""The total number of shots to use per random learning circuit.
         A learning circuit is a random circuit at a specific learning depth with a specific
-        measurement basis that is executed on hardware. 
-        
+        measurement basis that is executed on hardware.
+
         Default: 128.
     """
     num_randomizations: UnsetType | int = Unset
@@ -82,8 +82,8 @@ class LayerNoiseLearningOptions:
         circuits that need to be executed (where ``9`` is the number of circuits that need to be
         implemented to measure all the required observables, see the note in the docstring for
         :class:`~.LayerNoiseLearningOptions` for mode details), at :attr:`~shots_per_randomization`
-        each. 
-        
+        each.
+
         Default: 32.
     """
     layer_pair_depths: UnsetType | list[int] = Unset

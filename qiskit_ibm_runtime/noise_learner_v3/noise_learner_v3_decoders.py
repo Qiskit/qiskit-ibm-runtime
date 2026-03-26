@@ -28,7 +28,6 @@ from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # typ
     NoiseLearnerV3Results,
 )
 
-# pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
 from .converters.version_0_1 import noise_learner_v3_result_from_0_1
 from .converters.version_0_2 import noise_learner_v3_result_from_0_2

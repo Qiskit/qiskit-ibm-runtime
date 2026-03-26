@@ -17,7 +17,7 @@ from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit_ibm_runtime.models import BackendProperties
-from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
+from .fake_backend import FakeBackendV2
 
 
 class LocalRuntimeJob(PrimitiveJob):
