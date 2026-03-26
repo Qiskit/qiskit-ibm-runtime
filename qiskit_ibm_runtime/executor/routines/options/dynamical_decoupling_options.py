@@ -36,7 +36,7 @@ class DynamicalDecouplingOptions:
 
     extra_slack_distribution: Literal["middle", "edges"] = "middle"
     """Where to put extra timing delays due to rounding issues.
-    
+
     Rounding issues arise because the discrete time step ``dt`` of the system cannot
     be divided.
 

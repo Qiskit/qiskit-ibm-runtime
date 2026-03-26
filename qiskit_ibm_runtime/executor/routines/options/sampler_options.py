@@ -68,7 +68,7 @@ class SamplerOptions:
         default_factory=DynamicalDecouplingOptions
     )
     """Suboptions for dynamical decoupling.
-    
+
     See
     :class:`~qiskit_ibm_runtime.executor.routines.options.dynamical_decoupling_options.DynamicalDecouplingOptions`
     for all available options.
@@ -76,12 +76,12 @@ class SamplerOptions:
 
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
-    
+
     See :class:`.SamplerExecutionOptions` for all available options."""
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Pauli twirling options.
-    
+
     See :class:`~qiskit_ibm_runtime.executor.routines.options.twirling_options.TwirlingOptions`
     for all available options.
     """
