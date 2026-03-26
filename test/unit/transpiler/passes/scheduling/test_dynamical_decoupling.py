@@ -38,8 +38,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
 
 from .....ibm_test_case import IBMTestCase
 
-# pylint: disable=invalid-name,not-context-manager
-
 
 @ddt
 class TestPadDynamicalDecoupling(IBMTestCase):

@@ -24,7 +24,6 @@ from qiskit.providers import BackendV2
 from .runtime_job_v2 import RuntimeJobV2
 from .base_primitive import BasePrimitiveV2
 
-# pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
 from .utils import validate_classical_registers

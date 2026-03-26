@@ -108,13 +108,11 @@ class TestSamplerV2(IBMTestCase):
         session = MagicMock(spec=MockSession, _backend="common_backend")
         options_vars = [
             (
-                SamplerOptions(  # pylint: disable=unexpected-keyword-arg
-                    dynamical_decoupling={"sequence_type": "XX"}
-                ),
+                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
                 {"dynamical_decoupling": {"sequence_type": "XX"}},
             ),
             (
-                SamplerOptions(default_shots=1000),  # pylint: disable=unexpected-keyword-arg
+                SamplerOptions(default_shots=1000),
                 {"default_shots": 1000},
             ),
             (
@@ -224,7 +222,6 @@ class TestSamplerV2(IBMTestCase):
 
     def test_gate_not_in_target(self):
         """Test exception when circuits contain gates that are not basis gates"""
-        # pylint: disable=invalid-name,not-context-manager
         backend = FakeSherbrooke()
         sampler = SamplerV2(mode=backend)
 
@@ -246,7 +243,6 @@ class TestSamplerV2(IBMTestCase):
         """Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected"""
-        # pylint: disable=invalid-name,not-context-manager
 
         circ = QuantumCircuit(5, 1)
         circ.x(0)
@@ -267,7 +263,6 @@ class TestSamplerV2(IBMTestCase):
         qubit pairs that are not connected.
         For the case where the control operation body is defined not in a
         context, as in `test_isa_inside_condition_block`, but in a separate circuit."""
-        # pylint: disable=invalid-name,not-context-manager
 
         body = QuantumCircuit(QuantumRegister(2, "inner"))
         body.ecr(0, 1)
@@ -339,7 +334,6 @@ class TestSamplerV2(IBMTestCase):
         """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
         tests a more complex case. In addition, we test the currently non-existing case of dynamic
         instructions."""
-        # pylint: disable=not-context-manager
 
         # FakeFractionalBackend has both fractional and dynamic instructions
         backend = FakeFractionalBackend()

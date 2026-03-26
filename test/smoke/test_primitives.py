@@ -69,7 +69,6 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
 
     def test_estimator(self):
         """Test estimator job."""
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(
             self._psi1.layout
         )

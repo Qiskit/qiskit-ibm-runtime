@@ -30,8 +30,8 @@ class SamplerOptions(OptionsV2):
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     default_shots: UnsetType | int = Unset
     r"""The default number of shots to use if none are specified in the PUBs
-        or in the run method. 
-        
+        or in the run method.
+
         Default: 4096.
     """
     dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(

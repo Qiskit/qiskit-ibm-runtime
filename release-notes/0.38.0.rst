@@ -4,20 +4,20 @@
 Deprecation Notes
 -----------------
 
-- :class:`~.RuntimeJob` is now deprecated and will be removed no sooner than three months from this release. :class:`~.RuntimeJob` was superseded by :class:`~.RuntimeJobV2` in all primitive implementations, so the deprecation should not have any user impact. The major difference between the two classes is that 
+- :class:`~.RuntimeJob` is now deprecated and will be removed no sooner than three months from this release. :class:`~.RuntimeJob` was superseded by :class:`~.RuntimeJobV2` in all primitive implementations, so the deprecation should not have any user impact. The major difference between the two classes is that
   :meth:`~.RuntimeJobV2.status` returns a string instead of Qiskit's ``JobStatus`` enum. (`2170 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2170>`__)
-- Since pulse gates are no longer supported, the :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()`` 
+- Since pulse gates are no longer supported, the :class:`~.IBMBackend` and :class:`~.FakeBackendV2` ``defaults()``
   method has been deprecated and will be removed no sooner than three months from this release. While the method still exists, these pulse defaults are no longer used to construct the backend target. (`2186 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2186>`__)
-- The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July. 
-  After this date, ``ibm_cloud``, ``ibm_quantum_platform``, and ``local`` will be the only valid channels. 
-  For help migrating to the new IBM Quantum Platform on the 
+- The ``ibm_quantum`` channel option is deprecated and will be sunset on 1 July.
+  After this date, ``ibm_cloud``, ``ibm_quantum_platform``, and ``local`` will be the only valid channels.
+  For help migrating to the new IBM Quantum Platform on the
   ``ibm_cloud`` channel, read the `migration guide <https://github.com/Qiskit/documentation/blob/00575e951e6b397cbd9cba016b653979369c8cd5/docs/migration-guides/classic-iqp-to-cloud-iqp.mdx>`__. (`2205 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2205>`__)
 
 
 New Features
 ------------
 
-- Attributes from the configuration of fake backends can now be retrieved directly 
+- Attributes from the configuration of fake backends can now be retrieved directly
   with ``backend.<attribute_name>``. (`2202 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2202>`__)
 
 
@@ -33,5 +33,5 @@ Upgrade Notes
 
 - Since support for streaming results was removed in ``0.32.0``, the remaining related
   websocket code has been removed. As a part of this process, the environment option
-  ``callback`` is deprecated, as well as the parameters ``client_params`` and ``user_callback`` 
+  ``callback`` is deprecated, as well as the parameters ``client_params`` and ``user_callback``
   in ``BaseRuntimeJob``. (`2143 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2143>`__)

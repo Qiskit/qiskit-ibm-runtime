@@ -137,7 +137,6 @@ class ExecutionSpans:
         Returns:
             A plotly figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_execution_spans
 
         return draw_execution_spans(

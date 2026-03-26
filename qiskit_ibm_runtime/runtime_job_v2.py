@@ -25,8 +25,6 @@ from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
-
-# pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
 from .exceptions import (
     RuntimeJobFailureError,
@@ -108,7 +106,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         )
         self._status: JobStatus = "INITIALIZING"
 
-    def result(  # pylint: disable=arguments-differ
+    def result(
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
@@ -301,7 +299,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 return ""
             raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
 
-    def wait_for_final_state(  # pylint: disable=arguments-differ
+    def wait_for_final_state(
         self,
         timeout: float | None = None,
     ) -> None:

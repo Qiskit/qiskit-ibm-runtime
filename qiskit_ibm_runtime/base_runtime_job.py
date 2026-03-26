@@ -25,7 +25,6 @@ from datetime import datetime
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
-# pylint: disable=unused-import,cyclic-import
 
 from qiskit_ibm_runtime import qiskit_runtime_service
 

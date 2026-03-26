@@ -76,7 +76,7 @@ def get_version_info() -> str:
         return full_version
     try:
         release = _minimal_ext_cmd(["git", "tag", "-l", "--points-at", "HEAD"])
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         return full_version
     if not release:
         git_revision = git_version()

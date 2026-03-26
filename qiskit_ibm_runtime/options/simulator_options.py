@@ -16,7 +16,7 @@
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.utils import optionals
-from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
+from qiskit.transpiler import CouplingMap
 
 from pydantic import field_validator
 
@@ -45,8 +45,8 @@ class SimulatorOptions:
         Default: ``None``.
     """
     seed_simulator: UnsetType | int = Unset
-    r"""Random seed to control sampling. 
-    
+    r"""Random seed to control sampling.
+
         Default: ``None``.
     """
     coupling_map: UnsetType | list[list[int]] | CouplingMap = Unset
@@ -54,13 +54,13 @@ class SimulatorOptions:
         the coupling map is symmetric, both directions need to be specified.
         Each entry in the list specifies a directed two-qubit interaction,
         e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
-    
+
         Default: ``None``, which implies no connectivity constraints.
     """
     basis_gates: UnsetType | list[str] = Unset
     r"""List of basis gate names to unroll to. For example,
         ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
-        
+
         Default: all basis gates supported by the simulator.
     """
 
@@ -74,7 +74,7 @@ class SimulatorOptions:
                     "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
                 )
 
-            from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+            from qiskit_aer.noise import (
                 NoiseModel as AerNoiseModel,
             )
 
@@ -99,7 +99,7 @@ class SimulatorOptions:
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
             )
 
-        from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+        from qiskit_aer.noise import (
             NoiseModel as AerNoiseModel,
         )
 

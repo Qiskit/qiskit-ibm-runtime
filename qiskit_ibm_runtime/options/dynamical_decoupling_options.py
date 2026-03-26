@@ -27,19 +27,19 @@ class DynamicalDecouplingOptions:
         Default: ``False``.
     """
     sequence_type: UnsetType | Literal["XX", "XpXm", "XY4"] = Unset
-    r"""Which dynamical decoupling sequence to use. 
-    
+    r"""Which dynamical decoupling sequence to use.
+
         Default: ``"XX"``.
 
         * ``"XX"``: use the sequence ``tau/2 - (+X) - tau - (+X) - tau/2``
         * ``"XpXm"``: use the sequence ``tau/2 - (+X) - tau - (-X) - tau/2``
         * ``"XY4"``: use the sequence
-          ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``    
+          ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``
     """
     extra_slack_distribution: UnsetType | Literal["middle", "edges"] = Unset
     r"""Where to put extra timing delays due to rounding issues.
         Rounding issues arise because the discrete time step ``dt`` of the system cannot
-        be divided. This option takes following values. 
+        be divided. This option takes following values.
 
         Default: ``"middle"``.
 
@@ -49,7 +49,7 @@ class DynamicalDecouplingOptions:
     """
     scheduling_method: UnsetType | Literal["alap", "asap"] = Unset
     r"""Whether to schedule gates as soon as ("asap") or
-        as late as ("alap") possible. 
+        as late as ("alap") possible.
 
         Default: ``"alap"``.
     """

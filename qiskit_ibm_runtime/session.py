@@ -87,7 +87,7 @@ class Session:
         max_time: int | str | None = None,
         *,
         create_new: bool | None = True,
-    ):  # pylint: disable=line-too-long
+    ):
         """Session constructor.
 
         Args:

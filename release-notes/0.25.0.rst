@@ -17,5 +17,5 @@ New Features
 - Added ``backend``, ``backends``, and ``least_busy`` methods to ``QiskitRuntimeLocalService``. (`1764 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1764>`__)
 - Added an ``instance`` property to :class:`BaseRuntimeJob` which returns the instance
   where the job was run. (`1771 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1771>`__)
-- ``default_shots`` are now a supported option when using ``EstimatorV2`` in 
+- ``default_shots`` are now a supported option when using ``EstimatorV2`` in
   local testing mode. (`1773 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1773>`__)
