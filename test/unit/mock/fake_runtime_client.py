@@ -14,7 +14,6 @@
 
 import base64
 import json
-import time
 import uuid
 from datetime import timezone, datetime as python_datetime
 from typing import Any
@@ -121,12 +120,6 @@ class BaseFakeRuntimeJob:
 
             if self._status == "COMPLETED":
                 self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
-
-    def _auto_progress(self):
-        """Automatically update job status."""
-        for status in self._job_progress:
-            time.sleep(0.1)
-            self._status = status
 
     def to_dict(self):
         """Convert to dictionary format."""
