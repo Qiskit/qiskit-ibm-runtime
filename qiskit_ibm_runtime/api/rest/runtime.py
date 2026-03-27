@@ -72,7 +72,7 @@ class Runtime(RestAdapterBase):
         log_level: str | None = None,
         session_id: str | None = None,
         job_tags: list[str] | None = None,
-        max_execution_time: int | None = None,
+        max_usage: int | None = None,
         start_session: bool | None = False,
         session_time: int | None = None,
         private: bool | None = False,
@@ -88,7 +88,7 @@ class Runtime(RestAdapterBase):
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
-            max_execution_time: Maximum execution time in seconds.
+            max_usage: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
             private: Marks job as private.
@@ -112,8 +112,8 @@ class Runtime(RestAdapterBase):
             payload["session_id"] = session_id
         if job_tags:
             payload["tags"] = job_tags
-        if max_execution_time:
-            payload["cost"] = max_execution_time
+        if max_usage:
+            payload["cost"] = max_usage
         if start_session:
             payload["start_session"] = start_session
             payload["session_time"] = session_time

@@ -263,7 +263,7 @@ class IBMBackend(Backend):
             log_level=options.environment.log_level,
             session_id=None,
             job_tags=options.environment.job_tags,
-            max_execution_time=None,
+            max_usage=None,
             start_session=False,
             session_time=None,
             params=params,

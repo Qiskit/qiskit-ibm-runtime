@@ -1012,7 +1012,7 @@ class QiskitRuntimeService:
                 log_level=qrt_options.log_level,
                 session_id=session_id,
                 job_tags=qrt_options.job_tags,
-                max_execution_time=qrt_options.max_execution_time,
+                max_usage=qrt_options.max_usage,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
                 private=qrt_options.private,

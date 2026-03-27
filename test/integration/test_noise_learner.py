@@ -46,7 +46,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self.circuits = [c1, c2]
 
         self.default_input_options = {
-            "max_execution_time": None,
+            "max_usage": None,
             "max_layers_to_learn": 4,
             "shots_per_randomization": 128,
             "num_randomizations": 32,

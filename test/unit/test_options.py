@@ -21,7 +21,12 @@ from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime.runtime_options import RuntimeOptions
-from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
+from qiskit_ibm_runtime.options import (
+    EstimatorOptions,
+    SamplerOptions,
+    NoiseLearnerOptions,
+)
+
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
@@ -41,7 +46,7 @@ class TestOptionsV2(IBMTestCase):
             log_level="DEBUG",
             instance="crn",
             job_tags=["foo", "bar"],
-            max_execution_time=600,
+            max_usage=600,
         )
         partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
 
@@ -102,3 +107,20 @@ class TestOptionsV2(IBMTestCase):
         }
 
         self.assertDictEqual(asdict(options), asdict(expected_options))
+
+    @combine(opt_cls=[EstimatorOptions, SamplerOptions, NoiseLearnerOptions, RuntimeOptions])
+    def test_max_execution_time_deprecation(self, opt_cls):
+        """Test max_execution_time deprecation in favor of max_usage setting."""
+        with self.assertWarns(DeprecationWarning):
+            options = opt_cls(max_execution_time=123)
+        self.assertEqual(options.max_execution_time, 123)
+        self.assertEqual(options.max_usage, 123)
+
+        options = opt_cls(max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
+
+        with self.assertWarns(DeprecationWarning):
+            options = opt_cls(max_execution_time=123, max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
