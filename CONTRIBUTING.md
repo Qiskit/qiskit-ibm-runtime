@@ -16,27 +16,25 @@ To install from source download this repository and follow the next steps.
 
 * Create a virtual environment
 
-  ``` {.bash}
+  ```sh
   python3 -m venv .venv
   ```
 
 * Activate your virtual environment
 
-  ``` {.bash}
+  ```sh
   source .venv/bin/activate
   ```
 
-* Install the dependencies
+* Install the dependencies package in editable mode, with the development dependencies
 
-  ``` {.bash}
-  pip install -e .
-  ```
-
-* Install the development dependencies
-
-  ``` {.bash}
+  ```sh
   pip install -e ".[dev]"
   ```
+
+  The `dev` extra install all the dependencies that a developer needs. The full list of extras
+  supported by the package can be found at the `[project.optional-dependencies]` section of
+  [pyproject.toml].
 
 ### Open an issue
 
@@ -359,3 +357,4 @@ the `main` branch, such as from `stable/0.21` to `main`.
 [unittest]: https://docs.python.org/3/library/unittest.html
 [encrypted environment secrets]: https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment
 [IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
+[pyproject.toml]: ./pyproject.toml
