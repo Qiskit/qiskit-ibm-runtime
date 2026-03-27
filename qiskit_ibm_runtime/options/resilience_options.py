@@ -46,7 +46,7 @@ class ResilienceOptionsV2:
         If you enable measurement mitigation, you can fine-tune its noise learning
         by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
         for all measurement mitigation noise learning options.
-        
+
         If ``measure_mitigation`` is ``Unset``, it is determined by the server according to the
         resilience level: it is ``False`` for resilience level 0, and ``True`` for resilience
         levels 1 and 2.

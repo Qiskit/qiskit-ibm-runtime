@@ -81,7 +81,7 @@ class NoiseLearnerOptions(OptionsV2):
 
     layer_pair_depths: UnsetType | list[int] = Unset
     r"""The circuit depths (measured in number of pairs) to use in learning experiments.
-    
+
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
     the noise learning implementation. For example, a value of ``3`` corresponds to 6 repetitions
     of the layer of interest. Default: (0, 1, 2, 4, 16, 32).
@@ -89,7 +89,7 @@ class NoiseLearnerOptions(OptionsV2):
 
     twirling_strategy: UnsetType | TwirlingStrategyType = Unset
     r"""The twirling strategy in the identified layers of two-qubit twirled gates.
-    
+
     The allowed values are:
 
         * ``"active"``: in each individual twirled layer, only the instruction qubits are twirled.
@@ -106,8 +106,8 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     experimental: UnsetType | dict = Unset
-    r"""Experimental options. 
-    
+    r"""Experimental options.
+
     These options are subject to change without notification, and stability is not guaranteed.
     """
 

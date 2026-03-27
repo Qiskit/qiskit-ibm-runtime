@@ -109,7 +109,7 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
-            plugin_passes += [convert_pass()]  # pylint: disable=not-callable
+            plugin_passes += [convert_pass()]
 
         return PassManager(plugin_passes) + translator_pm
 
@@ -122,7 +122,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     dynamic circuits is not assumed.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         issue_deprecation_msg(
             msg="Since backends now support running jobs that contain both "
             "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",
@@ -206,5 +206,5 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
-            pre_passes += [convert_pass()]  # pylint: disable=not-callable
+            pre_passes += [convert_pass()]
         return PassManager(pre_passes) + translator_pm + PassManager(post_passes)

@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Tests for Sampler V2."""
-# pylint: disable=invalid-name
 
 import unittest
 

@@ -111,7 +111,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         options_vars = [
             (
-                EstimatorOptions(default_shots=1024),  # pylint: disable=unexpected-keyword-arg
+                EstimatorOptions(default_shots=1024),
                 {"default_shots": 1024},
             ),
             (
@@ -270,7 +270,6 @@ class TestEstimatorV2(IBMTestCase):
 
     def test_gate_not_in_target(self):
         """Test exception when circuits contain gates that are not basis gates"""
-        # pylint: disable=invalid-name,not-context-manager
         backend = FakeSherbrooke()
         estimator = EstimatorV2(mode=backend)
         observable = SparsePauliOp("Z")

@@ -4,7 +4,7 @@
 Deprecation Notes
 -----------------
 
-- The simulator option ``noise_model`` is now deprecated for jobs running on real devices. 
+- The simulator option ``noise_model`` is now deprecated for jobs running on real devices.
   ``noise_model`` will still be an acceptable option when using the local testing mode. (`1892 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1892>`__)
 
 
@@ -19,9 +19,9 @@ New Features
 Bug Fixes
 ---------
 
-- Ported the ``Noise_model.from_dict()`` method from ``qiskit-aer`` because it was removed 
+- Ported the ``Noise_model.from_dict()`` method from ``qiskit-aer`` because it was removed
   in ``0.15.0``. (`1890 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1890>`__)
-- Revert a previous change to ``backend.target`` where the target was no longer being 
+- Revert a previous change to ``backend.target`` where the target was no longer being
   cached. (`1891 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1891>`__)
-- Fixed an issue where ``Session.from_id()`` would create 
+- Fixed an issue where ``Session.from_id()`` would create
   a new empty session. (`1896 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1896>`__)

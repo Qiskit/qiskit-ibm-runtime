@@ -21,7 +21,7 @@ from qiskit.circuit import ParameterExpression
 class BackendEncoder(json.JSONEncoder):
     """A json encoder for qobj"""
 
-    def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
+    def default(self, obj: Any) -> Any:
         """Default encoding"""
         # Convert numpy arrays:
         if hasattr(obj, "tolist"):

@@ -26,11 +26,11 @@ from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.transpiler.target import Target
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
-from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
+from . import qiskit_runtime_service
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
@@ -58,12 +58,12 @@ from .utils.backend_decoder import (
 
 
 if Version(qiskit_version).major >= 2:
-    from qiskit.result import (  # pylint: disable=ungrouped-imports
+    from qiskit.result import (
         MeasLevel,
         MeasReturnType,
     )
 else:
-    from qiskit.qobj.utils import (  # pylint: disable=import-error
+    from qiskit.qobj.utils import (
         MeasLevel,
         MeasReturnType,
     )
@@ -382,7 +382,7 @@ class IBMBackend(Backend):
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
-            properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
+            properties=self.properties(datetime=datetime),
         )
 
     def refresh(self) -> None:
@@ -395,7 +395,7 @@ class IBMBackend(Backend):
             use_fractional_gates=self.options.use_fractional_gates,
         ):
             self._configuration = config
-        self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
+        self.properties(refresh=True)
         self._convert_to_target(refresh=True)
 
     def properties(
@@ -426,7 +426,6 @@ class IBMBackend(Backend):
             TypeError: If an input argument is not of the correct type.
             NotImplementedError: If `datetime` is specified when cloud runtime is used.
         """
-        # pylint: disable=arguments-differ
         if self._configuration.simulator:
             # Simulators do not have backend properties.
             return None

@@ -17,10 +17,10 @@ from __future__ import annotations
 from typing import Any
 import logging
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_1,
 )
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_2.models import (
+from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
 
@@ -28,7 +28,6 @@ from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # typ
     NoiseLearnerV3Results,
 )
 
-# pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
 from .converters.version_0_1 import noise_learner_v3_result_from_0_1
 from .converters.version_0_2 import noise_learner_v3_result_from_0_2

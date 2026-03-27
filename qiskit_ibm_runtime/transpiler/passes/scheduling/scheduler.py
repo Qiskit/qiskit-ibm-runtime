@@ -154,12 +154,10 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         # We resolve this here by caching these dags in the property set.
         self._node_block_dags[node] = node_block_dags = []
 
-        t0 = max(  # pylint: disable=invalid-name
-            self._current_block_bit_times[bit] for bit in self._map_wires(node)
-        )
+        t0 = max(self._current_block_bit_times[bit] for bit in self._map_wires(node))
 
         # Duration is 0 as we do not schedule across terminator
-        t1 = t0  # pylint: disable=invalid-name
+        t1 = t0
         self._update_bit_times(node, t0, t1)
 
         for block in node.op.blocks:
@@ -251,9 +249,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
         return duration
 
-    def _update_bit_times(  # pylint: disable=invalid-name
-        self, node: DAGNode, t0: int, t1: int, update_cargs: bool = True
-    ) -> None:
+    def _update_bit_times(self, node: DAGNode, t0: int, t1: int, update_cargs: bool = True) -> None:
         self._max_block_t1[self._current_block_idx] = max(
             self._max_block_t1.get(self._current_block_idx, 0), t1
         )
@@ -382,9 +378,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # this method and a reset may have multiple qubits.
         measure_qargs = set(self._map_qubits(node))
 
-        t0q = max(
-            self._current_block_bit_times[q] for q in measure_qargs
-        )  # pylint: disable=invalid-name
+        t0q = max(self._current_block_bit_times[q] for q in measure_qargs)
 
         # If the measurement qubits overlap, we need to flush measurements and start a
         # new scheduling block.
@@ -398,7 +392,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 self._flush_measures()
         else:
             # Otherwise we need to increment all measurements to start at the same time within the block.
-            t0q = max(  # pylint: disable=invalid-name
+            t0q = max(
                 itertools.chain(
                     [t0q],
                     (self._node_start_time[measure][1] for measure in self._current_block_measures),
@@ -409,9 +403,9 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         self._current_block_measures.add(node)
 
         for measure in self._current_block_measures:
-            t0 = t0q  # pylint: disable=invalid-name
+            t0 = t0q
             measure_duration = self._get_duration(measure)
-            t1 = t0 + measure_duration  # pylint: disable=invalid-name
+            t1 = t0 + measure_duration
             self._update_bit_times(measure, t0, t1)
 
     def _visit_reset(self, node: DAGNode) -> None:
@@ -436,11 +430,9 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # If the measurement qubits overlap, we need to flush the measurement group
         self._check_flush_measures(node)
 
-        t0 = max(  # pylint: disable=invalid-name
-            self._current_block_bit_times[bit] for bit in self._map_wires(node)
-        )
+        t0 = max(self._current_block_bit_times[bit] for bit in self._map_wires(node))
 
-        t1 = t0 + op_duration  # pylint: disable=invalid-name
+        t1 = t0 + op_duration
         self._update_bit_times(node, t0, t1)
 
 
@@ -508,9 +500,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # this method and a reset may have multiple qubits.
         measure_qargs = set(self._map_qubits(node))
 
-        t0q = max(
-            self._current_block_bit_times[q] for q in measure_qargs
-        )  # pylint: disable=invalid-name
+        t0q = max(self._current_block_bit_times[q] for q in measure_qargs)
 
         # If the measurement qubits overlap, we need to flush measurements and start a
         # new scheduling block.
@@ -524,7 +514,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 self._flush_measures()
         else:
             # Otherwise we need to increment all measurements to start at the same time within the block.
-            t0q = max(  # pylint: disable=invalid-name
+            t0q = max(
                 itertools.chain(
                     [t0q],
                     (self._node_start_time[measure][1] for measure in self._current_block_measures),
@@ -535,9 +525,9 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         self._current_block_measures.add(node)
 
         for measure in self._current_block_measures:
-            t0 = t0q  # pylint: disable=invalid-name
+            t0 = t0q
             measure_duration = self._get_duration(measure)
-            t1 = t0 + measure_duration  # pylint: disable=invalid-name
+            t1 = t0 + measure_duration
             self._update_bit_times(measure, t0, t1)
 
     def _visit_reset(self, node: DAGNode) -> None:
@@ -568,11 +558,9 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # If the measurement qubits overlap, we need to flush the measurement group
         self._check_flush_measures(node)
 
-        t0 = max(  # pylint: disable=invalid-name
-            self._current_block_bit_times[bit] for bit in self._map_wires(node)
-        )
+        t0 = max(self._current_block_bit_times[bit] for bit in self._map_wires(node))
 
-        t1 = t0 + op_duration  # pylint: disable=invalid-name
+        t1 = t0 + op_duration
         self._update_bit_times(node, t0, t1)
 
     def _push_block_durations(self) -> None:
@@ -603,8 +591,8 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         ) -> int:
             max_block_time = min(block_bit_times[block][bit] for bit in self._map_qubits(node))
 
-            t0 = self._node_start_time[node][1]  # pylint: disable=invalid-name
-            t1 = self._node_stop_time[node][1]  # pylint: disable=invalid-name
+            t0 = self._node_start_time[node][1]
+            t1 = self._node_stop_time[node][1]
             # Determine how much to shift by
             node_offset = max_block_time - t1
             new_t0 = t0 + node_offset
@@ -633,7 +621,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         for node, (
             block,
             _,
-        ) in iterate_nodes:  # pylint: disable=invalid-name
+        ) in iterate_nodes:
             # skip already scheduled
             if node in scheduled:
                 continue

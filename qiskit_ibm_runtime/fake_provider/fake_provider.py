@@ -10,7 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=wildcard-import,unused-argument
 # ruff: noqa: F405 undefined-local-with-import-star-usage
 
 """

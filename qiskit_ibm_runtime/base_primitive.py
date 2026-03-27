@@ -37,7 +37,6 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
-# pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
 

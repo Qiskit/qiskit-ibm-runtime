@@ -410,7 +410,7 @@ class BackendProperties:
             ) from ex
         return result
 
-    def t1(self, qubit: int) -> float:  # pylint: disable=invalid-name
+    def t1(self, qubit: int) -> float:
         """
         Return the T1 time of the given qubit.
 
@@ -422,7 +422,7 @@ class BackendProperties:
         """
         return self.qubit_property(qubit, "T1")[0]  # type: ignore[index, return-value]
 
-    def t2(self, qubit: int) -> float:  # pylint: disable=invalid-name
+    def t2(self, qubit: int) -> float:
         """
         Return the T2 time of the given qubit.
 

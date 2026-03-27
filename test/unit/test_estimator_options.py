@@ -95,7 +95,6 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
-        # pylint: disable=unexpected-keyword-arg
 
         noise_model = NoiseModel.from_backend(FakeManilaV2())
         resilience_level = 2

@@ -1,5 +1,5 @@
 extends: spelling
 message: "Unknown word '%s'; fix or add to dictionary."
 level: error
-ignore: 
+ignore:
   - dictionary.txt
