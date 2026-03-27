@@ -240,6 +240,7 @@ doc = [
     "nbqa==1.5.3",
     "nbsphinx",
     "packaging",
+    "pylatexenc",
     "Sphinx>=8,<9",
     "sphinxcontrib-katex==0.9.9",
 ]
