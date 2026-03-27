@@ -378,7 +378,7 @@ class QiskitRuntimeService:
     ) -> Account:
         """Discover account for ibm_cloud and ibm_quantum_platform channels."""
         account = None
-        verify_ = verify or True
+        verify_ = verify
         if name:
             if filename:
                 if any([channel, token, url]):
