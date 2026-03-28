@@ -22,6 +22,9 @@ integration-test:
 smoke-test:
 	pytest test/smoke
 
+benchmark:
+	pytest test/benchmark
+
 docs-test:
 	./test/docs/vale.sh
 
