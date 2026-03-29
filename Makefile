@@ -23,7 +23,7 @@ smoke-test:
 	pytest test/smoke
 
 benchmark:
-	pytest test/benchmark
+	pytest test/benchmarks
 
 docs-test:
 	./test/docs/vale.sh
