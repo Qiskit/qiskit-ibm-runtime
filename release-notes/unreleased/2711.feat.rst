@@ -1,0 +1,1 @@
+One new fake backend, ``FakeKingston``, has been added. This is a 156-qubit Heron r2 device.
