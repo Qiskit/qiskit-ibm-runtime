@@ -40,6 +40,7 @@ from .hanoi import FakeHanoiV2
 from .jakarta import FakeJakartaV2
 from .johannesburg import FakeJohannesburgV2
 from .kawasaki import FakeKawasaki
+from .kingston import FakeKingston
 from .kolkata import FakeKolkataV2
 from .kyiv import FakeKyiv
 from .kyoto import FakeKyoto
