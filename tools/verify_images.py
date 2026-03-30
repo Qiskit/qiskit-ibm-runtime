@@ -13,6 +13,7 @@
 
 """Utility script to verify that all images have alt text"""
 
+from argparse import ArgumentParser
 from pathlib import Path
 import multiprocessing
 import sys
@@ -45,9 +46,8 @@ def is_valid_image(options: list[str]) -> bool:
 
 def validate_image(file_path: str) -> tuple[str, list[str]]:
     """Validate all the images of a single file"""
-
     if file_path in ALLOWLIST_MISSING_ALT_TEXT:
-        return [file_path, []]
+        return (file_path, [])
 
     invalid_images: list[str] = []
 
@@ -69,7 +69,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
             if not is_valid_image(options):
                 image_line = line_index - len(options)
                 invalid_images.append(
-                    f"- Error in line {image_line}: {lines[image_line-1].strip()}"
+                    f"- Error in line {image_line}: {lines[image_line - 1].strip()}"
                 )
 
         image_found = is_image(line)
@@ -78,9 +78,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
     return (file_path, invalid_images)
 
 
-def main() -> None:
-    files = glob.glob("qiskit_ibm_runtime/**/*.py", recursive=True)
-
+def main(files: list[str]) -> None:
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
@@ -107,4 +105,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(description="Utility script to verify that all images have alt text..")
+    parser.add_argument(
+        "paths",
+        type=str,
+        nargs="*",
+        help="Path of files to check. If empty, it will check all files in 'qiskit_ibm_runtime/`",
+    )
+
+    args = parser.parse_args()
+    default_files = glob.glob("qiskit_ibm_runtime/**/*.py", recursive=True)
+    main(args.paths or default_files)

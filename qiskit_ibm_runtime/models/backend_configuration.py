@@ -19,7 +19,7 @@ from typing import Any, TypeVar
 from qiskit.exceptions import QiskitError
 
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
-UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")  # pylint: disable=[invalid-name]
+UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")
 QasmBackendConfigurationT = TypeVar("QasmBackendConfigurationT", bound="QasmBackendConfiguration")
 
 

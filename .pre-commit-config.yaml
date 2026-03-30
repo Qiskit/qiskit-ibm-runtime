@@ -1,0 +1,37 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        exclude: .json
+      - id: check-yaml
+        exclude: ^test/docs/IBMQuantum/
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.10.0
+    hooks:
+      - id: black
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.10
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
+  - repo: local
+    hooks:
+      # Invoke the locally installed mypy binary, ensuring it runs over all files.
+      - id: mypy
+        name: mypy
+        entry: mypy
+        pass_filenames: false
+        language: system
+        require_serial: true
+      - id: verify-headers
+        name: Verify copyright headers
+        entry: tools/verify_headers.py
+        language: python
+        types: [file, python]
+      - id: verify-images
+        name: Verify alt text in images
+        entry: tools/verify_images.py
+        language: python
+        types: [file, python]

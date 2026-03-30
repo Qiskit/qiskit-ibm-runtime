@@ -4,9 +4,9 @@
 New Features
 ------------
 
-- Added :func:`~.draw_execution_spans`, a function for creating a Plotly figure that 
+- Added :func:`~.draw_execution_spans`, a function for creating a Plotly figure that
   visualizes one or more :class:`~.ExecutionSpans` objects. Also added the convenience
-  method :meth:`~.ExecutionSpans.draw` to invoke the drawing function on a 
+  method :meth:`~.ExecutionSpans.draw` to invoke the drawing function on a
   particular instance. (`1923 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1923>`__)
 
   .. code-block:: python
@@ -19,7 +19,7 @@ New Features
       draw_execution_spans(spans1, spans2)
 
       # convenience to plot just spans1
-      spans1.draw() 
+      spans1.draw()
 
 - Added a new method, ``backend.refresh()`` that refreshes the
   current backend target with the latest updates from the server. (`1955 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1955>`__)
@@ -31,18 +31,18 @@ New Features
 Upgrade Notes
 -------------
 
-- Deprecations from the ``0.25.0`` release have been removed. 
+- Deprecations from the ``0.25.0`` release have been removed.
 
       - ``optimization_level`` is no longer a valid option for ``EstimatorV2``.
       - Job methods ``interim_results()`` and ``stream_results()`` have been removed. (`1965 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1965>`__)
 - The ``channel_strategy`` parameter in ``QiskitRuntimeService`` has been removed.
   To continue using Q-CTRL in your workflow, please explore the following options:
 
-      * If your organization has an existing IBM Quantum Premium Plan instance: migrate to 
-        the Q-CTRL Performance Management Function, found in the 
+      * If your organization has an existing IBM Quantum Premium Plan instance: migrate to
+        the Q-CTRL Performance Management Function, found in the
         `Qiskit Functions Catalog <https://quantum.ibm.com/functions>`__.
 
-      * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
-        the same performance management product accessible directly through Q-CTRL. 
+      * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal,
+        the same performance management product accessible directly through Q-CTRL.
         You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-migrate-from-performance-management-on-ibm-cloud>`__
         to Fire Opal. (`1966 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1966>`__)

@@ -165,7 +165,6 @@ class TestBackend(IBMTestCase):
 
     def test_single_dynamic_circuit_submission(self):
         """Test submitting single circuit with dynamic=True"""
-        # pylint: disable=not-context-manager
 
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
@@ -182,7 +181,6 @@ class TestBackend(IBMTestCase):
 
     def test_multi_dynamic_circuit_submission(self):
         """Test submitting multiple circuits with dynamic=True"""
-        # pylint: disable=not-context-manager
 
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
@@ -201,7 +199,6 @@ class TestBackend(IBMTestCase):
 
     def test_single_openqasm3_submission(self):
         """Test submitting a single openqasm3 strings with dynamic=True"""
-        # pylint: disable=not-context-manager
 
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
@@ -220,7 +217,6 @@ class TestBackend(IBMTestCase):
 
     def test_runtime_image_selection_submission(self):
         """Test image selection from runtime"""
-        # pylint: disable=not-context-manager
 
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)

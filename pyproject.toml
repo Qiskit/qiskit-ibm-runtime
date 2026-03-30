@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 40.6.0", "setuptools_scm[toml]~=8.0"]
+requires = ["setuptools >= 65.0.2", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
@@ -13,30 +13,30 @@ directory = "release-notes/unreleased"
 title_format = "{version} ({project_date})"
 issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{issue}>`__"
 
-    [[tool.towncrier.type]]
-    directory = "upgrade"
-    name = "Upgrade Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "upgrade"
+name = "Upgrade Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "deprecation"
-    name = "Deprecation Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "Deprecation Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "feat"
-    name = "New Features"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "feat"
+name = "New Features"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "bug"
-    name = "Bug Fixes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "bug"
+name = "Bug Fixes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "other"
-    name = "Other Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other Notes"
+showcontent = true
 
 [tool.setuptools.packages.find]
 exclude = ["test*"]
@@ -50,10 +50,11 @@ zip-safe = false
 root = "."
 version_file = "qiskit_ibm_runtime/VERSION.txt"
 version_scheme = "release-branch-semver"
-fallback_version = "0.45.0"
+fallback_version = "0.46.1"
 
 [tool.mypy]
 python_version = "3.10"
+packages = ["qiskit_ibm_runtime", "test"]
 namespace_packages = true
 ignore_missing_imports = true
 warn_redundant_casts = true
@@ -134,17 +135,17 @@ keywords = ["qiskit", "sdk", "quantum", "api", "runtime", "ibm"]
 requires-python=">=3.10"
 
 dependencies = [
-    "requests>=2.19,!=2.32.2",
+    "requests>=2.32.4",
     "requests-ntlm>=1.1.0",
-    "numpy>=1.13",
-    "urllib3>=1.21.1",
-    "python-dateutil>=2.8.0",
-    "ibm-platform-services>=0.22.6",
+    "numpy>=1.26",
+    "urllib3>=2.4.0",
+    "python-dateutil>=2.9.0",
+    "ibm-platform-services>=0.55.3",
     "ibm-quantum-schemas>=0.5.20260320",
-    "pydantic>=2.5.0",
-    "qiskit>=2.0.0",
+    "pydantic>=2.7.0",
+    "qiskit>=2.2.0",
     "packaging",
-    "pybase64>=1.0",
+    "pybase64>=1.4",
     "samplomatic>=0.13.0"
 ]
 
@@ -164,7 +165,6 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 
 common = [
     "mypy==1.19.0",
-    "pylint==3.0.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
     "matplotlib>=2.1",
@@ -181,6 +181,11 @@ common = [
     "setuptools",
 ]
 
+style = [
+    "mypy==1.19.0",
+    "pre-commit>=4",
+]
+
 documentation = [
     "nbsphinx",
     "Sphinx>=8,<9",
@@ -193,11 +198,15 @@ documentation = [
 ]
 
 visualization = ["plotly>=5.23.0"]
-test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
+test = [
+    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
+    "pytest",
+]
 
 dev = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
+    "qiskit-ibm-runtime[style]",
     "qiskit-ibm-runtime[documentation]",
     "qiskit-ibm-runtime[visualization]",
 ]

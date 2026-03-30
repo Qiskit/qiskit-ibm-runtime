@@ -18,8 +18,8 @@ Upgrade Notes
                                         filename="~/my_account_file.json",
                                         name = "my_account",
                                         token="my_token")
-      service = QiskitRuntimeService(channel="ibm_quantum", 
-                                     filename="~/my_account_file.json", 
+      service = QiskitRuntimeService(channel="ibm_quantum",
+                                     filename="~/my_account_file.json",
                                      name = "my_account",)
 
 Deprecation Notes

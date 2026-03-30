@@ -48,17 +48,14 @@ class BaseHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Process a GET request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_POST(self):
         """Process a POST request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_PUT(self):
         """Process a PUT request."""
-        # pylint: disable=invalid-name
         self._respond()
 
 
