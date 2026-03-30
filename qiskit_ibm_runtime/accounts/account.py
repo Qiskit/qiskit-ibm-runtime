@@ -318,8 +318,13 @@ class CloudAccount(Account):
         authenticator = IAMAuthenticator(self.token, url=iam_url)
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
+
+        # Prepare the services.
         client.set_service_url(get_global_search_api_url(self.url))
         catalog.set_service_url(get_global_catalog_api_url(self.url))
+        client.configure_service("global_search")
+        catalog.configure_service("global_catalog")
+
         search_cursor = None
         all_crns = []
         while True:
@@ -336,11 +341,11 @@ class CloudAccount(Account):
                     search_cursor=search_cursor,
                     limit=100,
                 ).get_result()
-            except:  # noqa: E722 bare-except
+            except Exception as ex:
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."
-                )
+                ) from ex
             crns = []
             items = result.get("items", [])
             for item in items:
