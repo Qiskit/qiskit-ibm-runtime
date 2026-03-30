@@ -144,6 +144,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeJakartaV2
     FakeJohannesburgV2
     FakeKawasaki
+    FakeKingston
     FakeKolkataV2
     FakeKyiv
     FakeKyoto
@@ -185,8 +186,8 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeYorktownV2
 """
 
-# Fake providers
-from .fake_provider import FakeProviderForBackendV2
-
 # Standard fake backends with IBM Quantum systems snapshots
 from .backends import *
+
+# Fake providers
+from .fake_provider import FakeProviderForBackendV2
