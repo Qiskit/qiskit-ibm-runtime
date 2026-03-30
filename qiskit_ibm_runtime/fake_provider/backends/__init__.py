@@ -53,14 +53,15 @@ from .melbourne import FakeMelbourneV2
 from .montreal import FakeMontrealV2
 from .mumbai import FakeMumbaiV2
 from .nairobi import FakeNairobiV2
+from .nighthawk import FakeNighthawk
 from .osaka import FakeOsaka
 from .oslo import FakeOslo
 from .ourense import FakeOurenseV2
 from .paris import FakeParisV2
 from .peekskill import FakePeekskill
 from .perth import FakePerth
-from .prague import FakePrague
 from .poughkeepsie import FakePoughkeepsieV2
+from .prague import FakePrague
 from .quebec import FakeQuebec
 from .quito import FakeQuitoV2
 from .rochester import FakeRochesterV2
@@ -75,4 +76,3 @@ from .valencia import FakeValenciaV2
 from .vigo import FakeVigoV2
 from .washington import FakeWashingtonV2
 from .yorktown import FakeYorktownV2
-from .nighthawk import FakeNighthawk
