@@ -1,0 +1,5 @@
+The interactions with the IBM Cloud Platform Services (which happens during
+``QiskitRuntimeService`` instantation) now adhere to the
+`IBM Cloud SDK configuration mechanisms
+<https://github.com/IBM/ibm-cloud-sdk-common/blob/main/README.md#using-external-configuration>`_,
+allowing for custom configuration to be passed via environment variables or credential files.
