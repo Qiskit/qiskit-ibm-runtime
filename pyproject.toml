@@ -193,13 +193,7 @@ documentation = [
     "packaging",
 ]
 
-visualization = ["plotly>=5.23.0"]
-test = [
-    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
-    "pytest",
-]
-
-dev = [
+dev_legacy = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
     "qiskit-ibm-runtime[style]",
@@ -233,7 +227,7 @@ style_local = [
 
 test = [
     "ddt>=1.2.0,!=1.4.0,!=1.4.3",
-    "pytest>=8.1"
+    "pytest>=8.1",
     "pproxy==2.7.8",
     "coverage>=6.3",
     "pytest-benchmark==5.2.3",
