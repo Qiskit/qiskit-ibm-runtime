@@ -227,9 +227,10 @@ style_local = [
 
 test = [
     "ddt>=1.2.0,!=1.4.0,!=1.4.3",
-    "pytest",
+    "pytest>=8.1",
     "pproxy==2.7.8",
     "coverage>=6.3",
+    "pytest-benchmark==5.2.3",
 ]
 
 doc = [
