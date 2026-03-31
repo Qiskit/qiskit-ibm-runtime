@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 
-.PHONY: unit-test integration-test smoke-test docs-test unit-test-coverage
+.PHONY: unit-test integration-test smoke-test benchmark docs-test unit-test-coverage
 
 unit-test:
 	pytest test/unit
