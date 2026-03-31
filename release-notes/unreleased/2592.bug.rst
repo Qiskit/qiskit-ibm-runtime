@@ -1,0 +1,4 @@
+The ``proxies`` and ``ssl_verification`` arguments for ``QiskitRuntimeService``
+are nowpropagated to the underlying HTTP requests to ```GlobalSearchV2``,
+``GlobalCatalogV1`` and ``IAMAuthenticator`` services, allowing to instantiate
+``QiskitRuntimeService`` correctly when using a proxy.

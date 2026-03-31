@@ -14,10 +14,8 @@
 
 import base64
 import json
-import time
 import uuid
 from datetime import timezone, datetime as python_datetime
-from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -82,8 +80,6 @@ class BaseFakeRuntimeJob:
 
     _job_progress = ["QUEUED", "RUNNING", "COMPLETED"]
 
-    _executor = ThreadPoolExecutor()
-
     def __init__(
         self,
         job_id,
@@ -112,20 +108,18 @@ class BaseFakeRuntimeJob:
         self._start_session = start_session
         self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
-            self._future = self._executor.submit(self._auto_progress)
             self._result = None
         elif final_status == "COMPLETED":
             self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._final_status = final_status
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        for status in self._job_progress:
-            time.sleep(0.5)
-            self._status = status
+    def advance_progress(self):
+        """Progress to the next job status."""
+        if self._status != self._final_status:
+            self._status = self._job_progress[self._job_progress.index(self._status) + 1]
 
-        if self._status == "COMPLETED":
-            self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
+            if self._status == "COMPLETED":
+                self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
 
     def to_dict(self):
         """Convert to dictionary format."""
@@ -158,9 +152,9 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
 
     _job_progress = ["QUEUED", "RUNNING", "FAILED"]
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "FAILED":
             self._result = "Kaboom!"
@@ -171,9 +165,9 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
 
     _job_progress = ["QUEUED", "RUNNING", "CANCELLED"]
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "CANCELLED":
             self._reason = "RAN TOO LONG"
@@ -193,7 +187,6 @@ class CancelableRuntimeJob(BaseFakeRuntimeJob):
 
     def cancel(self):
         """Cancel the job."""
-        self._future.cancel()
         self._cancelled = True
 
     def to_dict(self):
@@ -209,28 +202,12 @@ class CustomResultRuntimeJob(BaseFakeRuntimeJob):
 
     custom_result = "bar"
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "COMPLETED":
             self._result = json.dumps(self.custom_result, cls=RuntimeEncoder)
-
-
-class TimedRuntimeJob(BaseFakeRuntimeJob):
-    """Class for a job that runs for the input seconds."""
-
-    def __init__(self, **kwargs):
-        self._runtime = kwargs.pop("run_time")
-        super().__init__(**kwargs)
-
-    def _auto_progress(self):
-        self._status = "RUNNING"
-        time.sleep(self._runtime)
-        self._status = "COMPLETED"
-
-        if self._status == "COMPLETED":
-            self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
 
 
 class BaseFakeRuntimeClient:
@@ -387,6 +364,7 @@ class BaseFakeRuntimeClient:
         final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
         status = self._get_job(job_id).status()
         while status not in final_states:
+            self._get_job(job_id).advance_progress()
             status = self._get_job(job_id).status()
 
     def _get_job(self, job_id: str, exclude_params: bool | None = None) -> Any:
