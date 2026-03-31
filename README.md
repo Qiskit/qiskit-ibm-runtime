@@ -18,8 +18,15 @@ This module provides the interface to access the Qiskit Runtime service on IBM Q
 
 You can install this package using pip:
 
-```bash
+```sh
 pip install qiskit-ibm-runtime
+```
+
+Optional dependencies that provide additional features can be install by specifying the package
+extras `performance` and `visualization` when installing:
+
+```sh
+pip install qiskit-ibm-runtime[performance,visualization]
 ```
 
 ## Account setup
