@@ -41,9 +41,9 @@ class TestProxies(IBMTestCase):
         # launch a mock server.
         command = ["pproxy", "-v", "-l", "http://{}:{}".format(ADDRESS, PORT)]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
-        #Time for the proxy to start
+        # Time for the proxy to start
         sleep(2)
-        #Block all traffic not routed to the proxy
+        # Block all traffic not routed to the proxy
         self._original_connect = socket.socket.connect
 
         def blocking_connect(sock, address):
