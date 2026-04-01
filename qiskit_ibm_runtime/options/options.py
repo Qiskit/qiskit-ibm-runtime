@@ -29,6 +29,7 @@ from .utils import (
     merge_options_v2,
     primitive_dataclass,
     remove_empty_dict,
+    match_max_execution_time_and_max_usage,
 )
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
@@ -92,7 +93,7 @@ class BaseOptions:
         options_copy = copy.deepcopy(options)
         remove_dict_unset_values(options_copy)
         environment = options_copy.get("environment") or {}
-        out = {"max_execution_time": options_copy.get("max_execution_time", None)}
+        out = {"max_usage": options_copy.get("max_usage", None)}
 
         for fld in fields(RuntimeOptions):
             if fld.name in environment:
@@ -116,33 +117,40 @@ class BaseOptions:
 
 @primitive_dataclass
 class OptionsV2(BaseOptions):
-    """Base primitive options, used by v2 primitives.
-
-    Args:
-        max_execution_time: Maximum execution time in seconds, which is based
-            on system execution time (not wall clock time). System execution time is
-            the amount of time that the system is dedicated to processing your job.
-            If a job exceeds this time limit, it is forcibly cancelled.
-            Simulator jobs continue to use wall clock time.
-
-            Refer to the
-            `Max execution time documentation
-            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            for more information.
-
-        environment: Options related to the execution environment. See
-            :class:`EnvironmentOptions` for all available options.
-
-        simulator: Simulator options. See
-            :class:`SimulatorOptions` for all available options.
-    """
+    """Base primitive options, used by v2 primitives."""
 
     _VERSION: int = Field(2, frozen=True)
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
+    """Maximum execution time in seconds.
+
+    Maximum execution time in seconds, which is based on system execution time (not wall clock
+    time). System execution time is the amount of time that the system is dedicated to processing
+    your job. If a job exceeds this time limit, it is forcibly cancelled. Simulator jobs continue
+    to use wall clock time.
+
+    Refer to the `Max execution time documentation
+    <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_ for more information.
+    """
+
+    max_usage: UnsetType | int = Unset
+    """Maximum usage time in seconds.
+
+    Maximum usage in seconds, which is based on system execution time (not wall clock time). System
+    execution time is the amount of time that the system is dedicated to processing your job. If a
+    job exceeds this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
+    clock time.
+    """
+
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
+    """Options related to the execution environment.
+
+    See :class:`EnvironmentOptions` for all available options.
+    """
+
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
+    """Simulator options. See :class:`SimulatorOptions` for all available options."""
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
@@ -154,6 +162,10 @@ class OptionsV2(BaseOptions):
 
         merged = merge_options_v2(self, kwargs)
         _set_attr(merged)
+
+    def __post_init__(self) -> None:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        match_max_execution_time_and_max_usage(self, Unset)
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

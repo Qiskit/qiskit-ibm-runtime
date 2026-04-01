@@ -36,6 +36,7 @@ from .utils import (
     make_constraint_validator,
     primitive_dataclass,
     skip_unset_validation,
+    match_max_execution_time_and_max_usage,
 )
 
 
@@ -142,6 +143,15 @@ class NoiseLearnerV3Options(BaseOptions):
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset
+
+    max_usage: UnsetType | int = Unset
+    """Maximum usage in seconds.
+
+    This value bounds system usage (not wall clock time). System usage is the amount of time that
+    the system is dedicated to processing your job. If a job exceeds this time limit, it is
+    forcibly cancelled.
+    """
+
     environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
     simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
 
@@ -153,3 +163,7 @@ class NoiseLearnerV3Options(BaseOptions):
             Inputs acceptable by primitives.
         """
         raise NotImplementedError("Not implemented by `NoiseLearnerV3Options`.")
+
+    def __post_init__(self) -> None:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        match_max_execution_time_and_max_usage(self, Unset)
