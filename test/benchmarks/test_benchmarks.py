@@ -19,7 +19,7 @@ from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from ..decorators import _get_integration_test_config
+from ..decorators import get_integration_test_config
 
 
 def run_in_subprocess(cmd: str) -> None:
@@ -42,7 +42,7 @@ def test_import_qiskit_ibm_runtime(benchmark):
 def test_instantiate_qiskit_runtime_service(benchmark):
     """Benchmark the instantating of `QiskitRuntimeService`."""
 
-    channel, token, url, instance, _ = _get_integration_test_config()
+    channel, token, url, instance, _ = get_integration_test_config()
     if not all([channel, token, url]):
         raise SkipTest("No accounts available")
 
