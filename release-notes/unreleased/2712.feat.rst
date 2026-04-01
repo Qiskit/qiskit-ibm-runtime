@@ -1,0 +1,6 @@
+The interactions with the IBM Cloud Platform Services (which happens during
+``QiskitRuntimeService`` instantation, with the service names ``global_search``,
+``global_catalog`` and ``resource_controller``) now adhere to the
+`IBM Cloud SDK configuration mechanisms
+<https://github.com/IBM/ibm-cloud-sdk-common/blob/main/README.md#using-external-configuration>`_,
+allowing for custom configuration to be passed via environment variables or credential files.
