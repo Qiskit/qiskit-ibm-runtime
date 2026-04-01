@@ -97,6 +97,7 @@ class TestProxies(IBMTestCase):
             channel=dependencies.channel,
             verify=False,
             proxies={"urls": VALID_PROXIES},
+            url=dependencies.url,
         )
         service.jobs(limit=1)
 
