@@ -16,27 +16,25 @@ To install from source download this repository and follow the next steps.
 
 * Create a virtual environment
 
-  ``` {.bash}
+  ```sh
   python3 -m venv .venv
   ```
 
 * Activate your virtual environment
 
-  ``` {.bash}
+  ```sh
   source .venv/bin/activate
   ```
 
-* Install the dependencies
+* Install the dependencies package in editable mode, with the development dependencies
 
-  ``` {.bash}
-  pip install -e .
-  ```
-
-* Install the development dependencies
-
-  ``` {.bash}
+  ```sh
   pip install -e ".[dev]"
   ```
+
+  The `dev` extra install all the dependencies that a developer needs. The full list of extras
+  supported by the package can be found at the `[project.optional-dependencies]` section of
+  [pyproject.toml].
 
 ### Open an issue
 
@@ -229,12 +227,12 @@ To execute the smoke tests, run
 make smoke-test
 ```
 
-###### Configuration
+#### Configuration
 
-Integration tests require an environment configuration and can be run against the IBM Quantum Platform API
-(`ibm_quantum_platform` channel).
+Integration and smoke tests require an environment configuration and can be run against the IBM
+Quantum Platform API (`ibm_quantum_platform` channel).
 
-Sample configuration for IBM Cloud (ibm_quantum_platform)
+Sample configuration for IBM Cloud (ibm_quantum_platform):
 
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
@@ -250,6 +248,14 @@ To enable test cases against external system in your private fork, make sure to 
 For example, in your github fork settings, add the environment you want to run tests on
 (`ibm-cloud-production`, `ibm-cloud-staging`). Then add the appropriate environment secrets
 (`QISKIT_IBM_INSTANCE`, `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL`, `QISKIT_IBM_DEVICE`).
+
+#### Benchmarking
+
+Experimental support for benchmarking is available via:
+
+```sh
+make benchmark
+```
 
 ### Style guide
 
@@ -359,3 +365,4 @@ the `main` branch, such as from `stable/0.21` to `main`.
 [unittest]: https://docs.python.org/3/library/unittest.html
 [encrypted environment secrets]: https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment
 [IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
+[pyproject.toml]: ./pyproject.toml

@@ -19,6 +19,7 @@ from collections.abc import Callable
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.accounts import ChannelType
 
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
@@ -52,7 +53,7 @@ def run_cloud_fake(func):
     return _wrapper
 
 
-def _get_integration_test_config():
+def get_integration_test_config():
     token, url, instance, qpu = (
         os.getenv("QISKIT_IBM_TOKEN"),
         os.getenv("QISKIT_IBM_URL"),
@@ -102,7 +103,7 @@ def integration_test_setup(
                 else supported_channel
             )
 
-            channel, token, url, instance, qpu = _get_integration_test_config()
+            channel, token, url, instance, qpu = get_integration_test_config()
             if not all([channel, token, url]):
                 raise Exception("Configuration Issue")
 
@@ -143,7 +144,7 @@ class IntegrationTestDependencies:
     instance: str | None
     qpu: str
     token: str
-    channel: str
+    channel: ChannelType
     url: str
 
 
