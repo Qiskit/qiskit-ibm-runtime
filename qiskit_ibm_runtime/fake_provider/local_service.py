@@ -44,7 +44,6 @@ class QiskitRuntimeLocalService:
     def __init__(self) -> None:
         """QiskitRuntimeLocalService constructor.
 
-
         Returns:
             An instance of QiskitRuntimeService.
 

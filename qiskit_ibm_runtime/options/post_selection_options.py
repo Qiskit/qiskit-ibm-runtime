@@ -23,9 +23,7 @@ DEFAULT_X_PULSE_TYPE = "xslow"
 
 @primitive_dataclass
 class PostSelectionOptions(BaseOptions):
-    """
-    Options for post selecting results.
-    """
+    """Options for post selecting results."""
 
     enable: bool = False
     r"""Whether to enable Post Selection when performing learning experiments.

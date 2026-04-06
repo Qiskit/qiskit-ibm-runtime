@@ -98,7 +98,8 @@ class TestValidation(IBMTestCase):
 
     def test_validate_instruction_cannot_be_learned(self):
         """Test that instruction validation raises when the instruction doesn't match any
-        learning protocol."""
+        learning protocol.
+        """
         target = FakeAlgiers().target
         circuit = QuantumCircuit(target.num_qubits)
         with circuit.box(annotations=[Twirl()]):
@@ -110,7 +111,8 @@ class TestValidation(IBMTestCase):
 
     def test_validate_instruction_unphysical(self):
         """Test that instruction validation raises when the qubits don't belong to the expected
-        register."""
+        register.
+        """
         target = FakeAlgiers().target
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):

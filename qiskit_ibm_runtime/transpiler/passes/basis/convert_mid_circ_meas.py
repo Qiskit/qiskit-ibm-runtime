@@ -11,7 +11,8 @@
 # that they have been altered from the originals.
 
 """Pass to replace terminal measures in the middle of the circuit with
-MidCircuitMeasure instructions."""
+MidCircuitMeasure instructions.
+"""
 
 from qiskit.circuit import Measure
 from qiskit.dagcircuit import DAGCircuit
@@ -44,7 +45,6 @@ class ConvertToMidCircuitMeasure(TransformationPass):
             ValueError: If the specifcied ``mcm_name`` does not conform to the ``measure_`` pattern
                 or is not contained in the provided target.
         """
-
         super().__init__()
         self.target = target
         if not mcm_name.startswith("measure_"):

@@ -72,7 +72,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
-
         # no default instance and no filters
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service = QiskitRuntimeService(
@@ -343,7 +342,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = QiskitRuntimeService(
@@ -357,7 +355,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
-
         service_instance_name = "-non-existing-service-name-"
         with (
             self.subTest(instance="-non-existing-service-name-"),

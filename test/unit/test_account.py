@@ -90,7 +90,6 @@ class TestAccount(IBMTestCase):
 
     def test_invalid_channel(self):
         """Test invalid values for channel parameter."""
-
         with self.assertRaises(InvalidAccountError) as err:
             invalid_channel: Any = "phantom"
             Account.create_account(
@@ -102,7 +101,6 @@ class TestAccount(IBMTestCase):
 
     def test_invalid_token(self):
         """Test invalid values for token parameter."""
-
         invalid_tokens = [1, None, ""]
         for token in invalid_tokens:
             with self.subTest(token=token):
@@ -116,7 +114,6 @@ class TestAccount(IBMTestCase):
 
     def test_invalid_url(self):
         """Test invalid values for url parameter."""
-
         subtests = [
             {"channel": "ibm_cloud", "url": 123},
         ]
@@ -128,7 +125,6 @@ class TestAccount(IBMTestCase):
 
     def test_invalid_account_prefs(self):
         """Test invalid values for account preferences."""
-
         with self.assertRaises(InvalidAccountError) as err:
             Account.create_account(
                 channel="ibm_quantum_platform",
@@ -236,7 +232,6 @@ class TestAccountManager(IBMTestCase):
     @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_get(self):
         """Test save and get."""
-
         # Each tuple contains the
         # - account to save
         # - the name passed to AccountManager.save
@@ -300,7 +295,6 @@ class TestAccountManager(IBMTestCase):
     )
     def test_list(self):
         """Test list."""
-
         test_ibm_quantum_classic_account = {
             "channel": "ibm_quantum",
             "url": "...",
@@ -368,7 +362,6 @@ class TestAccountManager(IBMTestCase):
     )
     def test_delete(self):
         """Test delete."""
-
         with self.subTest("delete named account"):
             self.assertTrue(AccountManager.delete(name="key1"))
             self.assertFalse(AccountManager.delete(name="key1"))
@@ -382,7 +375,6 @@ class TestAccountManager(IBMTestCase):
 
     def test_delete_filename(self):
         """Test delete accounts with filename parameter."""
-
         filename = _TEST_FILENAME
         name = "key1"
         channel = "ibm_quantum_platform"
@@ -437,7 +429,6 @@ class TestAccountManager(IBMTestCase):
 
     def test_save_private_endpoint(self):
         """Test private endpoint parameter."""
-
         AccountManager.save(
             filename=_TEST_FILENAME,
             name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
@@ -454,7 +445,8 @@ class TestAccountManager(IBMTestCase):
 
     def test_save_default_account(self):
         """Test that if a default_account is defined in the qiskit-ibm.json file,
-        this account will be used"""
+        this account will be used
+        """
         AccountManager.save(
             filename=_TEST_FILENAME,
             name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
@@ -475,7 +467,8 @@ class TestAccountManager(IBMTestCase):
     def test_set_channel_precedence(self):
         """Test the precedence of the various methods to set the account:
         account name > env_variables > channel parameter default account
-               > default account > default account from default channel"""
+               > default account > default account from default channel
+        """
         cloud_token = uuid.uuid4().hex
         preferred_token = uuid.uuid4().hex
         any_token = uuid.uuid4().hex

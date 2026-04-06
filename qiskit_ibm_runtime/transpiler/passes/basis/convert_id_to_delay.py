@@ -47,7 +47,8 @@ class ConvertIdToDelay(TransformationPass):
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
         """Run the pass on one :class:`.DAGCircuit`, mutating it.  Returns ``True`` if the circuit
-        was modified and ``False`` if not."""
+        was modified and ``False`` if not.
+        """
         modified = False
         qubit_index_map = {bit: index for index, bit in enumerate(dag.qubits)}
         for node in dag.op_nodes():

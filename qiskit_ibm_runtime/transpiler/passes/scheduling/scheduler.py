@@ -62,7 +62,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
         """
-
         if durations:
             warnings.warn(
                 "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "
@@ -189,7 +188,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
     def _init_run(self, dag: DAGCircuit) -> None:
         """Setup for initial run."""
-
         self._dag = dag
         self._block_dag = None
         self._wire_map = {wire: wire for wire in dag.wires}
@@ -373,8 +371,8 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         intersecting with the set of qubits to be measured in parallel will trigger the
         end of a scheduling block with said measurement occurring in a following block
         which begins another grouping sequence. This behavior will change in future
-        backend software updates."""
-
+        backend software updates.
+        """
         current_block_measure_qargs = self._current_block_measure_qargs()
         # We handle a set of qubits here as _visit_reset currently calls
         # this method and a reset may have multiple qubits.
@@ -497,8 +495,8 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         intersecting with the set of qubits to be measured in parallel will trigger the
         end of a scheduling block with said measurement occurring in a following block
         which begins another grouping sequence. This behavior will change in future
-        backend software updates."""
-
+        backend software updates.
+        """
         current_block_measure_qargs = self._current_block_measure_qargs()
         # We handle a set of qubits here as _visit_reset currently calls
         # this method and a reset may have multiple qubits.
@@ -552,7 +550,6 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
     def _visit_generic(self, node: DAGNode) -> None:
         """Visit a generic node such as a gate or barrier."""
-
         # If True we are coming from a conditional block.
         # start a new block for the unconditional operations.
         if self._control_flow_block:
@@ -570,7 +567,6 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
     def _push_block_durations(self) -> None:
         """After scheduling of each block, pass over and push the times of all nodes."""
-
         # Store the next available time to push to for the block by bit
         block_bit_times = {}
         # Iterated nodes starting at the first, from the node with the
@@ -578,7 +574,8 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
         def order_ops(item: tuple[DAGNode, tuple[int, int]]) -> tuple[int, int, bool, int]:
             """Iterated nodes ordering by channel, time and preferring that barriers are processed
-            first."""
+            first.
+            """
             return (
                 item[1][0],
                 -item[1][1],

@@ -66,7 +66,6 @@ class IBMBackend(Backend):
     """Backend class interfacing with an IBM Quantum backend.
 
     Note:
-
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
           the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
@@ -330,7 +329,6 @@ class IBMBackend(Backend):
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
-
         return None
 
     @property
@@ -362,7 +360,6 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),
@@ -545,9 +542,8 @@ class IBMBackend(Backend):
         return cpy
 
     def run(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        """
-        Raises:
-            IBMBackendError: The run() method is no longer supported.
+        """Raises:
+        IBMBackendError: The run() method is no longer supported.
 
         """
         raise IBMBackendError(

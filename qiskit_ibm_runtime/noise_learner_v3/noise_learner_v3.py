@@ -96,10 +96,10 @@ class NoiseLearnerV3:
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
-            Args:
+        Args:
                 instructions: The instructions to learn the noise of.
 
-            Returns:
+        Returns:
                 The submitted job.
 
         Raises:

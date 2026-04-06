@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Base class for dummy backends.
-"""
+"""Base class for dummy backends."""
 
 from typing import Any
 import logging
@@ -138,7 +136,6 @@ class FakeBackendV2(BackendV2):
             The status of the backend.
 
         """
-
         api_status = {
             "backend_name": self.name,
             "backend_version": "",
@@ -232,7 +229,6 @@ class FakeBackendV2(BackendV2):
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
-
         return None
 
     @classmethod
@@ -313,7 +309,6 @@ class FakeBackendV2(BackendV2):
         This is a temporary fix until qiskit-aer supports building noise model
         from a BackendV2 object.
         """
-
         from qiskit.circuit import Delay
         from qiskit_aer.noise import NoiseModel
         from qiskit_aer.noise.device.models import (

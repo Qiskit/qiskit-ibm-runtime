@@ -174,24 +174,26 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
     @classmethod
     def from_backend(cls, backend: Backend) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the backend.
+
         Args:
             backend: backend from which durations (gate lengths) and dt are extracted.
+
         Returns:
             The InstructionDurations constructed from backend.
         """
-
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)
 
     @classmethod
     def from_target(cls, target: Target) -> DynamicCircuitInstructionDurations:
         """Construct a :class:`DynamicInstructionDurations` object from the target.
+
         Args:
             target: target from which durations (gate lengths) and dt are extracted.
+
         Returns:
             The InstructionDurations constructed from backend.
         """
-
         instruction_durations_dict = target.durations().duration_by_name_qubits
         instruction_durations = []
         for instr_key, instr_value in instruction_durations_dict.items():
@@ -218,7 +220,6 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         Raises:
             TranspilerError: If the format of instruction_durations is invalid.
         """
-
         # First update as normal
         super().update(inst_durations, dt=dt)
 

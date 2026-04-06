@@ -11,7 +11,8 @@
 # that they have been altered from the originals.
 
 """Utilities for working with circuit schedule timing information returned
-from the Qiskit Runtime service."""
+from the Qiskit Runtime service.
+"""
 
 from __future__ import annotations
 

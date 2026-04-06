@@ -70,7 +70,6 @@ class TestAccountClient(IBMTestCase):
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
-
         custom_header = "batman"
         with custom_envs({"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}):
             client = self._get_client()

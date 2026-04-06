@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Guadalupe device (16 qubit).
-"""
+"""Fake Guadalupe device (16 qubit)."""
 
 import os
 

@@ -81,7 +81,6 @@ class TestOptionsV2(IBMTestCase):
     )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
-
         options = opt_cls()
         options.simulator.seed_simulator = 42
         options.simulator.set_backend(fake_backend)

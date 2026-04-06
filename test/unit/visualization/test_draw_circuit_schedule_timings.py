@@ -42,9 +42,7 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
     def test_plotting(
         self, included_channels, filter_readout_channels, filter_barriers, expected_n_traces
     ):
-        r"""
-        Test to make sure that it produces the right figure.
-        """
+        r"""Test to make sure that it produces the right figure."""
         circuit_schedule = self.get_mock_data()
 
         if included_channels is not None:

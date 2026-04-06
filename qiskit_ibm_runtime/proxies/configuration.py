@@ -23,7 +23,7 @@ from requests_ntlm import HttpNtlmAuth
 class ProxyConfiguration:
     """Class for representing a proxy configuration.
 
-    Args
+    Args:
         urls: a dictionary mapping protocol or protocol and host to the URL of the proxy. Refer to
             https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies for details.
         username_ntlm: username used to enable NTLM user authentication.
@@ -60,7 +60,6 @@ class ProxyConfiguration:
 
     def to_dict(self) -> dict:
         """Transform configuration to dictionary."""
-
         return {k: v for k, v in self.__dict__.items() if v is not None}
 
     def to_request_params(self) -> dict:
@@ -71,7 +70,6 @@ class ProxyConfiguration:
             expected by ``requests``. The following keys can be present:
             ``proxies``and ``auth``.
         """
-
         request_kwargs = {}
         if self.urls:
             request_kwargs["proxies"] = self.urls

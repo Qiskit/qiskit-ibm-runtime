@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Utility functions for visualizing qiskit-ibm-runtime's objects.
-"""
+"""Utility functions for visualizing qiskit-ibm-runtime's objects."""
 
 import importlib
 from types import ModuleType
@@ -43,8 +41,7 @@ def plotly_module(submodule: str = ".") -> ModuleType:
 
 
 def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: float) -> str:
-    r"""
-    Return a path that can be used to draw a slice of a pie chart with plotly.
+    r"""Return a path that can be used to draw a slice of a pie chart with plotly.
 
     Note: To draw pie charts we use paths and shapes, as they are easier to place in a specific
     location than `go.Pie` objects.
@@ -75,8 +72,7 @@ def pie_slice(angle_st: float, angle_end: float, x: float, y: float, radius: flo
 def get_rgb_color(
     discreet_colorscale: list[str], val: float, default: str, color_out_of_scale: str
 ) -> str:
-    r"""
-    Map a float to an RGB color based on a discreet colorscale that contains
+    r"""Map a float to an RGB color based on a discreet colorscale that contains
     exactly ``1000`` hues.
 
     Args:

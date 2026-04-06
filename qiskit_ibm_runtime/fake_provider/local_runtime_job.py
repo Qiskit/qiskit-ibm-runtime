@@ -91,7 +91,6 @@ class LocalRuntimeJob(PrimitiveJob):
     @property
     def session_id(self) -> str:
         """Return the Session ID which would just be the job ID in local mode."""
-
         return self._job_id
 
     @property

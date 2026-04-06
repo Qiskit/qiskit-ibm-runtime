@@ -71,8 +71,7 @@ class NoiseLearnerV3Result:
         rates_std: Iterable[float] | None = None,
         metadata: Metadata | None = None,
     ) -> NoiseLearnerV3Result:
-        """
-        Construct from a collection of generators and rates.
+        """Construct from a collection of generators and rates.
 
         Args:
             generators: The generators describing the noise channel in the Pauli Lindblad format.

@@ -80,7 +80,8 @@ class TestDecoder(IBMTestCase):
 
     def test_no_schema_version(self):
         """Verify that an error is raised if the encoded string
-        does not specify any schema version."""
+        does not specify any schema version.
+        """
         encoded_as_json = json.loads(self.encoded)
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
@@ -89,7 +90,8 @@ class TestDecoder(IBMTestCase):
 
     def test_unknown_schema_version(self):
         """Verify that an error is raised if the schema version specified in the encoded string
-        does not exist."""
+        does not exist.
+        """
         encoded_as_json = json.loads(self.encoded)
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)

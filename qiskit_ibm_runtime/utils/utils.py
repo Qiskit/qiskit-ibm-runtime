@@ -85,8 +85,7 @@ def is_simulator(backend: BackendV2) -> bool:
 
 
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
-    """
-    A section of is_isa_circuit, separated to allow recursive calls
+    """A section of is_isa_circuit, separated to allow recursive calls
     within blocks of conditional operations.
     """
     for instruction in circuit.data:
@@ -148,8 +147,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 
 
 def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
-    """
-    For rzz gates:
+    """For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
     - Collect parameterized angles
 
@@ -355,10 +353,10 @@ def default_runtime_url_resolver(
         private_endpoint: Connect to private API URL.
         channel: This input parameter is currently UNUSED and kept for
             backwards compatibility purposes only.
+
     Returns:
         Runtime API base URL
     """
-
     # URL won't be modified if it contains "experimental"
     api_host = url
 
@@ -561,7 +559,6 @@ class RefreshQueue(Queue):
         Args:
             item: Item to put into the queue.
         """
-
         with self.condition:
             if self.full():
                 super().get(block=False)

@@ -22,8 +22,7 @@ from .utils import primitive_dataclass, make_constraint_validator, skip_unset_va
 
 @primitive_dataclass
 class NoiseLearnerOptions(OptionsV2):
-    """
-    Options for :class:`.NoiseLearner`.
+    """Options for :class:`.NoiseLearner`.
 
     .. note::
 

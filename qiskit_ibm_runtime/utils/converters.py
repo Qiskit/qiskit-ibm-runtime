@@ -200,7 +200,6 @@ def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
     Raises:
         IBMInputValueError: when the given hms string is in an invalid format
     """
-
     parsed_time = re.findall(r"(\d+[dhms])", hms)
     total_seconds = 0
 

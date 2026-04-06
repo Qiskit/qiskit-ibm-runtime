@@ -138,7 +138,6 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
-
         with self.assertRaises(ValidationError):
             sampler = Sampler(mode=self.sim_backend)
             sampler.options.environment.job_tags = "foo"

@@ -36,7 +36,8 @@ _TERRA_VERSION = tuple(
 
 class IBMTranslationPlugin(PassManagerStagePlugin):
     """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    to IBM Quantum systems.
+    """
 
     def pass_manager(
         self,
@@ -44,7 +45,6 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -72,7 +72,8 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
     """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    to IBM Quantum systems.
+    """
 
     def pass_manager(
         self,
@@ -80,7 +81,6 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -137,7 +137,6 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -177,7 +176,6 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:

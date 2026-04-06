@@ -38,7 +38,6 @@ def validate_classical_registers(pubs: list[SamplerPub]) -> None:
         IBMInputValueError: If any circuit has a creg whose name is not a valid identifier.
         IBMInputValueError: If any circuit has a creg whose name is a Python keyword.
     """
-
     for index, pub in enumerate(pubs):
         if len(pub.circuit.cregs) == 0:
             warnings.warn(

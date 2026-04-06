@@ -298,13 +298,13 @@ class BaseRuntimeJob(ABC):
         Returns:
             Input parameters used in this job.
         """
-
         response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
         return response.get("params", {})
 
     @property
     def primitive_id(self) -> str:
         """Primitive name.
+
         Returns:
             Primitive this job is for.
         """

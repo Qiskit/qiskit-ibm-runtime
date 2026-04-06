@@ -240,8 +240,8 @@ class TestSamplerV2(IBMTestCase):
     def test_isa_inside_condition_block(self, backend):
         """Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
-        qubit pairs that are not connected"""
-
+        qubit pairs that are not connected
+        """
         circ = QuantumCircuit(5, 1)
         circ.x(0)
         circ.measure(0, 0)
@@ -260,8 +260,8 @@ class TestSamplerV2(IBMTestCase):
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected.
         For the case where the control operation body is defined not in a
-        context, as in `test_isa_inside_condition_block`, but in a separate circuit."""
-
+        context, as in `test_isa_inside_condition_block`, but in a separate circuit.
+        """
         body = QuantumCircuit(QuantumRegister(2, "inner"))
         body.ecr(0, 1)
 
@@ -293,7 +293,8 @@ class TestSamplerV2(IBMTestCase):
     @data(-1, 1, 2)
     def test_rzz_parametrized_angle_validation(self, angle):
         """Test exception when rzz gate is used with a parameter which is assigned a value outside
-        the range [0, pi/2]"""
+        the range [0, pi/2]
+        """
         backend = FakeFractionalBackend()
         param = Parameter("p")
 
@@ -310,7 +311,8 @@ class TestSamplerV2(IBMTestCase):
     @unpack
     def test_rzz_validation_param_exp(self, val1, val2):
         """Test exception when rzz gate is used with a parameter expression, which is evaluated to
-        a value outside the range [0, pi/2]"""
+        a value outside the range [0, pi/2]
+        """
         backend = FakeFractionalBackend()
         p1 = Parameter("p1")
         p2 = Parameter("p2")
@@ -331,8 +333,8 @@ class TestSamplerV2(IBMTestCase):
     def test_rzz_complex(self, flawed_params):
         """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
         tests a more complex case. In addition, we test the currently non-existing case of dynamic
-        instructions."""
-
+        instructions.
+        """
         # FakeFractionalBackend has both fractional and dynamic instructions
         backend = FakeFractionalBackend()
 
@@ -394,7 +396,6 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_backend_run_options(self, meas_type):
         """Test translation of sampler options into backend run options"""
-
         # This test is checking that meas_level, meas_return, and noise_model
         # get through the backend's run() call when SamplerV2 falls back to
         # BackendSamplerV2 in local mode. To do this, it creates a dummy

@@ -250,7 +250,6 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             IBM backends available for this service instance.
         """
-
         return self._api.backends()["devices"]
 
     def backend_configuration(

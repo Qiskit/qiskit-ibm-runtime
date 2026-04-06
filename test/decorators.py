@@ -67,7 +67,8 @@ def get_integration_test_config():
 def run_integration_test(func):
     """Decorator that injects preinitialized service and device parameters.
 
-    To be used in combination with the integration_test_setup decorator function."""
+    To be used in combination with the integration_test_setup decorator function.
+    """
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):

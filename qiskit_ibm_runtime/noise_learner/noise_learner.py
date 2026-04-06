@@ -224,9 +224,7 @@ class NoiseLearner:
     def _set_options(
         self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
-        """
-        Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
-        """
+        """Sets the options, ensuring that they are of type ``NoiseLearnerOptions``."""
         if not options:
             self._options = NoiseLearnerOptions()
         elif isinstance(options, NoiseLearnerOptions):
@@ -245,7 +243,8 @@ class NoiseLearner:
     @staticmethod
     def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
         """Returns a dictionary of options that must be included in the program inputs,
-        filtering out every option that is not part of the NoiseLearningOptions."""
+        filtering out every option that is not part of the NoiseLearningOptions.
+        """
         ret = {}
 
         ignored_names = [

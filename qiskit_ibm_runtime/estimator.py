@@ -153,7 +153,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
-
         if (
             options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None

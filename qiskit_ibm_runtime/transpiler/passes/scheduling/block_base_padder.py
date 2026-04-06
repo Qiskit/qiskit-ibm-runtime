@@ -422,9 +422,9 @@ class BlockBasePadder(TransformationPass):
         self._prev_node = node
 
     def _visit_if_else_op(self, node: DAGNode) -> None:
-        """check if is fast-path eligible otherwise fall back
-        to standard ControlFlowOp handling."""
-
+        """Check if is fast-path eligible otherwise fall back
+        to standard ControlFlowOp handling.
+        """
         if self._will_use_fast_path(node):
             self._fast_path_nodes.add(node)
         self._visit_control_flow_op(node)
@@ -462,7 +462,6 @@ class BlockBasePadder(TransformationPass):
 
     def _visit_control_flow_op(self, node: DAGNode) -> None:
         """Visit a control-flow node to pad."""
-
         # Control-flow terminator ends scheduling of block currently
         block_idx, t0 = self._node_start_time[node]
         self._terminate_block(t0, block_idx)

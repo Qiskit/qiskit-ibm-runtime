@@ -50,7 +50,6 @@ class TestSamplerOptions(IBMTestCase):
 
     def test_program_inputs(self):
         """Test converting to program inputs from sampler options."""
-
         noise_model = NoiseModel.from_backend(FakeManilaV2())
         simulator = {
             "noise_model": noise_model,

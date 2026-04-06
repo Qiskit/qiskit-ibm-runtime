@@ -51,8 +51,7 @@ def get_mode_service_backend(
     QiskitRuntimeService | QiskitRuntimeLocalService | None,
     BackendV2 | None,
 ]:
-    """
-    A utility function that returns mode, service, and backend for a given execution mode.
+    """A utility function that returns mode, service, and backend for a given execution mode.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be
@@ -61,7 +60,6 @@ def get_mode_service_backend(
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
     """
-
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):

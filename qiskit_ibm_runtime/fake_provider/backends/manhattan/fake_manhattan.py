@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Manhattan device (65 qubit).
-"""
+"""Fake Manhattan device (65 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend

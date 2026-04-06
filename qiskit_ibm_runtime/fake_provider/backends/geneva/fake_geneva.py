@@ -11,9 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""
-Fake Geneva device (27 qubits).
-"""
+"""Fake Geneva device (27 qubits)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend

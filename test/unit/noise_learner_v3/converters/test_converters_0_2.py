@@ -95,7 +95,6 @@ class TestConverters(IBMTestCase):
 
     def test_converting_invalid_results(self):
         """Test that converting results raises when results are invalid."""
-
         generators = [
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),

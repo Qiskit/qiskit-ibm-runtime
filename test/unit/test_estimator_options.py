@@ -95,7 +95,6 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
-
         noise_model = NoiseModel.from_backend(FakeManilaV2())
         resilience_level = 2
         simulator = {

@@ -20,6 +20,7 @@ import warnings
 
 def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: int = 2) -> Callable:
     """Emit a warning prior to calling decorated function.
+
     Args:
         deprecated: Function being deprecated.
         version: First release the function is deprecated.

@@ -59,7 +59,8 @@ class TestSamplexItem(IBMTestCase):
 
     def test_samplex_item_shape_not_broadcastable(self):
         """Test that ``SamplexItem`` raises an error when the samplex shape does not match
-        the parameter values."""
+        the parameter values.
+        """
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):
             circuit.rx(Parameter("p"), 0)
@@ -98,7 +99,8 @@ class TestSamplexItem(IBMTestCase):
 
     def test_samplex_item_num_params_doesnt_match_circuit_arguments(self):
         """Test that ``SamplexItem`` raises an error if the number of circuit parameters
-        doesn't match the shape of the samplex arguments."""
+        doesn't match the shape of the samplex arguments.
+        """
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):
             circuit.rx(Parameter("p"), 0)
@@ -116,7 +118,8 @@ class TestSamplexItem(IBMTestCase):
 
     def test_samplex_item_no_samplex_arguments_for_parametric_circuit(self):
         """Test that ``SamplexItem`` raises an error if the circuit has parameters
-        but the ``samplex_arguments`` parameter is unset."""
+        but the ``samplex_arguments`` parameter is unset.
+        """
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl()]):
             circuit.rx(Parameter("p"), 0)
@@ -170,7 +173,8 @@ class TestSamplexItem(IBMTestCase):
 
     def test_samplex_item_missing_pauli_lindblad_map_in_samplex_arguments(self):
         """Test that ``SamplexItem`` raises an error when the samplex arguments don't contain
-        a Pauli-Lindblad map for a noise annotation."""
+        a Pauli-Lindblad map for a noise annotation.
+        """
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), InjectNoise(ref="r0")]):
             circuit.rx(Parameter("p"), 0)

@@ -101,6 +101,7 @@ class Session:
                 <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
             create_new: If True, the POST session API endpoint will be called to create a new
                 session. Prevents creating a new session when ``from_id()`` is called.
+
         Raises:
             ValueError: If an input value is invalid.
         """
@@ -199,7 +200,8 @@ class Session:
     def close(self) -> None:
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
-        are no more pending jobs."""
+        are no more pending jobs.
+        """
         self._active = False
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             self._service._get_api_client(self._instance).close_session(self._session_id)
@@ -350,7 +352,7 @@ class Session:
             calibration_id: The calibration id for the backend that is used to create the
                 session.
 
-         Raises:
+        Raises:
             IBMInputValueError: If given `session_id` does not exist.
             IBMRuntimeError: If the backend of the session is unknown.
 

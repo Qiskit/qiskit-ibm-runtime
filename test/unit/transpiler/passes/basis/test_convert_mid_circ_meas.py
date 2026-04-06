@@ -72,7 +72,8 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
     def test_convert_measure_3(self):
         """Test conversion with non-default alternative measure. The pass is
         only expected to convert terminal measures into measure_3, the existing
-        measure_2 instruction is left untouched."""
+        measure_2 instruction is left untouched.
+        """
         num_qubits = 5
         mcm = MidCircuitMeasure("measure_3")
         target = GenericBackendV2(num_qubits=num_qubits, seed=0).target
@@ -95,7 +96,8 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
 
     def test_different_qarg(self):
         """Test that terminal measure is only replaced if measure_2 is defined
-        in corresponding qarg (else, it's left untouched)."""
+        in corresponding qarg (else, it's left untouched).
+        """
         num_qubits = 5
         mcm = MidCircuitMeasure()
         target = GenericBackendV2(num_qubits=num_qubits, seed=0).target

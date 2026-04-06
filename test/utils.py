@@ -152,7 +152,7 @@ def get_real_device(service):
 
 
 def mock_wait_for_final_state(service, job):
-    """replace `wait_for_final_state` with a mock function"""
+    """Replace `wait_for_final_state` with a mock function"""
     return mock.patch.object(
         RuntimeJobV2,
         "wait_for_final_state",
@@ -174,7 +174,8 @@ def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
 
 def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     """Flat the dictionaries then determine whether all keys in dict2 are
-    in dict1 and have the same values."""
+    in dict1 and have the same values.
+    """
 
     def _flat_dict(in_dict, out_dict):
         for key_, val_ in in_dict.items():
@@ -235,7 +236,6 @@ def create_faulty_backend(
     Returns:
         An IBMBackend with faulty qubits/edges.
     """
-
     properties = model_backend.properties().to_dict()
 
     if faulty_qubit:
@@ -285,7 +285,6 @@ def get_mocked_backend(
     properties: dict | None = None,
 ) -> IBMBackend:
     """Return a mock backend."""
-
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
     mock_api_client = mock.MagicMock()
     mock_api_client._instance = "mock_instance"

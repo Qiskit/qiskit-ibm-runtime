@@ -62,7 +62,8 @@ class FoldRzzAngle(TransformationPass):
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
         """Mutate the input dag to fix non-ISA Rzz angles.
-        Return true if the dag was modified."""
+        Return true if the dag was modified.
+        """
         modified = False
         for node in dag.op_nodes():
             if isinstance(node.op, ControlFlowOp):
@@ -254,8 +255,7 @@ class FoldRzzAngle(TransformationPass):
 def convert_to_rzz_valid_pub(
     primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
 ) -> SamplerPub | EstimatorPub:
-    """
-    Return a pub which is compatible with Rzz constraints.
+    """Return a pub which is compatible with Rzz constraints.
 
     Current limitations:
     1. Does not support dynamic circuits.

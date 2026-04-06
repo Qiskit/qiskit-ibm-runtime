@@ -111,7 +111,8 @@ class TestQuantumProgram(IBMTestCase):
 
     def test_subset_of_noise_maps(self):
         """Test that `QuantumProgram` knows to handle the case where a specific samplex
-        item uses only a subset of the program's noise maps."""
+        item uses only a subset of the program's noise maps.
+        """
         shots = 100
 
         noise_models = [

@@ -11,9 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""
-Fake Prague device (33 qubits).
-"""
+"""Fake Prague device (33 qubits)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend

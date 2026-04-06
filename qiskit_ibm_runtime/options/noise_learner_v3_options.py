@@ -44,9 +44,7 @@ AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1, "v0.2": OptionsModel_0_2}
 
 @primitive_dataclass
 class NoiseLearnerV3Options(BaseOptions):
-    """
-    Options for :class:`.NoiseLearnerV3`.
-    """
+    """Options for :class:`.NoiseLearnerV3`."""
 
     shots_per_randomization: int = 128
     r"""The total number of shots to use per randomized learning circuit."""

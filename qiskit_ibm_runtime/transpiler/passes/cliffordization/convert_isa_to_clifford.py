@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Pass to convert the gates of an ISA circuit to Clifford gates.
-"""
+"""Pass to convert the gates of an ISA circuit to Clifford gates."""
 
 from random import choices
 import numpy as np
@@ -49,8 +47,7 @@ SUPPORTED_INSTRUCTIONS = (
 
 
 class ConvertISAToClifford(TransformationPass):
-    """
-    Convert the gates of an ISA circuit to Clifford gates.
+    """Convert the gates of an ISA circuit to Clifford gates.
 
     ISA circuits only contain Clifford gates from a restricted set or
     :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To convert them to Clifford

@@ -94,7 +94,6 @@ class RuntimeOptions:
         Raises:
             IBMInputValueError: If one or more option is invalid.
         """
-
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,

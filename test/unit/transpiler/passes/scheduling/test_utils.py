@@ -24,8 +24,8 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
 
     def test_patch_measure(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
-        See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
-
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654
+        """
         with self.assertWarns(DeprecationWarning):
             durations = DynamicCircuitInstructionDurations(
                 [
@@ -65,7 +65,6 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
 
     def test_durations_from_target(self):
         """Test loading and patching durations from a target"""
-
         with self.assertWarns(DeprecationWarning):
             durations = DynamicCircuitInstructionDurations.from_target(FakeKolkataV2().target)
 
@@ -75,8 +74,8 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
 
     def test_patch_disable(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
-        See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
-
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654
+        """
         with self.assertWarns(DeprecationWarning):
             durations = DynamicCircuitInstructionDurations(
                 [("x", None, 200), ("measure", None, 1000), ("measure", (0, 1), 1200)],

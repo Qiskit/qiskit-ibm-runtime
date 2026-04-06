@@ -76,7 +76,6 @@ def delete_config(
     name: str,
 ) -> bool:
     """Delete configuration data from a JSON file."""
-
     logger.debug("Delete configuration data for '%s' from '%s'", name, filename)
 
     _ensure_file_exists(filename)

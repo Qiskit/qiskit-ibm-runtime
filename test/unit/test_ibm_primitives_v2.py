@@ -258,7 +258,6 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single cirucit."""
-
         circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
@@ -686,7 +685,8 @@ class TestGetModeServiceBackend(IBMTestCase):
 
     def test_mode_is_backend_inside_session_context_manager(self):
         """Test ``get_mode_service_backend`` inside a session context manager,
-        when the input mode is an ``IBMBackend``."""
+        when the input mode is an ``IBMBackend``.
+        """
         backend = get_mocked_backend()
         service = backend.service
         with Session(backend=backend) as session:

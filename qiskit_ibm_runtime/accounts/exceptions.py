@@ -33,4 +33,5 @@ class AccountAlreadyExistsError(AccountsError):
 
 class CloudResourceNameResolutionError(AccountsError):
     """Errors raised when the Cloud Resource Name (CRN) cannot be resolved for a given service
-    name."""
+    name.
+    """

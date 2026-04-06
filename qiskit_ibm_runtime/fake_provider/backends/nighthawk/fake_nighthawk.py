@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Nighthawk device (120 qubit).
-"""
+"""Fake Nighthawk device (120 qubit)."""
 
 import os
 import warnings
@@ -23,8 +21,7 @@ DISPLAY_WARNING = True
 
 
 class FakeNighthawk(fake_backend.FakeBackendV2):
-    """
-    A fake 120 qubit backend. Its coupling map and basis gates match those of a
+    """A fake 120 qubit backend. Its coupling map and basis gates match those of a
     real Nighthawk backend, but the properties are not  intended to represent
     typical Nighthawk error values. You can use this fake backend to, for
     example, transpile and optimize your circuits in preparation of the

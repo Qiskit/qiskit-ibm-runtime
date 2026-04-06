@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Singapore device (20 qubit).
-"""
+"""Fake Singapore device (20 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend

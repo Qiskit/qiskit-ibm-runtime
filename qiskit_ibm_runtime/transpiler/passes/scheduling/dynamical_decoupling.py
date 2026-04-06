@@ -195,13 +195,13 @@ class PadDynamicalDecoupling(BlockBasePadder):
             block_ordering_callable: A callable used to produce an ordering of the nodes to
                 minimize the number of blocks needed. If not provided,
                 :func:`~block_order_op_nodes` will be used.
+
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
                 non-multiple of the alignment constraint value is found.
             TranspilerError: When the coupling map is not supported (i.e., if degree > 3)
         """
-
         if durations:
             warnings.warn(
                 "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "

@@ -61,7 +61,6 @@ class GateConfig:
                 property of the backend.
             description: Description of the gate operation
         """
-
         self.name = name
         self.parameters = parameters
         self.qasm_def = qasm_def

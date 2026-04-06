@@ -75,7 +75,6 @@ class PadDelay(BlockBasePadder):
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
         """
-
         if durations:
             warnings.warn(
                 "The `durations` input argument of `PadDelay` is deprecated "

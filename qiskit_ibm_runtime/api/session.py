@@ -56,7 +56,6 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-
     if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
         return ""
 

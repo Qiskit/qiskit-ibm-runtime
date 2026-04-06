@@ -114,7 +114,6 @@ class IBMTestCase(TestCase):
                 `places` are specified).
             AssertionError: if the dictionaries are not almost equal.
         """
-
         error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
 
         if error_msg:
@@ -149,7 +148,7 @@ class IBMTestCase(TestCase):
         """
 
         def valid_comparison(value):
-            """compare value to delta, within places accuracy"""
+            """Compare value to delta, within places accuracy"""
             if places is not None:
                 return round(value, places) == 0
             else:

@@ -87,7 +87,6 @@ class TestEstimatorV2(IBMTestCase):
 
     def test_invalid_estimator_precision_option(self):
         """Test exception when precision is invalid."""
-
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 

@@ -461,7 +461,6 @@ class QiskitRuntimeService:
 
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         """Get the crn from the instance service name."""
-
         if not self._all_instances:
             self._all_instances = account.list_instances()
         matching_instances = [item for item in self._all_instances if item["name"] == instance]
@@ -850,7 +849,6 @@ class QiskitRuntimeService:
                 will be prioritized if an instance is not passed in.
 
         """
-
         AccountManager.save(
             token=token,
             url=url,
@@ -986,7 +984,6 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
         self._check_instance_usage()
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:

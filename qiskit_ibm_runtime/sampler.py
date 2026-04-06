@@ -113,7 +113,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValidationError: if validation fails.
         """
-
         pass
 
     @classmethod

@@ -259,12 +259,14 @@ def make_constraint_validator(
     """Make a field validator that performs the give constraint if the value is numeric.
     This differs to the one built-in to ``pydantic.Field`` in that it ignores non-Real types,
     which lets us apply this to fields with annotations like ``int | Literal["auto"]``.
+
     Args:
         field_names: The field names to check.
         ge: A number the value must be greater than or equal to.
         gt: A number the value must be strictly greater than.
         le: A number the value must be less than or equal to.
         lt: A number the value must be strictly less than.
+
     Returns:
         A new field validator.
     """

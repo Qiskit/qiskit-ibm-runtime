@@ -102,9 +102,7 @@ class TestNeat(IBMTestCase):
         self.assertListEqual(list(r3[1].vals.shape), [3])
 
     def test_non_clifford_error(self):
-        r"""
-        Tests that ``_simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``.
-        """
+        r"""Tests that ``_simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``."""
         qc = QuantumCircuit(3)
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]

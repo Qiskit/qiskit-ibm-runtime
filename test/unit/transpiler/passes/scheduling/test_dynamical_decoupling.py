@@ -438,7 +438,8 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     def test_insert_ghz_uhrig(self, use_target):
         """Test custom spacing (following Uhrig DD [1]).
         [1] Uhrig, G. "Keeping a quantum bit alive by optimized π-pulse sequences."
-        Physical Review Letters 98.10 (2007): 100504."""
+        Physical Review Letters 98.10 (2007): 100504.
+        """
         n = 8
         dd_sequence = [XGate()] * n
 
@@ -785,7 +786,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_back_to_back_if_test(self, use_target):
         """Test DD with if_test circuit back to back."""
-
         dd_sequence = [XGate(), XGate()]
         if use_target:
             pm = PassManager(
@@ -857,7 +857,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_dd_if_test(self, use_target):
         """Test DD with if_test circuit."""
-
         dd_sequence = [XGate(), XGate()]
 
         if use_target:
@@ -949,7 +948,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_reproducible(self, use_target):
         """Test DD calls are reproducible."""
-
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
         qc.x(2)
@@ -1004,7 +1002,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_nested_block_dd(self, use_target):
         """Test DD applied within a block."""
-
         dd_sequence = [XGate(), XGate()]
 
         if use_target:
@@ -1066,7 +1063,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_multiple_dd_sequences(self, use_target):
         """Test multiple DD sequence can be submitted"""
-
         qc = QuantumCircuit(2, 0)
         qc.x(0)  # First delay so qubits are touched
         qc.x(1)
@@ -1162,7 +1158,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_multiple_dd_sequence_cycles(self, use_target):
         """Test a single DD sequence can be inserted for multiple cycles in a single delay."""
-
         qc = QuantumCircuit(1, 0)
         qc.x(0)  # First delay so qubit is touched
         qc.delay(2000, 0)
@@ -1529,7 +1524,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         unused qubits.
         Which might hurt performance in later execution stages.
         """
-
         dd_sequence = [XGate(), XGate()]
 
         if use_target:
@@ -1605,7 +1599,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_dd_named_barriers(self, use_target):
         """Test DD applied on delays ending on named barriers."""
-
         dd_sequence = [XGate(), XGate()]
         if use_target:
             pm = PassManager(
