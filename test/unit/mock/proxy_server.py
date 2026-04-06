@@ -24,7 +24,7 @@ class MockProxyServer:
     PROXY_IP_ADDRESS = "127.0.0.1"
     PROXY_PORT = 8085
     INVALID_PROXY_PORT = 6666
-    VALID_PROXIES = {"https": "http://{}:{}".format(PROXY_IP_ADDRESS, PROXY_PORT)}
+    VALID_PROXIES = {"https": f"http://{PROXY_IP_ADDRESS}:{PROXY_PORT}"}
 
     def __init__(self, test_case, logger):
         self._test_case = test_case
@@ -38,7 +38,7 @@ class MockProxyServer:
             "pproxy",
             "-v",
             "-l",
-            "http://{}:{}".format(self.PROXY_IP_ADDRESS, self.PROXY_PORT),
+            f"http://{self.PROXY_IP_ADDRESS}:{self.PROXY_PORT}",
         ]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
         self._test_case.addCleanup(self.stop)

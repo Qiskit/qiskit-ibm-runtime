@@ -47,4 +47,4 @@ class RestAdapterBase:
         Returns:
             The resolved URL of the endpoint (relative to the session base URL).
         """
-        return "{}{}".format(self.prefix_url, self.URL_MAP[identifier])
+        return f"{self.prefix_url}{self.URL_MAP[identifier]}"

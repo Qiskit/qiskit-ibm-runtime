@@ -29,7 +29,7 @@ from ..decorators import IntegrationTestDependencies, integration_test_setup
 
 ADDRESS = "127.0.0.1"
 PORT = 8085
-VALID_PROXIES = {"https": "http://{}:{}".format(ADDRESS, PORT)}
+VALID_PROXIES = {"https": f"http://{ADDRESS}:{PORT}"}
 INVALID_PORT_PROXIES = {"https": "http://{}:{}".format(ADDRESS, "6666")}
 INVALID_ADDRESS_PROXIES = {"https": "http://{}:{}".format("invalid", PORT)}
 
@@ -41,7 +41,7 @@ class TestProxies(IBMTestCase):
         """Initial test setup."""
         super().setUp()
         # launch a mock server.
-        command = ["pproxy", "-v", "-l", "http://{}:{}".format(ADDRESS, PORT)]
+        command = ["pproxy", "-v", "-l", f"http://{ADDRESS}:{PORT}"]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
         # Time for the proxy to start
         sleep(2)
@@ -122,4 +122,4 @@ def pproxy_desired_access_log_line(url):
     """Return a desired pproxy log entry given a url."""
     qe_url_parts = urllib.parse.urlparse(url)
     protocol_port = "443" if qe_url_parts.scheme == "https" else "80"
-    return "{}:{}".format(qe_url_parts.hostname, protocol_port)
+    return f"{qe_url_parts.hostname}:{protocol_port}"

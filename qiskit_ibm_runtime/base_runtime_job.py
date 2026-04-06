@@ -166,8 +166,8 @@ class BaseRuntimeJob(ABC):
         else:
             raise IBMApiError(
                 "An unexpected error occurred when updating the "
-                "tags for job {}. The tags were not updated for "
-                "the job.".format(self.job_id())
+                f"tags for job {self.job_id()}. The tags were not updated for "
+                "the job."
             )
 
     def properties(self, refresh: bool = False) -> BackendProperties | None:

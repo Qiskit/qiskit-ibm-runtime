@@ -204,9 +204,7 @@ class IBMBackend(Backend):
         """
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_properties", "_target", "_configuration"]:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
@@ -221,9 +219,7 @@ class IBMBackend(Backend):
         try:
             return self._configuration.__getattribute__(name)
         except AttributeError:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def submit(
         self, program: QuantumProgram, options: ExecutorOptions | None = None
@@ -418,9 +414,8 @@ class IBMBackend(Backend):
             return None
         if not isinstance(refresh, bool):
             raise TypeError(
-                "The 'refresh' argument needs to be a boolean. {} is of type {}".format(
-                    refresh, type(refresh)
-                )
+                f"The 'refresh' argument needs to be a boolean. {refresh} is of type "
+                f" {type(refresh)}"
             )
         if datetime:
             if not isinstance(datetime, python_datetime):
@@ -462,7 +457,7 @@ class IBMBackend(Backend):
         except TypeError as ex:
             raise IBMBackendApiProtocolError(
                 "Unexpected return value received from the server when "
-                "getting backend status: {}".format(str(ex))
+                f"getting backend status: {str(ex)}"
             ) from ex
 
     def configuration(
@@ -493,7 +488,7 @@ class IBMBackend(Backend):
         return self._configuration
 
     def __repr__(self) -> str:
-        return "<{}('{}')>".format(self.__class__.__name__, self.name)
+        return f"<{self.__class__.__name__}('{self.name}')>"
 
     def __call__(self) -> IBMBackend:
         # For backward compatibility only, can be removed later.

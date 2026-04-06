@@ -36,9 +36,9 @@ class RuntimeSession(RestAdapterBase):
             url_prefix: Prefix to use in the URL.
         """
         if not session_id:
-            super().__init__(session, "{}/sessions".format(url_prefix))
+            super().__init__(session, f"{url_prefix}/sessions")
         else:
-            super().__init__(session, "{}/sessions/{}".format(url_prefix, session_id))
+            super().__init__(session, f"{url_prefix}/sessions/{session_id}")
 
     def create(
         self,

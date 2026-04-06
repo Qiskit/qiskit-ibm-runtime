@@ -40,7 +40,7 @@ class ProgramJob(RestAdapterBase):
             job_id: ID of the program job.
             url_prefix: Prefix to use in the URL.
         """
-        super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
+        super().__init__(session, f"{url_prefix}/jobs/{job_id}")
 
     def get(self, exclude_params: bool | None = None) -> dict:
         """Return program job information.

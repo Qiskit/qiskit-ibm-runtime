@@ -174,16 +174,16 @@ def duration_difference(date_time: datetime) -> str:
     # days, hours, minutes, seconds, and milliseconds.
     time_str = ""
     if time_tuple[0]:
-        time_str += "{} days".format(time_tuple[0])
-        time_str += " {} hrs".format(time_tuple[1])
+        time_str += f"{time_tuple[0]} days"
+        time_str += f" {time_tuple[1]} hrs"
     elif time_tuple[1]:
-        time_str += "{} hrs".format(time_tuple[1])
-        time_str += " {} min".format(time_tuple[2])
+        time_str += f"{time_tuple[1]} hrs"
+        time_str += f" {time_tuple[2]} min"
     elif time_tuple[2]:
-        time_str += "{} min".format(time_tuple[2])
-        time_str += " {} sec".format(time_tuple[3])
+        time_str += f"{time_tuple[2]} min"
+        time_str += f" {time_tuple[3]} sec"
     elif time_tuple[3]:
-        time_str += "{} sec".format(time_tuple[3])
+        time_str += f"{time_tuple[3]} sec"
     return time_str
 
 

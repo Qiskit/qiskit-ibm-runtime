@@ -1357,7 +1357,7 @@ class QiskitRuntimeService:
         return self._channel
 
     def __repr__(self) -> str:
-        return "<{}>".format(self.__class__.__name__)
+        return f"<{self.__class__.__name__}>"
 
     def __eq__(self, other: Any) -> bool:
         return (

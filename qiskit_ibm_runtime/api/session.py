@@ -385,7 +385,7 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
+                        request_data_to_log = f"Request Data: {filter_data(request_data)}."
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,

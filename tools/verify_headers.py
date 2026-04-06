@@ -62,14 +62,14 @@ def validate_header(file_path: str) -> tuple[str, bool, str]:
             start = index
             break
     if "".join(lines[start : start + 2]) != header:
-        return (file_path, False, "Header up to copyright line does not match: {}".format(header))
+        return (file_path, False, f"Header up to copyright line does not match: {header}")
     if not lines[start + 2].startswith("# (C) Copyright IBM 20"):
         return (file_path, False, "Header copyright line not found")
     if "".join(lines[start + 3 : start + 11]) != apache_text:
         return (
             file_path,
             False,
-            "Header apache text string doesn't match:\n {}".format(apache_text),
+            f"Header apache text string doesn't match:\n {apache_text}",
         )
     return (file_path, True, None)
 
@@ -93,8 +93,8 @@ def main() -> None:
     failed_files = [x for x in res if x[1] is False]
     if len(failed_files) > 0:
         for failed_file in failed_files:
-            sys.stderr.write("{} failed header check because:\n".format(failed_file[0]))
-            sys.stderr.write("{}\n\n".format(failed_file[2]))
+            sys.stderr.write(f"{failed_file[0]} failed header check because:\n")
+            sys.stderr.write(f"{failed_file[2]}\n\n")
         sys.exit(1)
     sys.exit(0)
 
