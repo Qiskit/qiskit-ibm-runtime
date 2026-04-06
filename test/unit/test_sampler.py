@@ -83,7 +83,7 @@ class TestSamplerV2(IBMTestCase):
             self.assertIn(list(opt.keys())[0], str(exc.exception))
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)
@@ -219,7 +219,7 @@ class TestSamplerV2(IBMTestCase):
             inst.run([dynamic_circuit, fractional_circuit])
 
     def test_gate_not_in_target(self):
-        """Test exception when circuits contain gates that are not basis gates"""
+        """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         sampler = SamplerV2(mode=backend)
 
@@ -240,7 +240,7 @@ class TestSamplerV2(IBMTestCase):
     def test_isa_inside_condition_block(self, backend):
         """Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
-        qubit pairs that are not connected
+        qubit pairs that are not connected.
         """
         circ = QuantumCircuit(5, 1)
         circ.x(0)
@@ -278,7 +278,7 @@ class TestSamplerV2(IBMTestCase):
 
     @data(-1, 1, 2)
     def test_rzz_fixed_angle_validation(self, angle):
-        """Test exception when rzz gate is used with an angle outside the range [0, pi/2]"""
+        """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
 
         circ = QuantumCircuit(2)
@@ -293,7 +293,7 @@ class TestSamplerV2(IBMTestCase):
     @data(-1, 1, 2)
     def test_rzz_parametrized_angle_validation(self, angle):
         """Test exception when rzz gate is used with a parameter which is assigned a value outside
-        the range [0, pi/2]
+        the range [0, pi/2].
         """
         backend = FakeFractionalBackend()
         param = Parameter("p")
@@ -311,7 +311,7 @@ class TestSamplerV2(IBMTestCase):
     @unpack
     def test_rzz_validation_param_exp(self, val1, val2):
         """Test exception when rzz gate is used with a parameter expression, which is evaluated to
-        a value outside the range [0, pi/2]
+        a value outside the range [0, pi/2].
         """
         backend = FakeFractionalBackend()
         p1 = Parameter("p1")
@@ -395,7 +395,7 @@ class TestSamplerV2(IBMTestCase):
         "avg_kerneled",
     )
     def test_backend_run_options(self, meas_type):
-        """Test translation of sampler options into backend run options"""
+        """Test translation of sampler options into backend run options."""
         # This test is checking that meas_level, meas_return, and noise_model
         # get through the backend's run() call when SamplerV2 falls back to
         # BackendSamplerV2 in local mode. To do this, it creates a dummy
@@ -403,13 +403,13 @@ class TestSamplerV2(IBMTestCase):
         # sampler execution completes successfully.
 
         class DummyJob:
-            """Enough of a job class to return a result"""
+            """Enough of a job class to return a result."""
 
             def __init__(self, run_options):
                 self.run_options = run_options
 
             def result(self):
-                """Return result object"""
+                """Return result object."""
                 shots = self.run_options["shots"]
 
                 if self.run_options["meas_level"] == 1:
@@ -438,7 +438,7 @@ class TestSamplerV2(IBMTestCase):
                 return result
 
         class DummyBackend(BackendV2):
-            """Test backend that saves run options into the result"""
+            """Test backend that saves run options into the result."""
 
             max_circuits = 1
             # The backend gets cloned inside of the sampler execution code, so

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
-    """Class used to decode noise learner results"""
+    """Class used to decode noise learner results."""
 
     @classmethod
     def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:

@@ -108,7 +108,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that primitive inputs (options) are valid
+        """Validate that primitive inputs (options) are valid.
 
         Raises:
             ValidationError: if validation fails.

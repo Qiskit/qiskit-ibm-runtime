@@ -61,7 +61,7 @@ class TestOptionsV2(IBMTestCase):
 
     @data(EstimatorOptions, SamplerOptions)
     def test_coupling_map_options(self, opt_cls):
-        """Check that coupling_map is processed correctly for various types"""
+        """Check that coupling_map is processed correctly for various types."""
         coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
         coupling_maps = [
             coupling_map,

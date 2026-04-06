@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor"""
+"""Executor."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ logger = logging.getLogger()
 
 
 class Executor:
-    """Class for running :class:`~.QuantumProgram`\\s.
+    r"""Class for running :class:`~.QuantumProgram`\\s.
 
     The :meth:`run` method can be used to submit a quantum program to be executed on a backend.
 

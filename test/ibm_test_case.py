@@ -148,7 +148,7 @@ class IBMTestCase(TestCase):
         """
 
         def valid_comparison(value):
-            """Compare value to delta, within places accuracy"""
+            """Compare value to delta, within places accuracy."""
             if places is not None:
                 return round(value, places) == 0
             else:

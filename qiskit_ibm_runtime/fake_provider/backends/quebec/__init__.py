@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Quebec backend (127 qubit).
-"""
+"""Fake Quebec backend (127 qubit)."""
 
 from .fake_quebec import FakeQuebec

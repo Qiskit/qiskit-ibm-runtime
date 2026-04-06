@@ -63,7 +63,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_session_from_id(self, service):
-        """Test creating a session from a given id"""
+        """Test creating a session from a given id."""
         backend = service.backend(self.dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")

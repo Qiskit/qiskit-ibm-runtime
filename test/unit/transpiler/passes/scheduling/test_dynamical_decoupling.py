@@ -1062,7 +1062,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     @data(True, False)
     def test_multiple_dd_sequences(self, use_target):
-        """Test multiple DD sequence can be submitted"""
+        """Test multiple DD sequence can be submitted."""
         qc = QuantumCircuit(2, 0)
         qc.x(0)  # First delay so qubits are touched
         qc.x(1)
@@ -1215,7 +1215,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     @data(True, False)
     def test_staggered_dd(self, use_target):
-        """Test that timing on DD can be staggered if coupled with each other"""
+        """Test that timing on DD can be staggered if coupled with each other."""
         dd_sequence = [XGate(), XGate()]
 
         if use_target:
@@ -1292,7 +1292,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     @data(True, False)
     def test_staggered_dd_multiple_cycles(self, use_target):
-        """Test staggered DD with multiple cycles in a single delay"""
+        """Test staggered DD with multiple cycles in a single delay."""
         dd_sequence = [XGate(), XGate()]
 
         if use_target:

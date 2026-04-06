@@ -47,7 +47,7 @@ class RuntimeSession(RestAdapterBase):
         max_time: int | None = None,
         mode: str | None = None,
     ) -> dict[str, Any]:
-        """Create a session"""
+        """Create a session."""
         url = self.get_url("self")
         payload: dict[str, str | int] = {}
         if mode:

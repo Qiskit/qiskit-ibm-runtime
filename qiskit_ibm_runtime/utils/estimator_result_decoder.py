@@ -18,7 +18,7 @@ from .result_decoder import ResultDecoder
 
 
 class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results"""
+    """Class used to decode estimator results."""
 
     @classmethod
     def decode(cls, raw_result: str) -> PrimitiveResult:

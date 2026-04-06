@@ -191,7 +191,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
 
 
 def _set_int_keys_flag(obj: dict) -> dict | list:
-    """Recursively sets '__int_keys__' flag if dictionary uses integer keys
+    """Recursively sets '__int_keys__' flag if dictionary uses integer keys.
 
     Args:
         obj: dictionary
@@ -208,7 +208,7 @@ def _set_int_keys_flag(obj: dict) -> dict | list:
 
 
 def _cast_strings_keys_to_int(obj: dict) -> dict:
-    """Casts string to int keys in dictionary when '__int_keys__' flag is set
+    """Casts string to int keys in dictionary when '__int_keys__' flag is set.
 
     Args:
         obj: dictionary

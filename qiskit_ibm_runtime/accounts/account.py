@@ -289,7 +289,7 @@ class CloudAccount(Account):
         return proxies_kwargs
 
     def get_iam_authentificator(self) -> IAMAuthenticator:
-        """Return the configured IAM Authentification service"""
+        """Return the configured IAM Authentification service."""
         iam_url = get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(

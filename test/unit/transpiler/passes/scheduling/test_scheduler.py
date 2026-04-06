@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test the dynamic circuits scheduling analysis"""
+"""Test the dynamic circuits scheduling analysis."""
 
 from ddt import ddt, data
 
@@ -37,12 +37,12 @@ from .....ibm_test_case import IBMTestCase
 
 @ddt
 class TestASAPSchedulingAndPaddingPass(IBMTestCase):
-    """Tests the ASAP Scheduling passes"""
+    """Tests the ASAP Scheduling passes."""
 
     @data(True, False)
     def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
-        See: https://github.com/Qiskit/qiskit-terra/issues/7654
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
@@ -992,7 +992,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_gate_on_measured_qubit(self, use_target):
-        """Test that a gate on a previously measured qubit triggers the end of the block"""
+        """Test that a gate on a previously measured qubit triggers the end of the block."""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
         qc.x(0)
@@ -1043,7 +1043,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_grouped_measurements_prior_control_flow(self, use_target):
-        """Test that measurements are grouped prior to control-flow"""
+        """Test that measurements are grouped prior to control-flow."""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
         qc.measure(1, 1)
@@ -1112,7 +1112,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_back_to_back_if_test(self, use_target):
-        """Test back to back if_test scheduling"""
+        """Test back to back if_test scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.delay(800, 1)
         with qc.if_test((0, 1)):
@@ -1183,7 +1183,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_nested_control_scheduling(self, use_target):
-        """Test scheduling of nested control-flow"""
+        """Test scheduling of nested control-flow."""
         qc = QuantumCircuit(4, 3)
         qc.x(0)
         with qc.if_test((0, 1)):
@@ -1266,7 +1266,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_while_loop(self, use_target):
-        """Test scheduling while loop"""
+        """Test scheduling while loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
         with qc.while_loop((0, 1)):
@@ -1323,7 +1323,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_for_loop(self, use_target):
-        """Test scheduling for loop"""
+        """Test scheduling for loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
         with qc.for_loop(range(2)):
@@ -1431,10 +1431,10 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
 @ddt
 class TestALAPSchedulingAndPaddingPass(IBMTestCase):
-    """Tests the ALAP Scheduling passes"""
+    """Tests the ALAP Scheduling passes."""
 
     def get_delay_dict(self, circ):
-        """Return a dictionary with a list of delays for each qubit"""
+        """Return a dictionary with a list of delays for each qubit."""
         dag = circuit_to_dag(circ)
         delays = dag.op_nodes(Delay)
         delay_dict = {q_ind: [] for q_ind in range(len(circ.qubits))}
@@ -1444,7 +1444,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_alap(self, use_target):
-        """Test standard ALAP scheduling"""
+        """Test standard ALAP scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
         qc.x(1)
@@ -1497,7 +1497,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
-        See: https://github.com/Qiskit/qiskit-terra/issues/7654
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
@@ -1556,7 +1556,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_classically_controlled_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
-        See: https://github.com/Qiskit/qiskit-terra/issues/7654
+        See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
@@ -2439,7 +2439,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_already_scheduled(self, use_target):
-        """Test no changes to pre-scheduled"""
+        """Test no changes to pre-scheduled."""
         qc = QuantumCircuit(3, 2)
         qc.cx(0, 1)
         qc.delay(400, 2)
@@ -2564,7 +2564,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_gate_on_measured_qubit(self, use_target):
-        """Test that a gate on a previously measured qubit triggers the end of the block"""
+        """Test that a gate on a previously measured qubit triggers the end of the block."""
         qc = QuantumCircuit(2, 1)
         qc.measure(0, 0)
         qc.x(0)
@@ -2615,7 +2615,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_grouped_measurements_prior_control_flow(self, use_target):
-        """Test that measurements are grouped prior to control-flow"""
+        """Test that measurements are grouped prior to control-flow."""
         qc = QuantumCircuit(3, 3)
         qc.measure(0, 0)
         qc.measure(1, 1)
@@ -2772,7 +2772,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_back_to_back_if_test(self, use_target):
-        """Test back to back if_test scheduling"""
+        """Test back to back if_test scheduling."""
         qc = QuantumCircuit(3, 1)
         qc.delay(800, 1)
         with qc.if_test((0, 1)):
@@ -2842,7 +2842,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_issue_458_extra_idle_bug_0(self, use_target):
-        """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458
+        """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458.
 
         This demonstrates that delays on idle qubits are pushed to the last schedulable
         region. This may happen if Terra's default scheduler is used and then the
@@ -2945,7 +2945,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_issue_458_extra_idle_bug_1(self, use_target):
-        """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458
+        """Regression test for https://github.com/Qiskit/qiskit-ibm-provider/issues/458.
 
         This demonstrates that a bug with a double-delay insertion has been resolved.
         """
@@ -3013,7 +3013,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_nested_control_scheduling(self, use_target):
-        """Test scheduling of nested control-flow"""
+        """Test scheduling of nested control-flow."""
         qc = QuantumCircuit(4, 3)
         qc.x(0)
         with qc.if_test((0, 1)):
@@ -3096,7 +3096,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_while_loop(self, use_target):
-        """Test scheduling while loop"""
+        """Test scheduling while loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
         with qc.while_loop((0, 1)):
@@ -3153,7 +3153,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_for_loop(self, use_target):
-        """Test scheduling for loop"""
+        """Test scheduling for loop."""
         qc = QuantumCircuit(2, 1)
         qc.x(0)
         with qc.for_loop(range(2)):
@@ -3385,7 +3385,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_scheduling_nonuniform_durations(self, use_target):
         """Test that scheduling withing control flow blocks uses the
-        instruction durations on the correct qubit indices
+        instruction durations on the correct qubit indices.
         """
         backend = FakeJakartaV2()
 

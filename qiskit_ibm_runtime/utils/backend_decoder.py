@@ -69,7 +69,7 @@ def configuration_from_server_data(
 
 
 def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
-    """Filter unwanted entries from raw configuration data
+    """Filter unwanted entries from raw configuration data.
 
     Args:
         use_fractional_gates: Set True to allow for the backends to include

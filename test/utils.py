@@ -152,7 +152,7 @@ def get_real_device(service):
 
 
 def mock_wait_for_final_state(service, job):
-    """Replace `wait_for_final_state` with a mock function"""
+    """Replace `wait_for_final_state` with a mock function."""
     return mock.patch.object(
         RuntimeJobV2,
         "wait_for_final_state",
@@ -350,11 +350,11 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
 
 
 class Case(dict):
-    """<no description>"""
+    """<no description>."""
 
 
 def generate_cases(docstring, dsc=None, name=None, **kwargs):
-    """Combines kwargs in Cartesian product and creates Case with them"""
+    """Combines kwargs in Cartesian product and creates Case with them."""
     ret = []
     keys = kwargs.keys()
     vals = kwargs.values()
@@ -375,7 +375,7 @@ def combine(**kwargs):
     @combine(level=[0, 1, 2, 3],
              circuit=[a, b, c, d],
              dsc='Test circuit {circuit.__name__} with level {level}',
-             name='{circuit.__name__}_level{level}')
+             name='{circuit.__name__}_level{level}').
     """
 
     def deco(func):
@@ -474,7 +474,7 @@ def remap_observables(observables, isa_circuit):
 
 
 class MockSession(Session):
-    """Mock for session class"""
+    """Mock for session class."""
 
     _circuits_map: dict[str, QuantumCircuit] = {}
     _instance = None

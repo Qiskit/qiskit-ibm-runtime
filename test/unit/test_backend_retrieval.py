@@ -28,7 +28,7 @@ class TestBackendFilters(IBMTestCase):
 
     @run_cloud_fake
     def test_backend_instance_warnings(self, service):
-        """Test backend instance warnings"""
+        """Test backend instance warnings."""
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service.backends()
         self.assertIn("Loading instance", logs.output[0])
@@ -201,7 +201,7 @@ class TestGetBackend(IBMTestCase):
     """Test getting a backend."""
 
     def test_get_backend_properties(self):
-        """Test that a backend's properties are loaded into its target"""
+        """Test that a backend's properties are loaded into its target."""
         service = FakeRuntimeService(
             channel="ibm_quantum_platform",
             token="my_token",

@@ -31,7 +31,7 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
         ]["timing"]
 
     def get_mock_data(self):
-        """Return the data object"""
+        """Return the data object."""
         return self.circuit_schedule_data
 
     @ddt.data(

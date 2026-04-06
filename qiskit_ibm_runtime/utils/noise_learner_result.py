@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """==================================================================================
-NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`)
+NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`).
 ==================================================================================
 
 .. autosummary::

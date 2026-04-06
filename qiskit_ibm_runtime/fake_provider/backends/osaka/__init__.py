@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Osaka backend (127 qubit).
-"""
+"""Fake Osaka backend (127 qubit)."""
 
 from .fake_osaka import FakeOsaka

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
+r"""
 ==========================================================
 Execution Spans (:mod:`qiskit_ibm_runtime.execution_span`)
 ==========================================================

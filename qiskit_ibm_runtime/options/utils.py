@@ -205,7 +205,7 @@ def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None =
 
 
 def skip_unset_validation(func: Callable) -> Callable:
-    """Decorator used to skip unset value"""
+    """Decorator used to skip unset value."""
 
     @functools.wraps(func)
     def wrapper(cls: Any, val: Any, *args: Any, **kwargs: Any) -> Any:

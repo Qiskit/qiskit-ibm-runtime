@@ -26,7 +26,7 @@ from .....ibm_test_case import IBMTestCase
 
 
 class TestConvertToMidCircuitMeasure(IBMTestCase):
-    """Tests the ConvertToMidCircuitMeasure pass"""
+    """Tests the ConvertToMidCircuitMeasure pass."""
 
     def setUp(self):
         super().setUp()

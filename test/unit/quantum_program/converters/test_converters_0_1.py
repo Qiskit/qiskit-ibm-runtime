@@ -45,7 +45,7 @@ class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
 
     def test_quantum_program_to_0_1(self):
-        """Test the function ``quantum_program_to_0_1``"""
+        """Test the function ``quantum_program_to_0_1``."""
         shots = 100
 
         noise_models = [
@@ -126,7 +126,7 @@ class TestQuantumProgramConverters(IBMTestCase):
 
     def test_quantum_program_to_0_1_no_argument(self):
         """Test the function ``quantum_program_to_0_1`` when there are no circuit arguments, samplex
-        arguments, and chunk size
+        arguments, and chunk size.
         """
         quantum_program = QuantumProgram(100)
 
@@ -158,7 +158,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.samplex_arguments, {})
 
     def test_quantum_program_result_from_0_1(self):
-        """Test the function ``quantum_program_result_from_0_1``"""
+        """Test the function ``quantum_program_result_from_0_1``."""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])

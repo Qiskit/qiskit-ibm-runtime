@@ -49,7 +49,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
 
     def test_from_generators_different_lengths(self):
         """Test that ``NoiseLearnerV3Result.from_generators`` raises if the specified generators
-        and rates have different lengths
+        and rates have different lengths.
         """
         generators = [
             QubitSparsePauliList.from_label(pauli1 + pauli0)

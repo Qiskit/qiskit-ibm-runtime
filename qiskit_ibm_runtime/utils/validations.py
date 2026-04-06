@@ -86,7 +86,7 @@ def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
 
 
 def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
-    """Validate if all circuits are ISA circuits
+    """Validate if all circuits are ISA circuits.
 
     Args:
         circuits: A list of QuantumCircuits.
@@ -107,7 +107,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
 
 
 def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
-    """Validate that rzz angles are always in the range [0, pi/2]
+    """Validate that rzz angles are always in the range [0, pi/2].
 
     Args:
         pubs: A list of pubs.
@@ -120,7 +120,7 @@ def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
 
 def validate_no_dd_with_dynamic_circuits(circuits: list[QuantumCircuit], options: Any) -> None:
     """Validate that if dynamical decoupling options are enabled,
-    no circuit in the pubs is dynamic
+    no circuit in the pubs is dynamic.
 
     Args:
         circuits: A list of QuantumCircuits.

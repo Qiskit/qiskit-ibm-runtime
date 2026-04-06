@@ -149,7 +149,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
     """For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
-    - Collect parameterized angles
+    - Collect parameterized angles.
 
     Returns one of the following:
     - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
@@ -255,7 +255,7 @@ def are_circuits_dynamic(circuits: list[QuantumCircuit], qasm_default: bool = Tr
 
 
 def is_fractional_gate(gate: Instruction) -> bool:
-    """Test if a gate is considered fractional by IBM
+    """Test if a gate is considered fractional by IBM.
 
     Fractional gates produce a rotation based on a continuous input parameter
     and require a non-zero gate duration. The latter distinction excludes gates

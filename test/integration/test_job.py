@@ -182,7 +182,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
 
     @run_integration_test
     def test_usage_estimation(self, service):
-        """Test job usage estimation"""
+        """Test job usage estimation."""
         job = self._run_program(service)
         job.wait_for_final_state()
         self.assertTrue(job.usage_estimation)

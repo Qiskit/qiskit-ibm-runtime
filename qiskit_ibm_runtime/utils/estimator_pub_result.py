@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """========================================================================================
-EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`)
+EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`).
 ========================================================================================
 
 .. autosummary::

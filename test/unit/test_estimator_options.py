@@ -224,7 +224,7 @@ class TestEstimatorOptions(IBMTestCase):
         self.assertDictEqual(options, opt_dict)
 
     def test_zero_resilience_level(self):
-        """Test resilience_level=0"""
+        """Test resilience_level=0."""
         opt_dict = {"resilience_level": 0}
         backend = get_mocked_backend()
         estimator = Estimator(mode=backend, options=opt_dict)

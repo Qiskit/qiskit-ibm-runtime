@@ -125,7 +125,7 @@ def get_account_config_contents(
     proxies=None,
     set_default=None,
 ):
-    """Generate account config file content"""
+    """Generate account config file content."""
     token = token or uuid.uuid4().hex
     if name is None:
         name = (

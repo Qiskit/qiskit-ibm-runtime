@@ -29,7 +29,7 @@ BackendPropertiesT = TypeVar("BackendPropertiesT", bound="BackendProperties")
 
 
 class Nduv:
-    """Class representing name-date-unit-value
+    """Class representing name-date-unit-value.
 
     Attributes:
         date: date.
@@ -39,7 +39,7 @@ class Nduv:
     """
 
     def __init__(self, date: datetime.datetime, name: str, unit: str, value: float) -> None:
-        """Initialize a new name-date-unit-value object
+        """Initialize a new name-date-unit-value object.
 
         Args:
             date: Date field
@@ -90,7 +90,7 @@ class Nduv:
 
 
 class GateProperties:
-    """Class representing a gate's properties
+    """Class representing a gate's properties.
 
     Attributes:
         qubits: qubits.
@@ -101,7 +101,7 @@ class GateProperties:
     _data: dict[Any, Any] = {}
 
     def __init__(self, qubits: list[int], gate: str, parameters: list[Nduv], **kwargs: Any) -> None:
-        """Initialize a new :class:`GateProperties` object
+        """Initialize a new :class:`GateProperties` object.
 
         Args:
             qubits: A list of integers representing qubits
@@ -166,7 +166,7 @@ Gate = GateProperties
 
 
 class BackendProperties:
-    """Class representing backend properties
+    """Class representing backend properties.
 
     This holds backend properties measured by the provider. All properties
     which are provided optionally. These properties may describe qubits, gates,

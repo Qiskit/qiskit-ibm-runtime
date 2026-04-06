@@ -203,7 +203,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @property
     def options(self) -> OptionsT:
-        """Return options"""
+        """Return options."""
         return self._options
 
     def backend(self) -> BackendV2:
@@ -227,7 +227,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that program inputs (options) are valid.
 
         Raises:
             ValueError: if resilience_level is out of the allowed range.

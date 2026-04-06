@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transport conversion functions"""
+"""Transport conversion functions."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def noise_learner_v3_result_to_0_1(
 def noise_learner_v3_result_from_0_1(
     model: NoiseLearnerV3ResultsModel,
 ) -> NoiseLearnerV3Results:
-    """Convert a V0.1 model to noise learner v3 results"""
+    """Convert a V0.1 model to noise learner v3 results."""
     return NoiseLearnerV3Results(
         data=[
             NoiseLearnerV3Result.from_generators(

@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Kyiv backend (127 qubit).
-"""
+"""Fake Kyiv backend (127 qubit)."""
 
 from .fake_kyiv import FakeKyiv

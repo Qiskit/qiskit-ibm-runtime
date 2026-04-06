@@ -27,7 +27,7 @@ from .....ibm_test_case import IBMTestCase
 
 
 class TestConvertIdToDelay(IBMTestCase):
-    """Tests the ConvertIdToDelay pass"""
+    """Tests the ConvertIdToDelay pass."""
 
     def setUp(self):
         """Setup."""

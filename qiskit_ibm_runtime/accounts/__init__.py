@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Account management functionality related to the IBM Runtime Services.
-"""
+"""Account management functionality related to the IBM Runtime Services."""
 
 from .account import Account, AccountType, ChannelType, RegionType, PlanType
 from .management import AccountManager

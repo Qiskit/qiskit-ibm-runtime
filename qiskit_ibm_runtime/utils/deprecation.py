@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Deprecation utilities"""
+"""Deprecation utilities."""
 
 from typing import Any
 from collections.abc import Callable

@@ -240,7 +240,7 @@ class TestEstimatorV2(IBMTestCase):
                     estimator.run([(circuit, obs)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)
@@ -268,7 +268,7 @@ class TestEstimatorV2(IBMTestCase):
             inst.run(pubs=[(circ, obs)])
 
     def test_gate_not_in_target(self):
-        """Test exception when circuits contain gates that are not basis gates"""
+        """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         estimator = EstimatorV2(mode=backend)
         observable = SparsePauliOp("Z")

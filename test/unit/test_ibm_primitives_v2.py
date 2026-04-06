@@ -244,7 +244,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @data(SamplerV2, EstimatorV2)
     def test_init_with_mode_as_batch(self, primitive):
-        """Test initializing a primitive with mode as a Batch"""
+        """Test initializing a primitive with mode as a Batch."""
         backend = get_mocked_backend()
         batch = get_mocked_batch(backend)
         batch.reset_mock()

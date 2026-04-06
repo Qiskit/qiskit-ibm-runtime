@@ -88,7 +88,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
     @production_only
     def test_refresh_method(self):
-        """Test refresh method"""
+        """Test refresh method."""
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
         # change some configuration

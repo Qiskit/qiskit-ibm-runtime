@@ -76,7 +76,7 @@ class FakeBackendV2(BackendV2):
         self.sim: BackendV2 | None = None
 
     def __getattr__(self, name: str) -> Any:
-        """Gets attribute from self or configuration
+        """Gets attribute from self or configuration.
 
         This magic method executes when user accesses an attribute that
         does not yet exist on the class.
@@ -147,7 +147,7 @@ class FakeBackendV2(BackendV2):
         return BackendStatus.from_dict(api_status)
 
     def properties(self, refresh: bool = False) -> BackendProperties:
-        """Return the backend properties
+        """Return the backend properties.
 
         Args:
             refresh: If ``True``, re-retrieve the backend properties from the local file.
@@ -233,7 +233,7 @@ class FakeBackendV2(BackendV2):
 
     @classmethod
     def _default_options(cls) -> Options:
-        """Return the default options
+        """Return the default options.
 
         This method will return a :class:`qiskit.providers.Options`
         subclass object that will be used for the default options. These
@@ -252,7 +252,7 @@ class FakeBackendV2(BackendV2):
 
     @property
     def dtm(self) -> float:
-        """Return the system time resolution of output signals
+        """Return the system time resolution of output signals.
 
         Returns:
             The output signal timestep in seconds.
@@ -378,7 +378,7 @@ class FakeBackendV2(BackendV2):
         return noise_model
 
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
-        """Update the data files from its real counterpart
+        """Update the data files from its real counterpart.
 
         This method pulls the latest backend data files from their real counterpart and
         overwrites the corresponding files in the local installation:

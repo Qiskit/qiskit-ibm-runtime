@@ -12,7 +12,7 @@
 
 
 """This module defines the functionality to visualize the schedule of a Qiskit circuit compiled
-code
+code.
 """
 
 from __future__ import annotations

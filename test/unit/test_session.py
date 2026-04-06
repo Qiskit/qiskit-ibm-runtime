@@ -108,7 +108,7 @@ class TestSession(IBMTestCase):
 
     @data([None, "my_id"])
     def test_session_from_id(self, calibration_id):
-        """Create session with given session_id"""
+        """Create session with given session_id."""
         service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
         session = Session.from_id(

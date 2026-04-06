@@ -20,10 +20,10 @@ from qiskit.circuit import ParameterExpression
 
 
 class BackendEncoder(json.JSONEncoder):
-    """A json encoder for qobj"""
+    """A json encoder for qobj."""
 
     def default(self, obj: Any) -> Any:
-        """Default encoding"""
+        """Default encoding."""
         # Convert numpy arrays:
         if hasattr(obj, "tolist"):
             return obj.tolist()

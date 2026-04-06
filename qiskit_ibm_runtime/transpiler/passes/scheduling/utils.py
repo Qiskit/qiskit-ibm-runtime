@@ -252,7 +252,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         return self
 
     def _patch_instruction(self, key: InstrKey) -> None:
-        """Dispatcher logic for instruction patches"""
+        """Dispatcher logic for instruction patches."""
         name = key[0]
         if name == "measure":
             self._patch_measurement(key)
@@ -260,7 +260,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             self._patch_reset(key)
 
     def _convert_and_patch_key(self, key: InstrKey) -> None:
-        """Convert duration to dt and patch key"""
+        """Convert duration to dt and patch key."""
         prev_duration, unit = self._get_duration(key)
         if unit != "dt":
             prev_duration = self._convert_unit(prev_duration, unit, "dt")
@@ -321,7 +321,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
 
     def _get_odd_cycle_correction(self) -> int:
         """Determine the amount of the odd cycle correction to apply
-        For devices with short gates with odd lenghts we add an extra 16dt to the measurement
+        For devices with short gates with odd lenghts we add an extra 16dt to the measurement.
 
         TODO: Eliminate the need for this correction
         """

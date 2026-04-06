@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Fez backend (156 qubit).
-"""
+"""Fake Fez backend (156 qubit)."""
 
 from .fake_fez import FakeFez

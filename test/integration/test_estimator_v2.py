@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests for Estimator V2"""
+"""Integration tests for Estimator V2."""
 
 from unittest import skip
 
@@ -33,7 +33,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         self._backend = self.service.backend(self.dependencies.qpu)
 
     def test_estimator_v2_session(self):
-        """Verify correct results are returned"""
+        """Verify correct results are returned."""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))

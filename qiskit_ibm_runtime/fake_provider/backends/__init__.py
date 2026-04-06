@@ -11,9 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""
-Mocked versions of real quantum backends.
-"""
+"""Mocked versions of real quantum backends."""
 
 # BackendV2 Backends
 from .algiers import FakeAlgiers

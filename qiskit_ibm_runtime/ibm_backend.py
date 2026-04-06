@@ -196,7 +196,7 @@ class IBMBackend(Backend):
             )
 
     def __getattr__(self, name: str) -> Any:
-        """Gets attribute from self or configuration
+        """Gets attribute from self or configuration.
 
         This magic method executes when user accesses an attribute that
         does not yet exist on IBMBackend class.
@@ -273,7 +273,7 @@ class IBMBackend(Backend):
         )
 
     def _convert_to_target(self, refresh: bool = False) -> None:
-        """Converts backend configuration and properties to Target object"""
+        """Converts backend configuration and properties to Target object."""
         if refresh or not self._target:
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
@@ -307,7 +307,7 @@ class IBMBackend(Backend):
 
     @property
     def service(self) -> qiskit_runtime_service.QiskitRuntimeService:
-        """Return the ``service`` object
+        """Return the ``service`` object.
 
         Returns:
             An instance of QiskitRuntimeService
@@ -316,7 +316,7 @@ class IBMBackend(Backend):
 
     @property
     def dtm(self) -> float:
-        """Return the system time resolution of output signals
+        """Return the system time resolution of output signals.
 
         Returns:
             The output signal timestep in seconds.
@@ -333,7 +333,7 @@ class IBMBackend(Backend):
 
     @property
     def meas_map(self) -> list[list[int]]:
-        """Return the grouping of measurements which are multiplexed
+        """Return the grouping of measurements which are multiplexed.
 
         This is required to be implemented if the backend supports Pulse
         scheduling.

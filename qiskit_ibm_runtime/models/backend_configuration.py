@@ -25,7 +25,7 @@ QasmBackendConfigurationT = TypeVar("QasmBackendConfigurationT", bound="QasmBack
 
 
 class GateConfig:
-    """Class representing a Gate Configuration
+    """Class representing a Gate Configuration.
 
     Attributes:
         name: the gate name as it will be referred to in OpenQASM.
@@ -44,7 +44,7 @@ class GateConfig:
         conditional: bool | None = None,
         description: str | None = None,
     ):
-        """Initialize a GateConfig object
+        """Initialize a GateConfig object.
 
         Args:
             name: the gate name as it will be referred to in OpenQASM.
@@ -125,7 +125,7 @@ class GateConfig:
 
 
 class UchannelLO:
-    """Class representing a U Channel LO
+    """Class representing a U Channel LO.
 
     Attributes:
         q: Qubit that scale corresponds too.
@@ -133,7 +133,7 @@ class UchannelLO:
     """
 
     def __init__(self, q: int, scale: complex) -> None:
-        """Initialize a UchannelLOSchema object
+        """Initialize a UchannelLOSchema object.
 
         Args:
             q: Qubit that scale corresponds too. Must be >= 0.
@@ -236,7 +236,7 @@ class QasmBackendConfiguration:
         parametric_pulses: list | None = None,
         **kwargs: Any,
     ):
-        """Initialize a QasmBackendConfiguration Object
+        """Initialize a QasmBackendConfiguration Object.
 
         Args:
             backend_name: The backend name

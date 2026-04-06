@@ -30,7 +30,7 @@ from .utils import BlockOrderingCallableType, block_order_op_nodes
 
 
 class BaseDynamicCircuitAnalysis(TransformationPass):
-    """Base class for scheduling analysis
+    """Base class for scheduling analysis.
 
     This is a scheduler designed to work for the unique scheduling constraints of the dynamic
     circuits backends due to the limitations imposed by hardware. This is expected to evolve over

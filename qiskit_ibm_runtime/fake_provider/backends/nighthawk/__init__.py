@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Nighthawk backend (120 qubit).
-"""
+"""Fake Nighthawk backend (120 qubit)."""
 
 from .fake_nighthawk import FakeNighthawk

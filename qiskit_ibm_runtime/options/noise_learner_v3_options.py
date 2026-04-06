@@ -128,7 +128,7 @@ class NoiseLearnerV3Options(BaseOptions):
         return options_model(**filtered_options)
 
     def to_runtime_options(self) -> dict:
-        """Turn these options into a dictionary of runtime options object.
+        r"""Turn these options into a dictionary of runtime options object.
 
         Filters out every irrelevant field (i.e., those that are not fields of
         :class:`.RuntimeOptions`) and replaces ``Unset``\\s with ``None``\\s.

@@ -409,7 +409,7 @@ class TestAccountManager(IBMTestCase):
 
     @temporary_account_config_file()
     def test_default_env_channel(self):
-        """Test that if QISKIT_IBM_CHANNEL is set in the environment, this channel will be used"""
+        """Test that if QISKIT_IBM_CHANNEL is set in the environment, this channel will be used."""
         token = uuid.uuid4().hex
         # unset default_channel in the environment
         with temporary_account_config_file(token=token), no_envs("QISKIT_IBM_CHANNEL"):
@@ -445,7 +445,7 @@ class TestAccountManager(IBMTestCase):
 
     def test_save_default_account(self):
         """Test that if a default_account is defined in the qiskit-ibm.json file,
-        this account will be used
+        this account will be used.
         """
         AccountManager.save(
             filename=_TEST_FILENAME,
@@ -467,7 +467,7 @@ class TestAccountManager(IBMTestCase):
     def test_set_channel_precedence(self):
         """Test the precedence of the various methods to set the account:
         account name > env_variables > channel parameter default account
-               > default account > default account from default channel
+               > default account > default account from default channel.
         """
         cloud_token = uuid.uuid4().hex
         preferred_token = uuid.uuid4().hex

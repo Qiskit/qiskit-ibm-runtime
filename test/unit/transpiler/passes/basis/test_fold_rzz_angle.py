@@ -36,7 +36,7 @@ from .....ibm_test_case import IBMTestCase
 
 @ddt
 class TestFoldRzzAngle(IBMTestCase):
-    """Test FoldRzzAngle pass"""
+    """Test FoldRzzAngle pass."""
 
     @named_data(
         ("pi/2_pos", pi / 2),
@@ -107,7 +107,7 @@ class TestFoldRzzAngle(IBMTestCase):
 
     def test_fractional_plugin(self):
         """Verify that a pass manager created for a fractional backend applies the rzz folding
-        pass
+        pass.
         """
         circ = QuantumCircuit(2)
         circ.rzz(7, 0, 1)
@@ -132,7 +132,7 @@ class TestFoldRzzAngle(IBMTestCase):
     )
     @unpack
     def test_rzz_pub_conversion(self, p1_set1, p2_set1, p1_set2, p2_set2, expected_num_params):
-        """Test the function `convert_to_rzz_valid_circ_and_vals`"""
+        """Test the function `convert_to_rzz_valid_circ_and_vals`."""
         p1 = Parameter("p1")
         p2 = Parameter("p2")
 
@@ -162,7 +162,7 @@ class TestFoldRzzAngle(IBMTestCase):
 
     @unittest.skip("convert_to_rzz_valid_pub does not support dynamic circuits currently")
     def test_rzz_pub_conversion_dynamic(self):
-        """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits"""
+        """Test the function `convert_to_rzz_valid_circ_and_vals` for dynamic circuits."""
         p = Parameter("p")
         observable = SparsePauliOp("ZZZ")
 

@@ -327,7 +327,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
     def test_local_channel(self):
-        """Test local channel mode"""
+        """Test local channel mode."""
         local_service = QiskitRuntimeService(
             channel="local",
         )

@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Torino backend (133 qubit).
-"""
+"""Fake Torino backend (133 qubit)."""
 
 from .fake_torino import FakeTorino

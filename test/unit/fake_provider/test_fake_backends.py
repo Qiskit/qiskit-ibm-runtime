@@ -84,7 +84,7 @@ class FakeBackendsTest(IBMTestCase):
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
-        """Test that submitting a simple circuit with FakeNighthawk works"""
+        """Test that submitting a simple circuit with FakeNighthawk works."""
         # Initialize fake_nighthawk
         backend = FakeNighthawk()
         self.assertEqual(backend.num_qubits, 120)

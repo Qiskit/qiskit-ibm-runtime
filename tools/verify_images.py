@@ -11,7 +11,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility script to verify that all images have alt text"""
+"""Utility script to verify that all images have alt text."""
 
 from argparse import ArgumentParser
 from pathlib import Path
@@ -45,7 +45,7 @@ def is_valid_image(options: list[str]) -> bool:
 
 
 def validate_image(file_path: str) -> tuple[str, list[str]]:
-    """Validate all the images of a single file"""
+    """Validate all the images of a single file."""
     if file_path in ALLOWLIST_MISSING_ALT_TEXT:
         return (file_path, [])
 

@@ -47,7 +47,7 @@ SUPPORTED_INSTRUCTIONS = (
 
 
 class ConvertISAToClifford(TransformationPass):
-    """Convert the gates of an ISA circuit to Clifford gates.
+    r"""Convert the gates of an ISA circuit to Clifford gates.
 
     ISA circuits only contain Clifford gates from a restricted set or
     :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To convert them to Clifford

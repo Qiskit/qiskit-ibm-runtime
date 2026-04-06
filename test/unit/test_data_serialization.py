@@ -187,7 +187,7 @@ class TestDataSerialization(IBMTestCase):
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
     def test_encoder_instruction(self):
-        """Test encoding and decoding instructions"""
+        """Test encoding and decoding instructions."""
         subtests = (
             {"instruction": CXGate()},
             {"instruction": PhaseGate(theta=1)},
@@ -201,7 +201,7 @@ class TestDataSerialization(IBMTestCase):
             self.assertEqual(decoded, obj)
 
     def test_encoder_np_number(self):
-        """Test encoding and decoding instructions"""
+        """Test encoding and decoding instructions."""
         encoded = json.dumps(np.int64(100), cls=RuntimeEncoder)
         self.assertIsInstance(encoded, str)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
@@ -281,11 +281,11 @@ class TestContainerSerialization(IBMTestCase):
 
     # Container specific assertEqual methods
     def assert_observable_arrays_equal(self, obs1, obs2):
-        """Tests that two ObservableArray objects are equal"""
+        """Tests that two ObservableArray objects are equal."""
         self.assertEqual(obs1.tolist(), obs2.tolist())
 
     def assert_binding_arrays_equal(self, barr1, barr2):
-        """Tests that two BindingArray objects are equal"""
+        """Tests that two BindingArray objects are equal."""
 
         def _to_str_keyed(_in_dict):
             _out_dict = {}
@@ -305,7 +305,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def assert_data_bins_equal(self, dbin1, dbin2):
         """Compares two DataBins
-        Field types are compared up to their string representation
+        Field types are compared up to their string representation.
         """
         self.assertEqual(tuple(dbin1), tuple(dbin2))
         self.assertEqual(dbin1.shape, dbin2.shape)
@@ -318,25 +318,25 @@ class TestContainerSerialization(IBMTestCase):
                 self.assertEqual(field_1, field_2)
 
     def assert_estimator_pubs_equal(self, pub1, pub2):
-        """Tests that two EstimatorPub objects are equal"""
+        """Tests that two EstimatorPub objects are equal."""
         self.assertEqual(pub1.circuit, pub2.circuit)
         self.assert_observable_arrays_equal(pub1.observables, pub2.observables)
         self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.precision, pub2.precision)
 
     def assert_sampler_pubs_equal(self, pub1, pub2):
-        """Tests that two SamplerPub objects are equal"""
+        """Tests that two SamplerPub objects are equal."""
         self.assertEqual(pub1.circuit, pub2.circuit)
         self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.shots, pub2.shots)
 
     def assert_pub_results_equal(self, pub_result1, pub_result2):
-        """Tests that two PubResult objects are equal"""
+        """Tests that two PubResult objects are equal."""
         self.assert_data_bins_equal(pub_result1.data, pub_result2.data)
         self.assertEqual(pub_result1.metadata, pub_result2.metadata)
 
     def assert_primitive_results_equal(self, primitive_result1, primitive_result2):
-        """Tests that two PrimitiveResult objects are equal"""
+        """Tests that two PrimitiveResult objects are equal."""
         self.assertEqual(len(primitive_result1), len(primitive_result2))
         for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
             self.assert_pub_results_equal(pub_result1, pub_result2)
@@ -344,19 +344,19 @@ class TestContainerSerialization(IBMTestCase):
         self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
 
     def assert_pauli_lindblad_error_equal(self, error1, error2):
-        """Tests that two PauliLindbladError objects are equal"""
+        """Tests that two PauliLindbladError objects are equal."""
         if error1 or error2:
             self.assertEqual(error1.generators, error2.generators)
             self.assertEqual(error1.rates.tolist(), error2.rates.tolist())
 
     def assert_layer_errors_equal(self, layer_error1, layer_error2):
-        """Tests that two LayerError objects are equal"""
+        """Tests that two LayerError objects are equal."""
         self.assertEqual(layer_error1.circuit, layer_error2.circuit)
         self.assertEqual(layer_error1.qubits, layer_error2.qubits)
         self.assert_pauli_lindblad_error_equal(layer_error1.error, layer_error2.error)
 
     def assert_noise_learner_results_equal(self, result1, result2):
-        """Tests that two NoiseLearnerResult objects are equal"""
+        """Tests that two NoiseLearnerResult objects are equal."""
         self.assertEqual(len(result1), len(result2))
         for layer_error1, layer_error2 in zip(result1, result2):
             self.assert_layer_errors_equal(layer_error1, layer_error2)
@@ -366,7 +366,7 @@ class TestContainerSerialization(IBMTestCase):
     # Data generation methods
 
     def make_test_data_bins(self):
-        """Generates test data for DataBin test"""
+        """Generates test data for DataBin test."""
         result_bins = []
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
@@ -375,7 +375,7 @@ class TestContainerSerialization(IBMTestCase):
         return result_bins
 
     def make_test_estimator_pubs(self):
-        """Generates test data for EstimatorPub test"""
+        """Generates test data for EstimatorPub test."""
         pubs = []
         params = (Parameter("a"), Parameter("b"))
         circuit = QuantumCircuit(2)
@@ -395,7 +395,7 @@ class TestContainerSerialization(IBMTestCase):
         return pubs
 
     def make_test_sampler_pubs(self):
-        """Generates test data for SamplerPub test"""
+        """Generates test data for SamplerPub test."""
         pubs = []
         params = (Parameter("a"), Parameter("b"))
         circuit = QuantumCircuit(2)
@@ -414,7 +414,7 @@ class TestContainerSerialization(IBMTestCase):
         return pubs
 
     def make_test_pub_results(self):
-        """Generates test data for PubResult test"""
+        """Generates test data for PubResult test."""
         pub_results = []
         pub_result = PubResult(DataBin(a=1.0, b=2))
         pub_results.append(pub_result)
@@ -423,7 +423,7 @@ class TestContainerSerialization(IBMTestCase):
         return pub_results
 
     def make_test_estimator_pub_results(self):
-        """Generates test data for EstimatorPubResult test"""
+        """Generates test data for EstimatorPubResult test."""
         pub_results = []
         pub_result = EstimatorPubResult(DataBin(a=1.0, b=2))
         pub_results.append(pub_result)
@@ -432,7 +432,7 @@ class TestContainerSerialization(IBMTestCase):
         return pub_results
 
     def make_test_sampler_pub_results(self):
-        """Generates test data for SamplerPubResult test"""
+        """Generates test data for SamplerPubResult test."""
         pub_results = []
         pub_result = SamplerPubResult(DataBin(a=1.0, b=2))
         pub_results.append(pub_result)
@@ -441,7 +441,7 @@ class TestContainerSerialization(IBMTestCase):
         return pub_results
 
     def make_test_primitive_results(self):
-        """Generates test data for PrimitiveResult test"""
+        """Generates test data for PrimitiveResult test."""
         primitive_results = []
 
         alpha = np.empty((10, 20), dtype=np.uint16)
@@ -504,7 +504,7 @@ class TestContainerSerialization(IBMTestCase):
         return primitive_results
 
     def make_test_noise_learner_results(self, unknown_err=False):
-        """Generates test data for NoiseLearnerResult test"""
+        """Generates test data for NoiseLearnerResult test."""
         noise_learner_results = []
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
@@ -530,7 +530,7 @@ class TestContainerSerialization(IBMTestCase):
         ),
     )
     def test_obs_array(self, oarray):
-        """Test encoding and decoding ObservablesArray"""
+        """Test encoding and decoding ObservablesArray."""
         payload = {"array": oarray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
@@ -592,7 +592,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_data_bins_equal(dbin, decoded)
 
     def test_estimator_pub(self):
-        """Test encoding and decoding EstimatorPub"""
+        """Test encoding and decoding EstimatorPub."""
         for pub in self.make_test_estimator_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -603,7 +603,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_estimator_pubs_equal(pub, decoded_pub)
 
     def test_sampler_pub(self):
-        """Test encoding and decoding SamplerPub"""
+        """Test encoding and decoding SamplerPub."""
         for pub in self.make_test_sampler_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -614,7 +614,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_sampler_pubs_equal(pub, decoded_pub)
 
     def test_pub_result(self):
-        """Test encoding and decoding PubResult"""
+        """Test encoding and decoding PubResult."""
         for pub_result in self.make_test_pub_results():
             payload = {"pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -623,7 +623,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_estimator_pub_result(self):
-        """Test encoding and decoding EstimatorPubResult"""
+        """Test encoding and decoding EstimatorPubResult."""
         for pub_result in self.make_test_estimator_pub_results():
             payload = {"estimator_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -632,7 +632,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_sampler_pub_result(self):
-        """Test encoding and decoding SamplerPubResult"""
+        """Test encoding and decoding SamplerPubResult."""
         for pub_result in self.make_test_sampler_pub_results():
             payload = {"sampler_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -641,7 +641,7 @@ class TestContainerSerialization(IBMTestCase):
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_primitive_result(self):
-        """Test encoding and decoding PubResult"""
+        """Test encoding and decoding PubResult."""
         for primitive_result in self.make_test_primitive_results():
             payload = {"primitive_result": primitive_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -651,7 +651,7 @@ class TestContainerSerialization(IBMTestCase):
 
     @data(True, False)
     def test_noise_learner_result(self, unknown_err):
-        """Test encoding and decoding NoiseLearnerResult"""
+        """Test encoding and decoding NoiseLearnerResult."""
         for noise_learner_result in self.make_test_noise_learner_results(unknown_err):
             payload = {"noise_learner_result": noise_learner_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
@@ -664,7 +664,7 @@ class TestContainerSerialization(IBMTestCase):
         PauliLindbladMap.from_list([("IIIXI", 0.1), ("XXIII", 0.3), ("IIYIY", 0.4)]),
     )
     def test_pauli_lindblad_map(self, noise_map):
-        """Test enconding and decoding for PauliLindbladMap"""
+        """Test enconding and decoding for PauliLindbladMap."""
         payload = {"map": noise_map}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["map"]
@@ -688,7 +688,7 @@ class TestContainerSerialization(IBMTestCase):
 class TestExecutionSpansSerialization(IBMTestCase):
     """Class for testing execution spans serialization, with a focus on backward compatibility:
     the deserialization may be done with an old version of qiskit-ibm-runtime, which does not
-    support twirled slice spans with data slice version 2
+    support twirled slice spans with data slice version 2.
     """
 
     def setUp(self):

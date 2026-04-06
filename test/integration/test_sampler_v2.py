@@ -33,7 +33,7 @@ from ..ibm_test_case import IBMIntegrationTestCase
 
 
 class TestSampler(IBMIntegrationTestCase):
-    """Test Sampler"""
+    """Test Sampler."""
 
     def setUp(self):
         super().setUp()
@@ -123,7 +123,7 @@ class TestSampler(IBMIntegrationTestCase):
         )
 
     def test_run_1qubit(self):
-        """Test for 1-qubit cases"""
+        """Test for 1-qubit cases."""
         qc = QuantumCircuit(1)
         qc.measure_all()
         qc2 = QuantumCircuit(1)
@@ -135,7 +135,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=2)
 
     def test_run_2qubit(self):
-        """Test for 2-qubit cases"""
+        """Test for 2-qubit cases."""
         qc0 = QuantumCircuit(2)
         qc0.measure_all()
         qc1 = QuantumCircuit(2)
@@ -210,7 +210,7 @@ class TestSampler(IBMIntegrationTestCase):
                         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     def test_run_reverse_meas_order(self):
-        """Test for sampler with reverse measurement order"""
+        """Test for sampler with reverse measurement order."""
         x = Parameter("x")
         y = Parameter("y")
 
@@ -228,7 +228,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=2)
 
     def test_run_empty_parameter(self):
-        """Test for empty parameter"""
+        """Test for empty parameter."""
         with Session(self._backend) as session:
             n = 5
             qc = QuantumCircuit(n, n - 1)
@@ -243,7 +243,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=2)
 
     def test_run_numpy_params(self):
-        """Test for numpy array as parameter values"""
+        """Test for numpy array as parameter values."""
         with Session(self._backend) as session:
             qc = real_amplitudes(num_qubits=2, reps=2)
             qc.measure_all()
@@ -329,7 +329,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=2)
 
     def test_run_shots_result_size(self):
-        """Test with shots option to validate the result size"""
+        """Test with shots option to validate the result size."""
         n = 10
         qc = QuantumCircuit(n)
         qc.h(range(n))
@@ -342,7 +342,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=1)
 
     def test_primitive_job_status_done(self):
-        """Test primitive job's status"""
+        """Test primitive job's status."""
         sampler = Sampler(mode=self._backend, options=self._options)
         job = sampler.run([self._isa_bell])
         _ = job.result()

@@ -34,7 +34,7 @@ class IBMQubitProperties(QubitProperties):
         anharmonicity: float | None = None,
         operational: bool = True,
     ) -> None:
-        """Create a new ``IBMQubitProperties`` object
+        """Create a new ``IBMQubitProperties`` object.
 
         Args:
             t1: The T1 time for a qubit in secs
