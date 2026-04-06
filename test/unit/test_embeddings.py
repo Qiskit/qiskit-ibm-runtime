@@ -78,7 +78,7 @@ class TestEmbedding(IBMTestCase):
         self.armonk = service.backend("fake_armonk")
 
     def test_from_backend(self):
-        r"""Test the constructor from backend."""
+        """Test the constructor from backend."""
         e = Embedding.from_backend(self.vigo)
 
         coo = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
@@ -86,7 +86,7 @@ class TestEmbedding(IBMTestCase):
         self.assertEqual(e.coupling_map, self.vigo.coupling_map)
 
     def test_init_error(self):
-        r"""Test the errors raised by the constructor."""
+        """Test the errors raised by the constructor."""
         e_vigo = Embedding.from_backend(self.vigo)
         e_kyiv = Embedding.from_backend(self.kyiv)
 
@@ -106,13 +106,13 @@ class TestCoordinates(IBMTestCase):
     """Class for testing the coordinates of backends."""
 
     def test_5(self):
-        r"""Test for 5-qubit lattices."""
+        """Test for 5-qubit lattices."""
         embedding = Embedding.from_backend(FakeManilaV2())
         exp = [(1, 0), (0, 1), (1, 1), (1, 2), (2, 1)]
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_7(self):
-        r"""Test for 7-qubit lattices."""
+        """Test for 7-qubit lattices."""
         embedding = Embedding.from_backend(FakePerth())
         exp = ascii_to_coords(
             """
@@ -124,7 +124,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_15(self):
-        r"""Test for 15-qubit lattices."""
+        """Test for 15-qubit lattices."""
         embedding = Embedding.from_backend(FakeMelbourneV2())
         exp = [
             (0, 0),
@@ -146,7 +146,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_16(self):
-        r"""Test for 16-qubit lattices."""
+        """Test for 16-qubit lattices."""
         embedding = Embedding.from_backend(FakeGuadalupeV2())
         exp = ascii_to_coords(
             """
@@ -161,7 +161,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_20(self):
-        r"""Test for 20-qubit lattices."""
+        """Test for 20-qubit lattices."""
         embedding = Embedding.from_backend(FakeAlmadenV2())
         exp = ascii_to_coords(
             """
@@ -174,7 +174,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_27(self):
-        r"""Test for 27-qubit lattices."""
+        """Test for 27-qubit lattices."""
         embedding = Embedding.from_backend(FakeAlgiers())
         exp = ascii_to_coords(
             """
@@ -189,7 +189,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_28(self):
-        r"""Test for 28-qubit lattices."""
+        """Test for 28-qubit lattices."""
         embedding = Embedding.from_backend(FakeCambridgeV2())
         exp = ascii_to_coords(
             """
@@ -203,7 +203,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_53(self):
-        r"""Test for 53-qubit lattices."""
+        """Test for 53-qubit lattices."""
         embedding = Embedding.from_backend(FakeRochesterV2())
         exp = ascii_to_coords(
             """
@@ -222,7 +222,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_65(self):
-        r"""Test for 65-qubit lattices."""
+        """Test for 65-qubit lattices."""
         embedding = Embedding.from_backend(FakeBrooklynV2())
         exp = ascii_to_coords(
             """
@@ -240,7 +240,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_120(self):
-        r"""Test for 120-qubit lattices."""
+        """Test for 120-qubit lattices."""
         embedding = Embedding.from_backend(FakeNighthawk())
         exp = ascii_to_coords(
             """
@@ -261,7 +261,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_127(self):
-        r"""Test for 127-qubit lattices."""
+        """Test for 127-qubit lattices."""
         embedding = Embedding.from_backend(FakeKyiv())
         exp = ascii_to_coords(
             """
@@ -283,7 +283,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_133(self):
-        r"""Test for 133-qubit lattices."""
+        """Test for 133-qubit lattices."""
         embedding = Embedding.from_backend(FakeTorino())
         exp = ascii_to_coords(
             """
@@ -306,7 +306,7 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_156(self):
-        r"""Test for 156-qubit lattices."""
+        """Test for 156-qubit lattices."""
         embedding = Embedding.from_backend(FakeMarrakesh())
         exp = ascii_to_coords(
             """
@@ -330,6 +330,6 @@ class TestCoordinates(IBMTestCase):
         self.assertListEqual(embedding.coordinates, exp)
 
     def test_error(self):
-        r"""Test that an error is raised when the coordinates are unknown."""
+        """Test that an error is raised when the coordinates are unknown."""
         with self.assertRaisesRegex(ValueError, "Failed to fetch coordinates for backend"):
             Embedding.from_backend(FakeArmonkV2())

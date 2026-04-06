@@ -573,9 +573,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # last time, preferring barriers over non-barriers
 
         def order_ops(item: tuple[DAGNode, tuple[int, int]]) -> tuple[int, int, bool, int]:
-            """Iterated nodes ordering by channel, time and preferring that barriers are processed
-            first.
-            """
+            """Iterated nodes ordering by channel, time and preferring processing barriers first."""
             return (
                 item[1][0],
                 -item[1][1],

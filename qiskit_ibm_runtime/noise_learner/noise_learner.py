@@ -242,7 +242,9 @@ class NoiseLearner:
 
     @staticmethod
     def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
-        """Returns a dictionary of options that must be included in the program inputs,
+        """Returns a filtered dictionary of options for the program inputs.
+
+        Returns a dictionary of options that must be included in the program inputs,
         filtering out every option that is not part of the NoiseLearningOptions.
         """
         ret = {}

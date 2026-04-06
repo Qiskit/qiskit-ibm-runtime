@@ -23,18 +23,17 @@ from qiskit.transpiler.instruction_durations import InstructionDurations
 
 
 class ConvertIdToDelay(TransformationPass):
-    """Convert :class:`qiskit.circuit.library.standard_gates.IGate` to
-    a delay of the corresponding length.
+    """Convert :class:`qiskit.circuit.library.standard_gates.IGate` to a corresponding delay.
+
+    Convert :class:`qiskit.circuit.library.IGate` to a :class:`qiskit.circuit.Delay` of
+    corresponding length.
+
+    Args:
+        duration: Duration of the delay to replace the identity gate with.
+        gate: Single qubit gate to extract duration from.
     """
 
     def __init__(self, durations: InstructionDurations, gate: str = "sx"):
-        """Convert :class:`qiskit.circuit.library.IGate` to a
-        Convert :class:`qiskit.circuit.Delay`.
-
-        Args:
-            duration: Duration of the delay to replace the identity gate with.
-            gate: Single qubit gate to extract duration from.
-        """
         self.durations = durations
         self.gate = gate
         self._cached_durations: dict[int, int] = {}
@@ -46,8 +45,9 @@ class ConvertIdToDelay(TransformationPass):
         return dag
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
-        """Run the pass on one :class:`.DAGCircuit`, mutating it.  Returns ``True`` if the circuit
-        was modified and ``False`` if not.
+        """Run the pass on one :class:`.DAGCircuit`, mutating it.
+
+        Returns ``True`` if the circuit was modified and ``False`` if not.
         """
         modified = False
         qubit_index_map = {bit: index for index, bit in enumerate(dag.qubits)}

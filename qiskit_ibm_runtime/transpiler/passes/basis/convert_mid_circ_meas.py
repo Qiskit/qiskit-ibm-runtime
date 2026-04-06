@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to replace terminal measures in the middle of the circuit with
-MidCircuitMeasure instructions.
-"""
+"""Pass to replace mid-circuit terminal measures with MidCircuitMeasure instructions."""
 
 from qiskit.circuit import Measure
 from qiskit.dagcircuit import DAGCircuit
@@ -21,30 +19,29 @@ from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_
 
 
 class ConvertToMidCircuitMeasure(TransformationPass):
-    """This pass replaces terminal measures in the middle of the circuit with
-    MidCircuitMeasure instructions.
+    """Transpiler pass replacing mid-circuit terminal measure instructions.
+
+    Transpiler pass that replaces terminal measure instructions in non-terminal locations
+    with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
+    pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
+    it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
+
+    Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace
+    existing mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or
+    convert any ``MidCircuitMeasure`` instance into a ``Measure``.
+
+    Args:
+        target: Backend's target instance that contains one or more ``measure_`` instructions.
+        mcm_name: Name of the ``measure_`` instruction that terminal measure instructions in
+            non-terminal locations will be replaced with. This instruction must be contained in
+            the target. Defaults to ``measure_2``.
+
+    Raises:
+        ValueError: If the specifcied ``mcm_name`` does not conform to the ``measure_`` pattern
+            or is not contained in the provided target.
     """
 
     def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
-        """Transpiler pass that replaces terminal measure instructions in non-terminal locations
-        with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
-        pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
-        it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
-
-        Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace
-        existing mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or
-        convert any ``MidCircuitMeasure`` instance into a ``Measure``.
-
-        Args:
-            target: Backend's target instance that contains one or more ``measure_`` instructions.
-            mcm_name: Name of the ``measure_`` instruction that terminal measure instructions in
-                non-terminal locations will be replaced with. This instruction must be contained in
-                the target. Defaults to ``measure_2``.
-
-        Raises:
-            ValueError: If the specifcied ``mcm_name`` does not conform to the ``measure_`` pattern
-                or is not contained in the provided target.
-        """
         super().__init__()
         self.target = target
         if not mcm_name.startswith("measure_"):

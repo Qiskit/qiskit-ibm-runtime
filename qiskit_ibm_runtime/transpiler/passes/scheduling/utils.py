@@ -139,12 +139,13 @@ InstrKey: TypeAlias = (
 
 
 class DynamicCircuitInstructionDurations(InstructionDurations):
-    """For dynamic circuits the IBM Qiskit backend currently
-    reports instruction durations that differ compared with those
-    required for the legacy Qobj-based path. For now we use this
-    class to report updated InstructionDurations.
-    TODO: This would be mitigated by a specialized Backend/Target for
-    dynamic circuit backends.
+    """Dynamic circuit instructions durations.
+
+    For dynamic circuits the IBM Qiskit backend currently reports instruction durations that differ
+    compared with those required for the legacy Qobj-based path. For now we use this class to
+    report updated InstructionDurations.
+
+    TODO: This would be mitigated by a specialized Backend/Target for dynamic circuit backends.
     """
 
     MEASURE_PATCH_CYCLES = 160
@@ -156,7 +157,6 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         dt: float | None = None,
         enable_patching: bool = True,
     ):
-        """Dynamic circuit instruction durations."""
         warnings.warn(
             "The DynamicCircuitInstructionDurations class is deprecated "
             "as of qiskit_ibm_runtime v0.43.0 "
@@ -207,8 +207,9 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
     def update(
         self, inst_durations: InstructionDurationsType | None, dt: float | None = None
     ) -> DynamicCircuitInstructionDurations:
-        """Update self with inst_durations (inst_durations overwrite self). Overrides the default
-        durations for certain hardcoded instructions.
+        """Update self with inst_durations (inst_durations overwrite self).
+
+        Overrides the default durations for certain hardcoded instructions.
 
         Args:
             inst_durations: Instruction durations to be merged into self (overwriting self).
@@ -272,7 +273,9 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         self._patch_key(key, new_duration, unit)
 
     def _patch_measurement(self, key: InstrKey) -> None:
-        """Patch measurement duration by extending duration by 160dt as temporarily
+        """Patch measurement duration by extending duration.
+
+                Patch measurement duration by extending duration by 160dt as temporarily
         required by the dynamic circuit backend.
         """
         self._convert_and_patch_key(key)
@@ -280,7 +283,9 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         self._patch_reset(("reset", key[1], key[2]))
 
     def _patch_reset(self, key: InstrKey) -> None:
-        """Patch reset duration by extending duration by measurement patch as temporarily
+        """Patch reset duration by extending duration.
+
+        Patch reset duration by extending duration by measurement patch as temporarily
         required by the dynamic circuit backend.
         """
         # We patch the reset to be the duration of the measurement if it
@@ -320,7 +325,8 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         self.duration_by_name_qubits_params[key] = (duration, unit)
 
     def _get_odd_cycle_correction(self) -> int:
-        """Determine the amount of the odd cycle correction to apply
+        """Determine the amount of the odd cycle correction to apply.
+
         For devices with short gates with odd lenghts we add an extra 16dt to the measurement.
 
         TODO: Eliminate the need for this correction

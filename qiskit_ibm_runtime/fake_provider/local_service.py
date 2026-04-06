@@ -134,7 +134,9 @@ class QiskitRuntimeLocalService:
         min_num_qubits: int | None = None,
         filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
-        """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
+        """Return a randomly-chosen fake backend.
+
+        Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
 
         Args:

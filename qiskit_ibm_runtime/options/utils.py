@@ -257,6 +257,7 @@ def make_constraint_validator(
     lt: Real | None = None,
 ) -> Callable:
     """Make a field validator that performs the give constraint if the value is numeric.
+
     This differs to the one built-in to ``pydantic.Field`` in that it ignores non-Real types,
     which lets us apply this to fields with annotations like ``int | Literal["auto"]``.
 

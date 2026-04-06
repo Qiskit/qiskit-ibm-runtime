@@ -325,7 +325,9 @@ class IBMBackend(Backend):
 
     @property
     def max_circuits(self) -> None:
-        """This property used to return the `max_experiments` value from the
+        """Return the  maximum number of circuits that can be run in a single job.
+
+        This property used to return the `max_experiments` value from the
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
@@ -542,9 +544,10 @@ class IBMBackend(Backend):
         return cpy
 
     def run(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        """Raises:
-        IBMBackendError: The run() method is no longer supported.
+        """Run a job in the backend.
 
+        Raises:
+            IBMBackendError: The run() method is no longer supported.
         """
         raise IBMBackendError(
             "Support for backend.run() has been removed. Please see our migration guide "

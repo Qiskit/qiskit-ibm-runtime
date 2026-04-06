@@ -35,9 +35,7 @@ _TERRA_VERSION = tuple(
 
 
 class IBMTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems.
-    """
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
@@ -71,9 +69,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems.
-    """
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
@@ -115,11 +111,12 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
-    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with fractional gate support.
+    """(DEPRECATED) Plugin for targeting Qiskit circuits with fractional gate support.
 
-    Currently coexistence of fractional gate operations and
-    dynamic circuits is not assumed.
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with fractional
+    gate support.
+
+    Currently coexistence of fractional gate operations and dynamic circuits is not assumed.
     """
 
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
@@ -166,8 +163,10 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with both dynamic circuits and fractional gate support.
+    """Plugin for targeting Qiskit circuits (dynamic circuits and fractional gate support).
+
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with both
+    dynamic circuits and fractional gate support.
     """
 
     def pass_manager(

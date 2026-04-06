@@ -101,6 +101,7 @@ class RuntimeClient(BaseBackendClient):
 
         Args:
             job_id: Job ID.
+            exclude_params: If ``True``, the params will not be included in the response.
 
         Returns:
             JSON response.

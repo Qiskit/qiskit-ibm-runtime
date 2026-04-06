@@ -156,13 +156,13 @@ class TestLayerError(IBMTestCase):
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_no_coupling_map(self):
-        r"""Tests the `draw_map` function with invalid coordinates."""
+        """Tests the `draw_map` function with invalid coordinates."""
         with self.assertRaises(ValueError):
             self.layer_error_viz.draw_map(AerSimulator())
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plotting(self):
-        r"""Tests the `draw_map` function to make sure that it produces the right figure."""
+        """Tests the `draw_map` function to make sure that it produces the right figure."""
         fig = self.layer_error_viz.draw_map(
             embedding=FakeKyiv(),
             color_no_data="blue",

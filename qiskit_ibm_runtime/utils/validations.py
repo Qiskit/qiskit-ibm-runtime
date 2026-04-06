@@ -27,7 +27,9 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def validate_classical_registers(pubs: list[SamplerPub]) -> None:
-    """Validates the classical registers in the pub won't cause problems that can be caught
+    """Validates the classical registers in the pub.
+
+    Validates that the classical registers in the pub won't cause problems that can be caught
     client-side.
 
     Args:
@@ -119,8 +121,7 @@ def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
 
 
 def validate_no_dd_with_dynamic_circuits(circuits: list[QuantumCircuit], options: Any) -> None:
-    """Validate that if dynamical decoupling options are enabled,
-    no circuit in the pubs is dynamic.
+    """Validate that if dynamical decoupling options are enabled, no circuit in the pubs is dynamic.
 
     Args:
         circuits: A list of QuantumCircuits.

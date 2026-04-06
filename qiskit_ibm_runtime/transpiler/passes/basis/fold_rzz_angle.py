@@ -31,8 +31,7 @@ from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):
-    """Fold Rzz gate angle into calibrated range of 0-pi/2 with
-    local gate tweaks.
+    """Fold Rzz gate angle into calibrated range of 0-pi/2 with local gate tweaks.
 
     In the IBM Quantum ISA, the instruction Rzz(theta) has
     valid "theta" value of [0, pi/2] and any instruction outside
@@ -62,6 +61,7 @@ class FoldRzzAngle(TransformationPass):
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
         """Mutate the input dag to fix non-ISA Rzz angles.
+
         Return true if the dag was modified.
         """
         modified = False

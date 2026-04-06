@@ -422,15 +422,14 @@ class BlockBasePadder(TransformationPass):
         self._prev_node = node
 
     def _visit_if_else_op(self, node: DAGNode) -> None:
-        """Check if is fast-path eligible otherwise fall back
-        to standard ControlFlowOp handling.
-        """
+        """Check if is fast-path eligible otherwise fall back to standard ControlFlowOp handling."""
         if self._will_use_fast_path(node):
             self._fast_path_nodes.add(node)
         self._visit_control_flow_op(node)
 
     def _will_use_fast_path(self, node: DAGNode) -> bool:
         """Check if this conditional operation will be scheduled on the fastpath.
+
         This will happen if
         1. This operation is a direct descendent of a current measurement block to be flushed
         2. The operation only operates on the qubit that is measured.
@@ -521,7 +520,9 @@ class BlockBasePadder(TransformationPass):
         )
 
     def _visit_delay(self, node: DAGNode) -> None:
-        """The padding class considers a delay instruction as idle time
+        """Visit a delay node.
+
+        The padding class considers a delay instruction as idle time
         rather than instruction. Delay node is not added so that
         we can extract non-delay predecessors.
         """

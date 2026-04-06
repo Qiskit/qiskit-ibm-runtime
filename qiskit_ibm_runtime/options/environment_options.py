@@ -30,25 +30,28 @@ class EnvironmentOptions:
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    r"""logging level to set in the execution environment. The valid
-        log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+    """logging level to set in the execution environment.
 
-        Default: ``WARNING``.
+    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+
+    Default: ``WARNING``.
     """
     job_tags: list | None = None
-    r"""Tags to be assigned to the job. The tags can subsequently be used
-        as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
-        function call.
+    """Tags to be assigned to the job.
 
-        Default: ``None``.
+    The tags can subsequently be used as a filter in the
+    :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()` function call.
+
+    Default: ``None``.
     """
     private: bool | None = False
-    r"""Boolean that indicates whether the job is marked as private. When set to true,
-        input parameters are not returned, and the results can only be read once.
-        After the job is completed, input parameters are deleted from the service.
-        After the results are read, these are also deleted from the service.
-        When set to false, the input parameters and results follow the
-        standard retention behavior of the API.
+    """Boolean that indicates whether the job is marked as private.
 
-        Default: False.
+    When set to true, input parameters are not returned, and the results can only be read once.
+    After the job is completed, input parameters are deleted from the service.
+    After the results are read, these are also deleted from the service.
+    When set to false, the input parameters and results follow the
+    standard retention behavior of the API.
+
+    Default: False.
     """

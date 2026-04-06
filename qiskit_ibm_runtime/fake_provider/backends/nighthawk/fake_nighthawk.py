@@ -21,18 +21,17 @@ DISPLAY_WARNING = True
 
 
 class FakeNighthawk(fake_backend.FakeBackendV2):
-    """A fake 120 qubit backend. Its coupling map and basis gates match those of a
-    real Nighthawk backend, but the properties are not  intended to represent
-    typical Nighthawk error values. You can use this fake backend to, for
-    example, transpile and optimize your circuits in preparation of the
-    forthcoming Nighthawk backends.
+    """A fake 120 qubit backend.
 
-    For a 100-qubit square lattice Ising circuit with 10 Trotter steps,
-    fake_nighthawk showed a 600% improvement in circuit depth compared to
-    a Heron backend.
+    Its coupling map and basis gates match those of a real Nighthawk backend, but the properties
+    are not intended to represent typical Nighthawk error values. You can use this fake backend to,
+    for example, transpile and optimize your circuits in preparation of the forthcoming Nighthawk
+    backends.
+
+    For a 100-qubit square lattice Ising circuit with 10 Trotter steps, fake_nighthawk showed a
+    600% improvement in circuit depth compared to a Heron backend.
 
     # Example
-
 
     ```
     from qiskit import QuantumCircuit

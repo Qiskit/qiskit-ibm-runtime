@@ -67,9 +67,7 @@ class QuantumProgramItem(abc.ABC):
     @property
     @abc.abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The extrinsic shape of this item, i.e., the broadcasted extrinsic shapes of all
-        inputs.
-        """
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
 
     def size(self) -> int:
         """The total number elements in this item; the product of the entries of :attr:`~.shape`."""

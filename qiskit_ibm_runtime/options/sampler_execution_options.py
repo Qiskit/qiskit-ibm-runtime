@@ -19,12 +19,10 @@ from .utils import primitive_dataclass, Unset, UnsetType
 
 @primitive_dataclass
 class SamplerExecutionOptionsV2(ExecutionOptionsV2):
-    r"""Extension of :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2`
-    for the sampler primitive.
-    """
+    """Extends :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2` for the sampler primitive."""
 
     meas_type: UnsetType | Literal["classified", "kerneled", "avg_kerneled"] = Unset
-    r"""How to process and return measurement results.
+    """How to process and return measurement results.
 
     This option sets the return type of all classical registers in all
     :class:`~qiskit.primitives.containers.SamplerPubResult`\s.

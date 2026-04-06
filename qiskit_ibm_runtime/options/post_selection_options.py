@@ -26,27 +26,27 @@ class PostSelectionOptions(BaseOptions):
     """Options for post selecting results."""
 
     enable: bool = False
-    r"""Whether to enable Post Selection when performing learning experiments.
+    """Whether to enable Post Selection when performing learning experiments.
 
     If ``True``, Post Selection is applied to all the learning circuits. In particular, the
     following steps are undertaken:
 
-        * Using the passes in
-          :mod:`qiskit_addon_utils.noise_management.post_selection.transpiler.passes`, the learning
-          circuits are modified by adding measurements on the spectator qubits, as well as
-          post selection measurements.
-        * The results of each individual learning circuits are post selected by discarding the shots
-          where one or more bits failed to flip, as explained in the docstring of
-          :meth:`qiskit_addon_utils.noise_management.post_selection.PostSelector.compute_mask`.
+    * Using the passes in
+        :mod:`qiskit_addon_utils.noise_management.post_selection.transpiler.passes`, the learning
+        circuits are modified by adding measurements on the spectator qubits, as well as
+        post selection measurements.
+    * The results of each individual learning circuits are post selected by discarding the shots
+        where one or more bits failed to flip, as explained in the docstring of
+        :meth:`qiskit_addon_utils.noise_management.post_selection.PostSelector.compute_mask`.
 
     If ``False``, all the other Post Selection options will be ignored.
     """
 
     x_pulse_type: Literal["xslow", "rx"] = "xslow"
-    r"""The type of the X-pulse used for the post selection measurements."""
+    """The type of the X-pulse used for the post selection measurements."""
 
     strategy: Literal["node", "edge"] = "node"
-    r"""The strategy used to decide if a shot should be kept or discarded.
+    """The strategy used to decide if a shot should be kept or discarded.
 
     The available startegies are:
 

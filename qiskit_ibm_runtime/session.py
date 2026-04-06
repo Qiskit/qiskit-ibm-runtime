@@ -198,7 +198,9 @@ class Session:
             self._service._get_api_client(self._instance).cancel_session(self._session_id)
 
     def close(self) -> None:
-        """Close the session so new jobs will no longer be accepted, but existing
+        """Close the session so new jobs will no longer be accepted.
+
+        Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs.
         """

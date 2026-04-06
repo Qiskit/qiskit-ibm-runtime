@@ -28,17 +28,16 @@ class MeasureNoiseLearningOptions:
     """
 
     num_randomizations: UnsetType | int = Unset
-    r"""The number of random circuits to draw for the measurement
-        learning experiment.
+    """The number of random circuits to draw for the measurement learning experiment.
 
-        Default: 32.
+    Default: 32.
     """
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
-    r"""The number of shots to use for the learning experiment
-        per random circuit. If "auto", the value will be chosen automatically
-        based on the input PUBs.
+    """The number of shots to use for the learning experiment per random circuit.
 
-        Default: "auto".
+    If "auto", the value will be chosen automatically based on the input PUBs.
+
+    Default: "auto".
     """
 
     _ge1 = make_constraint_validator(

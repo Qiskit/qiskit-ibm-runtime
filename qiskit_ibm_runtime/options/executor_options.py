@@ -26,14 +26,15 @@ class ExecutionOptions:
     """Low-level execution options."""
 
     init_qubits: bool = True
-    r"""Whether to reset the qubits to the ground state for each shot.
-    """
+    """Whether to reset the qubits to the ground state for each shot."""
 
     rep_delay: float | None = None
-    r"""The repetition delay. This is the delay between a measurement and
-    the subsequent quantum circuit. This is only supported on backends that have
-    ``backend.dynamic_reprate_enabled=True``. It must be from the
+    """The repetition delay.
+
+    This is the delay between a measurement and the subsequent quantum circuit. This is only
+    supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must be from the
     range supplied by ``backend.rep_delay_range``.
+
     Default is given by ``backend.default_rep_delay``.
     """
 
@@ -43,19 +44,20 @@ class EnvironmentOptions:
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    r"""logging level to set in the execution environment. The valid
-        log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+    """logging level to set in the execution environment.
+
+    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
     """
 
     job_tags: list[str] = Field(default_factory=list)
-    r"""Tags to be assigned to the job.
+    """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
     :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()` function call.
     """
 
     private: bool = False
-    r"""Boolean that indicates whether the job is marked as private.
+    """Boolean that indicates whether the job is marked as private.
 
     When set to true,
         input parameters are not returned, and the results can only be read once.
@@ -74,7 +76,7 @@ class EnvironmentOptions:
     """
 
     image: str | None = None
-    r"""Runtime image used for this job."""
+    """Runtime image used for this job."""
 
 
 @dataclass

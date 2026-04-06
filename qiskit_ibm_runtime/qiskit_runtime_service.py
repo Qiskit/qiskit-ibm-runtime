@@ -493,6 +493,7 @@ class QiskitRuntimeService:
         instance: str | None = None,
     ) -> RuntimeClient:
         """Return the saved api client for a given instance for all channels.
+
         If no instance is provided, return the current active api client.
 
         Args:
@@ -513,7 +514,9 @@ class QiskitRuntimeService:
             return client
 
     def _get_api_clients(self) -> dict[str, RuntimeClient]:
-        """Return dictionary of saved api clients identified by their corresponding instance
+        """Return a dictionary of saved api clients.
+
+        Return a dictionary of saved api clients identified by their corresponding instance
         for all channels.
 
         Returns:
@@ -1330,8 +1333,10 @@ class QiskitRuntimeService:
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def instances(self) -> Sequence[dict[str, Any]]:
-        """Return a list that contains a series of dictionaries with the
-            following instance identifiers per instance: "crn", "plan", "name".
+        """Return a list of instances available for the active account.
+
+        Return a list that contains a series of dictionaries with the following instance
+        identifiers per instance: "crn", "plan", "name".
 
         Returns:
             A list with instances available for the active account.

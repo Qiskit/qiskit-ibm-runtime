@@ -85,8 +85,9 @@ def is_simulator(backend: BackendV2) -> bool:
 
 
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
-    """A section of is_isa_circuit, separated to allow recursive calls
-    within blocks of conditional operations.
+    """Helper for checking if a circuit is an ISA circuit.
+
+    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation
@@ -126,8 +127,10 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: d
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
-    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
-    only uses instructions that exist in the target.
+    """Checks if the circuit is an ISA circuit.
+
+    An ISA circuit means that it has a layout and that it only uses instructions that exist in the
+    target.
 
     Args:
         circuit: A single QuantumCircuit
@@ -147,7 +150,9 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 
 
 def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
-    """For rzz gates:
+    """Helper for validating ``rzz`` gates in pubs.
+
+    For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
     - Collect parameterized angles.
 
@@ -382,6 +387,7 @@ def default_runtime_url_resolver(
 
 def _is_experimental_runtime_url(url: str) -> bool:
     """Checks if the provided url points to an experimental runtime cluster.
+
     This type of URLs is used for internal development purposes only.
 
     Args:

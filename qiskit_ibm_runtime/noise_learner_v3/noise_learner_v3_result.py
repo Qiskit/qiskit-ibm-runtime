@@ -31,8 +31,7 @@ Metadata = dict[str, MetadataValue]
 
 
 class NoiseLearnerV3Result:
-    r"""The results of a noise learner experiment for a single instruction, in Pauli Lindblad
-    format.
+    r"""Results of a noise learner experiment for a single instruction, in Pauli Lindblad format.
 
     An error channel Pauli Lindblad :math:`E` acting on a state :math:`\rho` can be expressed in
     Pauli Lindblad format as :math:`E(\rho) = e^{\sum_j r_j D_{P_j}}(\rho)`, :math:`P_j` are Pauli
@@ -141,8 +140,9 @@ class NoiseLearnerV3Results:
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
-        """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap`
-        objects. This function iterates over a sequence of instructions, extracts the ``ref`` value
+        """Convert to dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
+
+        This function iterates over a sequence of instructions, extracts the ``ref`` value
         from the inject noise annotation of each instruction, and returns a dictionary mapping
         those refs to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in
         this :class:`NoiseLearnerV3Results` object.

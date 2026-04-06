@@ -45,7 +45,7 @@ class TestNeatPubResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_scalarlike(self, scalar, idx, op_name):
-        r"""Test operations between ``NeatPubResult`` and ``ScalarLike`` objects."""
+        """Test operations between ``NeatPubResult`` and ``ScalarLike`` objects."""
         result = self.results[idx]
 
         new_result = getattr(result, f"__{op_name}__")(scalar)
@@ -58,7 +58,7 @@ class TestNeatPubResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_debugger_result(self, idx, op_name):
-        r"""Test operations between two ``NeatPubResult`` objects."""
+        """Test operations between two ``NeatPubResult`` objects."""
         result1 = self.results[idx]
         result2 = 2 * result1
 
@@ -72,7 +72,7 @@ class TestNeatPubResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_databins(self, idx, op_name):
-        r"""Test operations between ``NeatPubResult`` and ``DataBin`` objects."""
+        """Test operations between ``NeatPubResult`` and ``DataBin`` objects."""
         result = self.results[idx]
         databin = self.databins[idx]
 
@@ -83,7 +83,7 @@ class TestNeatPubResult(IBMTestCase):
 
     @combine(op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"])
     def test_error_for_operations_with_databins(self, op_name):
-        r"""Test the errors for operations between ``NeatPubResult`` and ``DataBin``."""
+        """Test the errors for operations between ``NeatPubResult`` and ``DataBin``."""
         result = self.results[0]
         databin = DataBin(wrong_kwarg=result.vals)
 
@@ -95,7 +95,7 @@ class TestNeatPubResult(IBMTestCase):
         op_name=["add", "mul", "sub", "truediv", "radd", "rmul", "rsub", "rtruediv"],
     )
     def test_operations_with_pub_results(self, idx, op_name):
-        r"""Test operations between ``NeatPubResult`` and ``PubResult`` objects."""
+        """Test operations between ``NeatPubResult`` and ``PubResult`` objects."""
         result = self.results[idx]
         pub_result = self.pub_results[idx]
 
@@ -105,7 +105,7 @@ class TestNeatPubResult(IBMTestCase):
         self.assertListEqual(new_result.vals.tolist(), new_vals.tolist())
 
     def test_abs(self):
-        r"""Test the ``abs`` operator."""
+        """Test the ``abs`` operator."""
         result = NeatPubResult([-1, 0, 1])
         new_result = abs(result)
         new_vals = abs(result.vals)
@@ -114,7 +114,7 @@ class TestNeatPubResult(IBMTestCase):
 
     @ddt.data(2, 4.5)
     def test_pow(self, p):
-        r"""Test the ``pow`` operator."""
+        """Test the ``pow`` operator."""
         result = self.results[0]
         new_result = result**p
         new_vals = result.vals**p
@@ -134,17 +134,17 @@ class TestNeatResult(IBMTestCase):
         self.pub_results = [pub_result1, pub_result2]
 
     def test_getitem(self):
-        r"""Test the ``__getitem__`` method of NeatResult."""
+        """Test the ``__getitem__`` method of NeatResult."""
         r = NeatResult(self.pub_results)
 
         self.assertListEqual(r[0].vals.tolist(), self.pub_results[0].vals.tolist())
         self.assertListEqual(r[1].vals.tolist(), self.pub_results[1].vals.tolist())
 
     def test_len(self):
-        r"""Test the ``__len__`` method of NeatResult."""
+        """Test the ``__len__`` method of NeatResult."""
         self.assertEqual(len(NeatResult(self.pub_results)), 2)
 
     def test_iter(self):
-        r"""Test the ``__iter__`` method of NeatResult."""
+        """Test the ``__iter__`` method of NeatResult."""
         for i, j in zip(NeatResult(self.pub_results), self.pub_results):
             self.assertListEqual(i.vals.tolist(), j.vals.tolist())

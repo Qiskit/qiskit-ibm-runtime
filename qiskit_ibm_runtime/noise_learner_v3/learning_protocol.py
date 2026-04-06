@@ -28,6 +28,7 @@ class LearningProtocol(str, Enum):
 
 LearningProtocolLiteral = LearningProtocol | Literal["pauli_lindblad", "trex"]
 """The supported learning protocols.
+
  * ``pauli_lindblad``: Pauli Lindblad learning from arXiv:2201.09866..
  * ``trex``: Readout learning protocol.
 """

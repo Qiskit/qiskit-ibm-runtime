@@ -11,9 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""This module defines the functionality to visualize the schedule of a Qiskit circuit compiled
-code.
-"""
+"""Functionality to visualize the schedule of a Qiskit circuit compiled code."""
 
 from __future__ import annotations
 
@@ -33,7 +31,7 @@ def draw_circuit_schedule_timing(
     merge_common_instructions: bool = False,
     width: int = 1400,
 ) -> PlotlyFigure:
-    r"""Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
+    """Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
         circuit_schedule: The circuit schedule as a string as returned

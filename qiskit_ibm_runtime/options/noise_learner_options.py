@@ -50,7 +50,7 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     max_layers_to_learn: UnsetType | int | None = Unset
-    r"""The max number of unique layers to learn.
+    """The max number of unique layers to learn.
 
     A ``None`` value indicates that there is no limit.
     If there are more unique layers present, then some layers will not be learned or
@@ -60,14 +60,14 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     shots_per_randomization: UnsetType | int = Unset
-    r"""The total number of shots to use per random learning circuit.
+    """The total number of shots to use per random learning circuit.
 
     A learning circuit is a random circuit at a specific learning depth with a specific
     measurement basis that is executed on hardware. Default: 128.
     """
 
     num_randomizations: UnsetType | int = Unset
-    r"""The number of random circuits to use per learning circuit configuration.
+    """The number of random circuits to use per learning circuit configuration.
 
     A configuration is a measurement basis and depth setting. For example, if your experiment
     has six depths, then setting this value to 32 will result in a total of ``32 * 9 * 6``
@@ -78,7 +78,7 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     layer_pair_depths: UnsetType | list[int] = Unset
-    r"""The circuit depths (measured in number of pairs) to use in learning experiments.
+    """The circuit depths (measured in number of pairs) to use in learning experiments.
 
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
     the noise learning implementation. For example, a value of ``3`` corresponds to 6 repetitions
@@ -86,7 +86,7 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     twirling_strategy: UnsetType | TwirlingStrategyType = Unset
-    r"""The twirling strategy in the identified layers of two-qubit twirled gates.
+    """The twirling strategy in the identified layers of two-qubit twirled gates.
 
     The allowed values are:
 
@@ -104,7 +104,7 @@ class NoiseLearnerOptions(OptionsV2):
     """
 
     experimental: UnsetType | dict = Unset
-    r"""Experimental options.
+    """Experimental options.
 
     These options are subject to change without notification, and stability is not guaranteed.
     """

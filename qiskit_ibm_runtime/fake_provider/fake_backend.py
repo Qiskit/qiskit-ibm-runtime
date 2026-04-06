@@ -51,9 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 class FakeBackendV2(BackendV2):
-    """A fake backend class for testing and noisy simulation using real backend
-    snapshots.
-    """
+    """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
     # directory and file names for real backend snapshots.
     dirname: str | None = None
@@ -225,7 +223,9 @@ class FakeBackendV2(BackendV2):
 
     @property
     def max_circuits(self) -> None:
-        """This property used to return the `max_experiments` value from the
+        """Return the  maximum number of circuits that can be run in a single job.
+
+        This property used to return the `max_experiments` value from the
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """

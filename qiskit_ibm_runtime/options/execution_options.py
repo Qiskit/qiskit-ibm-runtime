@@ -20,13 +20,14 @@ class ExecutionOptionsV2:
     """Execution options for V2 primitives."""
 
     init_qubits: UnsetType | bool = Unset
-    r"""Whether to reset the qubits to the ground state for each shot. Default is ``True``.
-    """
+    """Whether to reset the qubits to the ground state for each shot. Default is ``True``."""
 
     rep_delay: UnsetType | float = Unset
-    r"""The repetition delay. This is the delay between a measurement and
-    the subsequent quantum circuit. This is only supported on backends that have
-    ``backend.dynamic_reprate_enabled=True``. It must be from the
+    """The repetition delay.
+
+    This is the delay between a measurement and the subsequent quantum circuit. This is only
+    supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must be from the
     range supplied by ``backend.rep_delay_range``.
+
     Default is given by ``backend.default_rep_delay``.
     """

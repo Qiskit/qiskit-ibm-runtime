@@ -41,7 +41,7 @@ def draw_layer_error_map(
     radius: float = 0.25,
     width: int = 800,
 ) -> PlotlyFigure:
-    r"""Draw a map view of a :class:`~.LayerError`.
+    """Draw a map view of a :class:`~.LayerError`.
 
     Args:
         layer_error: The :class:`~.LayerError` to draw.
@@ -278,7 +278,7 @@ def draw_layer_errors_swarm(
     height: int = 500,
     width: int = 800,
 ) -> PlotlyFigure:
-    r"""Draw a swarm plot for the given list of layer errors.
+    """Draw a swarm plot for the given list of layer errors.
 
     This function plots the rates of each of the given layer errors along a vertical axes,
     offsetting the rates along the ``x`` axis to minimize the overlap between the markers. It helps

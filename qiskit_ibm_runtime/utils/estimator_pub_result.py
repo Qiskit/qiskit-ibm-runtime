@@ -10,13 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""========================================================================================
+"""
+========================================================================================
 EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`).
 ========================================================================================
 
 .. autosummary::
    :toctree: ../stubs/
-"""
+"""  # noqa: D205, D212
 
 from __future__ import annotations
 

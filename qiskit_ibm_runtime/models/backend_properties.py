@@ -475,8 +475,7 @@ class BackendProperties:
         return True  # if property operational not existent, then True.
 
     def _apply_prefix(self, value: float, unit: str) -> float:
-        """Given a SI unit prefix and value, apply the prefix to convert to
-        standard SI unit.
+        """Given a SI unit prefix and value, apply the prefix to convert to standard SI unit.
 
         Args:
             value: The number to apply prefix to.

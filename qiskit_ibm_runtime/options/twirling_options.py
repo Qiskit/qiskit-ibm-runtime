@@ -30,7 +30,7 @@ class TwirlingOptions:
     """Twirling options."""
 
     enable_gates: UnsetType | bool = Unset
-    r"""Whether to apply 2-qubit Clifford gate twirling.
+    """Whether to apply 2-qubit Clifford gate twirling.
 
     Default:
     - For the Sampler: ``False``.
@@ -40,7 +40,7 @@ class TwirlingOptions:
     """
 
     enable_measure: UnsetType | bool = Unset
-    r"""Whether to enable twirling to measurement instructions, as long as the measurement is not
+    """Whether to enable twirling to measurement instructions, as long as the measurement is not
     involved within a conditional block.
 
     Default:
@@ -51,7 +51,7 @@ class TwirlingOptions:
     """
 
     num_randomizations: UnsetType | int | Literal["auto"] = Unset
-    r"""The number of random samples to use when twirling or peforming sampled mitigation.
+    """The number of random samples to use when twirling or peforming sampled mitigation.
 
     If ``num_randomizations`` is "auto", for every pub executed ``shots`` times:
 
@@ -71,7 +71,7 @@ class TwirlingOptions:
     """
 
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
-    r"""The number of shots to run for each random sample.
+    """The number of shots to run for each random sample.
 
     If "auto", for every pub executed ``shots`` times:
 
@@ -91,7 +91,7 @@ class TwirlingOptions:
     """
 
     strategy: UnsetType | TwirlingStrategyType = Unset
-    r"""Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
+    """Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
 
     Allowed values are:
 

@@ -10,7 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""==================================================================================
+"""
+==================================================================================
 NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`).
 ==================================================================================
 
@@ -20,7 +21,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
    PauliLindbladError
    LayerError
-"""
+"""  # noqa: D205, D212
 
 from __future__ import annotations
 
@@ -87,21 +88,23 @@ class PauliLindbladError:
 
     @property
     def generators(self) -> PauliList:
-        r"""The Pauli Lindblad generators of this :class:`~.PauliLindbladError`."""
+        """The Pauli Lindblad generators of this :class:`~.PauliLindbladError`."""
         return self._generators
 
     @property
     def rates(self) -> NDArray[np.float64]:
-        r"""The Lindblad generator rates of this quantum error."""
+        """The Lindblad generator rates of this quantum error."""
         return self._rates
 
     @property
     def num_qubits(self) -> int:
-        r"""The number of qubits in this :class:`~.PauliLindbladError`."""
+        """The number of qubits in this :class:`~.PauliLindbladError`."""
         return self.generators.num_qubits
 
     def restrict_num_bodies(self, num_qubits: int) -> PauliLindbladError:
-        r"""The :class:`~.PauliLindbladError` containing only those terms acting on exactly
+        """Pauli-Lindblad error containing only those terms acting on exactly ``num_qubits`` qubits.
+
+        The :class:`~.PauliLindbladError` containing only those terms acting on exactly
         ``num_qubits`` qubits.
 
         Args:
@@ -157,24 +160,25 @@ class LayerError:
 
     @property
     def circuit(self) -> QuantumCircuit:
-        r"""The circuit in this :class:`.~LayerError`."""
+        """The circuit in this :class:`.~LayerError`."""
         return self._circuit
 
     @property
     def qubits(self) -> list[int]:
-        r"""The qubits in this :class:`.~LayerError`."""
+        """The qubits in this :class:`.~LayerError`."""
         return self._qubits
 
     @property
     def error(self) -> PauliLindbladError | None:
-        r"""The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
-        unknown or explicitly disabled.
+        """The error channel in this :class:`.~LayerError`, or ``None``.
+
+        Return ``None`` if the error channel is either unknown or explicitly disabled.
         """
         return self._error
 
     @property
     def num_qubits(self) -> int:
-        r"""The number of qubits in this :class:`~.LayerError`."""
+        """The number of qubits in this :class:`~.LayerError`."""
         return len(self.qubits)
 
     def draw_map(
@@ -191,7 +195,7 @@ class LayerError:
         radius: float = 0.25,
         width: int = 800,
     ) -> PlotlyFigure:
-        r"""Draw a map view of a this layer error.
+        """Draw a map view of a this layer error.
 
         Args:
             embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
@@ -271,7 +275,7 @@ class LayerError:
         height: int = 500,
         width: int = 800,
     ) -> PlotlyFigure:
-        r"""Draw a swarm plot of the rates in this layer error.
+        """Draw a swarm plot of the rates in this layer error.
 
         This function plots the rates along a vertical axes, offsetting the rates along the ``x``
         axis so that they do not overlap with each other.
@@ -329,14 +333,15 @@ class LayerError:
 
 
 class NoiseLearnerResult:
-    """A container for the results of a noise learner experiment."""
+    """A container for the results of a noise learner experiment.
 
-    def __init__(self, data: Sequence[LayerError], metadata: dict[str, Any] | None = None):
-        """Args:
+    Args:
         data: The data of a noise learner experiment.
         metadata: Metadata that is common to all pub results; metadata specific to particular
             pubs should be placed in their metadata fields. Keys are expected to be strings.
-        """
+    """
+
+    def __init__(self, data: Sequence[LayerError], metadata: dict[str, Any] | None = None):
         self._data = list(data)
         self._metadata = {} if metadata is None else metadata.copy()
 

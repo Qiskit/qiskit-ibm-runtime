@@ -27,8 +27,7 @@ from .learning_protocol import LearningProtocol
 
 
 def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:
-    """Find which of the supported learning protocols is suitable to learn the noise of
-    ``instruction``.
+    """Find which learning protocol is suitable to learn the noise of ``instruction``.
 
     Args:
         instruction: The instruction to learn the noise of.

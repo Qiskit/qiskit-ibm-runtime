@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Converters from BackendConfiguration and BackendProperties
-model (BackendV1) to Target model (BackendV2).
-"""
+"""Converters from BackendConfiguration and BackendProperties model to Target model."""
 
 import logging
 import warnings

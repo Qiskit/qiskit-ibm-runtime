@@ -61,7 +61,7 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_error_map`` function."""
 
     def test_plotting(self):
-        r"""Test to make sure that it produces the right figure."""
+        """Test to make sure that it produces the right figure."""
         fig = draw_layer_error_map(
             self.layer_errors[2],
             embedding=FakeKyiv(),
@@ -82,7 +82,7 @@ class TestDrawLayerErrorMap(DrawLayerErrorBase):
         self.save_plotly_artifact(fig)
 
     def test_no_coupling_map(self):
-        r"""Test error when invalid coordinates are passed."""
+        """Test error when invalid coordinates are passed."""
         with self.assertRaises(ValueError):
             draw_layer_error_map(self.layer_errors[0], AerSimulator())
 
@@ -91,7 +91,7 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
     """Class for testing the ``draw_layer_errors_swarm`` function."""
 
     def test_plotting(self):
-        r"""Test that it produces the right image."""
+        """Test that it produces the right image."""
         fig = draw_layer_errors_swarm(
             self.layer_errors,
             colors=["red", "blue", "green"],
@@ -127,7 +127,7 @@ class TestDrawLayerErrorsSwarm(DrawLayerErrorBase):
         self.save_plotly_artifact(fig)
 
     def test_errors(self):
-        r"""Test errors."""
+        """Test errors."""
         with self.assertRaisesRegex(ValueError, "Expected 3 colors"):
             draw_layer_errors_swarm(self.layer_errors, colors=["blue", "red"])
 

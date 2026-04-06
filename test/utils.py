@@ -173,8 +173,10 @@ def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
 
 
 def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
-    """Flat the dictionaries then determine whether all keys in dict2 are
-    in dict1 and have the same values.
+    """Flat the dictionaries, and compare.
+
+    Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have the same
+    values.
     """
 
     def _flat_dict(in_dict, out_dict):
@@ -371,7 +373,8 @@ def generate_cases(docstring, dsc=None, name=None, **kwargs):
 
 
 def combine(**kwargs):
-    """Decorator to create combinations and tests
+    """Decorator to create combinations and tests.
+
     @combine(level=[0, 1, 2, 3],
              circuit=[a, b, c, d],
              dsc='Test circuit {circuit.__name__} with level {level}',

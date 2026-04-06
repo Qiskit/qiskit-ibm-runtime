@@ -22,24 +22,23 @@ class PecOptions:
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
     max_overhead: UnsetType | float | None = Unset
-    r"""The maximum circuit sampling overhead allowed, or
-        ``None`` for no maximum.
+    """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
-        Default: 100.
+    Default: 100.
     """
     noise_gain: UnsetType | float | Literal["auto"] = Unset
-    r"""The amount by which to scale the noise, where:
+    """The amount by which to scale the noise, where:
 
-        * A value of 0 corresponds to removing the full learned noise.
-        * A value of 1 corresponds to no removal of the learned noise.
-        * A value between 0 and 1 corresponds to partially removing the learned noise.
-        * A value greater than one corresponds to amplifying the learned noise.
+    * A value of 0 corresponds to removing the full learned noise.
+    * A value of 1 corresponds to no removal of the learned noise.
+    * A value between 0 and 1 corresponds to partially removing the learned noise.
+    * A value greater than one corresponds to amplifying the learned noise.
 
-        If "auto", the value in the range ``[0, 1]`` will be chosen automatically
-        for each input PUB based on the learned noise strength, ``max_overhead``,
-        and the depth of the PUB.
+    If "auto", the value in the range ``[0, 1]`` will be chosen automatically
+    for each input PUB based on the learned noise strength, ``max_overhead``,
+    and the depth of the PUB.
 
-        Default: "auto".
+    Default: "auto".
     """
 
     _gt0 = make_constraint_validator("max_overhead", gt=0)  # type: ignore[arg-type]
