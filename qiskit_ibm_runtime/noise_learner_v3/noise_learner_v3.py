@@ -42,11 +42,11 @@ logger = logging.getLogger(__name__)
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
 
-    The noise learner allows characterizing the noise processes affecting target instructions, based on
-    the Pauli-Lindblad noise model described in [1]. The instructions provided to the :meth:`~run`
-    method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing ISA operations.
-    The result of a noise learner job contains a list of :class:`.NoiseLearnerV3Result` objects, one for
-    each given instruction.
+    The noise learner allows characterizing the noise processes affecting target instructions, based
+    on the Pauli-Lindblad noise model described in [1]. The instructions provided to the
+    :meth:`~run` method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing
+    ISA operations. The result of a noise learner job contains a list of
+    :class:`.NoiseLearnerV3Result` objects, one for each given instruction.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
@@ -107,12 +107,12 @@ class NoiseLearnerV3:
         Raises:
             IBMInputValueError: If an instruction does not contain a box.
             IBMInputValueError: If an instruction contains a box without twirl annotation.
-            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do not
-                belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')`` for the
-                backend in use.
+            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do
+                not belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
+                for the backend in use.
             IBMInputValueError: If an instruction a box with non-ISA gates.
-            IBMInputValueError: If an instruction cannot be learned by any of the supported learning
-                protocols.
+            IBMInputValueError: If an instruction cannot be learned by any of the supported
+                learning protocols.
         """
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:

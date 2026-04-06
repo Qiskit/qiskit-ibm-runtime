@@ -30,8 +30,8 @@ class PostSelectionOptions(BaseOptions):
     enable: bool = False
     r"""Whether to enable Post Selection when performing learning experiments.
 
-    If ``True``, Post Selection is applied to all the learning circuits. In particular, the following
-    steps are undertaken:
+    If ``True``, Post Selection is applied to all the learning circuits. In particular, the
+    following steps are undertaken:
 
         * Using the passes in
           :mod:`qiskit_addon_utils.noise_management.post_selection.transpiler.passes`, the learning
@@ -53,10 +53,11 @@ class PostSelectionOptions(BaseOptions):
     The available startegies are:
 
     * ``'node'``: Discard every shot where one or more bits failed to flip. Keep every other shot.
-    * ``'edge'``: Discard every shot where there exists a pair of neighbouring qubits for which both of
-        the bits failed to flip. Keep every other shot.
+    * ``'edge'``: Discard every shot where there exists a pair of neighbouring qubits for which
+        both of the bits failed to flip. Keep every other shot.
 
-    See the dosctrings of :class:`.PostSelector` and :meth:`.PostSelector.compute_mask` for more details.
+    See the dosctrings of :class:`.PostSelector` and :meth:`.PostSelector.compute_mask` for more
+    details.
 
     Defaults to ``node``.
     """

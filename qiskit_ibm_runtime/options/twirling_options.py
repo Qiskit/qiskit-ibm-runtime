@@ -64,9 +64,10 @@ class TwirlingOptions:
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
-      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other hand,
-      is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
+      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
+      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
+      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
+      ``default_shots``.
     """
 
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
@@ -83,9 +84,10 @@ class TwirlingOptions:
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
-      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other hand,
-      is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
+      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
+      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
+      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
+      ``default_shots``.
     """
 
     strategy: UnsetType | TwirlingStrategyType = Unset
@@ -109,7 +111,8 @@ class TwirlingOptions:
             instruction qubits in each layer will be twirled. If "active-circuit",
             all instruction qubits in the circuit will be twirled. If "active-accum", the union
             all instruction qubits in the circuit up to the current twirled layer will be twirled.
-            Finally, if "all", all qubits in the input circuit will be twirled in each twirled layer.
+            Finally, if "all", all qubits in the input circuit will be twirled in each twirled
+            layer.
     """
 
     _ge1 = make_constraint_validator(

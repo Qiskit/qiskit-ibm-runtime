@@ -48,15 +48,15 @@ class ProxyConfiguration:
             ]
         ):
             raise ValueError(
-                f"Invalid proxy configuration for NTLM authentication. None or both of username and "
-                f"password must be provided. Got username_ntlm={self.username_ntlm}, "
+                f"Invalid proxy configuration for NTLM authentication. None or both of username "
+                f"and password must be provided. Got username_ntlm={self.username_ntlm}, "
                 f"password_ntlm={self.password_ntlm}."
             )
 
         if self.urls is not None and not isinstance(self.urls, dict):
             raise ValueError(
-                f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping protocol "
-                f"or protocol and host to the URL of the proxy. Got {self.urls}"
+                f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping "
+                f"protocol or protocol and host to the URL of the proxy. Got {self.urls}"
             )
 
     def to_dict(self) -> dict:

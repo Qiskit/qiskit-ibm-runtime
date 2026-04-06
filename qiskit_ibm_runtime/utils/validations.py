@@ -26,7 +26,8 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def validate_classical_registers(pubs: list[SamplerPub]) -> None:
-    """Validates the classical registers in the pub won't cause problems that can be caught client-side.
+    """Validates the classical registers in the pub won't cause problems that can be caught
+    client-side.
 
     Args:
         pubs: The list of pubs to validate

@@ -106,7 +106,8 @@ class ResilienceOptionsV2:
             for value in asdict(self.measure_noise_learning).values()  # type: ignore[call-overload]
         ):
             raise ValueError(
-                "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."
+                "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to "
+                "True."
             )
 
         # Validate not ZNE+PEC

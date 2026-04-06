@@ -32,19 +32,20 @@ from .utils import BlockOrderingCallableType, block_order_op_nodes
 class BaseDynamicCircuitAnalysis(TransformationPass):
     """Base class for scheduling analysis
 
-    This is a scheduler designed to work for the unique scheduling constraints of the dynamic circuits
-    backends due to the limitations imposed by hardware. This is expected to evolve over time as the
-    dynamic circuit backends also change.
+    This is a scheduler designed to work for the unique scheduling constraints of the dynamic
+    circuits backends due to the limitations imposed by hardware. This is expected to evolve over
+    time as the dynamic circuit backends also change.
 
     The primary differences are that:
 
-    * Resets and control-flow currently trigger the end of a "quantum block". The period between the end
-        of the block and the next is *nondeterministic*
+    * Resets and control-flow currently trigger the end of a "quantum block". The period between
+        the end of the block and the next is *nondeterministic*
         ie., we do not know when the next block will begin (as we could be evaluating a classical
         function of nondeterministic length) and therefore the
         next block starts at a *relative* t=0.
     * During a measurement it is possible to apply gates in parallel on disjoint qubits.
-    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same block.
+    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same
+        block.
     """
 
     def __init__(
@@ -317,22 +318,23 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
     """Dynamic circuits as-soon-as-possible (ASAP) scheduling analysis pass.
 
-    This is a scheduler designed to work for the unique scheduling constraints of the dynamic circuits
-    backends due to the limitations imposed by hardware. This is expected to evolve over time as the
-    dynamic circuit backends also change.
+    This is a scheduler designed to work for the unique scheduling constraints of the dynamic
+    circuits backends due to the limitations imposed by hardware. This is expected to evolve over
+    time as the dynamic circuit backends also change.
 
     In its current form this is similar to Qiskit's ASAP scheduler in which instructions
     start as early as possible.
 
     The primary differences are that:
 
-    * Resets and control-flow currently trigger the end of a "quantum block". The period between the end
-        of the block and the next is *nondeterministic*
+    * Resets and control-flow currently trigger the end of a "quantum block". The period between
+        the end of the block and the next is *nondeterministic*
         ie., we do not know when the next block will begin (as we could be evaluating a classical
         function of nondeterministic length) and therefore the
         next block starts at a *relative* t=0.
     * During a measurement it is possible to apply gates in parallel on disjoint qubits.
-    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same block.
+    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same
+        block.
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
@@ -391,7 +393,8 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 # Otherwise just trigger a measurement flush
                 self._flush_measures()
         else:
-            # Otherwise we need to increment all measurements to start at the same time within the block.
+            # Otherwise we need to increment all measurements to start at the same time within
+            # the block.
             t0q = max(
                 itertools.chain(
                     [t0q],
@@ -439,22 +442,23 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
     """Dynamic circuits as-late-as-possible (ALAP) scheduling analysis pass.
 
-    This is a scheduler designed to work for the unique scheduling constraints of the dynamic circuits
-    backends due to the limitations imposed by hardware. This is expected to evolve over time as the
-    dynamic circuit backends also change.
+    This is a scheduler designed to work for the unique scheduling constraints of the dynamic
+    circuits backends due to the limitations imposed by hardware. This is expected to evolve over
+    time as the dynamic circuit backends also change.
 
     In its current form this is similar to Qiskit's ALAP scheduler in which instructions
     start as late as possible.
 
     The primary differences are that:
 
-    * Resets and control-flow currently trigger the end of a "quantum block". The period between the end
-        of the block and the next is *nondeterministic*
+    * Resets and control-flow currently trigger the end of a "quantum block". The period between
+        the end of the block and the next is *nondeterministic*
         ie., we do not know when the next block will begin (as we could be evaluating a classical
         function of nondeterministic length) and therefore the
         next block starts at a *relative* t=0.
     * During a measurement it is possible to apply gates in parallel on disjoint qubits.
-    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same block.
+    * Measurements and resets on disjoint qubits happen simultaneously and are part of the same
+        block.
     """
 
     def run(self, dag: DAGCircuit) -> None:
@@ -513,7 +517,8 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 # Otherwise just trigger a measurement flush
                 self._flush_measures()
         else:
-            # Otherwise we need to increment all measurements to start at the same time within the block.
+            # Otherwise we need to increment all measurements to start at the same time within
+            # the block.
             t0q = max(
                 itertools.chain(
                     [t0q],

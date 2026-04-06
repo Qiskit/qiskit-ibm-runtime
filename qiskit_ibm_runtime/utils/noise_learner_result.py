@@ -302,20 +302,20 @@ class LayerError:
         Args:
             num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
                 generators should be included.
-            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
-                set.
-            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
-                set.
+            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should
+                be set.
+            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should
+                be set.
             connected: A list of generators whose markers are to be connected by lines.
-            colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
-                chosen automatically.
+            colors: A list of colors for the markers in the plot, or ``None`` if these colors are
+                to be chosen automatically.
             num_bins: The number of bins to place the rates into when calculating the ``x``-axis
                 offsets.
             opacities: A list of opacities for the markers.
             names: The names of the various layers as displayed in the legend. If ``None``, default
                 names are assigned based on the layers' position inside the ``layer_errors`` list.
-            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
-                ``None`` if these axes should be placed at regular intervals.
+            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn
+                around, or ``None`` if these axes should be placed at regular intervals.
             marker_size: The size of the marker in the plot.
             height: The height of the returned figure.
             width: The width of the returned figure.

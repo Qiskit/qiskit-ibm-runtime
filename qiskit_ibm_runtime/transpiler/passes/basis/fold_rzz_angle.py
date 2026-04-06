@@ -295,7 +295,8 @@ def convert_to_rzz_valid_pub(
 
         if operation.name in CONTROL_FLOW_OP_NAMES:
             raise ValueError(
-                "The function convert_to_rzz_valid_pub currently does not support dynamic instructions."
+                "The function convert_to_rzz_valid_pub currently does not support dynamic "
+                "instructions."
             )
 
         if operation.name != "rzz" or not isinstance(

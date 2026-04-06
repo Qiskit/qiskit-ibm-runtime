@@ -99,8 +99,8 @@ class Session:
                 This value must be less than the
                 `system imposed maximum
                 <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            create_new: If True, the POST session API endpoint will be called to create a new session.
-                Prevents creating a new session when ``from_id()`` is called.
+            create_new: If True, the POST session API endpoint will be called to create a new
+                session. Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
         """
@@ -265,9 +265,10 @@ class Session:
 
             * ``id``: id of the session.
             * ``backend_name``: backend used for the session.
-            * ``interactive_timeout``: The maximum idle time (in seconds) between jobs that
-              is allowed to occur before the session is deactivated.
-            * ``max_time``: Maximum allowed time (in seconds) for the session, subject to plan limits.
+            * ``interactive_timeout``: The maximum idle time (in seconds) between jobs that is
+              allowed to occur before the session is deactivated.
+            * ``max_time``: Maximum allowed time (in seconds) for the session, subject to plan
+              limits.
             * ``active_timeout``: The maximum time (in seconds) a session can stay active.
             * ``state``: State of the session - open, active, inactive, or closed.
             * ``accepting_jobs``: Whether or not the session is accepting jobs.

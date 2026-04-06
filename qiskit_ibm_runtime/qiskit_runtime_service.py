@@ -111,8 +111,8 @@ class QiskitRuntimeService:
         ``token``. The ``local`` channel doesn't require authentication.
         For non-local channels, it is recommended to always provide the relevant ``instance``
         to minimize API calls. If an ``instance`` is not defined, the service will fetch all
-        instances accessible within the account, filtered by ``region``, ``plans_preference``,
-        and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
+        instances accessible within the account, filtered by ``region``, ``plans_preference``, and
+        ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
         over paid instances.
 
         Also note that only one account per API token can be used. The API token is linked to the
@@ -154,8 +154,9 @@ class QiskitRuntimeService:
             Optional[str] token: IBM Cloud API key. Providing an API key is required for IQP
                 authentication. If not provided explicitly, the default saved account will be
                 queried for this API key.
-            Optional[str] url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local channels
-                accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``, ``ibm_cloud``).
+            Optional[str] url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
+                channels accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``,
+                ``ibm_cloud``).
                 This URL is processed by a ``url_resolver`` to route requests to the correct
                 service entrypoint. If you provide a custom ``url``, you must also supply a
                 matching ``url_resolver``. The default resolver rewrites the base URL to
@@ -168,15 +169,15 @@ class QiskitRuntimeService:
                 Name (CRN) or the service name. If set, it will define an instance for
                 service instantiation, if not set, the service will fetch all instances accessible
                 within the account following the specified filtering criteria.
-            Optional[dict] proxies: Proxy configuration. Supported optional keys are
-                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+            Optional[dict] proxies: Proxy configuration. Supported optional keys are ``urls`` (a
+                dictionary mapping protocol or protocol and host to the URL of the proxy, documented
+                at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             Optional[bool] verify: Whether to verify the server's TLS certificate.
             Optional[bool] private_endpoint: Connect to private API URL.
-            Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not provided,
-                a default resolver will be used to access different service endpoints.
+            Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not
+                provided, a default resolver will be used to access different service endpoints.
             Optional[str] region: Set a region preference for automatic instance selection.
                 This argument is **ignored** if an ``instance`` is specified.
                 Accepted values are ``us-east`` or ``eu-de``.
@@ -193,8 +194,8 @@ class QiskitRuntimeService:
                 instance selection. This argument is **ignored** if an ``instance`` is specified.
 
         Returns:
-            An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService` if local
-            channel is set.
+            An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService`
+            if local channel is set.
 
         Raises:
             IBMInputValueError: If an input is invalid.

@@ -505,9 +505,9 @@ class BlockBasePadder(TransformationPass):
         new_control_flow_op = node.op.replace_blocks(
             dag_to_circuit(block) for block in new_node_block_dags
         )
-        # Enforce that this control-flow operation contains all wires since it has now been padded
-        # such that each qubit is scheduled within each block. Don't added all cargs as these will not
-        # be padded.
+        # Enforce that this control-flow operation contains all wires since it has now been
+        # padded such that each qubit is scheduled within each block. Don't added all cargs as
+        # these will not be padded.
         if fast_path_node:
             padded_qubits = node.qargs
         elif not self._schedule_idle_qubits:

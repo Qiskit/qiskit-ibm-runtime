@@ -145,9 +145,9 @@ class Account:
             )
 
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
-        Relevant for "ibm_cloud" channel only."""
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly. Relevant for
+        "ibm_cloud" channel only."""
         pass
 
     def list_instances(self) -> list[dict[str, Any]]:  # type: ignore

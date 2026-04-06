@@ -162,8 +162,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 satisfy this constraint.
             extra_slack_distribution: The option to control the behavior of DD sequence generation.
                 The duration of the DD sequence should be identical to an idle time in the
-                scheduled quantum circuit, however, the delay in between gates comprising the sequence
-                should be integer number in units of dt, and it might be further truncated
+                scheduled quantum circuit, however, the delay in between gates comprising the
+                sequence should be integer number in units of dt, and it might be further truncated
                 when ``pulse_alignment`` is specified. This sometimes results in the duration of
                 the created sequence being shorter than the idle time
                 that you want to fill with the sequence, i.e. `extra slack`.
@@ -172,27 +172,29 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     * "middle": Put the extra slack to the interval at the middle of the sequence.
                     * "edges": Divide the extra slack as evenly as possible into
                       intervals at beginning and end of the sequence.
-            sequence_min_length_ratios: List of minimum delay length to DD sequence ratio to satisfy
-                in order to insert the DD sequence. For example if the X-X dynamical decoupling sequence
-                is 320dt samples long and the available delay is 384dt it has a ratio of 384dt/320dt=1.2.
-                From the perspective of dynamical decoupling this is likely to add more control noise
-                than decoupling error rate reductions. The defaults value is 2.0.
+            sequence_min_length_ratios: List of minimum delay length to DD sequence ratio to
+                satisfy in order to insert the DD sequence. For example if the X-X dynamical
+                decoupling sequence is 320dt samples long and the available delay is 384dt it has a
+                ratio of 384dt/320dt=1.2. From the perspective of dynamical decoupling this is
+                likely to add more control noise than decoupling error rate reductions. The defaults
+                value is 2.0.
             insert_multiple_cycles: If the available duration exceeds
                 2*sequence_min_length_ratio*duration(dd_sequence) enable the insertion of multiple
                 rounds of the dynamical decoupling sequence in that delay.
             coupling_map: directed graph representing the coupling map for the device. Specifying a
                 coupling map partitions the device into subcircuits, in order to apply DD sequences
                 with different pulse spacings within each. Currently support 2 subcircuits.
-            alt_spacings: A list of lists of spacings between the DD gates, for the second subcircuit,
-                as determined by the coupling map. If None, a balanced spacing that is staggered with
-                respect to the first subcircuit will be used [d, d, d, ..., d, d, 0].
+            alt_spacings: A list of lists of spacings between the DD gates, for the second
+                subcircuit, as determined by the coupling map. If None, a balanced spacing that is
+                staggered with respect to the first subcircuit will be used [d, d, d, ..., d, d, 0].
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues
                 for execution on large backends.
             dd_barrier: only apply DD to delays terminating with a barrier
                 whose label contains the specified string
-            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize the
-                number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be used.
+            block_ordering_callable: A callable used to produce an ordering of the nodes to
+                minimize the number of blocks needed. If not provided,
+                :func:`~block_order_op_nodes` will be used.
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
@@ -204,7 +206,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
             warnings.warn(
                 "The `durations` input argument of `PadDynamicalDecoupling` is deprecated "
                 "as of qiskit_ibm_runtime v0.43.0 and will be removed in a future release. "
-                "Provide a `target` instance instead ex: PadDynamicalDecoupling(target=backend.target).",
+                "Provide a `target` instance instead ex: "
+                "PadDynamicalDecoupling(target=backend.target).",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -556,7 +559,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 taus[-1] += extra_slack - to_begin_edge
             else:
                 raise TranspilerError(
-                    f"Option extra_slack_distribution = {self._extra_slack_distribution} is invalid."
+                    f"Option extra_slack_distribution = {self._extra_slack_distribution} is "
+                    f"invalid."
                 )
 
             # (3) Construct DD sequence with delays

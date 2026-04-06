@@ -31,10 +31,10 @@ class Batch(Session):
 
         - There is usually minimal delay between job, which can help avoid drift.
 
-        - If you partition your workload into multiple jobs and run them in ``batch`` mode, you can
-          get results from individual jobs, which makes them more flexible to work with. For example,
-          if a job's results do not meet your expectations, you can cancel the remaining jobs, or
-          simply re-submit that individual job and avoid re-running the entire workload.
+        - If you partition your workload into multiple jobs and run them in ``batch`` mode, you
+          can get results from individual jobs, which makes them more flexible to work with. For
+          example, if a job's results do not meet your expectations, you can cancel the remaining
+          jobs, or simply re-submit that individual job and avoid re-running the entire workload.
 
     Batch mode can shorten processing time if all jobs are provided at the outset.
     If you want to submit iterative jobs, use ``session`` mode instead.
@@ -99,8 +99,8 @@ class Batch(Session):
                 This value must be less than the
                 `system imposed maximum
                 <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            create_new: If True, the POST session API endpoint will be called to create a new session.
-                Prevents creating a new session when ``from_id()`` is called.
+            create_new: If True, the POST session API endpoint will be called to create a new
+                session. Prevents creating a new session when ``from_id()`` is called.
         Raises:
             ValueError: If an input value is invalid.
         """

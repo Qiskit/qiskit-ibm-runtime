@@ -50,15 +50,18 @@ class EstimatorPubResult(PubResult):
         This method generates a subfigure for each expectation value.
 
         Args:
-            indices: The indices of the expectation values to include in the plot. If ``None``, includes
-                all values. See :class:`~.ZneOptions` for information on the indexing scheme.
-            names: The names to assign to the expectation values. If ``None``, the names correspond to
-                the indices.
+            indices: The indices of the expectation values to include in the plot. If ``None``,
+                includes all values. See :class:`~.ZneOptions` for information on the indexing
+                scheme.
+            names: The names to assign to the expectation values. If ``None``, the names correspond
+                to the indices.
             num_stds: The number of standard deviations to include around each fit.
-            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
-                a greater magnitude than this value, the expectation value is omitted from the plot.
-            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
-                this value for an expectation value and extrapolator, the fit is omitted from the plot.
+            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated``
+                has a greater magnitude than this value, the expectation value is omitted from the
+                plot.
+            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater
+                than this value for an expectation value and extrapolator, the fit is omitted from
+                the plot.
             height: The height of the plot in pixels.
             width: The width of the plot in pixels.
             num_cols: The maximum number of columns in the figure.
@@ -98,15 +101,18 @@ class EstimatorPubResult(PubResult):
         This method generates a subfigure for each extrapolator.
 
         Args:
-            indices: The indices of the expectation values to include in the plot. If ``None``, includes
-                all values. See :class:`~.ZneOptions` for information on the indexing scheme.
-            names: The names to assign to the expectation values. If ``None``, the names correspond to
-                the indices.
+            indices: The indices of the expectation values to include in the plot. If ``None``,
+                includes all values. See :class:`~.ZneOptions` for information on the indexing
+                scheme.
+            names: The names to assign to the expectation values. If ``None``, the names correspond
+                to the indices.
             num_stds: The number of standard deviations to include around each fit.
-            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
-                a greater magnitude than this value, the expectation value is omitted from the plot.
-            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
-                this value for an expectation value and extrapolator, the fit is omitted from the plot.
+            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated``
+                has a greater magnitude than this value, the expectation value is omitted from the
+                plot.
+            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater
+                than this value for an expectation value and extrapolator, the fit is omitted from
+                the plot.
             height: The height of the plot in pixels.
             width: The width of the plot in pixels.
             colorscale: The colorscale to use.

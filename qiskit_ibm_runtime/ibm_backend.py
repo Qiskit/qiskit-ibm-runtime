@@ -476,12 +476,13 @@ class IBMBackend(Backend):
         `Get backend configuration REST API
         <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
-        More details about backend configuration properties can be found here `QasmBackendConfiguration
+        More details about backend configuration properties can be found here
+        `QasmBackendConfiguration
         <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
-            * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
-                circuits support.
+            * ``supported_features``: a list of strings of supported features like "qasm3" for
+                dynamic circuits support.
             * ``parallel_compilation``: a boolean of whether or not the backend can process multiple
                 jobs at once. Parts of the classical computation will be parallelized.
 

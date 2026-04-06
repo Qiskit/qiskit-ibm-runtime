@@ -48,9 +48,9 @@ class PadDelay(BlockBasePadder):
         q_1: ──────┤ X ├───────┤ X ├
                    └───┘       └───┘
 
-    Note that the additional idle time of 60dt on the ``q_0`` wire coming from the duration difference
-    between ``Delay`` of 100dt (``q_0``) and ``XGate`` of 160 dt (``q_1``) is absorbed in
-    the delay instruction on the ``q_0`` wire, i.e. in total 160 dt.
+    Note that the additional idle time of 60dt on the ``q_0`` wire coming from the duration
+    difference between ``Delay`` of 100dt (``q_0``) and ``XGate`` of 160 dt (``q_1``) is absorbed
+    in the delay instruction on the ``q_0`` wire, i.e. in total 160 dt.
 
     See :class:`BlockBasePadder` pass for details.
     """
