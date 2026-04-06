@@ -62,10 +62,11 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
                 options.append(line)
                 continue
 
-            # Else, the prior image_found has no more options so we should determine if it was valid.
+            # Else, the prior image_found has no more options so we should determine if it was
+            # valid.
             #
-            # Note that, either way, we do not early exit out of the loop iteration because this `line`
-            # might be the start of a new image.
+            # Note that, either way, we do not early exit out of the loop iteration because this
+            # `line` might be the start of a new image.
             if not is_valid_image(options):
                 image_line = line_index - len(options)
                 invalid_images.append(
@@ -97,7 +98,10 @@ def main(files: list[str]) -> None:
             print(image_error, file=sys.stderr)
 
     print(
-        "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
+        "\nAlt text is crucial for making documentation accessible to all users. It should serve "
+        "the same purpose as the images on the page, conveying the same meaning rather than "
+        "describing visual characteristics. When an image contains words that are important to "
+        "understanding the content, the alt text should include those words as well.",
         file=sys.stderr,
     )
 

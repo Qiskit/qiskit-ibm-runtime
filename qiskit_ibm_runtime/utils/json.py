@@ -453,8 +453,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
-                # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
-                # to deserialize load qpy circuit and return first instruction object in that circuit.
+                # Standalone instructions are encoded as the sole instruction in a QPY serialized 
+                # circuit to deserialize load qpy circuit and return first instruction object in
+                # that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":

@@ -259,8 +259,8 @@ class CloudAccount(Account):
             private_endpoint: Connect to private API URL.
             region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
             plans_preference: A list of account types, ordered by preference.
-            channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
-                Defaults to ``ibm_quantum_platform``.
+            channel: Channel identifier. Accepted values are ``ibm_cloud`` or
+                ``ibm_quantum_platform``. Defaults to ``ibm_quantum_platform``.
             tags: List of instance tags.
         """
         super().__init__(token, instance, proxies, verify)
@@ -300,8 +300,8 @@ class CloudAccount(Account):
         )
 
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly.
 
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 

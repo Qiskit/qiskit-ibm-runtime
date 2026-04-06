@@ -81,13 +81,17 @@ class QiskitRuntimeLocalService:
             filters: More complex filters, such as lambda functions.
                 For example::
 
-                    from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+                    from qiskit_ibm_runtime.fake_provider.local_service import (
+                        QiskitRuntimeLocalService
+                    )
 
                     QiskitRuntimeService.backends(
                         filters=lambda backend: (backend.online_date.year == 2021)
                     )
                     QiskitRuntimeLocalService.backends(
-                        filters=lambda backend: (backend.num_qubits > 30 and backend.num_qubits < 100)
+                        filters=lambda backend: (
+                            backend.num_qubits > 30 and backend.num_qubits < 100
+                        )
                     )
 
         Returns:

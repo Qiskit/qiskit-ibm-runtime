@@ -362,7 +362,8 @@ class TestAccountManager(IBMTestCase):
         contents={
             "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
             _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-            _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
+            _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: 
+            _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
         }
     )
     def test_delete(self):

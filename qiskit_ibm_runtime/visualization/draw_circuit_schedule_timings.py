@@ -11,7 +11,8 @@
 # that they have been altered from the originals.
 
 
-"""This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
+"""This module defines the functionality to visualize the schedule of a Qiskit circuit compiled 
+code"""
 
 from __future__ import annotations
 

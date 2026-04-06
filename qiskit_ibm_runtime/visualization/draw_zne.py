@@ -360,7 +360,8 @@ def _scatter_trace(
         name=name,
         mode="markers",
         marker={"color": color},
-        hovertemplate="noise_factor: %{x} <br>ev: %{y:.4f}<br>std: %{error_y.array:.4f}<extra></extra>",
+        hovertemplate=("noise_factor: %{x} <br>ev: %{y:.4f}<br>"
+                       "std: %{error_y.array:.4f}<extra></extra>"),
         legendgroup=legend_group,
         showlegend=show_legend,
     )
@@ -389,8 +390,8 @@ def _validate_metadata(metadata: dict) -> dict:
     """
     if not (resilience := metadata.get("resilience")):
         raise ValueError(
-            "Result does not contain resilience metadata. Enable ZNE options on an estimator to use "
-            "this function."
+            "Result does not contain resilience metadata. Enable ZNE options on an estimator to "
+            "use this function."
         )
 
     if not (zne_metadata := resilience.get("zne")):

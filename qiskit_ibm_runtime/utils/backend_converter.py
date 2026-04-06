@@ -129,8 +129,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             if not include_control_flow:
                 # Remove name if this is control flow and dynamic circuits feature is disabled.
                 logger.info(
-                    "Control flow %s is found but the dynamic circuits are disabled for this backend. "
-                    "This instruction is excluded from the backend Target.",
+                    "Control flow %s is found but the dynamic circuits are disabled for this "
+                    "backend. This instruction is excluded from the backend Target.",
                     name,
                 )
                 unsupported_instructions.append(name)
@@ -151,7 +151,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             # GateConfig model is a translator of QASM opcode.
             # This doesn't have quantum definition, so qiskit transpiler doesn't perform
             # any optimization in quantum domain.
-            # Usually GateConfig counterpart should exist in qiskit namespace so this is rarely called.
+            # Usually GateConfig counterpart should exist in qiskit namespace so this is rarely
+            # called.
             this_config = gate_configs[name]
             params = list(map(Parameter, getattr(this_config, "parameters", [])))
             coupling_map = getattr(this_config, "coupling_map", [])
@@ -255,7 +256,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                         continue
                     if prop_name_map[name] is None:
                         # This instruction is tied to particular qubits
-                        # i.e. gate config is not provided, and instruction has been globally defined.
+                        # i.e. gate config is not provided, and instruction has been globally
+                        # defined.
                         prop_name_map[name] = {}
                     prop_name_map[name][qubits] = InstructionProperties(
                         error=_get_value(param_dict, "gate_error"),  # type: ignore[arg-type]

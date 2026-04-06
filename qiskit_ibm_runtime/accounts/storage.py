@@ -37,8 +37,8 @@ def save_config(
 
     data[name] = config
 
-    # if set_as_default, but another account is defined as default, user must specify overwrite to change
-    # the default account.
+    # if set_as_default, but another account is defined as default, user must specify overwrite to
+    # change the default account.
     if set_as_default:
         data[name]["is_default_account"] = True
         for account_name in data:

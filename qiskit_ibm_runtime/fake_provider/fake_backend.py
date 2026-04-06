@@ -409,8 +409,9 @@ class FakeBackendV2(BackendV2):
         """
         if not isinstance(service, QiskitRuntimeService):
             raise ValueError(
-                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
-                " required to retrieve the real backend's current properties and settings."
+                "The provided service to update the fake backend is invalid. A "
+                " QiskitRuntimeService is required to retrieve the real backend's current "
+                "properties and settings."
             )
 
         prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]

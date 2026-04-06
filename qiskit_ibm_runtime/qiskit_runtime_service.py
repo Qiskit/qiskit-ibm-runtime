@@ -136,8 +136,8 @@ class QiskitRuntimeService:
 
         - If no ``name`` is specified: if ``channel`` is specified, the service will load the
           default account associated with that channel from the configuration file. Else,
-          it will fall back to the overall default account, defined when calling :meth:`.save_account`
-          with ``set_as_default=True``.
+          it will fall back to the overall default account, defined when calling
+          :meth:`.save_account` with ``set_as_default=True``.
 
         Args:
             Optional[ChannelType] channel: String that identifies the service platform. This is
@@ -242,8 +242,8 @@ class QiskitRuntimeService:
         if self._account.instance:
             if self._account.instance not in [inst["crn"] for inst in self.instances()]:
                 raise IBMInputValueError(
-                    "The given API token is associated with an account that does not have access to "
-                    f"the instance {self._account.instance}. "
+                    "The given API token is associated with an account that does not have access "
+                    f"to the instance {self._account.instance}. "
                     "To use this instance, use an API token generated from the account "
                     "with this instance available."
                 )
@@ -430,7 +430,8 @@ class QiskitRuntimeService:
             )
         elif url:
             raise ValueError(
-                "'url' is not valid as a standalone parameter. Try also passing in 'token' or 'name'."
+                "'url' is not valid as a standalone parameter. Try also passing in 'token' or "
+                "'name'."
             )
 
         # channel is not defined yet, get it from the AccountManager
@@ -559,7 +560,8 @@ class QiskitRuntimeService:
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
             calibration_id: The calibration id used for instantiating the backend. This should only
-                be used when selecting a single backend as the calibration id is defined per backend.
+                be used when selecting a single backend as the calibration id is defined per
+                backend.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -826,8 +828,9 @@ class QiskitRuntimeService:
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
-                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the
+                proxy, documented at
+                https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.
@@ -841,8 +844,8 @@ class QiskitRuntimeService:
                 (``open``, ``premium``, etc.), ordered by preference. An instance with the first
                 value in the list will be prioritized and only instances
                 with the given plan names will be considered. For example, if you want to avoid
-                using your premium accounts you can just pass in ``"open"`` to only use your open plan
-                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
+                using your premium accounts you can just pass in ``"open"`` to only use your open
+                plan instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
@@ -970,8 +973,8 @@ class QiskitRuntimeService:
             options: Runtime options that control the execution environment.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 If more than one decoder is specified, the first is used for interim results and
-                the second final results. If not specified, a program-specific decoder or the default
-                ``ResultDecoder`` is used.
+                the second final results. If not specified, a program-specific decoder or the
+                default ``ResultDecoder`` is used.
             session_id: Job ID of the first job in a runtime session.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
@@ -1207,18 +1210,20 @@ class QiskitRuntimeService:
         usage_dict = self.usage()
 
         if usage_dict.get("usage_limit_reached"):
+            active_instance = quote(self.active_instance(), safe='')
             if usage_dict.get("usage_limit_seconds") and usage_dict["usage_remaining_seconds"] <= 0:
                 warnings.warn(
-                    "This instance has met its usage limit. Workloads will not run until time is made "
-                    "available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "This instance has met its usage limit. Workloads will not run until time is" 
+                    "made available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{active_instance} "
                     "for more details."
                 )
             else:
                 warnings.warn(
-                    "There is currently no more time available for this instance's plan on the account. "
+                    "There is currently no more time available for this instance's plan on the "
+                    "account. "
                     "Workloads will not run until time is made available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    f"https://quantum.cloud.ibm.com/instances/{active_instance} "
                     "for more details."
                 )
 
