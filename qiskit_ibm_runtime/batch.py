@@ -12,7 +12,6 @@
 
 """Qiskit Runtime batch mode."""
 
-
 from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService

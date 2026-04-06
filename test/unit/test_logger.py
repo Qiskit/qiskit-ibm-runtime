@@ -41,8 +41,9 @@ class TestLogger(IBMTestCase):
             self.assertEqual(
                 logger.level,
                 default_level_not_set,
-                "The logger level was set to {}, but it should "
-                "be {}".format(logger.level, default_level_not_set),
+                "The logger level was set to {}, but it should be {}".format(
+                    logger.level, default_level_not_set
+                ),
             )
 
     def test_empty_log_level(self):
@@ -59,8 +60,9 @@ class TestLogger(IBMTestCase):
             self.assertEqual(
                 logger.level,
                 default_level_not_set,
-                "The logger level was set to {}, but it should "
-                "be {}.".format(logger.level, default_level_not_set),
+                "The logger level was set to {}, but it should be {}.".format(
+                    logger.level, default_level_not_set
+                ),
             )
 
     def test_invalid_log_level(self):
@@ -82,8 +84,9 @@ class TestLogger(IBMTestCase):
                     self.assertEqual(
                         logger.level,
                         default_level_invalid,
-                        "The logger level was set to {}, but it should "
-                        "be {}.".format(logger.level, default_level_invalid),
+                        "The logger level was set to {}, but it should be {}.".format(
+                            logger.level, default_level_invalid
+                        ),
                     )
 
     def test_valid_log_levels_mixed_casing(self):
@@ -104,8 +107,9 @@ class TestLogger(IBMTestCase):
                     self.assertEqual(
                         logger.level,
                         level_value,
-                        "The logger level was set to {}, but it should "
-                        "be {}.".format(logger.level, level_value),
+                        "The logger level was set to {}, but it should be {}.".format(
+                            logger.level, level_value
+                        ),
                     )
 
     @skipIf(os.name == "nt", "Test not supported in Windows")
@@ -126,8 +130,9 @@ class TestLogger(IBMTestCase):
                 self.assertEqual(
                     logger.level,
                     log_level_error[1],
-                    "The logger level was set to {}, but it should "
-                    "be {}.".format(logger.level, log_level_error[1]),
+                    "The logger level was set to {}, but it should be {}.".format(
+                        logger.level, log_level_error[1]
+                    ),
                 )
 
                 # Assert the file handler was created.
@@ -138,8 +143,9 @@ class TestLogger(IBMTestCase):
                 self.assertEqual(
                     len(logger.handlers),
                     1,
-                    "Many handlers were setup {}, but it should have only "
-                    "been one.".format(logger.handlers),
+                    "Many handlers were setup {}, but it should have only been one.".format(
+                        logger.handlers
+                    ),
                 )
 
                 # Note that only messages >= `ERROR` will be logged.

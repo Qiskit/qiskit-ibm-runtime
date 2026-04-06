@@ -12,7 +12,6 @@
 
 """Estimator result decoder."""
 
-
 from qiskit.primitives.containers import PrimitiveResult
 
 from .result_decoder import ResultDecoder

@@ -418,8 +418,9 @@ class IBMBackend(Backend):
             return None
         if not isinstance(refresh, bool):
             raise TypeError(
-                "The 'refresh' argument needs to be a boolean. "
-                "{} is of type {}".format(refresh, type(refresh))
+                "The 'refresh' argument needs to be a boolean. {} is of type {}".format(
+                    refresh, type(refresh)
+                )
             )
         if datetime:
             if not isinstance(datetime, python_datetime):

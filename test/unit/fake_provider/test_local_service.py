@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Test of generated fake backends."""
+
 from ddt import data, ddt
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError

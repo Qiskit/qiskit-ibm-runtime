@@ -44,7 +44,7 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
 
     marker = "▸" if is_section else ""
     spacer_style = "display: inline-block; text-align: right; margin-right: 10px;"
-    spacer = f"<div style='width: {20*(1 + indent)}px; {spacer_style}'>{marker}</div>"
+    spacer = f"<div style='width: {20 * (1 + indent)}px; {spacer_style}'>{marker}</div>"
 
     yield "  <tr>"
     yield f"    <{tag} {style}>{spacer}{name}</{tag}>"

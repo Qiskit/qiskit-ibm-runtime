@@ -313,7 +313,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 self._spacings.append([end] + [mid] * (num_pulses - 1) + [end])  # type: ignore
             else:
                 if sum(self._spacings[seq_idx]) != 1 or any(  # type: ignore
-                    a < 0 for a in self._spacings[seq_idx]  # type: ignore
+                    a < 0
+                    for a in self._spacings[seq_idx]  # type: ignore
                 ):
                     raise TranspilerError(
                         "The spacings must be given in terms of fractions "
@@ -326,7 +327,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     self._alt_spacings.append([mid] * num_pulses + [0])  # type: ignore
                 else:
                     if sum(self._alt_spacings[seq_idx]) != 1 or any(  # type: ignore
-                        a < 0 for a in self._alt_spacings[seq_idx]  # type: ignore
+                        a < 0
+                        for a in self._alt_spacings[seq_idx]  # type: ignore
                     ):
                         raise TranspilerError(
                             "The spacings must be given in terms of fractions "

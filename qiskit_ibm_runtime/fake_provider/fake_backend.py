@@ -13,6 +13,7 @@
 """
 Base class for dummy backends.
 """
+
 from typing import Any
 import logging
 import warnings

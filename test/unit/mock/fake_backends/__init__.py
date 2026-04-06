@@ -12,5 +12,4 @@
 
 """Fake backends for testing"""
 
-
 from .midcircuit import FakeMidcircuit

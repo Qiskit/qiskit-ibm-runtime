@@ -12,7 +12,6 @@
 
 """Tests for Session classession."""
 
-
 from unittest.mock import MagicMock
 from ddt import ddt, data
 

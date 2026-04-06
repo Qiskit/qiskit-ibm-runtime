@@ -12,7 +12,6 @@
 
 """Proxy related classes and functions."""
 
-
 from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse

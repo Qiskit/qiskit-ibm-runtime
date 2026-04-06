@@ -93,7 +93,6 @@ select = [
     "RUF013", # implicit-optional
 ]
 ignore = [
-    "E501",  # line-too-long: black handles line length
     "UP032", # f-string: requires manual revision of non f-string formatting
 ]
 

@@ -433,5 +433,5 @@ class CloudAccount(Account):
             )
         if tags and not isinstance(tags, list):
             raise InvalidAccountError(
-                "Invalid `tags` value. Expected a list of strings. " f"got '{tags}' instead."
+                f"Invalid `tags` value. Expected a list of strings. got '{tags}' instead."
             )

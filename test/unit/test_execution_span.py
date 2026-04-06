@@ -12,7 +12,6 @@
 
 """Tests SliceSpan and ExecutionSpans classes."""
 
-
 from datetime import datetime, timedelta
 import ddt
 

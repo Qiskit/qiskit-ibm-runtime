@@ -82,7 +82,6 @@ class TestFakeBackends(IBMTestCase):
 
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

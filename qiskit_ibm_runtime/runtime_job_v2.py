@@ -132,7 +132,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
         if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
-                "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
+                "Unable to retrieve result for job {}. Job was cancelled.".format(self.job_id())
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())

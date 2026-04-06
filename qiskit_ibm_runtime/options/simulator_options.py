@@ -12,7 +12,6 @@
 
 """Simulator options."""
 
-
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.utils import optionals

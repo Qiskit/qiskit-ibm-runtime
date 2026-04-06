@@ -12,7 +12,6 @@
 
 """NoiseLearner options."""
 
-
 from pydantic import ValidationInfo, field_validator
 
 from .utils import Unset, UnsetType
@@ -113,7 +112,9 @@ class NoiseLearnerOptions(OptionsV2):
 
     _gt0 = make_constraint_validator("max_layers_to_learn", ge=0)  # type: ignore[arg-type]
     _ge0 = make_constraint_validator(
-        "shots_per_randomization", "num_randomizations", ge=1  # type: ignore[arg-type]
+        "shots_per_randomization",
+        "num_randomizations",
+        ge=1,  # type: ignore[arg-type]
     )
 
     @field_validator("layer_pair_depths", mode="after")

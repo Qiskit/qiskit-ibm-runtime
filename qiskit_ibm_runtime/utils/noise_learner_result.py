@@ -153,7 +153,6 @@ class LayerError:
         qubits: Sequence[int],
         error: PauliLindbladError | None = None,
     ) -> None:
-
         self._circuit = circuit
         self._qubits = list(qubits)
         self._error = error

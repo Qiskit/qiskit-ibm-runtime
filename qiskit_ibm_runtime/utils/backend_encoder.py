@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Utilities for working with IBM Quantum backends."""
+
 import json
 from datetime import datetime
 from typing import Any

@@ -360,8 +360,9 @@ def _scatter_trace(
         name=name,
         mode="markers",
         marker={"color": color},
-        hovertemplate=("noise_factor: %{x} <br>ev: %{y:.4f}<br>"
-                       "std: %{error_y.array:.4f}<extra></extra>"),
+        hovertemplate=(
+            "noise_factor: %{x} <br>ev: %{y:.4f}<br>std: %{error_y.array:.4f}<extra></extra>"
+        ),
         legendgroup=legend_group,
         showlegend=show_legend,
     )

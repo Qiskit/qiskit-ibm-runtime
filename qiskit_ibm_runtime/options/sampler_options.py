@@ -12,7 +12,6 @@
 
 """Sampler options."""
 
-
 from pydantic import Field
 
 from .utils import Dict, Unset, UnsetType

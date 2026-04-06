@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for the account functions."""
+
 import copy
 import json
 import logging
@@ -55,6 +56,7 @@ _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
         username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
     ),
 )
+_TEST_IBM_CLOUD_ACCOUNT_DICT = _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()
 
 _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT = Account.create_account(
     channel="ibm_quantum_platform",
@@ -65,6 +67,7 @@ _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT = Account.create_account(
         username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
     ),
 )
+_TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT = _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format()
 
 _TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
@@ -159,7 +162,7 @@ class TestAccount(IBMTestCase):
 class TestAccountManager(IBMTestCase):
     """Tests for AccountManager class."""
 
-    @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()})
+    @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
     def test_save_without_overwrite_cloud(self):
         """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
@@ -191,9 +194,7 @@ class TestAccountManager(IBMTestCase):
                 overwrite=False,
             )
 
-    @temporary_account_config_file(
-        contents={"conflict": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format()}
-    )
+    @temporary_account_config_file(contents={"conflict": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT})
     def test_save_without_overwrite_iqp(self):
         """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
@@ -225,7 +226,7 @@ class TestAccountManager(IBMTestCase):
                 overwrite=False,
             )
 
-    @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()})
+    @temporary_account_config_file(contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT_DICT})
     def test_get_none(self):
         """Test to get an account with an invalid name."""
         with self.assertRaises(AccountNotFoundError):
@@ -292,8 +293,8 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents=json.dumps(
             {
-                "ibm_cloud": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-                "ibm_quantum_platform": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
+                "ibm_cloud": _TEST_IBM_CLOUD_ACCOUNT_DICT,
+                "ibm_quantum_platform": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT,
             }
         )
     )
@@ -317,8 +318,8 @@ class TestAccountManager(IBMTestCase):
         with (
             temporary_account_config_file(
                 contents={
-                    "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-                    "key2": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
+                    "key1": _TEST_IBM_CLOUD_ACCOUNT_DICT,
+                    "key2": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT,
                     "key3": test_ibm_quantum_classic_account,
                 }
             ),
@@ -332,8 +333,8 @@ class TestAccountManager(IBMTestCase):
         with (
             temporary_account_config_file(
                 contents={
-                    "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-                    "key2": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
+                    "key1": _TEST_IBM_CLOUD_ACCOUNT_DICT,
+                    "key2": _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT,
                     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: Account.create_account(
                         channel="ibm_cloud", token="token-ibm-cloud", instance="crn:123"
                     ).to_saved_format(),
@@ -360,10 +361,9 @@ class TestAccountManager(IBMTestCase):
 
     @temporary_account_config_file(
         contents={
-            "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-            _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-            _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: 
-            _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT.to_saved_format(),
+            "key1": _TEST_IBM_CLOUD_ACCOUNT_DICT,
+            _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT_DICT,
+            _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM: _TEST_IBM_QUANTUM_PLATFORM_ACCOUNT_DICT,
         }
     )
     def test_delete(self):

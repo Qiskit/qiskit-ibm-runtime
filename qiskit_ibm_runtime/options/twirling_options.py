@@ -116,5 +116,7 @@ class TwirlingOptions:
     """
 
     _ge1 = make_constraint_validator(
-        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+        "num_randomizations",
+        "shots_per_randomization",
+        ge=1,  # type: ignore[arg-type]
     )

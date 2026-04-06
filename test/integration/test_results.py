@@ -12,7 +12,6 @@
 
 """Tests for job functions using real runtime service."""
 
-
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 
 from ..ibm_test_case import IBMIntegrationJobTestCase

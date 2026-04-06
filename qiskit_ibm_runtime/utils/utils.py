@@ -377,9 +377,7 @@ def default_runtime_url_resolver(
             #  - for other regions, ie. eu-de: "https://eu-de.quantum.cloud.ibm.com/api/v1"
             region = _location_from_crn(instance)
             region_prefix = "" if region == "us-east" else f"{region}."
-            api_host = (
-                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
-            )
+            api_host = f"{parsed_url.scheme}://{region_prefix}quantum.{parsed_url.hostname}/api/v1"
 
     return api_host
 

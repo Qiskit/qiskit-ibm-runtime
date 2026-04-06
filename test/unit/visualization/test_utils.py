@@ -12,7 +12,6 @@
 
 """Unit tests for the visualization folder."""
 
-
 from types import ModuleType
 
 from qiskit_ibm_runtime.visualization.utils import plotly_module

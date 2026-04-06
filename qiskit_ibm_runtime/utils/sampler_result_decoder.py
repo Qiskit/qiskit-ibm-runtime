@@ -12,7 +12,6 @@
 
 """Sampler result decoder."""
 
-
 from qiskit.primitives import PrimitiveResult
 
 from .result_decoder import ResultDecoder

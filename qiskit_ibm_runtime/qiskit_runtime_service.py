@@ -266,7 +266,7 @@ class QiskitRuntimeService:
                 joined_plan_names = ", ".join(instance_plan_names)
                 plans_preference_str = f"), and available plans: ({joined_plan_names})"
 
-            filters = f"(tags: {tags_str}, " f"region: {region_str}" f"{plans_preference_str}"
+            filters = f"(tags: {tags_str}, region: {region_str}{plans_preference_str}"
 
             logger.warning(
                 "Instance was not set at service instantiation. %s"
@@ -473,7 +473,7 @@ class QiskitRuntimeService:
             return matching_instances[0]["crn"]
         else:
             raise IBMInputValueError(
-                f"The instance specified ({instance}) is not a valid " "instance name."
+                f"The instance specified ({instance}) is not a valid instance name."
             )
 
     @staticmethod
@@ -1210,10 +1210,10 @@ class QiskitRuntimeService:
         usage_dict = self.usage()
 
         if usage_dict.get("usage_limit_reached"):
-            active_instance = quote(self.active_instance(), safe='')
+            active_instance = quote(self.active_instance(), safe="")
             if usage_dict.get("usage_limit_seconds") and usage_dict["usage_remaining_seconds"] <= 0:
                 warnings.warn(
-                    "This instance has met its usage limit. Workloads will not run until time is" 
+                    "This instance has met its usage limit. Workloads will not run until time is"
                     "made available. Check "
                     f"https://quantum.cloud.ibm.com/instances/{active_instance} "
                     "for more details."

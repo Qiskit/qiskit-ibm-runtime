@@ -90,7 +90,7 @@ def draw_execution_spans(
 
     # make sure there are always at least as many names as span sets
     all_names.extend(
-        f"ExecutionSpans{_get_id(single_span, len(spans)>1)}"
+        f"ExecutionSpans{_get_id(single_span, len(spans) > 1)}"
         for single_span in spans[len(all_names) :]
     )
 

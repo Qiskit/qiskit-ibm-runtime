@@ -56,9 +56,7 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
         channel = (
-            channel
-            or os.getenv("QISKIT_IBM_CHANNEL")
-            or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
+            channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
         )
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE

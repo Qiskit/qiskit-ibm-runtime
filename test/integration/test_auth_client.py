@@ -12,7 +12,6 @@
 
 """Tests for the AccountClient class."""
 
-
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
 from ..ibm_test_case import IBMTestCase

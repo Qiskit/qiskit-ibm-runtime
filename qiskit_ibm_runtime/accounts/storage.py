@@ -32,7 +32,7 @@ def save_config(
 
     if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
-            f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
+            f"Named account ({name}) already exists. Set overwrite=True to overwrite."
         )
 
     data[name] = config
@@ -48,8 +48,7 @@ def save_config(
                     del account["is_default_account"]
                 else:
                     raise AccountAlreadyExistsError(
-                        f"default_account ({name}) already exists. "
-                        f"Set overwrite=True to overwrite."
+                        f"default_account ({name}) already exists. Set overwrite=True to overwrite."
                     )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:

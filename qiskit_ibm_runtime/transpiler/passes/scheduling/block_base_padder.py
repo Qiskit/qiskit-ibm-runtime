@@ -71,7 +71,6 @@ class BlockBasePadder(TransformationPass):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ) -> None:
-
         self._node_start_time: dict[DAGNode, tuple[int, int]] | None = None
         self._node_block_dags: dict[DAGNode, DAGCircuit] | None = None
         self._idle_after: dict[Qubit, int] | None = None

@@ -239,9 +239,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
 
         for name in all_instructions:
             try:
-                for qubits, param_dict in properties.gate_property(
-                    name
-                ).items():  # type: ignore[arg-type, union-attr]
+                for qubits, param_dict in properties.gate_property(name).items():  # type: ignore[arg-type, union-attr]
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
                         or not properties.is_gate_operational(name, qubits)  # type: ignore[arg-type]
