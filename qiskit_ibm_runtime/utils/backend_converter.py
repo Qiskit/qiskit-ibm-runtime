@@ -45,7 +45,7 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 """
 
 
-def convert_to_target(  # type: ignore[no-untyped-def]
+def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties | None = None,
     *,
@@ -54,7 +54,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     custom_name_mapping: dict[str, Any] | None = None,
     add_delay: bool = True,
     filter_faulty: bool = True,
-    **kwargs,
+    **kwargs: dict,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -72,6 +72,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             will be dropped in the resulting ``Target`` object.
         add_delay: If True, adds delay to the instruction set.
         filter_faulty: If True, this filters the non-operational qubits.
+        kwargs: additional arguments.
 
     Returns:
         A ``Target`` instance.

@@ -156,6 +156,7 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             calibration_id: The calibration id to use with the program execution
 
         Returns:
@@ -334,7 +335,9 @@ class Session:
         use_fractional_gates: bool = False,
         calibration_id: str | None = None,
     ) -> Session:
-        """Construct a Session object with a given ``session_id``. For example:
+        """Construct a Session object with a given ``session_id``.
+
+        For example:
 
         .. code-block::
 

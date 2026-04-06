@@ -72,6 +72,7 @@ def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None
     """Filter unwanted entries from raw configuration data.
 
     Args:
+        raw_config: dictionary with raw configuration data.
         use_fractional_gates: Set True to allow for the backends to include
             fractional gates. See :meth:`~.QiskitRuntimeService.backends`
                 for further details.

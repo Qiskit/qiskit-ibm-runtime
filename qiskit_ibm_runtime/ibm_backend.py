@@ -168,6 +168,7 @@ class IBMBackend(Backend):
             configuration: Backend configuration.
             service: Instance of QiskitRuntimeService.
             api_client: IBM client used to communicate with the server.
+            instance: The service instance to use.
             calibration_id: An optional calibration id to use for this backend
         """
         super().__init__(

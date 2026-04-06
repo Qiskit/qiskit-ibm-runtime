@@ -140,7 +140,7 @@ class QiskitRuntimeService:
           :meth:`.save_account` with ``set_as_default=True``.
 
         Args:
-            Optional[ChannelType] channel: String that identifies the service platform. This is
+            channel: String that identifies the service platform. This is
                 set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
                 and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
                 path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
@@ -151,38 +151,38 @@ class QiskitRuntimeService:
                 For non-local modes, the channel is used to resolve the default API URL value.
                 ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
                 its URL will be redirected to the new ``ibm_quantum_platform`` address.
-            Optional[str] token: IBM Cloud API key. Providing an API key is required for IQP
+            token: IBM Cloud API key. Providing an API key is required for IQP
                 authentication. If not provided explicitly, the default saved account will be
                 queried for this API key.
-            Optional[str] url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
+            url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
                 channels accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``,
                 ``ibm_cloud``).
                 This URL is processed by a ``url_resolver`` to route requests to the correct
                 service entrypoint. If you provide a custom ``url``, you must also supply a
                 matching ``url_resolver``. The default resolver rewrites the base URL to
                 ``https://quantum.cloud.ibm.com/api/v[x]``.
-            Optional[str] filename: Full path of the file where the account is created.
+            filename: Full path of the file where the account is created.
                 Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
-            Optional[str] name: Name of the account to load from file.
-            Optional[str] instance: The service instance to use.
+            name: Name of the account to load from file.
+            instance: The service instance to use.
                 For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
                 Name (CRN) or the service name. If set, it will define an instance for
                 service instantiation, if not set, the service will fetch all instances accessible
                 within the account following the specified filtering criteria.
-            Optional[dict] proxies: Proxy configuration. Supported optional keys are ``urls`` (a
+            proxies: Proxy configuration. Supported optional keys are ``urls`` (a
                 dictionary mapping protocol or protocol and host to the URL of the proxy, documented
                 at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
-            Optional[bool] verify: Whether to verify the server's TLS certificate.
-            Optional[bool] private_endpoint: Connect to private API URL.
-            Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not
+            verify: Whether to verify the server's TLS certificate.
+            private_endpoint: Connect to private API URL.
+            url_resolver: Function used to resolve the runtime URL. If not
                 provided, a default resolver will be used to access different service endpoints.
-            Optional[str] region: Set a region preference for automatic instance selection.
+            region: Set a region preference for automatic instance selection.
                 This argument is **ignored** if an ``instance`` is specified.
                 Accepted values are ``us-east`` or ``eu-de``.
                 An instance with this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account plan names
+            plans_preference: A list of account plan names
                 ordered by priority for automatic instance selection.
                 This argument is **ignored** if an ``instance`` is specified.
                 Only instances with the given plan names will be considered.
@@ -190,7 +190,7 @@ class QiskitRuntimeService:
                 pass in ``"open"`` to only use your open plan instances.
                 Accepted values include (but are not limited to): ``open``, ``premium``,
                 ``flex``, ``on-prem``, ``pay-as-you-go``.
-            Optional[List[str]] tags: Set a list of tags to filter available instances for automatic
+            tags: Set a list of tags to filter available instances for automatic
                 instance selection. This argument is **ignored** if an ``instance`` is specified.
 
         Returns:
@@ -715,6 +715,7 @@ class QiskitRuntimeService:
                 None to include both fractional gates and control flow
                 operations.  See :meth:`~.QiskitRuntimeService.backends` for
                 further details.
+            calibration_id: The calibration id to use for the IBM backend.
 
         Returns:
             A backend object.
@@ -978,6 +979,7 @@ class QiskitRuntimeService:
                 default ``ResultDecoder`` is used.
             session_id: Job ID of the first job in a runtime session.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            calibration_id: The calibration id to use for the IBM backend.
 
         Returns:
             A ``RuntimeJobV2`` instance representing the execution.
@@ -1280,6 +1282,8 @@ class QiskitRuntimeService:
                 An example to get the operational backends with 5 qubits::
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
+
+            kwargs: Additional arguments passed to the backend query.
 
         Returns:
             The backend with the fewest number of pending jobs.

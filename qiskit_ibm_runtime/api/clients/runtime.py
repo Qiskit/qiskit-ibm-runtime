@@ -218,6 +218,9 @@ class RuntimeClient(BaseBackendClient):
         """Create a session.
 
         Args:
+            backend: IBM backend to use for the session.
+            instance: The service instance to use.
+            max_time: Maximum duration of the session.
             mode: Execution mode.
         """
         return self._api.runtime_session(session_id=None).create(backend, instance, max_time, mode)
@@ -260,6 +263,7 @@ class RuntimeClient(BaseBackendClient):
 
         Args:
             backend_name: The name of the IBM backend.
+            refresh: If ``True``, re-query the server for the backend configuration.
             calibration_id: The calibration id to use for the IBM backend
 
         Returns:

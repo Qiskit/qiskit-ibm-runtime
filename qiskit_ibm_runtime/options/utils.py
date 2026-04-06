@@ -100,6 +100,7 @@ def merge_options(old_options: dict | BaseOptions, new_options: dict | None = No
     """Merge current options with the new ones.
 
     Args:
+        old_options: Old options to merge.
         new_options: New options to merge.
 
     Returns:
@@ -163,6 +164,7 @@ def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None =
     but ``merge_options_v2()`` would return ``{'nested_foo': {'foo': 'bar1'}, 'foo': 'bar2'}``.
 
     Args:
+        old_options: Old options to merge.
         new_options: New options to merge.
 
     Returns:

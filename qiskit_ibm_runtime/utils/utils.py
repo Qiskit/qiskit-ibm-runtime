@@ -87,7 +87,8 @@ def is_simulator(backend: BackendV2) -> bool:
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
     """Helper for checking if a circuit is an ISA circuit.
 
-    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional operations.
+    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional
+    operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation

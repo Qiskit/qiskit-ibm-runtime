@@ -22,7 +22,7 @@ from qiskit.transpiler import CouplingMap
 
 
 class Embedding:
-    """A class to represent an embedding or arrangement of a set of qubits in a two-dimensional plane.
+    """Represents an embedding or arrangement of a set of qubits in a two-dimensional plane.
 
     Args:
         coordinates: A list of coordinates in the form ``(row, column)`` that specify the qubits'

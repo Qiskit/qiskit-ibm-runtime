@@ -37,6 +37,11 @@ class LocalRuntimeJob(PrimitiveJob):
         Args:
             future: Thread executor the job is run on.
             backend: The backend to run the primitive on.
+            primitive: Name of the primitive.
+            inputs: Program input parameters. These input values are passed
+                to the runtime program.
+            args: Additional arguments.
+            kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
         self._future = future

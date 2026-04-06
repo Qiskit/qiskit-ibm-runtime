@@ -46,6 +46,13 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
     * During a measurement it is possible to apply gates in parallel on disjoint qubits.
     * Measurements and resets on disjoint qubits happen simultaneously and are part of the same
         block.
+
+    Args:
+        durations: Durations of instructions to be used in scheduling.
+        block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
+            the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+            used.
+        target: The backend compilation target.
     """
 
     def __init__(
@@ -54,14 +61,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ) -> None:
-        """Scheduler for dynamic circuit backends.
-
-        Args:
-            durations: Durations of instructions to be used in scheduling.
-            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
-                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
-                used.
-        """
+        """Scheduler for dynamic circuit backends."""
         if durations:
             warnings.warn(
                 "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "

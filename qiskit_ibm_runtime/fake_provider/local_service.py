@@ -58,6 +58,7 @@ class QiskitRuntimeLocalService:
 
         Args:
             name: The name of the backend.
+            instance: The service instance to use.
 
         Returns:
             A backend matching the filtering.

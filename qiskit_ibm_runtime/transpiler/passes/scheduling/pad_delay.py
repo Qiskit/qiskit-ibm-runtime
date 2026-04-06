@@ -74,6 +74,7 @@ class PadDelay(BlockBasePadder):
             block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
                 the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
                 used.
+            target: The backend compilation target.
         """
         if durations:
             warnings.warn(

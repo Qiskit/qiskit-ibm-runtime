@@ -59,7 +59,7 @@ class NeatPubResult:
     def _coerced_operation(
         self, other: ScalarLike | NeatPubResultLike, op_name: str
     ) -> NeatPubResult:
-        """Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``."""
+        """Coerces ``other`` to a compatible format, applies ``op_name`` to ``self``, ``other``."""
         if not isinstance(other, (int, float)):
             if isinstance(other, NeatPubResult):
                 other = other.vals

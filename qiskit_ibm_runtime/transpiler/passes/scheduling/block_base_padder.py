@@ -260,6 +260,7 @@ class BlockBasePadder(TransformationPass):
             t_end: Absolute end time of this interval.
             next_node: Node that follows the sequence.
             prev_node: Node ahead of the sequence.
+            enable_dd: Whether to enable dynamical decoupling.
         """
         raise NotImplementedError
 
