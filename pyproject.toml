@@ -89,19 +89,24 @@ select = [
     "E",      # pycodestyle
     "F",      # pyflake
     "G",      # flake8-logging-format
+    "RUF013", # implicit-optional
     "T10",    # flake8-debugger
     "UP",     # pyupgrade
-    "RUF013", # implicit-optional
+]
+
+ignore = [
+    "D105",   # undocumented-magic-method
+    "D107",   # undocumented-public-init
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
+    "D205",   # missing-blank-line-after-summary
+    "D212",   # multi-line-summary-first-line
+    "D415",   # missing-terminal-punctuation
     "E402",   # module-import-not-at-top-of-file
     "F401",   # unused-import
     "F403",   # undefined-local-with-import-star
-    "D212",   # multi-line-summary-first-line
-    "D205",   # missing-blank-line-after-summary
-    "D415",   # missing-terminal-punctuation
 ]
 
 [tool.ruff.lint.pydocstyle]

@@ -117,6 +117,7 @@ class CircuitItem(QuantumProgramItem):
 
     @property
     def shape(self) -> tuple[int, ...]:
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
         return self.circuit_arguments.shape[:-1]
 
     def __repr__(self) -> str:
@@ -185,6 +186,7 @@ class SamplexItem(QuantumProgramItem):
 
     @property
     def shape(self) -> tuple[int, ...]:
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
         return self._shape
 
     def __repr__(self) -> str:

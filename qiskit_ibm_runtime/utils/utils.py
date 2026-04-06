@@ -602,4 +602,5 @@ class CallableStr(str):
     """A callable string."""
 
     def __call__(self) -> str:
+        """Return the string when called as a function."""
         return self

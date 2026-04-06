@@ -69,6 +69,7 @@ class CloudAuth(AuthBase):
         return False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        """Return the prepared request when calling the auth hook as a function."""
         r.headers.update(self.get_headers())
         return r
 

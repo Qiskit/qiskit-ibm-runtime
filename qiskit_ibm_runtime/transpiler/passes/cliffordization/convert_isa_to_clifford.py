@@ -84,6 +84,7 @@ class ConvertISAToClifford(TransformationPass):
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on the DAGCircuit."""
         for node in dag.op_nodes():
             if not isinstance(node.op, SUPPORTED_INSTRUCTIONS):
                 raise ValueError(f"Operation ``{node.op.name}`` not supported.")

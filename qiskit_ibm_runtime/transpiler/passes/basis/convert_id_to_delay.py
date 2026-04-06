@@ -41,6 +41,7 @@ class ConvertIdToDelay(TransformationPass):
         super().__init__()
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on the DAGCircuit."""
         self._run_inner(dag)
         return dag
 

@@ -175,6 +175,7 @@ class QiskitRuntimeService:
     """
 
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """Construct a ``QiskitRuntimeService`` instance."""
         channel = kwargs.get("channel", None)
         if channel == "local":
             from .fake_provider.local_service import QiskitRuntimeLocalService

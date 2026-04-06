@@ -489,6 +489,7 @@ class IBMBackend(Backend):
         return f"<{self.__class__.__name__}('{self.name}')>"
 
     def __call__(self) -> IBMBackend:
+        """Return the backend instance when called as a function."""
         # For backward compatibility only, can be removed later.
         return self
 

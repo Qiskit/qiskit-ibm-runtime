@@ -238,6 +238,7 @@ class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
     def default(self, obj: Any) -> Any:
+        """Return a serializable object for ``obj``."""
         if isinstance(obj, CouplingMap):
             return list(obj)
         if isinstance(obj, date):
