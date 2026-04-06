@@ -60,7 +60,6 @@ class FakeBackendV2(BackendV2):
     backend_name: str | None = None
 
     def __init__(self) -> None:
-        """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict: dict | None = None
         super().__init__(

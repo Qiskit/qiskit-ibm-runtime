@@ -79,6 +79,21 @@ class Session:
             pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Counts: {pub_result.data.cr.get_counts()}")
+
+    Args:
+        backend: Instance of ``Backend`` class.
+
+        max_time:
+            Maximum amount of time, a runtime session can be open before being
+            forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+            This value must be less than the
+            `system imposed maximum
+            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
+        create_new: If True, the POST session API endpoint will be called to create a new
+            session. Prevents creating a new session when ``from_id()`` is called.
+
+    Raises:
+        ValueError: If an input value is invalid.
     """
 
     def __init__(
@@ -88,23 +103,6 @@ class Session:
         *,
         create_new: bool | None = True,
     ):
-        """Session constructor.
-
-        Args:
-            backend: Instance of ``Backend`` class.
-
-            max_time:
-                Maximum amount of time, a runtime session can be open before being
-                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-                This value must be less than the
-                `system imposed maximum
-                <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            create_new: If True, the POST session API endpoint will be called to create a new
-                session. Prevents creating a new session when ``from_id()`` is called.
-
-        Raises:
-            ValueError: If an input value is invalid.
-        """
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
         self._backend: BackendV2 | None = None
         self._instance = None

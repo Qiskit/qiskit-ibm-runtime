@@ -20,7 +20,13 @@ from ...exceptions import IBMRuntimeError
 
 
 class RuntimeSession(RestAdapterBase):
-    """Rest adapter for session related endpoints."""
+    """Rest adapter for session related endpoints.
+
+    Args:
+        session: RetrySession to be used in the adapter.
+        session_id: Job ID of the first job in a runtime session.
+        url_prefix: Prefix to use in the URL.
+    """
 
     URL_MAP = {
         "self": "",
@@ -28,13 +34,6 @@ class RuntimeSession(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, session_id: str, url_prefix: str = "") -> None:
-        """Job constructor.
-
-        Args:
-            session: RetrySession to be used in the adapter.
-            session_id: Job ID of the first job in a runtime session.
-            url_prefix: Prefix to use in the URL.
-        """
         if not session_id:
             super().__init__(session, f"{url_prefix}/sessions")
         else:

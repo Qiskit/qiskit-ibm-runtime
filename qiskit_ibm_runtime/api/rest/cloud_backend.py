@@ -20,7 +20,13 @@ from ..session import RetrySession
 
 
 class CloudBackend(RestAdapterBase):
-    """Rest adapter for IBM Cloud backend related endpoints."""
+    """Rest adapter for IBM Cloud backend related endpoints.
+
+    Args:
+        session: Session to be used in the adaptor.
+        backend_name: Name of the backend.
+        url_prefix: Base URL.
+    """
 
     URL_MAP = {
         "configuration": "/configuration",
@@ -29,13 +35,6 @@ class CloudBackend(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = "") -> None:
-        """Backend constructor.
-
-        Args:
-            session: Session to be used in the adaptor.
-            backend_name: Name of the backend.
-            url_prefix: Base URL.
-        """
         self.backend_name = backend_name
         super().__init__(session, f"{url_prefix}/backends/{backend_name}")
 

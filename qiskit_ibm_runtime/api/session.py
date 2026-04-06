@@ -153,6 +153,17 @@ class RetrySession(Session):
 
     This is a child class of ``requests.Session``. It has its own retry
     policy and handles IBM Quantum specific parameters.
+
+    Args:
+        base_url: Base URL for the session's requests.
+        retries_total: Number of total retries for the requests.
+        retries_connect: Number of connect retries for the requests.
+        backoff_factor: Backoff factor between retry attempts.
+        verify: Whether to enable SSL verification.
+        proxies: Proxy URLs mapped by protocol.
+        auth: Authentication handler.
+        timeout: Timeout for the requests, in the form of (connection_timeout,
+            total_timeout).
     """
 
     def __init__(
@@ -166,19 +177,6 @@ class RetrySession(Session):
         auth: AuthBase | None = None,
         timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
-        """RetrySession constructor.
-
-        Args:
-            base_url: Base URL for the session's requests.
-            retries_total: Number of total retries for the requests.
-            retries_connect: Number of connect retries for the requests.
-            backoff_factor: Backoff factor between retry attempts.
-            verify: Whether to enable SSL verification.
-            proxies: Proxy URLs mapped by protocol.
-            auth: Authentication handler.
-            timeout: Timeout for the requests, in the form of (connection_timeout,
-                total_timeout).
-        """
         super().__init__()
 
         self.base_url = base_url

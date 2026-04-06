@@ -150,6 +150,13 @@ class IBMBackend(Backend):
             * family: Processor family of this backend.
             * revision: Revision version of this processor.
             * segment: Segment this processor belongs to within a larger chip.
+
+    Args:
+        configuration: Backend configuration.
+        service: Instance of QiskitRuntimeService.
+        api_client: IBM client used to communicate with the server.
+        instance: The service instance to use.
+        calibration_id: An optional calibration id to use for this backend
     """
 
     id_warning_issued = False
@@ -162,15 +169,6 @@ class IBMBackend(Backend):
         instance: str | None = None,
         calibration_id: str | None = None,
     ) -> None:
-        """IBMBackend constructor.
-
-        Args:
-            configuration: Backend configuration.
-            service: Instance of QiskitRuntimeService.
-            api_client: IBM client used to communicate with the server.
-            instance: The service instance to use.
-            calibration_id: An optional calibration id to use for this backend
-        """
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
@@ -564,7 +562,13 @@ class IBMBackend(Backend):
 
 
 class IBMRetiredBackend(IBMBackend):
-    """Backend class interfacing with an IBM Quantum device no longer available."""
+    """Backend class interfacing with an IBM Quantum device no longer available.
+
+    Args:
+        configuration: Backend configuration.
+        service: Instance of QiskitRuntimeService.
+        api_client: IBM Quantum client used to communicate with the server.
+    """
 
     def __init__(
         self,
@@ -572,13 +576,6 @@ class IBMRetiredBackend(IBMBackend):
         service: qiskit_runtime_service.QiskitRuntimeService,
         api_client: RuntimeClient | None = None,
     ) -> None:
-        """IBMRetiredBackend constructor.
-
-        Args:
-            configuration: Backend configuration.
-            service: Instance of QiskitRuntimeService.
-            api_client: IBM Quantum client used to communicate with the server.
-        """
         super().__init__(configuration, service, api_client)
         self._status = BackendStatus(
             backend_name=self.name,

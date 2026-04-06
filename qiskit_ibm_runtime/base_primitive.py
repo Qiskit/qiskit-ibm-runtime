@@ -92,7 +92,22 @@ def get_mode_service_backend(
 
 
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
-    """Base class for Qiskit Runtime primitives."""
+    """Base class for Qiskit Runtime primitives.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+        options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
+            and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
+            on estimator and sampler options, respectively.
+
+    Raises:
+        ValueError: Invalid arguments are given.
+    """
 
     _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
@@ -102,22 +117,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         mode: BackendV2 | Session | Batch | str | None = None,
         options: dict | OptionsT | None = None,
     ):
-        """Initializes the primitive.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-            options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
-                and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
-                on estimator and sampler options, respectively.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 

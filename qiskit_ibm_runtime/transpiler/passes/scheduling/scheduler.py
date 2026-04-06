@@ -61,7 +61,6 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ) -> None:
-        """Scheduler for dynamic circuit backends."""
         if durations:
             warnings.warn(
                 "The `durations` input argument of `BaseDynamicCircuitAnalysis` is deprecated "

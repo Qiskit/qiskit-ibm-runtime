@@ -36,17 +36,15 @@ class Nduv:
         name: name.
         unit: unit.
         value: value.
+
+    Args:
+        date: Date field
+        name: Name field
+        unit: Nduv unit
+        value: The value of the Nduv
     """
 
     def __init__(self, date: datetime.datetime, name: str, unit: str, value: float) -> None:
-        """Initialize a new name-date-unit-value object.
-
-        Args:
-            date: Date field
-            name: Name field
-            unit: Nduv unit
-            value: The value of the Nduv
-        """
         self.date = date
         self.name = name
         self.unit = unit
@@ -96,19 +94,17 @@ class GateProperties:
         qubits: qubits.
         gate: gate.
         parameters: parameters.
+
+    Args:
+        qubits: A list of integers representing qubits
+        gate: The gates name
+        parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
+        kwargs: Optional additional fields
     """
 
     _data: dict[Any, Any] = {}
 
     def __init__(self, qubits: list[int], gate: str, parameters: list[Nduv], **kwargs: Any) -> None:
-        """Initialize a new :class:`GateProperties` object.
-
-        Args:
-            qubits: A list of integers representing qubits
-            gate: The gates name
-            parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
-            kwargs: Optional additional fields
-        """
         self._data = {}
         self.qubits = qubits
         self.gate = gate
@@ -171,6 +167,16 @@ class BackendProperties:
     This holds backend properties measured by the provider. All properties
     which are provided optionally. These properties may describe qubits, gates,
     or other general properties of the backend.
+
+    Args:
+        backend_name: Backend name.
+        backend_version: Backend version in the form X.Y.Z.
+        last_update_date: Last date/time that a property was updated. If specified as a
+            ``str``, it must be in ISO format.
+        qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
+        gates: System gate parameters as a list of :class:`GateProperties` objects
+        general: General parameters as a list of :class:`Nduv` objects
+        kwargs: optional additional fields
     """
 
     _data: dict = {}
@@ -185,18 +191,6 @@ class BackendProperties:
         general: list,
         **kwargs: Any,
     ) -> None:
-        """Initialize a BackendProperties instance.
-
-        Args:
-            backend_name: Backend name.
-            backend_version: Backend version in the form X.Y.Z.
-            last_update_date: Last date/time that a property was updated. If specified as a
-                ``str``, it must be in ISO format.
-            qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
-            gates: System gate parameters as a list of :class:`GateProperties` objects
-            general: General parameters as a list of :class:`Nduv` objects
-            kwargs: optional additional fields
-        """
         self._data = {}
         self.backend_name = backend_name
         self.backend_version = backend_version

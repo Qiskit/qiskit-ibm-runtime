@@ -21,7 +21,17 @@ from .fake_backend import FakeBackendV2
 
 
 class LocalRuntimeJob(PrimitiveJob):
-    """Job class for qiskit-ibm-runtime's local mode."""
+    """Job class for qiskit-ibm-runtime's local mode.
+
+    Args:
+        future: Thread executor the job is run on.
+        backend: The backend to run the primitive on.
+        primitive: Name of the primitive.
+        inputs: Program input parameters. These input values are passed
+            to the runtime program.
+        args: Additional arguments.
+        kwargs: Additional keyword arguments.
+    """
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
@@ -32,17 +42,6 @@ class LocalRuntimeJob(PrimitiveJob):
         *args,
         **kwargs,
     ) -> None:
-        """LocalRuntimeJob constructor.
-
-        Args:
-            future: Thread executor the job is run on.
-            backend: The backend to run the primitive on.
-            primitive: Name of the primitive.
-            inputs: Program input parameters. These input values are passed
-                to the runtime program.
-            args: Additional arguments.
-            kwargs: Additional keyword arguments.
-        """
         super().__init__(*args, **kwargs)
         self._future = future
         self._backend = backend

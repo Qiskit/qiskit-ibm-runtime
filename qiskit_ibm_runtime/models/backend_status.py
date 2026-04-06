@@ -21,7 +21,18 @@ BackendStatusT = TypeVar("BackendStatusT", bound="BackendStatus")
 
 
 class BackendStatus:
-    """Class representing Backend Status."""
+    """Class representing Backend Status.
+
+    Args:
+        backend_name: The backend's name
+        backend_version: The backend's version of the form X.Y.Z
+        operational: True if the backend is operational
+        pending_jobs: The number of pending jobs on the backend
+        status_msg: The status msg for the backend
+
+    Raises:
+        QiskitError: If the backend version is in an invalid format
+    """
 
     def __init__(
         self,
@@ -31,18 +42,6 @@ class BackendStatus:
         pending_jobs: int,
         status_msg: str,
     ):
-        """Initialize a BackendStatus object.
-
-        Args:
-            backend_name: The backend's name
-            backend_version: The backend's version of the form X.Y.Z
-            operational: True if the backend is operational
-            pending_jobs: The number of pending jobs on the backend
-            status_msg: The status msg for the backend
-
-        Raises:
-            QiskitError: If the backend version is in an invalid format
-        """
         self.backend_name = backend_name
         self.backend_version = backend_version
         self.operational = operational

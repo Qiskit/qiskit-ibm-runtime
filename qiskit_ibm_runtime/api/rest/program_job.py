@@ -21,7 +21,13 @@ from ...utils.json import RuntimeDecoder
 
 
 class ProgramJob(RestAdapterBase):
-    """Rest adapter for program job related endpoints."""
+    """Rest adapter for program job related endpoints.
+
+    Args:
+        session: Session to be used in the adapter.
+        job_id: ID of the program job.
+        url_prefix: Prefix to use in the URL.
+    """
 
     URL_MAP = {
         "self": "",
@@ -33,13 +39,6 @@ class ProgramJob(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, job_id: str, url_prefix: str = "") -> None:
-        """ProgramJob constructor.
-
-        Args:
-            session: Session to be used in the adapter.
-            job_id: ID of the program job.
-            url_prefix: Prefix to use in the URL.
-        """
         super().__init__(session, f"{url_prefix}/jobs/{job_id}")
 
     def get(self, exclude_params: bool | None = None) -> dict:

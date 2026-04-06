@@ -27,17 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 class RuntimeClient(BaseBackendClient):
-    """Client for accessing runtime service."""
+    """Client for accessing runtime service.
+
+    Args:
+        params: Connection parameters.
+    """
 
     def __init__(
         self,
         params: ClientParameters,
     ) -> None:
-        """RuntimeClient constructor.
-
-        Args:
-            params: Connection parameters.
-        """
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),

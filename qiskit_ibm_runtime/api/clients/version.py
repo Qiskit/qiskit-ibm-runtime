@@ -19,15 +19,14 @@ from ..session import RetrySession
 
 
 class VersionClient:
-    """Client for determining the version of an IBM Quantum service."""
+    """Client for determining the version of an IBM Quantum service.
+
+    Args:
+        url: URL of the service.
+        **request_kwargs: Arguments for the request ``Session``.
+    """
 
     def __init__(self, url: str, **request_kwargs: Any) -> None:
-        """VersionClient constructor.
-
-        Args:
-            url: URL of the service.
-            **request_kwargs: Arguments for the request ``Session``.
-        """
         self.client_version_finder = Api(RetrySession(url, **request_kwargs))
 
     def version(self) -> dict[str, bool | str]:

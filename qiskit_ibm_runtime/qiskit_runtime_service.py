@@ -50,7 +50,129 @@ SERVICE_NAME = "runtime"
 
 
 class QiskitRuntimeService:
-    """Class for interacting with the Qiskit Runtime service."""
+    """Class for interacting with the Qiskit Runtime service.
+
+    Recommended uses:
+
+    * Direct instantiation:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            service = QiskitRuntimeService(
+                channel="ibm_quantum_platform", # optional
+                token="API_KEY",
+                instance="CRN" # recommended
+                )
+
+    * Saving default acccount:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            QiskitRuntimeService.save_account(
+                token="API_KEY",
+                instance="CRN",
+                set_as_default = True
+                )
+
+            service = QiskitRuntimeService()
+
+    The minimum required information for service authentication to a non-local channel is the
+    ``token``. The ``local`` channel doesn't require authentication.
+    For non-local channels, it is recommended to always provide the relevant ``instance``
+    to minimize API calls. If an ``instance`` is not defined, the service will fetch all
+    instances accessible within the account, filtered by ``region``, ``plans_preference``, and
+    ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
+    over paid instances.
+
+    Also note that only one account per API token can be used. The API token is linked to the
+    account it was created in. If you want to use multiple accounts, you must create multiple
+    API tokens.
+
+    The service will attempt to load an account from file if (a) no explicit ``token``
+    was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
+    ``token`` was provided to the service constructor. The account will be selected based on
+    the following criteria:
+
+    - If a ``filename`` is specified, account details will be loaded from ``filename``,
+        else they will be loaded from the default configuration file.
+
+    - If a ``name`` is specified, the corresponding account details will be loaded from
+        the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
+        ``plans_preference``, and the advanced configuration parameters: ``url``,
+        ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
+        **Important Note**: An explicit ``instance`` value provided during instantiation
+        will **overwrite** the value of the loaded ``instance``.
+
+    - If no ``name`` is specified: if ``channel`` is specified, the service will load the
+        default account associated with that channel from the configuration file. Else,
+        it will fall back to the overall default account, defined when calling
+        :meth:`.save_account` with ``set_as_default=True``.
+
+    Args:
+        channel: String that identifies the service platform. This is
+            set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
+            and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
+            path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
+            If ``local`` is selected, the local testing mode will be used, and
+            primitive queries will run on a local simulator. For more details, check the
+            `Qiskit Runtime local testing mode
+            <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
+            For non-local modes, the channel is used to resolve the default API URL value.
+            ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
+            its URL will be redirected to the new ``ibm_quantum_platform`` address.
+        token: IBM Cloud API key. Providing an API key is required for IQP
+            authentication. If not provided explicitly, the default saved account will be
+            queried for this API key.
+        url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
+            channels accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``,
+            ``ibm_cloud``).
+            This URL is processed by a ``url_resolver`` to route requests to the correct
+            service entrypoint. If you provide a custom ``url``, you must also supply a
+            matching ``url_resolver``. The default resolver rewrites the base URL to
+            ``https://quantum.cloud.ibm.com/api/v[x]``.
+        filename: Full path of the file where the account is created.
+            Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
+        name: Name of the account to load from file.
+        instance: The service instance to use.
+            For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
+            Name (CRN) or the service name. If set, it will define an instance for
+            service instantiation, if not set, the service will fetch all instances accessible
+            within the account following the specified filtering criteria.
+        proxies: Proxy configuration. Supported optional keys are ``urls`` (a
+            dictionary mapping protocol or protocol and host to the URL of the proxy, documented
+            at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+            ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+            authentication)
+        verify: Whether to verify the server's TLS certificate.
+        private_endpoint: Connect to private API URL.
+        url_resolver: Function used to resolve the runtime URL. If not
+            provided, a default resolver will be used to access different service endpoints.
+        region: Set a region preference for automatic instance selection.
+            This argument is **ignored** if an ``instance`` is specified.
+            Accepted values are ``us-east`` or ``eu-de``.
+            An instance with this region will be prioritized if an instance is not passed in.
+        plans_preference: A list of account plan names
+            ordered by priority for automatic instance selection.
+            This argument is **ignored** if an ``instance`` is specified.
+            Only instances with the given plan names will be considered.
+            For example, if you want to avoid using your premium accounts you can just
+            pass in ``"open"`` to only use your open plan instances.
+            Accepted values include (but are not limited to): ``open``, ``premium``,
+            ``flex``, ``on-prem``, ``pay-as-you-go``.
+        tags: Set a list of tags to filter available instances for automatic
+            instance selection. This argument is **ignored** if an ``instance`` is specified.
+
+    Returns:
+        An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService`
+        if local channel is set.
+
+    Raises:
+        IBMInputValueError: If an input is invalid.
+    """
 
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
         channel = kwargs.get("channel", None)
@@ -77,129 +199,6 @@ class QiskitRuntimeService:
         plans_preference: list[str] | None = None,
         tags: list[str] | None = None,
     ) -> None:
-        """QiskitRuntimeService constructor.
-
-        Recommended uses:
-
-        * Direct instantiation:
-
-            .. code-block:: python
-
-                from qiskit_ibm_runtime import QiskitRuntimeService
-
-                service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform", # optional
-                    token="API_KEY",
-                    instance="CRN" # recommended
-                    )
-
-        * Saving default acccount:
-
-            .. code-block:: python
-
-                from qiskit_ibm_runtime import QiskitRuntimeService
-
-                QiskitRuntimeService.save_account(
-                    token="API_KEY",
-                    instance="CRN",
-                    set_as_default = True
-                    )
-
-                service = QiskitRuntimeService()
-
-        The minimum required information for service authentication to a non-local channel is the
-        ``token``. The ``local`` channel doesn't require authentication.
-        For non-local channels, it is recommended to always provide the relevant ``instance``
-        to minimize API calls. If an ``instance`` is not defined, the service will fetch all
-        instances accessible within the account, filtered by ``region``, ``plans_preference``, and
-        ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
-        over paid instances.
-
-        Also note that only one account per API token can be used. The API token is linked to the
-        account it was created in. If you want to use multiple accounts, you must create multiple
-        API tokens.
-
-        The service will attempt to load an account from file if (a) no explicit ``token``
-        was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
-        ``token`` was provided to the service constructor. The account will be selected based on
-        the following criteria:
-
-        - If a ``filename`` is specified, account details will be loaded from ``filename``,
-          else they will be loaded from the default configuration file.
-
-        - If a ``name`` is specified, the corresponding account details will be loaded from
-          the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
-          ``plans_preference``, and the advanced configuration parameters: ``url``,
-          ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
-          **Important Note**: An explicit ``instance`` value provided during instantiation
-          will **overwrite** the value of the loaded ``instance``.
-
-        - If no ``name`` is specified: if ``channel`` is specified, the service will load the
-          default account associated with that channel from the configuration file. Else,
-          it will fall back to the overall default account, defined when calling
-          :meth:`.save_account` with ``set_as_default=True``.
-
-        Args:
-            channel: String that identifies the service platform. This is
-                set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
-                and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
-                path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
-                If ``local`` is selected, the local testing mode will be used, and
-                primitive queries will run on a local simulator. For more details, check the
-                `Qiskit Runtime local testing mode
-                <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
-                For non-local modes, the channel is used to resolve the default API URL value.
-                ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
-                its URL will be redirected to the new ``ibm_quantum_platform`` address.
-            token: IBM Cloud API key. Providing an API key is required for IQP
-                authentication. If not provided explicitly, the default saved account will be
-                queried for this API key.
-            url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
-                channels accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``,
-                ``ibm_cloud``).
-                This URL is processed by a ``url_resolver`` to route requests to the correct
-                service entrypoint. If you provide a custom ``url``, you must also supply a
-                matching ``url_resolver``. The default resolver rewrites the base URL to
-                ``https://quantum.cloud.ibm.com/api/v[x]``.
-            filename: Full path of the file where the account is created.
-                Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
-            name: Name of the account to load from file.
-            instance: The service instance to use.
-                For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
-                Name (CRN) or the service name. If set, it will define an instance for
-                service instantiation, if not set, the service will fetch all instances accessible
-                within the account following the specified filtering criteria.
-            proxies: Proxy configuration. Supported optional keys are ``urls`` (a
-                dictionary mapping protocol or protocol and host to the URL of the proxy, documented
-                at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
-                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
-                authentication)
-            verify: Whether to verify the server's TLS certificate.
-            private_endpoint: Connect to private API URL.
-            url_resolver: Function used to resolve the runtime URL. If not
-                provided, a default resolver will be used to access different service endpoints.
-            region: Set a region preference for automatic instance selection.
-                This argument is **ignored** if an ``instance`` is specified.
-                Accepted values are ``us-east`` or ``eu-de``.
-                An instance with this region will be prioritized if an instance is not passed in.
-            plans_preference: A list of account plan names
-                ordered by priority for automatic instance selection.
-                This argument is **ignored** if an ``instance`` is specified.
-                Only instances with the given plan names will be considered.
-                For example, if you want to avoid using your premium accounts you can just
-                pass in ``"open"`` to only use your open plan instances.
-                Accepted values include (but are not limited to): ``open``, ``premium``,
-                ``flex``, ``on-prem``, ``pay-as-you-go``.
-            tags: Set a list of tags to filter available instances for automatic
-                instance selection. This argument is **ignored** if an ``instance`` is specified.
-
-        Returns:
-            An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService`
-            if local channel is set.
-
-        Raises:
-            IBMInputValueError: If an input is invalid.
-        """
         super().__init__()
         self._all_instances: list[dict[str, Any]] = []
         self._saved_instances: list[str] = []

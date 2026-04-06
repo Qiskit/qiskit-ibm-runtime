@@ -44,7 +44,22 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRuntimeJob(ABC):
-    """Base Runtime Job class."""
+    """Base Runtime Job class.
+
+    Args:
+        backend: The backend instance used to run this job.
+        api_client: Object for connecting to the server.
+        job_id: Job ID.
+        program_id: ID of the program this job is for.
+        creation_date: Job creation date, in UTC.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        image: Runtime image used for this job: image_name:tag.
+        service: Runtime service.
+        session_id: Job ID of the first job in a runtime session.
+        tags: Tags assigned to the job.
+        version: Primitive version.
+        private: Marks job as private.
+    """
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
@@ -66,22 +81,6 @@ class BaseRuntimeJob(ABC):
         version: int | None = None,
         private: bool | None = False,
     ) -> None:
-        """RuntimeJob constructor.
-
-        Args:
-            backend: The backend instance used to run this job.
-            api_client: Object for connecting to the server.
-            job_id: Job ID.
-            program_id: ID of the program this job is for.
-            creation_date: Job creation date, in UTC.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            image: Runtime image used for this job: image_name:tag.
-            service: Runtime service.
-            session_id: Job ID of the first job in a runtime session.
-            tags: Tags assigned to the job.
-            version: Primitive version.
-            private: Marks job as private.
-        """
         self._backend = backend
         self._job_id = job_id
         self._api_client = api_client

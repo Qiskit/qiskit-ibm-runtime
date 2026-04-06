@@ -47,7 +47,15 @@ logger = logging.getLogger(__name__)
 
 
 class Account:
-    """Class that represents an account. This is an abstract class."""
+    """Class that represents an account. This is an abstract class.
+
+    Args:
+        channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
+        token: Account token to use.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+    """
 
     def __init__(
         self,
@@ -56,15 +64,6 @@ class Account:
         proxies: ProxyConfiguration | None = None,
         verify: bool | None = True,
     ):
-        """Account constructor.
-
-        Args:
-            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
-            token: Account token to use.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-        """
         self.channel: str = None
         self.url: str = None
         self.token = token
@@ -235,7 +234,21 @@ class Account:
 
 
 class CloudAccount(Account):
-    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'."""
+    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'.
+
+    Args:
+        token: Account token to use.
+        url: Authentication URL.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+        private_endpoint: Connect to private API URL.
+        region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+        plans_preference: A list of account types, ordered by preference.
+        channel: Channel identifier. Accepted values are ``ibm_cloud`` or
+            ``ibm_quantum_platform``. Defaults to ``ibm_quantum_platform``.
+        tags: List of instance tags.
+    """
 
     def __init__(
         self,
@@ -250,21 +263,6 @@ class CloudAccount(Account):
         channel: str | None = "ibm_quantum_platform",
         tags: list[str] | None = None,
     ):
-        """Account constructor.
-
-        Args:
-            token: Account token to use.
-            url: Authentication URL.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-            private_endpoint: Connect to private API URL.
-            region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
-            plans_preference: A list of account types, ordered by preference.
-            channel: Channel identifier. Accepted values are ``ibm_cloud`` or
-                ``ibm_quantum_platform``. Defaults to ``ibm_quantum_platform``.
-            tags: List of instance tags.
-        """
         super().__init__(token, instance, proxies, verify)
         raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel

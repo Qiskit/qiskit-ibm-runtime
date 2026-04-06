@@ -88,6 +88,21 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         job = estimator.run([(isa_psi, isa_observables, [theta])])
         pub_result = job.result()[0]
         print(f"Expectation values: {pub_result.data.evs}")
+
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `Qiskit Runtime documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Estimator options, see :class:`EstimatorOptions` for detailed description.
     """
 
     _options_class = EstimatorOptions
@@ -99,23 +114,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         mode: BackendV2 | Session | Batch | str | None = None,
         options: dict | EstimatorOptions | None = None,
     ):
-        """Initializes the Estimator primitive.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be:
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-                Refer to the
-                `Qiskit Runtime documentation
-                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
-                for more information about the ``Execution modes``.
-
-            options: Estimator options, see :class:`EstimatorOptions` for detailed description.
-
-        """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
 

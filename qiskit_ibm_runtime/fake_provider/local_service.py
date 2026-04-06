@@ -41,14 +41,6 @@ logger = logging.getLogger(__name__)
 class QiskitRuntimeLocalService:
     """Class for local testing mode."""
 
-    def __init__(self) -> None:
-        """QiskitRuntimeLocalService constructor.
-
-        Returns:
-            An instance of QiskitRuntimeService.
-
-        """
-
     def backend(
         self,
         name: str | None = None,

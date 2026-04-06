@@ -53,6 +53,18 @@ class PadDelay(BlockBasePadder):
     in the delay instruction on the ``q_0`` wire, i.e. in total 160 dt.
 
     See :class:`BlockBasePadder` pass for details.
+
+
+    Args:
+        durations: Durations of instructions to be used in scheduling.
+        fill_very_end: Set ``True`` to fill the end of circuit with delay.
+        schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
+            This is useful for timeline visualizations, but may cause issues for execution
+            on large backends.
+        block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
+            the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+            used.
+        target: The backend compilation target.
     """
 
     def __init__(
@@ -63,19 +75,6 @@ class PadDelay(BlockBasePadder):
         block_ordering_callable: BlockOrderingCallableType | None = None,
         target: Target | None = None,
     ):
-        """Create new padding delay pass.
-
-        Args:
-            durations: Durations of instructions to be used in scheduling.
-            fill_very_end: Set ``True`` to fill the end of circuit with delay.
-            schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
-                This is useful for timeline visualizations, but may cause issues for execution
-                on large backends.
-            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
-                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
-                used.
-            target: The backend compilation target.
-        """
         if durations:
             warnings.warn(
                 "The `durations` input argument of `PadDelay` is deprecated "

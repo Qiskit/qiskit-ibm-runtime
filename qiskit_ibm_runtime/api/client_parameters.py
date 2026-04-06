@@ -21,7 +21,18 @@ from ..api.auth import CloudAuth
 
 
 class ClientParameters:
-    """IBM Quantum account client parameters."""
+    """IBM Quantum account client parameters.
+
+    Args:
+        channel: Channel type. ``ibm_cloud``, or ``ibm_quantum_platform``.
+        token: IBM Quantum Platform API token.
+        url: IBM Quantum Platform URL.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: If ``False``, ignores SSL certificates errors.
+        private_endpoint: Connect to private API URL.
+        url_resolver: Function used to resolve the runtime url.
+    """
 
     def __init__(
         self,
@@ -34,18 +45,6 @@ class ClientParameters:
         private_endpoint: bool | None = False,
         url_resolver: Callable[[str, str, bool | None, str], str] | None = None,
     ) -> None:
-        """ClientParameters constructor.
-
-        Args:
-            channel: Channel type. ``ibm_cloud``, or ``ibm_quantum_platform``.
-            token: IBM Quantum Platform API token.
-            url: IBM Quantum Platform URL.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: If ``False``, ignores SSL certificates errors.
-            private_endpoint: Connect to private API URL.
-            url_resolver: Function used to resolve the runtime url.
-        """
         self.token = token
         self.instance = instance
         self.channel = channel

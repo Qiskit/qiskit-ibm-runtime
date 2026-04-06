@@ -547,14 +547,12 @@ class RefreshQueue(Queue):
     A FIFO queue with a bounded size. Once the queue is full, when a new item
     is being added, the oldest item on the queue is discarded to make space for
     the new item.
+
+    Args:
+        maxsize: Maximum size of the queue.
     """
 
     def __init__(self, maxsize: int):
-        """RefreshQueue constructor.
-
-        Args:
-            maxsize: Maximum size of the queue.
-        """
         self.condition = Condition()
         super().__init__(maxsize=maxsize)
 
