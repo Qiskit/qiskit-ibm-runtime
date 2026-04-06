@@ -68,6 +68,7 @@ class LayerNoiseLearningOptions:
 
     Default: 4.
     """
+
     shots_per_randomization: UnsetType | int = Unset
     """The total number of shots to use per random learning circuit.
 
@@ -76,6 +77,7 @@ class LayerNoiseLearningOptions:
 
     Default: 128.
     """
+
     num_randomizations: UnsetType | int = Unset
     """The number of random circuits to use per learning circuit configuration.
 
@@ -88,6 +90,7 @@ class LayerNoiseLearningOptions:
 
     Default: 32.
     """
+
     layer_pair_depths: UnsetType | list[int] = Unset
     """The circuit depths (measured in number of pairs) to use in learning experiments.
 

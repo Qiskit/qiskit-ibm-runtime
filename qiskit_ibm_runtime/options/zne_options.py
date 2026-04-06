@@ -107,11 +107,13 @@ class ZneOptions:
             your circuits is amplified by probabilistically injecting single-qubit noise
             proportional to the corresponding learned noise model.
     """
+
     noise_factors: UnsetType | Sequence[float] = Unset
     """ noise_factors: Noise factors to use for noise amplification.
 
     Default: ``(1, 3, 5)``.
     """
+
     extrapolator: UnsetType | ExtrapolatorType | Sequence[ExtrapolatorType] = Unset
     """Extrapolator(s) to try (in order) for extrapolating to zero noise.
 
@@ -134,6 +136,7 @@ class ZneOptions:
 
     Default: ``("exponential", "linear")``.
     """
+
     extrapolated_noise_factors: UnsetType | Sequence[float] = Unset
     """Noise factors to evaluate the fit extrapolation models at.
 

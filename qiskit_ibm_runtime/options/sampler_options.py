@@ -39,15 +39,18 @@ class SamplerOptions(OptionsV2):
     """Suboptions for dynamical decoupling.
     See :class:`DynamicalDecouplingOptions` for all available options.
     """
+
     execution: SamplerExecutionOptionsV2 | Dict = Field(default_factory=SamplerExecutionOptionsV2)
     """Execution time options.
 
     See :class:`SamplerExecutionOptionsV2` for all available options.
     """
+
     twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
     """Pauli twirling options.
 
     See :class:`TwirlingOptions` for all available options.
     """
+
     experimental: UnsetType | dict = Unset
     """Experimental options."""

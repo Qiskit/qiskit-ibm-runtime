@@ -244,7 +244,9 @@ setup_logger(logger)
 # Constants used by the IBM Quantum logger.
 QISKIT_IBM_RUNTIME_LOGGER_NAME = "qiskit_ibm_runtime"
 """The name of the IBM Quantum logger."""
+
 QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
+
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""

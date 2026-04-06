@@ -37,6 +37,7 @@ class EnvironmentOptions:
     Default: ``WARNING``.
     """
     job_tags: list | None = None
+
     """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
@@ -44,6 +45,7 @@ class EnvironmentOptions:
 
     Default: ``None``.
     """
+
     private: bool | None = False
     """Boolean that indicates whether the job is marked as private.
 

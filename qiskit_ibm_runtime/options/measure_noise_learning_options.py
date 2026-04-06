@@ -32,6 +32,7 @@ class MeasureNoiseLearningOptions:
 
     Default: 32.
     """
+
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
     """The number of shots to use for the learning experiment per random circuit.
 

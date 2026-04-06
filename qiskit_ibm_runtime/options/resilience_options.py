@@ -55,11 +55,13 @@ class ResilienceOptionsV2:
     measure_noise_learning: MeasureNoiseLearningOptions | Dict = Field(
         default_factory=MeasureNoiseLearningOptions
     )
+
     """Additional measurement noise learning options.
 
     See :class:`MeasureNoiseLearningOptions` for all options.
     """
     zne_mitigation: UnsetType | bool = Unset
+
     """Whether to turn on Zero-Noise Extrapolation error mitigation method.
 
     If you enable ZNE, you can fine-tune its options by using :attr:`~zne`.
@@ -70,10 +72,12 @@ class ResilienceOptionsV2:
     level 2.
     """
     zne: ZneOptions | Dict = Field(default_factory=ZneOptions)
+
     """Additional zero-noise extrapolation mitigation options.
 
     See :class:`ZneOptions` for all options.
     """
+
     pec_mitigation: UnsetType | bool = Unset
     """Whether to turn on Probabilistic Error Cancellation error mitigation method.
 
@@ -82,11 +86,13 @@ class ResilienceOptionsV2:
 
     Default: False.
     """
+
     pec: PecOptions | Dict = Field(default_factory=PecOptions)
     """Additional probabalistic error cancellation mitigation options.
 
     See :class:`PecOptions` for all options.
     """
+
     layer_noise_learning: LayerNoiseLearningOptions | Dict = Field(
         default_factory=LayerNoiseLearningOptions
     )
@@ -94,6 +100,7 @@ class ResilienceOptionsV2:
 
     See :class:`LayerNoiseLearningOptions` for all options.
     """
+
     layer_noise_model: UnsetType | NoiseLearnerResult | Sequence[LayerError] | None = Unset
     """A :class:`NoiseLearnerResult` or a sequence of :class:`LayerError` objects.
 

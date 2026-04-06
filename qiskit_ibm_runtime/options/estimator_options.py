@@ -63,6 +63,7 @@ class EstimatorOptions(OptionsV2):
     Default: ``None``.
     """
     resilience_level: UnsetType | int = Unset
+
     """How much resilience to build against errors.
 
     Higher levels generate more accurate results,
@@ -80,11 +81,13 @@ class EstimatorOptions(OptionsV2):
 
     Default: 1.
     """
+
     seed_estimator: UnsetType | int = Unset
     """Seed used to control sampling.
 
     Default: ``None``.
     """
+
     dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(
         default_factory=DynamicalDecouplingOptions
     )

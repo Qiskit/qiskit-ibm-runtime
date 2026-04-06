@@ -26,6 +26,7 @@ class DynamicalDecouplingOptions:
 
     Default: ``False``.
     """
+
     sequence_type: UnsetType | Literal["XX", "XpXm", "XY4"] = Unset
     """Which dynamical decoupling sequence to use.
 
@@ -36,6 +37,7 @@ class DynamicalDecouplingOptions:
         * ``"XY4"``: use the sequence
           ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``
     """
+
     extra_slack_distribution: UnsetType | Literal["middle", "edges"] = Unset
     """Where to put extra timing delays due to rounding issues.
 
@@ -48,11 +50,13 @@ class DynamicalDecouplingOptions:
     * ``"edges"``: Divide the extra slack as evenly as possible into intervals at
         beginning and end of the sequence.
     """
+
     scheduling_method: UnsetType | Literal["alap", "asap"] = Unset
     """Whether to schedule gates as soon as ("asap") or as late as ("alap") possible.
 
     Default: ``"alap"``.
     """
+
     skip_reset_qubits: UnsetType | bool = Unset
     """Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
 

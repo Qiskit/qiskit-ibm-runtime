@@ -26,6 +26,7 @@ class PecOptions:
 
     Default: 100.
     """
+
     noise_gain: UnsetType | float | Literal["auto"] = Unset
     """The amount by which to scale the noise, where:
 

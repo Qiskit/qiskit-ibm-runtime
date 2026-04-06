@@ -46,11 +46,7 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
 }
 
 DEFAULT_POST_SELECTION_SUFFIX = "_ps"
-"""
-The default suffix to append to the names of the classical registers used for post selection.
-"""
+"""The default suffix to append to the names of the classical registers used for post selection."""
 
 DEFAULT_SPECTATOR_CREG_NAME = "spec"
-"""
-The default name of the classical register used for measuring spectator qubits.
-"""
+"""The default name of the classical register used for measuring spectator qubits."""
