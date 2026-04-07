@@ -54,6 +54,7 @@ def run_cloud_fake(func):
 
 
 def get_integration_test_config():
+    """Return a tuple with the specified configuration from env vars."""
     token, url, instance, qpu = (
         os.getenv("QISKIT_IBM_TOKEN"),
         os.getenv("QISKIT_IBM_URL"),
@@ -164,6 +165,7 @@ def integration_test_setup_with_backend(
         backend_name: The name of the backend.
         simulator: If set to True, the list of suitable backends is limited to simulators.
         min_num_qubits: Minimum number of qubits the backend has to have.
+        staging: If True, signal that the test uses the staging environment.
 
     Returns:
         Decorator that retrieves the appropriate backend to use for testing.

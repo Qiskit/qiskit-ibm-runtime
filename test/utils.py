@@ -340,6 +340,7 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
 
     Args:
         backend: Backend to submit the job to.
+        logger: The logger to use for sending logs when cancelling.
 
     Returns:
         Cancelled job.

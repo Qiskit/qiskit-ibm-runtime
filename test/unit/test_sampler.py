@@ -83,7 +83,7 @@ class TestSamplerV2(IBMTestCase):
             self.assertIn(list(opt.keys())[0], str(exc.exception))
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed."""
+        """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)

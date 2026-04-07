@@ -108,6 +108,9 @@ ignore = [
     "F401",   # unused-import
     "F403",   # undefined-local-with-import-star
 ]
+"test/**/test_*.py" = [
+    "D"
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

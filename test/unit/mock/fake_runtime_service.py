@@ -48,6 +48,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     ]
 
     def __new__(cls, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):
+        """Construct a ``FakeRuntimeService`` instance."""
         return super().__new__(cls, *args, **kwargs)
 
     def __init__(self, *args, num_crns=2, runtime_client=None, backend_specs=None, **kwargs):

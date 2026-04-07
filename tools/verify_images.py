@@ -28,14 +28,17 @@ ALLOWLIST_MISSING_ALT_TEXT = [
 
 
 def is_image(line: str) -> bool:
+    """Check if the line contains an image statement."""
     return line.strip().startswith((".. image:", ".. plot:"))
 
 
 def is_option(line: str) -> bool:
+    """Check if the line contains an option statement."""
     return line.strip().startswith(":")
 
 
 def is_valid_image(options: list[str]) -> bool:
+    """Check if the lines declare a valid image."""
     alt_exists = any(option.strip().startswith(":alt:") for option in options)
     nofigs_exists = any(option.strip().startswith(":nofigs:") for option in options)
 
@@ -80,6 +83,7 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
 
 
 def main(files: list[str]) -> None:
+    """Main entry point."""
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 

@@ -240,7 +240,7 @@ class TestEstimatorV2(IBMTestCase):
                     estimator.run([(circuit, obs)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed."""
+        """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)

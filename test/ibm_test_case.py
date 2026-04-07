@@ -46,6 +46,7 @@ class IBMTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Setup the test case."""
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
         filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"

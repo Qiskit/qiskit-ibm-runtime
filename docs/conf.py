@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Sphinx configuration."""
+
 # -- Path setup --------------------------------------------------------------
 import importlib
 import inspect
@@ -200,6 +202,8 @@ GITHUB_BRANCH = determine_github_branch()
 
 
 def linkcode_resolve(domain: str, info: dict) -> str | None:
+    """Return the GitHub URL for an entity."""
+
     def is_valid_code_object(obj: typing.Any) -> bool:
         return inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
 

@@ -11,6 +11,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Script for ensuring the files have the right copyright header."""
+
 import argparse
 import multiprocessing
 import os
@@ -22,6 +24,7 @@ pep263 = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 
 
 def discover_files(code_paths: list[str]) -> list[str]:
+    """Traverse the code paths, returning a list of Python files."""
     out_paths = []
     for path in code_paths:
         if os.path.isfile(path):
@@ -36,6 +39,7 @@ def discover_files(code_paths: list[str]) -> list[str]:
 
 
 def validate_header(file_path: str) -> tuple[str, bool, str]:
+    """Check that the header is correct."""
     header = """# This code is part of Qiskit.
 #
 """
@@ -75,6 +79,7 @@ def validate_header(file_path: str) -> tuple[str, bool, str]:
 
 
 def main() -> None:
+    """Main entry point."""
     default_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qiskit"
     )
