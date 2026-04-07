@@ -12,7 +12,7 @@
 
 """
 ==================================================================================
-NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`).
+NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result`)
 ==================================================================================
 
 .. autosummary::
@@ -21,7 +21,7 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
    PauliLindbladError
    LayerError
-"""  # noqa: D205, D212
+"""  # noqa: D205, D212, D415
 
 from __future__ import annotations
 

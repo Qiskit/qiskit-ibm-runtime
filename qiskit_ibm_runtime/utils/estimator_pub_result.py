@@ -12,12 +12,12 @@
 
 """
 ========================================================================================
-EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`).
+EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`)
 ========================================================================================
 
 .. autosummary::
    :toctree: ../stubs/
-"""  # noqa: D205, D212
+"""  # noqa: D205, D212, D415
 
 from __future__ import annotations
 
