@@ -115,7 +115,7 @@ class ZneOptions:
     """
 
     extrapolator: UnsetType | ExtrapolatorType | Sequence[ExtrapolatorType] = Unset
-    """Extrapolator(s) to try (in order) for extrapolating to zero noise.
+    r"""Extrapolator(s) to try (in order) for extrapolating to zero noise.
 
     The available options are:
 
@@ -138,7 +138,7 @@ class ZneOptions:
     """
 
     extrapolated_noise_factors: UnsetType | Sequence[float] = Unset
-    """Noise factors to evaluate the fit extrapolation models at.
+    r"""Noise factors to evaluate the fit extrapolation models at.
 
     If unset, this will default to ``[0, *noise_factors]``. This
     option does not affect execution or model fitting in any way, it only determines the

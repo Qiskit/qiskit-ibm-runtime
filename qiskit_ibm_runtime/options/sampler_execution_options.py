@@ -22,7 +22,7 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
     """Extends :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2` for the sampler primitive."""
 
     meas_type: UnsetType | Literal["classified", "kerneled", "avg_kerneled"] = Unset
-    """How to process and return measurement results.
+    r"""How to process and return measurement results.
 
     This option sets the return type of all classical registers in all
     :class:`~qiskit.primitives.containers.SamplerPubResult`\s.
