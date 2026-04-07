@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# This code is a Qiskit project.
+# This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024, 2025, 2026.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -26,7 +26,7 @@ from pathlib import Path
 pep263 = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 allow_path = re.compile(r"^[-_a-zA-Z0-9]+")
 
-HEADER = """# This code is a Qiskit project.
+HEADER = """# This code is part of Qiskit.
 #
 # (C) Copyright IBM {year}.
 #
@@ -93,9 +93,9 @@ def discover_files(
         if path.is_dir():
             # Recursively search for files with the specified extensions
             for file in path.rglob("*"):
-                if file.suffix in extensions and not file.match(omit):
+                if file.suffix in extensions and (not omit or (omit and not file.match(omit))):
                     yield str(file)
-        elif path.suffix in extensions and not path.match(omit):
+        elif path.suffix in extensions and (not omit or (omit and not path.match(omit))):
             yield str(path)
 
 
@@ -135,9 +135,9 @@ def validate_header(file_path: str) -> tuple[str, bool, str]:
 
 
 def main():
+    """Run verification."""
     try:
-        """Run verification."""
-        default_path = Path(__file__).resolve().parent.parent / "samplomatic"
+        default_path = Path(__file__).resolve().parent.parent / "qiskit_ibm_runtime"
 
         parser = argparse.ArgumentParser(description="Check file headers.")
         parser.add_argument(
@@ -145,7 +145,10 @@ def main():
             type=Path,
             nargs="*",
             default=[default_path],
-            help="Paths to scan; defaults to '../samplomatic' relative to the script location.",
+            help=(
+                "Paths to scan; defaults to '../qiskit_ibm_runtime' relative to the script "
+                "location."
+            ),
         )
         parser.add_argument(
             "-o",
