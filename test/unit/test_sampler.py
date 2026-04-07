@@ -103,7 +103,8 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=MockSession, _backend="common_backend")
+        backend = get_mocked_backend()
+        session = MagicMock(spec=MockSession, _backend=backend)
         options_vars = [
             (
                 SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
@@ -115,10 +116,10 @@ class TestSamplerV2(IBMTestCase):
             ),
             (
                 {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
+                    "execution": {"init_qubits": True, "rep_delay": 0.0001},
                 },
                 {
-                    "execution": {"init_qubits": True, "rep_delay": 0.01},
+                    "execution": {"init_qubits": True, "rep_delay": 0.0001},
                 },
             ),
         ]
@@ -131,6 +132,15 @@ class TestSamplerV2(IBMTestCase):
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",
                 )
+
+    def test_rep_delay_validation(self):
+        """Test rep_delay_validation."""
+        backend = get_mocked_backend()
+        session = MagicMock(spec=MockSession, _backend=backend)
+        options = {"execution": {"init_qubits": True, "rep_delay": 0.1}}
+        inst = SamplerV2(mode=session, options=options)
+        with self.assertRaises(ValueError):
+            inst.run((self.circuit,))
 
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
