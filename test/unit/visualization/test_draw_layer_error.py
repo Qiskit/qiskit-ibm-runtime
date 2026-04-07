@@ -27,6 +27,7 @@ class DrawLayerErrorBase(IBMTestCase):
     """Base class for testing the functions that draw layer errors."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         # A set of circuits

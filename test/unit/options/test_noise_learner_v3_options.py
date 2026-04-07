@@ -30,9 +30,7 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(options_model.num_randomizations, 15)
 
     def test_to_options_model_invalid_schema_model(self):
-        """Test that ``NoiseLearnerV3Options.to_options_model`` raises for a
-        non-existing schema version.
-        """
+        """Test that ``.to_options_model`` raises for a non-existing schema version."""
         options = NoiseLearnerV3Options()
         options.num_randomizations = 15
         options.experimental = {"not": "me"}

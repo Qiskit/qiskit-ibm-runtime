@@ -30,6 +30,7 @@ class TestNeat(IBMTestCase):
     """Class for testing the Neat class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         noise_strength = 0.05

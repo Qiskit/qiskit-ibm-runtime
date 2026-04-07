@@ -36,6 +36,7 @@ class TestPauliLindbladError(IBMTestCase):
     """Class for testing the PauliLindbladError class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         # A set of generators
@@ -93,6 +94,7 @@ class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         # A set of circuits

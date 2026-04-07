@@ -25,9 +25,7 @@ class TestNoiseLearnerV3(IBMTestCase):
     """Tests the ``NoiseLearnerV3`` class."""
 
     def test_run_of_session_is_selected(self):
-        """Test that ``NoiseLearnerV3.run`` selects the ``run`` method
-        of the session, if a session is specified.
-        """
+        """Test ``.run`` selects the session ``run`` method, if session specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         with (
@@ -39,9 +37,7 @@ class TestNoiseLearnerV3(IBMTestCase):
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
-        """Test that ``NoiseLearnerV3.run`` selects the ``run`` method
-        of the service, if a session is not specified.
-        """
+        """Test ``.run`` selects the session ``run`` method, if session not specified."""
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             noise_learner = NoiseLearnerV3(mode=backend)

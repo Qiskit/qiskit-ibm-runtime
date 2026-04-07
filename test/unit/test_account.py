@@ -444,9 +444,7 @@ class TestAccountManager(IBMTestCase):
         self.assertTrue(account.private_endpoint)
 
     def test_save_default_account(self):
-        """Test that if a default_account is defined in the qiskit-ibm.json file,
-        this account will be used.
-        """
+        """Test default_account defined in the qiskit-ibm.json file is used."""
         AccountManager.save(
             filename=_TEST_FILENAME,
             name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
@@ -465,7 +463,8 @@ class TestAccountManager(IBMTestCase):
 
     @temporary_account_config_file()
     def test_set_channel_precedence(self):
-        """Test the precedence of the various methods to set the account:
+        """Test the precedence of the various methods to set the account.
+
         account name > env_variables > channel parameter default account
                > default account > default account from default channel.
         """

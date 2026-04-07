@@ -56,7 +56,9 @@ class TestCircuitItem(IBMTestCase):
         self.assertEqual(circuit_item.shape, expected_shape)
 
     def test_circuit_item_num_params_doesnt_match_circuit_arguments(self):
-        """Test that ``CircuitItem`` raises an error if the number of circuit parameters
+        """Test ``CircuitItem`` raises if the number of circuit parameters doesn't match shape.
+
+        Test that ``CircuitItem`` raises an error if the number of circuit parameters
         doesn't match the shape of the circuit arguments.
         """
         circuit = QuantumCircuit(1)
@@ -67,9 +69,7 @@ class TestCircuitItem(IBMTestCase):
             CircuitItem(circuit, circuit_arguments=circuit_arguments)
 
     def test_circuit_item_no_circuit_arguments_for_parametric_circuit(self):
-        """Test that ``CircuitItem`` raises an error if the circuit has parameters
-        but the ``circuit_arguments`` parameter is unset.
-        """
+        """Test ``CircuitItem`` raises if circuit has parameters but unset ``circuit_arguments``."""
         circuit = QuantumCircuit(1)
         circuit.rx(Parameter("p"), 0)
 

@@ -39,6 +39,7 @@ class TestSamplerV2(IBMTestCase):
     """Class for testing the Estimator class."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.circuit = QuantumCircuit(1, 1)
 
@@ -238,7 +239,9 @@ class TestSamplerV2(IBMTestCase):
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block(self, backend):
-        """Test no exception for 2q gates involving qubits that are not connected in
+        """Test ISA inside condition block.
+
+        Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected.
         """
@@ -256,7 +259,9 @@ class TestSamplerV2(IBMTestCase):
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block_body_in_separate_circuit(self, backend):
-        """Test no exception for 2q gates involving qubits that are not connected in
+        """Test ISA inside condition block, with body in separate circuit.
+
+        Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected.
         For the case where the control operation body is defined not in a
@@ -292,7 +297,9 @@ class TestSamplerV2(IBMTestCase):
 
     @data(-1, 1, 2)
     def test_rzz_parametrized_angle_validation(self, angle):
-        """Test exception when rzz gate is used with a parameter which is assigned a value outside
+        """Test rzz gate with parameter outside range.
+
+        Test exception when rzz gate is used with a parameter which is assigned a value outside
         the range [0, pi/2].
         """
         backend = FakeFractionalBackend()
@@ -310,7 +317,9 @@ class TestSamplerV2(IBMTestCase):
     @data([1.0, 2.0], [1.0, 0.0])
     @unpack
     def test_rzz_validation_param_exp(self, val1, val2):
-        """Test exception when rzz gate is used with a parameter expression, which is evaluated to
+        """Test rzz gate with parameter expression evaluated outside range.
+
+        Test exception when rzz gate is used with a parameter expression, which is evaluated to
         a value outside the range [0, pi/2].
         """
         backend = FakeFractionalBackend()
@@ -331,7 +340,9 @@ class TestSamplerV2(IBMTestCase):
 
     @data(("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None)
     def test_rzz_complex(self, flawed_params):
-        """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
+        """Test rzz validation for a complex case.
+
+        Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
         tests a more complex case. In addition, we test the currently non-existing case of dynamic
         instructions.
         """

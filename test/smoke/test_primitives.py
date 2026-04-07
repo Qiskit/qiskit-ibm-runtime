@@ -36,6 +36,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
     """Smoke tests."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)

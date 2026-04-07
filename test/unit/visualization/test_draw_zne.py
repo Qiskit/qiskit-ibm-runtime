@@ -26,6 +26,7 @@ class DrawZNEBase(IBMTestCase):
     """Base class for testing the functions that visualize ZNE expectation values."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         data = DataBin(
             shape=(1,),

@@ -30,7 +30,7 @@ class TestConvertIdToDelay(IBMTestCase):
     """Tests the ConvertIdToDelay pass."""
 
     def setUp(self):
-        """Setup."""
+        """Test level setup."""
         super().setUp()
 
         self.durations = DynamicCircuitInstructionDurations([("sx", None, 160), ("x", None, 200)])

@@ -106,9 +106,7 @@ class TestFoldRzzAngle(IBMTestCase):
         self.assertEqual(isa, expected)
 
     def test_fractional_plugin(self):
-        """Verify that a pass manager created for a fractional backend applies the rzz folding
-        pass.
-        """
+        """Verify that a pass manager for a fractional backend applies the rzz folding pass."""
         circ = QuantumCircuit(2)
         circ.rzz(7, 0, 1)
 

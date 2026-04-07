@@ -32,6 +32,7 @@ class TestSession(IBMTestCase):
     """Class for testing the Session class."""
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 

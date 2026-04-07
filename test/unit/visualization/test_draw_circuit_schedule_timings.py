@@ -24,7 +24,7 @@ class TestDrawCircuitScheduleTiming(IBMTestCase):
     """Tests for the ``draw_circuit_schedule_timing`` function."""
 
     def setUp(self) -> None:
-        """Set up."""
+        """Test level setup."""
         fake_sampler_pub_result = FakeCircuitScheduleInputData.sampler_pub_result_large
         self.circuit_schedule_data = fake_sampler_pub_result.metadata["compilation"][
             "scheduler_timing"

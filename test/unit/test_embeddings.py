@@ -69,6 +69,7 @@ class TestEmbedding(IBMTestCase):
     """Class for testing the Embedding class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         service = QiskitRuntimeLocalService()

@@ -437,6 +437,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_insert_ghz_uhrig(self, use_target):
         """Test custom spacing (following Uhrig DD [1]).
+
         [1] Uhrig, G. "Keeping a quantum bit alive by optimized π-pulse sequences."
         Physical Review Letters 98.10 (2007): 100504.
         """
@@ -720,6 +721,7 @@ class TestPadDynamicalDecoupling(IBMTestCase):
     @data(True, False)
     def test_dd_can_sequentially_called(self, use_target):
         """Test if sequentially called DD pass can output the same circuit.
+
         This test verifies:
         - if global phase is properly propagated from the previous padding node.
         - if node_start_time property is properly updated for new dag circuit.
@@ -1517,11 +1519,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
     @data(True, False)
     def test_no_unused_qubits(self, use_target):
-        """Test DD with if_test circuit that unused qubits are untouched and
-        not scheduled. Unused qubits may also have missing durations when
-        not operational.
-        This ensures that programs don't have unnecessary information for
-        unused qubits.
+        """Test DD with if_test circuit that unused qubits are untouched and not scheduled.
+
+        Unused qubits may also have missing durations when not operational.
+        This ensures that programs don't have unnecessary information for unused qubits.
         Which might hurt performance in later execution stages.
         """
         dd_sequence = [XGate(), XGate()]

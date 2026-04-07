@@ -29,6 +29,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
 

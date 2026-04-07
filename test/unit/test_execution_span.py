@@ -33,6 +33,7 @@ class TestSliceSpan(IBMTestCase):
     """Class for testing SliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
@@ -136,6 +137,7 @@ class TestDoubleSliceSpan(IBMTestCase):
     """Class for testing DoubleSliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2024, 10, 11, 4, 31, 30)
         self.stop1 = datetime(2024, 10, 11, 4, 31, 34)
@@ -238,6 +240,7 @@ class TestTwirledSliceSpan(IBMTestCase):
     """Class for testing TwirledSliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2024, 10, 11, 4, 31, 30)
         self.stop1 = datetime(2024, 10, 11, 4, 31, 34)
@@ -369,6 +372,7 @@ class TestExecutionSpans(IBMTestCase):
     """Class for testing ExecutionSpans."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)

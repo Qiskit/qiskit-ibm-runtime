@@ -125,9 +125,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             )
 
     def test_quantum_program_to_0_1_no_argument(self):
-        """Test the function ``quantum_program_to_0_1`` when there are no circuit arguments, samplex
-        arguments, and chunk size.
-        """
+        """Test when there are no circuit arguments, samplex arguments, and chunk size."""
         quantum_program = QuantumProgram(100)
 
         circuit1 = QuantumCircuit(1)

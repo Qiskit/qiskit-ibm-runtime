@@ -52,11 +52,13 @@ class TestPrimitivesV2(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         cls.circ = bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
@@ -684,7 +686,9 @@ class TestGetModeServiceBackend(IBMTestCase):
             self.assertEqual(result[2], backend)
 
     def test_mode_is_backend_inside_session_context_manager(self):
-        """Test ``get_mode_service_backend`` inside a session context manager,
+        """Test ``get_mode_service_backend`` inside a session context manager (IBMBackend mode).
+
+        Test ``get_mode_service_backend`` inside a session context manager,
         when the input mode is an ``IBMBackend``.
         """
         backend = get_mocked_backend()

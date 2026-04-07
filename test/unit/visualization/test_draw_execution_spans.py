@@ -28,7 +28,7 @@ class TestDrawExecutionSpans(IBMTestCase):
     """Tests for the ``draw_execution_spans`` function."""
 
     def setUp(self) -> None:
-        """Set up."""
+        """Test level setup."""
         random.seed(100)
 
         time0 = time1 = datetime(year=1995, month=7, day=30)

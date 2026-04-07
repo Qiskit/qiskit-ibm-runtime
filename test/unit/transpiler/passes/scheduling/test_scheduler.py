@@ -42,6 +42,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
+
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
@@ -343,11 +344,10 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_shorter_measure_after_measure(self, use_target):
-        """Test if schedules circuits with shorter measure after measure
-        with a common clbit.
+        """Test if schedules circuits with shorter measure after measure with a common clbit.
 
-        Note: For dynamic circuits support we currently group measurements
-        to start at the same time which in turn trigger the end of a block.
+        Note: For dynamic circuits support we currently group measurements to start at the same
+        time which in turn trigger the end of a block.
         """
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
@@ -765,8 +765,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     def test_reset_terminates_block(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
-        Note: For dynamic circuits support we currently group resets
-        to start at the same time which in turn trigger the end of a block.
+        Note: For dynamic circuits support we currently group resets to start at the same time
+        which in turn trigger the end of a block.
         """
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -850,8 +850,8 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     def test_reset_merged_with_measure(self, use_target):
         """Test if reset operations terminate the block scheduled.
 
-        Note: For dynamic circuits support we currently group resets to start
-        at the same time which in turn trigger the end of a block.
+        Note: For dynamic circuits support we currently group resets to start at the same time
+        which in turn trigger the end of a block.
         """
         qc = QuantumCircuit(3, 1)
         qc.x(0)
@@ -1497,6 +1497,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_if_test_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
+
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
@@ -1556,6 +1557,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_classically_controlled_gate_after_measure(self, use_target):
         """Test if schedules circuits with if_test after measure with a common clbit.
+
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         qc = QuantumCircuit(2, 1)
@@ -1854,8 +1856,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_shorter_measure_after_measure(self, use_target):
-        """Test if schedules circuits with shorter measure after measure
-        with a common clbit.
+        """Test if schedules circuits with shorter measure after measure with a common clbit.
 
         Note: For dynamic circuits support we currently group measurements
         to start at the same time which in turn trigger the end of a block.
@@ -2685,6 +2686,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     @data(True, False)
     def test_fast_path_eligible_scheduling(self, use_target):
         """Test scheduling of the fast-path eligible blocks.
+
         Verify that no barrier is inserted between measurements and fast-path conditionals.
         """
         qc = QuantumCircuit(4, 3)
@@ -3384,8 +3386,10 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     @data(True, False)
     def test_scheduling_nonuniform_durations(self, use_target):
-        """Test that scheduling withing control flow blocks uses the
-        instruction durations on the correct qubit indices.
+        """Test scheduling uses the instruction durations correctly.
+
+        Test that scheduling withing control flow blocks uses the instruction durations on the
+        correct qubit indices.
         """
         backend = FakeJakartaV2()
 

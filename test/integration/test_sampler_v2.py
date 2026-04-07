@@ -36,6 +36,7 @@ class TestSampler(IBMIntegrationTestCase):
     """Test Sampler."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.fake_backend = FakeManilaV2()

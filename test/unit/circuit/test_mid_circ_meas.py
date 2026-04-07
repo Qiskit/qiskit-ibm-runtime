@@ -78,8 +78,10 @@ class TestMidCircuitMeasure(IBMTestCase):
             _ = pm.run(qc)
 
     def test_transpiler_compat_with(self):
-        """Test that default pass manager PASSES if measure_2 is in Target
-        and doesn't modify the instruction.
+        """Test default PM passes if measure_2 is in Target and does not modify the instruction.
+
+        Test that default pass manager PASSES if measure_2 is in Target and doesn't modify the
+        instruction.
         """
         mcm = MidCircuitMeasure()
         backend = GenericBackendV2(num_qubits=5, seed=0)

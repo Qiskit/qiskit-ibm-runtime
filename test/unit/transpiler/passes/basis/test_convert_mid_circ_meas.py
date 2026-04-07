@@ -29,6 +29,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
     """Tests the ConvertToMidCircuitMeasure pass."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         num_qubits = 5
@@ -70,8 +71,9 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
             ConvertToMidCircuitMeasure(self.target_without)
 
     def test_convert_measure_3(self):
-        """Test conversion with non-default alternative measure. The pass is
-        only expected to convert terminal measures into measure_3, the existing
+        """Test conversion with non-default alternative measure.
+
+        The pass is only expected to convert terminal measures into measure_3, the existing
         measure_2 instruction is left untouched.
         """
         num_qubits = 5
@@ -95,7 +97,9 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         self.assertIsInstance(transpiled.data[5].operation, Measure)
 
     def test_different_qarg(self):
-        """Test that terminal measure is only replaced if measure_2 is defined
+        """Test correct replacing of measure_2.
+
+        Test that terminal measure is only replaced if measure_2 is defined
         in corresponding qarg (else, it's left untouched).
         """
         num_qubits = 5

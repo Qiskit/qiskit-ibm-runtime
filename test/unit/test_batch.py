@@ -24,6 +24,7 @@ class TestBatch(IBMTestCase):
     """Class for testing the Batch class."""
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 

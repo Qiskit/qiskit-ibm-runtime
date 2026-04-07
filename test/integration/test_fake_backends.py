@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Tests for fake backends."""
 
 import operator
 
@@ -41,6 +42,7 @@ class TestFakeBackends(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
         cls.circuit = QuantumCircuit(2)
         cls.circuit.h(0)
@@ -82,8 +84,11 @@ class TestFakeBackends(IBMTestCase):
 
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
+    """Test case for refreshing fake backends."""
+
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
 
     @production_only

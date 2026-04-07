@@ -24,6 +24,7 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
 
     def test_patch_measure(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
+
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         with self.assertWarns(DeprecationWarning):
@@ -74,6 +75,7 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
 
     def test_patch_disable(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
+
         See: https://github.com/Qiskit/qiskit-terra/issues/7654.
         """
         with self.assertWarns(DeprecationWarning):

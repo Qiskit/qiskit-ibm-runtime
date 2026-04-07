@@ -27,6 +27,7 @@ class TestNeatPubResult(IBMTestCase):
     """Class for testing the NeatPubResult class."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
 
         result1 = NeatPubResult([1, 2, 3])
@@ -127,6 +128,7 @@ class TestNeatResult(IBMTestCase):
     """Class for testing the NeatResult class."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
 
         pub_result1 = NeatPubResult([1, 2, 3])

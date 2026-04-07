@@ -31,6 +31,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     """Integration tests for NoiseLearner."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
 
         self._backend = self.service.backend(self.dependencies.qpu)

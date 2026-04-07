@@ -30,6 +30,7 @@ class TestExecutor(IBMIntegrationTestCase):
     """Test Executor."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self.backend = (backend := self.service.backend(self.dependencies.qpu))
 
