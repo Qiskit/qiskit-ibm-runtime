@@ -12,7 +12,7 @@
 
 """Tests the quantum program converters."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
@@ -161,8 +161,8 @@ class TestQuantumProgramConverters(IBMTestCase):
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
-        chunk_start = datetime(2025, 12, 30, 14, 10)
-        chunk_stop = datetime(2025, 12, 30, 14, 15)
+        chunk_start = datetime(2025, 12, 30, 14, 10, tzinfo=timezone.utc)
+        chunk_stop = datetime(2025, 12, 30, 14, 15, tzinfo=timezone.utc)
 
         chunk_model = ChunkSpan(
             start=chunk_start,
