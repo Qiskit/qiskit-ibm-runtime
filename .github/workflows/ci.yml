@@ -64,7 +64,7 @@ jobs:
       - name: Build documentation
         run: tox -edocs
       - name: Upload documentation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: html_docs
           path: docs/_build/html
