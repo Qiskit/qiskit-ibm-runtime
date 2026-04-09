@@ -110,21 +110,15 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
-        post_processor: Callable[[QuantumProgramResult], Any] | None = None,
     ) -> Any:
         """Return the results of the job.
 
         If the decoded job results are of type QuantumProgramResult, and if a post processor is specified
-        (explicitly by the users, or via the results' passthrough data), the results are post-processed
-        before being returned. If provided, the user-specified `post_processor` takes precedence over the
-        post processor specified in the passthrough data.
+        via the results' passthrough data, the results are post-processed before being returned.
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            post_processor: Post-processor callable to apply to results.
-                Only applies to QuantumProgramResult. If provided, takes precedence
-                over ``post_processor`` specified in ``passthrough_data``.
 
         Returns:
             Runtime job result (post-processed if applicable).
@@ -151,28 +145,23 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         # Apply post-processing only if result is QuantumProgramResult
         if result is not None:
-            result = self._apply_post_processing(result, post_processor)
+            result = self._apply_post_processing(result)
 
         return result
 
     def _apply_post_processing(
         self,
         result: Any,
-        post_processor_override: Callable[[QuantumProgramResult], Any] | None = None,
     ) -> Any:
         """Apply post-processing to the decoded result.
 
         Post-processing is only applied if the result is a QuantumProgramResult
         (from Executor jobs). Other result types are returned unchanged.
 
-        Post-processing precedence:
-        1. ``post_processor_override`` parameter (if provided)
-        2. Post-processor from result's ``passthrough_data`` (if available)
-        3. No post-processing (return result as-is)
+        Post-processing is applied from the result's ``passthrough_data`` (if available).
 
         Args:
             result: The decoded result
-            post_processor_override: Optional post-processor to use, overriding defaults
 
         Returns:
             Post-processed result or original result if no post-processing applies
@@ -182,15 +171,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         if not isinstance(result, QuantumProgramResult):
             return result
 
-        # Determine which post-processor to use
+        # Check post-processor in passthrough data
         post_processor_fn = None
-
-        # Priority 1: Override parameter
-        if post_processor_override:
-            post_processor_fn = post_processor_override
-
-        # Priority 2: Post-processor from passthrough_data
-        if not post_processor_fn and isinstance(result.passthrough_data, dict):
+        if isinstance(result.passthrough_data, dict):
             if isinstance(
                 post_processor_info := result.passthrough_data.get("post_processor"), dict
             ):

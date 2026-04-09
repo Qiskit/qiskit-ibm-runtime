@@ -83,7 +83,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
 
         # Test with various non-QuantumProgramResult types
         for result in ["string_result", 123, {"dict": "result"}, None]:
-            processed = job._apply_post_processing(result, None)
+            processed = job._apply_post_processing(result)
             self.assertEqual(processed, result)
 
     def test_apply_post_processing_no_processor(self):
@@ -91,20 +91,8 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         job = self._create_job()
         qp_result = QuantumProgramResult(data=[{"c": np.array([[0, 1]])}], metadata=Metadata())
 
-        processed = job._apply_post_processing(qp_result, None)
+        processed = job._apply_post_processing(qp_result)
         self.assertEqual(processed, qp_result)
-
-    def test_apply_post_processing_with_override(self):
-        """Test post-processing with override parameter."""
-        job = self._create_job()
-        qp_result = QuantumProgramResult(data=[{"c": np.array([[0, 1]])}], metadata=Metadata())
-
-        # Define override processor inline for this specific test
-        def override_proc(qp_result):  # pylint: disable=unused-argument
-            return "override_result"
-
-        processed = job._apply_post_processing(qp_result, override_proc)
-        self.assertEqual(processed, "override_result")
 
     def test_apply_post_processing_with_passthrough_data(self):
         """Test post-processing with passthrough_data."""
@@ -121,34 +109,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         )
 
         # Apply with passthrough_data (uses pre-registered "v0.1" processor)
-        processed = job._apply_post_processing(qp_result, None)
-        self.assertEqual(processed, "processed_result")
-
-    def test_post_processing_precedence(self):
-        """Test that override > passthrough_data."""
-        job = self._create_job()
-
-        # Create result with passthrough_data
-        qp_result_with_passthrough = QuantumProgramResult(
-            data=[{"c": np.array([[0, 1]])}],
-            metadata=Metadata(),
-            passthrough_data={
-                "post_processor": {
-                    "context": "sampler_v2",
-                    "version": "v0.1",
-                }
-            },
-        )
-
-        # Test 1: Override takes precedence over passthrough_data
-        def override_proc(qp_result):  # pylint: disable=unused-argument
-            return "override"
-
-        processed = job._apply_post_processing(qp_result_with_passthrough, override_proc)
-        self.assertEqual(processed, "override")
-
-        # Test 2: Passthrough_data used when no override
-        processed = job._apply_post_processing(qp_result_with_passthrough, None)
+        processed = job._apply_post_processing(qp_result)
         self.assertEqual(processed, "processed_result")
 
     def test_passthrough_data_wrong_context(self):
@@ -166,7 +127,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         )
 
         # Should return unchanged since context is not registered
-        processed = job._apply_post_processing(qp_result, None)
+        processed = job._apply_post_processing(qp_result)
         self.assertEqual(processed, qp_result)
 
     def test_passthrough_data_missing_version(self):
@@ -185,38 +146,6 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
 
         # Should raise ValueError since version is required for sampler_v2 context
         with self.assertRaises(ValueError) as context:
-            job._apply_post_processing(qp_result, None)
+            job._apply_post_processing(qp_result)
 
         self.assertIn("Could not determine a post-processor version", str(context.exception))
-
-    def test_post_processing_error_propagation(self):
-        """Test that post-processing errors are propagated."""
-        job = self._create_job()
-        qp_result = QuantumProgramResult(data=[{"c": np.array([[0, 1]])}], metadata=Metadata())
-
-        # Use pre-registered failing processor as override
-        with self.assertRaises(RuntimeError) as context:
-            job._apply_post_processing(qp_result, SAMPLER_POST_PROCESSORS["failing_version"])
-
-        self.assertIn("Test error", str(context.exception))
-
-    def test_result_with_post_processor_parameter(self):
-        """Test result() with post_processor parameter."""
-        job = self._create_job()
-        job._status = "DONE"
-
-        # Mock the API response
-        self.mock_api_client.job_results.return_value = '{"test": "data"}'
-
-        # Mock decoder to return QuantumProgramResult
-        mock_decoder = Mock()
-        mock_decoder.decode.return_value = self.qp_result
-        job._final_result_decoder = mock_decoder  # type: ignore[assignment]
-
-        # Define test processor inline for this specific test
-        def test_proc(qp_result):  # pylint: disable=unused-argument
-            return "param_result"
-
-        result = job.result(post_processor=test_proc)
-
-        self.assertEqual(result, "param_result")
