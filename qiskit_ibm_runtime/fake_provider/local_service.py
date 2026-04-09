@@ -29,8 +29,8 @@ from qiskit.providers.backend import BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
-from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
+from .fake_backend import FakeBackendV2
+from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
 from ..ibm_backend import IBMBackend
 from ..runtime_options import RuntimeOptions
@@ -53,7 +53,7 @@ class QiskitRuntimeLocalService:
     def backend(
         self,
         name: str | None = None,
-        instance: str | None = None,  # pylint: disable=unused-argument
+        instance: str | None = None,
     ) -> FakeBackendV2:
         """Return a single fake backend matching the specified filters.
 
@@ -102,7 +102,6 @@ class QiskitRuntimeLocalService:
 
         if name:
             if name == "aer_simulator":
-                # pylint: disable=import-outside-toplevel
                 from qiskit_aer import AerSimulator
 
                 backends = [AerSimulator()]

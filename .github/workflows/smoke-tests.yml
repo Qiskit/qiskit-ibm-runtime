@@ -31,10 +31,10 @@ jobs:
       QISKIT_IBM_URL: ${{ secrets.QISKIT_IBM_URL }}
       QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
       QISKIT_IBM_QPU: ${{ secrets.QISKIT_IBM_QPU }}
-
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "-v -s"
     steps:
       - uses: actions/checkout@v6
         with:

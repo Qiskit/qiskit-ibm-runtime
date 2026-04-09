@@ -34,9 +34,6 @@ from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
 from .....ibm_test_case import IBMTestCase
 
 
-# pylint: disable=not-context-manager
-
-
 @ddt
 class TestFoldRzzAngle(IBMTestCase):
     """Test FoldRzzAngle pass"""
@@ -118,7 +115,7 @@ class TestFoldRzzAngle(IBMTestCase):
         pm = generate_preset_pass_manager(
             optimization_level=0,
             backend=FakeFractionalBackend(),
-            translation_method="ibm_fractional",
+            translation_method="ibm_dynamic_and_fractional",
         )
         isa_circ = pm.run(circ)
 

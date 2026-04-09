@@ -24,6 +24,7 @@ jobs:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "-v -s"
     steps:
       - uses: actions/checkout@v6
         with:

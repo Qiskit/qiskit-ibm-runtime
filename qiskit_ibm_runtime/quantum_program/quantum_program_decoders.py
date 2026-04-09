@@ -16,14 +16,13 @@ from __future__ import annotations
 
 import logging
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_1,
 )
-from ibm_quantum_schemas.models.executor.version_0_2.models import (
+from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_2,
 )
 
-# pylint: disable=unused-import,cyclic-import
 from ..utils.result_decoder import ResultDecoder
 from .converters import quantum_program_result_from_0_1
 from .converters import quantum_program_result_from_0_2

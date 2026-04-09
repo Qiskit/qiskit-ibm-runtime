@@ -4,5 +4,5 @@
 Bug Fixes
 ---------
 
-- Fixed an issue where the RZZ validation did not handle 
+- Fixed an issue where the RZZ validation did not handle
   parameter expressions correctly. (`2035 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2035>`__)

@@ -87,7 +87,7 @@ class CloudAuth(AuthBase):
         try:
             access_token = self.tm.get_token()
             return {"Service-CRN": self.crn, "Authorization": f"Bearer {access_token}"}
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             warnings.warn(
                 f"Unable to retrieve IBM Cloud access token. API Key will be used instead. {ex}"
             )

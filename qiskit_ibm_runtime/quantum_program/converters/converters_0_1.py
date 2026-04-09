@@ -19,17 +19,20 @@ from dataclasses import asdict
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     ParamsModel,
     CircuitItemModel,
     SamplexItemModel,
     QuantumProgramModel,
     QuantumProgramResultModel,
 )
-from ibm_quantum_schemas.models.pauli_lindblad_map_model import PauliLindbladMapModel
-from ibm_quantum_schemas.models.samplex_model import SamplexModelSSV1
-from ibm_quantum_schemas.models.tensor_model import F64TensorModel, TensorModel
-from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
+from ibm_quantum_schemas.common import (
+    PauliLindbladMapModel,
+    SamplexModelSSV1,
+    F64TensorModel,
+    TensorModel,
+    QpyModelV13ToV16,
+)
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem

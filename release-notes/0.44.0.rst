@@ -5,15 +5,15 @@ Upgrade Notes
 -------------
 
 - If a backend that does not support fractional gates is requested by setting the flag
-  ``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`, 
+  ``use_fractional_gates=True`` in :meth:`.QiskitRuntimeService.backend`,
   ``IBMInputValueError`` will be raised. (`2405 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2405>`__)
-- The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the 
+- The URL resolver was updated so that both ``ibm_cloud`` and ``ibm_quantum_platform`` channels now generate the
   same runtime entrypoint URL (``https://quantum.cloud.ibm.com/api/v[x]``).
-  Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes 
+  Previously, the ``ibm_cloud`` channel produced a decommissioned URL and relied on redirects. This change removes
   that dependency and aligns URL generation across channels. There are no user-facing changes. (`2486 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2486>`__)
-- A y-axis channel ordering for :meth:`draw_circuit_schedule_timing` has now been imposed, according 
+- A y-axis channel ordering for :meth:`draw_circuit_schedule_timing` has now been imposed, according
   to the order of channels in the ``included_channels`` input argument. (`2492 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2492>`__)
-- Added a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that, 
+- Added a new ``merge_common_instructions`` input argument to :meth:`draw_circuit_schedule_timing` that,
   if set to ``True``, will merge instructions of the same type based on temporal continuity.
 
   Example (`2494 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2494>`__):
@@ -41,28 +41,28 @@ New Features
   has reached its limit. (`2458 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2458>`__)
 - Added a "Fake Nighthawk" (:class:`.FakeNighthawk`) backend to the :mod:`.fake_provider` module.
 
-  Its coupling map and basis gates match those of a real Nighthawk backend, but 
-  the properties are not  intended to represent typical Nighthawk error values. 
-  You can use this fake backend to, for example, transpile and optimize your 
-  circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit 
-  square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a 
+  Its coupling map and basis gates match those of a real Nighthawk backend, but
+  the properties are not  intended to represent typical Nighthawk error values.
+  You can use this fake backend to, for example, transpile and optimize your
+  circuits in preparation for the forthcoming Nighthawk backends. For a 100-qubit
+  square lattice Ising circuit with 10 Trotter steps, ``FakeNighthawk`` showed a
   600% improvement in circuit depth compared to a Heron backend. (`2476 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2476>`__)
-- The :mod:`.qiskit_ibm_runtime.transpiler.passes` module has been extended with a 
-  new transpiler pass: :class:`.ConvertMidCircMeas`. This pass detects non-terminal 
-  :class:`~qiskit.circuit.Measure` instructions in a circuit and converts them into 
+- The :mod:`.qiskit_ibm_runtime.transpiler.passes` module has been extended with a
+  new transpiler pass: :class:`.ConvertMidCircMeas`. This pass detects non-terminal
+  :class:`~qiskit.circuit.Measure` instructions in a circuit and converts them into
   mid-circuit measurement instructions supported by the target.
   The pass is constructed with two arguments:
 
   - ``target`` (required): The backend target defining supported instructions.
-  - ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use. 
+  - ``mcm_name`` (optional): The name of the mid-circuit measurement instruction to use.
       Defaults to ``measure_2``. The name must follow the pattern ``measure_[X]`` (for example, ``measure_3``, ``measure_reset``).
 
-  During initialization, the pass validates that the specified target supports the given 
+  During initialization, the pass validates that the specified target supports the given
   mid-circuit measurement instruction on at least one qubit. If not, construction fails.
   When executed, the pass does the following:
 
   - It runs on an already routed circuit.
-  - It replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit 
+  - It replaces only non-terminal :class:`.~qiskit.circuit.Measure`` instructions with the specified mid-circuit
     measurement instruction, provided the target supports it on the corresponding physical qubit.
 
   It does not do the following:
@@ -111,14 +111,14 @@ New Features
 Bug Fixes
 ---------
 
-- IAM authentification bug fix when using a proxy configuration specified in ``QiskitRuntimeService``. 
+- IAM authentification bug fix when using a proxy configuration specified in ``QiskitRuntimeService``.
   The patch injects the ``proxies`` and ``verify`` attributes from ``QiskitRuntimeService`` into ``IAMTokenManager`` when using cloud authentification (``CloudAuth``). (`2344 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2344>`__)
 
 
 Other Notes
 -----------
 
-- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with 
+- The deprecated methods ``check_pending_jobs()`` and ``delete_job()`` methods, along with
   support for Python 3.9, have been removed. (`2439 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2439>`__)
 - Added :class:`CircuitSchedule` as an optional input to :meth:`draw_circuit_schedule_timing`.
   This allows for manual preprocessing of the circuit schedule timing data outside of its draw function. (`2457 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2457>`__)

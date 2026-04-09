@@ -9,8 +9,6 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable=method-hidden
-# pylint: disable=too-many-return-statements
 
 """Utility functions for the runtime service."""
 
@@ -66,7 +64,7 @@ from qiskit.primitives.containers import (
 )
 from qiskit.utils import LazyImportTester
 
-from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
+from qiskit_ibm_runtime.options.zne_options import (
     ExtrapolatorType,
 )
 from qiskit_ibm_runtime.execution_span import (
@@ -239,7 +237,7 @@ def _cast_strings_keys_to_int(obj: dict) -> dict:
 class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
-    def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, CouplingMap):
             return list(obj)
         if isinstance(obj, date):
@@ -391,7 +389,7 @@ class RuntimeEncoder(json.JSONEncoder):
             # Guard import so qiskit_aer is not imported unnecessarily. If a
             # NoiseModel instance has been created, qiskit_aer must already have
             # been imported.
-            from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
+            from qiskit_aer.noise import NoiseModel
 
             if isinstance(obj, NoiseModel):
                 return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
@@ -416,7 +414,7 @@ class RuntimeEncoder(json.JSONEncoder):
             # Guard import so scipy is not imported unnecessarily. If an
             # spmatrix instance has been created, scipy must already have
             # been imported.
-            from scipy.sparse import save_npz, spmatrix  # pylint: disable=import-outside-toplevel
+            from scipy.sparse import save_npz, spmatrix
 
             if isinstance(obj, spmatrix):
                 value = _serialize_and_encode(obj, save_npz, compress=False)
@@ -479,7 +477,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 if HAS_SCIPY:
-                    from scipy.sparse import load_npz  # pylint: disable=import-outside-toplevel
+                    from scipy.sparse import load_npz
 
                     return _decode_and_deserialize(obj_val, load_npz, False)
                 warnings.warn("Scipy is needed to restore sparse matrix.")
@@ -564,10 +562,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return obj_val
             if obj_type == "NoiseModel":
                 if HAS_AER:
-                    # pylint: disable=import-outside-toplevel
                     from qiskit_aer.noise import NoiseModel
 
-                    # pylint: enable=import-outside-toplevel
                     return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val

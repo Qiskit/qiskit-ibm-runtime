@@ -465,7 +465,7 @@ class BlockBasePadder(TransformationPass):
         """Visit a control-flow node to pad."""
 
         # Control-flow terminator ends scheduling of block currently
-        block_idx, t0 = self._node_start_time[node]  # pylint: disable=invalid-name
+        block_idx, t0 = self._node_start_time[node]
         self._terminate_block(t0, block_idx)
         self._add_block_terminating_barrier(block_idx, t0, node)
 
@@ -527,7 +527,7 @@ class BlockBasePadder(TransformationPass):
         rather than instruction. Delay node is not added so that
         we can extract non-delay predecessors.
         """
-        block_idx, t0 = self._node_start_time[node]  # pylint: disable=invalid-name
+        block_idx, t0 = self._node_start_time[node]
         # Trigger the end of a block
         if block_idx > self._current_block_idx:
             self._terminate_block(self._block_duration, self._current_block_idx)
@@ -535,14 +535,14 @@ class BlockBasePadder(TransformationPass):
 
         self._current_block_idx = block_idx
 
-        t1 = t0 + self._get_node_duration(node)  # pylint: disable=invalid-name
+        t1 = t0 + self._get_node_duration(node)
         self._block_duration = max(self._block_duration, t1)
 
     def _visit_generic(self, node: DAGNode, enable_dd: bool = False) -> None:
         """Visit a generic node to pad."""
         # Note: t0 is the relative time with respect to the current block specified
         # by block_idx.
-        block_idx, t0 = self._node_start_time[node]  # pylint: disable=invalid-name
+        block_idx, t0 = self._node_start_time[node]
 
         # Trigger the end of a block
         if block_idx > self._current_block_idx:
@@ -552,7 +552,7 @@ class BlockBasePadder(TransformationPass):
         # Now set the current block index.
         self._current_block_idx = block_idx
 
-        t1 = t0 + self._get_node_duration(node)  # pylint: disable=invalid-name
+        t1 = t0 + self._get_node_duration(node)
         self._block_duration = max(self._block_duration, t1)
 
         for bit in self._map_wires(node.qargs):

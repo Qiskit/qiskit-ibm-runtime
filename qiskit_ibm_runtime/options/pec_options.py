@@ -23,8 +23,8 @@ class PecOptions:
 
     max_overhead: UnsetType | float | None = Unset
     r"""The maximum circuit sampling overhead allowed, or
-        ``None`` for no maximum. 
-        
+        ``None`` for no maximum.
+
         Default: 100.
     """
     noise_gain: UnsetType | float | Literal["auto"] = Unset
@@ -37,8 +37,8 @@ class PecOptions:
 
         If "auto", the value in the range ``[0, 1]`` will be chosen automatically
         for each input PUB based on the learned noise strength, ``max_overhead``,
-        and the depth of the PUB. 
-        
+        and the depth of the PUB.
+
         Default: "auto".
     """
 

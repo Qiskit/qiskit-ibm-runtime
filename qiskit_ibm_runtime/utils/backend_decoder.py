@@ -57,7 +57,7 @@ def configuration_from_server_data(
         decode_backend_configuration(raw_config)
         filter_raw_configuration(raw_config, use_fractional_gates=use_fractional_gates)
         return QasmBackendConfiguration.from_dict(raw_config)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         logger.warning(
             'Remote backend "%s" for service instance %s could not be instantiated due '
             "to an invalid server-side configuration",

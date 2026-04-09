@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
-# pylint: disable=missing-module-docstring
 
 from ddt import ddt, data
 
@@ -96,7 +94,7 @@ class TestFakeBackends(IBMTestCase):
 
     def test_delay_circuit(self):
         backend = FakeMumbaiV2()
-        qc = QuantumCircuit(2)  # pylint: disable=invalid-name
+        qc = QuantumCircuit(2)
         qc.delay(502, 0, unit="ns")
         qc.x(1)
         qc.delay(250, 1, unit="ns")
