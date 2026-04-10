@@ -20,6 +20,8 @@ from pydantic import Field, ConfigDict
 
 from .environment_options import LogLevelType
 
+# without validate_assignment, it doesn't validate when mutating attributes, only when constructing
+# an instance for the first time.
 _CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 
 
