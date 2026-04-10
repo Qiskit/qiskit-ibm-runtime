@@ -16,29 +16,31 @@ from __future__ import annotations
 
 
 from pydantic.dataclasses import dataclass
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
 from .environment_options import LogLevelType
 
+_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 
-@dataclass
+
+@dataclass(config=_CONFIG)
 class ExecutionOptions:
     """Low-level execution options."""
 
     init_qubits: bool = True
-    r"""Whether to reset the qubits to the ground state for each shot.
-    """
+    r"""Whether to reset the qubits to the ground state for each shot."""
 
     rep_delay: float | None = None
-    r"""The repetition delay. This is the delay between a measurement and
-    the subsequent quantum circuit. This is only supported on backends that have
-    ``backend.dynamic_reprate_enabled=True``. It must be from the
-    range supplied by ``backend.rep_delay_range``.
-    Default is given by ``backend.default_rep_delay``.
+    r"""The repetition delay. 
+    
+    This is the delay between a measurement and the subsequent quantum circuit. This is only
+    supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must be from the
+    range supplied by ``backend.rep_delay_range``. Default is given by
+    ``backend.default_rep_delay``.
     """
 
 
-@dataclass
+@dataclass(config=_CONFIG)
 class EnvironmentOptions:
     """Options related to the execution environment."""
 
@@ -57,12 +59,10 @@ class EnvironmentOptions:
     private: bool = False
     r"""Boolean that indicates whether the job is marked as private.
 
-    When set to true,
-        input parameters are not returned, and the results can only be read once.
-        After the job is completed, input parameters are deleted from the service.
-        After the results are read, these are also deleted from the service.
-        When set to false, the input parameters and results follow the
-        standard retention behavior of the API.
+    When set to true, input parameters are not returned, and the results can only be read once.
+    After the job is completed, input parameters are deleted from the service. After the results are
+    read, these are also deleted from the service. When set to false, the input parameters and
+    results follow the standard retention behavior of the API.
     """
 
     max_execution_time: int | None = None
@@ -77,7 +77,7 @@ class EnvironmentOptions:
     r"""Runtime image used for this job."""
 
 
-@dataclass
+@dataclass(config=_CONFIG)
 class ExecutorOptions:
     """Options for the executor."""
 
