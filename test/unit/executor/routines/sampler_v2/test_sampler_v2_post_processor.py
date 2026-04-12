@@ -87,6 +87,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
+                "meas_type": "classified"
             }
         }
 
@@ -295,6 +296,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": False,
+                "meas_type": "classified"
             }
         }
 
@@ -331,6 +333,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
+                "meas_type": "classified",
             }
         }
 
@@ -374,6 +377,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
+                "meas_type": "classified"
             }
         }
 
@@ -420,6 +424,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
+                "meas_type": "classified"
             }
         }
 
@@ -461,6 +466,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
+                "meas_type": "classified"
             }
         }
 
@@ -501,7 +507,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, twirling_enabled=False):
+    def _make_result(self, data, twirling_enabled=False, meas_type="classified"):
         """Helper to build a QuantumProgramResult with twirling flag.
 
         Args:
@@ -516,6 +522,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": twirling_enabled,
+                "meas_type": meas_type
             }
         }
 
@@ -611,6 +618,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             "context": "sampler_v2",
             "version": "v0.1",
             "options": options_dict,
+            "meas_type": "classified"
             # Intentionally omit twirling flag
         }
         qp_result = QuantumProgramResult(
@@ -624,6 +632,38 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             sampler_v2_post_processor_v0_1(qp_result)
 
         self.assertIn("twirling", str(context.exception))
+
+    def test_error_when_meas_type_missing_from_passthrough(self):
+        """Verify error is raised when meas_type is missing from passthrough data."""
+        num_rand, shots_per_rand, num_bits = 4, 64, 2
+        meas_data = np.random.randint(
+            0, 2, size=(num_rand, shots_per_rand, num_bits), dtype=np.uint8
+        )
+
+        # Create options with twirling enabled
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        options_dict = asdict(options)
+
+        # Build result with options but WITHOUT meas_type
+        post_processor_data = {
+            "context": "sampler_v2",
+            "version": "v0.1",
+            "options": options_dict,
+            "twirling": True
+            # Intentionally omit meas_type
+        }
+        qp_result = QuantumProgramResult(
+            data=[{"meas": meas_data}],
+            metadata=Metadata(),
+            passthrough_data={"post_processor": post_processor_data},
+        )
+
+        # Should raise ValueError
+        with self.assertRaises(ValueError) as context:
+            sampler_v2_post_processor_v0_1(qp_result)
+
+        self.assertIn("meas_type", str(context.exception))
 
     def test_multiple_pubs_mixed_twirled(self):
         """Multiple pubs: each pub is flattened according to its computed pub_shape."""
