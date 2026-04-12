@@ -238,7 +238,6 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
 
     def test_data_integrity_kerneled(self):
         """Test that kerneled measurements pass through."""
-        num_shots = 10
         # Create specific measurement data to verify integrity
         meas_data = np.array(
             [1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j],
