@@ -81,8 +81,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         if cls.dependencies.channel == "ibm_quantum_platform":
             cls.backend = cls.dependencies.service.backend(cls.dependencies.qpu)
@@ -172,7 +170,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.backend
         with self.subTest(backend=backend.name):
             with self.assertRaises(AttributeError):
-                backend.foobar  # pylint: disable=pointless-statement
+                backend.foobar
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""

@@ -31,7 +31,7 @@ class TwirlingOptions:
 
     enable_gates: UnsetType | bool = Unset
     r"""Whether to apply 2-qubit Clifford gate twirling.
-    
+
     Default:
     - For the Sampler: ``False``.
     - For the Estimator: If ``enables_gates`` is ``Unset``, it is determined by the server
@@ -40,7 +40,7 @@ class TwirlingOptions:
     """
 
     enable_measure: UnsetType | bool = Unset
-    r"""Whether to enable twirling to measurement instructions, as long as the measurement is not 
+    r"""Whether to enable twirling to measurement instructions, as long as the measurement is not
     involved within a conditional block.
 
     Default:
@@ -106,9 +106,9 @@ class TwirlingOptions:
 
     .. image:: /source_images/twirling_strategy_options.png
       :alt: Image illustrating the differences among twirling strategies. If "active", only
-            instruction qubits in each layer will be twirled. If "active-circuit", 
-            all instruction qubits in the circuit will be twirled. If "active-accum", the union 
-            all instruction qubits in the circuit up to the current twirled layer will be twirled. 
+            instruction qubits in each layer will be twirled. If "active-circuit",
+            all instruction qubits in the circuit will be twirled. If "active-accum", the union
+            all instruction qubits in the circuit up to the current twirled layer will be twirled.
             Finally, if "all", all qubits in the input circuit will be twirled in each twirled layer.
     """
 

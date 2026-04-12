@@ -21,7 +21,7 @@ import re
 pep263 = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
 
 
-def discover_files(code_paths):
+def discover_files(code_paths: list[str]) -> list[str]:
     out_paths = []
     for path in code_paths:
         if os.path.isfile(path):
@@ -35,7 +35,7 @@ def discover_files(code_paths):
     return out_paths
 
 
-def validate_header(file_path):
+def validate_header(file_path: str) -> tuple[str, bool, str]:
     header = """# This code is part of Qiskit.
 #
 """
@@ -62,15 +62,19 @@ def validate_header(file_path):
             start = index
             break
     if "".join(lines[start : start + 2]) != header:
-        return (file_path, False, "Header up to copyright line does not match: %s" % header)
+        return (file_path, False, "Header up to copyright line does not match: {}".format(header))
     if not lines[start + 2].startswith("# (C) Copyright IBM 20"):
         return (file_path, False, "Header copyright line not found")
     if "".join(lines[start + 3 : start + 11]) != apache_text:
-        return (file_path, False, "Header apache text string doesn't match:\n %s" % apache_text)
+        return (
+            file_path,
+            False,
+            "Header apache text string doesn't match:\n {}".format(apache_text),
+        )
     return (file_path, True, None)
 
 
-def main():
+def main() -> None:
     default_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qiskit"
     )
@@ -80,7 +84,7 @@ def main():
         type=str,
         nargs="*",
         default=[default_path],
-        help="Paths to scan by default uses ../qiskit from the" " script",
+        help="Paths to scan by default uses ../qiskit from the script",
     )
     args = parser.parse_args()
     files = discover_files(args.paths)
@@ -89,8 +93,8 @@ def main():
     failed_files = [x for x in res if x[1] is False]
     if len(failed_files) > 0:
         for failed_file in failed_files:
-            sys.stderr.write("%s failed header check because:\n" % failed_file[0])
-            sys.stderr.write("%s\n\n" % failed_file[2])
+            sys.stderr.write("{} failed header check because:\n".format(failed_file[0]))
+            sys.stderr.write("{}\n\n".format(failed_file[2]))
         sys.exit(1)
     sys.exit(0)
 

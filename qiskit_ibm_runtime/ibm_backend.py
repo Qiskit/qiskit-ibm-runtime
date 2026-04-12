@@ -19,9 +19,8 @@ from typing import Any
 from datetime import datetime as python_datetime
 from copy import deepcopy
 
-from packaging.version import Version
 from qiskit import QuantumCircuit
-from qiskit import __version__ as qiskit_version
+from qiskit.result import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.transpiler.target import Target
@@ -30,7 +29,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
 )
 
-from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
+from . import qiskit_runtime_service
 from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
@@ -55,18 +54,6 @@ from .utils.backend_decoder import (
     configuration_from_server_data,
     properties_from_server_data,
 )
-
-
-if Version(qiskit_version).major >= 2:
-    from qiskit.result import (  # pylint: disable=ungrouped-imports
-        MeasLevel,
-        MeasReturnType,
-    )
-else:
-    from qiskit.qobj.utils import (  # pylint: disable=import-error
-        MeasLevel,
-        MeasReturnType,
-    )
 
 
 logger = logging.getLogger(__name__)
@@ -382,7 +369,7 @@ class IBMBackend(Backend):
 
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
-            properties=self.properties(datetime=datetime),  # pylint: disable=unexpected-keyword-arg
+            properties=self.properties(datetime=datetime),
         )
 
     def refresh(self) -> None:
@@ -395,7 +382,7 @@ class IBMBackend(Backend):
             use_fractional_gates=self.options.use_fractional_gates,
         ):
             self._configuration = config
-        self.properties(refresh=True)  # pylint: disable=unexpected-keyword-arg
+        self.properties(refresh=True)
         self._convert_to_target(refresh=True)
 
     def properties(
@@ -426,7 +413,6 @@ class IBMBackend(Backend):
             TypeError: If an input argument is not of the correct type.
             NotImplementedError: If `datetime` is specified when cloud runtime is used.
         """
-        # pylint: disable=arguments-differ
         if self._configuration.simulator:
             # Simulators do not have backend properties.
             return None

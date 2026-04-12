@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
-# pylint: disable=missing-module-docstring
 
 import operator
 
@@ -87,8 +85,6 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
     @classmethod
     def setUpClass(cls):
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
         super().setUpClass()
 
     @production_only

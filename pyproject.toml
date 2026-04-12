@@ -13,30 +13,30 @@ directory = "release-notes/unreleased"
 title_format = "{version} ({project_date})"
 issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{issue}>`__"
 
-    [[tool.towncrier.type]]
-    directory = "upgrade"
-    name = "Upgrade Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "upgrade"
+name = "Upgrade Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "deprecation"
-    name = "Deprecation Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "deprecation"
+name = "Deprecation Notes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "feat"
-    name = "New Features"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "feat"
+name = "New Features"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "bug"
-    name = "Bug Fixes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "bug"
+name = "Bug Fixes"
+showcontent = true
 
-    [[tool.towncrier.type]]
-    directory = "other"
-    name = "Other Notes"
-    showcontent = true
+[[tool.towncrier.type]]
+directory = "other"
+name = "Other Notes"
+showcontent = true
 
 [tool.setuptools.packages.find]
 exclude = ["test*"]
@@ -54,6 +54,7 @@ fallback_version = "0.46.1"
 
 [tool.mypy]
 python_version = "3.10"
+packages = ["qiskit_ibm_runtime", "test"]
 namespace_packages = true
 ignore_missing_imports = true
 warn_redundant_casts = true
@@ -139,11 +140,10 @@ dependencies = [
     "numpy>=1.26",
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
-    "ibm-platform-services>=0.55.3",
+    "ibm-platform-services>=0.61.1",
     "ibm-quantum-schemas>=0.5.20260320",
     "pydantic>=2.7.0",
     "qiskit>=2.2.0",
-    "packaging",
     "pybase64>=1.4",
     "samplomatic>=0.13.0"
 ]
@@ -162,9 +162,10 @@ issues = "https://github.com/Qiskit/qiskit-ibm-runtime/issues"
 
 [project.optional-dependencies]
 
+# Legacy developer extras.
+
 common = [
     "mypy==1.19.0",
-    "pylint==3.0.0",
     "pproxy==2.7.8",
     "nbqa==1.5.3",
     "matplotlib>=2.1",
@@ -192,12 +193,64 @@ documentation = [
     "packaging",
 ]
 
-visualization = ["plotly>=5.23.0"]
-test = ["ddt>=1.2.0,!=1.4.0,!=1.4.3"]
-
-dev = [
+dev_legacy = [
     "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[common]",
+    "qiskit-ibm-runtime[style]",
     "qiskit-ibm-runtime[documentation]",
+    "qiskit-ibm-runtime[visualization]",
+]
+
+# User-facing extras.
+
+visualization = [
+    "plotly>=5.23.0"
+]
+
+performance = [
+    "qiskit-aer>=0.17.0",
+    "scipy>=1.0"
+]
+
+# Developer extras.
+
+style = [
+    "mypy==1.19.0",
+    "pre-commit>=4",
+]
+
+style_local = [
+    "black~=24.1",
+    "mypy==1.19.0",
+    "ruff~=0.14.10",
+]
+
+test = [
+    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
+    "pytest>=8.1",
+    "pproxy==2.7.8",
+    "coverage>=6.3",
+    "pytest-benchmark==5.2.3",
+]
+
+doc = [
+    "autodoc_pydantic==2.2.0",
+    "matplotlib>=2.1",
+    "nbconvert>=5.3.1",
+    "nbformat>=4.4.0",
+    "nbqa==1.5.3",
+    "nbsphinx",
+    "packaging",
+    "pylatexenc",
+    "Sphinx>=8,<9",
+    "sphinxcontrib-katex==0.9.9",
+]
+
+dev = [
+    "qiskit-ibm-runtime[doc]",
+    "qiskit-ibm-runtime[performance]",
+    "qiskit-ibm-runtime[style_local]",
+    "qiskit-ibm-runtime[style]",
+    "qiskit-ibm-runtime[test]",
     "qiskit-ibm-runtime[visualization]",
 ]

@@ -33,7 +33,7 @@ def get_test_circuit():
     desired_vector = [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)]
     qreg = QuantumRegister(2, "qr")
     creg = ClassicalRegister(2, "cr")
-    qc = QuantumCircuit(qreg, creg)  # pylint: disable=invalid-name
+    qc = QuantumCircuit(qreg, creg)
     qc.initialize(desired_vector, [qreg[0], qreg[1]])
     qc.measure(qreg[0], creg[0])
     qc.measure(qreg[1], creg[1])
@@ -48,7 +48,7 @@ class FakeBackendsTest(IBMTestCase):
         """Fake backends honor kwargs passed."""
         backend = FakeAthensV2()
 
-        qc = QuantumCircuit(2)  # pylint: disable=invalid-name
+        qc = QuantumCircuit(2)
         qc.x(range(0, 2))
         qc.measure_all()
 
@@ -64,7 +64,7 @@ class FakeBackendsTest(IBMTestCase):
     def test_fake_backend_v2_noise_model_always_present(self):
         """Test that FakeBackendV2 instances always run with noise."""
         backend = FakePerth()
-        qc = QuantumCircuit(1)  # pylint: disable=invalid-name
+        qc = QuantumCircuit(1)
         qc.x(0)
         qc.measure_all()
         sampler = SamplerV2(backend)

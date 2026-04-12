@@ -22,8 +22,8 @@ from ibm_quantum_schemas.common import BaseParamsModel
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from ..ibm_backend import IBMBackend
-from ..session import Session  # pylint: disable=cyclic-import
-from ..batch import Batch  # pylint: disable=cyclic-import
+from ..session import Session
+from ..batch import Batch
 from ..options.executor_options import ExecutorOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.converters import quantum_program_to_0_2

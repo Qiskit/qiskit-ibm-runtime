@@ -14,14 +14,10 @@
 
 from dataclasses import asdict, dataclass
 from typing import Any
-from packaging.version import Version
 
-from qiskit import QuantumCircuit, __version__ as qiskit_version
+from qiskit import QuantumCircuit
 
-if Version(qiskit_version).major >= 2:
-    from qiskit.result import MeasLevel, MeasReturnType
-else:
-    from qiskit.qobj.utils import MeasLevel, MeasReturnType  # pylint: disable=import-error
+from qiskit.result import MeasLevel, MeasReturnType
 
 
 @dataclass

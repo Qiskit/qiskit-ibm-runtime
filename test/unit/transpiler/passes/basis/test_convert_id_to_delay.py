@@ -25,8 +25,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
 
 from .....ibm_test_case import IBMTestCase
 
-# pylint: disable=invalid-name
-
 
 class TestConvertIdToDelay(IBMTestCase):
     """Tests the ConvertIdToDelay pass"""
@@ -67,14 +65,14 @@ class TestConvertIdToDelay(IBMTestCase):
         """Test if if_test gate is converted."""
         qc = QuantumCircuit(1, 1)
 
-        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
+        with qc.if_test((0, 1)):
             qc.id(0)
 
         pm = PassManager([ConvertIdToDelay(self.durations)])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)
-        with expected.if_test((0, 1)):  # pylint: disable=not-context-manager
+        with expected.if_test((0, 1)):
             expected.delay(160, 0)
 
         self.assertEqual(expected, transformed)
@@ -82,16 +80,16 @@ class TestConvertIdToDelay(IBMTestCase):
     def test_if_test_id_gate(self):
         """Test if if_test Id gate is converted a if_test delay."""
         qc = QuantumCircuit(1, 1)
-        with qc.if_test((0, 1)) as else_:  # pylint: disable=not-context-manager
+        with qc.if_test((0, 1)) as else_:
             qc.id(0)
-        with else_:  # pylint: disable=not-context-manager
+        with else_:
             qc.id(0)
 
         pm = PassManager([ConvertIdToDelay(self.durations)])
         transformed = pm.run(qc)
 
         expected = QuantumCircuit(1, 1)
-        with expected.if_test((0, 1)) as else_:  # pylint: disable=not-context-manager
+        with expected.if_test((0, 1)) as else_:
             expected.delay(160, 0)
         with else_:
             expected.delay(160, 0)

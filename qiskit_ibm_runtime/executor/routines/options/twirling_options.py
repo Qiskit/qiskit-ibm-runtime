@@ -28,19 +28,19 @@ class TwirlingOptions:
 
     enable_measure: bool = False
     """Whether to enable twirling of measurement instructions.
-    
+
     Twirling is only applied to measurements that are not involved in a conditional block.
     """
 
     num_randomizations: int | Literal["auto"] = "auto"
     """The number of random samples to use when twirling or performing sampled mitigation.
-    
+
     If ``"auto"``, the value is determined automatically based on the input PUB and other options.
     """
 
     shots_per_randomization: int | Literal["auto"] = "auto"
     """The number of shots to run for each random sample.
-    
+
     If ``"auto"``, the value is determined automatically based on the input PUB and other options.
     """
 

@@ -67,7 +67,6 @@ class EstimatorPubResult(PubResult):
         Returns:
             A plotly figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_zne_evs
 
         return draw_zne_evs(
@@ -115,7 +114,6 @@ class EstimatorPubResult(PubResult):
         Returns:
             A plotly figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_zne_extrapolators
 
         return draw_zne_extrapolators(
