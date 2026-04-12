@@ -980,6 +980,10 @@ class TestPrepareTwirling(unittest.TestCase):
         # Verify both pubs were processed
         self.assertEqual(len(qp.items), 2)
 
+
+class TestPreparePassthroughData(unittest.TestCase):
+    """Unit tests for prepare() function, checking passthrough_data."""
+
     def test_prepare_sets_passthrough_data(self):
         """Test that prepare() sets correct passthrough_data for post-processing."""
         circuit = QuantumCircuit(1, 1)
@@ -997,8 +1001,8 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
         # Twirling path: twirling flag must be True
-        self.assertIn("twirling", qp.passthrough_data["post_processor"])
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
+        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
 
     def test_prepare_sets_passthrough_data_no_twirling(self):
         """Test that prepare() sets twirling flag to False when twirling is disabled."""
@@ -1016,8 +1020,8 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
-        self.assertIn("twirling", qp.passthrough_data["post_processor"])
         self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], False)
+        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
 
     def test_prepare_sets_passthrough_data_parametric_twirling(self):
         """Test that prepare() sets twirling flag for parametric circuits with twirling enabled."""
@@ -1055,22 +1059,11 @@ class TestPrepareTwirling(unittest.TestCase):
 
         # Verify options dictionary is present in passthrough_data
         self.assertIn("post_processor", qp.passthrough_data)
-
-    def test_prepare_includes_options_without_twirling(self):
-        """Test that prepare() includes options even when twirling is disabled."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        options.default_shots = 512
-        # Twirling disabled (default)
-
-        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
-
-        # Verify options dictionary is present even without twirling
         self.assertIn("post_processor", qp.passthrough_data)
+        self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
+        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
+        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
+        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "kerneled")
 
 
 class TestSamplerV2CustomPrepareFn(unittest.TestCase):
