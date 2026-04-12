@@ -87,7 +87,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
-                "meas_type": "classified"
+                "meas_type": "classified",
             }
         }
 
@@ -296,7 +296,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": False,
-                "meas_type": "classified"
+                "meas_type": "classified",
             }
         }
 
@@ -377,7 +377,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
-                "meas_type": "classified"
+                "meas_type": "classified",
             }
         }
 
@@ -424,7 +424,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
-                "meas_type": "classified"
+                "meas_type": "classified",
             }
         }
 
@@ -466,7 +466,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
-                "meas_type": "classified"
+                "meas_type": "classified",
             }
         }
 
@@ -522,7 +522,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": twirling_enabled,
-                "meas_type": meas_type
+                "meas_type": meas_type,
             }
         }
 
@@ -618,7 +618,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             "context": "sampler_v2",
             "version": "v0.1",
             "options": options_dict,
-            "meas_type": "classified"
+            "meas_type": "classified",
             # Intentionally omit twirling flag
         }
         qp_result = QuantumProgramResult(
@@ -650,7 +650,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             "context": "sampler_v2",
             "version": "v0.1",
             "options": options_dict,
-            "twirling": True
+            "twirling": True,
             # Intentionally omit meas_type
         }
         qp_result = QuantumProgramResult(
