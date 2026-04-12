@@ -236,6 +236,28 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         reconstructed = bit_array.get_bitstrings()
         self.assertEqual(len(reconstructed), num_shots)
 
+    def test_data_integrity_kerneled(self):
+        """Test that kerneled measurements pass through."""
+        num_shots = 10
+        # Create specific measurement data to verify integrity
+        meas_data = np.array(
+            [1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j],
+            dtype=np.complex128,
+        )
+
+        qp_result = QuantumProgramResult(
+            data=[{"meas": meas_data}],
+            metadata=Metadata(),
+        )
+
+        result = SamplerV2.quantum_program_result_to_primitive_result(
+            qp_result, meas_type="kerneled"
+        )
+        result_array = result[0].data.meas
+
+        # Verify the result array contains the same data
+        np.testing.assert_array_equal(result_array, meas_data)
+
     def test_empty_pub_shape(self):
         """Test conversion with empty pub shape (non-parametric circuit)."""
         num_shots = 50
