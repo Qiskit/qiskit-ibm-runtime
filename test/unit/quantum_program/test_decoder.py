@@ -72,8 +72,12 @@ class TestDecoder(IBMTestCase):
         self.assertTrue(np.array_equal(decoded[0]["meas"], self.meas1))
         self.assertTrue(np.array_equal(decoded[1]["meas"], self.meas2))
         self.assertTrue(np.array_equal(decoded[1]["measurement_flips.meas"], self.meas_flips))
-        self.assertEqual(decoded.metadata.chunk_timing[0].start, self.chunk_start)
-        self.assertEqual(decoded.metadata.chunk_timing[0].stop, self.chunk_stop)
+        self.assertEqual(
+            decoded.metadata.chunk_timing[0].start.replace(tzinfo=None), self.chunk_start
+        )
+        self.assertEqual(
+            decoded.metadata.chunk_timing[0].stop.replace(tzinfo=None), self.chunk_stop
+        )
         self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].idx_item, 0)
         self.assertEqual(decoded.metadata.chunk_timing[0].parts[0].size, 1)
         self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].idx_item, 1)

@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import timezone
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
@@ -141,7 +142,9 @@ def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> Quantum
     metadata = Metadata(
         chunk_timing=[
             ChunkSpan(
-                span.start, span.stop, [ChunkPart(part.idx_item, part.size) for part in span.parts]
+                span.start.replace(tzinfo=timezone.utc),
+                span.stop.replace(tzinfo=timezone.utc),
+                [ChunkPart(part.idx_item, part.size) for part in span.parts],
             )
             for span in model.metadata.chunk_timing
         ]
