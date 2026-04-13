@@ -17,6 +17,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import logging
 from typing import Any
+from os import getenv
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -38,6 +39,10 @@ from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirli
 from ..options.sampler_options import SamplerOptions
 
 logger = logging.getLogger(__name__)
+
+if not getenv("QISKIT_IBM_RUNTIME_LOG_LEVEL", ""):
+    # If the user has not specified a logging configuration, use `INFO` for this logger.
+    logger.setLevel(logging.INFO)
 
 
 def prepare(
@@ -96,7 +101,8 @@ def prepare(
 
     if not twirling_enabled:
         # No twirling path: validate no boxes, create CircuitItem objects
-        for pub in pubs:
+        for i, pub in enumerate(pubs):
+            logger.info("Procesing pub %d/%d", i, len(pubs))
             validate_no_boxes(pub.circuit)
 
             # Apply DD if enabled
@@ -132,7 +138,8 @@ def prepare(
             twirling_strategy=options.twirling.strategy.replace("-", "_"),
         )
 
-        for pub in pubs:
+        for i, pub in enumerate(pubs):
+            logger.info("Procesing pub %d/%d", i, len(pubs))
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
 
@@ -348,8 +355,9 @@ class SamplerV2(BaseSamplerV2):
 
         # Submit to executor
         logger.info(
-            "Submitting %d pub(s) to executor with %d shots",
+            "Submitting %d pub%s to executor with %d shots",
             len(coerced_pubs),
+            "s" if len(coerced_pubs) > 1 else "",
             quantum_program.shots,
         )
 
