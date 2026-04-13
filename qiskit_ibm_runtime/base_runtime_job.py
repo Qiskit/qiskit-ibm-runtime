@@ -300,7 +300,11 @@ class BaseRuntimeJob(ABC):
         """
 
         response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
-        return response.get("params", {})
+        params = response.get("params", {})
+        # if response["program"]["id"] == "executor":
+        #     try params[]
+        #     return params
+        return params
 
     @property
     def primitive_id(self) -> str:
