@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from collections.abc import Iterable
 
-from ..quantum_program.quantum_program_result import ChunkTimings
+from ..quantum_program.quantum_program_result import ChunkTimings, ChunkSpan
 from .utils import plotly_module
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def _apply_tz(dt: datetime, tz: timezone | None) -> datetime:
     return dt.astimezone(tz=tz).replace(tzinfo=None)
 
 
-def _format_hover(name: str, idx: int, chunk, tz: timezone | None) -> str:
+def _format_hover(name: str, idx: int, chunk: ChunkSpan, tz: timezone | None) -> str:
     chunk_size = sum(p.size for p in chunk.parts)
     duration = (chunk.stop - chunk.start).total_seconds()
     lines = [

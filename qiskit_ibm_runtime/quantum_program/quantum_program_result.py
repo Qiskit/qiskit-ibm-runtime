@@ -116,7 +116,7 @@ class ChunkTimings:
     @overload
     def __getitem__(self, idxs: slice) -> ChunkTimings: ...
 
-    def __getitem__(self, idxs):
+    def __getitem__(self, idxs):  # type: ignore[no-untyped-def]
         if isinstance(idxs, int):
             return self._spans[idxs]
         return ChunkTimings(self._spans[idxs])
