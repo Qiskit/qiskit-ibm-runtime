@@ -13,6 +13,7 @@
 """Base runtime job class."""
 
 from __future__ import annotations
+import warnings
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -27,6 +28,9 @@ from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
 
 from qiskit_ibm_runtime import qiskit_runtime_service
+from qiskit_ibm_runtime.quantum_program.quantum_program_params_converters import (
+    QuantumProgramParamsConverter,
+)
 
 from .utils import utc_to_local, validate_job_tags
 from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
@@ -300,7 +304,19 @@ class BaseRuntimeJob(ABC):
         """
 
         response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
-        return response.get("params", {})
+        params = response.get("params", {})
+
+        if response["program"]["id"] == "executor":
+            try:
+                quantum_program, options = QuantumProgramParamsConverter.decode(params)
+                params["quantum_program"] = quantum_program
+                params["options"] = options
+            except Exception:
+                warnings.warn(
+                    "Unable to convert 'params' to a pair of quantum program and options."
+                )
+
+        return params
 
     @property
     def primitive_id(self) -> str:
