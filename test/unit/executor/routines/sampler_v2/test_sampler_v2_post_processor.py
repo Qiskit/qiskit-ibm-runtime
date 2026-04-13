@@ -179,6 +179,94 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         # Verify metadata is present
         self.assertEqual(result.metadata, metadata)
 
+    def test_circuit_metadata_multiple_pubs(self):
+        """Test that circuit metadata is correctly placed for multiple pubs."""
+        qp_result = QuantumProgramResult(
+            data=[
+                {"c": np.array([[5]], dtype=np.uint8)},
+                {"c": np.array([[3]], dtype=np.uint8)},
+                {"c": np.array([[7]], dtype=np.uint8)},
+            ],
+            metadata=Metadata(),
+        )
+
+        circuits_metadata = [
+            {"experiment_id": "exp_001", "param": 1},
+            {"experiment_id": "exp_002", "param": 2},
+            {},
+        ]
+        
+        result = SamplerV2.quantum_program_result_to_primitive_result(
+            qp_result, metadata=None, circuits_metadata=circuits_metadata
+        )
+
+        # Verify each pub has correct circuit metadata
+        self.assertEqual(len(result), 3)
+        for idx, pub_result in enumerate(result):
+            self.assertIn("circuit_metadata", pub_result.metadata)
+            self.assertEqual(
+                pub_result.metadata["circuit_metadata"], 
+                circuits_metadata[idx]
+            )
+
+    def test_circuit_metadata_none(self):
+        """Test that None circuit metadata is handled correctly."""
+        qp_result = QuantumProgramResult(
+            data=[{"c": np.array([[5]], dtype=np.uint8)}],
+            metadata=Metadata(),
+        )
+
+        circuits_metadata = [None]
+        
+        result = SamplerV2.quantum_program_result_to_primitive_result(
+            qp_result, metadata=None, circuits_metadata=circuits_metadata
+        )
+
+        # Verify pub result has empty metadata when circuit metadata is None
+        pub_result = result[0]
+        self.assertNotIn("circuit_metadata", pub_result.metadata)
+        self.assertEqual(pub_result.metadata, {})
+
+    def test_circuit_metadata_missing(self):
+        """Test that missing circuits_metadata parameter results in empty pub metadata."""
+        qp_result = QuantumProgramResult(
+            data=[{"c": np.array([[5]], dtype=np.uint8)}],
+            metadata=Metadata(),
+        )
+
+        result = SamplerV2.quantum_program_result_to_primitive_result(
+            qp_result, metadata=None, circuits_metadata=None
+        )
+
+        # Verify pub result has empty metadata
+        pub_result = result[0]
+        self.assertEqual(pub_result.metadata, {})
+
+    def test_circuit_metadata_length_mismatch(self):
+        """Test that mismatched circuits_metadata length raises ValueError."""
+        qp_result = QuantumProgramResult(
+            data=[
+                {"c": np.array([[5]], dtype=np.uint8)},
+                {"c": np.array([[3]], dtype=np.uint8)},
+                {"c": np.array([[7]], dtype=np.uint8)},
+            ],
+            metadata=Metadata(),
+        )
+
+        # Provide metadata for only 2 pubs when there are 3
+        circuits_metadata = [
+            {"experiment_id": "exp_001"},
+            {"experiment_id": "exp_002"},
+        ]
+        
+        with self.assertRaises(ValueError) as context:
+            SamplerV2.quantum_program_result_to_primitive_result(
+                qp_result, metadata=None, circuits_metadata=circuits_metadata
+            )
+        
+        self.assertIn("does not match", str(context.exception))
+
+
     def test_different_register_names(self):
         """Test that any register name works (not hardcoded)."""
         num_shots = 50
@@ -349,6 +437,88 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].data.meas.num_bits, 2)
         self.assertEqual(result[1].data.meas.num_bits, 3)
+    
+    def test_post_processor_with_multiple_circuit_metadata(self):
+        """Test that post-processor handles circuit metadata for multiple pubs."""
+        num_rands = 10
+        num_shots_per_rand = 5
+        meas_data_1 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
+        )
+        meas_data_2 = np.random.randint(
+            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
+        )
+
+        circuits_metadata = [
+            {"experiment_id": "exp_001", "param": 1},
+            {"experiment_id": "exp_002", "param": 2},
+        ]
+
+        options = SamplerOptions()
+        options.twirling.enable_gates = True
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v0.1",
+                "options": asdict(options),
+                "twirling": True,
+                "circuits_metadata": circuits_metadata,
+            }
+        }
+
+        qp_result = QuantumProgramResult(
+            data=[
+                {"meas": meas_data_1},
+                {"meas": meas_data_2},
+            ],
+            metadata=Metadata(),
+            passthrough_data=passthrough_data,
+        )
+
+        result = sampler_v2_post_processor_v0_1(qp_result)
+
+        # Verify each pub has correct circuit metadata
+        self.assertEqual(len(result), 2)
+        for idx, pub_result in enumerate(result):
+            self.assertIn("circuit_metadata", pub_result.metadata)
+            self.assertEqual(
+                pub_result.metadata["circuit_metadata"], 
+                circuits_metadata[idx]
+            )
+
+    def test_post_processor_circuit_metadata_length_mismatch(self):
+        """Test that post-processor raises error when circuit metadata length doesn't match pubs."""
+        num_shots = 100
+        num_bits = 3
+        meas_data_1 = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+        meas_data_2 = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
+
+        # Provide metadata for only 1 pub when there are 2
+        circuits_metadata = [{"experiment_id": "exp_001"}]
+        
+        options = SamplerOptions()
+        options.twirling.enable_gates = False
+        passthrough_data = {
+            "post_processor": {
+                "context": "sampler_v2",
+                "version": "v0.1",
+                "options": asdict(options),
+                "twirling": False,
+                "circuits_metadata": circuits_metadata,
+            }
+        }
+
+        qp_result = QuantumProgramResult(
+            data=[{"c": meas_data_1}, {"c": meas_data_2}],
+            metadata=Metadata(),
+            passthrough_data=passthrough_data,
+        )
+
+        # Should raise ValueError
+        with self.assertRaises(ValueError) as context:
+            sampler_v2_post_processor_v0_1(qp_result)
+        
+        self.assertIn("does not match", str(context.exception))
 
     def test_post_processor_applies_bit_flips(self):
         """Test that post-processor applies measurement twirling bit flips via XOR."""

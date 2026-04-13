@@ -162,11 +162,15 @@ def prepare(
                 )
             )
 
+    # Collect circuit metadata from each pub
+    circuits_metadata = [pub.circuit.metadata for pub in pubs]
+    
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
             "version": "v0.1",
             "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
+            "circuits_metadata": circuits_metadata,
         }
     }
 
@@ -405,19 +409,29 @@ class SamplerV2(BaseSamplerV2):
     def quantum_program_result_to_primitive_result(
         result: QuantumProgramResult,
         metadata: dict[str, Any] | None = None,
+        circuits_metadata: list[dict] | None = None,
     ) -> PrimitiveResult:
         """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
 
         Args:
             result: The (possibly post-processed) quantum program result.
             metadata: The metadata to attach to the result.
+            circuits_metadata: Optional list of circuit metadata dicts, one per pub.
 
         Returns:
             The converted primitive result.
 
         Raises:
-            ValueError: If data is malformed or inconsistent
+            ValueError: If data is malformed or inconsistent, or if circuits_metadata
+                length doesn't match number of pubs.
         """
+        # Validate circuits_metadata length if provided
+        if circuits_metadata is not None and len(circuits_metadata) != len(result):
+            raise ValueError(
+                f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
+                f"number of pubs ({len(result)})."
+            )
+        
         # Build SamplerPubResult for each pub
         pub_results = []
         for idx, item_data in enumerate(result):
@@ -437,7 +451,14 @@ class SamplerV2(BaseSamplerV2):
 
             data_bin = DataBin(**bit_arrays, shape=pub_shape)
 
-            pub_result = SamplerPubResult(data=data_bin, metadata={})
+            # Get circuit metadata for this pub if available
+            pub_metadata = {}
+            if circuits_metadata is not None and idx < len(circuits_metadata):
+                circuit_meta = circuits_metadata[idx]
+                if circuit_meta is not None:
+                    pub_metadata["circuit_metadata"] = circuit_meta
+
+            pub_result = SamplerPubResult(data=data_bin, metadata=pub_metadata)
             pub_results.append(pub_result)
 
         return PrimitiveResult(pub_results, metadata=metadata or {})
