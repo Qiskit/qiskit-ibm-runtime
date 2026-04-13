@@ -62,6 +62,8 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
         raise ValueError("Missing 'twirling' in passthrough data.")
+    if (meas_type := post_processor_data.get("meas_type", None)) is None:
+        raise ValueError("Missing 'meas_type' in passthrough data.")
 
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
@@ -88,5 +90,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         result.metadata, num_randomizations, shots, pub_shapes
     )
 
-    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(result, metadata)
+    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(
+        result, metadata, meas_type
+    )
     return sampler_result
