@@ -10,13 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Decoders for quantum programs."""
+"""Converters for quantum program params."""
 
 from __future__ import annotations
 
 from typing import Any
-
-import logging
 
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
@@ -27,8 +25,6 @@ from .converters import quantum_program_from_0_1, quantum_program_to_0_1
 from .converters import quantum_program_from_0_2, quantum_program_to_0_2
 from .quantum_program import QuantumProgram
 from ..options import ExecutorOptions
-
-logger = logging.getLogger(__name__)
 
 AVAILABLE_CONVERTERS = {
     "v0.1": (ParamsModel_0_1, quantum_program_from_0_1, quantum_program_to_0_1),
