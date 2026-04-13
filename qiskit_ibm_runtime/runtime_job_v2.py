@@ -112,9 +112,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     ) -> Any:
         """Return the results of the job.
 
-        If the decoded job results are of type QuantumProgramResult, and if a post processor is specified
-        via the results' passthrough data, the results are post-processed before being returned.
-
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
@@ -156,8 +153,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         Post-processing is only applied if the result is a QuantumProgramResult
         (from Executor jobs). Other result types are returned unchanged.
-
-        Post-processing is applied from the result's ``passthrough_data`` (if available).
 
         Args:
             result: The decoded result
