@@ -76,11 +76,32 @@ class ChunkTimings:
     represents a single execution chunk on the backend and contains timing information and a
     description of which parts of the :class:`~.QuantumProgram` were executed in that chunk.
 
-    .. code:: python
+    To iterate over chunks:
+
+    .. code-block:: python
 
         result = job.result()
-        for chunk in result.chunk_timings:
+        for chunk in chunk_timings:
             print(chunk)
+
+    To draw the timings for a single result:
+
+    .. code-block:: python
+
+        chunk_timings.draw()
+
+    To draw the timings for several results on one plot:
+
+    .. code-block:: python
+
+        from qiskit_ibm_runtime.visualization import draw_chunk_timings
+
+        draw_chunk_timings(
+            chunk_timings1,
+            chunk_timings2,
+            names=["job 1", "job 2"],
+            common_start=True,
+        )
     """
 
     def __init__(self, spans: Iterable[ChunkSpan]):
@@ -134,7 +155,8 @@ class ChunkTimings:
         """Draw these chunk timings.
 
         .. note::
-            To draw chunk timings with additional options like ``common_start``, consider calling
+            To draw chunk timings with additional options like ``common_start``, or to draw
+            timings of several jobs on the same axis, consider calling
             :meth:`~qiskit_ibm_runtime.visualization.draw_chunk_timings` directly.
 
         Args:

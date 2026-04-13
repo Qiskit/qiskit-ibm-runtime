@@ -47,55 +47,60 @@ class TestDrawChunkTimings(IBMTestCase):
     def setUp(self):
         self.chunk_timings = _make_chunk_timings()
 
-    # --- sequence protocol ---
-
     def test_len(self):
+        """Assert ChunkTimings reports the number of spans it contains."""
         self.assertEqual(len(self.chunk_timings), 5)
 
     def test_getitem_int(self):
+        """Assert integer indexing returns a ChunkSpan."""
         item = self.chunk_timings[0]
         self.assertIsInstance(item, ChunkSpan)
 
     def test_getitem_slice(self):
+        """Assert slice indexing returns a new ChunkTimings with the selected spans."""
         sliced = self.chunk_timings[1:3]
         self.assertIsInstance(sliced, ChunkTimings)
         self.assertEqual(len(sliced), 2)
 
     def test_iter(self):
+        """Assert iteration yields all ChunkSpan objects."""
         items = list(self.chunk_timings)
         self.assertEqual(len(items), 5)
         self.assertTrue(all(isinstance(s, ChunkSpan) for s in items))
 
     def test_eq(self):
+        """Assert two ChunkTimings built from the same spans compare equal."""
         other = _make_chunk_timings()
         self.assertEqual(self.chunk_timings, other)
 
     def test_repr(self):
+        """Assert repr includes the class name."""
         self.assertIn("ChunkTimings", repr(self.chunk_timings))
 
-    # --- properties ---
-
     def test_start_stop_duration(self):
+        """Assert start and stop are datetimes and duration is positive."""
         self.assertIsInstance(self.chunk_timings.start, datetime)
         self.assertIsInstance(self.chunk_timings.stop, datetime)
         self.assertGreater(self.chunk_timings.duration, 0)
 
-    # --- draw_chunk_timings function ---
-
     @ddt.data(False, True)
     def test_draw_normalize_y(self, normalize_y):
+        """Verify draw_chunk_timings renders without error with normalize_y on and off."""
         fig = draw_chunk_timings(self.chunk_timings, normalize_y=normalize_y)
         self.save_plotly_artifact(fig)
 
     def test_draw_common_start(self):
+        """Verify draw_chunk_timings renders without error when common_start=True."""
         fig = draw_chunk_timings(self.chunk_timings, common_start=True)
         self.save_plotly_artifact(fig)
 
     def test_draw_with_name(self):
+        """Verify draw_chunk_timings renders without error when a name is provided."""
         fig = draw_chunk_timings(self.chunk_timings, names="my_job")
         self.save_plotly_artifact(fig)
 
     def test_draw_empty(self):
+        """Verify draw_chunk_timings handles an empty ChunkTimings without error."""
         fig = draw_chunk_timings(ChunkTimings([]))
         self.save_plotly_artifact(fig)
 
@@ -106,7 +111,7 @@ class TestDrawChunkTimings(IBMTestCase):
     )
     @ddt.unpack
     def test_two_chunk_timings(self, normalize_y, common_start, width, names):
-        """Test with two ChunkTimings for cross-job comparison."""
+        """Verify draw_chunk_timings renders two ChunkTimings for cross-job comparison."""
         ct2 = _make_chunk_timings(n=3)
         fig = draw_chunk_timings(
             self.chunk_timings,
@@ -118,19 +123,18 @@ class TestDrawChunkTimings(IBMTestCase):
         )
         self.save_plotly_artifact(fig)
 
-    # --- ChunkTimings.draw convenience method ---
-
     def test_draw_method(self):
+        """Verify ChunkTimings.draw() renders without error."""
         fig = self.chunk_timings.draw()
         self.save_plotly_artifact(fig)
 
     def test_draw_method_normalize_y(self):
+        """Verify ChunkTimings.draw() renders without error when normalize_y=True."""
         fig = self.chunk_timings.draw(normalize_y=True)
         self.save_plotly_artifact(fig)
 
-    # --- QuantumProgramResult.chunk_timings property ---
-
     def test_result_chunk_timings_property(self):
+        """Assert QuantumProgramResult.chunk_timings wraps the metadata spans."""
         metadata = Metadata(chunk_timing=list(self.chunk_timings))
         result = QuantumProgramResult(data=[], metadata=metadata)
         ct = result.chunk_timings
@@ -138,6 +142,7 @@ class TestDrawChunkTimings(IBMTestCase):
         self.assertEqual(len(ct), len(self.chunk_timings))
 
     def test_result_chunk_timings_empty(self):
+        """Assert QuantumProgramResult.chunk_timings is empty when no metadata spans are present."""
         result = QuantumProgramResult(data=[])
         ct = result.chunk_timings
         self.assertIsInstance(ct, ChunkTimings)
