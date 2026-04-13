@@ -13,6 +13,7 @@
 """Base runtime job class."""
 
 from __future__ import annotations
+import warnings
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -311,7 +312,9 @@ class BaseRuntimeJob(ABC):
                 params["quantum_program"] = quantum_program
                 params["options"] = options
             except Exception:
-                Warning
+                warnings.warn(
+                    "Unable to convert 'params' to a pair of quantum program and options."
+                )
 
         return params
 
