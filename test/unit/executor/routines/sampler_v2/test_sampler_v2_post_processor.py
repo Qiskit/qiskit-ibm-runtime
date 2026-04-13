@@ -195,7 +195,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             {"experiment_id": "exp_002", "param": 2},
             {},
         ]
-        
+
         result = SamplerV2.quantum_program_result_to_primitive_result(
             qp_result, metadata=None, circuits_metadata=circuits_metadata
         )
@@ -204,10 +204,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         self.assertEqual(len(result), 3)
         for idx, pub_result in enumerate(result):
             self.assertIn("circuit_metadata", pub_result.metadata)
-            self.assertEqual(
-                pub_result.metadata["circuit_metadata"], 
-                circuits_metadata[idx]
-            )
+            self.assertEqual(pub_result.metadata["circuit_metadata"], circuits_metadata[idx])
 
     def test_circuit_metadata_none(self):
         """Test that None circuit metadata is handled correctly."""
@@ -217,7 +214,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         )
 
         circuits_metadata = [None]
-        
+
         result = SamplerV2.quantum_program_result_to_primitive_result(
             qp_result, metadata=None, circuits_metadata=circuits_metadata
         )
@@ -258,14 +255,13 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             {"experiment_id": "exp_001"},
             {"experiment_id": "exp_002"},
         ]
-        
+
         with self.assertRaises(ValueError) as context:
             SamplerV2.quantum_program_result_to_primitive_result(
                 qp_result, metadata=None, circuits_metadata=circuits_metadata
             )
-        
-        self.assertIn("does not match", str(context.exception))
 
+        self.assertIn("does not match", str(context.exception))
 
     def test_different_register_names(self):
         """Test that any register name works (not hardcoded)."""
@@ -437,7 +433,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0].data.meas.num_bits, 2)
         self.assertEqual(result[1].data.meas.num_bits, 3)
-    
+
     def test_post_processor_with_multiple_circuit_metadata(self):
         """Test that post-processor handles circuit metadata for multiple pubs."""
         num_rands = 10
@@ -481,10 +477,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(result), 2)
         for idx, pub_result in enumerate(result):
             self.assertIn("circuit_metadata", pub_result.metadata)
-            self.assertEqual(
-                pub_result.metadata["circuit_metadata"], 
-                circuits_metadata[idx]
-            )
+            self.assertEqual(pub_result.metadata["circuit_metadata"], circuits_metadata[idx])
 
     def test_post_processor_circuit_metadata_length_mismatch(self):
         """Test that post-processor raises error when circuit metadata length doesn't match pubs."""
@@ -495,7 +488,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
         # Provide metadata for only 1 pub when there are 2
         circuits_metadata = [{"experiment_id": "exp_001"}]
-        
+
         options = SamplerOptions()
         options.twirling.enable_gates = False
         passthrough_data = {
@@ -517,7 +510,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         # Should raise ValueError
         with self.assertRaises(ValueError) as context:
             sampler_v2_post_processor_v0_1(qp_result)
-        
+
         self.assertIn("does not match", str(context.exception))
 
     def test_post_processor_applies_bit_flips(self):

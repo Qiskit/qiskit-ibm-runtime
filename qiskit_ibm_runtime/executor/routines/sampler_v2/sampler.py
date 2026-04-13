@@ -164,7 +164,7 @@ def prepare(
 
     # Collect circuit metadata from each pub
     circuits_metadata = [pub.circuit.metadata for pub in pubs]
-    
+
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
@@ -431,7 +431,7 @@ class SamplerV2(BaseSamplerV2):
                 f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
                 f"number of pubs ({len(result)})."
             )
-        
+
         # Build SamplerPubResult for each pub
         pub_results = []
         for idx, item_data in enumerate(result):

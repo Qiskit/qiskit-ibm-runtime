@@ -62,7 +62,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
         raise ValueError("Missing 'twirling' in passthrough data.")
-    
+
     # Extract circuit metadata if present and validate length
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
     if circuits_metadata is not None:
