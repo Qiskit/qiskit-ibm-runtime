@@ -72,7 +72,7 @@ class Metadata:
 class ChunkTimings:
     """A collection of chunk timing information for a :class:`QuantumProgramResult`.
 
-    This class is a readonly list-like containing :class:`ChunkSpan` objects, where each span
+    This class is a readonly list-like containing :class:`~.ChunkSpan` objects, where each span
     represents a single execution chunk on the backend and contains timing information and a
     description of which parts of the :class:`~.QuantumProgram` were executed in that chunk.
 
@@ -154,10 +154,9 @@ class ChunkTimings:
     ) -> PlotlyFigure:
         """Draw these chunk timings.
 
-        .. note::
-            To draw chunk timings with additional options like ``common_start``, or to draw
-            timings of several jobs on the same axis, consider calling
-            :meth:`~qiskit_ibm_runtime.visualization.draw_chunk_timings` directly.
+        To draw chunk timings with additional options like ``common_start``, or to draw
+        timings of several jobs on the same axis, consider calling
+        :meth:`~qiskit_ibm_runtime.visualization.draw_chunk_timings` directly.
 
         Args:
             name: A label for this set of chunks.
