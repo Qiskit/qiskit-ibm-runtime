@@ -45,6 +45,7 @@ class TestDrawChunkTiming(IBMTestCase):
     """Tests for ``draw_chunk_timings`` and ``ChunkTiming``."""
 
     def setUp(self):
+        """Set up the test class."""
         self.chunk_timings = _make_chunk_timings()
 
     def test_len(self):
