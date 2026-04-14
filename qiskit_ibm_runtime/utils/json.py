@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -194,7 +194,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
 
 
 def _set_int_keys_flag(obj: dict) -> dict | list:
-    """Recursively sets '__int_keys__' flag if dictionary uses integer keys
+    """Recursively sets '__int_keys__' flag if dictionary uses integer keys.
 
     Args:
         obj: dictionary
@@ -211,7 +211,7 @@ def _set_int_keys_flag(obj: dict) -> dict | list:
 
 
 def _cast_strings_keys_to_int(obj: dict) -> dict:
-    """Casts string to int keys in dictionary when '__int_keys__' flag is set
+    """Casts string to int keys in dictionary when '__int_keys__' flag is set.
 
     Args:
         obj: dictionary
@@ -241,6 +241,7 @@ class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
     def default(self, obj: Any) -> Any:
+        """Return a serializable object for ``obj``."""
         if isinstance(obj, CouplingMap):
             return list(obj)
         if isinstance(obj, date):
@@ -474,8 +475,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
-                # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
-                # to deserialize load qpy circuit and return first instruction object in that circuit.
+                # Standalone instructions are encoded as the sole instruction in a QPY serialized
+                # circuit to deserialize load qpy circuit and return first instruction object in
+                # that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":

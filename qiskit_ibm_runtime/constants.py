@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -46,11 +46,7 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
 }
 
 DEFAULT_POST_SELECTION_SUFFIX = "_ps"
-"""
-The default suffix to append to the names of the classical registers used for post selection.
-"""
+"""The default suffix to append to the names of the classical registers used for post selection."""
 
 DEFAULT_SPECTATOR_CREG_NAME = "spec"
-"""
-The default name of the classical register used for measuring spectator qubits.
-"""
+"""The default name of the classical register used for measuring spectator qubits."""

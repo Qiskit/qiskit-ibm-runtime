@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -20,7 +20,13 @@ from ...exceptions import IBMRuntimeError
 
 
 class RuntimeSession(RestAdapterBase):
-    """Rest adapter for session related endpoints."""
+    """Rest adapter for session related endpoints.
+
+    Args:
+        session: RetrySession to be used in the adapter.
+        session_id: Job ID of the first job in a runtime session.
+        url_prefix: Prefix to use in the URL.
+    """
 
     URL_MAP = {
         "self": "",
@@ -28,17 +34,10 @@ class RuntimeSession(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, session_id: str, url_prefix: str = "") -> None:
-        """Job constructor.
-
-        Args:
-            session: RetrySession to be used in the adapter.
-            session_id: Job ID of the first job in a runtime session.
-            url_prefix: Prefix to use in the URL.
-        """
         if not session_id:
-            super().__init__(session, "{}/sessions".format(url_prefix))
+            super().__init__(session, f"{url_prefix}/sessions")
         else:
-            super().__init__(session, "{}/sessions/{}".format(url_prefix, session_id))
+            super().__init__(session, f"{url_prefix}/sessions/{session_id}")
 
     def create(
         self,
@@ -47,7 +46,7 @@ class RuntimeSession(RestAdapterBase):
         max_time: int | None = None,
         mode: str | None = None,
     ) -> dict[str, Any]:
-        """Create a session"""
+        """Create a session."""
         url = self.get_url("self")
         payload: dict[str, str | int] = {}
         if mode:
@@ -79,5 +78,4 @@ class RuntimeSession(RestAdapterBase):
 
     def details(self) -> dict[str, Any]:
         """Return the details of this session."""
-
         return self.session.get(self.get_url("self"), headers=self._HEADER_JSON_ACCEPT).json()

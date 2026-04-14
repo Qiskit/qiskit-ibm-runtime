@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -35,8 +35,7 @@ _TERRA_VERSION = tuple(
 
 
 class IBMTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
@@ -44,7 +43,6 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -71,8 +69,7 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
@@ -80,7 +77,6 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -115,14 +111,16 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
-    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with fractional gate support.
+    """(DEPRECATED) Plugin for targeting Qiskit circuits with fractional gate support.
 
-    Currently coexistence of fractional gate operations and
-    dynamic circuits is not assumed.
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with fractional
+    gate support.
+
+    Currently coexistence of fractional gate operations and dynamic circuits is not assumed.
     """
 
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """Construct a ``IBMFractionalTranslationPlugin`` instance."""
         issue_deprecation_msg(
             msg="Since backends now support running jobs that contain both "
             "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",
@@ -137,7 +135,6 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -167,8 +164,10 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with both dynamic circuits and fractional gate support.
+    """Plugin for targeting Qiskit circuits (dynamic circuits and fractional gate support).
+
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with both
+    dynamic circuits and fractional gate support.
     """
 
     def pass_manager(
@@ -177,7 +176,6 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
         optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:

@@ -41,7 +41,6 @@ def test_import_qiskit_ibm_runtime(benchmark):
 
 def test_instantiate_qiskit_runtime_service(benchmark):
     """Benchmark the instantating of `QiskitRuntimeService`."""
-
     channel, token, url, instance, _ = get_integration_test_config()
     if not all([channel, token, url]):
         raise SkipTest("No accounts available")

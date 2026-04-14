@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -44,15 +44,16 @@ def draw_zne_evs(
 
     Args:
         result: An :class:`~.EstimatorPubResult`.
-        indices: The indices of the expectation values to include in the plot. If ``None``, includes all
-            values. See :class:`~.ZneOptions` for information on the indexing scheme.
-        names: The names to assign to the expectation values. If ``None``, the names correspond to the
-            indices.
+        indices: The indices of the expectation values to include in the plot. If ``None``, includes
+            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+        names: The names to assign to the expectation values. If ``None``, the names correspond to
+            the indices.
         num_stds: The number of standard deviations to include around each fit.
-        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
-            greater magnitude than this value, the expectation value is omitted from the plot.
-        max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
-            this value for an expectation value and extrapolator, the fit is omitted from the plot.
+        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
+            a greater magnitude than this value, the expectation value is omitted from the plot.
+        max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater
+            than this value for an expectation value and extrapolator, the fit is omitted from the
+            plot.
         height: The height of the plot in pixels.
         width: The width of the plot in pixels.
         num_cols: The maximum number of columns in the figure.
@@ -169,13 +170,13 @@ def draw_zne_extrapolators(
 
     Args:
         result: An :class:`~.EstimatorPubResult`.
-        indices: The indices of the expectation values to include in the plot. If ``None``, includes all
-            values. See :class:`~.ZneOptions` for information on the indexing scheme.
-        names: The names to assign to the expectation values. If ``None``, the names correspond to the
-            indices.
+        indices: The indices of the expectation values to include in the plot. If ``None``, includes
+            all values. See :class:`~.ZneOptions` for information on the indexing scheme.
+        names: The names to assign to the expectation values. If ``None``, the names correspond to
+            the indices.
         num_stds: The number of standard deviations to include around each fit.
-        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has a
-            greater magnitude than this value, the expectation value is omitted from the plot.
+        max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated`` has
+            a greater magnitude than this value, the expectation value is omitted from the plot.
         max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater than
             this value for an expectation value and extrapolator, the fit is omitted from the plot.
         height: The height of the plot in pixels.
@@ -359,7 +360,9 @@ def _scatter_trace(
         name=name,
         mode="markers",
         marker={"color": color},
-        hovertemplate="noise_factor: %{x} <br>ev: %{y:.4f}<br>std: %{error_y.array:.4f}<extra></extra>",
+        hovertemplate=(
+            "noise_factor: %{x} <br>ev: %{y:.4f}<br>std: %{error_y.array:.4f}<extra></extra>"
+        ),
         legendgroup=legend_group,
         showlegend=show_legend,
     )
@@ -388,13 +391,14 @@ def _validate_metadata(metadata: dict) -> dict:
     """
     if not (resilience := metadata.get("resilience")):
         raise ValueError(
-            "Result does not contain resilience metadata. Enable ZNE options on an estimator to use "
-            "this function."
+            "Result does not contain resilience metadata. Enable ZNE options on an estimator to "
+            "use this function."
         )
 
     if not (zne_metadata := resilience.get("zne")):
         raise ValueError(
-            "Result does not contain ZNE data. Enable ZNE options on an estimator to use this function."
+            "Result does not contain ZNE data. Enable ZNE options on an estimator to use this "
+            "function."
         )
 
     return zne_metadata

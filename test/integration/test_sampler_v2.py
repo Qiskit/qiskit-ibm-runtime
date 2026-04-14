@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023, 2024.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -33,9 +33,10 @@ from ..ibm_test_case import IBMIntegrationTestCase
 
 
 class TestSampler(IBMIntegrationTestCase):
-    """Test Sampler"""
+    """Test Sampler."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.fake_backend = FakeManilaV2()
@@ -75,7 +76,6 @@ class TestSampler(IBMIntegrationTestCase):
 
     def test_sampler_run(self):
         """Test Sampler.run()."""
-
         with Session(self._backend) as session:
             _, _, target = self._cases[1]
             with self.subTest("single"):
@@ -124,7 +124,7 @@ class TestSampler(IBMIntegrationTestCase):
         )
 
     def test_run_1qubit(self):
-        """test for 1-qubit cases"""
+        """Test for 1-qubit cases."""
         qc = QuantumCircuit(1)
         qc.measure_all()
         qc2 = QuantumCircuit(1)
@@ -136,7 +136,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=2)
 
     def test_run_2qubit(self):
-        """test for 2-qubit cases"""
+        """Test for 2-qubit cases."""
         qc0 = QuantumCircuit(2)
         qc0.measure_all()
         qc1 = QuantumCircuit(2)
@@ -211,7 +211,7 @@ class TestSampler(IBMIntegrationTestCase):
                         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     def test_run_reverse_meas_order(self):
-        """test for sampler with reverse measurement order"""
+        """Test for sampler with reverse measurement order."""
         x = Parameter("x")
         y = Parameter("y")
 
@@ -229,7 +229,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=2)
 
     def test_run_empty_parameter(self):
-        """Test for empty parameter"""
+        """Test for empty parameter."""
         with Session(self._backend) as session:
             n = 5
             qc = QuantumCircuit(n, n - 1)
@@ -244,7 +244,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=2)
 
     def test_run_numpy_params(self):
-        """Test for numpy array as parameter values"""
+        """Test for numpy array as parameter values."""
         with Session(self._backend) as session:
             qc = real_amplitudes(num_qubits=2, reps=2)
             qc.measure_all()
@@ -266,7 +266,7 @@ class TestSampler(IBMIntegrationTestCase):
                 )
 
     def test_run_with_shots_option(self):
-        """test with shots option."""
+        """Test with shots option."""
         with Session(self._backend) as session:
             _, _, _ = self._cases[1]
             shots = 100
@@ -330,7 +330,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=2)
 
     def test_run_shots_result_size(self):
-        """test with shots option to validate the result size"""
+        """Test with shots option to validate the result size."""
         n = 10
         qc = QuantumCircuit(n)
         qc.h(range(n))
@@ -343,7 +343,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=1)
 
     def test_primitive_job_status_done(self):
-        """test primitive job's status"""
+        """Test primitive job's status."""
         sampler = Sampler(mode=self._backend, options=self._options)
         job = sampler.run([self._isa_bell])
         _ = job.result()

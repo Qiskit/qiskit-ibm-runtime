@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor"""
+"""Executor."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ DEFAULT_SCHEMA_VERSION = "v0.2"
 
 
 class Executor:
-    """Class for running :class:`~.QuantumProgram`\\s.
+    r"""Class for running :class:`~.QuantumProgram`\\s.
 
     The :meth:`run` method can be used to submit a quantum program to be executed on a backend.
 

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -105,7 +105,8 @@ def _contains_physical_qubits(instruction: CircuitInstruction, target: Target) -
         target: The target to validate against.
 
     Returns:
-        An error message if ``instruction`` doesn't contain physical qubits, an empty string otherwise.
+        An error message if ``instruction`` doesn't contain physical qubits, an empty string
+        otherwise.
     """
     qreg = QuantumRegister(target.num_qubits, "q")
     if unphysical_qubits := [qubit for qubit in instruction.qubits if qubit not in qreg]:
@@ -156,7 +157,10 @@ def _is_isa_instruction(instruction: CircuitInstruction, target: Target) -> str:
             )
             and op.name != "barrier"
         ):
-            return f"The instruction {op.name} on qubits {qargs} is not supported by the target system."
+            return (
+                f"The instruction {op.name} on qubits {qargs} is not supported by the target "
+                f"system."
+            )
 
         # rzz gate is calibrated only for the range [0, pi/2].
         # We allow an angle value of a bit more than pi/2, to compensate floating point rounding
@@ -166,7 +170,10 @@ def _is_isa_instruction(instruction: CircuitInstruction, target: Target) -> str:
             return reason
 
         if isinstance(op, (ControlFlowOp, BoxOp)):
-            return f"The instruction {op.name} on qubits {qargs} is not supported by the noise learner."
+            return (
+                f"The instruction {op.name} on qubits {qargs} is not supported by the noise "
+                f"learner."
+            )
 
     return ""
 

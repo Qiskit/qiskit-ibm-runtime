@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -31,8 +31,7 @@ from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):
-    """Fold Rzz gate angle into calibrated range of 0-pi/2 with
-    local gate tweaks.
+    """Fold Rzz gate angle into calibrated range of 0-pi/2 with local gate tweaks.
 
     In the IBM Quantum ISA, the instruction Rzz(theta) has
     valid "theta" value of [0, pi/2] and any instruction outside
@@ -57,12 +56,15 @@ class FoldRzzAngle(TransformationPass):
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on the DAGCircuit."""
         self._run_inner(dag)
         return dag
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
         """Mutate the input dag to fix non-ISA Rzz angles.
-        Return true if the dag was modified."""
+
+        Return true if the dag was modified.
+        """
         modified = False
         for node in dag.op_nodes():
             if isinstance(node.op, ControlFlowOp):
@@ -254,8 +256,7 @@ class FoldRzzAngle(TransformationPass):
 def convert_to_rzz_valid_pub(
     primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
 ) -> SamplerPub | EstimatorPub:
-    """
-    Return a pub which is compatible with Rzz constraints.
+    """Return a pub which is compatible with Rzz constraints.
 
     Current limitations:
     1. Does not support dynamic circuits.
@@ -295,7 +296,8 @@ def convert_to_rzz_valid_pub(
 
         if operation.name in CONTROL_FLOW_OP_NAMES:
             raise ValueError(
-                "The function convert_to_rzz_valid_pub currently does not support dynamic instructions."
+                "The function convert_to_rzz_valid_pub currently does not support dynamic "
+                "instructions."
             )
 
         if operation.name != "rzz" or not isinstance(

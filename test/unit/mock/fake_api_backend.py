@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2019-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Classes for FakeApiBackends"""
+"""Classes for FakeApiBackends."""
+
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
 
@@ -85,7 +86,7 @@ class FakeApiBackend:
         self.crns = specs.crns
 
     def has_access(self, crn):
-        """Check if crn is accessible"""
+        """Check if crn is accessible."""
         if not self.crns:
             return True
         return crn in self.crns

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -85,9 +85,10 @@ def is_simulator(backend: BackendV2) -> bool:
 
 
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
-    """
-    A section of is_isa_circuit, separated to allow recursive calls
-    within blocks of conditional operations.
+    """Helper for checking if a circuit is an ISA circuit.
+
+    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional
+    operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation
@@ -127,8 +128,10 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: d
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
-    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
-    only uses instructions that exist in the target.
+    """Checks if the circuit is an ISA circuit.
+
+    An ISA circuit means that it has a layout and that it only uses instructions that exist in the
+    target.
 
     Args:
         circuit: A single QuantumCircuit
@@ -148,10 +151,11 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 
 
 def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
-    """
+    """Helper for validating ``rzz`` gates in pubs.
+
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
-    - Collect parameterized angles
+    - Collect parameterized angles.
 
     Returns one of the following:
     - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
@@ -257,7 +261,7 @@ def are_circuits_dynamic(circuits: list[QuantumCircuit], qasm_default: bool = Tr
 
 
 def is_fractional_gate(gate: Instruction) -> bool:
-    """Test if a gate is considered fractional by IBM
+    """Test if a gate is considered fractional by IBM.
 
     Fractional gates produce a rotation based on a continuous input parameter
     and require a non-zero gate duration. The latter distinction excludes gates
@@ -355,10 +359,10 @@ def default_runtime_url_resolver(
         private_endpoint: Connect to private API URL.
         channel: This input parameter is currently UNUSED and kept for
             backwards compatibility purposes only.
+
     Returns:
         Runtime API base URL
     """
-
     # URL won't be modified if it contains "experimental"
     api_host = url
 
@@ -377,15 +381,14 @@ def default_runtime_url_resolver(
             #  - for other regions, ie. eu-de: "https://eu-de.quantum.cloud.ibm.com/api/v1"
             region = _location_from_crn(instance)
             region_prefix = "" if region == "us-east" else f"{region}."
-            api_host = (
-                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
-            )
+            api_host = f"{parsed_url.scheme}://{region_prefix}quantum.{parsed_url.hostname}/api/v1"
 
     return api_host
 
 
 def _is_experimental_runtime_url(url: str) -> bool:
     """Checks if the provided url points to an experimental runtime cluster.
+
     This type of URLs is used for internal development purposes only.
 
     Args:
@@ -544,14 +547,12 @@ class RefreshQueue(Queue):
     A FIFO queue with a bounded size. Once the queue is full, when a new item
     is being added, the oldest item on the queue is discarded to make space for
     the new item.
+
+    Args:
+        maxsize: Maximum size of the queue.
     """
 
     def __init__(self, maxsize: int):
-        """RefreshQueue constructor.
-
-        Args:
-            maxsize: Maximum size of the queue.
-        """
         self.condition = Condition()
         super().__init__(maxsize=maxsize)
 
@@ -563,7 +564,6 @@ class RefreshQueue(Queue):
         Args:
             item: Item to put into the queue.
         """
-
         with self.condition:
             if self.full():
                 super().get(block=False)
@@ -602,4 +602,5 @@ class CallableStr(str):
     """A callable string."""
 
     def __call__(self) -> str:
+        """Return the string when called as a function."""
         return self

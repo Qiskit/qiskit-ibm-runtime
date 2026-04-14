@@ -48,7 +48,7 @@ class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
 
     def test_quantum_program_to_0_2(self):
-        """Test the function ``quantum_program_to_0_2``"""
+        """Test the function ``quantum_program_to_0_2``."""
         shots = 100
 
         noise_models = [
@@ -136,8 +136,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             )
 
     def test_quantum_program_to_0_2_no_argument(self):
-        """Test the function ``quantum_program_to_0_2`` when there are no circuit arguments, samplex
-        arguments, and chunk size"""
+        """Test when there are no circuit arguments, samplex arguments, and chunk size."""
         quantum_program = QuantumProgram(100)
 
         circuit1 = QuantumCircuit(1)
@@ -168,7 +167,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.samplex_arguments, {})
 
     def test_quantum_program_result_from_0_2(self):
-        """Test the function ``quantum_program_result_from_0_2``"""
+        """Test the function ``quantum_program_result_from_0_2``."""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
@@ -224,7 +223,6 @@ class TestQuantumProgramConverters(IBMTestCase):
 
     def test_roundtrip(self):
         """Test a roundtrip."""
-
         quantum_program = QuantumProgram(100)
 
         circuit1 = QuantumCircuit(1)

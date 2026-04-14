@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Deprecation utilities"""
+"""Deprecation utilities."""
 
 from typing import Any
 from collections.abc import Callable
@@ -20,6 +20,7 @@ import warnings
 
 def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: int = 2) -> Callable:
     """Emit a warning prior to calling decorated function.
+
     Args:
         deprecated: Function being deprecated.
         version: First release the function is deprecated.

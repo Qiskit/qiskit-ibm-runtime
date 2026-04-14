@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """IBMJob Test."""
+
 import copy
 from datetime import datetime, timedelta
 
@@ -126,9 +127,8 @@ class TestIBMJob(IBMIntegrationTestCase):
                     JobStatus.CANCELLED,
                     JobStatus.ERROR,
                 ],
-                "Job {} has status {} when it should be DONE, CANCELLED, or ERROR".format(
-                    job.job_id(), job.status()
-                ),
+                f"Job {job.job_id()} has status {job.status()} when it should be DONE, CANCELLED, "
+                "or ERROR",
             )
 
     def test_retrieve_jobs_created_after(self):
@@ -147,7 +147,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             self.assertGreaterEqual(
                 job.creation_date,
                 past_month_tz_aware,
-                "job {} creation date {} not within range".format(job.job_id(), job.creation_date),
+                f"job {job.job_id()} creation date {job.creation_date} not within range",
             )
 
     def test_retrieve_jobs_created_before(self):
@@ -166,7 +166,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             self.assertLessEqual(
                 job.creation_date,
                 past_month_tz_aware,
-                "job {} creation date {} not within range".format(job.job_id(), job.creation_date),
+                f"job {job.job_id()} creation date {job.creation_date} not within range",
             )
 
     def test_retrieve_jobs_between_datetime(self):
@@ -189,9 +189,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             for job in job_list:
                 self.assertTrue(
                     (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
-                    "job {} creation date {} not within range".format(
-                        job.job_id(), job.creation_date
-                    ),
+                    f"job {job.job_id()} creation date {job.creation_date} not within range",
                 )
 
     def test_retrieve_jobs_order(self):

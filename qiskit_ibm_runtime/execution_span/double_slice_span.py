@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""DoubleSliceSpan"""
+"""DoubleSliceSpan."""
 
 from __future__ import annotations
 
@@ -30,9 +30,9 @@ class DoubleSliceSpan(ExecutionSpan):
     This type of execution span references pub result data by assuming that it is a sliceable
     portion of the data where the shots are the outermost slice and the rest of the data is
     flattened. Therefore, for each pub dependent on this span, the constructor accepts two
-    :class:`slice` instances, along with the corresponding shape of the data to be sliced; in contrast
-    to :class:`~.SliceSpan`, this class does not assume that *all* shots for a particular set of
-    parameter values are contiguous in the array of data.
+    :class:`slice` instances, along with the corresponding shape of the data to be sliced; in
+    contrast to :class:`~.SliceSpan`, this class does not assume that *all* shots for a particular
+    set of parameter values are contiguous in the array of data.
 
     Args:
         start: The start time of the span, in UTC.
@@ -58,16 +58,19 @@ class DoubleSliceSpan(ExecutionSpan):
 
     @property
     def pub_idxs(self) -> list[int]:
+        """Which pubs, by index, have dependence on one or more execution spans present."""
         return sorted(self._data_slices)
 
     @property
     def size(self) -> int:
+        """The total number of results with dependence on this execution span, across all pubs."""
         size = 0
         for shape, args_sl, shots_sl in self._data_slices.values():
             size += len(range(math.prod(shape[:-1]))[args_sl]) * len(range(shape[-1])[shots_sl])
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
+        """Return array-valued mask specifying which parts of a pub result depend on this span."""
         if pub_idx not in self._data_slices:
             raise KeyError(f"Pub {pub_idx} is not included in the span.")
 
@@ -77,6 +80,7 @@ class DoubleSliceSpan(ExecutionSpan):
         return mask
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> DoubleSliceSpan:
+        """Return a new set of spans where each one has been filtered to the specified pubs."""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
         return DoubleSliceSpan(self.start, self.stop, slices)
