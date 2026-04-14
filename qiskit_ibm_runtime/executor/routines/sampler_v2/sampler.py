@@ -17,7 +17,6 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 import logging
 from typing import Any, Literal
-from os import getenv
 
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
@@ -39,10 +38,6 @@ from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirli
 from ..options.sampler_options import SamplerOptions
 
 logger = logging.getLogger(__name__)
-
-if not getenv("QISKIT_IBM_RUNTIME_LOG_LEVEL", ""):
-    # If the user has not specified a logging configuration, use `INFO` for this logger.
-    logger.setLevel(logging.INFO)
 
 
 def prepare(
@@ -316,6 +311,13 @@ class SamplerV2(BaseSamplerV2):
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
+        For moderate and complex workloads, the client-side processing can be resource intensive
+        and cause a delay between invoking the function and the ``job`` being submitted. In order
+        to check the progress of the call, it is recommended to setup logging (with an ``INFO``
+        level) - see `Qiskit Runtime documentation
+        <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        for more information.
+
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
                   or tuples ``(circuit, parameter_values)``.
@@ -347,6 +349,7 @@ class SamplerV2(BaseSamplerV2):
             )
 
         # Convert pubs to QuantumProgram and map options using the prepare function
+        logger.info("Starting pre-processing")
         quantum_program, executor_options = self._prepare(
             coerced_pubs, self._options, backend, default_shots
         )
