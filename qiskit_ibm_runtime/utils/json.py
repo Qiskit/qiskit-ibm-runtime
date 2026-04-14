@@ -438,6 +438,8 @@ class RuntimeDecoder(json.JSONDecoder):
             program_id = decoded.get("program", {}).get("id", None)
             params = decoded.get("params", {})
             if program_id == "executor" and params:
+                # `decoded` represents the input to an executo program. We use the converters to
+                # decode its inputs, or 'params'
                 try:
                     quantum_program, options = QuantumProgramParamsConverter.decode(params)
                     decoded["params"]["quantum_program"] = quantum_program
@@ -451,7 +453,6 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
-        print("yo")
         if "__type__" in obj:
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
