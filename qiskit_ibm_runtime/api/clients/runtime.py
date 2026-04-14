@@ -217,7 +217,7 @@ class RuntimeClient(BaseBackendClient):
         """Create a session.
 
         Args:
-            backend: IBM backend to use for the session.
+            backend: name of the backend to use for the session.
             instance: The service instance to use.
             max_time: Maximum duration of the session.
             mode: Execution mode.
