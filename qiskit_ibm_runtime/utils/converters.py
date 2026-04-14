@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -174,16 +174,16 @@ def duration_difference(date_time: datetime) -> str:
     # days, hours, minutes, seconds, and milliseconds.
     time_str = ""
     if time_tuple[0]:
-        time_str += "{} days".format(time_tuple[0])
-        time_str += " {} hrs".format(time_tuple[1])
+        time_str += f"{time_tuple[0]} days"
+        time_str += f" {time_tuple[1]} hrs"
     elif time_tuple[1]:
-        time_str += "{} hrs".format(time_tuple[1])
-        time_str += " {} min".format(time_tuple[2])
+        time_str += f"{time_tuple[1]} hrs"
+        time_str += f" {time_tuple[2]} min"
     elif time_tuple[2]:
-        time_str += "{} min".format(time_tuple[2])
-        time_str += " {} sec".format(time_tuple[3])
+        time_str += f"{time_tuple[2]} min"
+        time_str += f" {time_tuple[3]} sec"
     elif time_tuple[3]:
-        time_str += "{} sec".format(time_tuple[3])
+        time_str += f"{time_tuple[3]} sec"
     return time_str
 
 
@@ -200,7 +200,6 @@ def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
     Raises:
         IBMInputValueError: when the given hms string is in an invalid format
     """
-
     parsed_time = re.findall(r"(\d+[dhms])", hms)
     total_seconds = 0
 

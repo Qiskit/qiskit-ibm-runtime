@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -63,7 +63,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_session_from_id(self, service):
-        """Test creating a session from a given id"""
+        """Test creating a session from a given id."""
         backend = service.backend(self.dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")

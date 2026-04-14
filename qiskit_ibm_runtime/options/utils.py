@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -107,6 +107,7 @@ def merge_options(old_options: dict | BaseOptions, new_options: dict | None = No
     """Merge current options with the new ones.
 
     Args:
+        old_options: Old options to merge.
         new_options: New options to merge.
 
     Returns:
@@ -170,6 +171,7 @@ def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None =
     but ``merge_options_v2()`` would return ``{'nested_foo': {'foo': 'bar1'}, 'foo': 'bar2'}``.
 
     Args:
+        old_options: Old options to merge.
         new_options: New options to merge.
 
     Returns:
@@ -212,7 +214,7 @@ def merge_options_v2(old_options: dict | BaseOptions, new_options: dict | None =
 
 
 def skip_unset_validation(func: Callable) -> Callable:
-    """Decorator used to skip unset value"""
+    """Decorator used to skip unset value."""
 
     @functools.wraps(func)
     def wrapper(cls: Any, val: Any, *args: Any, **kwargs: Any) -> Any:
@@ -240,6 +242,7 @@ class UnsetType:
         return "Unset"
 
     def __new__(cls) -> UnsetType:
+        """Construct a ``UnsetType`` instance."""
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -264,14 +267,17 @@ def make_constraint_validator(
     lt: Real | None = None,
 ) -> Callable:
     """Make a field validator that performs the give constraint if the value is numeric.
+
     This differs to the one built-in to ``pydantic.Field`` in that it ignores non-Real types,
     which lets us apply this to fields with annotations like ``int | Literal["auto"]``.
+
     Args:
         field_names: The field names to check.
         ge: A number the value must be greater than or equal to.
         gt: A number the value must be strictly greater than.
         le: A number the value must be less than or equal to.
         lt: A number the value must be strictly less than.
+
     Returns:
         A new field validator.
     """
@@ -325,7 +331,8 @@ def match_max_execution_time_and_max_usage(
     else:
         if max_execution_time is not comparator:
             warnings.warn(
-                f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_execution_time}.",
+                f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. "
+                f"Both have been set to {max_execution_time}.",
                 DeprecationWarning,
                 stacklevel=2,
             )

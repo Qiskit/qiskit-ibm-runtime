@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Proxy related classes and functions."""
-
 
 from dataclasses import dataclass
 from typing import Any
@@ -24,7 +23,7 @@ from requests_ntlm import HttpNtlmAuth
 class ProxyConfiguration:
     """Class for representing a proxy configuration.
 
-    Args
+    Args:
         urls: a dictionary mapping protocol or protocol and host to the URL of the proxy. Refer to
             https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies for details.
         username_ntlm: username used to enable NTLM user authentication.
@@ -48,20 +47,19 @@ class ProxyConfiguration:
             ]
         ):
             raise ValueError(
-                f"Invalid proxy configuration for NTLM authentication. None or both of username and "
-                f"password must be provided. Got username_ntlm={self.username_ntlm}, "
+                f"Invalid proxy configuration for NTLM authentication. None or both of username "
+                f"and password must be provided. Got username_ntlm={self.username_ntlm}, "
                 f"password_ntlm={self.password_ntlm}."
             )
 
         if self.urls is not None and not isinstance(self.urls, dict):
             raise ValueError(
-                f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping protocol "
-                f"or protocol and host to the URL of the proxy. Got {self.urls}"
+                f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping "
+                f"protocol or protocol and host to the URL of the proxy. Got {self.urls}"
             )
 
     def to_dict(self) -> dict:
         """Transform configuration to dictionary."""
-
         return {k: v for k, v in self.__dict__.items() if v is not None}
 
     def to_request_params(self) -> dict:
@@ -72,7 +70,6 @@ class ProxyConfiguration:
             expected by ``requests``. The following keys can be present:
             ``proxies``and ``auth``.
         """
-
         request_kwargs = {}
         if self.urls:
             request_kwargs["proxies"] = self.urls

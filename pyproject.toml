@@ -85,25 +85,32 @@ future-annotations = true
 select = [
     # Rules in alphabetic order
     "C4",     # flake8-comprehensions
+    "D",      # pydocstyle
     "E",      # pycodestyle
-    "F",      # pyflake
+    "F",      # pyflakes
     "G",      # flake8-logging-format
+    "RUF013", # implicit-optional
     "T10",    # flake8-debugger
     "UP",     # pyupgrade
-    "RUF013", # implicit-optional
 ]
+
 ignore = [
-    "E501",  # line-too-long: black handles line length
-    "UP032", # f-string: requires manual revision of non f-string formatting
+    "D105",   # undocumented-magic-method
+    "D107",   # undocumented-public-init
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
+    "D205",   # missing-blank-line-after-summary - allows for sphinx headers to remain
+    "D212",   # multi-line-summary-first-line - allows for sphinx headers to remain
+    "D415",   # missing-terminal-punctuation - allows for sphinx headers to remain
     "E402",   # module-import-not-at-top-of-file
     "F401",   # unused-import
     "F403",   # undefined-local-with-import-star
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [project]
 name = "qiskit-ibm-runtime"

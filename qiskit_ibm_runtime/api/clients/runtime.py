@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -27,17 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 class RuntimeClient(BaseBackendClient):
-    """Client for accessing runtime service."""
+    """Client for accessing runtime service.
+
+    Args:
+        params: Connection parameters.
+    """
 
     def __init__(
         self,
         params: ClientParameters,
     ) -> None:
-        """RuntimeClient constructor.
-
-        Args:
-            params: Connection parameters.
-        """
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
@@ -101,6 +100,7 @@ class RuntimeClient(BaseBackendClient):
 
         Args:
             job_id: Job ID.
+            exclude_params: If ``True``, the params will not be included in the response.
 
         Returns:
             JSON response.
@@ -217,6 +217,9 @@ class RuntimeClient(BaseBackendClient):
         """Create a session.
 
         Args:
+            backend: name of the backend to use for the session.
+            instance: The service instance to use.
+            max_time: Maximum duration of the session.
             mode: Execution mode.
         """
         return self._api.runtime_session(session_id=None).create(backend, instance, max_time, mode)
@@ -250,7 +253,6 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             IBM backends available for this service instance.
         """
-
         return self._api.backends()["devices"]
 
     def backend_configuration(
@@ -260,6 +262,7 @@ class RuntimeClient(BaseBackendClient):
 
         Args:
             backend_name: The name of the IBM backend.
+            refresh: If ``True``, re-query the server for the backend configuration.
             calibration_id: The calibration id to use for the IBM backend
 
         Returns:

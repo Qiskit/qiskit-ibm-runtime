@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -27,10 +27,10 @@ from .....ibm_test_case import IBMTestCase
 
 
 class TestConvertIdToDelay(IBMTestCase):
-    """Tests the ConvertIdToDelay pass"""
+    """Tests the ConvertIdToDelay pass."""
 
     def setUp(self):
-        """Setup."""
+        """Test level setup."""
         super().setUp()
 
         self.durations = DynamicCircuitInstructionDurations([("sx", None, 160), ("x", None, 200)])

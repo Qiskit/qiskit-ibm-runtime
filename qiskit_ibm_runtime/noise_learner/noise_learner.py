@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -46,21 +46,21 @@ logger = logging.getLogger(__name__)
 class NoiseLearner:
     """Class for executing noise learning experiments.
 
-    The noise learner class allows characterizing the noise processes affecting the gates in one or more
-    circuits of interest, based on the Pauli-Lindblad noise model described in [1].
+    The noise learner class allows characterizing the noise processes affecting the gates in one or
+    more circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
-    The :meth:`~run` method allows running a noise learner job for a list of circuits. After the job is
-    submitted, the gates are collected into independent layers, and subsequently the resulting layers are
-    characterized individually.
+    The :meth:`~run` method allows running a noise learner job for a list of circuits. After the job
+    is submitted, the gates are collected into independent layers, and subsequently the resulting
+    layers are characterized individually.
 
-    The way in which the gates are collected into layers depends on the twirling ``strategy`` specified
-    in the given ``options`` (see :class:`.NoiseLearnerOptions` for more details). Note that all
-    strategies obey barriers. For example, if you have three ISA entangling layers of interest,
-    consider putting them into one circuit separated by barriers acting on the qubits you wish to
-    twirl, and select ``strategy="active-circuit"``.
+    The way in which the gates are collected into layers depends on the twirling ``strategy``
+    specified in the given ``options`` (see :class:`.NoiseLearnerOptions` for more details). Note
+    that all strategies obey barriers. For example, if you have three ISA entangling layers of
+    interest, consider putting them into one circuit separated by barriers acting on the qubits you
+    wish to twirl, and select ``strategy="active-circuit"``.
 
-    The following snippet shows an example where the noise learner is used to characterized the layers
-    of two GHZ circuits.
+    The following snippet shows an example where the noise learner is used to characterized the
+    layers of two GHZ circuits.
 
     .. code-block:: python
 
@@ -224,9 +224,7 @@ class NoiseLearner:
     def _set_options(
         self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
-        """
-        Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
-        """
+        """Sets the options, ensuring that they are of type ``NoiseLearnerOptions``."""
         if not options:
             self._options = NoiseLearnerOptions()
         elif isinstance(options, NoiseLearnerOptions):
@@ -244,8 +242,11 @@ class NoiseLearner:
 
     @staticmethod
     def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
-        """Returns a dictionary of options that must be included in the program inputs,
-        filtering out every option that is not part of the NoiseLearningOptions."""
+        """Returns a filtered dictionary of options for the program inputs.
+
+        Returns a dictionary of options that must be included in the program inputs,
+        filtering out every option that is not part of the NoiseLearningOptions.
+        """
         ret = {}
 
         ignored_names = [

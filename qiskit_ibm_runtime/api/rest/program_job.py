@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -21,7 +21,13 @@ from ...utils.json import RuntimeDecoder
 
 
 class ProgramJob(RestAdapterBase):
-    """Rest adapter for program job related endpoints."""
+    """Rest adapter for program job related endpoints.
+
+    Args:
+        session: Session to be used in the adapter.
+        job_id: ID of the program job.
+        url_prefix: Prefix to use in the URL.
+    """
 
     URL_MAP = {
         "self": "",
@@ -33,14 +39,7 @@ class ProgramJob(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, job_id: str, url_prefix: str = "") -> None:
-        """ProgramJob constructor.
-
-        Args:
-            session: Session to be used in the adapter.
-            job_id: ID of the program job.
-            url_prefix: Prefix to use in the URL.
-        """
-        super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
+        super().__init__(session, f"{url_prefix}/jobs/{job_id}")
 
     def get(self, exclude_params: bool | None = None) -> dict:
         """Return program job information.

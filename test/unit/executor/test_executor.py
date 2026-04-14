@@ -143,8 +143,7 @@ class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""
 
     def test_run_of_session_is_selected(self):
-        """Test that ``Executor.run`` selects the ``run`` method
-        of the session, if a session is specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         with (
@@ -156,8 +155,7 @@ class TestExecutor(IBMTestCase):
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
-        """Test that ``Executor.run`` selects the ``run`` method
-        of the service, if a session is not specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session not specified."""
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             executor = Executor(mode=backend)

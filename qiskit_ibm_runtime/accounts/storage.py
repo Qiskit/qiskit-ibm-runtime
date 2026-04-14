@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -32,13 +32,13 @@ def save_config(
 
     if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
-            f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
+            f"Named account ({name}) already exists. Set overwrite=True to overwrite."
         )
 
     data[name] = config
 
-    # if set_as_default, but another account is defined as default, user must specify overwrite to change
-    # the default account.
+    # if set_as_default, but another account is defined as default, user must specify overwrite to
+    # change the default account.
     if set_as_default:
         data[name]["is_default_account"] = True
         for account_name in data:
@@ -48,8 +48,7 @@ def save_config(
                     del account["is_default_account"]
                 else:
                     raise AccountAlreadyExistsError(
-                        f"default_account ({name}) already exists. "
-                        f"Set overwrite=True to overwrite."
+                        f"default_account ({name}) already exists. Set overwrite=True to overwrite."
                     )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
@@ -77,7 +76,6 @@ def delete_config(
     name: str,
 ) -> bool:
     """Delete configuration data from a JSON file."""
-
     logger.debug("Delete configuration data for '%s' from '%s'", name, filename)
 
     _ensure_file_exists(filename)

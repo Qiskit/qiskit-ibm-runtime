@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
+
 from typing import Any
 from collections.abc import Sequence
 import warnings
@@ -26,7 +27,10 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def validate_classical_registers(pubs: list[SamplerPub]) -> None:
-    """Validates the classical registers in the pub won't cause problems that can be caught client-side.
+    """Validates the classical registers in the pub.
+
+    Validates that the classical registers in the pub won't cause problems that can be caught
+    client-side.
 
     Args:
         pubs: The list of pubs to validate
@@ -36,7 +40,6 @@ def validate_classical_registers(pubs: list[SamplerPub]) -> None:
         IBMInputValueError: If any circuit has a creg whose name is not a valid identifier.
         IBMInputValueError: If any circuit has a creg whose name is a Python keyword.
     """
-
     for index, pub in enumerate(pubs):
         if len(pub.circuit.cregs) == 0:
             warnings.warn(
@@ -85,7 +88,7 @@ def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
 
 
 def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
-    """Validate if all circuits are ISA circuits
+    """Validate if all circuits are ISA circuits.
 
     Args:
         circuits: A list of QuantumCircuits.
@@ -106,7 +109,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
 
 
 def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
-    """Validate that rzz angles are always in the range [0, pi/2]
+    """Validate that rzz angles are always in the range [0, pi/2].
 
     Args:
         pubs: A list of pubs.
@@ -118,8 +121,7 @@ def validate_rzz_pubs(pubs: list[EstimatorPub] | list[SamplerPub]) -> None:
 
 
 def validate_no_dd_with_dynamic_circuits(circuits: list[QuantumCircuit], options: Any) -> None:
-    """Validate that if dynamical decoupling options are enabled,
-    no circuit in the pubs is dynamic
+    """Validate that if dynamical decoupling options are enabled, no circuit in the pubs is dynamic.
 
     Args:
         circuits: A list of QuantumCircuits.

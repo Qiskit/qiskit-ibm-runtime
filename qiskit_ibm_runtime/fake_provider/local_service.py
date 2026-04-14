@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -41,15 +41,6 @@ logger = logging.getLogger(__name__)
 class QiskitRuntimeLocalService:
     """Class for local testing mode."""
 
-    def __init__(self) -> None:
-        """QiskitRuntimeLocalService constructor.
-
-
-        Returns:
-            An instance of QiskitRuntimeService.
-
-        """
-
     def backend(
         self,
         name: str | None = None,
@@ -59,6 +50,7 @@ class QiskitRuntimeLocalService:
 
         Args:
             name: The name of the backend.
+            instance: The service instance to use.
 
         Returns:
             A backend matching the filtering.
@@ -81,13 +73,17 @@ class QiskitRuntimeLocalService:
             filters: More complex filters, such as lambda functions.
                 For example::
 
-                    from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+                    from qiskit_ibm_runtime.fake_provider.local_service import (
+                        QiskitRuntimeLocalService
+                    )
 
                     QiskitRuntimeService.backends(
                         filters=lambda backend: (backend.online_date.year == 2021)
                     )
                     QiskitRuntimeLocalService.backends(
-                        filters=lambda backend: (backend.num_qubits > 30 and backend.num_qubits < 100)
+                        filters=lambda backend: (
+                            backend.num_qubits > 30 and backend.num_qubits < 100
+                        )
                     )
 
         Returns:
@@ -131,7 +127,9 @@ class QiskitRuntimeLocalService:
         min_num_qubits: int | None = None,
         filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
-        """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
+        """Return a randomly-chosen fake backend.
+
+        Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
 
         Args:
