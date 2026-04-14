@@ -432,6 +432,7 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
+        print("hey", obj.keys())
         if "__type__" in obj:
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
@@ -567,4 +568,5 @@ class RuntimeDecoder(json.JSONDecoder):
                     return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
+        print("shoot")
         return obj

@@ -306,7 +306,7 @@ class BaseRuntimeJob(ABC):
         response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
         params = response.get("params", {})
 
-        if response["program"]["id"] == "executor":
+        if response.get("program", {}).get("id", None) == "executor":
             try:
                 quantum_program, options = QuantumProgramParamsConverter.decode(params)
                 params["quantum_program"] = quantum_program
