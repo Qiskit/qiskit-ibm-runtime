@@ -77,10 +77,6 @@ def _format_hover(name: str, idx: int, chunk: ChunkSpan, tz: timezone | None) ->
     return "<br>".join(lines)
 
 
-def _get_id(ct: ChunkTiming, multiple: bool) -> str:
-    return f"<{hex(id(ct))}>" if multiple else ""
-
-
 def draw_chunk_timings(
     *timings: ChunkTiming,
     names: str | Iterable[str] | None = None,
