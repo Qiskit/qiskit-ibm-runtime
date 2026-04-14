@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -56,7 +56,6 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-
     if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
         return ""
 
@@ -154,6 +153,17 @@ class RetrySession(Session):
 
     This is a child class of ``requests.Session``. It has its own retry
     policy and handles IBM Quantum specific parameters.
+
+    Args:
+        base_url: Base URL for the session's requests.
+        retries_total: Number of total retries for the requests.
+        retries_connect: Number of connect retries for the requests.
+        backoff_factor: Backoff factor between retry attempts.
+        verify: Whether to enable SSL verification.
+        proxies: Proxy URLs mapped by protocol.
+        auth: Authentication handler.
+        timeout: Timeout for the requests, in the form of (connection_timeout,
+            total_timeout).
     """
 
     def __init__(
@@ -167,19 +177,6 @@ class RetrySession(Session):
         auth: AuthBase | None = None,
         timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
-        """RetrySession constructor.
-
-        Args:
-            base_url: Base URL for the session's requests.
-            retries_total: Number of total retries for the requests.
-            retries_connect: Number of connect retries for the requests.
-            backoff_factor: Backoff factor between retry attempts.
-            verify: Whether to enable SSL verification.
-            proxies: Proxy URLs mapped by protocol.
-            auth: Authentication handler.
-            timeout: Timeout for the requests, in the form of (connection_timeout,
-                total_timeout).
-        """
         super().__init__()
 
         self.base_url = base_url
@@ -385,7 +382,7 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
+                        request_data_to_log = f"Request Data: {filter_data(request_data)}."
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,

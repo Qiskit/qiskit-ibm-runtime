@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -26,6 +26,7 @@ class DrawZNEBase(IBMTestCase):
     """Base class for testing the functions that visualize ZNE expectation values."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         data = DataBin(
             shape=(1,),
@@ -58,9 +59,7 @@ class TestDrawZNE(DrawZNEBase):
     """Class for testing the ``draw_zne_evs`` function."""
 
     def test_plotting(self):
-        r"""
-        Test to make sure that it produces the right figure.
-        """
+        """Test to make sure that it produces the right figure."""
         fig = draw_zne_evs(self.zne_data)
 
         # 1 expectation value with 2 extrapolators each with 1 std is
@@ -69,9 +68,7 @@ class TestDrawZNE(DrawZNEBase):
         self.save_plotly_artifact(fig)
 
     def test_errors(self):
-        r"""
-        Test error when no ZNE data is present.
-        """
+        """Test error when no ZNE data is present."""
         for error in self.error_data:
             with self.assertRaises(ValueError):
                 draw_zne_evs(error)
@@ -81,9 +78,7 @@ class TestDrawZNEExtrapolators(DrawZNEBase):
     """Class for testing the ``draw_zne_extrapolators`` function."""
 
     def test_plotting(self):
-        r"""
-        Test to make sure that it produces the right figure.
-        """
+        """Test to make sure that it produces the right figure."""
         fig = draw_zne_extrapolators(self.zne_data)
 
         # 2 figures (one per extrapolator) with 3 traces each is 6
@@ -91,9 +86,7 @@ class TestDrawZNEExtrapolators(DrawZNEBase):
         self.save_plotly_artifact(fig)
 
     def test_errors(self):
-        r"""
-        Test error when no ZNE data is present.
-        """
+        """Test error when no ZNE data is present."""
         for error in self.error_data:
             with self.assertRaises(ValueError):
                 draw_zne_extrapolators(error)

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -31,12 +31,12 @@ Metadata = dict[str, MetadataValue]
 
 
 class NoiseLearnerV3Result:
-    r"""The results of a noise learner experiment for a single instruction, in Pauli Lindblad format.
+    r"""Results of a noise learner experiment for a single instruction, in Pauli Lindblad format.
 
-    An error channel Pauli Lindblad :math:`E` acting on a state :math:`\rho` can be expressed in Pauli
-    Lindblad format as :math:`E(\rho) = e^{\sum_j r_j D_{P_j}}(\rho)`, :math:`P_j` are Pauli operators
-    (or "generators") and :math:`r_j` are floats (or "rates") [1]. The equivalent Pauli error channel
-    can be constructed as a composition of single-Pauli channel terms
+    An error channel Pauli Lindblad :math:`E` acting on a state :math:`\rho` can be expressed in
+    Pauli Lindblad format as :math:`E(\rho) = e^{\sum_j r_j D_{P_j}}(\rho)`, :math:`P_j` are Pauli
+    operators (or "generators") and :math:`r_j` are floats (or "rates") [1]. The equivalent Pauli
+    error channel can be constructed as a composition of single-Pauli channel terms
 
     .. math::
 
@@ -70,18 +70,17 @@ class NoiseLearnerV3Result:
         rates_std: Iterable[float] | None = None,
         metadata: Metadata | None = None,
     ) -> NoiseLearnerV3Result:
-        """
-        Construct from a collection of generators and rates.
+        """Construct from a collection of generators and rates.
 
         Args:
-            generators: The generators describing the noise channel in the Pauli Lindblad format. This
-                is a list of :class:`~qiskit.quantum_info.QubitSparsePauliList` objects, as opposed to
-                a list of :class:`~qiskit.quantum_info.QubitSparsePauli`, in order to capture
-                degeneracies present within the model.
-            rates: The rates of the individual generators. The ``i``-th element in this list represents
-                the rate of all the Paulis in the ``i``-th generator.
-            rates_std: The standard deviation associated to the rates of the generators. If ``None``,
-                it sets all the standard deviations to ``0``.
+            generators: The generators describing the noise channel in the Pauli Lindblad format.
+                This is a list of :class:`~qiskit.quantum_info.QubitSparsePauliList` objects, as
+                opposed to a list of :class:`~qiskit.quantum_info.QubitSparsePauli`, in order to
+                capture degeneracies present within the model.
+            rates: The rates of the individual generators. The ``i``-th element in this list
+                represents the rate of all the Paulis in the ``i``-th generator.
+            rates_std: The standard deviation associated to the rates of the generators. If
+                ``None``, it sets all the standard deviations to ``0``.
             metadata: A dictionary of metadata.
         """
         obj = cls()
@@ -141,11 +140,12 @@ class NoiseLearnerV3Results:
         instructions: Sequence[CircuitInstruction],
         require_refs: bool = True,
     ) -> dict[int, PauliLindbladMap]:
-        """Convert to a dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
-        This function iterates over a sequence of instructions, extracts the ``ref`` value from the
-        inject noise annotation of each instruction, and returns a dictionary mapping those refs
-        to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in this
-        :class:`NoiseLearnerV3Results` object.
+        """Convert to dictionary from :attr:`InjectNoise.ref` to :class:`PauliLindbladMap` objects.
+
+        This function iterates over a sequence of instructions, extracts the ``ref`` value
+        from the inject noise annotation of each instruction, and returns a dictionary mapping
+        those refs to the corresponding noise data (in :class:`PauliLindbladMap` format) stored in
+        this :class:`NoiseLearnerV3Results` object.
 
         Args:
             instructions: The instructions to get the refs from.
@@ -158,8 +158,8 @@ class NoiseLearnerV3Results:
                 item in this :class:`NoiseLearnerV3Results` object.
             ValueError: If some of the instructions do not contain a box.
             ValueError: If multiple instructions have the same ``ref``.
-            ValueError: If some of the instructions have no inject noise annotation and ``require_refs``
-                if ``True``.
+            ValueError: If some of the instructions have no inject noise annotation and
+                ``require_refs`` if ``True``.
         """
         if len(instructions) != len(self.data):
             raise ValueError(

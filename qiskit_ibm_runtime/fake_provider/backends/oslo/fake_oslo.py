@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2023.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,9 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""
-Fake Oslo device (7 qubits).
-"""
+"""Fake Oslo device (7 qubits)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend

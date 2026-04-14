@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2023.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -79,8 +79,8 @@ Here is an example of using a fake backend for transpilation and simulation.
 
     Please note that the simulation is done using a noise model generated from system snapshots
     obtained in the past (sometimes a few years ago) and the results are not representative of the
-    latest behaviors of the real quantum system that the fake backend is mimicking. If you want
-    to run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
+    latest behaviors of the real quantum system that the fake backend is mimicking. If you want to
+    run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
 
     .. code-block:: python
 

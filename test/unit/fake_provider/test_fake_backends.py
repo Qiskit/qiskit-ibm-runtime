@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020, 2023.
+# (C) Copyright IBM 2020-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Test of generated fake backends."""
+
 import math
 import unittest
 
@@ -83,10 +84,7 @@ class FakeBackendsTest(IBMTestCase):
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_fake_nighthawk(self):
-        """
-        Test that submitting a simple circuit with FakeNighthawk works
-        """
-
+        """Test that submitting a simple circuit with FakeNighthawk works."""
         # Initialize fake_nighthawk
         backend = FakeNighthawk()
         self.assertEqual(backend.num_qubits, 120)

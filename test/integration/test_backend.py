@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -173,7 +173,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 backend.foobar
 
     def test_backend_deepcopy(self):
-        """Test that deepcopy on IBMBackend works correctly"""
+        """Test that deepcopy on IBMBackend works correctly."""
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
@@ -199,7 +199,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
-        """Check retrieving properties of all qubits"""
+        """Check retrieving properties of all qubits."""
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
@@ -260,7 +260,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertNotIn("rzz", real_device_no_fg.basis_gates)
 
     def test_backend_fractional_gates_error(self):
-        """Test that use_fractional_gates = True raises error for unsupported backends"""
+        """Test that use_fractional_gates = True raises error for unsupported backends."""
         backend = self.backend
         with self.subTest(backend=backend.name):
             if "rzz" in backend.basis_gates or "rx" in backend.basis_gates:
@@ -305,7 +305,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         )
 
     def test_renew_backend_properties(self):
-        """Test renewed backend property"""
+        """Test renewed backend property."""
         name = self.backend.name
         backend = self.service.backend(name)
         basis_gates = copy.copy(backend.basis_gates)

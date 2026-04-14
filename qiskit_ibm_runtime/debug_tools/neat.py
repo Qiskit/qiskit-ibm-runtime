@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -34,7 +34,7 @@ except ImportError:
 
 
 class Neat:
-    r"""A class to help understand the expected performance of estimator jobs.
+    """A class to help understand the expected performance of estimator jobs.
 
     The "Noisy Estimator Analyzer Tool" (or "NEAT") is a convenience tool that users of the
     :class:`~.Estimator` primitive can employ to analyze and predict the performance of
@@ -96,9 +96,7 @@ class Neat:
 
     @property
     def noise_model(self) -> NoiseModel:
-        r"""
-        The noise model used by this analyzer tool for the noisy simulations.
-        """
+        """The noise model used by this analyzer tool for the noisy simulations."""
         return self._noise_model
 
     @noise_model.setter
@@ -111,9 +109,7 @@ class Neat:
         self._noise_model = value
 
     def backend(self) -> Backend:
-        r"""
-        The backend used by this analyzer tool.
-        """
+        """The backend used by this analyzer tool."""
         return self._backend
 
     def _simulate(
@@ -124,8 +120,7 @@ class Neat:
         seed_simulator: int | None,
         precision: float = 0,
     ) -> NeatResult:
-        r"""
-        Perform a noisy or noiseless simulation of the estimator task specified by ``pubs``.
+        """Perform a noisy or noiseless simulation of the estimator task specified by ``pubs``.
 
         Args:
             pubs: The PUBs specifying the estimation task of interest.
@@ -177,8 +172,7 @@ class Neat:
         seed_simulator: int | None = None,
         precision: float = 0,
     ) -> NeatResult:
-        r"""
-        Perform an ideal, noiseless simulation of the estimator task specified by ``pubs``.
+        """Perform an ideal, noiseless simulation of the estimator task specified by ``pubs``.
 
         This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
         classically.
@@ -214,8 +208,7 @@ class Neat:
         seed_simulator: int | None = None,
         precision: float = 0,
     ) -> NeatResult:
-        r"""
-        Perform a noisy simulation of the estimator task specified by ``pubs``.
+        """Perform a noisy simulation of the estimator task specified by ``pubs``.
 
         This function uses ``qiskit-aer``'s ``Estimator`` class to simulate the estimation task
         classically.
@@ -245,8 +238,7 @@ class Neat:
         return self._simulate(pubs, True, cliffordize, seed_simulator, precision)
 
     def to_clifford(self, pubs: Sequence[EstimatorPubLike]) -> list[EstimatorPub]:
-        r"""
-        Return the cliffordized version of the given ``pubs``.
+        """Return the cliffordized version of the given ``pubs``.
 
         This convenience method runs the :class:`.~ConvertISAToClifford` transpiler pass on the
         PUBs' circuits.

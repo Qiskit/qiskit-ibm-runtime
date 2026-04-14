@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -56,9 +56,7 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
         channel = (
-            channel
-            or os.getenv("QISKIT_IBM_CHANNEL")
-            or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
+            channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
         )
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE

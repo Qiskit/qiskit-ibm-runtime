@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -27,7 +27,7 @@ ScalarLike: TypeAlias = int | float
 
 
 class NeatPubResult:
-    r"""A class to store the PUB results of :class:`.~Neat`.
+    """A class to store the PUB results of :class:`.~Neat`.
 
     It allows performing mathematical operations (``+``, ``-``, ``*``, ``/``, ``abs``, and ``**``)
     with other objects of type :class:`.~NeatPubResultLike` and with scalars.
@@ -53,15 +53,13 @@ class NeatPubResult:
 
     @property
     def vals(self) -> np.ndarray:
-        r"""The values in this result."""
+        """The values in this result."""
         return self._vals
 
     def _coerced_operation(
         self, other: ScalarLike | NeatPubResultLike, op_name: str
     ) -> NeatPubResult:
-        r"""
-        Coerces ``other`` to a compatible format and applies ``op_name`` to ``self`` and ``other``.
-        """
+        """Coerces ``other`` to a compatible format, applies ``op_name`` to ``self``, ``other``."""
         if not isinstance(other, (int, float)):
             if isinstance(other, NeatPubResult):
                 other = other.vals

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
-    """Class used to decode noise learner results"""
+    """Class used to decode noise learner results."""
 
     @classmethod
     def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:

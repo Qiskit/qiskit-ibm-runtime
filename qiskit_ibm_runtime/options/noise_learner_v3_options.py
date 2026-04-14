@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -44,15 +44,13 @@ AVAILABLE_OPTIONS_MODELS = {"v0.1": OptionsModel_0_1, "v0.2": OptionsModel_0_2}
 
 @primitive_dataclass
 class NoiseLearnerV3Options(BaseOptions):
-    """
-    Options for :class:`.NoiseLearnerV3`.
-    """
+    """Options for :class:`.NoiseLearnerV3`."""
 
     shots_per_randomization: int = 128
-    r"""The total number of shots to use per randomized learning circuit."""
+    """The total number of shots to use per randomized learning circuit."""
 
     num_randomizations: int = 32
-    r"""The number of random circuits to use per learning circuit configuration.
+    """The number of random circuits to use per learning circuit configuration.
 
     For TREX experiments, a configuration is a measurement basis.
 
@@ -65,7 +63,7 @@ class NoiseLearnerV3Options(BaseOptions):
     """
 
     layer_pair_depths: list[int] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
-    r"""The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
+    """The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
 
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
     the noise learning implementation. For example, a value of ``3`` corresponds to 6 repetitions
@@ -76,10 +74,10 @@ class NoiseLearnerV3Options(BaseOptions):
     """
 
     init_qubits: bool = True
-    r"""Whether to reset the qubits to the ground state for each shot."""
+    """Whether to reset the qubits to the ground state for each shot."""
 
     rep_delay: float | None = None
-    r"""The repetition delay.
+    """The repetition delay.
 
     This is the delay between the end of one circuit and the start of the next within a shot loop.
     This is only supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must
@@ -88,17 +86,19 @@ class NoiseLearnerV3Options(BaseOptions):
     """
 
     post_selection: PostSelectionOptions | Dict = Field(default_factory=PostSelectionOptions)
-    r"""Options for post selecting the results of noise learning circuits.
+    """Options for post selecting the results of noise learning circuits.
     """
 
     experimental: UnsetType | dict = Unset
-    r"""Experimental options.
+    """Experimental options.
 
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
     _ge0 = make_constraint_validator(
-        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+        "num_randomizations",
+        "shots_per_randomization",
+        ge=1,  # type: ignore[arg-type]
     )
 
     @field_validator("layer_pair_depths", mode="after")
@@ -128,10 +128,10 @@ class NoiseLearnerV3Options(BaseOptions):
         return options_model(**filtered_options)
 
     def to_runtime_options(self) -> dict:
-        """Turn these options into a dictionary of runtime options object.
+        r"""Turn these options into a dictionary of runtime options object.
 
-        Filters out every irrelevant field (i.e., those that are not fields of :class:`.RuntimeOptions`)
-        and replaces ``Unset``\\s with ``None``\\s.
+        Filters out every irrelevant field (i.e., those that are not fields of
+        :class:`.RuntimeOptions`) and replaces ``Unset``\\s with ``None``\\s.
         """
         return self._get_runtime_options(asdict(self))
 

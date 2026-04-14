@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -50,7 +50,22 @@ API_TO_JOB_STATUS: dict[str, JobStatus] = {
 
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
-    """Representation of a runtime V2 primitive execution."""
+    """Representation of a runtime V2 primitive execution.
+
+    Args:
+        backend: The backend instance used to run this job.
+        api_client: Object for connecting to the server.
+        job_id: Job ID.
+        program_id: ID of the program this job is for.
+        creation_date: Job creation date, in UTC.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        image: Runtime image used for this job: image_name:tag.
+        service: Runtime service.
+        session_id: Job ID of the first job in a runtime session.
+        tags: Tags assigned to the job.
+        version: Primitive version.
+        private: Marks job as private.
+    """
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
@@ -70,22 +85,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         version: int | None = None,
         private: bool | None = False,
     ) -> None:
-        """RuntimeJob constructor.
-
-        Args:
-            backend: The backend instance used to run this job.
-            api_client: Object for connecting to the server.
-            job_id: Job ID.
-            program_id: ID of the program this job is for.
-            creation_date: Job creation date, in UTC.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            image: Runtime image used for this job: image_name:tag.
-            service: Runtime service.
-            session_id: Job ID of the first job in a runtime session.
-            tags: Tags assigned to the job.
-            version: Primitive version.
-            private: Marks job as private.
-        """
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
             self,
@@ -132,7 +131,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
         if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
-                "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
+                f"Unable to retrieve result for job {self.job_id()}. Job was cancelled."
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
