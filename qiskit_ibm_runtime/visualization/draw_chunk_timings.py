@@ -82,7 +82,7 @@ def _get_id(ct: ChunkTimings, multiple: bool) -> str:
 
 
 def draw_chunk_timings(
-    *chunk_timings: ChunkTimings,
+    *timings: ChunkTimings,
     names: str | Iterable[str] | None = None,
     common_start: bool = False,
     normalize_y: bool = False,
@@ -104,9 +104,8 @@ def draw_chunk_timings(
         ``result.chunk_timings`` attribute.
 
     Args:
-        chunk_timings: One or more :class:`~.ChunkTimings` collections,
-            e.g. ``result.chunk_timings``.
-        names: Name or names to assign to the respective ``chunk_timings``. When provided, a
+        timings: One or more :class:`~.ChunkTimings` collections.
+        names: Name or names to assign to the respective ``timings``. When provided, a
             legend is shown by default.
         common_start: Whether to shift each collection's chunks so that its first chunk starts
             at :math:`t=0`. Useful for comparing timings from different jobs side by side.
@@ -137,23 +136,20 @@ def draw_chunk_timings(
             all_names.extend(names)
 
     # fill in default names for any without an explicit one
-    multiple = len(chunk_timings) > 1
-    all_names.extend(
-        f"ChunkTimings{_get_id(ct, multiple)}" for ct in chunk_timings[len(all_names) :]
-    )
+    all_names.extend(f"Timings {idx}" for idx in range(len(all_names), len(timings)))
 
-    for ct, color, name in zip(chunk_timings, cycle(colors), all_names):
-        if not ct:
+    for timing, color, name in zip(timings, cycle(colors), all_names):
+        if not timing:
             continue
 
-        sorted_chunks = sorted(enumerate(ct), key=lambda x: x[1].start)
+        sorted_chunks = sorted(enumerate(timing), key=lambda x: x[1].start)
 
         offset = timedelta()
         if common_start:
             first_start = _apply_tz(sorted_chunks[0][1].start, tz)
             offset = first_start - datetime(year=1970, month=1, day=1)
 
-        total_size = sum(sum(p.size for p in c.parts) for c in ct) if normalize_y else 1
+        total_size = sum(sum(p.size for p in c.parts) for c in timing) if normalize_y else 1
         y_value = 0.0
         x_data = []
         y_data = []
