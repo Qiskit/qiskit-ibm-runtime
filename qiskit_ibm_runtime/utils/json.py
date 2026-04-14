@@ -435,6 +435,7 @@ class RuntimeDecoder(json.JSONDecoder):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def decode(self, s):  # type: ignore[no-untyped-def]
+        """Overrides the built-in method."""
         if isinstance(decoded := super().decode(s), dict):
             program_id = decoded.get("program", {}).get("id", None)
             params = decoded.get("params", {})
@@ -447,7 +448,8 @@ class RuntimeDecoder(json.JSONDecoder):
                     decoded["params"]["options"] = options
                 except Exception:
                     warnings.warn(
-                        "Unable to convert executor 'params' to a pair of quantum program and options."
+                        "Unable to convert executor 'params' to a pair of quantum program and "
+                        "options."
                     )
 
         return decoded
