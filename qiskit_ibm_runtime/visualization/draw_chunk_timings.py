@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from collections.abc import Iterable
 
-from ..quantum_program.quantum_program_result import ChunkTimings, ChunkSpan
+from ..quantum_program.quantum_program_result import ChunkTiming, ChunkSpan
 from .utils import plotly_module
 
 if TYPE_CHECKING:
@@ -77,12 +77,12 @@ def _format_hover(name: str, idx: int, chunk: ChunkSpan, tz: timezone | None) ->
     return "<br>".join(lines)
 
 
-def _get_id(ct: ChunkTimings, multiple: bool) -> str:
+def _get_id(ct: ChunkTiming, multiple: bool) -> str:
     return f"<{hex(id(ct))}>" if multiple else ""
 
 
 def draw_chunk_timings(
-    *timings: ChunkTimings,
+    *timings: ChunkTiming,
     names: str | Iterable[str] | None = None,
     common_start: bool = False,
     normalize_y: bool = False,
@@ -90,21 +90,22 @@ def draw_chunk_timings(
     show_legend: bool | None = None,
     tz: timezone | None = None,
 ) -> PlotlyFigure:
-    """Draw one or more :class:`~.ChunkTimings` on a bar plot.
+    """Draw one or more :class:`~.ChunkTiming` on a bar plot.
 
     Each chunk corresponds to a single execution window on the backend. The y-axis represents
     cumulative work completed across chunks — in units of elements executed, or as a percentage
     if ``normalize_y=True``.
 
-    When comparing multiple :class:`~.ChunkTimings` (e.g. from different jobs), use
+    When comparing multiple :class:`~.ChunkTiming` (e.g. from different jobs), use
     ``common_start=True`` to align traces at :math:`t=0` for direct comparison.
 
     .. note::
-        For a simpler single-trace interface, call :meth:`~.ChunkTimings.draw` directly on the
-        ``result.chunk_timings`` attribute.
+
+        For a simpler single-trace interface for data from an executor job, call
+        :meth:`~.ChunkTiming.draw` directly on ``job.result().timings``.
 
     Args:
-        timings: One or more :class:`~.ChunkTimings` collections.
+        timings: One or more :class:`~.ChunkTiming` collections.
         names: Name or names to assign to the respective ``timings``. When provided, a
             legend is shown by default.
         common_start: Whether to shift each collection's chunks so that its first chunk starts

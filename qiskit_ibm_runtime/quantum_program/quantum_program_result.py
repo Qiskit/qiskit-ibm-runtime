@@ -69,7 +69,7 @@ class Metadata:
     """Timing information about all executed chunks of a quantum program."""
 
 
-class ChunkTimings:
+class ChunkTiming:
     """A collection of chunk timing information for a :class:`QuantumProgramResult`.
 
     This class is a readonly list-like containing :class:`~.ChunkSpan` objects, where each span
@@ -114,21 +114,21 @@ class ChunkTimings:
     def __getitem__(self, idxs: int) -> ChunkSpan: ...
 
     @overload
-    def __getitem__(self, idxs: slice) -> ChunkTimings: ...
+    def __getitem__(self, idxs: slice) -> ChunkTiming: ...
 
     def __getitem__(self, idxs):  # type: ignore[no-untyped-def]
         if isinstance(idxs, int):
             return self._spans[idxs]
-        return ChunkTimings(self._spans[idxs])
+        return ChunkTiming(self._spans[idxs])
 
     def __iter__(self) -> Iterator[ChunkSpan]:
         return iter(self._spans)
 
     def __repr__(self) -> str:
-        return f"ChunkTimings({repr(self._spans)})"
+        return f"ChunkTiming({repr(self._spans)})"
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, ChunkTimings) and self._spans == other._spans
+        return isinstance(other, ChunkTiming) and self._spans == other._spans
 
     @property
     def start(self) -> datetime.datetime:
@@ -152,7 +152,7 @@ class ChunkTimings:
         line_width: int = 4,
         tz: timezone | None = None,
     ) -> PlotlyFigure:
-        """Draw these chunk timings.
+        """Draw timing information on a bar plot.
 
         To draw chunk timings with additional options like ``common_start``, or to draw
         timings of several jobs on the same axis, consider calling
@@ -208,19 +208,19 @@ class QuantumProgramResult:
         return f"{type(self).__name__}(<{len(self)} results>)"
 
     @property
-    def chunk_timings(self) -> ChunkTimings:
+    def timing(self) -> ChunkTiming:
         """Execution timing information of these results.
 
         A single executor job may be broken up into chunks of work that are executed serially.
-        This object stores information about their timing. Most notably, for each chunk of execution
-        a start and stop timestamp are provided that bound the window in which the data was
-        collected.
+        This property stores information about their timing. Most notably, for each chunk of
+        execution, a start and stop timestamp are provided that bound the window in which the data
+        was collected.
 
         To draw the timings for a single result:
 
         .. code-block:: python
 
-            result.chunk_timings.draw()
+            job.result().timing.draw()
 
         To draw the timings for several results on one plot:
 
@@ -229,13 +229,13 @@ class QuantumProgramResult:
             from qiskit_ibm_runtime.visualization import draw_chunk_timings
 
             draw_chunk_timings(
-                result1.chunk_timings,
-                result2.chunk_timings,
+                job1.result().timing,
+                job2.result().timing,
                 names=["job 1", "job 2"],
                 common_start=True,
             )
 
         Returns:
-            A :class:`ChunkTimings` collection.
+            A :class:`~.ChunkTiming` collection.
         """
-        return ChunkTimings(self.metadata.chunk_timing)
+        return ChunkTiming(self.metadata.chunk_timing)
