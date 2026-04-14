@@ -28,6 +28,9 @@ from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
+from qiskit_ibm_runtime.quantum_program.quantum_program_params_converters import (
+    QuantumProgramParamsConverter,
+)
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -430,9 +433,25 @@ class RuntimeDecoder(json.JSONDecoder):
             kwargs.pop("encoding")
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
+    def decode(self, s):  # type: ignore[no-untyped-def]
+        decoded = super().decode(s)
+
+        program_id = decoded.get("program", {}).get("id", None)
+        params = decoded.get("params", {})
+        if program_id == "executor" and params:
+            try:
+                quantum_program, options = QuantumProgramParamsConverter.decode(params)
+                decoded["params"]["quantum_program"] = quantum_program
+                decoded["params"]["options"] = options
+            except Exception:
+                warnings.warn(
+                    "Unable to convert executor 'params' to a pair of quantum program and options."
+                )
+
+        return decoded
+
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
-        print("hey", obj.keys())
         if "__type__" in obj:
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
@@ -568,5 +587,4 @@ class RuntimeDecoder(json.JSONDecoder):
                     return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val
-        print("shoot")
         return obj
