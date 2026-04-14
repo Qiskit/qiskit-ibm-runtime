@@ -434,24 +434,24 @@ class RuntimeDecoder(json.JSONDecoder):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def decode(self, s):  # type: ignore[no-untyped-def]
-        decoded = super().decode(s)
-
-        program_id = decoded.get("program", {}).get("id", None)
-        params = decoded.get("params", {})
-        if program_id == "executor" and params:
-            try:
-                quantum_program, options = QuantumProgramParamsConverter.decode(params)
-                decoded["params"]["quantum_program"] = quantum_program
-                decoded["params"]["options"] = options
-            except Exception:
-                warnings.warn(
-                    "Unable to convert executor 'params' to a pair of quantum program and options."
-                )
+        if isinstance(decoded := super().decode(s), dict):
+            program_id = decoded.get("program", {}).get("id", None)
+            params = decoded.get("params", {})
+            if program_id == "executor" and params:
+                try:
+                    quantum_program, options = QuantumProgramParamsConverter.decode(params)
+                    decoded["params"]["quantum_program"] = quantum_program
+                    decoded["params"]["options"] = options
+                except Exception:
+                    warnings.warn(
+                        "Unable to convert executor 'params' to a pair of quantum program and options."
+                    )
 
         return decoded
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
+        print("yo")
         if "__type__" in obj:
             obj_type = obj["__type__"]
             obj_val = obj["__value__"]
