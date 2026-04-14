@@ -34,6 +34,8 @@ from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
 from ....quantum_program.quantum_program import CircuitItem, SamplexItem
 from ....options.executor_options import ExecutorOptions
+from ....utils.validations import is_datatree_compatible
+from ....exceptions import IBMInputValueError
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
 from ..options.sampler_options import SamplerOptions
 
@@ -164,6 +166,15 @@ def prepare(
 
     # Collect circuit metadata from each pub
     circuits_metadata = [pub.circuit.metadata for pub in pubs]
+
+    # Validate that circuit metadata is compatible with DataTree format
+    for idx, metadata in enumerate(circuits_metadata):
+        if metadata is not None and not is_datatree_compatible(metadata):
+            raise IBMInputValueError(
+                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
+                f"Metadata must be a nested structure of lists, dicts (with string keys), "
+                f"numpy arrays, or primitive types (str, int, float, bool, None)."
+            )
 
     passthrough_data = {
         "post_processor": {
