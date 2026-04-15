@@ -29,7 +29,8 @@ def test_round_trip(schema_version):
     options = ExecutorOptions()
 
     converters = QUANTUM_PROGRAM_PARAMS_CONVERTERS[schema_version]
-    decoded = converters.decoder(converters.encoder(program, options))
+    encoded = converters.encoder(program, options).model_dump()
+    decoded = converters.decoder(converters.model(**encoded))
 
     assert isinstance(decoded[0], QuantumProgram)
     assert decoded[1] == options
