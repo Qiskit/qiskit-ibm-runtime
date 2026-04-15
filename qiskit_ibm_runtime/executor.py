@@ -26,8 +26,8 @@ from .session import Session
 from .batch import Batch
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
-from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
-from .quantum_program.quantum_program_params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from .quantum_program.result_decoders import QuantumProgramResultDecoder
+from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session

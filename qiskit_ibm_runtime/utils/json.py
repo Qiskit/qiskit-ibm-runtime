@@ -28,7 +28,7 @@ from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
-from qiskit_ibm_runtime.quantum_program.quantum_program_params_converters import (
+from qiskit_ibm_runtime.quantum_program.params_converters import (
     QUANTUM_PROGRAM_PARAMS_CONVERTERS,
 )
 

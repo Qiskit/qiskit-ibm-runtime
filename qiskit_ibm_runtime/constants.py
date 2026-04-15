@@ -14,7 +14,7 @@
 
 from qiskit.providers.jobstatus import JobStatus
 
-from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
 from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
 from .utils.estimator_result_decoder import EstimatorResultDecoder
