@@ -434,8 +434,15 @@ class RuntimeDecoder(json.JSONDecoder):
             kwargs.pop("encoding")
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
-    def decode(self, s):  # type: ignore[no-untyped-def]
-        """Overrides the built-in method."""
+    def decode(self, s: str) -> Any:  # type: ignore[override]
+        """Return the Python representation of a ``str`` instance containing a JSON document.
+
+        Applies additional conversion for ``executor`` program ``params``, preserving the
+        superclass `decode()` output in all other cases.
+
+        Args:
+            s: a string containing a JSON document.
+        """
         if isinstance(decoded := super().decode(s), dict):
             program_id = decoded.get("program", {}).get("id", None)
             params = decoded.get("params", {})
