@@ -62,6 +62,7 @@ def main(backend_list: str, verbose: bool) -> None:
 
         try:
             backend = service.backend(backend_name)
+            backend.refresh()
         except Exception as e:
             print(f"Fetching '{backend_name}' has failed.")
             print(e)
@@ -71,7 +72,7 @@ def main(backend_list: str, verbose: bool) -> None:
 
         if verbose:
             print("Fetching properties")
-        properties = backend.properties(refresh=True).to_dict()
+        properties = backend.properties().to_dict()
 
         if verbose:
             print("Fetching configuration")
