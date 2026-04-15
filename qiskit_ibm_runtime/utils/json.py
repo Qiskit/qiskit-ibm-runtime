@@ -451,7 +451,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 # decode its inputs, or 'params'
                 try:
                     converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
-                    quantum_program, options = converter.decoder(params)
+                    quantum_program, options = converter.decoder(converter.model(**params))
                     decoded["params"]["quantum_program"] = quantum_program
                     decoded["params"]["options"] = options
                 except Exception:
