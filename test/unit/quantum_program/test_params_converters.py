@@ -12,25 +12,30 @@
 
 """Tests the decoder for the quantum program result model."""
 
-import pytest
-
 from qiskit.circuit import QuantumCircuit
 from qiskit_ibm_runtime import QuantumProgram
 from qiskit_ibm_runtime.options import ExecutorOptions
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from ...ibm_test_case import IBMTestCase
+
+from ddt import data, ddt
 
 
-@pytest.mark.parametrize("schema_version", ["v0.1", "v0.2"])
-def test_round_trip(schema_version):
-    """Test a round trip."""
-    program = QuantumProgram(shots=100)
-    program.append_circuit_item(QuantumCircuit(3))
+@ddt
+class TestParamConverters(IBMTestCase):
+    """Tests for ParamConverters."""
 
-    options = ExecutorOptions()
+    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
+    def test_round_trip(self, schema_version):
+        """Test a round trip."""
+        program = QuantumProgram(shots=100)
+        program.append_circuit_item(QuantumCircuit(3))
 
-    converters = QUANTUM_PROGRAM_PARAMS_CONVERTERS[schema_version]
-    encoded = converters.encoder(program, options).model_dump()
-    decoded = converters.decoder(converters.model(**encoded))
+        options = ExecutorOptions()
 
-    assert isinstance(decoded[0], QuantumProgram)
-    assert decoded[1] == options
+        converters = QUANTUM_PROGRAM_PARAMS_CONVERTERS[schema_version]
+        encoded = converters.encoder(program, options).model_dump()
+        decoded = converters.decoder(converters.model(**encoded))
+
+        assert isinstance(decoded[0], QuantumProgram)
+        assert decoded[1] == options
