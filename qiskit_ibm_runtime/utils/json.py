@@ -447,7 +447,7 @@ class RuntimeDecoder(json.JSONDecoder):
             program_id = decoded.get("program", {}).get("id", None)
             params = decoded.get("params", {})
             if program_id == "executor" and params:
-                # `decoded` represents the input to an executo program. We use the converters to
+                # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
                     quantum_program, options = QuantumProgramParamsConverter.decode(params)

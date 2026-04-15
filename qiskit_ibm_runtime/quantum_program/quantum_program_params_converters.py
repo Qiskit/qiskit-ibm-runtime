@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from ibm_quantum_schemas.common import BaseParamsModel
@@ -36,7 +37,7 @@ class QuantumProgramParamsConverter:
     """Converter to/from schema model for the inputs of executor."""
 
     @classmethod
-    def get_converters(cls, schema_version: str):  # type: ignore[no-untyped-def]
+    def get_converters(cls, schema_version: str) -> tuple[BaseParamsModel, Callable, Callable]:
         """Get converters for a given schema version.
 
         Args:
