@@ -29,7 +29,7 @@ from collections.abc import Callable
 import dateutil.parser
 import numpy as np
 from qiskit_ibm_runtime.quantum_program.quantum_program_params_converters import (
-    QuantumProgramParamsConverter,
+    QUANTUM_PROGRAM_PARAMS_CONVERTERS,
 )
 
 try:
@@ -450,7 +450,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
-                    quantum_program, options = QuantumProgramParamsConverter.decode(params)
+                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    quantum_program, options = converter.decoder(params)
                     decoded["params"]["quantum_program"] = quantum_program
                     decoded["params"]["options"] = options
                 except Exception:

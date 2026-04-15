@@ -27,7 +27,7 @@ from .batch import Batch
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
 from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
-from .quantum_program.quantum_program_params_converters import QuantumProgramParamsConverter
+from .quantum_program.quantum_program_params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
@@ -155,5 +155,9 @@ class Executor:
         Returns:
             A job.
         """
-        params = QuantumProgramParamsConverter.encode(DEFAULT_SCHEMA_VERSION, program, self.options)
-        return self._run(params)
+        try:
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+
+        return self._run(converter.encoder(program, self.options))

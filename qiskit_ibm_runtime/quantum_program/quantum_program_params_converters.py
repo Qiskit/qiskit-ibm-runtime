@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import NamedTuple
 
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
@@ -27,55 +27,22 @@ from .converters import quantum_program_from_0_2, quantum_program_to_0_2
 from .quantum_program import QuantumProgram
 from ..options import ExecutorOptions
 
-AVAILABLE_CONVERTERS = {
-    "v0.1": (ParamsModel_0_1, quantum_program_from_0_1, quantum_program_to_0_1),
-    "v0.2": (ParamsModel_0_2, quantum_program_from_0_2, quantum_program_to_0_2),
+
+class ParamsConverter(NamedTuple):
+    """A helper to store params models and converters."""
+
+    model: BaseParamsModel
+    """The model describing the executor inputs, or 'params'."""
+
+    decoder: Callable[[BaseParamsModel], tuple[QuantumProgram, ExecutorOptions]]
+    """A function to decode the inputs of executor."""
+
+    encoder: Callable[[QuantumProgram, ExecutorOptions], BaseParamsModel]
+    """A function to encode the inputs of executor."""
+
+
+QUANTUM_PROGRAM_PARAMS_CONVERTERS = {
+    "v0.1": ParamsConverter(ParamsModel_0_1, quantum_program_from_0_1, quantum_program_to_0_1),
+    "v0.2": ParamsConverter(ParamsModel_0_2, quantum_program_from_0_2, quantum_program_to_0_2),
 }
-
-
-class QuantumProgramParamsConverter:
-    """Converter to/from schema model for the inputs of executor."""
-
-    @classmethod
-    def get_converters(cls, schema_version: str) -> tuple[BaseParamsModel, Callable, Callable]:
-        """Get converters for a given schema version.
-
-        Args:
-            schema_version: The schema version to provide converters for.
-        """
-        try:
-            return AVAILABLE_CONVERTERS[schema_version]
-        except KeyError:
-            raise ValueError(f"No converters for schema version {schema_version}.")
-
-    @classmethod
-    def encode(
-        cls,
-        schema_version: str,
-        quantum_program: QuantumProgram,
-        options: ExecutorOptions,
-    ) -> BaseParamsModel:
-        """Encode the inputs of executor.
-
-        Args:
-            schema_version: The schema version.
-            quantum_program: The program to encode.
-            options: The options to encode.
-        """
-        _, _, encoder = cls.get_converters(schema_version)
-        return encoder(quantum_program, options)
-
-    @classmethod
-    def decode(cls, inputs: dict[str, Any]) -> tuple[QuantumProgram, ExecutorOptions]:
-        """Decode the inputs of executor.
-
-        Args:
-            inputs: A dictionary of inputs to executor.
-        """
-        try:
-            schema_version = inputs["schema_version"]
-        except KeyError:
-            raise ValueError("Field 'schema_version' is missing.")
-
-        model, decoder, _ = cls.get_converters(schema_version)
-        return decoder(model(**inputs))
+"""Converter to/from schema model for the inputs of executor."""
