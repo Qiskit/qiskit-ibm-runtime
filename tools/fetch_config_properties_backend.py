@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2026
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,6 +10,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+"""Retrieves latest configuration and properties from a backend."""
 
 import argparse
 import json
@@ -33,6 +34,10 @@ parser.add_argument(
 
 
 def main(backend_name: str) -> None:
+    """Retrieves latest configuration and properties from a backend.
+
+    The configuration and properties and then saved as valid JSON files in the backends directory.
+    """
     try:
         service = QiskitRuntimeService()
     except AccountNotFoundError:
