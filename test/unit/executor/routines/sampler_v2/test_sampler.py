@@ -639,7 +639,6 @@ class TestPrepareOptionsHandling(unittest.TestCase):
         self.assertEqual(executor_options.environment.image, "full-test:v1")
 
 
-@ddt
 class TestPrepareTwirling(unittest.TestCase):
     """Unit tests for prepare() function with twirling enabled."""
 
