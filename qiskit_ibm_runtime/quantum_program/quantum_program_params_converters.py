@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import NamedTuple
+from typing import NamedTuple, TYPE_CHECKING
 
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
@@ -24,8 +24,10 @@ from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_
 
 from .converters import quantum_program_from_0_1, quantum_program_to_0_1
 from .converters import quantum_program_from_0_2, quantum_program_to_0_2
-from .quantum_program import QuantumProgram
-from ..options import ExecutorOptions
+
+if TYPE_CHECKING:
+    from .quantum_program import QuantumProgram
+    from ..options import ExecutorOptions
 
 
 class ParamsConverter(NamedTuple):
