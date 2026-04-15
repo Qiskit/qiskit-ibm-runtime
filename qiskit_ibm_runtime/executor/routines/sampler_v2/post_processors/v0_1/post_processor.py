@@ -67,21 +67,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
 
     # Extract circuit metadata if present and validate length
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
-    if circuits_metadata is not None:
-        if len(circuits_metadata) != len(result):
-            raise ValueError(
-                f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
-                f"number of pubs ({len(result)})."
-            )
 
-    # Extract circuit metadata if present and validate length
-    circuits_metadata = post_processor_data.get("circuits_metadata", None)
-    if circuits_metadata is not None:
-        if len(circuits_metadata) != len(result):
-            raise ValueError(
-                f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
-                f"number of pubs ({len(result)})."
-            )
 
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]

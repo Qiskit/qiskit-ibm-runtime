@@ -445,6 +445,7 @@ class SamplerV2(BaseSamplerV2):
                 length doesn't match number of pubs.
         """
         # Validate circuits_metadata length if provided
+        circuits_metadata = circuits_metadata or [None] * len(result)
         if circuits_metadata is not None and len(circuits_metadata) != len(result):
             raise ValueError(
                 f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
@@ -475,7 +476,7 @@ class SamplerV2(BaseSamplerV2):
 
             # Get circuit metadata for this pub if available
             pub_metadata = {}
-            if circuits_metadata is not None and idx < len(circuits_metadata):
+            if circuits_metadata is not None:
                 circuit_meta = circuits_metadata[idx]
                 if circuit_meta is not None:
                     pub_metadata["circuit_metadata"] = circuit_meta
