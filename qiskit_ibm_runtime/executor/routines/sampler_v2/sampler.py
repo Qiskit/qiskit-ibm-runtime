@@ -441,7 +441,7 @@ class SamplerV2(BaseSamplerV2):
             The converted primitive result.
 
         Raises:
-            ValueError: If data is malformed or inconsistent, or if circuits_metadata
+            ValueError: If data is malformed or inconsistent, or if ``circuits_metadata``
                 length doesn't match number of pubs.
         """
         # Validate circuits_metadata length if provided

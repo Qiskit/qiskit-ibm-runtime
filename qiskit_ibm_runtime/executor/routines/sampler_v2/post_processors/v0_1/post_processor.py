@@ -65,7 +65,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
 
-    # Extract circuit metadata if present and validate length
+    # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
