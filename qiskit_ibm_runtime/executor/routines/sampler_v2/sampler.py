@@ -311,10 +311,11 @@ class SamplerV2(BaseSamplerV2):
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
-        For moderate and complex workloads, the client-side processing can be resource intensive
-        and cause a delay between invoking the function and the ``job`` being submitted. In order
-        to check the progress of the call, it is recommended to setup logging (with an ``INFO``
-        level) - see `Qiskit Runtime documentation
+        For moderate and complex workloads, the client-side processing done to map sampler inputs
+        to executor inputs can be resource intensive can be resource intensive and cause a delay
+        between invoking the function and the ``job`` being submitted. In order to check the
+        progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
+        `Qiskit Runtime documentation
         <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
