@@ -160,12 +160,7 @@ def is_datatree_compatible(data: Any) -> bool:
     Returns:
         True if data is compatible with DataTree format, False otherwise.
     """
-    if data is None or isinstance(data, (str, bool, int, float)):
-        # Primitive types are valid
-        return True
-
-    if isinstance(data, np.ndarray):
-        # NumPy arrays are valid
+    if data is None or isinstance(data, (str, bool, int, float, np.ndarray)):
         return True
 
     if isinstance(data, list):
