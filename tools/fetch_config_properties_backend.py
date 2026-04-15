@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.accounts.exceptions import AccountNotFoundError
+from qiskit_ibm_runtime.accounts.exceptions import AccountsError
 from qiskit_ibm_runtime.utils.backend_encoder import BackendEncoder
 
 tools_dir = Path(__file__).parent
@@ -29,53 +29,86 @@ parser.add_argument(
     "-b",
     "--backend",
     required=True,
-    help="backend name (required), e.g. 'ibm_boston'",
+    action="append",
+    help="backend name (required), e.g. 'ibm_boston'. Can be used more than once.",
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    required=False,
+    action="store_true",
+    help="print debug messages.",
 )
 
 
-def main(backend_name: str) -> None:
+def main(backend_list: str, verbose: bool) -> None:
     """Retrieves latest configuration and properties from a backend.
 
     The configuration and properties and then saved as valid JSON files in the backends directory.
     """
+    if verbose:
+        print("Initializing IBM service")
+
     try:
         service = QiskitRuntimeService()
-    except AccountNotFoundError:
-        print("This script requires a saved IBM account")
+    except AccountsError as e:
+        print("Service initialization failed")
+        print(e)
         sys.exit(1)
 
-    backend_city = backend_name.split("_")[-1]
-    use_fractional_gates = False
+    for backend_name in backend_list:
+        if verbose:
+            print(f"Fetching backend '{backend_name}'")
 
-    try:
-        backend = service.backend(backend_name, use_fractional_gates=use_fractional_gates)
+        try:
+            backend = service.backend(backend_name)
+        except Exception as e:
+            print(f"Fetching '{backend_name}' has failed.")
+            print(e)
+            sys.exit(1)
+
+        backend_city = backend_name.split("_")[-1]
+
+        if verbose:
+            print("Fetching properties")
         properties = backend.properties(refresh=True).to_dict()
+
+        if verbose:
+            print("Fetching configuration")
         configuration = backend.configuration().to_dict()
         configuration["backend_name"] = backend_name
-    except Exception as e:
-        print(f"Fetching {backend_name} has failed: {e}")
-        sys.exit(1)
 
-    out_dir = backends_dir / backend_city
-    Path.mkdir(out_dir, exist_ok=True)
+        out_dir = backends_dir / backend_city
+        Path.mkdir(out_dir, exist_ok=True)
 
-    if not configuration:
-        print("Script failed to fetch config")
-        sys.exit(1)
+        if not configuration:
+            print("Script failed to fetch config")
+            sys.exit(1)
 
-    config_path = out_dir / f"conf_{backend_city}.json"
-    with open(config_path, "w", encoding="utf-8") as fd:
-        fd.write(json.dumps(configuration, cls=BackendEncoder))
+        config_path = out_dir / f"conf_{backend_city}.json"
 
-    if not properties:
-        print("Script failed to fetch properties")
-        sys.exit(1)
+        if verbose:
+            print("Saving configuration")
 
-    props_path = out_dir / f"props_{backend_city}.json"
-    with open(props_path, "w", encoding="utf-8") as fd:
-        fd.write(json.dumps(properties, cls=BackendEncoder))
+        with open(config_path, "w", encoding="utf-8") as fd:
+            fd.write(json.dumps(configuration, cls=BackendEncoder))
+
+        if not properties:
+            print("Script failed to fetch properties")
+            sys.exit(1)
+
+        props_path = out_dir / f"props_{backend_city}.json"
+
+        if verbose:
+            print("Saving properties")
+
+        with open(props_path, "w", encoding="utf-8") as fd:
+            fd.write(json.dumps(properties, cls=BackendEncoder))
+
+        if verbose:
+            print(f"Backend '{backend_name}' done")
 
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    main(args.backend)
+    main(args.backend, args.verbose)
