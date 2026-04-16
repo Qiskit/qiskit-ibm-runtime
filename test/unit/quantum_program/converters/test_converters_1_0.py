@@ -17,7 +17,7 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.executor.version_1_0 import (
+from ibm_quantum_schemas.executor.version_1_0_dev import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
@@ -97,7 +97,7 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         params_model = quantum_program_to_1_0(quantum_program, options)
 
-        self.assertEqual(params_model.schema_version, "v0.2")
+        self.assertEqual(params_model.schema_version, "v1.0")
         self.assertEqual(params_model.options.init_qubits, False)
         self.assertEqual(params_model.options.rep_delay, None)
         self.assertEqual(params_model.options.experimental, experimental_opts)
@@ -109,7 +109,6 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         circuit_item_model = quantum_program_model.items[0]
         self.assertEqual(circuit_item_model.item_type, "circuit")
-        self.assertEqual(circuit_item_model.circuit.to_quantum_circuit(), circuit1)
         self.assertTrue(
             np.array_equal(circuit_item_model.circuit_arguments.to_numpy(), circuit_arguments)
         )
@@ -117,7 +116,6 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         samplex_item_model = quantum_program_model.items[1]
         self.assertEqual(samplex_item_model.item_type, "samplex")
-        self.assertEqual(samplex_item_model.circuit.to_quantum_circuit(), template_circuit)
         self.assertEqual(samplex_item_model.shape, [4, 3, 2])
         self.assertEqual(samplex_item_model.chunk_size, 7)
 
@@ -134,6 +132,8 @@ class TestQuantumProgramConverters(IBMTestCase):
                 samplex_arguments_model[f"pauli_lindblad_maps.pl{i}"].to_pauli_lindblad_map(),
                 noise_model,
             )
+
+        self.assertEqual(quantum_program_model.circuits.to_python(), [circuit1, template_circuit])
 
     def test_quantum_program_to_1_0_no_argument(self):
         """Test when there are no circuit arguments, samplex arguments, and chunk size."""

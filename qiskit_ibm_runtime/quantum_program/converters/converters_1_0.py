@@ -30,7 +30,7 @@ from ibm_quantum_schemas.executor.version_1_0_dev import (
 )
 from ibm_quantum_schemas.common import (
     PauliLindbladMapModel,
-    SamplexModelSSV1ToSSV2,
+    SamplexModelSSV1ToSSV3,
     F64TensorModel,
     TensorModel,
     QpyDataV13ToV17Model,
@@ -46,7 +46,7 @@ from ...options.executor_options import ExecutorOptions
 def quantum_program_from_1_0(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:
     """Convert a V1.0 model to a pair of program and options."""
     program_model = model.quantum_program
-    circuits: list[QuantumCircuit] = model.circuits.to_python(use_cached=True)
+    circuits: list[QuantumCircuit] = program_model.circuits.to_python(use_cached=True)
     items: list[CircuitItem | SamplexItem] = []
     for circuit, model_item in zip(circuits, program_model.items):
         chunk_size = None if model_item.chunk_size == "auto" else model_item.chunk_size
@@ -85,10 +85,10 @@ def quantum_program_from_1_0(model: ParamsModel) -> tuple[QuantumProgram, Execut
     quantum_program = QuantumProgram(
         shots=program_model.shots,
         items=items,
-        meas_level=model.meas_level,
-        passthrough_data=model.passthrough_data,
+        meas_level=program_model.meas_level,
+        passthrough_data=program_model.passthrough_data,
     )
-    quantum_program.semantic_role = model.semantic_role
+    quantum_program.semantic_role = program_model.semantic_role
 
     options = ExecutorOptions()
     options.execution.init_qubits = model.options.init_qubits
@@ -109,6 +109,7 @@ def quantum_program_to_1_0(program: QuantumProgram, options: ExecutorOptions) ->
             model_item = CircuitItemModel(
                 circuit_arguments=F64TensorModel.from_numpy(item.circuit_arguments),
                 chunk_size=chunk_size,
+                shape=[],  # Not yet supported
             )
         elif isinstance(item, SamplexItem):
             arguments = {}
@@ -122,7 +123,7 @@ def quantum_program_to_1_0(program: QuantumProgram, options: ExecutorOptions) ->
                     else:
                         arguments[name] = value
             model_item = SamplexItemModel(
-                samplex=SamplexModelSSV1ToSSV2.from_samplex(item.samplex, ssv=get_ssv_version(2)),
+                samplex=SamplexModelSSV1ToSSV3.from_samplex(item.samplex, ssv=get_ssv_version(3)),
                 samplex_arguments=arguments,
                 shape=item.shape,
                 chunk_size=chunk_size,
@@ -163,8 +164,10 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
         ]
     )
 
-    return QuantumProgramResult(
+    result = QuantumProgramResult(
         data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
         metadata=metadata,
         passthrough_data=model.passthrough_data,
     )
+    result.semantic_role = model.semantic_role
+    return result

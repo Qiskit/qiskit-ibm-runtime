@@ -88,8 +88,8 @@ def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, Execut
     quantum_program = QuantumProgram(
         shots=program_model.shots,
         items=items,
-        meas_level=model.meas_level,
-        passthrough_data=model.passthrough_data,
+        meas_level=program_model.meas_level,
+        passthrough_data=program_model.passthrough_data,
     )
 
     options = ExecutorOptions()
@@ -168,10 +168,8 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
         ]
     )
 
-    result = QuantumProgramResult(
+    return QuantumProgramResult(
         data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
         metadata=metadata,
         passthrough_data=model.passthrough_data,
     )
-    result.semantic_role = model.semantic_role
-    return result
