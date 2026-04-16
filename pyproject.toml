@@ -2,10 +2,6 @@
 requires = ["setuptools >= 65.0.2", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313']
-
 [tool.towncrier]
 single_file = false
 filename = "release-notes/{version}.rst"
@@ -181,7 +177,6 @@ common = [
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
-    "black~=24.1",
     "ruff~=0.14.10",
     "coverage>=6.3",
     "pylatexenc",
@@ -227,7 +222,6 @@ style = [
 ]
 
 style_local = [
-    "black~=24.1",
     "mypy==1.19.0",
     "ruff~=0.14.10",
 ]
