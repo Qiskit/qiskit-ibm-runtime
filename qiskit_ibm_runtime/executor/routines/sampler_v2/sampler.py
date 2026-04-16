@@ -96,7 +96,8 @@ def prepare(
 
     if not twirling_enabled:
         # No twirling path: validate no boxes, create CircuitItem objects
-        for pub in pubs:
+        for i, pub in enumerate(pubs):
+            logger.info("Processing pub %d/%d", i, len(pubs))
             validate_no_boxes(pub.circuit)
 
             # Apply DD if enabled
@@ -132,7 +133,8 @@ def prepare(
             twirling_strategy=options.twirling.strategy.replace("-", "_"),
         )
 
-        for pub in pubs:
+        for i, pub in enumerate(pubs):
+            logger.info("Processing pub %d/%d", i, len(pubs))
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
 
@@ -309,6 +311,14 @@ class SamplerV2(BaseSamplerV2):
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
+        For moderate and complex workloads, the client-side processing done to map sampler inputs
+        to executor inputs can be resource intensive can be resource intensive and cause a delay
+        between invoking the function and the ``job`` being submitted. In order to check the
+        progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
+        `Qiskit Runtime documentation
+        <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        for more information.
+
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
                   or tuples ``(circuit, parameter_values)``.
@@ -340,6 +350,7 @@ class SamplerV2(BaseSamplerV2):
             )
 
         # Convert pubs to QuantumProgram and map options using the prepare function
+        logger.info("Starting pre-processing")
         quantum_program, executor_options = self._prepare(
             coerced_pubs, self._options, backend, default_shots
         )
@@ -349,8 +360,9 @@ class SamplerV2(BaseSamplerV2):
 
         # Submit to executor
         logger.info(
-            "Submitting %d pub(s) to executor with %d shots",
+            "Submitting %d pub%s to executor with %d shots",
             len(coerced_pubs),
+            "s" if len(coerced_pubs) > 1 else "",
             quantum_program.shots,
         )
 
