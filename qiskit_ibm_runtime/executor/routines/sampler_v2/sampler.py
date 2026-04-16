@@ -69,7 +69,6 @@ def prepare(
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
         ValueError: If dynamical decoupling is enabled with dynamic circuits.
     """
-
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)
 

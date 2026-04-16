@@ -89,7 +89,6 @@ def calculate_twirling_shots(
     Returns:
         Tuple of (num_randomizations, shots_per_randomization).
     """
-
     if num_randomizations == "auto" and shots_per_randomization == "auto":
         # Both auto: shots_per_rand = max(64, ceil(shots/32))
         shots_per_rand = max(64, math.ceil(pub_shots / 32))

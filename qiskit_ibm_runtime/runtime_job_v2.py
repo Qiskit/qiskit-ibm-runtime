@@ -160,7 +160,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Returns:
             Post-processed result or original result if no post-processing applies
         """
-
         # Only apply post-processing to QuantumProgramResult
         if not isinstance(result, QuantumProgramResult):
             return result

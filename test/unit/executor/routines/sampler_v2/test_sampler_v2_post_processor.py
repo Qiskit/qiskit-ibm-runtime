@@ -486,7 +486,8 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     def test_twirled_2d_sweep_flattened(self):
         """Twirled 2-D parametric pub.
 
-        (num_rand, 5, 3, shots_per_rand, bits) -> (5, 3, total_shots, bits)."""
+        (num_rand, 5, 3, shots_per_rand, bits) -> (5, 3, total_shots, bits).
+        """
         num_rand, s1, s2, shots_per_rand, num_bits = 4, 5, 3, 64, 2
         meas_data = np.random.randint(
             0, 2, size=(num_rand, s1, s2, shots_per_rand, num_bits), dtype=np.uint8

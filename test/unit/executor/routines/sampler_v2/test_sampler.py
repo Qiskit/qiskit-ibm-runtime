@@ -644,7 +644,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
     def test_prepare_creates_samplex_items(self):
         """Test that prepare() creates SamplexItem objects when twirling is enabled."""
-
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()

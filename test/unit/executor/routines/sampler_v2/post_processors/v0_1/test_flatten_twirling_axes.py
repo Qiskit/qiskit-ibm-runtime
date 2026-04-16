@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for ``flatten_twirling_axes``."""
+
 from __future__ import annotations
 
 import unittest

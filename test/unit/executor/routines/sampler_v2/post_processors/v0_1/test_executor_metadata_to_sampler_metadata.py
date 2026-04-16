@@ -13,6 +13,7 @@
 # pylint: disable=line-too-long
 
 """Tests for ``executor_metadata_to_sampler_metadata``."""
+
 from __future__ import annotations
 
 import unittest
