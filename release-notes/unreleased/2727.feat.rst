@@ -1,0 +1,4 @@
+Added :func:`.draw_chunk_timings` to :mod:`qiskit_ibm_runtime.visualization` for plotting
+the execution timing of one or more instances of the new chunk timings container class,
+:class:`.ChunkTimings`, on an interactive barchart. A convenience :meth:`.ChunkTimings.draw`
+method is also available for the single-result case via ``job.result().chunk_timings.draw()``.
