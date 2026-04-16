@@ -20,10 +20,17 @@ from typing import NamedTuple, TYPE_CHECKING
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_0_2
+from ibm_quantum_schemas.executor.version_1_0_dev import ParamsModel as ParamsModel_1_0
 
 
-from .converters import quantum_program_from_0_1, quantum_program_to_0_1
-from .converters import quantum_program_from_0_2, quantum_program_to_0_2
+from .converters import (
+    quantum_program_from_0_1,
+    quantum_program_to_0_1,
+    quantum_program_from_0_2,
+    quantum_program_to_0_2,
+    quantum_program_from_1_0,
+    quantum_program_to_1_0,
+)
 
 if TYPE_CHECKING:
     from .quantum_program import QuantumProgram
@@ -46,5 +53,6 @@ class ParamsConverter(NamedTuple):
 QUANTUM_PROGRAM_PARAMS_CONVERTERS = {
     "v0.1": ParamsConverter(ParamsModel_0_1, quantum_program_from_0_1, quantum_program_to_0_1),
     "v0.2": ParamsConverter(ParamsModel_0_2, quantum_program_from_0_2, quantum_program_to_0_2),
+    "v1.0": ParamsConverter(ParamsModel_1_0, quantum_program_from_1_0, quantum_program_to_1_0),
 }
 """Converter to/from schema model for the inputs of executor."""
