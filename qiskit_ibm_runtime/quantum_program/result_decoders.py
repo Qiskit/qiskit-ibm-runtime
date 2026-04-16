@@ -22,16 +22,23 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_2,
 )
+from ibm_quantum_schemas.executor.version_1_0_dev import (
+    QuantumProgramResultModel as QuantumProgramResultModel_1_0,
+)
 
 from ..utils.result_decoder import ResultDecoder
-from .converters import quantum_program_result_from_0_1
-from .converters import quantum_program_result_from_0_2
+from .converters import (
+    quantum_program_result_from_0_1,
+    quantum_program_result_from_0_2,
+    quantum_program_result_from_1_0,
+)
 
 logger = logging.getLogger(__name__)
 
 AVAILABLE_DECODERS = {
     "v0.1": (quantum_program_result_from_0_1, QuantumProgramResultModel_0_1),
     "v0.2": (quantum_program_result_from_0_2, QuantumProgramResultModel_0_2),
+    "v1.0": (quantum_program_result_from_1_0, QuantumProgramResultModel_1_0),
 }
 
 
