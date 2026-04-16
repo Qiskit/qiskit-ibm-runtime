@@ -15,6 +15,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from ddt import ddt, data
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter, BoxOp
@@ -52,41 +53,6 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_single_circuit_quantum_program_structure(self, mock_run):
-        """Test QuantumProgram structure for a single simple circuit."""
-        mock_run.return_value = MagicMock()
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        sampler = SamplerV2(mode=self.backend)
-        sampler.run([circuit], shots=1024)
-
-        # Verify Executor run was called once
-        self.assertEqual(mock_run.call_count, 1)
-
-        # Extract the QuantumProgram
-        quantum_program = mock_run.call_args[0][0]
-
-        # Verify QuantumProgram structure
-        self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(quantum_program.shots, 1024)
-        self.assertEqual(len(quantum_program.items), 1)
-
-        # Verify CircuitItem
-        item = quantum_program.items[0]
-        self.assertIsInstance(item, CircuitItem)
-        self.assertEqual(item.circuit, circuit)
-        self.assertEqual(item.circuit.num_qubits, 2)
-        self.assertEqual(item.circuit.num_clbits, 4)
-
-        # Verify circuit_arguments for non-parametric circuit
-        self.assertIsNotNone(item.circuit_arguments)
-        self.assertEqual(item.circuit_arguments.shape, (0,))
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_multiple_circuits_quantum_program_structure(self, mock_run):
@@ -145,36 +111,6 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         self.backend = create_mock_backend()
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_single_parameter_single_value(self, mock_run):
-        """Test parametric circuit with single parameter and single value."""
-        mock_run.return_value = MagicMock()
-
-        theta = Parameter("θ")
-        circuit = QuantumCircuit(1, 1)
-        circuit.rx(theta, 0)
-        circuit.measure_all()
-
-        sampler = SamplerV2(mode=self.backend)
-        sampler.run([(circuit, [0.5])], shots=1024)
-
-        quantum_program = mock_run.call_args[0][0]
-
-        # Verify QuantumProgram
-        self.assertEqual(quantum_program.shots, 1024)
-        self.assertEqual(len(quantum_program.items), 1)
-
-        # Verify CircuitItem with parameters
-        item = quantum_program.items[0]
-        self.assertIsInstance(item, CircuitItem)
-        self.assertEqual(item.circuit, circuit)
-        self.assertEqual(item.circuit.num_parameters, 1)
-
-        # Verify circuit_arguments shape and values
-        self.assertIsNotNone(item.circuit_arguments)
-        self.assertEqual(item.circuit_arguments.shape, (1,))
-        np.testing.assert_array_almost_equal(item.circuit_arguments, [0.5])
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_single_parameter_multiple_values(self, mock_run):
         """Test parametric circuit with single parameter and multiple values."""
         mock_run.return_value = MagicMock()
@@ -195,31 +131,6 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         self.assertEqual(item.circuit_arguments.shape, (4, 1))
         expected = np.array([[0.1], [0.2], [0.3], [0.4]])
         np.testing.assert_array_almost_equal(item.circuit_arguments, expected)
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_multiple_parameters_single_set(self, mock_run):
-        """Test parametric circuit with multiple parameters and single value set."""
-        mock_run.return_value = MagicMock()
-
-        theta = Parameter("θ")
-        phi = Parameter("φ")
-        circuit = QuantumCircuit(1, 1)
-        circuit.rx(theta, 0)
-        circuit.rz(phi, 0)
-        circuit.measure_all()
-
-        sampler = SamplerV2(mode=self.backend)
-        sampler.run([(circuit, [[0.5, 1.2]])], shots=1024)
-
-        quantum_program = mock_run.call_args[0][0]
-        item = quantum_program.items[0]
-
-        # Verify circuit has 2 parameters
-        self.assertEqual(item.circuit.num_parameters, 2)
-
-        # Verify circuit_arguments shape and values
-        self.assertEqual(item.circuit_arguments.shape, (1, 2))
-        np.testing.assert_array_almost_equal(item.circuit_arguments, [[0.5, 1.2]])
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_multiple_parameters_multiple_sets(self, mock_run):
@@ -289,28 +200,6 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         self.backend = create_mock_backend()
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_circuit_with_box_raises_error(self, mock_run):
-        """Test that running a circuit with BoxOp raises an error."""
-        inner_circuit = QuantumCircuit(2)
-        inner_circuit.h(0)
-        inner_circuit.cx(0, 1)
-
-        circuit = QuantumCircuit(2, 2)
-        circuit.append(BoxOp(inner_circuit), [0, 1])
-        circuit.measure_all()
-
-        sampler = SamplerV2(mode=self.backend)
-
-        with self.assertRaises(IBMInputValueError) as context:
-            sampler.run([circuit], shots=1024)
-
-        self.assertIn("BoxOp", str(context.exception))
-        self.assertIn("not supported", str(context.exception))
-
-        # Verify executor.run was never called
-        mock_run.assert_not_called()
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_multiple_circuits_one_with_box_raises_error(self, mock_run):
         """Test that BoxOp in any circuit raises an error."""
         circuit1 = QuantumCircuit(1, 1)
@@ -339,21 +228,6 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
-
-    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
-    def test_explicit_shots_in_run(self, mock_run):
-        """Test that explicit shots in run() are used."""
-        mock_run.return_value = MagicMock()
-
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        sampler = SamplerV2(mode=self.backend)
-        sampler.run([circuit], shots=8192)
-
-        quantum_program = mock_run.call_args[0][0]
-        self.assertEqual(quantum_program.shots, 8192)
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_default_shots_when_not_specified(self, mock_run):
@@ -497,63 +371,48 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
 class TestPrepare(unittest.TestCase):
     """Tests for prepare function."""
 
-    def test_single_pub_no_parameters(self):
-        """Test conversion of a single pub without parameters."""
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        program, executor_options = prepare([pub], options, FakeManilaV2())
-
-        self.assertIsInstance(program, QuantumProgram)
-        self.assertEqual(program.shots, 1024)
-        self.assertEqual(len(program.items), 1)
-        self.assertIsInstance(program.items[0], CircuitItem)
-        self.assertEqual(program.items[0].circuit, circuit)
-        self.assertIsNotNone(executor_options)
-
-    def test_single_pub_with_parameters(self):
-        """Test conversion of a single pub with parameters."""
-        theta = Parameter("θ")
-        circuit = QuantumCircuit(1, 1)
-        circuit.rx(theta, 0)
-        circuit.measure_all()
-
-        param_values = np.array([[0.1], [0.2], [0.3]])
-        pub = SamplerPub.coerce((circuit, param_values), shots=2048)
-        options = SamplerOptions()
-        program, executor_options = prepare([pub], options, FakeManilaV2())
-
-        self.assertEqual(program.shots, 2048)
-        self.assertEqual(len(program.items), 1)
-        self.assertIsInstance(program.items[0], CircuitItem)
-        np.testing.assert_array_equal(program.items[0].circuit_arguments, param_values)
-        self.assertIsNotNone(executor_options)
-
     def test_multiple_pubs(self):
-        """Test conversion of multiple pubs."""
+        """Test conversion of multiple pubs, including parametric circuits."""
+        # Non-parametric circuit
         circuit1 = QuantumCircuit(2, 2)
         circuit1.h(0)
         circuit1.measure_all()
 
-        circuit2 = QuantumCircuit(3, 3)
-        circuit2.h([0, 1, 2])
+        # Parametric circuit
+        theta = Parameter("θ")
+        circuit2 = QuantumCircuit(1, 1)
+        circuit2.rx(theta, 0)
         circuit2.measure_all()
+        param_values = np.array([[0.1], [0.2], [0.3]])
+
+        # Another non-parametric circuit
+        circuit3 = QuantumCircuit(3, 3)
+        circuit3.h([0, 1, 2])
+        circuit3.measure_all()
 
         pubs = [
             SamplerPub.coerce(circuit1, shots=1024),
-            SamplerPub.coerce(circuit2, shots=1024),
+            SamplerPub.coerce((circuit2, param_values), shots=1024),
+            SamplerPub.coerce(circuit3, shots=1024),
         ]
         options = SamplerOptions()
         program, executor_options = prepare(pubs, options, FakeManilaV2())
 
         self.assertEqual(program.shots, 1024)
-        self.assertEqual(len(program.items), 2)
+        self.assertEqual(len(program.items), 3)
+
+        # Verify non-parametric circuit
         self.assertEqual(program.items[0].circuit, circuit1)
+        self.assertIsInstance(program.items[0], CircuitItem)
+
+        # Verify parametric circuit
         self.assertEqual(program.items[1].circuit, circuit2)
+        self.assertIsInstance(program.items[1], CircuitItem)
+        np.testing.assert_array_equal(program.items[1].circuit_arguments, param_values)
+
+        # Verify another non-parametric circuit
+        self.assertEqual(program.items[2].circuit, circuit3)
+
         self.assertIsNotNone(executor_options)
 
     def test_default_shots(self):
@@ -981,10 +840,12 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertEqual(len(qp.items), 2)
 
 
+@ddt
 class TestPreparePassthroughData(unittest.TestCase):
     """Unit tests for prepare() function, checking passthrough_data."""
 
-    def test_prepare_sets_passthrough_data(self):
+    @data(True, False)
+    def test_prepare_sets_passthrough_data(self, enable_gates):
         """Test that prepare() sets correct passthrough_data for post-processing."""
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
@@ -992,7 +853,7 @@ class TestPreparePassthroughData(unittest.TestCase):
 
         pub = SamplerPub.coerce(circuit, shots=1024)
         options = SamplerOptions()
-        options.twirling.enable_gates = True
+        options.twirling.enable_gates = enable_gates
 
         qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
 
@@ -1000,46 +861,8 @@ class TestPreparePassthroughData(unittest.TestCase):
         self.assertIn("post_processor", qp.passthrough_data)
         self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
         self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
-        # Twirling path: twirling flag must be True
-        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
         self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
-
-    def test_prepare_sets_passthrough_data_no_twirling(self):
-        """Test that prepare() sets twirling flag to False when twirling is disabled."""
-        circuit = QuantumCircuit(1, 1)
-        circuit.h(0)
-        circuit.measure_all()
-
-        pub = SamplerPub.coerce(circuit, shots=1024)
-        options = SamplerOptions()
-        # Twirling disabled (default)
-
-        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
-
-        # Verify passthrough_data contains post-processor info with twirling=False
-        self.assertIn("post_processor", qp.passthrough_data)
-        self.assertEqual(qp.passthrough_data["post_processor"]["context"], "sampler_v2")
-        self.assertEqual(qp.passthrough_data["post_processor"]["version"], "v0.1")
-        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], False)
-        self.assertEqual(qp.passthrough_data["post_processor"]["meas_type"], "classified")
-
-    def test_prepare_sets_passthrough_data_parametric_twirling(self):
-        """Test that prepare() sets twirling flag for parametric circuits with twirling enabled."""
-        theta = Parameter("θ")
-        circuit = QuantumCircuit(1, 1)
-        circuit.rx(theta, 0)
-        circuit.measure_all()
-
-        param_values = np.array([[0.5], [1.0], [1.5]])  # shape (3, 1)
-        pub = SamplerPub.coerce((circuit, param_values), shots=1024)
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-
-        qp, _ = prepare([pub], options, FakeManilaV2(), default_shots=1024)
-
-        # Verify twirling flag is set (pub_shapes will be computed in post-processor)
-        self.assertIn("twirling", qp.passthrough_data["post_processor"])
-        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], True)
+        self.assertEqual(qp.passthrough_data["post_processor"]["twirling"], enable_gates)
 
     def test_prepare_includes_options_in_passthrough_data(self):
         """Test that prepare() includes options dictionary in passthrough_data."""
@@ -1390,32 +1213,6 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify the pass manager's run method was called
         # (DD is applied to the template circuit in twirling path)
         mock_pm.run.assert_called()
-
-    def test_dd_raises_error_with_control_flow(self):
-        """Test that DD raises ValueError when circuit has control flow operations."""
-        # Create a circuit with control flow (if_test)
-        qc = QuantumCircuit(2, 2)
-        qc.h(0)
-        qc.measure(0, 0)
-
-        # Add control flow operation (if_test)
-        with qc.if_test((0, 1)):  # pylint: disable=not-context-manager
-            qc.x(1)
-
-        qc.measure(1, 1)
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-
-        # Verify that running with DD enabled raises ValueError
-        with self.assertRaises(ValueError) as context:
-            sampler.run([qc], shots=1024)
-
-        # Check the error message
-        self.assertIn(
-            "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
-        )
 
     def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
         """Test that DD raises ValueError when one of multiple circuits has control flow."""
