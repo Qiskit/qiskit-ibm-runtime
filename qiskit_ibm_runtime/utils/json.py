@@ -454,10 +454,10 @@ class RuntimeDecoder(json.JSONDecoder):
                     quantum_program, options = converter.decoder(converter.model(**params))
                     decoded["params"]["quantum_program"] = quantum_program
                     decoded["params"]["options"] = options
-                except Exception:
+                except Exception as exception:
                     warnings.warn(
                         "Unable to convert executor 'params' to a pair of quantum program and "
-                        "options."
+                        f"options due to the following exception: {exception}"
                     )
 
         return decoded
