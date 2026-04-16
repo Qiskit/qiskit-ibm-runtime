@@ -74,13 +74,14 @@ def _spans_for_twirled_execution(
             slice_stop = slice_start + part.size
             slices_latest_stop[part.idx_item] = slice_stop
 
-            # a shape tuple including a twirling axis, and where the last axis is shots per randomization
+            # A shape tuple including a twirling axis, and where the last axis is shots per
+            # randomization.
             twirled_shape = (
                 (num_randomizations,) + pubs_shapes[part.idx_item] + (shots_per_randomization,)
             )
 
-            # whether ``num_randomizations`` is at the front of the tuple, as opposed to right before the
-            # ``shots`` axis at the end
+            # Whether ``num_randomizations`` is at the front of the tuple, as opposed to right
+            # before the ``shots`` axis at the end.
             at_front = True
 
             # a slice of an array of shape ``twirled_shape[:-1]``, flattened

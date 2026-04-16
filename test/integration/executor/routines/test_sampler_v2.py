@@ -29,9 +29,10 @@ from ....ibm_test_case import IBMIntegrationTestCase
 
 @ddt
 class TestSampler(IBMIntegrationTestCase):
-    """Test SamplerV2"""
+    """Test SamplerV2."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self.backend = self.service.backend(self.dependencies.qpu)
 

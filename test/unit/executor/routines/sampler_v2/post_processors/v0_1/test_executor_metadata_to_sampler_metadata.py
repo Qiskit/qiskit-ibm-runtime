@@ -22,7 +22,7 @@ from datetime import datetime
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v0_1.executor_metadata_to_sampler_metadata import (
+from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v0_1.executor_metadata_to_sampler_metadata import (  # noqa: E501
     executor_metadata_to_sampler_metadata,
 )
 

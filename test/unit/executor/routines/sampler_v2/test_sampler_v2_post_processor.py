@@ -450,6 +450,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         Args:
             data: Measurement data for the result
             twirling_enabled: Whether twirling is enabled
+            meas_type: Measurement type
         """
         options = SamplerOptions()
         options.twirling.enable_gates = twirling_enabled
@@ -607,7 +608,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         self.assertEqual(result[1].data.shape, (3,))
 
     def test_twirled_axis_ordering_preserved(self):
-        """Test that parameter sweep axes are not mixed with randomization axes during flattening."""
+        """Test parameter sweep axes are not mixed with randomization axes during flattening."""
         num_rand, sweep, shots_per_rand, num_bits = 2, 3, 2, 1
 
         # Create data where each (rand, param) combination has a unique pattern
