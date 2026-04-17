@@ -10,11 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for validation functions."""
+"""Tests for DataTree."""
 
 import numpy as np
 
-from qiskit_ibm_runtime.utils.validations import is_datatree_compatible
+from qiskit_ibm_runtime.quantum_program.datatree import is_datatree_compatible
 from ...ibm_test_case import IBMTestCase
 
 

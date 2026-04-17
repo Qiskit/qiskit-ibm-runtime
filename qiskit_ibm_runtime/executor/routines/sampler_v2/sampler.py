@@ -33,8 +33,8 @@ from ....session import Session
 from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
 from ....quantum_program.quantum_program import CircuitItem, SamplexItem
+from ....quantum_program.datatree import is_datatree_compatible
 from ....options.executor_options import ExecutorOptions
-from ....utils.validations import is_datatree_compatible
 from ....exceptions import IBMInputValueError
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
 from ..options.sampler_options import SamplerOptions

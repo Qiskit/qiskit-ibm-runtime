@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 import datetime
 import numpy as np
 
-from ..utils.datatree import DataTree
+from .datatree import DataTree
 
 
 @dataclass
