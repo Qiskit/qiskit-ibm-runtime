@@ -88,8 +88,9 @@ def quantum_program_from_0_1(model: ParamsModel) -> tuple[QuantumProgram, Execut
     quantum_program = QuantumProgram(shots=program_model.shots, items=items)
 
     options = ExecutorOptions()
-    options.execution.init_qubits = model.options.init_qubits
-    options.execution.rep_delay = model.options.rep_delay
+    model_options = model.options.model_copy(deep=True)
+    options.execution.init_qubits = model_options.init_qubits
+    options.execution.rep_delay = model_options.rep_delay
 
     return quantum_program, options
 
