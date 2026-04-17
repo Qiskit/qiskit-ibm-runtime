@@ -67,6 +67,9 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
 
+    # Extract circuit metadata if present
+    circuits_metadata = post_processor_data.get("circuits_metadata", None)
+
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
     # places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
@@ -94,6 +97,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     )
 
     sampler_result = SamplerV2.quantum_program_result_to_primitive_result(
-        result, metadata, meas_type
+        result, metadata, meas_type, circuits_metadata
     )
     return sampler_result

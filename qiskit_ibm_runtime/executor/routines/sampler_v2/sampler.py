@@ -33,7 +33,9 @@ from ....session import Session
 from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
 from ....quantum_program.quantum_program import CircuitItem, SamplexItem
+from ....quantum_program.datatree import is_datatree_compatible
 from ....options.executor_options import ExecutorOptions
+from ....exceptions import IBMInputValueError
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
 from ..options.sampler_options import SamplerOptions
 
@@ -160,12 +162,25 @@ def prepare(
                 )
             )
 
+    # Collect circuit metadata from each pub
+    circuits_metadata = [pub.circuit.metadata for pub in pubs]
+
+    # Validate that circuit metadata is compatible with DataTree format
+    for idx, metadata in enumerate(circuits_metadata):
+        if metadata is not None and not is_datatree_compatible(metadata):
+            raise IBMInputValueError(
+                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
+                f"Metadata must be a nested structure of lists, dicts (with string keys), "
+                f"numpy arrays, or primitive types (str, int, float, bool, None)."
+            )
+
     passthrough_data = {
         "post_processor": {
             "context": "sampler_v2",
             "version": "v0.1",
             "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
             "meas_type": options.execution.meas_type,
+            "circuits_metadata": circuits_metadata,
         }
     }
 
@@ -406,6 +421,7 @@ class SamplerV2(BaseSamplerV2):
         result: QuantumProgramResult,
         metadata: dict[str, Any] | None = None,
         meas_type: Literal["classified", "kerneled"] = "classified",
+        circuits_metadata: list[dict] | None = None,
     ) -> PrimitiveResult:
         """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
 
@@ -418,13 +434,23 @@ class SamplerV2(BaseSamplerV2):
             * ``"classified"``: Returns a BitArray with classified measurement outcomes.
             * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
               trace, in arbitrary units.
+            circuits_metadata: Optional list of circuit metadata dicts, one per pub.
 
         Returns:
             The converted primitive result.
 
         Raises:
-            ValueError: If data is malformed or inconsistent
+            ValueError: If data is malformed or inconsistent, or if ``circuits_metadata``
+                length doesn't match number of pubs.
         """
+        # Validate circuits_metadata length if provided
+        circuits_metadata = circuits_metadata or [None] * len(result)
+        if circuits_metadata is not None and len(circuits_metadata) != len(result):
+            raise ValueError(
+                f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
+                f"number of pubs ({len(result)})."
+            )
+
         # Build SamplerPubResult for each pub
         pub_results = []
         for idx, item_data in enumerate(result):
@@ -447,7 +473,14 @@ class SamplerV2(BaseSamplerV2):
 
             data_bin = DataBin(**arrays, shape=pub_shape)
 
-            pub_result = SamplerPubResult(data=data_bin, metadata={})
+            # Get circuit metadata for this pub if available
+            pub_metadata = {}
+            if circuits_metadata is not None:
+                circuit_meta = circuits_metadata[idx]
+                if circuit_meta is not None:
+                    pub_metadata["circuit_metadata"] = circuit_meta
+
+            pub_result = SamplerPubResult(data=data_bin, metadata=pub_metadata)
             pub_results.append(pub_result)
 
         return PrimitiveResult(pub_results, metadata=metadata or {})

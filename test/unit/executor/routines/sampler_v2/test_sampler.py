@@ -221,6 +221,27 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         self.assertIn("BoxOp", str(context.exception))
         mock_run.assert_not_called()
 
+    @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
+    def test_invalid_circuit_metadata_raises_error(self, mock_run):
+        """Test that circuit with invalid metadata (not DataTree compatible) raises an error."""
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+
+        # Set invalid metadata (tuple is not DataTree compatible)
+        circuit.metadata = {"invalid": (1, 2, 3)}
+
+        sampler = SamplerV2(mode=self.backend)
+
+        with self.assertRaises(IBMInputValueError) as context:
+            sampler.run([circuit], shots=1024)
+
+        self.assertIn("metadata", str(context.exception).lower())
+        self.assertIn("DataTree", str(context.exception))
+
+        # Verify executor.run was never called
+        mock_run.assert_not_called()
+
 
 class TestSamplerV2ShotsHandling(unittest.TestCase):
     """Tests for shots handling in SamplerV2."""
