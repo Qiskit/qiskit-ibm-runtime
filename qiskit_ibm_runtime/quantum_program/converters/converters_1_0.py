@@ -88,7 +88,7 @@ def quantum_program_from_1_0(model: ParamsModel) -> tuple[QuantumProgram, Execut
         meas_level=program_model.meas_level,
         passthrough_data=program_model.passthrough_data,
     )
-    quantum_program.semantic_role = program_model.semantic_role
+    quantum_program._semantic_role = program_model._semantic_role
 
     options = ExecutorOptions()
     options.execution.init_qubits = model.options.init_qubits
@@ -169,5 +169,5 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
         metadata=metadata,
         passthrough_data=model.passthrough_data,
     )
-    result.semantic_role = model.semantic_role
+    result._semantic_role = model._semantic_role
     return result

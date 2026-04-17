@@ -240,7 +240,7 @@ class QuantumProgram:
         # Semantic role indicating how execution results may be post-processed by runtime clients.
         # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
         # without notice. Third party clients should not set or depend on this value.
-        self.semantic_role: str | None = None
+        self._semantic_role: str | None = None
 
     def append_circuit_item(
         self,
