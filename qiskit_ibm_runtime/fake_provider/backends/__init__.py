@@ -14,16 +14,20 @@
 """Mocked versions of real quantum backends."""
 
 # BackendV2 Backends
+from .aachen import FakeAachen
 from .algiers import FakeAlgiers
 from .almaden import FakeAlmadenV2
 from .armonk import FakeArmonkV2
 from .athens import FakeAthensV2
 from .auckland import FakeAuckland
 from .belem import FakeBelemV2
+from .berlin import FakeBerlin
 from .boeblingen import FakeBoeblingenV2
 from .bogota import FakeBogotaV2
+from .boston import FakeBoston
 from .brisbane import FakeBrisbane
 from .brooklyn import FakeBrooklynV2
+from .brussels import FakeBrussels
 from .burlington import FakeBurlingtonV2
 from .cairo import FakeCairoV2
 from .cambridge import FakeCambridgeV2
@@ -49,6 +53,7 @@ from .manhattan import FakeManhattanV2
 from .manila import FakeManilaV2
 from .marrakesh import FakeMarrakesh
 from .melbourne import FakeMelbourneV2
+from .miami import FakeMiami
 from .montreal import FakeMontrealV2
 from .mumbai import FakeMumbaiV2
 from .nairobi import FakeNairobiV2
@@ -59,6 +64,7 @@ from .ourense import FakeOurenseV2
 from .paris import FakeParisV2
 from .peekskill import FakePeekskill
 from .perth import FakePerth
+from .pittsburgh import FakePittsburgh
 from .poughkeepsie import FakePoughkeepsieV2
 from .prague import FakePrague
 from .quebec import FakeQuebec
@@ -68,6 +74,7 @@ from .rome import FakeRomeV2
 from .santiago import FakeSantiagoV2
 from .sherbrooke import FakeSherbrooke
 from .singapore import FakeSingaporeV2
+from .strasbourg import FakeStrasbourg
 from .sydney import FakeSydneyV2
 from .torino import FakeTorino
 from .toronto import FakeTorontoV2

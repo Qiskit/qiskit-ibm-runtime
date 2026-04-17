@@ -25,13 +25,13 @@ properties for one or more backends, and writes the following files under:
 Usage examples:
 
     # Use the default saved account.
-    python tools/fetch_config_properties_backend.py -b ibm_boston
+    python tools/generate_fake_backend_files.py -b ibm_boston
 
     # Fetch multiple backends in one run.
-    python tools/fetch_config_properties_backend.py -b ibm_berlin -b ibm_strasbourg
+    python tools/generate_fake_backend_files.py -b ibm_berlin -b ibm_strasbourg
 
     # Use a named account and print progress logs.
-    python tools/fetch_config_properties_backend.py -b ibm_miami -a us-fleet -v
+    python tools/generate_fake_backend_files.py -b ibm_miami -a us-fleet -v
 """
 
 import argparse
