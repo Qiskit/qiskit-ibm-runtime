@@ -25,7 +25,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 )
 from ibm_quantum_schemas.common import TensorModel
 
-from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
 
 from ...ibm_test_case import IBMTestCase
 

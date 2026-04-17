@@ -68,6 +68,10 @@ from ..serialization import (
 )
 from ..utils import mock_wait_for_final_state, bell
 
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from qiskit_ibm_runtime.options import ExecutorOptions
+
 
 @ddt
 class TestDataSerialization(IBMTestCase):
@@ -774,3 +778,57 @@ class TestExecutionSpansSerialization(IBMTestCase):
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         self.assertEqual(spans, decoded)
+
+
+@ddt
+class TestRuntimeDecoder(IBMTestCase):
+    """Tests for RuntimeDecoder class."""
+
+    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
+    def test_decoding_executor_params(self, schema_version):
+        """Test that inputs (or 'params') of executor jobs can be decoded correctly.
+
+        The goal of this test is to check that when these 'params' are in the correct format,
+        i.e. the format in which they are returned when calling `job.inputs`,
+        the `RuntimeDecoder.encode` function returns `QuantumProgram` objects.
+        """
+        program = QuantumProgram(shots=100)
+        program.append_circuit_item(QuantumCircuit(3))
+
+        # This is the format expected by `RuntimeDecoder.encode` when deserializing inputs of
+        # an executor job
+        params = {
+            "program": {"id": "executor"},
+            "params": QUANTUM_PROGRAM_PARAMS_CONVERTERS[schema_version]
+            .encoder(program, ExecutorOptions())
+            .model_dump(),
+        }
+        encoded = json.dumps(params, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+
+        assert isinstance(decoded["params"]["quantum_program"], QuantumProgram)
+        assert decoded["params"]["options"] == ExecutorOptions()
+
+    @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
+    def test_decoding_incorrect_executor_params_warns(self, schema_version):
+        """Test that inputs (or 'params') of executor jobs can be decoded correctly.
+
+        The goal of this test is to check that when these 'params' are in an incorrect format,
+        the `RuntimeDecoder.encode` function raises a warning instead of an error.
+        """
+        program = QuantumProgram(shots=100)
+        program.append_circuit_item(QuantumCircuit(3))
+
+        # This is the format expected by `RuntimeDecoder.encode` when deserializing inputs of
+        # an executor job, but with program and options in an incorrect format.
+        params = {
+            "program": {"id": "executor"},
+            "params": {"quantum_program": "foo", "options": "bar"},
+        }
+        encoded = json.dumps(params, cls=RuntimeEncoder)
+
+        with self.assertWarnsRegex(Warning, "Unable to convert"):
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+
+        assert decoded["params"]["quantum_program"] == "foo"
+        assert decoded["params"]["options"] == "bar"
