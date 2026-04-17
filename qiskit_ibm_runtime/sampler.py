@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -49,6 +49,20 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     if measurement level 2 (bits) is requested.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `Qiskit Runtime documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Sampler options, see :class:`SamplerOptions` for detailed description.
     """
 
     _options_class = SamplerOptions
@@ -60,23 +74,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         mode: BackendV2 | Session | Batch | None = None,
         options: dict | SamplerOptions | None = None,
     ):
-        """Initializes the Sampler primitive.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be:
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-                Refer to the
-                `Qiskit Runtime documentation
-                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
-                for more information about the ``Execution modes``.
-
-            options: Sampler options, see :class:`SamplerOptions` for detailed description.
-
-        """
         self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
@@ -108,12 +105,11 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that primitive inputs (options) are valid
+        """Validate that primitive inputs (options) are valid.
 
         Raises:
             ValidationError: if validation fails.
         """
-
         pass
 
     @classmethod

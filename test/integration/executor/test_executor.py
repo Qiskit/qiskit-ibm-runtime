@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -30,6 +30,7 @@ class TestExecutor(IBMIntegrationTestCase):
     """Test Executor."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self.backend = (backend := self.service.backend(self.dependencies.qpu))
 
@@ -64,6 +65,10 @@ class TestExecutor(IBMIntegrationTestCase):
 
         executor = Executor(self.backend)
         job = executor.run(program)
+
+        params = job.inputs
+        assert params["options"] == executor.options
+        assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)
@@ -107,6 +112,10 @@ class TestExecutor(IBMIntegrationTestCase):
 
         executor = Executor(self.backend)
         job = executor.run(program)
+
+        params = job.inputs
+        assert params["options"] == executor.options
+        assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)

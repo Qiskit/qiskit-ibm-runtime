@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -97,7 +97,6 @@ class TestConverters(IBMTestCase):
 
     def test_converting_invalid_results(self):
         """Test that converting results raises when results are invalid."""
-
         generators = [
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),

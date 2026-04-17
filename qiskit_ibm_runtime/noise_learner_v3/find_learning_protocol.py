@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -27,14 +27,14 @@ from .learning_protocol import LearningProtocol
 
 
 def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:
-    """Find which of the supported learning protocols is suitable to learn the noise of ``instruction``.
+    """Find which learning protocol is suitable to learn the noise of ``instruction``.
 
     Args:
         instruction: The instruction to learn the noise of.
 
     Returns:
-        The supported protocol that can learn the noise of this instruction, or ``None`` if none of the
-        protocols are suitable.
+        The supported protocol that can learn the noise of this instruction, or ``None`` if none
+        of the protocols are suitable.
 
     Raises:
         IBMInputValueError: If ``instruction`` does not contain a box.

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,11 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transport conversion functions"""
+"""Transport conversion functions."""
 
 from __future__ import annotations
 
 from dataclasses import asdict
+from datetime import timezone
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
@@ -154,7 +155,9 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
     metadata = Metadata(
         chunk_timing=[
             ChunkSpan(
-                span.start, span.stop, [ChunkPart(part.idx_item, part.size) for part in span.parts]
+                span.start.replace(tzinfo=timezone.utc),
+                span.stop.replace(tzinfo=timezone.utc),
+                [ChunkPart(part.idx_item, part.size) for part in span.parts],
             )
             for span in model.metadata.chunk_timing
         ]

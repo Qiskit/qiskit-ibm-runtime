@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2023.
+# (C) Copyright IBM 2019-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Base class for dummy backends.
-"""
+"""Base class for dummy backends."""
+
 from typing import Any
 import logging
 import warnings
@@ -52,9 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 class FakeBackendV2(BackendV2):
-    """A fake backend class for testing and noisy simulation using real backend
-    snapshots.
-    """
+    """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
     # directory and file names for real backend snapshots.
     dirname: str | None = None
@@ -63,7 +60,6 @@ class FakeBackendV2(BackendV2):
     backend_name: str | None = None
 
     def __init__(self) -> None:
-        """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict: dict | None = None
         super().__init__(
@@ -77,24 +73,20 @@ class FakeBackendV2(BackendV2):
         self.sim: BackendV2 | None = None
 
     def __getattr__(self, name: str) -> Any:
-        """Gets attribute from self or configuration
+        """Gets attribute from self or configuration.
 
         This magic method executes when user accesses an attribute that
         does not yet exist on the class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_target", "_conf_dict", "_props_dict"]:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         # Check if the attribute now is available in backend configuration
         try:
             return self.configuration().__getattribute__(name)
         except AttributeError:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def _setup_sim(self) -> None:
         if _optionals.HAS_AER:
@@ -141,7 +133,6 @@ class FakeBackendV2(BackendV2):
             The status of the backend.
 
         """
-
         api_status = {
             "backend_name": self.name,
             "backend_version": "",
@@ -153,7 +144,7 @@ class FakeBackendV2(BackendV2):
         return BackendStatus.from_dict(api_status)
 
     def properties(self, refresh: bool = False) -> BackendProperties:
-        """Return the backend properties
+        """Return the backend properties.
 
         Args:
             refresh: If ``True``, re-retrieve the backend properties from the local file.
@@ -231,16 +222,17 @@ class FakeBackendV2(BackendV2):
 
     @property
     def max_circuits(self) -> None:
-        """This property used to return the `max_experiments` value from the
+        """Return the  maximum number of circuits that can be run in a single job.
+
+        This property used to return the `max_experiments` value from the
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
-
         return None
 
     @classmethod
     def _default_options(cls) -> Options:
-        """Return the default options
+        """Return the default options.
 
         This method will return a :class:`qiskit.providers.Options`
         subclass object that will be used for the default options. These
@@ -259,7 +251,7 @@ class FakeBackendV2(BackendV2):
 
     @property
     def dtm(self) -> float:
-        """Return the system time resolution of output signals
+        """Return the system time resolution of output signals.
 
         Returns:
             The output signal timestep in seconds.
@@ -316,7 +308,6 @@ class FakeBackendV2(BackendV2):
         This is a temporary fix until qiskit-aer supports building noise model
         from a BackendV2 object.
         """
-
         from qiskit.circuit import Delay
         from qiskit_aer.noise import NoiseModel
         from qiskit_aer.noise.device.models import (
@@ -386,7 +377,7 @@ class FakeBackendV2(BackendV2):
         return noise_model
 
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
-        """Update the data files from its real counterpart
+        """Update the data files from its real counterpart.
 
         This method pulls the latest backend data files from their real counterpart and
         overwrites the corresponding files in the local installation:
@@ -409,8 +400,9 @@ class FakeBackendV2(BackendV2):
         """
         if not isinstance(service, QiskitRuntimeService):
             raise ValueError(
-                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
-                " required to retrieve the real backend's current properties and settings."
+                "The provided service to update the fake backend is invalid. A "
+                " QiskitRuntimeService is required to retrieve the real backend's current "
+                "properties and settings."
             )
 
         prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]

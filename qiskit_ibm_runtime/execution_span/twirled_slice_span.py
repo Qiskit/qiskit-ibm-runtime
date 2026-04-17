@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""TwirledSliceSpan"""
+"""TwirledSliceSpan."""
 
 from __future__ import annotations
 
@@ -63,10 +63,12 @@ class TwirledSliceSpan(ExecutionSpan):
 
     @property
     def pub_idxs(self) -> list[int]:
+        """Which pubs, by index, have dependence on one or more execution spans present."""
         return sorted(self._data_slices)
 
     @property
     def size(self) -> int:
+        """The total number of results with dependence on this execution span, across all pubs."""
         size = 0
         for data_slice in self._data_slices.values():
             shape, _, shape_sl, shots_sl = data_slice[:4]
@@ -74,6 +76,7 @@ class TwirledSliceSpan(ExecutionSpan):
         return size
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
+        """Return array-valued mask specifying which parts of a pub result depend on this span."""
         # This function assumes that the data slices don't contain information
         # about pub shots, therefore `TwirledSliceSpanV2` must override it
         if pub_idx not in self._data_slices:
@@ -93,6 +96,7 @@ class TwirledSliceSpan(ExecutionSpan):
         return mask.reshape((*shape[:-2], math.prod(shape[-2:])))
 
     def filter_by_pub(self, pub_idx: int | Iterable[int]) -> TwirledSliceSpan:
+        """Return a new set of spans where each one has been filtered to the specified pubs."""
         pub_idx = {pub_idx} if isinstance(pub_idx, int) else set(pub_idx)
         slices = {idx: val for idx, val in self._data_slices.items() if idx in pub_idx}
         return type(self)(self.start, self.stop, slices)
@@ -129,4 +133,5 @@ class TwirledSliceSpanV2(TwirledSliceSpan):
         super().__init__(start, stop, data_slices_no_shots)
 
     def mask(self, pub_idx: int) -> npt.NDArray[np.bool_]:
+        """Return array-valued mask specifying which parts of a pub result depend on this span."""
         return super().mask(pub_idx)[..., : self._pub_shots[pub_idx]]

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Tests for Session classession."""
-
 
 from unittest.mock import MagicMock
 from ddt import ddt, data
@@ -33,6 +32,7 @@ class TestSession(IBMTestCase):
     """Class for testing the Session class."""
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
@@ -109,7 +109,7 @@ class TestSession(IBMTestCase):
 
     @data([None, "my_id"])
     def test_session_from_id(self, calibration_id):
-        """Create session with given session_id"""
+        """Create session with given session_id."""
         service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
         session = Session.from_id(

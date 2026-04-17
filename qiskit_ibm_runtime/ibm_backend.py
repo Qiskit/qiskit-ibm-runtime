@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -66,7 +66,6 @@ class IBMBackend(Backend):
     """Backend class interfacing with an IBM Quantum backend.
 
     Note:
-
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
           the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
@@ -151,6 +150,13 @@ class IBMBackend(Backend):
             * family: Processor family of this backend.
             * revision: Revision version of this processor.
             * segment: Segment this processor belongs to within a larger chip.
+
+    Args:
+        configuration: Backend configuration.
+        service: Instance of QiskitRuntimeService.
+        api_client: IBM client used to communicate with the server.
+        instance: The service instance to use.
+        calibration_id: An optional calibration id to use for this backend
     """
 
     id_warning_issued = False
@@ -163,14 +169,6 @@ class IBMBackend(Backend):
         instance: str | None = None,
         calibration_id: str | None = None,
     ) -> None:
-        """IBMBackend constructor.
-
-        Args:
-            configuration: Backend configuration.
-            service: Instance of QiskitRuntimeService.
-            api_client: IBM client used to communicate with the server.
-            calibration_id: An optional calibration id to use for this backend
-        """
         super().__init__(
             name=configuration.backend_name,
             online_date=configuration.online_date,
@@ -197,16 +195,14 @@ class IBMBackend(Backend):
             )
 
     def __getattr__(self, name: str) -> Any:
-        """Gets attribute from self or configuration
+        """Gets attribute from self or configuration.
 
         This magic method executes when user accesses an attribute that
         does not yet exist on IBMBackend class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_properties", "_target", "_configuration"]:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         # Lazy load properties and pulse defaults and construct the target object.
         self.properties()
@@ -221,9 +217,7 @@ class IBMBackend(Backend):
         try:
             return self._configuration.__getattribute__(name)
         except AttributeError:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def submit(
         self, program: QuantumProgram, options: ExecutorOptions | None = None
@@ -278,7 +272,7 @@ class IBMBackend(Backend):
         )
 
     def _convert_to_target(self, refresh: bool = False) -> None:
-        """Converts backend configuration and properties to Target object"""
+        """Converts backend configuration and properties to Target object."""
         if refresh or not self._target:
             self._target = convert_to_target(
                 configuration=self._configuration,  # type: ignore[arg-type]
@@ -312,7 +306,7 @@ class IBMBackend(Backend):
 
     @property
     def service(self) -> qiskit_runtime_service.QiskitRuntimeService:
-        """Return the ``service`` object
+        """Return the ``service`` object.
 
         Returns:
             An instance of QiskitRuntimeService
@@ -321,7 +315,7 @@ class IBMBackend(Backend):
 
     @property
     def dtm(self) -> float:
-        """Return the system time resolution of output signals
+        """Return the system time resolution of output signals.
 
         Returns:
             The output signal timestep in seconds.
@@ -330,16 +324,17 @@ class IBMBackend(Backend):
 
     @property
     def max_circuits(self) -> None:
-        """This property used to return the `max_experiments` value from the
+        """Return the  maximum number of circuits that can be run in a single job.
+
+        This property used to return the `max_experiments` value from the
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
-
         return None
 
     @property
     def meas_map(self) -> list[list[int]]:
-        """Return the grouping of measurements which are multiplexed
+        """Return the grouping of measurements which are multiplexed.
 
         This is required to be implemented if the backend supports Pulse
         scheduling.
@@ -366,7 +361,6 @@ class IBMBackend(Backend):
         Returns:
             Target with properties found on `datetime`
         """
-
         return convert_to_target(
             configuration=self._configuration,  # type: ignore[arg-type]
             properties=self.properties(datetime=datetime),
@@ -418,8 +412,8 @@ class IBMBackend(Backend):
             return None
         if not isinstance(refresh, bool):
             raise TypeError(
-                "The 'refresh' argument needs to be a boolean. "
-                "{} is of type {}".format(refresh, type(refresh))
+                f"The 'refresh' argument needs to be a boolean. {refresh} is of type "
+                f" {type(refresh)}"
             )
         if datetime:
             if not isinstance(datetime, python_datetime):
@@ -461,7 +455,7 @@ class IBMBackend(Backend):
         except TypeError as ex:
             raise IBMBackendApiProtocolError(
                 "Unexpected return value received from the server when "
-                "getting backend status: {}".format(str(ex))
+                f"getting backend status: {str(ex)}"
             ) from ex
 
     def configuration(
@@ -476,12 +470,13 @@ class IBMBackend(Backend):
         `Get backend configuration REST API
         <https://quantum.cloud.ibm.com/docs/api/qiskit-runtime-rest/tags/backends#tags__backends__operations__get_backend_configuration>`_.
 
-        More details about backend configuration properties can be found here `QasmBackendConfiguration
+        More details about backend configuration properties can be found here
+        `QasmBackendConfiguration
         <https://quantum.cloud.ibm.com/docs/api/qiskit/1.4/qiskit.providers.models.QasmBackendConfiguration>`_.
 
         IBM backends may also include the following properties:
-            * ``supported_features``: a list of strings of supported features like "qasm3" for dynamic
-                circuits support.
+            * ``supported_features``: a list of strings of supported features like "qasm3" for
+                dynamic circuits support.
             * ``parallel_compilation``: a boolean of whether or not the backend can process multiple
                 jobs at once. Parts of the classical computation will be parallelized.
 
@@ -491,9 +486,10 @@ class IBMBackend(Backend):
         return self._configuration
 
     def __repr__(self) -> str:
-        return "<{}('{}')>".format(self.__class__.__name__, self.name)
+        return f"<{self.__class__.__name__}('{self.name}')>"
 
     def __call__(self) -> IBMBackend:
+        """Return the backend instance when called as a function."""
         # For backward compatibility only, can be removed later.
         return self
 
@@ -548,10 +544,10 @@ class IBMBackend(Backend):
         return cpy
 
     def run(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        """
+        """Run a job in the backend.
+
         Raises:
             IBMBackendError: The run() method is no longer supported.
-
         """
         raise IBMBackendError(
             "Support for backend.run() has been removed. Please see our migration guide "
@@ -567,7 +563,13 @@ class IBMBackend(Backend):
 
 
 class IBMRetiredBackend(IBMBackend):
-    """Backend class interfacing with an IBM Quantum device no longer available."""
+    """Backend class interfacing with an IBM Quantum device no longer available.
+
+    Args:
+        configuration: Backend configuration.
+        service: Instance of QiskitRuntimeService.
+        api_client: IBM Quantum client used to communicate with the server.
+    """
 
     def __init__(
         self,
@@ -575,13 +577,6 @@ class IBMRetiredBackend(IBMBackend):
         service: qiskit_runtime_service.QiskitRuntimeService,
         api_client: RuntimeClient | None = None,
     ) -> None:
-        """IBMRetiredBackend constructor.
-
-        Args:
-            configuration: Backend configuration.
-            service: Instance of QiskitRuntimeService.
-            api_client: IBM Quantum client used to communicate with the server.
-        """
         super().__init__(configuration, service, api_client)
         self._status = BackendStatus(
             backend_name=self.name,

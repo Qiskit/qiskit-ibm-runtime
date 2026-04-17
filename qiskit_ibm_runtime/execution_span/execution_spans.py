@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""ExecutionSpans"""
+"""ExecutionSpans."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class ExecutionSpans:
-    """A collection of timings for pub results.
+    r"""A collection of timings for pub results.
 
     This class is a list-like containing :class:`~.ExecutionSpan`\\s, where each execution span
     represents a time window of data collection, and contains a reference to exactly which of the

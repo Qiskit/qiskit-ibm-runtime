@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -47,7 +47,15 @@ logger = logging.getLogger(__name__)
 
 
 class Account:
-    """Class that represents an account. This is an abstract class."""
+    """Class that represents an account. This is an abstract class.
+
+    Args:
+        channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
+        token: Account token to use.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+    """
 
     def __init__(
         self,
@@ -56,15 +64,6 @@ class Account:
         proxies: ProxyConfiguration | None = None,
         verify: bool | None = True,
     ):
-        """Account constructor.
-
-        Args:
-            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
-            token: Account token to use.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-        """
         self.channel: str = None
         self.url: str = None
         self.token = token
@@ -145,9 +144,12 @@ class Account:
             )
 
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
-        Relevant for "ibm_cloud" channel only."""
+        """Resolves the corresponding CRN, updating the ``instance`` attribute accordingly.
+
+        Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly. Relevant for
+        "ibm_cloud" channel only.
+        """
         pass
 
     def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
@@ -177,7 +179,6 @@ class Account:
         Returns:
             This Account instance.
         """
-
         self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
         self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
         self._assert_valid_token(self.token)
@@ -233,7 +234,21 @@ class Account:
 
 
 class CloudAccount(Account):
-    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'."""
+    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'.
+
+    Args:
+        token: Account token to use.
+        url: Authentication URL.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+        private_endpoint: Connect to private API URL.
+        region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+        plans_preference: A list of account types, ordered by preference.
+        channel: Channel identifier. Accepted values are ``ibm_cloud`` or
+            ``ibm_quantum_platform``. Defaults to ``ibm_quantum_platform``.
+        tags: List of instance tags.
+    """
 
     def __init__(
         self,
@@ -248,21 +263,6 @@ class CloudAccount(Account):
         channel: str | None = "ibm_quantum_platform",
         tags: list[str] | None = None,
     ):
-        """Account constructor.
-
-        Args:
-            token: Account token to use.
-            url: Authentication URL.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-            private_endpoint: Connect to private API URL.
-            region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
-            plans_preference: A list of account types, ordered by preference.
-            channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
-                Defaults to ``ibm_quantum_platform``.
-            tags: List of instance tags.
-        """
         super().__init__(token, instance, proxies, verify)
         raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel
@@ -289,7 +289,7 @@ class CloudAccount(Account):
         return proxies_kwargs
 
     def get_iam_authentificator(self) -> IAMAuthenticator:
-        """Return the configured IAM Authentification service"""
+        """Return the configured IAM Authentification service."""
         iam_url = get_iam_api_url(self.url)
         proxies_kwargs = self._get_proxies_kwargs()
         return IAMAuthenticator(
@@ -300,8 +300,10 @@ class CloudAccount(Account):
         )
 
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
+        """Resolves the corresponding CRN, updating the ``instance`` attribute accordingly.
+
+        Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly.
 
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
@@ -433,5 +435,5 @@ class CloudAccount(Account):
             )
         if tags and not isinstance(tags, list):
             raise InvalidAccountError(
-                "Invalid `tags` value. Expected a list of strings. " f"got '{tags}' instead."
+                f"Invalid `tags` value. Expected a list of strings. got '{tags}' instead."
             )

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,6 +9,8 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""Sphinx configuration."""
 
 # -- Path setup --------------------------------------------------------------
 import importlib
@@ -200,6 +202,8 @@ GITHUB_BRANCH = determine_github_branch()
 
 
 def linkcode_resolve(domain: str, info: dict) -> str | None:
+    """Return the GitHub URL for an entity."""
+
     def is_valid_code_object(obj: typing.Any) -> bool:
         return inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
 

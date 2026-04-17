@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -69,9 +69,10 @@ def configuration_from_server_data(
 
 
 def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
-    """Filter unwanted entries from raw configuration data
+    """Filter unwanted entries from raw configuration data.
 
     Args:
+        raw_config: dictionary with raw configuration data.
         use_fractional_gates: Set True to allow for the backends to include
             fractional gates. See :meth:`~.QiskitRuntimeService.backends`
                 for further details.
@@ -175,4 +176,4 @@ def _to_complex(value: list[float] | complex) -> complex:
     elif isinstance(value, complex):
         return value
 
-    raise TypeError("{} is not in a valid complex number format.".format(value))
+    raise TypeError(f"{value} is not in a valid complex number format.")

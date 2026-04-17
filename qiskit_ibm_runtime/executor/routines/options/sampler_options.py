@@ -51,7 +51,8 @@ class SamplerExecutionOptions(ExecutionOptions):
     def to_executor_options(self) -> ExecutionOptions:
         """Convert to execution options.
 
-        This drops the ``meas_type`` field, which is passed as part of the :class:`~.QuantumProgramResult`.
+        This drops the ``meas_type`` field, which is passed as part of the
+        :class:`~.QuantumProgramResult`.
         """
         fields = dict(vars(self))
         fields.pop("meas_type")
@@ -70,10 +71,8 @@ class SamplerOptions:
     )
     """Suboptions for dynamical decoupling.
 
-    See
-    :class:`~qiskit_ibm_runtime.executor.routines.options.dynamical_decoupling_options.DynamicalDecouplingOptions`
-    for all available options.
-    """  # pylint: disable=line-too-long
+    See :class:`DynamicalDecouplingOptions` for all available options.
+    """
 
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
