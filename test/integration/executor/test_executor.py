@@ -64,13 +64,10 @@ class TestExecutor(IBMIntegrationTestCase):
         program.append_circuit_item(isa_circuit, circuit_arguments=circuit_arguments)
 
         executor = Executor(self.backend)
-        executor.options.environment.image = (
-            "qiskit-ibm-primitives:a1e8b20c3361dae449d3d873d3e3048ceda58845"
-        )
         job = executor.run(program)
 
         params = job.inputs
-        # assert params["options"] == executor.options
+        assert params["options"] == executor.options
         assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
@@ -114,13 +111,10 @@ class TestExecutor(IBMIntegrationTestCase):
         )
 
         executor = Executor(self.backend)
-        executor.options.environment.image = (
-            "qiskit-ibm-primitives:a1e8b20c3361dae449d3d873d3e3048ceda58845"
-        )
         job = executor.run(program)
 
         params = job.inputs
-        # assert params["options"] == executor.options
+        assert params["options"] == executor.options
         assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
