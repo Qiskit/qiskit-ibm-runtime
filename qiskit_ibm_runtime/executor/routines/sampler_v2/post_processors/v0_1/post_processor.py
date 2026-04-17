@@ -26,7 +26,9 @@ from .flatten_twirling_axes import flatten_twirling_axes
 
 @register_post_processor("v0.1")
 def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
+    """Convert a quantum program result to a primitives result, for a V2 sampler.
+
+    Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
     for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
 
     This function transforms the raw quantum program execution results into the
@@ -68,7 +70,8 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other places.
+    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
+    # places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to

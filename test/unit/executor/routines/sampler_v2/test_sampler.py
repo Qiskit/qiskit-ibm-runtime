@@ -366,7 +366,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
 
     @patch("qiskit_ibm_runtime.executor.routines.sampler_v2.sampler.Executor.run")
     def test_circuit_item_shape_property(self, mock_run):
-        """Test that CircuitItem.shape property is correct for different parameter configurations."""
+        """Test CircuitItem.shape property is correct for different parameter configurations."""
         mock_run.return_value = MagicMock()
 
         theta = Parameter("θ")
@@ -665,7 +665,6 @@ class TestPrepareTwirling(unittest.TestCase):
 
     def test_prepare_creates_samplex_items(self):
         """Test that prepare() creates SamplexItem objects when twirling is enabled."""
-
         circuit = QuantumCircuit(1, 1)
         circuit.h(0)
         circuit.measure_all()
@@ -750,7 +749,7 @@ class TestPrepareTwirling(unittest.TestCase):
     @patch("samplomatic.build")
     @patch("samplomatic.transpiler.generate_boxing_pass_manager")
     def test_prepare_calculates_shots_correctly(self, mock_boxing_pm, mock_build):
-        """Test that prepare() calculates shots_per_randomization and num_randomizations correctly."""
+        """Test prepare() calculates shots_per_randomization and num_randomizations correctly."""
         # Setup mocks
         mock_pm_instance = MagicMock()
         mock_boxing_pm.return_value = mock_pm_instance

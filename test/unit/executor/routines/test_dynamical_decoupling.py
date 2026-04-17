@@ -71,7 +71,8 @@ class TestMakeDDSequence(unittest.TestCase):
         self.assertAlmostEqual(dd_sequence[3].params[0], -np.pi)
 
         # Check spacing: [0.25, 0.5, 0, 0, 0.25]
-        # First sequence (_xp) gets 0.25, second sequence (_xm) gets 0.5 then 2 zeros for its extra gates
+        # First sequence (_xp) gets 0.25, second sequence (_xm) gets 0.5 then 2 zeros for its
+        # extra gates
         self.assertEqual(len(spacing), 5)  # 2 sequences + 1
         self.assertAlmostEqual(sum(spacing), 1.0)
         self.assertAlmostEqual(spacing[0], 0.25)  # delay/2 before first sequence
@@ -317,7 +318,8 @@ class TestGenerateDDPassManager(unittest.TestCase):
         total_dd_duration = total_delay + 2 * x_duration_dt
         self.assertEqual(total_dd_duration, cx_duration_dt)
 
-        # For XX sequence, spacing is [0.25, 0.5, 0.25] of total delay time, but granularity is enforced.
+        # For XX sequence, spacing is [0.25, 0.5, 0.25] of total delay time, but granularity is
+        # enforced.
         self.assertAlmostEqual(
             delays_q2[0], np.floor(total_delay * 0.25 / granualrity) * granualrity
         )

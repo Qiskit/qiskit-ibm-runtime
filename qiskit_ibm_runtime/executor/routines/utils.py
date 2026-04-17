@@ -41,8 +41,7 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
 
 
 def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = None) -> int:
-    """Extract and validate shots value from a list of
-    :class:`~qiskit.primitives.containers.sampler_pub.SamplerPub` objects.
+    """Extract and validate shots value from a list of ``SamplerPub``` objects.
 
     This function determines the shots value by examining all pubs and ensures
     that all pubs have the same number of shots. If a pub doesn't specify shots,
@@ -76,10 +75,12 @@ def calculate_twirling_shots(
     """Calculate num_randomizations and shots_per_randomization for twirling.
 
     Implements the logic from TwirlingOptions documentation:
+
     - If both "auto": shots_per_randomization = max(64, ceil(shots/32))
                      num_randomizations = ceil(shots/shots_per_randomization)
     - If only num_randomizations "auto": num_randomizations = ceil(shots/shots_per_randomization)
-    - If only shots_per_randomization "auto": shots_per_randomization = ceil(shots/num_randomizations)
+    - If only ``shots_per_randomization`` "auto":
+      shots_per_randomization = ceil(shots/num_randomizations)
 
     Args:
         pub_shots: Total shots requested for the pub.
@@ -89,7 +90,6 @@ def calculate_twirling_shots(
     Returns:
         Tuple of (num_randomizations, shots_per_randomization).
     """
-
     if num_randomizations == "auto" and shots_per_randomization == "auto":
         # Both auto: shots_per_rand = max(64, ceil(shots/32))
         shots_per_rand = max(64, math.ceil(pub_shots / 32))
