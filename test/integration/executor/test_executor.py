@@ -65,7 +65,7 @@ class TestExecutor(IBMIntegrationTestCase):
 
         executor = Executor(self.backend)
         executor.options.environment.image = (
-            "qiskit-ibm-primitives:6bb9b66490a0c1f38e4ab70be63c9a374bf6c91f"
+            "qiskit-ibm-primitives:1d51ca3ed731ea1000a5f58d53f621c09cb46869"
         )
         job = executor.run(program)
 
@@ -115,7 +115,7 @@ class TestExecutor(IBMIntegrationTestCase):
 
         executor = Executor(self.backend)
         executor.options.environment.image = (
-            "qiskit-ibm-primitives:6bb9b66490a0c1f38e4ab70be63c9a374bf6c91f"
+            "qiskit-ibm-primitives:1d51ca3ed731ea1000a5f58d53f621c09cb46869"
         )
         job = executor.run(program)
 
