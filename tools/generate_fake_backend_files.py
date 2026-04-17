@@ -60,7 +60,8 @@ parser.add_argument(
     "--account",
     required=False,
     action="store",
-    help="account name (optional), e.g. 'us-fleet'. If not provided, the default account will be used.",
+    help="account name (optional), e.g. 'us-fleet'. If not provided, the default account \
+                    will be used.",
 )
 parser.add_argument(
     "-v",
