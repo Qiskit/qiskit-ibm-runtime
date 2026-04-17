@@ -26,7 +26,7 @@ from .flatten_twirling_axes import flatten_twirling_axes
 
 @register_post_processor("v0.1")
 def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
-    """Convert a ``QuantumProgramResult`` to a ``PrimitiveResult``, for ``SamplerV2``.
+    """Convert a quantum program result to a primitives result, for a V2 sampler.
 
     Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
     for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.

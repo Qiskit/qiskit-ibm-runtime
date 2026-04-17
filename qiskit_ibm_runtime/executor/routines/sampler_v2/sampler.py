@@ -295,7 +295,7 @@ class SamplerV2(BaseSamplerV2):
             | None
         ) = None,
     ):
-        super().__init__(self)
+        super().__init__()
 
         self._executor = Executor(mode=mode)
 
