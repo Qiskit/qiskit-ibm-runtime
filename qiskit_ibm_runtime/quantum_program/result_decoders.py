@@ -22,7 +22,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 from ibm_quantum_schemas.executor.version_0_2 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_2,
 )
-from ibm_quantum_schemas.executor.version_1_0_dev import (
+from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
 

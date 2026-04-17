@@ -20,7 +20,7 @@ from typing import NamedTuple, TYPE_CHECKING
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_0_2
-from ibm_quantum_schemas.executor.version_1_0_dev import ParamsModel as ParamsModel_1_0
+from ibm_quantum_schemas.executor.version_1_0 import ParamsModel as ParamsModel_1_0
 
 
 from .converters import (

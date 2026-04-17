@@ -17,7 +17,7 @@ import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.executor.version_1_0_dev import (
+from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
@@ -177,7 +177,10 @@ class TestQuantumProgramConverters(IBMTestCase):
         chunk_model = ChunkSpan(
             start=chunk_start,
             stop=chunk_stop,
-            parts=[ChunkPart(idx_item=0, size=1), ChunkPart(idx_item=1, size=1)],
+            parts=[
+                ChunkPart(idx_item=0, size=1, permutation=[], element_range=(0, 1, 1)),
+                ChunkPart(idx_item=1, size=1, permutation=[], element_range=(0, 1, 1)),
+            ],
         )
         metadata_model = MetadataModel(chunk_timing=[chunk_model])
         result1_model = QuantumProgramResultItemModel(
