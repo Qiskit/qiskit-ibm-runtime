@@ -44,8 +44,8 @@ from .models import (
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
 from .quantum_program.converters import (
-    quantum_program_to_1_0,
-    quantum_program_result_from_1_0,
+    quantum_program_to_0_2,
+    quantum_program_result_from_0_2,
 )
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import local_to_utc
@@ -233,7 +233,7 @@ class IBMBackend(Backend):
         """
         options = options or ExecutorOptions()
         program_id = "executor"
-        model = quantum_program_to_1_0(program, options)
+        model = quantum_program_to_0_2(program, options)
 
         params = model.model_dump()
         params["version"] = 2  # TODO: this is a work-around for the dispatch while we use 'execute'
@@ -257,7 +257,7 @@ class IBMBackend(Backend):
             def decode(cls, data: str):  # type: ignore[no-untyped-def]
                 """Decode."""
                 obj = QuantumProgramResultModel.model_validate_json(data)
-                return quantum_program_result_from_1_0(obj)
+                return quantum_program_result_from_0_2(obj)
 
         return RuntimeJobV2(
             backend=self,
