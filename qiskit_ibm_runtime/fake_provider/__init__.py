@@ -121,16 +121,20 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     :toctree: ../stubs/
     :nosignatures:
 
+    FakeAachen
     FakeAlgiers
     FakeAlmadenV2
     FakeArmonkV2
     FakeAthensV2
     FakeAuckland
     FakeBelemV2
+    FakeBerlin
     FakeBoeblingenV2
     FakeBogotaV2
+    FakeBoston
     FakeBrisbane
     FakeBrooklynV2
+    FakeBrussels
     FakeBurlingtonV2
     FakeCairoV2
     FakeCambridgeV2
@@ -156,6 +160,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeManilaV2
     FakeMarrakesh
     FakeMelbourneV2
+    FakeMiami
     FakeMontrealV2
     FakeMumbaiV2
     FakeNairobiV2
@@ -165,6 +170,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeParisV2
     FakePeekskill
     FakePerth
+    FakePittsburgh
     FakePrague
     FakePoughkeepsieV2
     FakeQuebec
@@ -175,6 +181,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeSantiagoV2
     FakeSherbrooke
     FakeSingaporeV2
+    FakeStrasbourg
     FakeSydneyV2
     .. FakeTenerifeV2 # no v2 version
     .. FakeTokyoV2 # no v2 version
