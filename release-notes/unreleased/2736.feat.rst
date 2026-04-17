@@ -1,6 +1,6 @@
-Building on top of the fake-backend snapshot tool introduced in ``#2711``,
+Building on top of the fake backend snapshot script introduced in ``#2711``,
 the script now also generates ``__init__.py`` and ``fake_<backend_name>.py``
-files for each backend package, and adds a new ``-a``/``--account`` argument
+files for each backend, and adds a new ``-a``/``--account`` argument
 to select a named account when fetching backend data from different cloud
 regions (for example, US vs EU).
 
