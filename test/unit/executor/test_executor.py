@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 from test.utils import get_mocked_backend, get_mocked_session
 
+from qiskit.circuit import QuantumCircuit
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options.executor_options import (
     ExecutorOptions,
@@ -126,6 +127,12 @@ class TestExecutorOptions(IBMTestCase):
 class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""
 
+    def setUp(self) -> None:
+        """Test level setup."""
+        super().setUp()
+        self.program = QuantumProgram(10)
+        self.program.append_circuit_item(circuit=QuantumCircuit(1))
+
     def test_run_of_session_is_selected(self):
         """Test ``Executor.run`` selects the service ``run`` method, if session specified."""
         backend_name = "ibm_hello"
@@ -135,7 +142,7 @@ class TestExecutor(IBMTestCase):
             patch.object(session.service, "_run", return_value="service"),
         ):
             executor = Executor(mode=session)
-            selected_run = executor.run(QuantumProgram(10))
+            selected_run = executor.run(self.program)
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
@@ -143,5 +150,5 @@ class TestExecutor(IBMTestCase):
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             executor = Executor(mode=backend)
-            selected_run = executor.run(QuantumProgram(10))
+            selected_run = executor.run(self.program)
             self.assertEqual(selected_run, "service")
