@@ -34,7 +34,7 @@ from .utils.default_session import get_cm_session
 
 logger = logging.getLogger()
 
-DEFAULT_SCHEMA_VERSION = "v1.0"
+DEFAULT_SCHEMA_VERSION = "v0.2"
 """The schema version used by default by executor to encode the input params."""
 
 
