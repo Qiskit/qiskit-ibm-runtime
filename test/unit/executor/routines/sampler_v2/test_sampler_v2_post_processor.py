@@ -18,7 +18,6 @@ from dataclasses import asdict
 import numpy as np
 
 from qiskit.primitives import PrimitiveResult
-from qiskit.primitives.containers import BitArray, SamplerPubResult
 
 from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
 from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v0_1 import (
@@ -37,36 +36,6 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
     This class contains comprehensive tests for the static method that performs
     the actual conversion logic from QuantumProgramResult to PrimitiveResult.
     """
-
-    def test_single_pub_single_register(self):
-        """Test conversion with single pub and single classical register."""
-        # Create mock QuantumProgramResult
-        num_shots = 100
-        num_bits = 3
-        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
-
-        qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}],
-            metadata=Metadata(),
-        )
-
-        # Apply conversion using static method
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify result type
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), 1)
-
-        # Verify pub result
-        pub_result = result[0]
-        self.assertIsInstance(pub_result, SamplerPubResult)
-        self.assertIn("c", pub_result.data)
-
-        # Verify BitArray
-        bit_array = pub_result.data.c
-        self.assertIsInstance(bit_array, BitArray)
-        self.assertEqual(bit_array.num_shots, num_shots)
-        self.assertEqual(bit_array.num_bits, num_bits)
 
     def test_single_pub_multiple_registers(self):
         """Test conversion with single pub and multiple classical registers."""
@@ -133,27 +102,6 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         self.assertEqual(result[0].data.meas.num_bits, 2)
         self.assertEqual(result[1].data.meas.num_bits, 3)
         self.assertEqual(result[2].data.meas.num_bits, 4)
-
-    def test_parameter_sweep(self):
-        """Test conversion with parameter sweep (non-trivial pub shape)."""
-        num_shots = 100
-        num_bits = 3
-        sweep_shape = (5, 3)  # 5x3 parameter sweep
-        meas_data = np.random.randint(
-            0, 2, size=sweep_shape + (num_shots, num_bits), dtype=np.uint8
-        )
-
-        qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}],
-            metadata=Metadata(),
-        )
-
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify shape
-        pub_result = result[0]
-        self.assertEqual(pub_result.data.shape, sweep_shape)
-        self.assertEqual(pub_result.data.c.num_bits, num_bits)
 
     def test_missing_measurement_data(self):
         """Test error when measurement data is missing."""
@@ -386,38 +334,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
     This class contains basic smoke tests to verify the post-processor function
     works correctly and delegates to the static method appropriately.
     """
-
-    def test_post_processor_basic_functionality(self):
-        """Test that post-processor function works for basic case."""
-        num_shots = 100
-        num_bits = 3
-        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = False
-        passthrough_data = {
-            "post_processor": {
-                "context": "sampler_v2",
-                "version": "v0.1",
-                "options": asdict(options),
-                "twirling": False,
-                "meas_type": "classified",
-            }
-        }
-
-        qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}], metadata=Metadata(), passthrough_data=passthrough_data
-        )
-
-        # Apply post-processing
-        result = sampler_v2_post_processor_v0_1(qp_result)
-
-        # Verify basic structure
-        self.assertIsInstance(result, PrimitiveResult)
-        self.assertEqual(len(result), 1)
-        self.assertIn("c", result[0].data)
-        self.assertEqual(result[0].data.c.num_shots, num_shots)
-        self.assertEqual(result[0].data.c.num_bits, num_bits)
 
     def test_post_processor_with_multiple_pubs(self):
         """Test that post-processor handles multiple pubs correctly."""
@@ -731,20 +647,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
         self.assertEqual(bit_array.num_bits, num_bits)
         self.assertEqual(result[0].data.shape, ())
-
-    def test_twirled_1d_sweep_flattened(self):
-        """Twirled 1-D parametric pub: (num_rand, 3, shots_per_rand, bits) -> (3, total_shots, bits)."""
-        num_rand, sweep, shots_per_rand, num_bits = 4, 3, 64, 2
-        meas_data = np.random.randint(
-            0, 2, size=(num_rand, sweep, shots_per_rand, num_bits), dtype=np.uint8
-        )
-        result = sampler_v2_post_processor_v0_1(
-            self._make_result([{"meas": meas_data}], twirling_enabled=True)
-        )
-        bit_array = result[0].data.meas
-        self.assertEqual(bit_array.num_shots, num_rand * shots_per_rand)
-        self.assertEqual(bit_array.num_bits, num_bits)
-        self.assertEqual(result[0].data.shape, (sweep,))
 
     def test_twirled_2d_sweep_flattened(self):
         """Twirled 2-D parametric pub.

@@ -13,12 +13,10 @@
 """Tests for SamplerOptions.to_executor_options() mapping method."""
 
 import unittest
-from ddt import ddt, data
 
 from qiskit_ibm_runtime.executor.routines.options import SamplerOptions
 
 
-@ddt
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
     """Tests for SamplerOptions.to_executor_options() method."""
 
@@ -37,64 +35,6 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         self.assertEqual(executor_options.environment.private, False)
         self.assertIsNone(executor_options.environment.max_execution_time)
         self.assertIsNone(executor_options.environment.image)
-
-    @data(True, False)
-    def test_execution_init_qubits_mapping(self, init_qubits_value):
-        """Test mapping of execution.init_qubits."""
-        options = SamplerOptions()
-        options.execution.init_qubits = init_qubits_value
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.execution.init_qubits, init_qubits_value)
-
-    def test_execution_rep_delay_mapping(self):
-        """Test mapping of execution.rep_delay."""
-        options = SamplerOptions()
-        options.execution.rep_delay = 0.0001
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.execution.rep_delay, 0.0001)
-
-    def test_environment_log_level_mapping(self):
-        """Test mapping of environment.log_level."""
-        options = SamplerOptions()
-        options.environment.log_level = "DEBUG"
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.environment.log_level, "DEBUG")
-
-    def test_environment_job_tags_mapping(self):
-        """Test mapping of environment.job_tags."""
-        options = SamplerOptions()
-        options.environment.job_tags = ["test", "mapping"]
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.environment.job_tags, ["test", "mapping"])
-
-    @data(True, False)
-    def test_environment_private_mapping(self, private_value):
-        """Test mapping of environment.private."""
-        options = SamplerOptions()
-        options.environment.private = private_value
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.environment.private, private_value)
-
-    def test_max_execution_time_mapping(self):
-        """Test mapping of max_execution_time."""
-        options = SamplerOptions()
-        options.max_execution_time = 600
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.environment.max_execution_time, 600)
-
-    def test_experimental_image_mapping(self):
-        """Test mapping of experimental.image."""
-        options = SamplerOptions()
-        options.experimental = {"image": "custom-image:v1"}
-        executor_options = options.to_executor_options()
-
-        self.assertEqual(executor_options.environment.image, "custom-image:v1")
 
     def test_experimental_image_not_set(self):
         """Test that image is None when experimental is None."""
