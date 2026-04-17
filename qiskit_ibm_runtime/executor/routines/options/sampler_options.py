@@ -51,7 +51,7 @@ class SamplerExecutionOptions(ExecutionOptions):
     def to_executor_options(self) -> ExecutionOptions:
         """Convert to execution options.
 
-        This drops the `meas_type` field, which is passed as part of the QuantumProgram.
+        This drops the ``meas_type`` field, which is passed as part of the :class:`~.QuantumProgramResult`.
         """
         fields = dict(vars(self))
         fields.pop("meas_type")
