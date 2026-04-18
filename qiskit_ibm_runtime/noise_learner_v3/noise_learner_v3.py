@@ -85,19 +85,19 @@ class NoiseLearnerV3:
         ):
             self.options.experimental = {}
 
-        self._session, self._service, self._backend = get_mode_service_backend(mode)  # type: ignore[assignment]
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
 
-        if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
+        if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Args:
-                instructions: The instructions to learn the noise of.
+            instructions: The instructions to learn the noise of.
 
         Returns:
-                The submitted job.
+            The submitted job.
 
         Raises:
             IBMInputValueError: If an instruction does not contain a box.
