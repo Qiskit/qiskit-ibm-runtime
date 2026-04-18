@@ -71,27 +71,25 @@ class NoiseLearnerV3:
     _PROGRAM_ID = "noise-learner"
     _DECODER = NoiseLearnerV3ResultDecoder
 
+    options: NoiseLearnerV3Options
+    """The options in this noise learner."""
+
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
         options: NoiseLearnerV3Options | None = None,
     ):
-        self._options = options or NoiseLearnerV3Options()
+        self.options = options or NoiseLearnerV3Options()
         if (
-            isinstance(self._options.experimental, UnsetType)
-            or self._options.experimental.get("image") is None
+            isinstance(self.options.experimental, UnsetType)
+            or self.options.experimental.get("image") is None
         ):
-            self._options.experimental = {}
+            self.options.experimental = {}
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)  # type: ignore[assignment]
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
-
-    @property
-    def options(self) -> NoiseLearnerV3Options:
-        """The options in this noise learner."""
-        return self._options
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
