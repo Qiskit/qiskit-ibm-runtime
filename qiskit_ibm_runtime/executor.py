@@ -16,22 +16,24 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from typing import Any
-
-from ibm_quantum_schemas.common import BaseParamsModel
+from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from .ibm_backend import IBMBackend
-from .session import Session
-from .batch import Batch
 from .options.executor_options import ExecutorOptions
-from .quantum_program import QuantumProgram
 from .quantum_program.result_decoders import QuantumProgramResultDecoder
 from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
+
+if TYPE_CHECKING:
+    from ibm_quantum_schemas.common import BaseParamsModel
+    from .batch import Batch
+    from .session import Session
+    from .ibm_backend import IBMBackend
+    from .runtime_job_v2 import RuntimeJobV2
+    from .quantum_program import QuantumProgram
+
 
 logger = logging.getLogger()
 
