@@ -20,6 +20,7 @@ import functools
 import copy
 from dataclasses import is_dataclass, asdict
 from numbers import Real
+import warnings
 
 from pydantic import ConfigDict, ValidationInfo, field_validator
 from pydantic.dataclasses import dataclass
@@ -30,6 +31,12 @@ from ..utils.utils import is_simulator
 
 if TYPE_CHECKING:
     from ..options.options import BaseOptions
+
+
+MAX_EXECUTION_TIME_DEPRECATION_MSG = (
+    "`max_execution_time` is deprecated as of qiskit_ibm_runtime v0.47.0 and will "
+    "be removed in a future release. Use `max_usage` instead."
+)
 
 
 def set_default_error_levels(
@@ -299,3 +306,37 @@ def make_constraint_validator(
         return value
 
     return validator
+
+
+def match_max_execution_time_and_max_usage(
+    instance: Any, comparator: None | UnsetType = None
+) -> Any:
+    """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`.
+
+    This is a convenience function that should be removed once `max_execution_time` is
+    removed.
+    """
+    max_execution_time = instance.max_execution_time
+    max_usage = instance.max_usage
+
+    if max_usage is not comparator:
+        if max_execution_time is not comparator:
+            warnings.warn(
+                f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. Both have been set to {max_usage}.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        instance.max_execution_time = max_usage
+    else:
+        if max_execution_time is not comparator:
+            warnings.warn(
+                f"{MAX_EXECUTION_TIME_DEPRECATION_MSG}. "
+                f"Both have been set to {max_execution_time}.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+            instance.max_usage = max_execution_time
+
+    return instance

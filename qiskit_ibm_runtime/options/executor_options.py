@@ -14,11 +14,11 @@
 
 from __future__ import annotations
 
-
 from pydantic.dataclasses import dataclass
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .environment_options import LogLevelType
+from .utils import match_max_execution_time_and_max_usage
 
 
 @dataclass
@@ -75,8 +75,21 @@ class EnvironmentOptions:
     this time limit, it is forcibly cancelled.
     """
 
+    max_usage: int | None = None
+    """Maximum usage in seconds.
+
+    This value bounds system usage (not wall clock time). System usage is the amount of time that
+    the system is dedicated to processing your job. If a job exceeds this time limit, it is
+    forcibly cancelled.
+    """
+
     image: str | None = None
     """Runtime image used for this job."""
+
+    @model_validator(mode="after")
+    def match_max_execution_time_and_max_usage(self) -> EnvironmentOptions:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        return match_max_execution_time_and_max_usage(self)
 
 
 @dataclass

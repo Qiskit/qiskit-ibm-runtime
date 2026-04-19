@@ -1,0 +1,3 @@
+The ``max_execution_time`` attribute in the primitives' option classes has been renamed to
+``max_usage``. The ``max_execution_time`` attribute will be removed no sooner than three months
+from this release.

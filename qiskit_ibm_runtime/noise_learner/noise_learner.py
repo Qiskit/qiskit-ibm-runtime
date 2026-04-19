@@ -232,7 +232,7 @@ class NoiseLearner:
         elif isinstance(options, EstimatorOptions):
             d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr, arg-type]
             d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
-            d["max_execution_time"] = options.max_execution_time
+            d["max_usage"] = options.max_usage
             d["simulator"] = options.simulator
             d["environment"] = options.environment
             d["experimental"] = options.experimental
@@ -252,6 +252,7 @@ class NoiseLearner:
         ignored_names = [
             "_VERSION",
             "max_execution_time",
+            "max_usage",
             "environment",
         ]
 

@@ -47,4 +47,21 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         runtime_options = options.to_runtime_options()
         self.assertNotIn("num_randomizations", runtime_options)
         self.assertEqual(runtime_options["private"], True)
-        self.assertEqual(runtime_options["max_execution_time"], None)
+        self.assertEqual(runtime_options["max_usage"], None)
+
+    def test_max_execution_time_deprecation(self):
+        """Test max_execution_time deprecation in favor of max_usage setting."""
+        # pylint: disable=unexpected-keyword-arg
+        with self.assertWarns(DeprecationWarning):
+            options = NoiseLearnerV3Options(max_execution_time=123)
+        self.assertEqual(options.max_execution_time, 123)
+        self.assertEqual(options.max_usage, 123)
+
+        options = NoiseLearnerV3Options(max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
+
+        with self.assertWarns(DeprecationWarning):
+            options = NoiseLearnerV3Options(max_execution_time=123, max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
