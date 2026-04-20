@@ -477,7 +477,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     decoded["params"]["options"] = options
                 except Exception as exception:
                     warnings.warn(
-                        "Unable to convert executor 'params' to a pair of quantum program and "
+                        "Unable to convert NLV3 'params' to a pair of instructions and "
                         f"options due to the following exception: {exception}"
                     )
 

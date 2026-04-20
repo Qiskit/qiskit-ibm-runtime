@@ -89,7 +89,7 @@ class NoiseLearnerV3Options(BaseOptions):
     """Options for post selecting the results of noise learning circuits.
     """
 
-    experimental: UnsetType | dict = Unset
+    experimental: dict = Field(default_factory=dict)
     """Experimental options.
 
     These options are subject to change without notification, and stability is not guaranteed.

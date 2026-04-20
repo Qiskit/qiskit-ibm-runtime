@@ -20,7 +20,6 @@ from typing import NamedTuple, TYPE_CHECKING
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import ParamsModel as ParamsModel_0_2
-from ibm_quantum_schemas.noise_learner_v3.version_1_0 import ParamsModel as ParamsModel_1_0
 
 
 from .converters import (
