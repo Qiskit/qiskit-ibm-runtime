@@ -80,7 +80,10 @@ class NoiseLearnerV3:
         options: NoiseLearnerV3Options | None = None,
     ):
         self._options = options or NoiseLearnerV3Options()
-        if self._options.experimental.get("image") is None:
+        if (
+            isinstance(self._options.experimental, UnsetType)
+            or self._options.experimental.get("image") is None
+        ):
             self._options.experimental = {}
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)  # type: ignore[assignment]
