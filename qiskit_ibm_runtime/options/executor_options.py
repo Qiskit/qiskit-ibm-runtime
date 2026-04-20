@@ -20,8 +20,8 @@ from pydantic import Field, ConfigDict
 
 from .environment_options import LogLevelType
 
-# without validate_assignment, it doesn't validate when mutating attributes, only when constructing
-# an instance for the first time.
+# these config settings ensure we get validaton on attribute mutation, not just at construction
+# time, and also that we get a validaton error if someone spels an attribute name wrong
 _CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 
 
@@ -33,8 +33,8 @@ class ExecutionOptions:
     r"""Whether to reset the qubits to the ground state for each shot."""
 
     rep_delay: float | None = None
-    r"""The repetition delay. 
-    
+    r"""The repetition delay.
+
     This is the delay between a measurement and the subsequent quantum circuit. This is only
     supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must be from the
     range supplied by ``backend.rep_delay_range``. Default is given by
