@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -36,6 +36,7 @@ class TestPauliLindbladError(IBMTestCase):
     """Class for testing the PauliLindbladError class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         # A set of generators
@@ -93,6 +94,7 @@ class TestLayerError(IBMTestCase):
     """Class for testing the LayerError class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         # A set of circuits
@@ -156,17 +158,13 @@ class TestLayerError(IBMTestCase):
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_no_coupling_map(self):
-        r"""
-        Tests the `draw_map` function with invalid coordinates.
-        """
+        """Tests the `draw_map` function with invalid coordinates."""
         with self.assertRaises(ValueError):
             self.layer_error_viz.draw_map(AerSimulator())
 
     @skipIf(not PLOTLY_INSTALLED, reason="Plotly is not installed")
     def test_plotting(self):
-        r"""
-        Tests the `draw_map` function to make sure that it produces the right figure.
-        """
+        """Tests the `draw_map` function to make sure that it produces the right figure."""
         fig = self.layer_error_viz.draw_map(
             embedding=FakeKyiv(),
             color_no_data="blue",

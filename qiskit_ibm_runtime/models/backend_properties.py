@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2020-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -29,24 +29,22 @@ BackendPropertiesT = TypeVar("BackendPropertiesT", bound="BackendProperties")
 
 
 class Nduv:
-    """Class representing name-date-unit-value
+    """Class representing name-date-unit-value.
 
     Attributes:
         date: date.
         name: name.
         unit: unit.
         value: value.
+
+    Args:
+        date: Date field
+        name: Name field
+        unit: Nduv unit
+        value: The value of the Nduv
     """
 
     def __init__(self, date: datetime.datetime, name: str, unit: str, value: float) -> None:
-        """Initialize a new name-date-unit-value object
-
-        Args:
-            date: Date field
-            name: Name field
-            unit: Nduv unit
-            value: The value of the Nduv
-        """
         self.date = date
         self.name = name
         self.unit = unit
@@ -90,25 +88,23 @@ class Nduv:
 
 
 class GateProperties:
-    """Class representing a gate's properties
+    """Class representing a gate's properties.
 
     Attributes:
         qubits: qubits.
         gate: gate.
         parameters: parameters.
+
+    Args:
+        qubits: A list of integers representing qubits
+        gate: The gates name
+        parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
+        kwargs: Optional additional fields
     """
 
     _data: dict[Any, Any] = {}
 
     def __init__(self, qubits: list[int], gate: str, parameters: list[Nduv], **kwargs: Any) -> None:
-        """Initialize a new :class:`GateProperties` object
-
-        Args:
-            qubits: A list of integers representing qubits
-            gate: The gates name
-            parameters: List of :class:`Nduv` instances for the name-date-unit-value for the gate
-            kwargs: Optional additional fields
-        """
         self._data = {}
         self.qubits = qubits
         self.gate = gate
@@ -166,11 +162,21 @@ Gate = GateProperties
 
 
 class BackendProperties:
-    """Class representing backend properties
+    """Class representing backend properties.
 
     This holds backend properties measured by the provider. All properties
     which are provided optionally. These properties may describe qubits, gates,
     or other general properties of the backend.
+
+    Args:
+        backend_name: Backend name.
+        backend_version: Backend version in the form X.Y.Z.
+        last_update_date: Last date/time that a property was updated. If specified as a
+            ``str``, it must be in ISO format.
+        qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
+        gates: System gate parameters as a list of :class:`GateProperties` objects
+        general: General parameters as a list of :class:`Nduv` objects
+        kwargs: optional additional fields
     """
 
     _data: dict = {}
@@ -185,18 +191,6 @@ class BackendProperties:
         general: list,
         **kwargs: Any,
     ) -> None:
-        """Initialize a BackendProperties instance.
-
-        Args:
-            backend_name: Backend name.
-            backend_version: Backend version in the form X.Y.Z.
-            last_update_date: Last date/time that a property was updated. If specified as a
-                ``str``, it must be in ISO format.
-            qubits: System qubit parameters as a list of lists of :class:`Nduv` instances
-            gates: System gate parameters as a list of :class:`GateProperties` objects
-            general: General parameters as a list of :class:`Nduv` objects
-            kwargs: optional additional fields
-        """
         self._data = {}
         self.backend_name = backend_name
         self.backend_version = backend_version
@@ -293,8 +287,7 @@ class BackendProperties:
         qubits: int | Iterable[int] | None = None,
         name: str | None = None,
     ) -> dict[tuple[int, ...], dict[str, PropertyT]] | dict[str, PropertyT] | PropertyT:
-        """
-        Return the property of the given gate.
+        """Return the property of the given gate.
 
         Args:
             gate: Name of the gate.
@@ -339,8 +332,7 @@ class BackendProperties:
         return faulty
 
     def is_gate_operational(self, gate: str, qubits: int | Iterable[int] | None = None) -> bool:
-        """
-        Return the operational status of the given gate.
+        """Return the operational status of the given gate.
 
         Args:
             gate: Name of the gate.
@@ -356,8 +348,7 @@ class BackendProperties:
         return True  # if property operational not existent, then True.
 
     def gate_error(self, gate: str, qubits: int | Iterable[int]) -> float:
-        """
-        Return gate error estimates from backend properties.
+        """Return gate error estimates from backend properties.
 
         Args:
             gate: The gate for which to get the error.
@@ -369,8 +360,7 @@ class BackendProperties:
         return self.gate_property(gate, qubits, "gate_error")[0]  # type: ignore[index, return-value]
 
     def gate_length(self, gate: str, qubits: int | Iterable[int]) -> float:
-        """
-        Return the duration of the gate in units of seconds.
+        """Return the duration of the gate in units of seconds.
 
         Args:
             gate: The gate for which to get the duration.
@@ -386,8 +376,7 @@ class BackendProperties:
         qubit: int,
         name: str | None = None,
     ) -> dict[str, PropertyT] | PropertyT:
-        """
-        Return the property of the given qubit.
+        """Return the property of the given qubit.
 
         Args:
             qubit: The property to look for.
@@ -411,8 +400,7 @@ class BackendProperties:
         return result
 
     def t1(self, qubit: int) -> float:
-        """
-        Return the T1 time of the given qubit.
+        """Return the T1 time of the given qubit.
 
         Args:
             qubit: Qubit for which to return the T1 time of.
@@ -423,8 +411,7 @@ class BackendProperties:
         return self.qubit_property(qubit, "T1")[0]  # type: ignore[index, return-value]
 
     def t2(self, qubit: int) -> float:
-        """
-        Return the T2 time of the given qubit.
+        """Return the T2 time of the given qubit.
 
         Args:
             qubit: Qubit for which to return the T2 time of.
@@ -435,8 +422,7 @@ class BackendProperties:
         return self.qubit_property(qubit, "T2")[0]  # type: ignore[index, return-value]
 
     def frequency(self, qubit: int) -> float:
-        """
-        Return the frequency of the given qubit.
+        """Return the frequency of the given qubit.
 
         Args:
             qubit: Qubit for which to return frequency of.
@@ -447,8 +433,7 @@ class BackendProperties:
         return self.qubit_property(qubit, "frequency")[0]  # type: ignore[index, return-value]
 
     def readout_error(self, qubit: int) -> float:
-        """
-        Return the readout error of the given qubit.
+        """Return the readout error of the given qubit.
 
         Args:
             qubit: Qubit for which to return the readout error of.
@@ -459,8 +444,7 @@ class BackendProperties:
         return self.qubit_property(qubit, "readout_error")[0]  # type: ignore[index, return-value]
 
     def readout_length(self, qubit: int) -> float:
-        """
-        Return the readout length [sec] of the given qubit.
+        """Return the readout length [sec] of the given qubit.
 
         Args:
             qubit: Qubit for which to return the readout length of.
@@ -471,8 +455,7 @@ class BackendProperties:
         return self.qubit_property(qubit, "readout_length")[0]  # type: ignore[index, return-value]
 
     def is_qubit_operational(self, qubit: int) -> bool:
-        """
-        Return the operational status of the given qubit.
+        """Return the operational status of the given qubit.
 
         Args:
             qubit: Qubit for which to return operational status of.
@@ -486,9 +469,7 @@ class BackendProperties:
         return True  # if property operational not existent, then True.
 
     def _apply_prefix(self, value: float, unit: str) -> float:
-        """
-        Given a SI unit prefix and value, apply the prefix to convert to
-        standard SI unit.
+        """Given a SI unit prefix and value, apply the prefix to convert to standard SI unit.
 
         Args:
             value: The number to apply prefix to.

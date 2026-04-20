@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -125,7 +125,7 @@ def get_account_config_contents(
     proxies=None,
     set_default=None,
 ):
-    """Generate account config file content"""
+    """Generate account config file content."""
     token = token or uuid.uuid4().hex
     if name is None:
         name = (

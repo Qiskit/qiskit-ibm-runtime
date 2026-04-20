@@ -2,10 +2,6 @@
 requires = ["setuptools >= 65.0.2", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313']
-
 [tool.towncrier]
 single_file = false
 filename = "release-notes/{version}.rst"
@@ -85,25 +81,32 @@ future-annotations = true
 select = [
     # Rules in alphabetic order
     "C4",     # flake8-comprehensions
+    "D",      # pydocstyle
     "E",      # pycodestyle
-    "F",      # pyflake
+    "F",      # pyflakes
     "G",      # flake8-logging-format
+    "RUF013", # implicit-optional
     "T10",    # flake8-debugger
     "UP",     # pyupgrade
-    "RUF013", # implicit-optional
 ]
+
 ignore = [
-    "E501",  # line-too-long: black handles line length
-    "UP032", # f-string: requires manual revision of non f-string formatting
+    "D105",   # undocumented-magic-method
+    "D107",   # undocumented-public-init
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
+    "D205",   # missing-blank-line-after-summary - allows for sphinx headers to remain
+    "D212",   # multi-line-summary-first-line - allows for sphinx headers to remain
+    "D415",   # missing-terminal-punctuation - allows for sphinx headers to remain
     "E402",   # module-import-not-at-top-of-file
     "F401",   # unused-import
     "F403",   # undefined-local-with-import-star
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [project]
 name = "qiskit-ibm-runtime"
@@ -141,7 +144,7 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.5.20260320",
+    "ibm-quantum-schemas==0.7rc1",
     "pydantic>=2.7.0",
     "qiskit>=2.2.0",
     "pybase64>=1.4",
@@ -174,7 +177,6 @@ common = [
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
-    "black~=24.1",
     "ruff~=0.14.10",
     "coverage>=6.3",
     "pylatexenc",
@@ -220,7 +222,6 @@ style = [
 ]
 
 style_local = [
-    "black~=24.1",
     "mypy==1.19.0",
     "ruff~=0.14.10",
 ]

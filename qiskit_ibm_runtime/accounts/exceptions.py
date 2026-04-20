@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -32,4 +32,4 @@ class AccountAlreadyExistsError(AccountsError):
 
 
 class CloudResourceNameResolutionError(AccountsError):
-    """Errors raised when the Cloud Resource Name (CRN) cannot be resolved for a given service name."""
+    """Errors raised when the Cloud Resource Name cannot be resolved for a given service name."""

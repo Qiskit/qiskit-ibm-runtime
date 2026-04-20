@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -21,4 +21,9 @@ from .converters_0_2 import (
     quantum_program_to_0_2,
     quantum_program_from_0_2,
     quantum_program_result_from_0_2,
+)
+from .converters_1_0 import (
+    quantum_program_to_1_0,
+    quantum_program_from_1_0,
+    quantum_program_result_from_1_0,
 )

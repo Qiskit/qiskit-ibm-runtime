@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""QuantumProgram"""
+"""QuantumProgram."""
 
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ class QuantumProgramItem(abc.ABC):
     @property
     @abc.abstractmethod
     def shape(self) -> tuple[int, ...]:
-        """The extrinsic shape of this item, i.e., the broadcasted extrinsic shapes of all inputs."""
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
 
     def size(self) -> int:
         """The total number elements in this item; the product of the entries of :attr:`~.shape`."""
@@ -117,6 +117,7 @@ class CircuitItem(QuantumProgramItem):
 
     @property
     def shape(self) -> tuple[int, ...]:
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
         return self.circuit_arguments.shape[:-1]
 
     def __repr__(self) -> str:
@@ -185,6 +186,7 @@ class SamplexItem(QuantumProgramItem):
 
     @property
     def shape(self) -> tuple[int, ...]:
+        """The extrinsic shape of this item, i.e. the broadcasted extrinsic shapes of all inputs."""
         return self._shape
 
     def __repr__(self) -> str:
@@ -234,6 +236,11 @@ class QuantumProgram:
         self.noise_maps = noise_maps or {}
         self.meas_level = meas_level
         self.passthrough_data = passthrough_data
+
+        # Semantic role indicating how execution results may be post-processed by runtime clients.
+        # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
+        # without notice. Third party clients should not set or depend on this value.
+        self._semantic_role: str | None = None
 
     def append_circuit_item(
         self,

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor"""
+"""Executor."""
 
 from __future__ import annotations
 
@@ -26,17 +26,20 @@ from .session import Session
 from .batch import Batch
 from .options.executor_options import ExecutorOptions
 from .quantum_program import QuantumProgram
-from .quantum_program.converters import quantum_program_to_0_2
-from .quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
+from .quantum_program.result_decoders import QuantumProgramResultDecoder
+from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
 
 logger = logging.getLogger()
 
+DEFAULT_SCHEMA_VERSION = "v0.2"
+"""The schema version used by default by executor to encode the input params."""
+
 
 class Executor:
-    """Class for running :class:`~.QuantumProgram`\\s.
+    r"""Class for running :class:`~.QuantumProgram`\\s.
 
     The :meth:`run` method can be used to submit a quantum program to be executed on a backend.
 
@@ -152,4 +155,9 @@ class Executor:
         Returns:
             A job.
         """
-        return self._run(quantum_program_to_0_2(program, self.options))
+        try:
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+
+        return self._run(converter.encoder(program, self.options))

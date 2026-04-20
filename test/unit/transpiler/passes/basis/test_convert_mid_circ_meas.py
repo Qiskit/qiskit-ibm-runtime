@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -26,9 +26,10 @@ from .....ibm_test_case import IBMTestCase
 
 
 class TestConvertToMidCircuitMeasure(IBMTestCase):
-    """Tests the ConvertToMidCircuitMeasure pass"""
+    """Tests the ConvertToMidCircuitMeasure pass."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         num_qubits = 5
@@ -70,9 +71,11 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
             ConvertToMidCircuitMeasure(self.target_without)
 
     def test_convert_measure_3(self):
-        """Test conversion with non-default alternative measure. The pass is
-        only expected to convert terminal measures into measure_3, the existing
-        measure_2 instruction is left untouched."""
+        """Test conversion with non-default alternative measure.
+
+        The pass is only expected to convert terminal measures into measure_3, the existing
+        measure_2 instruction is left untouched.
+        """
         num_qubits = 5
         mcm = MidCircuitMeasure("measure_3")
         target = GenericBackendV2(num_qubits=num_qubits, seed=0).target
@@ -94,8 +97,11 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         self.assertIsInstance(transpiled.data[5].operation, Measure)
 
     def test_different_qarg(self):
-        """Test that terminal measure is only replaced if measure_2 is defined
-        in corresponding qarg (else, it's left untouched)."""
+        """Test correct replacing of measure_2.
+
+        Test that terminal measure is only replaced if measure_2 is defined
+        in corresponding qarg (else, it's left untouched).
+        """
         num_qubits = 5
         mcm = MidCircuitMeasure()
         target = GenericBackendV2(num_qubits=num_qubits, seed=0).target

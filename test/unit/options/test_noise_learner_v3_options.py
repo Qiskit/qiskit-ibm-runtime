@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -30,8 +30,7 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(options_model.num_randomizations, 15)
 
     def test_to_options_model_invalid_schema_model(self):
-        """Test that ``NoiseLearnerV3Options.to_options_model`` raises for a
-        non-existing schema version"""
+        """Test that ``.to_options_model`` raises for a non-existing schema version."""
         options = NoiseLearnerV3Options()
         options.num_randomizations = 15
         options.experimental = {"not": "me"}

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transport conversion functions"""
+"""Transport conversion functions."""
 
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ def noise_learner_v3_result_to_0_2(
 def noise_learner_v3_result_from_0_2(
     model: NoiseLearnerV3ResultsModel,
 ) -> NoiseLearnerV3Results:
-    """Convert a V0.2 model to noise learner v3 results"""
+    """Convert a V0.2 model to noise learner v3 results."""
     return NoiseLearnerV3Results(
         data=[
             NoiseLearnerV3Result.from_generators(

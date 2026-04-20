@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,6 +28,9 @@ from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
+from qiskit_ibm_runtime.quantum_program.params_converters import (
+    QUANTUM_PROGRAM_PARAMS_CONVERTERS,
+)
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -191,7 +194,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
 
 
 def _set_int_keys_flag(obj: dict) -> dict | list:
-    """Recursively sets '__int_keys__' flag if dictionary uses integer keys
+    """Recursively sets '__int_keys__' flag if dictionary uses integer keys.
 
     Args:
         obj: dictionary
@@ -208,7 +211,7 @@ def _set_int_keys_flag(obj: dict) -> dict | list:
 
 
 def _cast_strings_keys_to_int(obj: dict) -> dict:
-    """Casts string to int keys in dictionary when '__int_keys__' flag is set
+    """Casts string to int keys in dictionary when '__int_keys__' flag is set.
 
     Args:
         obj: dictionary
@@ -238,6 +241,7 @@ class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
     def default(self, obj: Any) -> Any:
+        """Return a serializable object for ``obj``."""
         if isinstance(obj, CouplingMap):
             return list(obj)
         if isinstance(obj, date):
@@ -430,6 +434,34 @@ class RuntimeDecoder(json.JSONDecoder):
             kwargs.pop("encoding")
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
+    def decode(self, s: str) -> Any:  # type: ignore[override]
+        """Return the Python representation of a string ``s`` containing a JSON document.
+
+        Applies additional conversion for executor program's ``params``, preserving the
+        superclass ``decode()`` output in all other cases.
+
+        Args:
+            s: a string containing a JSON document.
+        """
+        if isinstance(decoded := super().decode(s), dict):
+            program_id = decoded.get("program", {}).get("id", None)
+            params = decoded.get("params", {})
+            if program_id == "executor" and params:
+                # `decoded` represents the input to an executor program. We use the converters to
+                # decode its inputs, or 'params'
+                try:
+                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    quantum_program, options = converter.decoder(converter.model(**params))
+                    decoded["params"]["quantum_program"] = quantum_program
+                    decoded["params"]["options"] = options
+                except Exception as exception:
+                    warnings.warn(
+                        "Unable to convert executor 'params' to a pair of quantum program and "
+                        f"options due to the following exception: {exception}"
+                    )
+
+        return decoded
+
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
         if "__type__" in obj:
@@ -453,8 +485,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
-                # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
-                # to deserialize load qpy circuit and return first instruction object in that circuit.
+                # Standalone instructions are encoded as the sole instruction in a QPY serialized
+                # circuit to deserialize load qpy circuit and return first instruction object in
+                # that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":

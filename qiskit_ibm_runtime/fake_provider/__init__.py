@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2023.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -79,8 +79,8 @@ Here is an example of using a fake backend for transpilation and simulation.
 
     Please note that the simulation is done using a noise model generated from system snapshots
     obtained in the past (sometimes a few years ago) and the results are not representative of the
-    latest behaviors of the real quantum system that the fake backend is mimicking. If you want
-    to run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
+    latest behaviors of the real quantum system that the fake backend is mimicking. If you want to
+    run noisy simulations with the latest backend snapshots, you can use the ``refresh()`` method.
 
     .. code-block:: python
 
@@ -121,16 +121,20 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     :toctree: ../stubs/
     :nosignatures:
 
+    FakeAachen
     FakeAlgiers
     FakeAlmadenV2
     FakeArmonkV2
     FakeAthensV2
     FakeAuckland
     FakeBelemV2
+    FakeBerlin
     FakeBoeblingenV2
     FakeBogotaV2
+    FakeBoston
     FakeBrisbane
     FakeBrooklynV2
+    FakeBrussels
     FakeBurlingtonV2
     FakeCairoV2
     FakeCambridgeV2
@@ -144,6 +148,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeJakartaV2
     FakeJohannesburgV2
     FakeKawasaki
+    FakeKingston
     FakeKolkataV2
     FakeKyiv
     FakeKyoto
@@ -155,6 +160,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeManilaV2
     FakeMarrakesh
     FakeMelbourneV2
+    FakeMiami
     FakeMontrealV2
     FakeMumbaiV2
     FakeNairobiV2
@@ -164,6 +170,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeParisV2
     FakePeekskill
     FakePerth
+    FakePittsburgh
     FakePrague
     FakePoughkeepsieV2
     FakeQuebec
@@ -174,6 +181,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeSantiagoV2
     FakeSherbrooke
     FakeSingaporeV2
+    FakeStrasbourg
     FakeSydneyV2
     .. FakeTenerifeV2 # no v2 version
     .. FakeTokyoV2 # no v2 version
@@ -185,8 +193,8 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeYorktownV2
 """
 
-# Fake providers
-from .fake_provider import FakeProviderForBackendV2
-
 # Standard fake backends with IBM Quantum systems snapshots
 from .backends import *
+
+# Fake providers
+from .fake_provider import FakeProviderForBackendV2

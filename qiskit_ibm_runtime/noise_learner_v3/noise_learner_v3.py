@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -42,11 +42,11 @@ logger = logging.getLogger(__name__)
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
 
-    The noise learner allows characterizing the noise processes affecting target instructions, based on
-    the Pauli-Lindblad noise model described in [1]. The instructions provided to the :meth:`~run`
-    method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing ISA operations.
-    The result of a noise learner job contains a list of :class:`.NoiseLearnerV3Result` objects, one for
-    each given instruction.
+    The noise learner allows characterizing the noise processes affecting target instructions, based
+    on the Pauli-Lindblad noise model described in [1]. The instructions provided to the
+    :meth:`~run` method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing
+    ISA operations. The result of a noise learner job contains a list of
+    :class:`.NoiseLearnerV3Result` objects, one for each given instruction.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
@@ -83,9 +83,7 @@ class NoiseLearnerV3:
         ):
             self._options.experimental = {}
 
-        self._session, self._service, self._backend = get_mode_service_backend(
-            mode
-        )  # type: ignore[assignment]
+        self._session, self._service, self._backend = get_mode_service_backend(mode)  # type: ignore[assignment]
 
         if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
@@ -98,21 +96,21 @@ class NoiseLearnerV3:
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
-            Args:
+        Args:
                 instructions: The instructions to learn the noise of.
 
-            Returns:
+        Returns:
                 The submitted job.
 
         Raises:
             IBMInputValueError: If an instruction does not contain a box.
             IBMInputValueError: If an instruction contains a box without twirl annotation.
-            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do not
-                belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')`` for the
-                backend in use.
+            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do
+                not belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
+                for the backend in use.
             IBMInputValueError: If an instruction a box with non-ISA gates.
-            IBMInputValueError: If an instruction cannot be learned by any of the supported learning
-                protocols.
+            IBMInputValueError: If an instruction cannot be learned by any of the supported
+                learning protocols.
         """
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:

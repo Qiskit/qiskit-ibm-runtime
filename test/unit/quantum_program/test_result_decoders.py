@@ -25,7 +25,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 )
 from ibm_quantum_schemas.common import TensorModel
 
-from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
 
 from ...ibm_test_case import IBMTestCase
 
@@ -34,6 +34,7 @@ class TestDecoder(IBMTestCase):
     """Tests the decoder for the quantum program result model."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         self.meas1 = np.array([[False], [True], [True]])
@@ -83,8 +84,7 @@ class TestDecoder(IBMTestCase):
         self.assertEqual(decoded.metadata.chunk_timing[0].parts[1].size, 1)
 
     def test_no_schema_version(self):
-        """Verify that an error is raised if the encoded string
-        does not specify any schema version."""
+        """Verify an error is raised if the encoded string does not specify any schema version."""
         encoded_as_json = json.loads(self.encoded)
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
@@ -92,8 +92,7 @@ class TestDecoder(IBMTestCase):
             QuantumProgramResultDecoder.decode(encoded_as_str)
 
     def test_unknown_schema_version(self):
-        """Verify that an error is raised if the schema version specified in the encoded string
-        does not exist."""
+        """Verify an error is raised if the schema version specified does not exist."""
         encoded_as_json = json.loads(self.encoded)
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Pass to convert the gates of an ISA circuit to Clifford gates.
-"""
+"""Pass to convert the gates of an ISA circuit to Clifford gates."""
 
 from random import choices
 import numpy as np
@@ -49,8 +47,7 @@ SUPPORTED_INSTRUCTIONS = (
 
 
 class ConvertISAToClifford(TransformationPass):
-    """
-    Convert the gates of an ISA circuit to Clifford gates.
+    r"""Convert the gates of an ISA circuit to Clifford gates.
 
     ISA circuits only contain Clifford gates from a restricted set or
     :class:`qiskit.circuit.library.RZGate`\\s by arbitrary angles. To convert them to Clifford
@@ -87,6 +84,7 @@ class ConvertISAToClifford(TransformationPass):
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on the DAGCircuit."""
         for node in dag.op_nodes():
             if not isinstance(node.op, SUPPORTED_INSTRUCTIONS):
                 raise ValueError(f"Operation ``{node.op.name}`` not supported.")

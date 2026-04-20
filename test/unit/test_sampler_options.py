@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -50,7 +50,6 @@ class TestSamplerOptions(IBMTestCase):
 
     def test_program_inputs(self):
         """Test converting to program inputs from sampler options."""
-
         noise_model = NoiseModel.from_backend(FakeManilaV2())
         simulator = {
             "noise_model": noise_model,

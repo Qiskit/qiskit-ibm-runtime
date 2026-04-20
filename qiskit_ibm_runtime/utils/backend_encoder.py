@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Utilities for working with IBM Quantum backends."""
+
 import json
 from datetime import datetime
 from typing import Any
@@ -19,10 +20,10 @@ from qiskit.circuit import ParameterExpression
 
 
 class BackendEncoder(json.JSONEncoder):
-    """A json encoder for qobj"""
+    """A json encoder for qobj."""
 
     def default(self, obj: Any) -> Any:
-        """Default encoding"""
+        """Default encoding."""
         # Convert numpy arrays:
         if hasattr(obj, "tolist"):
             return obj.tolist()

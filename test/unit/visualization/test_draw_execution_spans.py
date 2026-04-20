@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Unit tests for the visualization folder."""
-
 
 from datetime import datetime, timedelta
 import random
@@ -29,7 +28,7 @@ class TestDrawExecutionSpans(IBMTestCase):
     """Tests for the ``draw_execution_spans`` function."""
 
     def setUp(self) -> None:
-        """Set up."""
+        """Test level setup."""
         random.seed(100)
 
         time0 = time1 = datetime(year=1995, month=7, day=30)

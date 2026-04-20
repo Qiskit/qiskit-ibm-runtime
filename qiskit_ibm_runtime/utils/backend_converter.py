@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2024.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,10 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Converters from BackendConfiguration and BackendProperties
-model (BackendV1) to Target model (BackendV2).
-"""
+"""Converters from BackendConfiguration and BackendProperties model to Target model."""
 
 import logging
 import warnings
@@ -48,7 +45,7 @@ are supported by a given backend, one can inspect ``backend.supported_operations
 """
 
 
-def convert_to_target(  # type: ignore[no-untyped-def]
+def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties | None = None,
     *,
@@ -57,7 +54,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
     custom_name_mapping: dict[str, Any] | None = None,
     add_delay: bool = True,
     filter_faulty: bool = True,
-    **kwargs,
+    **kwargs: dict,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -75,6 +72,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             will be dropped in the resulting ``Target`` object.
         add_delay: If True, adds delay to the instruction set.
         filter_faulty: If True, this filters the non-operational qubits.
+        kwargs: additional arguments.
 
     Returns:
         A ``Target`` instance.
@@ -129,8 +127,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             if not include_control_flow:
                 # Remove name if this is control flow and dynamic circuits feature is disabled.
                 logger.info(
-                    "Control flow %s is found but the dynamic circuits are disabled for this backend. "
-                    "This instruction is excluded from the backend Target.",
+                    "Control flow %s is found but the dynamic circuits are disabled for this "
+                    "backend. This instruction is excluded from the backend Target.",
                     name,
                 )
                 unsupported_instructions.append(name)
@@ -151,7 +149,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
             # GateConfig model is a translator of QASM opcode.
             # This doesn't have quantum definition, so qiskit transpiler doesn't perform
             # any optimization in quantum domain.
-            # Usually GateConfig counterpart should exist in qiskit namespace so this is rarely called.
+            # Usually GateConfig counterpart should exist in qiskit namespace so this is rarely
+            # called.
             this_config = gate_configs[name]
             params = list(map(Parameter, getattr(this_config, "parameters", [])))
             coupling_map = getattr(this_config, "coupling_map", [])
@@ -238,9 +237,7 @@ def convert_to_target(  # type: ignore[no-untyped-def]
 
         for name in all_instructions:
             try:
-                for qubits, param_dict in properties.gate_property(
-                    name
-                ).items():  # type: ignore[arg-type, union-attr]
+                for qubits, param_dict in properties.gate_property(name).items():  # type: ignore[arg-type, union-attr]
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
                         or not properties.is_gate_operational(name, qubits)  # type: ignore[arg-type]
@@ -255,7 +252,8 @@ def convert_to_target(  # type: ignore[no-untyped-def]
                         continue
                     if prop_name_map[name] is None:
                         # This instruction is tied to particular qubits
-                        # i.e. gate config is not provided, and instruction has been globally defined.
+                        # i.e. gate config is not provided, and instruction has been globally
+                        # defined.
                         prop_name_map[name] = {}
                     prop_name_map[name][qubits] = InstructionProperties(
                         error=_get_value(param_dict, "gate_error"),  # type: ignore[arg-type]

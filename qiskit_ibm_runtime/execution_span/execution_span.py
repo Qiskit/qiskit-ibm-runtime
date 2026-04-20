@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""ExecutionSpan"""
+"""ExecutionSpan."""
 
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ class ExecutionSpan(abc.ABC):
 
     @property
     def size(self) -> int:
-        """The total number of results with dependence on this execution span, across all pubs.
+        r"""The total number of results with dependence on this execution span, across all pubs.
 
         This attribute is equivalent to the sum of the elements of all present :meth:`mask`\\s.
         For sampler results, it represents the total number of shots with dependence on this

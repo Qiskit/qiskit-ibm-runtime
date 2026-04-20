@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transport conversion functions"""
+"""Transport conversion functions."""
 
 from __future__ import annotations
 
@@ -85,12 +85,18 @@ def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, Execut
         else:
             raise ValueError("Unexpected model item type.")
 
-    quantum_program = QuantumProgram(shots=program_model.shots, items=items)
+    quantum_program = QuantumProgram(
+        shots=program_model.shots,
+        items=items,
+        meas_level=program_model.meas_level,
+        passthrough_data=program_model.passthrough_data,
+    )
 
     options = ExecutorOptions()
-    options.execution.init_qubits = model.options.init_qubits
-    options.execution.rep_delay = model.options.rep_delay
-    options.experimental = model.options.experimental
+    model_options = model.options.model_copy(deep=True)
+    options.execution.init_qubits = model_options.init_qubits
+    options.execution.rep_delay = model_options.rep_delay
+    options.experimental = model_options.experimental
 
     return quantum_program, options
 
