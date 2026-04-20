@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from typing import NamedTuple, Type, TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING
 
 from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import ParamsModel as ParamsModel_0_1
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 class ParamsConverter(NamedTuple):
     """A helper to store params models and converters."""
 
-    model: Type[BaseParamsModel]
+    model: type[BaseParamsModel]
     """The model describing the NLV3 inputs, or 'params'."""
 
     decoder: Callable[[BaseParamsModel], tuple[Iterable[CircuitInstruction], NoiseLearnerV3Options]]
