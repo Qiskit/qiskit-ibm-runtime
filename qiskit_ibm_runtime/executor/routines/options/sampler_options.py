@@ -33,9 +33,8 @@ class SamplerExecutionOptions(ExecutionOptions):
 
     Args:
         init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Inherited from :class:`~qiskit_ibm_runtime.options.executor_options.ExecutionOptions`.
-        rep_delay: The repetition delay. Inherited from
-            :class:`~qiskit_ibm_runtime.options.executor_options.ExecutionOptions`.
+            Inherited from :class:`~.ExecutionOptions`.
+        rep_delay: The repetition delay. Inherited from :class:`~.ExecutionOptions`.
         meas_type: How to process and return measurement results. This option sets
             the return type of all classical registers in all sampler pub results.
 
@@ -71,19 +70,18 @@ class SamplerOptions:
     )
     """Suboptions for dynamical decoupling.
 
-    See :class:`DynamicalDecouplingOptions` for all available options.
+    See :class:`~.DynamicalDecouplingOptions` for all available options.
     """
 
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
 
-    See :class:`.SamplerExecutionOptions` for all available options."""
+    See :class:`~.SamplerExecutionOptions` for all available options."""
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Pauli twirling options.
 
-    See :class:`~qiskit_ibm_runtime.executor.routines.options.twirling_options.TwirlingOptions`
-    for all available options.
+    See :class:`~.TwirlingOptions` for all available options.
     """
 
     experimental: dict | None = None
@@ -97,7 +95,7 @@ class SamplerOptions:
     """Options related to the execution environment."""
 
     def to_executor_options(self) -> ExecutorOptions:
-        """Map SamplerOptions to ExecutorOptions, , ignoring all irrelevant fields.
+        """Map sampler options to executor options, ignoring all irrelevant fields.
 
         Returns:
             Mapped executor options.
