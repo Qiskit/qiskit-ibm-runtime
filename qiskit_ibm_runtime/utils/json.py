@@ -452,9 +452,9 @@ class RuntimeDecoder(json.JSONDecoder):
                 # decode its inputs, or 'params'
                 try:
                     qp_converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
-                    quantum_program, options = qp_converter.decoder(qp_converter.model(**params))
+                    quantum_program, qp_options = qp_converter.decoder(qp_converter.model(**params))
                     decoded["params"]["quantum_program"] = quantum_program
-                    decoded["params"]["options"] = options
+                    decoded["params"]["options"] = qp_options
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert executor 'params' to a pair of quantum program and "
@@ -472,9 +472,9 @@ class RuntimeDecoder(json.JSONDecoder):
                     )
 
                     nl_converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
-                    instructions, options = nl_converter.decoder(nl_converter.model(**params))
+                    instructions, nl_options = nl_converter.decoder(nl_converter.model(**params))
                     decoded["params"]["instructions"] = instructions
-                    decoded["params"]["options"] = options
+                    decoded["params"]["options"] = nl_options
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert NLV3 'params' to a pair of instructions and "
