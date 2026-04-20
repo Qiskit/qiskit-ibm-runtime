@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Quebec device (127 qubit).
-"""
+"""Fake Quebec device (127 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend
@@ -21,7 +19,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeQuebec(fake_backend.FakeBackendV2):
     """A fake 127 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_quebec.json"  # type: ignore
-    props_filename = "props_quebec.json"  # type: ignore
-    backend_name = "fake_quebec"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_quebec.json"
+    props_filename = "props_quebec.json"
+    backend_name = "fake_quebec"

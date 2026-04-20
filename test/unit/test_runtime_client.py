@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -37,7 +37,6 @@ class TestAccountClient(IBMTestCase):
 
     def _get_client(self):
         """Helper for instantiating an RuntimeClient."""
-        # pylint: disable=no-value-for-parameter
         params = ClientParameters(
             channel="ibm_quantum_platform",
             url=SimpleServer.URL,
@@ -48,7 +47,6 @@ class TestAccountClient(IBMTestCase):
 
     def test_client_error(self):
         """Test client error."""
-        client = self._get_client()
         self.fake_server = SimpleServer(handler_class=ClientErrorHandler)
         self.fake_server.start()
         # client.account_api.session.base_url = SimpleServer.URL
@@ -62,6 +60,8 @@ class TestAccountClient(IBMTestCase):
 
         for err_resp in sub_tests:
             with self.subTest(response=err_resp):
+                # Use a new client for each request, for avoiding delay in second response.
+                client = self._get_client()
                 self.fake_server.set_error_response(err_resp)
                 with self.assertRaises(RequestsApiError) as err_cm:
                     client.backend_status("ibmq_qasm_simulator")
@@ -70,7 +70,6 @@ class TestAccountClient(IBMTestCase):
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
-
         custom_header = "batman"
         with custom_envs({"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}):
             client = self._get_client()

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,7 +13,7 @@
 """Client for accessing IBM Quantum runtime service."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 from requests import Response
 
@@ -27,41 +27,40 @@ logger = logging.getLogger(__name__)
 
 
 class RuntimeClient(BaseBackendClient):
-    """Client for accessing runtime service."""
+    """Client for accessing runtime service.
+
+    Args:
+        params: Connection parameters.
+    """
 
     def __init__(
         self,
         params: ClientParameters,
     ) -> None:
-        """RuntimeClient constructor.
-
-        Args:
-            params: Connection parameters.
-        """
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
             **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
-        self._configuration_registry: Dict[str, Dict[str, Any]] = {}
+        self._configuration_registry: dict[str, dict[str, Any]] = {}
         self._instance = params.instance
 
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
-        params: Dict,
-        image: Optional[str],
-        log_level: Optional[str],
-        session_id: Optional[str],
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = False,
-        session_time: Optional[int] = None,
-        private: Optional[bool] = False,
-        calibration_id: Optional[str] = None,
-    ) -> Dict:
+        backend_name: str | None,
+        params: dict,
+        image: str | None,
+        log_level: str | None,
+        session_id: str | None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = False,
+        session_time: int | None = None,
+        private: bool | None = False,
+        calibration_id: str | None = None,
+    ) -> dict:
         """Run the specified program.
 
         Args:
@@ -96,11 +95,12 @@ class RuntimeClient(BaseBackendClient):
             calibration_id=calibration_id,
         )
 
-    def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> dict:
         """Get job data.
 
         Args:
             job_id: Job ID.
+            exclude_params: If ``True``, the params will not be included in the response.
 
         Returns:
             JSON response.
@@ -111,17 +111,17 @@ class RuntimeClient(BaseBackendClient):
 
     def jobs_get(
         self,
-        limit: int = None,
-        skip: int = None,
-        backend_name: str = None,
-        pending: bool = None,
-        program_id: str = None,
-        job_tags: Optional[List[str]] = None,
-        session_id: Optional[str] = None,
-        created_after: Optional[python_datetime] = None,
-        created_before: Optional[python_datetime] = None,
+        limit: int | None = None,
+        skip: int | None = None,
+        backend_name: str | None = None,
+        pending: bool | None = None,
+        program_id: str | None = None,
+        job_tags: list[str] | None = None,
+        session_id: str | None = None,
+        created_after: python_datetime | None = None,
+        created_before: python_datetime | None = None,
         descending: bool = True,
-    ) -> Dict:
+    ) -> dict:
         """Get job data for all jobs.
 
         Args:
@@ -196,7 +196,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def job_metadata(self, job_id: str) -> Dict[str, Any]:
+    def job_metadata(self, job_id: str) -> dict[str, Any]:
         """Get job metadata.
 
         Args:
@@ -209,14 +209,17 @@ class RuntimeClient(BaseBackendClient):
 
     def create_session(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        mode: str | None = None,
+    ) -> dict[str, Any]:
         """Create a session.
 
         Args:
+            backend: name of the backend to use for the session.
+            instance: The service instance to use.
+            max_time: Maximum duration of the session.
             mode: Execution mode.
         """
         return self._api.runtime_session(session_id=None).create(backend, instance, max_time, mode)
@@ -233,7 +236,7 @@ class RuntimeClient(BaseBackendClient):
         """Update session so jobs can no longer be submitted."""
         self._api.runtime_session(session_id=session_id).close()
 
-    def session_details(self, session_id: str) -> Dict[str, Any]:
+    def session_details(self, session_id: str) -> dict[str, Any]:
         """Get session details.
 
         Args:
@@ -244,22 +247,22 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.runtime_session(session_id=session_id).details()
 
-    def list_backends(self) -> List[Dict[str, Any]]:
+    def list_backends(self) -> list[dict[str, Any]]:
         """Return IBM backends available for this service instance.
 
         Returns:
             IBM backends available for this service instance.
         """
-
         return self._api.backends()["devices"]
 
     def backend_configuration(
-        self, backend_name: str, refresh: bool = False, calibration_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, backend_name: str, refresh: bool = False, calibration_id: str | None = None
+    ) -> dict[str, Any]:
         """Return the configuration of the IBM backend.
 
         Args:
             backend_name: The name of the IBM backend.
+            refresh: If ``True``, re-query the server for the backend configuration.
             calibration_id: The calibration id to use for the IBM backend
 
         Returns:
@@ -275,7 +278,7 @@ class RuntimeClient(BaseBackendClient):
             ).configuration()
         return self._configuration_registry[backend_name].copy()
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of the IBM backend.
 
         Args:
@@ -289,9 +292,9 @@ class RuntimeClient(BaseBackendClient):
     def backend_properties(
         self,
         backend_name: str,
-        datetime: Optional[python_datetime] = None,
-        calibration_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        datetime: python_datetime | None = None,
+        calibration_id: str | None = None,
+    ) -> dict[str, Any]:
         """Return the properties of the IBM backend.
 
         Args:
@@ -321,7 +324,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).update_tags(tags)
 
-    def cloud_usage(self) -> Dict[str, Any]:
+    def cloud_usage(self) -> dict[str, Any]:
         """Return cloud instance usage information.
 
         Returns:

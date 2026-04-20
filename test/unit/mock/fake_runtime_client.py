@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -14,11 +14,9 @@
 
 import base64
 import json
-import time
 import uuid
 from datetime import timezone, datetime as python_datetime
-from concurrent.futures import ThreadPoolExecutor
-from typing import Optional, Dict, Any, List
+from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
@@ -82,8 +80,6 @@ class BaseFakeRuntimeJob:
 
     _job_progress = ["QUEUED", "RUNNING", "COMPLETED"]
 
-    _executor = ThreadPoolExecutor()  # pylint: disable=bad-option-value,consider-using-with
-
     def __init__(
         self,
         job_id,
@@ -100,8 +96,8 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
-        self._reason: Optional[str] = None
-        self._reason_code: Optional[int] = None
+        self._reason: str | None = None
+        self._reason_code: int | None = None
         self._program_id = program_id
         self._backend_name = backend_name
         self._image = image
@@ -112,20 +108,18 @@ class BaseFakeRuntimeJob:
         self._start_session = start_session
         self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
-            self._future = self._executor.submit(self._auto_progress)
             self._result = None
         elif final_status == "COMPLETED":
             self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._final_status = final_status
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        for status in self._job_progress:
-            time.sleep(0.5)
-            self._status = status
+    def advance_progress(self):
+        """Progress to the next job status."""
+        if self._status != self._final_status:
+            self._status = self._job_progress[self._job_progress.index(self._status) + 1]
 
-        if self._status == "COMPLETED":
-            self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
+            if self._status == "COMPLETED":
+                self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
 
     def to_dict(self):
         """Convert to dictionary format."""
@@ -158,9 +152,9 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
 
     _job_progress = ["QUEUED", "RUNNING", "FAILED"]
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "FAILED":
             self._result = "Kaboom!"
@@ -171,9 +165,9 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
 
     _job_progress = ["QUEUED", "RUNNING", "CANCELLED"]
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "CANCELLED":
             self._reason = "RAN TOO LONG"
@@ -193,7 +187,6 @@ class CancelableRuntimeJob(BaseFakeRuntimeJob):
 
     def cancel(self):
         """Cancel the job."""
-        self._future.cancel()
         self._cancelled = True
 
     def to_dict(self):
@@ -209,28 +202,12 @@ class CustomResultRuntimeJob(BaseFakeRuntimeJob):
 
     custom_result = "bar"
 
-    def _auto_progress(self):
-        """Automatically update job status."""
-        super()._auto_progress()
+    def advance_progress(self):
+        """Progress to the next job status."""
+        super().advance_progress()
 
         if self._status == "COMPLETED":
             self._result = json.dumps(self.custom_result, cls=RuntimeEncoder)
-
-
-class TimedRuntimeJob(BaseFakeRuntimeJob):
-    """Class for a job that runs for the input seconds."""
-
-    def __init__(self, **kwargs):
-        self._runtime = kwargs.pop("run_time")
-        super().__init__(**kwargs)
-
-    def _auto_progress(self):
-        self._status = "RUNNING"
-        time.sleep(self._runtime)
-        self._status = "COMPLETED"
-
-        if self._status == "COMPLETED":
-            self._result = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
 
 
 class BaseFakeRuntimeClient:
@@ -248,7 +225,6 @@ class BaseFakeRuntimeClient:
         instance=None,
     ):
         """Initialize a fake runtime client."""
-        # pylint: disable=unused-argument
         self._jobs = {}
         self._job_classes = job_classes or []
         self._final_status = final_status
@@ -282,18 +258,18 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        backend_name: Optional[str],
+        backend_name: str | None,
         params: dict,
         image: str,
-        log_level: Optional[str],
-        session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
-        start_session: Optional[bool] = None,
-        session_time: Optional[int] = None,
-        private: Optional[int] = False,  # pylint: disable=unused-argument
-        calibration_id: Optional[str] = None,  # pylint: disable=unused-argument
-    ) -> Dict[str, Any]:
+        log_level: str | None,
+        session_id: str | None = None,
+        job_tags: list[str] | None = None,
+        max_execution_time: int | None = None,
+        start_session: bool | None = None,
+        session_time: int | None = None,
+        private: int | None = False,
+        calibration_id: str | None = None,
+    ) -> dict[str, Any]:
         """Run the specified program."""
         job_id = uuid.uuid4().hex
         job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
@@ -388,38 +364,36 @@ class BaseFakeRuntimeClient:
         final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
         status = self._get_job(job_id).status()
         while status not in final_states:
+            self._get_job(job_id).advance_progress()
             status = self._get_job(job_id).status()
 
-    # pylint: disable=unused-argument
-    def _get_job(self, job_id: str, exclude_params: bool = None) -> Any:
+    def _get_job(self, job_id: str, exclude_params: bool | None = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, crn: Optional[str] = None) -> List[str]:
+    def list_backends(self, crn: str | None = None) -> list[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(crn)]
 
-    # pylint: disable=unused-argument
     def backend_configuration(
         self,
         backend_name: str,
-        calibration_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        calibration_id: str | None = None,
+    ) -> dict[str, Any]:
         """Return the configuration a backend."""
         if ret := self._find_backend(backend_name).configuration:
             return ret.copy()
         return None
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(self, backend_name: str) -> dict[str, Any]:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
-    # pylint: disable=unused-argument
     def backend_properties(
-        self, backend_name: str, datetime: Any = None, calibration_id: str = None
-    ) -> Dict[str, Any]:
+        self, backend_name: str, datetime: Any = None, calibration_id: str | None = None
+    ) -> dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
@@ -427,15 +401,14 @@ class BaseFakeRuntimeClient:
             return ret.copy()
         return None
 
-    # pylint: disable=unused-argument
     def create_session(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        channel: Optional[str] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        channel: str | None = None,
+        mode: str | None = None,
+    ) -> dict[str, Any]:
         """Create a session."""
         session_id = uuid.uuid4().hex
         self._sessions.add(session_id)
@@ -447,9 +420,24 @@ class BaseFakeRuntimeClient:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
 
-    def session_details(self, session_id: str) -> Dict[str, Any]:
+    def session_details(self, session_id: str) -> dict[str, Any]:
         """Return the details of the session."""
         return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
+
+    def cloud_usage(self) -> dict[str, Any]:
+        """Return cloud instance usage information."""
+        return {
+            "instance_id": "instance_id",
+            "plan_id": "plan_id",
+            "usage_consumed_seconds": 6000,
+            "usage_period": {
+                "start_time": "2025-10-01T17:40:06.269Z",
+                "end_time": "2025-10-29T17:40:06.269Z",
+            },
+            "usage_allocation_seconds": 90000,
+            "usage_remaining_seconds": 84000,
+            "usage_limit_reached": False,
+        }
 
     def _find_backend(self, backend_name):
         for back in self._backends:

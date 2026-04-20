@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -18,7 +18,7 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Any
 from datetime import datetime
 from ddt import data, unpack
 
@@ -53,7 +53,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
         filename: Name of the output file, if log to file is enabled.
     """
     # Set up formatter.
-    log_fmt = "{}.%(funcName)s:%(levelname)s:%(asctime)s:" " %(message)s".format(logger.name)
+    log_fmt = f"{logger.name}.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s"
     formatter = logging.Formatter(log_fmt)
 
     if os.getenv("STREAM_LOG", "true").lower() == "true":
@@ -72,7 +72,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
 
 def most_busy_backend(
     service: QiskitRuntimeService,
-    instance: Optional[str] = None,
+    instance: str | None = None,
 ) -> IBMBackend:
     """Return the most busy backend for the provider given.
 
@@ -89,7 +89,11 @@ def most_busy_backend(
     """
     backends = service.backends(simulator=False, operational=True, instance=instance)
     return max(
-        (b for b in backends if b.configuration().n_qubits >= 5),
+        (
+            b
+            for b in backends
+            if b.configuration().n_qubits >= 5 and b.status().status_msg == "active"
+        ),
         key=lambda b: b.status().pending_jobs,
     )
 
@@ -118,10 +122,8 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
     try:
         job.cancel()
         status = job.status()
-        assert (
-            status == "CANCELLED"
-        ), "cancel() was successful for job {} but its " "status is {}.".format(
-            job.job_id(), status
+        assert status == "CANCELLED", (
+            f"cancel() was successful for job {job.job_id()} but its status is {status}."
         )
         return True
     except RuntimeInvalidStateError:
@@ -131,10 +133,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
         raise
 
 
-def wait_for_status(job, status, poll_time=1, time_out=20):
+def wait_for_status(job: RuntimeJobV2, status: str, poll_time: int = 1, time_out: int = 20) -> None:
     """Wait for job to reach a certain status."""
     wait_time = 1 if status == "QUEUED" else poll_time
-    while job.status() not in ["DONE", "CANCELLED", "ERROR"] and time_out > 0:
+    while job.status() not in ["DONE", "CANCELLED", "ERROR", status] and time_out > 0:
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
@@ -150,7 +152,7 @@ def get_real_device(service):
 
 
 def mock_wait_for_final_state(service, job):
-    """replace `wait_for_final_state` with a mock function"""
+    """Replace `wait_for_final_state` with a mock function."""
     return mock.patch.object(
         RuntimeJobV2,
         "wait_for_final_state",
@@ -158,7 +160,7 @@ def mock_wait_for_final_state(service, job):
     )
 
 
-def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
+def dict_paritally_equal(dict1: dict, dict2: dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
@@ -171,8 +173,11 @@ def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
 
 
 def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
-    """Flat the dictionaries then determine whether all keys in dict2 are
-    in dict1 and have the same values."""
+    """Flat the dictionaries, and compare.
+
+    Flat the dictionaries, then determine whether all keys in dict2 are in dict1 and have the same
+    values.
+    """
 
     def _flat_dict(in_dict, out_dict):
         for key_, val_ in in_dict.items():
@@ -192,7 +197,7 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list | None = None) -> bool:
     """Recursively determine whether the dictionaries have the same keys.
 
     Args:
@@ -218,9 +223,9 @@ def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool
 
 def create_faulty_backend(
     model_backend: Backend,
-    faulty_qubit: Optional[int] = None,
-    faulty_edge: Optional[tuple] = None,
-    faulty_q1_property: Optional[int] = None,
+    faulty_qubit: int | None = None,
+    faulty_edge: tuple | None = None,
+    faulty_q1_property: int | None = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -233,7 +238,6 @@ def create_faulty_backend(
     Returns:
         An IBMBackend with faulty qubits/edges.
     """
-
     properties = model_backend.properties().to_dict()
 
     if faulty_qubit:
@@ -279,11 +283,10 @@ def create_faulty_backend(
 
 def get_mocked_backend(
     name: str = "ibm_gotham",
-    configuration: Optional[Dict] = None,
-    properties: Optional[Dict] = None,
+    configuration: dict | None = None,
+    properties: dict | None = None,
 ) -> IBMBackend:
     """Return a mock backend."""
-
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
     mock_api_client = mock.MagicMock()
     mock_api_client._instance = "mock_instance"
@@ -298,7 +301,9 @@ def get_mocked_backend(
     mock_api_client.backend_properties = lambda *args, **kwargs: properties
     mock_api_client.session_details = mock.MagicMock(return_value={"mode": "dedicated"})
     mock_backend = IBMBackend(
-        configuration=configuration, service=mock_service, api_client=mock_api_client
+        configuration=configuration,  # type: ignore[arg-type]
+        service=mock_service,
+        api_client=mock_api_client,
     )
     mock_backend.name = name
     mock_backend._instance = None
@@ -335,6 +340,7 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
 
     Args:
         backend: Backend to submit the job to.
+        logger: The logger to use for sending logs when cancelling.
 
     Returns:
         Cancelled job.
@@ -347,11 +353,11 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
 
 
 class Case(dict):
-    """<no description>"""
+    """<no description>."""
 
 
 def generate_cases(docstring, dsc=None, name=None, **kwargs):
-    """Combines kwargs in Cartesian product and creates Case with them"""
+    """Combines kwargs in Cartesian product and creates Case with them."""
     ret = []
     keys = kwargs.keys()
     vals = kwargs.values()
@@ -368,11 +374,12 @@ def generate_cases(docstring, dsc=None, name=None, **kwargs):
 
 
 def combine(**kwargs):
-    """Decorator to create combinations and tests
+    """Decorator to create combinations and tests.
+
     @combine(level=[0, 1, 2, 3],
              circuit=[a, b, c, d],
              dsc='Test circuit {circuit.__name__} with level {level}',
-             name='{circuit.__name__}_level{level}')
+             name='{circuit.__name__}_level{level}').
     """
 
     def deco(func):
@@ -471,7 +478,7 @@ def remap_observables(observables, isa_circuit):
 
 
 class MockSession(Session):
-    """Mock for session class"""
+    """Mock for session class."""
 
-    _circuits_map: Dict[str, QuantumCircuit] = {}
+    _circuits_map: dict[str, QuantumCircuit] = {}
     _instance = None

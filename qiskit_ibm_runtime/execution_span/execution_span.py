@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,13 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""ExecutionSpan"""
+"""ExecutionSpan."""
 
 from __future__ import annotations
 
 import abc
 from datetime import datetime
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +24,7 @@ import numpy.typing as npt
 
 # Python 3.8 does not recognize tuple[<something],
 # in spite of `from __future__ import annotations`
-ShapeType = Tuple[int, ...]
+ShapeType = tuple[int, ...]
 """A shape tuple representing some nd-array shape."""
 
 
@@ -83,7 +83,7 @@ class ExecutionSpan(abc.ABC):
 
     @property
     def size(self) -> int:
-        """The total number of results with dependence on this execution span, across all pubs.
+        r"""The total number of results with dependence on this execution span, across all pubs.
 
         This attribute is equivalent to the sum of the elements of all present :meth:`mask`\\s.
         For sampler results, it represents the total number of shots with dependence on this
@@ -125,7 +125,7 @@ class ExecutionSpan(abc.ABC):
         return not pub_idx.isdisjoint(self.pub_idxs)
 
     @abc.abstractmethod
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "ExecutionSpan":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpan:
         """Return a new span whose slices are filtered to the provided pub indices.
 
         For example, if this span contains slice information for pubs with indices 1, 3, 4 and

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,6 +12,8 @@
 
 """Custom TestCase for IBM Provider."""
 
+from __future__ import annotations
+
 import os
 import logging
 import inspect
@@ -20,7 +22,7 @@ from unittest import TestCase
 from unittest.util import safe_repr
 from contextlib import suppress
 from collections import defaultdict
-from typing import DefaultDict, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
@@ -40,13 +42,14 @@ class IBMTestCase(TestCase):
     log: logging.Logger
     dependencies: IntegrationTestDependencies
     service: QiskitRuntimeService
-    program_ids: Dict[str, str]
+    program_ids: dict[str, str]
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
+        filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
@@ -75,7 +78,7 @@ class IBMTestCase(TestCase):
         if logger.level is logging.NOTSET:
             try:
                 logger.setLevel(cls.log.level)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
                     logger,
@@ -112,7 +115,6 @@ class IBMTestCase(TestCase):
                 `places` are specified).
             AssertionError: if the dictionaries are not almost equal.
         """
-
         error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
 
         if error_msg:
@@ -147,7 +149,7 @@ class IBMTestCase(TestCase):
         """
 
         def valid_comparison(value):
-            """compare value to delta, within places accuracy"""
+            """Compare value to delta, within places accuracy."""
             if places is not None:
                 return round(value, places) == 0
             else:
@@ -159,10 +161,10 @@ class IBMTestCase(TestCase):
         if places is not None:
             if delta is not None:
                 raise TypeError("specify delta or places not both")
-            msg_suffix = " within %s places" % places
+            msg_suffix = f" within {places} places"
         else:
             delta = delta or 1e-8
-            msg_suffix = " within %s delta" % delta
+            msg_suffix = f" within {delta} delta"
 
         # Compare all keys in both dicts, populating error_msg.
         error_msg = ""
@@ -177,7 +179,7 @@ class IBMTestCase(TestCase):
         else:
             return ""
 
-    def save_plotly_artifact(self, fig: "PlotlyFigure", name: str = None) -> str:
+    def save_plotly_artifact(self, fig: PlotlyFigure, name: str | None = None) -> str:
         """Save a Plotly figure as an HTML artifact."""
         # nested folder path based on the test module, class, and method
         test_path = self.id().split(".")[1:]
@@ -198,7 +200,6 @@ class IBMIntegrationTestCase(IBMTestCase):
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
@@ -206,8 +207,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete: DefaultDict = defaultdict(list)
-        self.to_cancel: DefaultDict = defaultdict(list)
+        self.to_delete: defaultdict = defaultdict(list)
+        self.to_cancel: defaultdict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""
@@ -218,8 +219,6 @@ class IBMIntegrationTestCase(IBMTestCase):
         for job in self.to_cancel[service.channel]:
             with suppress(Exception):
                 job.cancel()
-            with suppress(Exception):
-                service.delete_job(job.job_id())
 
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
@@ -228,8 +227,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls.program_ids = {}
         cls.sim_backends = {}

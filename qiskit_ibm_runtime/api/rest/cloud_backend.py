@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,7 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from datetime import datetime as python_datetime
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
@@ -20,7 +20,13 @@ from ..session import RetrySession
 
 
 class CloudBackend(RestAdapterBase):
-    """Rest adapter for IBM Cloud backend related endpoints."""
+    """Rest adapter for IBM Cloud backend related endpoints.
+
+    Args:
+        session: Session to be used in the adaptor.
+        backend_name: Name of the backend.
+        url_prefix: Base URL.
+    """
 
     URL_MAP = {
         "configuration": "/configuration",
@@ -29,17 +35,10 @@ class CloudBackend(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = "") -> None:
-        """Backend constructor.
-
-        Args:
-            session: Session to be used in the adaptor.
-            backend_name: Name of the backend.
-            url_prefix: Base URL.
-        """
         self.backend_name = backend_name
-        super().__init__(session, "{}/backends/{}".format(url_prefix, backend_name))
+        super().__init__(session, f"{url_prefix}/backends/{backend_name}")
 
-    def configuration(self, calibration_id: Optional[str] = None) -> Dict[str, Any]:
+    def configuration(self, calibration_id: str | None = None) -> dict[str, Any]:
         """Return backend configuration.
 
         Args:
@@ -56,8 +55,8 @@ class CloudBackend(RestAdapterBase):
         return self.session.get(url, params=params, headers=self._HEADER_JSON_ACCEPT).json()
 
     def properties(
-        self, datetime: Optional[python_datetime] = None, calibration_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, datetime: python_datetime | None = None, calibration_id: str | None = None
+    ) -> dict[str, Any]:
         """Return backend properties.
 
         Returns:
@@ -77,7 +76,7 @@ class CloudBackend(RestAdapterBase):
             response["backend_name"] = self.backend_name
         return response
 
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         """Return backend status.
 
         Returns:

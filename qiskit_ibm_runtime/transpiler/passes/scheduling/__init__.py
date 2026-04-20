@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -71,7 +71,7 @@ for a dynamic circuit backend's execution model:
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     # Configure the as-late-as-possible scheduling pass
     pm.scheduling = PassManager([
-        ALAPScheduleAnalysis(target=backend.target), 
+        ALAPScheduleAnalysis(target=backend.target),
         PadDelay(target=backend.target)]
         )
 

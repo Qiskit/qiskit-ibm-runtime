@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,14 +15,14 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict, Any
+from typing import Any
 
 
 class BaseHandler(BaseHTTPRequestHandler):
     """Base request handler for testing."""
 
-    good_response: Dict[str, Any] = {}
-    error_response: Dict[str, Any] = {}
+    good_response: dict[str, Any] = {}
+    error_response: dict[str, Any] = {}
 
     def _get_code(self):
         """Get the status code to be returned."""
@@ -48,24 +48,21 @@ class BaseHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Process a GET request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_POST(self):
         """Process a POST request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_PUT(self):
         """Process a PUT request."""
-        # pylint: disable=invalid-name
         self._respond()
 
 
 class ServerErrorOnceHandler(BaseHandler):
     """Request handler that returns a server error once then a good response."""
 
-    bad_status_given: Dict[str, Any] = {}
+    bad_status_given: dict[str, Any] = {}
 
     def _get_code(self):
         """Return 200 if the path was seen before, otherwise 504."""
@@ -88,7 +85,7 @@ class SimpleServer:
 
     IP_ADDRESS = "127.0.0.1"
     PORT = 8123
-    URL = "http://{}:{}".format(IP_ADDRESS, PORT)
+    URL = f"http://{IP_ADDRESS}:{PORT}"
 
     def __init__(self, handler_class):
         """SimpleServer constructor.
@@ -109,10 +106,10 @@ class SimpleServer:
         self.server.join(3)
         self.httpd.server_close()
 
-    def set_error_response(self, error_response: Dict) -> None:
+    def set_error_response(self, error_response: dict) -> None:
         """Set the error response."""
         setattr(self.httpd.RequestHandlerClass, "error_response", error_response)
 
-    def set_good_response(self, response: Dict) -> None:
+    def set_good_response(self, response: dict) -> None:
         """Set good response."""
         setattr(self.httpd.RequestHandlerClass, "good_response", response)

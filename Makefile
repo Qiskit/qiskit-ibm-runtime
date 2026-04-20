@@ -11,34 +11,23 @@
 # that they have been altered from the originals.
 
 
-.PHONY: lint style test mypy test1 test2 test3
-
-lint:
-	pylint -rn qiskit_ibm_runtime test
-	tools/verify_headers.py qiskit_ibm_runtime test
-	tools/verify_images.py
-
-mypy:
-	mypy --module qiskit_ibm_runtime --package test
-
-style:
-	black --check qiskit_ibm_runtime test
+.PHONY: unit-test integration-test smoke-test benchmark docs-test unit-test-coverage
 
 unit-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
+	pytest test/unit
 
 integration-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/integration
+	pytest test/integration
 
 smoke-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/smoke
+	pytest test/smoke
+
+benchmark:
+	pytest test/benchmarks
 
 docs-test:
 	./test/docs/vale.sh
 
 unit-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
+	coverage run -m pytest test/unit
 	coverage lcov
-
-black:
-	black qiskit_ibm_runtime test

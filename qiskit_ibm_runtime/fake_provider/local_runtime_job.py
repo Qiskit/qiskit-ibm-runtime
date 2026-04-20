@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,16 +12,26 @@
 
 """Qiskit runtime local mode job class."""
 
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit_ibm_runtime.models import BackendProperties
-from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
+from .fake_backend import FakeBackendV2
 
 
 class LocalRuntimeJob(PrimitiveJob):
-    """Job class for qiskit-ibm-runtime's local mode."""
+    """Job class for qiskit-ibm-runtime's local mode.
+
+    Args:
+        future: Thread executor the job is run on.
+        backend: The backend to run the primitive on.
+        primitive: Name of the primitive.
+        inputs: Program input parameters. These input values are passed
+            to the runtime program.
+        args: Additional arguments.
+        kwargs: Additional keyword arguments.
+    """
 
     def __init__(  # type: ignore[no-untyped-def]
         self,
@@ -32,12 +42,6 @@ class LocalRuntimeJob(PrimitiveJob):
         *args,
         **kwargs,
     ) -> None:
-        """LocalRuntimeJob constructor.
-
-        Args:
-            future: Thread executor the job is run on.
-            backend: The backend to run the primitive on.
-        """
         super().__init__(*args, **kwargs)
         self._future = future
         self._backend = backend
@@ -47,7 +51,7 @@ class LocalRuntimeJob(PrimitiveJob):
         self._running = datetime.now()
         self._finished = datetime.now()
 
-    def metrics(self) -> Dict[str, Any]:
+    def metrics(self) -> dict[str, Any]:
         """Return job metrics.
 
         Returns:
@@ -84,14 +88,13 @@ class LocalRuntimeJob(PrimitiveJob):
         return ""
 
     @property
-    def inputs(self) -> Dict:
+    def inputs(self) -> dict:
         """Return job input parameters."""
         return self._inputs
 
     @property
     def session_id(self) -> str:
         """Return the Session ID which would just be the job ID in local mode."""
-
         return self._job_id
 
     @property

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,10 +15,11 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Optional, List
+from collections.abc import Callable
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.accounts import ChannelType
 
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
@@ -52,7 +53,8 @@ def run_cloud_fake(func):
     return _wrapper
 
 
-def _get_integration_test_config():
+def get_integration_test_config():
+    """Return a tuple with the specified configuration from env vars."""
     token, url, instance, qpu = (
         os.getenv("QISKIT_IBM_TOKEN"),
         os.getenv("QISKIT_IBM_URL"),
@@ -66,7 +68,8 @@ def _get_integration_test_config():
 def run_integration_test(func):
     """Decorator that injects preinitialized service and device parameters.
 
-    To be used in combination with the integration_test_setup decorator function."""
+    To be used in combination with the integration_test_setup decorator function.
+    """
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
@@ -79,8 +82,8 @@ def run_integration_test(func):
 
 
 def integration_test_setup(
-    supported_channel: Optional[List[str]] = None,
-    init_service: Optional[bool] = True,
+    supported_channel: list[str] | None = None,
+    init_service: bool | None = True,
 ) -> Callable:
     """Returns a decorator for integration test initialization.
 
@@ -102,9 +105,9 @@ def integration_test_setup(
                 else supported_channel
             )
 
-            channel, token, url, instance, qpu = _get_integration_test_config()
+            channel, token, url, instance, qpu = get_integration_test_config()
             if not all([channel, token, url]):
-                raise Exception("Configuration Issue")  # pylint: disable=broad-exception-raised
+                raise Exception("Configuration Issue")
 
             if channel not in _supported_channel:
                 raise SkipTest(
@@ -140,18 +143,18 @@ class IntegrationTestDependencies:
     """Integration test dependencies."""
 
     service: QiskitRuntimeService
-    instance: Optional[str]
+    instance: str | None
     qpu: str
     token: str
-    channel: str
+    channel: ChannelType
     url: str
 
 
 def integration_test_setup_with_backend(
-    backend_name: Optional[str] = None,
-    simulator: Optional[bool] = True,
-    min_num_qubits: Optional[int] = None,
-    staging: Optional[bool] = True,
+    backend_name: str | None = None,
+    simulator: bool | None = True,
+    min_num_qubits: int | None = None,
+    staging: bool | None = True,
 ) -> Callable:
     """Returns a decorator that retrieves the appropriate backend to use for testing.
 
@@ -162,6 +165,7 @@ def integration_test_setup_with_backend(
         backend_name: The name of the backend.
         simulator: If set to True, the list of suitable backends is limited to simulators.
         min_num_qubits: Minimum number of qubits the backend has to have.
+        staging: If True, signal that the test uses the staging environment.
 
     Returns:
         Decorator that retrieves the appropriate backend to use for testing.

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,15 +12,17 @@
 
 """Integration tests for account management."""
 
-from typing import Dict
+from unittest.mock import patch
+
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
+from ibm_cloud_sdk_core import ApiException
 from ibm_platform_services import (
     ResourceControllerV2,
     GlobalSearchV2,
-)  # pylint: disable=import-error
+)
 
 from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
@@ -35,7 +37,7 @@ from ..decorators import IntegrationTestDependencies
 
 def _get_service_instance_name_for_crn(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance name and account id for a given CRN.
 
     Note: production code computes the inverse mapping. This function is needed for integration test
@@ -51,7 +53,7 @@ def _get_service_instance_name_for_crn(
 
 def _get_instance_tags(
     dependencies: IntegrationTestDependencies,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Retrieves the service instance tags for a given crn."""
     authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
     client = GlobalSearchV2(authenticator=authenticator)
@@ -70,7 +72,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
-
         # no default instance and no filters
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service = QiskitRuntimeService(
@@ -301,12 +302,32 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
         self.assertIsInstance(usage["usage_remaining_seconds"], int)
         self.assertIsInstance(usage, dict)
 
+    def test_instances_archived(self):
+        """Test that archived instances are available to the user."""
+        with patch(
+            "ibm_platform_services.GlobalCatalogV1.get_catalog_entry"
+        ) as get_catalog_entry_mock:
+            get_catalog_entry_mock.side_effect = ApiException(403)
+            service = QiskitRuntimeService(
+                token=self.dependencies.token,
+                channel="ibm_quantum_platform",
+                url=self.dependencies.url,
+            )
+            instances = service.instances()
+            self.assertTrue(instances)
+            self.assertTrue(
+                all(
+                    instance["plan"] == "unknown" and instance["pricing_type"] == "unknown"
+                    for instance in instances
+                )
+            )
+
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
     def test_local_channel(self):
-        """Test local channel mode"""
+        """Test local channel mode."""
         local_service = QiskitRuntimeService(
             channel="local",
         )
@@ -321,7 +342,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = QiskitRuntimeService(
@@ -335,7 +355,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
-
         service_instance_name = "-non-existing-service-name-"
         with (
             self.subTest(instance="-non-existing-service-name-"),

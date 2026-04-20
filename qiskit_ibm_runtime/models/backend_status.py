@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2020-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,7 +13,7 @@
 """Class for backend status."""
 
 import html
-from typing import Dict, Any, TypeVar, Type
+from typing import Any, TypeVar
 
 from qiskit.exceptions import QiskitError
 
@@ -21,7 +21,18 @@ BackendStatusT = TypeVar("BackendStatusT", bound="BackendStatus")
 
 
 class BackendStatus:
-    """Class representing Backend Status."""
+    """Class representing Backend Status.
+
+    Args:
+        backend_name: The backend's name
+        backend_version: The backend's version of the form X.Y.Z
+        operational: True if the backend is operational
+        pending_jobs: The number of pending jobs on the backend
+        status_msg: The status msg for the backend
+
+    Raises:
+        QiskitError: If the backend version is in an invalid format
+    """
 
     def __init__(
         self,
@@ -31,18 +42,6 @@ class BackendStatus:
         pending_jobs: int,
         status_msg: str,
     ):
-        """Initialize a BackendStatus object
-
-        Args:
-            backend_name: The backend's name
-            backend_version: The backend's version of the form X.Y.Z
-            operational: True if the backend is operational
-            pending_jobs: The number of pending jobs on the backend
-            status_msg: The status msg for the backend
-
-        Raises:
-            QiskitError: If the backend version is in an invalid format
-        """
         self.backend_name = backend_name
         self.backend_version = backend_version
         self.operational = operational
@@ -52,24 +51,23 @@ class BackendStatus:
         self.status_msg = status_msg
 
     @classmethod
-    def from_dict(cls: Type[BackendStatusT], data: Dict[str, Any]) -> BackendStatusT:
+    def from_dict(cls: type[BackendStatusT], data: dict[str, Any]) -> BackendStatusT:
         """Create a new BackendStatus object from a dictionary.
 
         Args:
-            data (dict): A dictionary representing the BaseBakend to create.
-                         It will be in the same format as output by
-                         :func:`to_dict`.
+            data: A dictionary representing the BaseBakend to create. It will be in the same format
+                as output by :func:`to_dict`.
 
         Returns:
-            BackendStatus: The BackendStatus from the input dictionary.
+            The BackendStatus from the input dictionary.
         """
         return cls(**data)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
-            dict: The dictionary form of the QobjHeader.
+            The dictionary form of the QobjHeader.
         """
         return self.__dict__
 
@@ -80,7 +78,7 @@ class BackendStatus:
         return False
 
     def _repr_html_(self) -> str:
-        """Return html representation of the object
+        """Return html representation of the object.
 
         Returns:
             Representation used in Jupyter notebook and other IDE's that call the method

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -14,7 +14,6 @@
 
 import os
 import logging
-from typing import Optional, Dict, List
 
 from ..proxies import ProxyConfiguration
 from .exceptions import AccountNotFoundError
@@ -40,30 +39,32 @@ class AccountManager:
     @classmethod
     def save(
         cls,
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = None,
-        overwrite: Optional[bool] = False,
-        set_as_default: Optional[bool] = None,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[str] = None,
+        token: str | None = None,
+        url: str | None = None,
+        instance: str | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = _DEFAULT_ACCOUNT_NAME,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = None,
+        overwrite: bool | None = False,
+        set_as_default: bool | None = None,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         """Save account on disk."""
-        channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+        channel = (
+            channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE  # type: ignore[assignment]
+        )
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
 
         config = Account.create_account(
-            channel=channel,
-            token=token,
+            channel=channel,  # type: ignore[arg-type]
+            token=token,  # type: ignore[arg-type]
             url=url,
             instance=instance,
             proxies=proxies,
@@ -85,11 +86,11 @@ class AccountManager:
 
     @staticmethod
     def list(
-        default: Optional[bool] = None,
-        channel: Optional[ChannelType] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Dict[str, Account]:
+        default: bool | None = None,
+        channel: ChannelType | None = None,
+        filename: str | None = None,
+        name: str | None = None,
+    ) -> dict[str, Account]:
         """List all accounts in a given filename, or in the default account file."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
@@ -119,12 +120,12 @@ class AccountManager:
         }
 
         # load all account objects
-        all_account_objects = map(
-            lambda kv: (
+        all_account_objects = (
+            (
                 kv[0],
                 Account.from_saved_format(kv[1]),
-            ),
-            filter_legacy_accounts_dict.items(),
+            )
+            for kv in filter_legacy_accounts_dict.items()
         )
         # filter based on input parameters
         filtered_account_objects = dict(
@@ -142,10 +143,10 @@ class AccountManager:
     @classmethod
     def get(
         cls,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
-    ) -> Optional[Account]:
+        filename: str | None = None,
+        name: str | None = None,
+        channel: ChannelType | None = None,
+    ) -> Account | None:
         """Read account from disk.
 
         Args:
@@ -184,7 +185,7 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
         logger.info("Loading default saved account")
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
-        env_account = cls._from_env_variables(channel_)
+        env_account = cls._from_env_variables(channel_)  # type: ignore[arg-type]
         if env_account is not None:
             return env_account
 
@@ -215,9 +216,9 @@ class AccountManager:
     @classmethod
     def delete(
         cls,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        channel: Optional[ChannelType] = None,
+        filename: str | None = None,
+        name: str | None = None,
+        channel: ChannelType | None = None,
     ) -> bool:
         """Delete account from disk."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
@@ -229,7 +230,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _from_env_variables(cls, channel: Optional[ChannelType]) -> Optional[Account]:
+    def _from_env_variables(cls, channel: ChannelType | None) -> Account | None:
         """Read account from environment variable."""
         token = os.getenv("QISKIT_IBM_TOKEN")
         url = os.getenv("QISKIT_IBM_URL")
@@ -243,9 +244,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _get_default_account(
-        cls, all_config: dict, channel: Optional[str] = None
-    ) -> Optional[dict]:
+    def _get_default_account(cls, all_config: dict, channel: str | None = None) -> dict | None:
         default_channel_account = None
         any_channel_account = None
 
@@ -256,7 +255,9 @@ class AccountManager:
                     return account
                 if account.get(
                     "channel"
-                ) == channel and account_name == cls._get_default_account_name(channel):
+                ) == channel and account_name == cls._get_default_account_name(
+                    channel  # type: ignore[arg-type]
+                ):
                     default_channel_account = account
                 if account.get("channel") == channel:
                     any_channel_account = account

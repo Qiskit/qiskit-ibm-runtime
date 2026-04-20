@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,9 +12,7 @@
 
 """Estimator primitive."""
 
-from __future__ import annotations
-
-from typing import Optional, Dict, Union, Iterable
+from collections.abc import Iterable
 import logging
 
 from qiskit.providers import BackendV2
@@ -28,7 +26,6 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
 from .utils import validate_estimator_pubs
 
-# pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
 
@@ -91,6 +88,21 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         job = estimator.run([(isa_psi, isa_observables, [theta])])
         pub_result = job.result()[0]
         print(f"Expectation values: {pub_result.data.evs}")
+
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the
+            `Qiskit Runtime documentation
+            <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
+            for more information about the ``Execution modes``.
+
+        options: Estimator options, see :class:`EstimatorOptions` for detailed description.
     """
 
     _options_class = EstimatorOptions
@@ -99,26 +111,9 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch, str]] = None,
-        options: Optional[Union[Dict, EstimatorOptions]] = None,
+        mode: BackendV2 | Session | Batch | str | None = None,
+        options: dict | EstimatorOptions | None = None,
     ):
-        """Initializes the Estimator primitive.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be:
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-                Refer to the
-                `Qiskit Runtime documentation
-                <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
-                for more information about the ``Execution modes``.
-
-            options: Estimator options, see :class:`EstimatorOptions` for detailed description.
-
-        """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
 
@@ -147,16 +142,15 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
         validate_estimator_pubs(coerced_pubs)
-        return self._run(coerced_pubs)  # type: ignore[arg-type]
+        return self._run(coerced_pubs)
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that primitive inputs (options) are valid
+        """Validate that primitive inputs (options) are valid.
 
         Raises:
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
-
         if (
             options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Osaka device (127 qubit).
-"""
+"""Fake Osaka device (127 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend
@@ -21,7 +19,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeOsaka(fake_backend.FakeBackendV2):
     """A fake 127 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_osaka.json"  # type: ignore
-    props_filename = "props_osaka.json"  # type: ignore
-    backend_name = "fake_osaka"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_osaka.json"
+    props_filename = "props_osaka.json"
+    backend_name = "fake_osaka"

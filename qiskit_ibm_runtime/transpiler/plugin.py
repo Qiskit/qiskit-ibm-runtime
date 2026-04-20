@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,7 +13,6 @@
 """Plugin for IBM provider backend transpiler stages."""
 
 import re
-from typing import Optional
 
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.passmanager_config import PassManagerConfig
@@ -36,16 +35,14 @@ _TERRA_VERSION = tuple(
 
 
 class IBMTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -72,16 +69,14 @@ class IBMTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems."""
+    """A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems."""
 
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -110,20 +105,22 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
-            plugin_passes += [convert_pass()]  # pylint: disable=not-callable
+            plugin_passes += [convert_pass()]
 
         return PassManager(plugin_passes) + translator_pm
 
 
 class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
-    """(DEPRECATED) A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with fractional gate support.
+    """(DEPRECATED) Plugin for targeting Qiskit circuits with fractional gate support.
 
-    Currently coexistence of fractional gate operations and
-    dynamic circuits is not assumed.
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with fractional
+    gate support.
+
+    Currently coexistence of fractional gate operations and dynamic circuits is not assumed.
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """Construct a ``IBMFractionalTranslationPlugin`` instance."""
         issue_deprecation_msg(
             msg="Since backends now support running jobs that contain both "
             "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",
@@ -135,10 +132,9 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -159,7 +155,7 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and not "id" in target:
+        if instruction_durations and "id" not in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
@@ -168,17 +164,18 @@ class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
 
 
 class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
-    """A translation stage plugin for targeting Qiskit circuits
-    to IBM Quantum systems with both dynamic circuits and fractional gate support.
+    """Plugin for targeting Qiskit circuits (dynamic circuits and fractional gate support).
+
+    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with both
+    dynamic circuits and fractional gate support.
     """
 
     def pass_manager(
         self,
         pass_manager_config: PassManagerConfig,
-        optimization_level: Optional[int] = None,
+        optimization_level: int | None = None,
     ) -> PassManager:
         """Build IBMTranslationPlugin PassManager."""
-
         if _TERRA_VERSION[0] == 1:
             legacy_options = {"backend_props": pass_manager_config.backend_properties}
         else:
@@ -199,7 +196,7 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
         pre_passes = []
         post_passes = []
         target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and not "id" in target:
+        if instruction_durations and "id" not in target:
             pre_passes.append(ConvertIdToDelay(instruction_durations))
         if "rzz" in target:
             # Apply this pass after SU4 is translated.
@@ -207,5 +204,5 @@ class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
 
         if (convert_pass := getattr(passes, "ConvertConditionsToIfOps", None)) is not None:
             # If `None`, we're dealing with Qiskit 2.0+ where it's unnecessary anyway.
-            pre_passes += [convert_pass()]  # pylint: disable=not-callable
+            pre_passes += [convert_pass()]
         return PassManager(pre_passes) + translator_pm + PassManager(post_passes)

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,11 +12,10 @@
 
 """Noise learner program."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
-from typing import Any, Dict, Iterable, Optional, Union
+from typing import Any
+from collections.abc import Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -24,7 +23,7 @@ from qiskit.providers import BackendV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..base_primitive import _get_mode_service_backend
+from ..base_primitive import get_mode_service_backend
 from ..constants import DEFAULT_DECODERS
 from ..runtime_job_v2 import RuntimeJobV2
 from ..ibm_backend import IBMBackend
@@ -38,7 +37,6 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..qiskit_runtime_service import QiskitRuntimeService
 
 
-# pylint: disable=unused-import,cyclic-import
 from ..session import Session
 from ..batch import Batch
 
@@ -48,21 +46,21 @@ logger = logging.getLogger(__name__)
 class NoiseLearner:
     """Class for executing noise learning experiments.
 
-    The noise learner class allows characterizing the noise processes affecting the gates in one or more
-    circuits of interest, based on the Pauli-Lindblad noise model described in [1].
+    The noise learner class allows characterizing the noise processes affecting the gates in one or
+    more circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
-    The :meth:`~run` method allows running a noise learner job for a list of circuits. After the job is
-    submitted, the gates are collected into independent layers, and subsequently the resulting layers are
-    characterized individually.
+    The :meth:`~run` method allows running a noise learner job for a list of circuits. After the job
+    is submitted, the gates are collected into independent layers, and subsequently the resulting
+    layers are characterized individually.
 
-    The way in which the gates are collected into layers depends on the twirling ``strategy`` specified
-    in the given ``options`` (see :class:`.NoiseLearnerOptions` for more details). Note that all
-    strategies obey barriers. For example, if you have three ISA entangling layers of interest,
-    consider putting them into one circuit separated by barriers acting on the qubits you wish to
-    twirl, and select ``strategy="active-circuit"``.
+    The way in which the gates are collected into layers depends on the twirling ``strategy``
+    specified in the given ``options`` (see :class:`.NoiseLearnerOptions` for more details). Note
+    that all strategies obey barriers. For example, if you have three ISA entangling layers of
+    interest, consider putting them into one circuit separated by barriers acting on the qubits you
+    wish to twirl, and select ``strategy="active-circuit"``.
 
-    The following snippet shows an example where the noise learner is used to characterized the layers
-    of two GHZ circuits.
+    The following snippet shows an example where the noise learner is used to characterized the
+    layers of two GHZ circuits.
 
     .. code-block:: python
 
@@ -123,10 +121,10 @@ class NoiseLearner:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV2, Session, Batch]] = None,
-        options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
+        mode: BackendV2 | Session | Batch | None = None,
+        options: dict | NoiseLearnerOptions | EstimatorOptions | None = None,
     ):
-        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
 
@@ -137,7 +135,7 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
+    def run(self, circuits: Iterable[QuantumCircuit | EstimatorPubLike]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
@@ -224,17 +222,15 @@ class NoiseLearner:
         return self._backend
 
     def _set_options(
-        self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
+        self, options: dict | NoiseLearnerOptions | EstimatorOptions | None = None
     ) -> None:
-        """
-        Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
-        """
+        """Sets the options, ensuring that they are of type ``NoiseLearnerOptions``."""
         if not options:
             self._options = NoiseLearnerOptions()
         elif isinstance(options, NoiseLearnerOptions):
             self._options = replace(options)
         elif isinstance(options, EstimatorOptions):
-            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr, arg-type]
             d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
             d["max_execution_time"] = options.max_execution_time
             d["simulator"] = options.simulator
@@ -246,8 +242,11 @@ class NoiseLearner:
 
     @staticmethod
     def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
-        """Returns a dictionary of options that must be included in the program inputs,
-        filtering out every option that is not part of the NoiseLearningOptions."""
+        """Returns a filtered dictionary of options for the program inputs.
+
+        Returns a dictionary of options that must be included in the program inputs,
+        filtering out every option that is not part of the NoiseLearningOptions.
+        """
         ret = {}
 
         ignored_names = [

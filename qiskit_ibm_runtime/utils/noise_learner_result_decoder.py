@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,21 +12,32 @@
 
 """NoiseLearner result decoder."""
 
-from typing import Dict
+from __future__ import annotations
 
-from .noise_learner_result import PauliLindbladError, LayerError, NoiseLearnerResult
+from typing import TYPE_CHECKING
+
+from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
-    """Class used to decode noise learner results"""
+    """Class used to decode noise learner results."""
 
     @classmethod
-    def decode(  # type: ignore # pylint: disable=arguments-differ
-        cls, raw_result: str
-    ) -> NoiseLearnerResult:
+    def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:
         """Convert the result to NoiseLearnerResult."""
-        decoded: Dict = super().decode(raw_result)
+        if "schema_version" in raw_result:
+            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
+                NoiseLearnerV3ResultDecoder,
+            )
+
+            return NoiseLearnerV3ResultDecoder().decode(raw_result)
+
+        # Decode for legacy noise learner
+        decoded: dict = super().decode(raw_result)
 
         data = []
         for layer in decoded["data"]:

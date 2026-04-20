@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,7 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Dict, Any, Optional
+from typing import Any
 from .base import RestAdapterBase
 from ..session import RetrySession
 from ..exceptions import RequestsApiError
@@ -20,7 +20,13 @@ from ...exceptions import IBMRuntimeError
 
 
 class RuntimeSession(RestAdapterBase):
-    """Rest adapter for session related endpoints."""
+    """Rest adapter for session related endpoints.
+
+    Args:
+        session: RetrySession to be used in the adapter.
+        session_id: Job ID of the first job in a runtime session.
+        url_prefix: Prefix to use in the URL.
+    """
 
     URL_MAP = {
         "self": "",
@@ -28,28 +34,21 @@ class RuntimeSession(RestAdapterBase):
     }
 
     def __init__(self, session: RetrySession, session_id: str, url_prefix: str = "") -> None:
-        """Job constructor.
-
-        Args:
-            session: RetrySession to be used in the adapter.
-            session_id: Job ID of the first job in a runtime session.
-            url_prefix: Prefix to use in the URL.
-        """
         if not session_id:
-            super().__init__(session, "{}/sessions".format(url_prefix))
+            super().__init__(session, f"{url_prefix}/sessions")
         else:
-            super().__init__(session, "{}/sessions/{}".format(url_prefix, session_id))
+            super().__init__(session, f"{url_prefix}/sessions/{session_id}")
 
     def create(
         self,
-        backend: Optional[str] = None,
-        instance: Optional[str] = None,
-        max_time: Optional[int] = None,
-        mode: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Create a session"""
+        backend: str | None = None,
+        instance: str | None = None,
+        max_time: int | None = None,
+        mode: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a session."""
         url = self.get_url("self")
-        payload = {}
+        payload: dict[str, str | int] = {}
         if mode:
             payload["mode"] = mode
         if backend:
@@ -57,7 +56,7 @@ class RuntimeSession(RestAdapterBase):
         if instance:
             payload["instance"] = instance
         if max_time:
-            payload["max_ttl"] = max_time  # type: ignore[assignment]
+            payload["max_ttl"] = max_time
         return self.session.post(url, json=payload, headers=self._HEADER_JSON_CONTENT).json()
 
     def cancel(self) -> None:
@@ -77,7 +76,6 @@ class RuntimeSession(RestAdapterBase):
             else:
                 raise IBMRuntimeError(f"Error closing session: {ex}")
 
-    def details(self) -> Dict[str, Any]:
+    def details(self) -> dict[str, Any]:
         """Return the details of this session."""
-
         return self.session.get(self.get_url("self"), headers=self._HEADER_JSON_ACCEPT).json()

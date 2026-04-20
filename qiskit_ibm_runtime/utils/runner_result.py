@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Circuit-runner result class"""
+"""Circuit-runner result class."""
 
-from typing import List, Union
+from __future__ import annotations
+
+from collections.abc import Iterable
 import json
 
 from qiskit.result import Result, QuasiDistribution
@@ -27,13 +29,13 @@ class RunnerResult(Result, ResultDecoder):
     """Result class for Qiskit Runtime program circuit-runner."""
 
     @classmethod
-    def decode(cls, data: str) -> "RunnerResult":
+    def decode(cls, data: str) -> RunnerResult:
         """Decoding for results from Qiskit runtime jobs."""
         return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
     def get_quasiprobabilities(
-        self, experiment: Union[int, List] = None
-    ) -> Union[QuasiDistribution, List[QuasiDistribution]]:
+        self, experiment: int | list | None = None
+    ) -> QuasiDistribution | list[QuasiDistribution]:
         """Get quasiprobabilites associated with one or more experiments.
 
         Parameters:
@@ -45,10 +47,11 @@ class RunnerResult(Result, ResultDecoder):
         Raises:
             QiskitError: If experiment result doesn't contain quasi-probability distribution.
         """
+        exp_keys: Iterable
         if experiment is None:
             exp_keys = range(len(self.results))
         else:
-            exp_keys = [experiment]  # type: ignore[assignment]
+            exp_keys = [experiment]
 
         dict_list = []
         for key in exp_keys:
@@ -64,9 +67,7 @@ class RunnerResult(Result, ResultDecoder):
                 out.shots = shots
                 dict_list.append(out)
             else:
-                raise QiskitError(
-                    'No quasi-probability distribution for experiment "{}"'.format(repr(key))
-                )
+                raise QiskitError(f'No quasi-probability distribution for experiment "{repr(key)}"')
 
         # Return first item of dict_list if size is 1
         if len(dict_list) == 1:

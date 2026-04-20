@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,8 +11,6 @@
 # that they have been altered from the originals.
 
 """Sampler result decoder."""
-
-from typing import Dict
 
 from qiskit.primitives import PrimitiveResult
 
@@ -25,7 +23,7 @@ class SamplerResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str) -> PrimitiveResult:
         """Convert the result to SamplerResult."""
-        decoded: Dict = super().decode(raw_result)
+        decoded: dict = super().decode(raw_result)
 
         return decoded
 

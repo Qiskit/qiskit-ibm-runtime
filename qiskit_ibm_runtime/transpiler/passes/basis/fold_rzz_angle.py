@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,6 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
-from typing import Tuple, Union
 from math import pi
 from operator import mod
 from itertools import chain
@@ -32,8 +31,7 @@ from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):
-    """Fold Rzz gate angle into calibrated range of 0-pi/2 with
-    local gate tweaks.
+    """Fold Rzz gate angle into calibrated range of 0-pi/2 with local gate tweaks.
 
     In the IBM Quantum ISA, the instruction Rzz(theta) has
     valid "theta" value of [0, pi/2] and any instruction outside
@@ -58,12 +56,15 @@ class FoldRzzAngle(TransformationPass):
     """
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on the DAGCircuit."""
         self._run_inner(dag)
         return dag
 
     def _run_inner(self, dag: DAGCircuit) -> bool:
         """Mutate the input dag to fix non-ISA Rzz angles.
-        Return true if the dag was modified."""
+
+        Return true if the dag was modified.
+        """
         modified = False
         for node in dag.op_nodes():
             if isinstance(node.op, ControlFlowOp):
@@ -118,7 +119,7 @@ class FoldRzzAngle(TransformationPass):
         return modified
 
     @staticmethod
-    def _quad1(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad1(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [0, pi/2].
 
         Circuit is not transformed - the Rzz gate is calibrated for the angle.
@@ -136,7 +137,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad2(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad2(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (pi/2, pi].
 
         Circuit is transformed into the following form:
@@ -183,7 +184,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad3(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad3(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between [-pi, -pi/2].
 
         Circuit is transformed into following form:
@@ -219,7 +220,7 @@ class FoldRzzAngle(TransformationPass):
         return new_dag
 
     @staticmethod
-    def _quad4(angle: float, qubits: Tuple[Qubit, ...]) -> DAGCircuit:
+    def _quad4(angle: float, qubits: tuple[Qubit, ...]) -> DAGCircuit:
         """Handle angle between (-pi/2, 0).
 
         Circuit is transformed into following form:
@@ -253,10 +254,9 @@ class FoldRzzAngle(TransformationPass):
 
 
 def convert_to_rzz_valid_pub(
-    primitive: BasePrimitiveV2, pub: Union[SamplerPubLike, EstimatorPubLike]
-) -> Union[SamplerPub, EstimatorPub]:
-    """
-    Return a pub which is compatible with Rzz constraints.
+    primitive: BasePrimitiveV2, pub: SamplerPubLike | EstimatorPubLike
+) -> SamplerPub | EstimatorPub:
+    """Return a pub which is compatible with Rzz constraints.
 
     Current limitations:
     1. Does not support dynamic circuits.
@@ -296,7 +296,8 @@ def convert_to_rzz_valid_pub(
 
         if operation.name in CONTROL_FLOW_OP_NAMES:
             raise ValueError(
-                "The function convert_to_rzz_valid_pub currently does not support dynamic instructions."
+                "The function convert_to_rzz_valid_pub currently does not support dynamic "
+                "instructions."
             )
 
         if operation.name != "rzz" or not isinstance(

@@ -23,42 +23,38 @@ jobs:
     name: Run code quality checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.9
+          python-version: '3.10'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev]'
-      - name: Run black
-        run: make style
-      - name: Run lint
-        run: make lint
-      - name: Run mypy
-        run: make mypy
+          pip install -e '.[style]'
+      - name: Run pre-comming
+        run: pre-commit run
+      - uses: pre-commit/action@v3.0.1
   documentation:
     if: github.repository_owner == 'Qiskit'
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.9
+          python-version: '3.10'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -U tox
           pip install nbqa docutils
           sudo apt install -y graphviz pandoc
-          pip install -e '.[dev]'
           wget https://github.com/errata-ai/vale/releases/download/v2.23.0/vale_2.23.0_Linux_64-bit.tar.gz
           mkdir $HOME/bin && tar -xf vale_2.23.0_Linux_64-bit.tar.gz -C $HOME/bin
           echo "$HOME/bin" >> $GITHUB_PATH
@@ -68,7 +64,7 @@ jobs:
       - name: Build documentation
         run: tox -edocs
       - name: Upload documentation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: html_docs
           path: docs/_build/html
@@ -80,27 +76,28 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.9, '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13']
         os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
         exclude:
           - os: "macos-latest"
-            python-version: 3.9
+            python-version: '3.10'
     env:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "--durations=10"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev]'
+          pip install -e '.[test,performance,visualization]'
       - name: Run unit tests
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
@@ -110,6 +107,7 @@ jobs:
           flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
           parallel: true
           file: coverage.lcov
+          fail-on-error: false
   integration-tests:
     if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
@@ -120,7 +118,7 @@ jobs:
       # avoid cancellation of in-progress jobs if any matrix job fails
       fail-fast: false
       matrix:
-        python-version: [ 3.9 ]
+        python-version: [ '3.10' ]
         os: [ "ubuntu-latest" ]
         environment: ["ibm-cloud-production" ]
     environment: ${{ matrix.environment }}
@@ -132,18 +130,19 @@ jobs:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "-v -s --durations=0"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e '.[dev]'
+          pip install -e '.[test,performance]'
       - name: Run integration tests
         run: make integration-test
   tests-finished:
@@ -157,3 +156,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+          fail-on-error: false

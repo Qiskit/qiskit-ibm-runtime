@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,12 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""ExecutionSpans"""
+"""ExecutionSpans."""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import overload, Iterable, Iterator, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING
+from collections.abc import Iterable, Iterator
 
 from .execution_span import ExecutionSpan
 
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 
 
 class ExecutionSpans:
-    """A collection of timings for pub results.
+    r"""A collection of timings for pub results.
 
     This class is a list-like containing :class:`~.ExecutionSpan`\\s, where each execution span
     represents a time window of data collection, and contains a reference to exactly which of the
@@ -54,9 +55,9 @@ class ExecutionSpans:
     def __getitem__(self, idxs: int) -> ExecutionSpan: ...
 
     @overload
-    def __getitem__(self, idxs: slice | list[int]) -> "ExecutionSpans": ...
+    def __getitem__(self, idxs: slice | list[int]) -> ExecutionSpans: ...
 
-    def __getitem__(self, idxs: int | slice | list[int]) -> ExecutionSpan | "ExecutionSpans":
+    def __getitem__(self, idxs: int | slice | list[int]) -> ExecutionSpan | ExecutionSpans:
         if isinstance(idxs, int):
             return self._spans[idxs]
         if isinstance(idxs, slice):
@@ -92,7 +93,7 @@ class ExecutionSpans:
         """The total duration of this collection, in seconds."""
         return (self.stop - self.start).total_seconds()
 
-    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> "ExecutionSpans":
+    def filter_by_pub(self, pub_idx: int | Iterable[int]) -> ExecutionSpans:
         """Return a new set of spans where each one has been filtered to the specified pubs.
 
         See also :meth:~.ExecutionSpan.filter_by_pub`.
@@ -102,7 +103,7 @@ class ExecutionSpans:
         """
         return ExecutionSpans(span.filter_by_pub(pub_idx) for span in self)
 
-    def sort(self, inplace: bool = True) -> "ExecutionSpans":
+    def sort(self, inplace: bool = True) -> ExecutionSpans:
         """Return the same execution spans, sorted.
 
         Sorting is done by the :attr:`~.ExecutionSpan.start` timestamp of each execution span.
@@ -118,7 +119,7 @@ class ExecutionSpans:
         return obj
 
     def draw(
-        self, name: str = None, normalize_y: bool = False, line_width: int = 4
+        self, name: str | None = None, normalize_y: bool = False, line_width: int = 4
     ) -> PlotlyFigure:
         """Draw these execution spans.
 
@@ -136,7 +137,6 @@ class ExecutionSpans:
         Returns:
             A plotly figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
         from ..visualization import draw_execution_spans
 
         return draw_execution_spans(

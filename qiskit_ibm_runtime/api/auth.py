@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,8 @@
 
 """Authentication helpers."""
 
-from typing import Dict, Optional
+from __future__ import annotations
+
 
 import warnings
 from requests import PreparedRequest
@@ -35,7 +36,7 @@ class CloudAuth(AuthBase):
         api_key: str,
         crn: str,
         private: bool = False,
-        proxies: Optional[ProxyConfiguration] = None,
+        proxies: ProxyConfiguration | None = None,
         verify: bool = True,
     ):
         self.crn = crn
@@ -68,10 +69,11 @@ class CloudAuth(AuthBase):
         return False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        """Return the prepared request when calling the auth hook as a function."""
         r.headers.update(self.get_headers())
         return r
 
-    def __deepcopy__(self, _memo: dict = None) -> "CloudAuth":
+    def __deepcopy__(self, _memo: dict | None = None) -> CloudAuth:
         cpy = CloudAuth(
             api_key=self.api_key,
             crn=self.crn,
@@ -81,12 +83,12 @@ class CloudAuth(AuthBase):
         )
         return cpy
 
-    def get_headers(self) -> Dict:
+    def get_headers(self) -> dict:
         """Return authorization information to be stored in header."""
         try:
             access_token = self.tm.get_token()
             return {"Service-CRN": self.crn, "Authorization": f"Bearer {access_token}"}
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             warnings.warn(
                 f"Unable to retrieve IBM Cloud access token. API Key will be used instead. {ex}"
             )

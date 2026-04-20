@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021, 2023.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Guadalupe device (16 qubit).
-"""
+"""Fake Guadalupe device (16 qubit)."""
 
 import os
 
@@ -22,7 +20,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeGuadalupeV2(fake_backend.FakeBackendV2):
     """A fake 16 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_guadalupe.json"  # type: ignore
-    props_filename = "props_guadalupe.json"  # type: ignore
-    backend_name = "fake_guadalupe"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_guadalupe.json"
+    props_filename = "props_guadalupe.json"
+    backend_name = "fake_guadalupe"

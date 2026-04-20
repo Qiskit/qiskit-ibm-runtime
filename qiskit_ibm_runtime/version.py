@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -19,12 +19,11 @@ Example::
 
 import os
 import subprocess
-from typing import List
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def _minimal_ext_cmd(cmd: List[str]) -> bytes:
+def _minimal_ext_cmd(cmd: list[str]) -> bytes:
     # construct minimal environment
     env = {}
     for k in ["SYSTEMROOT", "PATH"]:
@@ -60,7 +59,7 @@ def git_version() -> str:
     return git_revision
 
 
-with open(os.path.join(ROOT_DIR, "VERSION.txt"), "r", encoding="utf-8") as version_file:
+with open(os.path.join(ROOT_DIR, "VERSION.txt"), encoding="utf-8") as version_file:
     VERSION = version_file.read().strip()
 
 
@@ -77,7 +76,7 @@ def get_version_info() -> str:
         return full_version
     try:
         release = _minimal_ext_cmd(["git", "tag", "-l", "--points-at", "HEAD"])
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         return full_version
     if not release:
         git_revision = git_version()

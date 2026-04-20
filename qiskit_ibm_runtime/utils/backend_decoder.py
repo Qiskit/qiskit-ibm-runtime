@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,6 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Dict, Union, Optional
 import logging
 import traceback
 
@@ -31,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 
 def configuration_from_server_data(
-    raw_config: Dict,
+    raw_config: dict,
     instance: str = "",
-    use_fractional_gates: Optional[bool] = False,
-) -> Optional[QasmBackendConfiguration]:
+    use_fractional_gates: bool | None = False,
+) -> QasmBackendConfiguration | None:
     """Create a backend configuration instance from raw server data.
 
     Args:
@@ -58,7 +57,7 @@ def configuration_from_server_data(
         decode_backend_configuration(raw_config)
         filter_raw_configuration(raw_config, use_fractional_gates=use_fractional_gates)
         return QasmBackendConfiguration.from_dict(raw_config)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         logger.warning(
             'Remote backend "%s" for service instance %s could not be instantiated due '
             "to an invalid server-side configuration",
@@ -69,12 +68,11 @@ def configuration_from_server_data(
     return None
 
 
-def filter_raw_configuration(
-    raw_config: dict, use_fractional_gates: Optional[bool] = False
-) -> None:
-    """Filter unwanted entries from raw configuration data
+def filter_raw_configuration(raw_config: dict, use_fractional_gates: bool | None = False) -> None:
+    """Filter unwanted entries from raw configuration data.
 
     Args:
+        raw_config: dictionary with raw configuration data.
         use_fractional_gates: Set True to allow for the backends to include
             fractional gates. See :meth:`~.QiskitRuntimeService.backends`
                 for further details.
@@ -105,7 +103,7 @@ def filter_raw_configuration(
 
 
 def properties_from_server_data(
-    properties: Dict, use_fractional_gates: Optional[bool] = False
+    properties: dict, use_fractional_gates: bool | None = False
 ) -> BackendProperties:
     """Decode backend properties.
 
@@ -143,7 +141,7 @@ def properties_from_server_data(
     return BackendProperties.from_dict(properties)
 
 
-def decode_backend_configuration(config: Dict) -> None:
+def decode_backend_configuration(config: dict) -> None:
     """Decode backend configuration.
 
     Args:
@@ -161,7 +159,7 @@ def decode_backend_configuration(config: Dict) -> None:
 _decode_backend_configuration = decode_backend_configuration
 
 
-def _to_complex(value: Union[List[float], complex]) -> complex:
+def _to_complex(value: list[float] | complex) -> complex:
     """Convert the input value to type ``complex``.
 
     Args:
@@ -178,4 +176,4 @@ def _to_complex(value: Union[List[float], complex]) -> complex:
     elif isinstance(value, complex):
         return value
 
-    raise TypeError("{} is not in a valid complex number format.".format(value))
+    raise TypeError(f"{value} is not in a valid complex number format.")

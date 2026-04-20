@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,9 +12,11 @@
 
 """Test deserializing server data."""
 
-from typing import Any, Dict, Set, Optional
+from typing import Any
 
 import dateutil.parser
+
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only
@@ -61,12 +63,17 @@ class TestSerialization(IBMIntegrationTestCase):
 
         for backend in backends:
             with self.subTest(backend=backend):
-                properties = backend.properties()
+                try:
+                    properties = backend.properties()
+                except RequestsApiError as ex:
+                    # Some backends might not be able to fetch properties.
+                    if ex.status_code == 404:
+                        properties = None
                 if properties:
                     self._verify_data(properties.to_dict(), good_keys)
 
     def _verify_data(
-        self, data: Dict, good_keys: tuple, good_key_prefixes: Optional[tuple] = None
+        self, data: dict, good_keys: tuple, good_key_prefixes: tuple | None = None
     ) -> None:
         """Verify that the input data does not contain serialized objects.
 
@@ -76,7 +83,7 @@ class TestSerialization(IBMIntegrationTestCase):
             good_key_prefixes: A list of known prefixes for keys that look like
                 serialized objects.
         """
-        suspect_keys: Set[Any] = set()
+        suspect_keys: set[Any] = set()
         _find_potential_encoded(data, "", suspect_keys)
         # Remove known good keys from suspect keys.
         for gkey in good_keys:

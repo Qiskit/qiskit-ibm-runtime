@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -13,7 +13,8 @@
 """Primitive options."""
 
 from abc import abstractmethod
-from typing import Iterable, Tuple, Union, Any
+from typing import Any
+from collections.abc import Iterable
 from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
 
@@ -43,7 +44,7 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
 
     marker = "▸" if is_section else ""
     spacer_style = "display: inline-block; text-align: right; margin-right: 10px;"
-    spacer = f"<div style='width: {20*(1 + indent)}px; {spacer_style}'>{marker}</div>"
+    spacer = f"<div style='width: {20 * (1 + indent)}px; {spacer_style}'>{marker}</div>"
 
     yield "  <tr>"
     yield f"    <{tag} {style}>{spacer}{name}</{tag}>"
@@ -52,8 +53,8 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
 
 
 def _iter_all_fields(
-    data_cls: Any, indent: int = 0, dict_form: Union[dict, None] = None
-) -> Iterable[Tuple[int, str, Any, bool]]:
+    data_cls: Any, indent: int = 0, dict_form: dict | None = None
+) -> Iterable[tuple[int, str, Any, bool]]:
     """Recursively iterate over a dataclass, yielding (indent, name, value, is_dataclass) fields."""
     # we pass dict_form through recursion simply to avoid calling asdict() more than once
     dict_form = dict_form or asdict(data_cls)
@@ -79,7 +80,7 @@ class BaseOptions:
     @abstractmethod
     def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs."""
-        raise NotImplementedError()
+        raise NotImplementedError("Not implemented by `BaseOptions`.")
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
@@ -136,12 +137,12 @@ class OptionsV2(BaseOptions):
             :class:`SimulatorOptions` for all available options.
     """
 
-    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
+    _VERSION: int = Field(2, frozen=True)
 
     # Options not really related to primitives.
-    max_execution_time: Union[UnsetType, int] = Unset
-    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
-    simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
+    max_execution_time: UnsetType | int = Unset
+    environment: EnvironmentOptions | Dict = Field(default_factory=EnvironmentOptions)
+    simulator: SimulatorOptions | Dict = Field(default_factory=SimulatorOptions)
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""

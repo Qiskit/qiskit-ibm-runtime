@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Tests SliceSpan and ExecutionSpans classes."""
-
 
 from datetime import datetime, timedelta
 import ddt
@@ -34,6 +33,7 @@ class TestSliceSpan(IBMTestCase):
     """Class for testing SliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
@@ -46,7 +46,7 @@ class TestSliceSpan(IBMTestCase):
         self.span2 = SliceSpan(self.start2, self.stop2, self.slices2)
 
     def test_limits(self):
-        """Test the start and stop properties"""
+        """Test the start and stop properties."""
         self.assertEqual(self.span1.start, self.start1)
         self.assertEqual(self.span1.stop, self.stop1)
         self.assertEqual(self.span2.start, self.start2)
@@ -71,27 +71,27 @@ class TestSliceSpan(IBMTestCase):
         self.assertGreater(self.span1, span1_minus)
 
     def test_duration(self):
-        """Test the duration property"""
+        """Test the duration property."""
         self.assertEqual(self.span1.duration, 7)
         self.assertEqual(self.span2.duration, 2.5)
 
     def test_repr(self):
-        """Test the repr method"""
+        """Test the repr method."""
         expect = "start='2023-08-22 18:45:03', stop='2023-08-22 18:45:10', size=7"
         self.assertEqual(repr(self.span1), f"SliceSpan(<{expect}>)")
 
     def test_size(self):
-        """Test the size property"""
+        """Test the size property."""
         self.assertEqual(self.span1.size, 5 + 2)
         self.assertEqual(self.span2.size, 1 + 2)
 
     def test_pub_idxs(self):
-        """Test the pub_idxs property"""
+        """Test the pub_idxs property."""
         self.assertEqual(self.span1.pub_idxs, [0, 1])
         self.assertEqual(self.span2.pub_idxs, [0, 2])
 
     def test_mask(self):
-        """Test the mask() method"""
+        """Test the mask() method."""
         mask1 = np.zeros((100,), dtype=bool)
         mask1[4:9] = True
         npt.assert_array_equal(self.span1.mask(1), mask1)
@@ -110,12 +110,12 @@ class TestSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method"""
+        """The the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method"""
+        """The the filter_by_pub method."""
         self.assertEqual(self.span1.filter_by_pub([]), SliceSpan(self.start1, self.stop1, {}))
         self.assertEqual(self.span2.filter_by_pub([]), SliceSpan(self.start2, self.stop2, {}))
 
@@ -137,6 +137,7 @@ class TestDoubleSliceSpan(IBMTestCase):
     """Class for testing DoubleSliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2024, 10, 11, 4, 31, 30)
         self.stop1 = datetime(2024, 10, 11, 4, 31, 34)
@@ -155,7 +156,7 @@ class TestDoubleSliceSpan(IBMTestCase):
         self.span2 = DoubleSliceSpan(self.start2, self.stop2, self.slices2)
 
     def test_limits(self):
-        """Test the start and stop properties"""
+        """Test the start and stop properties."""
         self.assertEqual(self.span1.start, self.start1)
         self.assertEqual(self.span1.stop, self.stop1)
         self.assertEqual(self.span2.start, self.start2)
@@ -169,27 +170,27 @@ class TestDoubleSliceSpan(IBMTestCase):
         self.assertNotEqual(self.span1, self.span2)
 
     def test_duration(self):
-        """Test the duration property"""
+        """Test the duration property."""
         self.assertEqual(self.span1.duration, 4)
         self.assertEqual(self.span2.duration, 10)
 
     def test_repr(self):
-        """Test the repr method"""
+        """Test the repr method."""
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=14"
         self.assertEqual(repr(self.span1), f"DoubleSliceSpan(<{expect}>)")
 
     def test_size(self):
-        """Test the size property"""
+        """Test the size property."""
         self.assertEqual(self.span1.size, 1 * 5 + 3 * 3)
         self.assertEqual(self.span2.size, 2 * 20 + 3 * 3)
 
     def test_pub_idxs(self):
-        """Test the pub_idxs property"""
+        """Test the pub_idxs property."""
         self.assertEqual(self.span1.pub_idxs, [0, 2])
         self.assertEqual(self.span2.pub_idxs, [0, 1])
 
     def test_mask(self):
-        """Test the mask() method"""
+        """Test the mask() method."""
         mask1 = np.zeros((1, 100), dtype=bool)
         mask1[0][4:9] = True
         npt.assert_array_equal(self.span1.mask(2), mask1)
@@ -208,12 +209,12 @@ class TestDoubleSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method"""
+        """The the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method"""
+        """The the filter_by_pub method."""
         self.assertEqual(self.span1.filter_by_pub([]), DoubleSliceSpan(self.start1, self.stop1, {}))
         self.assertEqual(self.span2.filter_by_pub([]), DoubleSliceSpan(self.start2, self.stop2, {}))
 
@@ -228,7 +229,7 @@ class TestDoubleSliceSpan(IBMTestCase):
         )
 
     def test_one_dimensional_shape_mask(self):
-        """Test that mask doesn't throw with a one-dimensional shape"""
+        """Test that mask doesn't throw with a one-dimensional shape."""
         span = DoubleSliceSpan(self.start1, self.stop1, {0: ((7,), slice(0, 1), slice(0, 7))})
 
         span.mask(0)
@@ -239,6 +240,7 @@ class TestTwirledSliceSpan(IBMTestCase):
     """Class for testing TwirledSliceSpan."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2024, 10, 11, 4, 31, 30)
         self.stop1 = datetime(2024, 10, 11, 4, 31, 34)
@@ -263,7 +265,7 @@ class TestTwirledSliceSpan(IBMTestCase):
         self.span3 = TwirledSliceSpanV2(self.start3, self.stop3, self.slices3)
 
     def test_limits(self):
-        """Test the start and stop properties"""
+        """Test the start and stop properties."""
         self.assertEqual(self.span1.start, self.start1)
         self.assertEqual(self.span1.stop, self.stop1)
         self.assertEqual(self.span2.start, self.start2)
@@ -277,27 +279,27 @@ class TestTwirledSliceSpan(IBMTestCase):
         self.assertNotEqual(self.span1, self.span2)
 
     def test_duration(self):
-        """Test the duration property"""
+        """Test the duration property."""
         self.assertEqual(self.span1.duration, 4)
         self.assertEqual(self.span2.duration, 10)
 
     def test_repr(self):
-        """Test the repr method"""
+        """Test the repr method."""
         expect = "start='2024-10-11 04:31:30', stop='2024-10-11 04:31:34', size=11"
         self.assertEqual(repr(self.span1), f"TwirledSliceSpan(<{expect}>)")
 
     def test_size(self):
-        """Test the size property"""
+        """Test the size property."""
         self.assertEqual(self.span1.size, 1 * 2 + 3 * 3)
         self.assertEqual(self.span2.size, 2 * 20 + 6 * 2)
 
     def test_pub_idxs(self):
-        """Test the pub_idxs property"""
+        """Test the pub_idxs property."""
         self.assertEqual(self.span1.pub_idxs, [0, 2])
         self.assertEqual(self.span2.pub_idxs, [0, 1])
 
     def test_mask(self):
-        """Test the mask() method"""
+        """Test the mask() method."""
         # reminder: ((3, 1, 5), True, slice(1), slice(2, 4))
         mask1 = np.zeros((3, 1, 5), dtype=bool)
         mask1.reshape((3, 5))[:1, 2:4] = True
@@ -334,12 +336,12 @@ class TestTwirledSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method"""
+        """The the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method"""
+        """The the filter_by_pub method."""
         self.assertEqual(
             self.span1.filter_by_pub([]), TwirledSliceSpan(self.start1, self.stop1, {})
         )
@@ -358,7 +360,7 @@ class TestTwirledSliceSpan(IBMTestCase):
         )
 
     def test_one_dimensional_shape_mask(self):
-        """Test that mask doesn't throw with a one-dimensional shape"""
+        """Test that mask doesn't throw with a one-dimensional shape."""
         span = TwirledSliceSpan(
             self.start1, self.stop1, {0: ((7,), False, slice(0, 1), slice(0, 7))}
         )
@@ -370,6 +372,7 @@ class TestExecutionSpans(IBMTestCase):
     """Class for testing ExecutionSpans."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.start1 = datetime(2023, 8, 22, 18, 45, 3)
         self.stop1 = datetime(2023, 8, 22, 18, 45, 10)
@@ -384,11 +387,11 @@ class TestExecutionSpans(IBMTestCase):
         self.spans = ExecutionSpans([self.span1, self.span2])
 
     def test_duration(self):
-        """Test the duration property"""
+        """Test the duration property."""
         self.assertEqual(self.spans.duration, 8.5)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method"""
+        """The the filter_by_pub method."""
         self.assertEqual(
             self.spans.filter_by_pub([]),
             ExecutionSpans(
@@ -415,7 +418,7 @@ class TestExecutionSpans(IBMTestCase):
         )
 
     def test_sequence_methods(self):
-        """Test __len__ and __get_item__"""
+        """Test __len__ and __get_item__."""
         self.assertEqual(len(self.spans), 2)
         self.assertEqual(self.spans[0], self.span1)
         self.assertEqual(self.spans[1], self.span2)

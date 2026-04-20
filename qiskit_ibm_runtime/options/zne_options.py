@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,10 @@
 
 """Zero noise extrapolation mitigation options.."""
 
-from typing import Union, Sequence, Literal
+from __future__ import annotations
+
+from typing import Literal
+from collections.abc import Sequence
 
 from pydantic import field_validator, model_validator
 
@@ -78,66 +81,69 @@ class ZneOptions:
            `npj Quantum Inf 7, 80 (2021) <https://www.nature.com/articles/s41534-021-00404-3>`_
     """
 
-    amplifier: Union[
-        UnsetType, Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
-    ] = Unset
-    r"""Which technique to use for amplifying noise. 
-    
-        One of:
+    amplifier: (
+        UnsetType | Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
+    ) = Unset
+    """Which technique to use for amplifying noise.
 
-            * `"gate_folding"` (default) uses 2-qubit gate folding to amplify noise. If the noise
-                factor requires amplifying only a subset of the gates, then these gates are chosen
-                randomly.
-            * `"gate_folding_front"` uses 2-qubit gate folding to amplify noise. If the noise
-                factor requires amplifying only a subset of the gates, then these gates are selected
-                from the front of the topologically ordered DAG circuit.
-            * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
-                factor requires amplifying only a subset of the gates, then these gates are selected
-                from the back of the topologically ordered DAG circuit.
-            * `"pea"` uses a technique called Probabilistic Error Amplification 
-                (`PEA <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify noise. When this 
-                option is selected, gate twirling will always be used whether or not it has been 
-                enabled in the options. In this technique, the twirled noise model of each each unique 
-                layer of entangling gates in your ISA circuits is learned beforehand, see
-                :class:`~.LayerNoiseLearningOptions` for relevant learning options. Once complete,
-                your circuits are executed at each noise factor, where every entangling layer of
-                your circuits is amplified by probabilistically injecting single-qubit noise
-                proportional to the corresponding learned noise model.
+    One of:
+
+        * `"gate_folding"` (default) uses 2-qubit gate folding to amplify noise. If the noise
+            factor requires amplifying only a subset of the gates, then these gates are chosen
+            randomly.
+        * `"gate_folding_front"` uses 2-qubit gate folding to amplify noise. If the noise
+            factor requires amplifying only a subset of the gates, then these gates are selected
+            from the front of the topologically ordered DAG circuit.
+        * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
+            factor requires amplifying only a subset of the gates, then these gates are selected
+            from the back of the topologically ordered DAG circuit.
+        * `"pea"` uses a technique called Probabilistic Error Amplification
+            (`PEA <https://www.nature.com/articles/s41586-023-06096-3>`_) to amplify noise. When
+            this option is selected, gate twirling will always be used whether or not it has
+            been enabled in the options. In this technique, the twirled noise model of each each
+            unique layer of entangling gates in your ISA circuits is learned beforehand, see
+            :class:`~.LayerNoiseLearningOptions` for relevant learning options. Once complete,
+            your circuits are executed at each noise factor, where every entangling layer of
+            your circuits is amplified by probabilistically injecting single-qubit noise
+            proportional to the corresponding learned noise model.
     """
-    noise_factors: Union[UnsetType, Sequence[float]] = Unset
-    r""" noise_factors: Noise factors to use for noise amplification. 
-         
-    Default: ``(1, 1.5, 2)`` for PEA, and ``(1, 3, 5)`` otherwise.
+
+    noise_factors: UnsetType | Sequence[float] = Unset
+    """ noise_factors: Noise factors to use for noise amplification.
+
+    Default: ``(1, 3, 5)``.
     """
-    extrapolator: Union[UnsetType, ExtrapolatorType, Sequence[ExtrapolatorType]] = Unset
+
+    extrapolator: UnsetType | ExtrapolatorType | Sequence[ExtrapolatorType] = Unset
     r"""Extrapolator(s) to try (in order) for extrapolating to zero noise.
 
-        The available options are:
+    The available options are:
 
-            * ``"exponential"``, which fits the data using an exponential decaying function 
-              defined as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)` is the
-              value at zero noise (:math:`x=0`) and :math:`\tau>0` is a positive rate.
-            * ``"double_exponential"``, which uses a sum of two exponential as in Ref. 1.
-            * ``"polynomial_degree_(1 <= k <= 7)"``, which uses a polynomial function defined as
-              :math:`f(x; c_0, c_1, \ldots, c_k) = \sum_{i=0, k} c_i x^i`.
-            * ``"linear"``, which is equivalent to ``"polynomial_degree_1"``.
-            * ``"fallback"``, which simply returns the raw data corresponding to the lowest noise
-              factor (typically ``1``) without performing any sort of extrapolation.
+        * ``"exponential"``, which fits the data using an exponential decaying function
+            defined as :math:`f(x; A, \tau) = A e^{-x/\tau}`, where :math:`A = f(0; A, \tau)`
+            is the value at zero noise (:math:`x=0`) and :math:`\tau>0` is a positive rate.
+        * ``"double_exponential"``, which uses a sum of two exponential as in Ref. 1.
+        * ``"polynomial_degree_(1 <= k <= 7)"``, which uses a polynomial function defined as
+            :math:`f(x; c_0, c_1, \ldots, c_k) = \sum_{i=0, k} c_i x^i`.
+        * ``"linear"``, which is equivalent to ``"polynomial_degree_1"``.
+        * ``"fallback"``, which simply returns the raw data corresponding to the lowest noise
+            factor (typically ``1``) without performing any sort of extrapolation.
 
-        The extrapolated values (``evs_extrapolated`` and ``stds_extrapolated``) are sorted according to
-        the order of the provided extrapolators. If more than one extrapolator is specified, the ``evs``
-        and ``stds`` reported in the result's data refer to the first successful extrapolator, where an
-        extrapolator success is determined heuristically.
+    The extrapolated values (``evs_extrapolated`` and ``stds_extrapolated``) are sorted
+    according to the order of the provided extrapolators. If more than one extrapolator is
+    specified, the ``evs`` and ``stds`` reported in the result's data refer to the first
+    successful extrapolator, where an extrapolator success is determined heuristically.
 
-        Default: ``("exponential", "linear")``.
+    Default: ``("exponential", "linear")``.
     """
-    extrapolated_noise_factors: Union[UnsetType, Sequence[float]] = Unset
+
+    extrapolated_noise_factors: UnsetType | Sequence[float] = Unset
     r"""Noise factors to evaluate the fit extrapolation models at.
 
-        If unset, this will default to ``[0, *noise_factors]``. This
-        option does not affect execution or model fitting in any way, it only determines the
-        points at which the ``extrapolator``\\s are evaluated to be returned in the data
-        fields called ``evs_extrapolated`` and ``stds_extrapolated``.
+    If unset, this will default to ``[0, *noise_factors]``. This
+    option does not affect execution or model fitting in any way, it only determines the
+    points at which the ``extrapolator``\\s are evaluated to be returned in the data
+    fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
 
     def _default_noise_factors(self) -> Sequence[float]:
@@ -157,7 +163,7 @@ class ZneOptions:
         return factors
 
     @model_validator(mode="after")
-    def _validate_options(self) -> "ZneOptions":
+    def _validate_options(self) -> ZneOptions:
         """Check that there are enough noise factors for all extrapolators."""
         noise_factors = (
             self.noise_factors if self.noise_factors != Unset else self._default_noise_factors()
@@ -180,7 +186,7 @@ class ZneOptions:
             if isinstance(extrapolator, str)
             else extrapolator
         )
-        for extrap in extrapolators:  # pylint: disable=not-an-iterable
+        for extrap in extrapolators:
             if len(noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
                 raise ValueError(
                     f"{extrap} requires at least {required_factors[extrap]} noise_factors"

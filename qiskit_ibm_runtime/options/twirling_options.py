@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,7 @@
 
 """Twirling options."""
 
-from typing import Literal, Union
+from typing import Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
@@ -29,21 +29,29 @@ TwirlingStrategyType = Literal[
 class TwirlingOptions:
     """Twirling options."""
 
-    enable_gates: Union[UnsetType, bool] = Unset
-    r"""Whether to apply 2-qubit Clifford gate twirling.
-    
-    Default: ``False``.
+    enable_gates: UnsetType | bool = Unset
+    """Whether to apply 2-qubit Clifford gate twirling.
+
+    Default:
+    - For the Sampler: ``False``.
+    - For the Estimator: If ``enables_gates`` is ``Unset``, it is determined by the server
+    according to the resilience level: it is ``False`` for resilience levels 0 and 1, and ``True``
+    for resilience level 2.
     """
 
-    enable_measure: Union[UnsetType, bool] = Unset
-    r"""Whether to enable twirling to measurement instructions, as long as the measurement is not 
+    enable_measure: UnsetType | bool = Unset
+    """Whether to enable twirling to measurement instructions, as long as the measurement is not
     involved within a conditional block.
 
-    Default: ``True`` for ``Estimator``, ``False`` for ``Sampler``.
+    Default:
+    - For the Sampler: ``False``.
+    - For the Estimator: If ``enable_measure`` is ``Unset``, it is determined by the server
+    according to the resilience level: it is ``False`` for resilience level 0, and ``True`` for
+    resilience levels 1 and 2.
     """
 
-    num_randomizations: Union[UnsetType, int, Literal["auto"]] = Unset
-    r"""The number of random samples to use when twirling or peforming sampled mitigation.
+    num_randomizations: UnsetType | int | Literal["auto"] = Unset
+    """The number of random samples to use when twirling or peforming sampled mitigation.
 
     If ``num_randomizations`` is "auto", for every pub executed ``shots`` times:
 
@@ -56,13 +64,14 @@ class TwirlingOptions:
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
-      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other hand,
-      is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
+      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
+      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
+      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
+      ``default_shots``.
     """
 
-    shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
-    r"""The number of shots to run for each random sample.
+    shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
+    """The number of shots to run for each random sample.
 
     If "auto", for every pub executed ``shots`` times:
 
@@ -75,13 +84,14 @@ class TwirlingOptions:
 
     .. note::
       The ``shots`` value specified in a PUB or in the ``run()`` method is considered part of the
-      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other hand,
-      is considered a Qiskit Runtime specific option. Therefore, the product of
-      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over ``default_shots``.
+      primitive execution interface and therefore is always obeyed. ``default_shots``, on the other
+      hand, is considered a Qiskit Runtime specific option. Therefore, the product of
+      ``num_randomizations`` and ``shots_per_randomization`` takes precedence over
+      ``default_shots``.
     """
 
-    strategy: Union[UnsetType, TwirlingStrategyType] = Unset
-    r"""Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
+    strategy: UnsetType | TwirlingStrategyType = Unset
+    """Specify the strategy of twirling qubits in identified layers of 2-qubit twirled gates.
 
     Allowed values are:
 
@@ -98,10 +108,15 @@ class TwirlingOptions:
 
     .. image:: /source_images/twirling_strategy_options.png
       :alt: Image illustrating the differences among twirling strategies. If "active", only
-            instruction qubits in each layer will be twirled. If "active-circuit", 
-            all instruction qubits in the circuit will be twirled. If "active-accum", the union 
-            all instruction qubits in the circuit up to the current twirled layer will be twirled. 
-            Finally, if "all", all qubits in the input circuit will be twirled in each twirled layer.
+            instruction qubits in each layer will be twirled. If "active-circuit",
+            all instruction qubits in the circuit will be twirled. If "active-accum", the union
+            all instruction qubits in the circuit up to the current twirled layer will be twirled.
+            Finally, if "all", all qubits in the input circuit will be twirled in each twirled
+            layer.
     """
 
-    _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
+    _ge1 = make_constraint_validator(
+        "num_randomizations",
+        "shots_per_randomization",
+        ge=1,  # type: ignore[arg-type]
+    )

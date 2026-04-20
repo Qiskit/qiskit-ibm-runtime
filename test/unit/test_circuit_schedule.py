@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,30 +28,38 @@ class TestCircuitSchedule(IBMTestCase):
         """Set up."""
         fake_sampler_pub_result_large = FakeCircuitScheduleInputData.sampler_pub_result_large
         fake_sampler_pub_result_small = FakeCircuitScheduleInputData.sampler_pub_result_small
+        fake_sampler_pub_result_merge = FakeCircuitScheduleInputData.sampler_pub_result_merge
         self.circuit_schedule_large_data = fake_sampler_pub_result_large.metadata["compilation"][
             "scheduler_timing"
         ]["timing"]
         self.circuit_schedule_small_data = fake_sampler_pub_result_small.metadata["compilation"][
             "scheduler_timing"
         ]["timing"]
+        self.circuit_schedule_merge_data = fake_sampler_pub_result_merge.metadata["compilation"][
+            "scheduler_timing"
+        ]["timing"]
 
     def get_large_mock_data(self):
-        """Return the whole data object"""
+        """Return the whole data object."""
         return self.circuit_schedule_large_data
 
     def get_small_mock_data(self):
-        """Return small constant portion of data object"""
+        """Return small constant portion of data object."""
         return self.circuit_schedule_small_data
 
+    def get_merge_mock_data(self):
+        """Return a merge use case data object."""
+        return self.circuit_schedule_merge_data
+
     def test__load(self):
-        """Test data loading"""
+        """Test data loading."""
         data = self.get_small_mock_data()
         loaded_data = CircuitSchedule._load(data)
         expected_loaded_data = self.get_small_mock_data().split("\n")
         self.assertEqual(loaded_data, expected_loaded_data)
 
     def test__parse(self):
-        """Test circuit schedule data parsing"""
+        """Test circuit schedule data parsing."""
         data = self.get_small_mock_data()
         circuit_schedule = CircuitSchedule(data)
         self.assertIsNotNone(circuit_schedule.circuit_scheduling)
@@ -75,11 +83,12 @@ class TestCircuitSchedule(IBMTestCase):
             self.assertEqual(circuit_schedule.type_to_idx[name], idx)
 
     @ddt.data(
-        (None, False, False, 14, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 5, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 4, 7),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 5, 6),
-        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 4, 6),
+        (None, False, False, 14, 7, None),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, False, 5, 7, "AWGR0_1"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, False, 4, 7, "Qubit 0"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), False, True, 5, 6, "AWGR0_1"),
+        (("AWGR0_1", "Qubit 0", "Qubit 1", "Hub", "Receive"), True, True, 4, 6, "Qubit 0"),
+        (("Hub", "AWGR0_1", "Qubit 0", "Qubit 1", "Receive"), True, True, 4, 6, "Hub"),
     )
     @ddt.unpack
     def test_preprocess(
@@ -89,8 +98,9 @@ class TestCircuitSchedule(IBMTestCase):
         filter_barriers,
         n_channels,
         n_instructions,
+        top_channel,
     ):
-        """Test for correct circuit schedule preprocessing"""
+        """Test for correct circuit schedule preprocessing."""
         data = self.get_large_mock_data()
         circuit_schedule = CircuitSchedule(data)
 
@@ -105,8 +115,29 @@ class TestCircuitSchedule(IBMTestCase):
         self.assertEqual(len(circuit_schedule.channels), n_channels)
         self.assertEqual(len(circuit_schedule.instruction_set), n_instructions)
 
+        if top_channel is not None:
+            self.assertEqual(circuit_schedule.channels[-1], top_channel)
+
+    @ddt.data(
+        (False, 6),
+        (True, 3),
+    )
+    @ddt.unpack
+    def test_merge_common_instructions(self, to_merge_instruction, n_instructions):
+        """Test for instructions merging."""
+        data = self.get_merge_mock_data()
+        circuit_schedule = CircuitSchedule(data)
+
+        circuit_schedule.preprocess(
+            included_channels=None,
+            filter_awgr=False,
+            filter_barriers=False,
+            merge_common_instructions=to_merge_instruction,
+        )
+        self.assertEqual(len(circuit_schedule.circuit_scheduling), n_instructions)
+
     def test_get_trace_finite_duration_y_shift(self):
-        """Test that x, y, and z shifts for finite duration traces are set correctly"""
+        """Test that x, y, and z shifts for finite duration traces are set correctly."""
         branches = ("main", "then", "else")
         expected_shifts = ((-0.4, 0.4, 0), (0, 0.4, 0.25), (-0.4, 0, -0.25))
         for branch, expected_shift in zip(branches, expected_shifts):
@@ -119,7 +150,7 @@ class TestCircuitSchedule(IBMTestCase):
             _ = CircuitSchedule.get_trace_finite_duration_y_shift(CircuitSchedule, error_branch)
 
     def test_get_trace_zero_duration_y_shift(self):
-        """Test that y-shift for zero duration traces are set correctly"""
+        """Test that y-shift for zero duration traces are set correctly."""
         branches = ("main", "then", "else")
         expected_shifts = (0, 0.2, -0.2)
         for branch, expected_shift in zip(branches, expected_shifts):
@@ -132,7 +163,7 @@ class TestCircuitSchedule(IBMTestCase):
             _ = CircuitSchedule.get_trace_zero_duration_y_shift(CircuitSchedule, error_branch)
 
     def test_trace_finite_duration_instruction(self):
-        """Test that finite duration traces are created correctly"""
+        """Test that finite duration traces are created correctly."""
         # initialize a class
         data = self.get_small_mock_data()
         circuit_schedule = CircuitSchedule(data)
@@ -147,7 +178,7 @@ class TestCircuitSchedule(IBMTestCase):
         self.assertEqual(len(circuit_schedule.annotations), 1)
 
     def test_trace_zero_duration_instruction(self):
-        """Test that shift phase (zero duration) traces are created correctly"""
+        """Test that shift phase (zero duration) traces are created correctly."""
         # initialize a class
         data = self.get_large_mock_data()
         circuit_schedule = CircuitSchedule(data)
@@ -180,7 +211,7 @@ class TestCircuitSchedule(IBMTestCase):
     def test_populate_figure(
         self, included_channels, filter_readout_channels, filter_barriers, n_traces, n_instructions
     ):
-        """Test for making sure the figure is populated correctly"""
+        """Test for making sure the figure is populated correctly."""
         go = plotly_module(".graph_objects")
 
         data = self.get_large_mock_data()

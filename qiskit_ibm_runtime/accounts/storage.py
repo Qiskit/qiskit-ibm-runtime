@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,31 +15,30 @@
 import json
 import logging
 import os
-from typing import Optional, Dict
 from .exceptions import AccountAlreadyExistsError
 
 logger = logging.getLogger(__name__)
 
 
 def save_config(
-    filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = None
+    filename: str, name: str, config: dict, overwrite: bool, set_as_default: bool | None = None
 ) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
 
-    with open(filename, mode="r", encoding="utf-8") as json_in:
+    with open(filename, encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
-            f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
+            f"Named account ({name}) already exists. Set overwrite=True to overwrite."
         )
 
     data[name] = config
 
-    # if set_as_default, but another account is defined as default, user must specify overwrite to change
-    # the default account.
+    # if set_as_default, but another account is defined as default, user must specify overwrite to
+    # change the default account.
     if set_as_default:
         data[name]["is_default_account"] = True
         for account_name in data:
@@ -49,8 +48,7 @@ def save_config(
                     del account["is_default_account"]
                 else:
                     raise AccountAlreadyExistsError(
-                        f"default_account ({name}) already exists. "
-                        f"Set overwrite=True to overwrite."
+                        f"default_account ({name}) already exists. Set overwrite=True to overwrite."
                     )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
@@ -59,8 +57,8 @@ def save_config(
 
 def read_config(
     filename: str,
-    name: Optional[str] = None,
-) -> Optional[Dict]:
+    name: str | None = None,
+) -> dict | None:
     """Read configuration data from a JSON file."""
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
     _ensure_file_exists(filename)
@@ -78,11 +76,10 @@ def delete_config(
     name: str,
 ) -> bool:
     """Delete configuration data from a JSON file."""
-
     logger.debug("Delete configuration data for '%s' from '%s'", name, filename)
 
     _ensure_file_exists(filename)
-    with open(filename, mode="r", encoding="utf-8") as json_in:
+    with open(filename, encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if name in data:

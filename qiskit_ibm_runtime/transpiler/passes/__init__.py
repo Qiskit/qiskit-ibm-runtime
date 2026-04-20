@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,11 +28,12 @@ transpilation and passes.
    ConvertIdToDelay
    ConvertISAToClifford
    FoldRzzAngle
+   ConvertToMidCircuitMeasure
 
 See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """
 
-from .basis import ConvertIdToDelay, FoldRzzAngle
+from .basis import ConvertIdToDelay, FoldRzzAngle, ConvertToMidCircuitMeasure
 
 # circuit scheduling
 from .scheduling import ASAPScheduleAnalysis

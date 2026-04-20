@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 
-"""This module defines the functionality to visualize the schedule of a Qiskit circuit compiled code"""
+"""Functionality to visualize the schedule of a Qiskit circuit compiled code."""
 
 from __future__ import annotations
 
@@ -25,20 +25,23 @@ if TYPE_CHECKING:
 
 def draw_circuit_schedule_timing(
     circuit_schedule: str | CircuitSchedule,
-    included_channels: list = None,
+    included_channels: list | None = None,
     filter_readout_channels: bool = False,
     filter_barriers: bool = False,
+    merge_common_instructions: bool = False,
     width: int = 1400,
 ) -> PlotlyFigure:
-    r"""
-    Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
+    """Draw a circuit schedule timing for :class:`~.CircuitSchedule`.
 
     Args:
         circuit_schedule: The circuit schedule as a string as returned
-        from the compiler or a `CircuitSchedule` object.
-        included_channels: A list of channels to include in the plot.
+            from the compiler or a `CircuitSchedule` object.
+        included_channels: A list of channels to include in the plot
+            and to order the y-axis accordingly.
         filter_readout_channels: If ``True``, remove all readout channels.
         filter_barriers: If ``True``, remove all barriers.
+        merge_common_instructions: If ``True``, merge instructions of the same type
+            based on temporal continuity.
         width: The width of the returned figure.
 
     Returns:
@@ -65,6 +68,7 @@ def draw_circuit_schedule_timing(
         included_channels=included_channels,
         filter_awgr=filter_readout_channels,
         filter_barriers=filter_barriers,
+        merge_common_instructions=merge_common_instructions,
     )
 
     # Setup the figure
@@ -97,7 +101,7 @@ def draw_circuit_schedule_timing(
     )
     fig.update_layout(
         xaxis={
-            "rangeselector": {"buttons": list([])},
+            "rangeselector": {"buttons": []},
             "rangeslider": {"visible": True},
         }
     )
@@ -114,20 +118,18 @@ def draw_circuit_schedule_timing(
             {
                 "type": "dropdown",
                 "direction": "down",
-                "buttons": list(
-                    [
-                        {
-                            "args": [{"annotations": fig.layout.annotations}],
-                            "label": "Show Annotations",
-                            "method": "relayout",
-                        },
-                        {
-                            "args": [{"annotations": []}],
-                            "label": "Hide Annotations",
-                            "method": "relayout",
-                        },
-                    ]
-                ),
+                "buttons": [
+                    {
+                        "args": [{"annotations": fig.layout.annotations}],
+                        "label": "Show Annotations",
+                        "method": "relayout",
+                    },
+                    {
+                        "args": [{"annotations": []}],
+                        "label": "Hide Annotations",
+                        "method": "relayout",
+                    },
+                ],
                 "pad": {"r": 10, "t": 10},
                 "showactive": True,
                 "x": 0,

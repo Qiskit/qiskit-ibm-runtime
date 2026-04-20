@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,6 @@
 
 """General utility functions."""
 
-from __future__ import annotations
 import copy
 import keyword
 import logging
@@ -20,16 +19,16 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Set
+from typing import Any
 from urllib.parse import urlparse
 from itertools import chain
 import numpy as np
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
-from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from ibm_platform_services import ResourceControllerV2
 from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Instruction
@@ -38,10 +37,37 @@ from qiskit.circuit.library.standard_gates import (
     U1Gate,
     PhaseGate,
 )
+from qiskit.qpy import QPY_VERSION
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+
+from samplomatic.ssv import SSV
+
+
+def get_ssv_version(highest_value: int | None = None) -> int:
+    """Returns the largest SSV available with the installed version of Samplomatic.
+
+    Args:
+        highest_value: If it would return an ssv version larger than `highest_value`, return
+            `highest_value` instead.
+    """
+    if highest_value is None:
+        return SSV
+    return SSV if SSV <= highest_value else highest_value
+
+
+def get_qpy_version(highest_value: int | None = None) -> int:
+    """Returns the largest qpy version available with the installed version of Qiskit.
+
+    Args:
+        highest_value: If it would return a qpy version larger than `highest_value`, return
+            `highest_value` instead.
+    """
+    if highest_value is None:
+        return QPY_VERSION
+    return QPY_VERSION if QPY_VERSION <= highest_value else highest_value
 
 
 def is_simulator(backend: BackendV2) -> bool:
@@ -58,10 +84,11 @@ def is_simulator(backend: BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
-def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: Dict) -> str:
-    """
-    A section of is_isa_circuit, separated to allow recursive calls
-    within blocks of conditional operations.
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
+    """Helper for checking if a circuit is an ISA circuit.
+
+    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional
+    operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation
@@ -101,8 +128,10 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: D
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
-    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
-    only uses instructions that exist in the target.
+    """Checks if the circuit is an ISA circuit.
+
+    An ISA circuit means that it has a layout and that it only uses instructions that exist in the
+    target.
 
     Args:
         circuit: A single QuantumCircuit
@@ -121,11 +150,12 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return _is_isa_circuit_helper(circuit, target, qubit_map)
 
 
-def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Parameter]]:
-    """
+def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
+    """Helper for validating ``rzz`` gates in pubs.
+
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
-    - Collect parameterized angles
+    - Collect parameterized angles.
 
     Returns one of the following:
     - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
@@ -165,7 +195,7 @@ def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> Union[str, Set[Paramete
     return angle_params
 
 
-def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
+def is_valid_rzz_pub(pub: EstimatorPub | SamplerPub) -> str:
     """Verify that all rzz angles are in the range [0, pi/2].
 
     Args:
@@ -216,7 +246,7 @@ def is_valid_rzz_pub(pub: Union[EstimatorPub, SamplerPub]) -> str:
     return ""
 
 
-def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+def are_circuits_dynamic(circuits: list[QuantumCircuit], qasm_default: bool = True) -> bool:
     """Checks if the input circuits are dynamic."""
     for circuit in circuits:
         if isinstance(circuit, str):
@@ -231,7 +261,7 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
 
 
 def is_fractional_gate(gate: Instruction) -> bool:
-    """Test if a gate is considered fractional by IBM
+    """Test if a gate is considered fractional by IBM.
 
     Fractional gates produce a rotation based on a continuous input parameter
     and require a non-zero gate duration. The latter distinction excludes gates
@@ -278,7 +308,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
 
 
-def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
+def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
     if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
         raise ValueError("CRN value can only be resolved for cloud accounts.")
@@ -293,13 +323,14 @@ def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
             client = ResourceControllerV2(authenticator=authenticator)
             client.set_service_url(get_resource_controller_api_url(url))
             client.set_http_client(session)
+            client.configure_service("resource_controller")
             list_response = client.list_resource_instances(name=instance)
             result = list_response.get_result()
             row_count = result["rows_count"]
             if row_count == 0:
                 return []
             else:
-                return list(map(lambda resource: resource["crn"], result["resources"]))
+                return [resource["crn"] for resource in result["resources"]]
 
 
 def is_crn(locator: str) -> bool:
@@ -315,23 +346,27 @@ def is_crn(locator: str) -> bool:
 
 
 def default_runtime_url_resolver(
-    url: str, instance: str, private_endpoint: bool = False, channel: str = "ibm_quantum_platform"
+    url: str,
+    instance: str,
+    private_endpoint: bool = False,
+    channel: str = "ibm_quantum_platform",
 ) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
-        url: The URL.
-        instance: The instance.
+        url: The raw URL to access the service, for example, "https://cloud.ibm.com".
+        instance: The instance CRN.
         private_endpoint: Connect to private API URL.
+        channel: This input parameter is currently UNUSED and kept for
+            backwards compatibility purposes only.
 
     Returns:
         Runtime API base URL
     """
-
-    # ibm_quantum: no need to resolve runtime API URL
+    # URL won't be modified if it contains "experimental"
     api_host = url
 
-    # cloud: compute runtime API URL based on crn and URL
+    # In all other cases, compute runtime API URL based on CRN and raw URL
     if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
         if private_endpoint:
@@ -339,25 +374,21 @@ def default_runtime_url_resolver(
                 f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
                 f".quantum.{parsed_url.hostname}/api/v1"
             )
-        elif channel == "ibm_quantum_platform":
-            # ibm_quantum_platform url
+        else:
+            # ibm_quantum_platform and ibm_cloud share the URL. If the raw URL is
+            # "https://cloud.ibm.com" (default), then the output api_host will be:
+            #  - for us-east: "https://quantum.cloud.ibm.com/api/v1"
+            #  - for other regions, ie. eu-de: "https://eu-de.quantum.cloud.ibm.com/api/v1"
             region = _location_from_crn(instance)
             region_prefix = "" if region == "us-east" else f"{region}."
-            api_host = (
-                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
-            )
-        else:
-            # ibm_cloud url
-            api_host = (
-                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-                f".quantum-computing.{parsed_url.hostname}"
-            )
+            api_host = f"{parsed_url.scheme}://{region_prefix}quantum.{parsed_url.hostname}/api/v1"
 
     return api_host
 
 
 def _is_experimental_runtime_url(url: str) -> bool:
     """Checks if the provided url points to an experimental runtime cluster.
+
     This type of URLs is used for internal development purposes only.
 
     Args:
@@ -470,7 +501,7 @@ def setup_logger(logger: logging.Logger) -> None:
         logger.setLevel(level)
 
 
-def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
+def filter_data(data: dict[str, Any]) -> dict[str, Any]:
     """Return the data with certain fields filtered.
 
     Data to be filtered out includes hub/group/project information.
@@ -482,7 +513,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
         Filtered data.
     """
     if not isinstance(data, dict):
-        return data
+        return data  # type: ignore[unreachable]
 
     data_to_filter = copy.deepcopy(data)
     keys_to_filter = ["hubInfo"]
@@ -490,7 +521,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
     return data_to_filter
 
 
-def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]) -> None:
+def _filter_value(data: dict[str, Any], filter_keys: list[str | tuple[str, str]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:
@@ -516,14 +547,12 @@ class RefreshQueue(Queue):
     A FIFO queue with a bounded size. Once the queue is full, when a new item
     is being added, the oldest item on the queue is discarded to make space for
     the new item.
+
+    Args:
+        maxsize: Maximum size of the queue.
     """
 
     def __init__(self, maxsize: int):
-        """RefreshQueue constructor.
-
-        Args:
-            maxsize: Maximum size of the queue.
-        """
         self.condition = Condition()
         super().__init__(maxsize=maxsize)
 
@@ -535,15 +564,13 @@ class RefreshQueue(Queue):
         Args:
             item: Item to put into the queue.
         """
-        # pylint: disable=arguments-differ
-
         with self.condition:
             if self.full():
                 super().get(block=False)
             super().put(item, block=False)
             self.condition.notify()
 
-    def get(self, block: bool = True, timeout: Optional[float] = None) -> Any:
+    def get(self, block: bool = True, timeout: float | None = None) -> Any:
         """Remove and return an item from the queue.
 
         Args:
@@ -575,4 +602,5 @@ class CallableStr(str):
     """A callable string."""
 
     def __call__(self) -> str:
+        """Return the string when called as a function."""
         return self

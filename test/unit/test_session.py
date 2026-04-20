@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,8 +12,8 @@
 
 """Tests for Session classession."""
 
-import sys
 from unittest.mock import MagicMock
+from ddt import ddt, data
 
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime import Session, SamplerV2
@@ -27,10 +27,12 @@ from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
 
 
+@ddt
 class TestSession(IBMTestCase):
     """Class for testing the Session class."""
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
@@ -105,11 +107,14 @@ class TestSession(IBMTestCase):
             session.cancel()
         self.assertFalse(session._active)
 
-    def test_session_from_id(self):
-        """Create session with given session_id"""
+    @data([None, "my_id"])
+    def test_session_from_id(self, calibration_id):
+        """Create session with given session_id."""
         service = FakeRuntimeService(channel="ibm_quantum_platform", token="abc")
         session_id = "123"
-        session = Session.from_id(session_id=session_id, service=service)
+        session = Session.from_id(
+            session_id=session_id, service=service, calibration_id=calibration_id
+        )
         session._run(program_id="foo", inputs={})
         session._create_session = MagicMock()
         self.assertTrue(session._create_session.assert_not_called)
@@ -136,8 +141,6 @@ class TestSession(IBMTestCase):
 
     def test_backend_instance_warnings(self):
         """Test backend instance warnings do not appear."""
-        if sys.version_info < (3, 10):
-            self.skipTest("assertNoLogs is not supported")
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
         with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):

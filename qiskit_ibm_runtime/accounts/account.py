@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,12 +12,15 @@
 
 """Account related classes and functions."""
 
+from __future__ import annotations
+
 from abc import abstractmethod
 import logging
-from typing import Optional, Literal, List, Dict, Any
+from typing import Literal, Any, TypeAlias
 from urllib.parse import urlparse
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_cloud_sdk_core import ApiException
 
 from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
 from requests.auth import AuthBase
@@ -32,43 +35,35 @@ from ..utils import (
     get_global_catalog_api_url,
 )
 
-AccountType = Optional[Literal["cloud", "legacy"]]
-RegionType = Optional[Literal["us-east", "eu-de"]]
-PlanType = Optional[List[str]]
+AccountType: TypeAlias = Literal["cloud", "legacy"] | None
+RegionType: TypeAlias = Literal["us-east", "eu-de"] | None
+PlanType: TypeAlias = list[str] | None
 
-ChannelType = Optional[
-    Literal[
-        "ibm_quantum_platform",
-        "ibm_cloud",
-        "local",
-    ]
-]
+ChannelType: TypeAlias = Literal["ibm_quantum_platform", "ibm_cloud", "local"] | None
 
 IBM_QUANTUM_PLATFORM_API_URL = "https://cloud.ibm.com"
-IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 
 logger = logging.getLogger(__name__)
 
 
 class Account:
-    """Class that represents an account. This is an abstract class."""
+    """Class that represents an account. This is an abstract class.
+
+    Args:
+        channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
+        token: Account token to use.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+    """
 
     def __init__(
         self,
         token: str,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
     ):
-        """Account constructor.
-
-        Args:
-            channel: Channel type,  ``ibm_quantum_platform``, ``ibm_cloud``.
-            token: Account token to use.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-        """
         self.channel: str = None
         self.url: str = None
         self.token = token
@@ -77,8 +72,8 @@ class Account:
         self.verify = verify
         self.private_endpoint: bool = False
         self.region: str = None
-        self.plans_preference: List[str] = None
-        self.tags: List[str] = None
+        self.plans_preference: list[str] = None
+        self.tags: list[str] = None
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -88,7 +83,7 @@ class Account:
         return result
 
     @classmethod
-    def from_saved_format(cls, data: dict) -> "Account":
+    def from_saved_format(cls, data: dict) -> Account:
         """Creates an account instance from data saved on disk."""
         channel = data.get("channel")
         proxies = data.get("proxies")
@@ -119,15 +114,15 @@ class Account:
         cls,
         channel: str,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
-    ) -> "Account":
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        tags: list[str] | None = None,
+    ) -> Account:
         """Creates an account for a specific channel."""
         if channel in ["ibm_cloud", "ibm_quantum_platform"]:
             return CloudAccount(
@@ -149,12 +144,15 @@ class Account:
             )
 
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
-        Relevant for "ibm_cloud" channel only."""
+        """Resolves the corresponding CRN, updating the ``instance`` attribute accordingly.
+
+        Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly. Relevant for
+        "ibm_cloud" channel only.
+        """
         pass
 
-    def list_instances(self) -> List[Dict[str, Any]]:  # type: ignore
+    def list_instances(self) -> list[dict[str, Any]]:  # type: ignore
         """Retrieve all crns with the IBM Cloud Global Search API."""
         pass
 
@@ -172,7 +170,7 @@ class Account:
             ]
         )
 
-    def validate(self) -> "Account":
+    def validate(self) -> Account:
         """Validates the account instance.
 
         Raises:
@@ -181,19 +179,18 @@ class Account:
         Returns:
             This Account instance.
         """
-
         self._assert_valid_preferences(self.region, self.plans_preference, self.tags)
-        self._assert_valid_channel(self.channel)
+        self._assert_valid_channel(self.channel)  # type: ignore[arg-type]
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.instance)
-        self._assert_valid_proxies(self.proxies)
+        self._assert_valid_instance(self.instance)  # type: ignore[arg-type]
+        self._assert_valid_proxies(self.proxies)  # type: ignore[arg-type]
         return self
 
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum_platform"]):
+        if channel not in ["ibm_cloud", "ibm_quantum_platform"]:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
                 f"['ibm_cloud', 'ibm_quantum_platform], got '{channel}'."
@@ -212,7 +209,7 @@ class Account:
         """Assert that the URL is valid."""
         try:
             urlparse(url)
-        except:
+        except:  # noqa: E722 bare-except
             raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
@@ -230,49 +227,46 @@ class Account:
     @staticmethod
     @abstractmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         pass
 
 
 class CloudAccount(Account):
-    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'."""
+    """Class that represents an account with channel 'ibm_cloud' or 'ibm_quantum_platform'.
+
+    Args:
+        token: Account token to use.
+        url: Authentication URL.
+        instance: Service instance to use.
+        proxies: Proxy configuration.
+        verify: Whether to verify server's TLS certificate.
+        private_endpoint: Connect to private API URL.
+        region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
+        plans_preference: A list of account types, ordered by preference.
+        channel: Channel identifier. Accepted values are ``ibm_cloud`` or
+            ``ibm_quantum_platform``. Defaults to ``ibm_quantum_platform``.
+        tags: List of instance tags.
+    """
 
     def __init__(
         self,
         token: str,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[ProxyConfiguration] = None,
-        verify: Optional[bool] = True,
-        private_endpoint: Optional[bool] = False,
-        region: Optional[str] = None,
-        plans_preference: Optional[List[str]] = None,
-        channel: Optional[str] = "ibm_quantum_platform",
-        tags: Optional[str] = None,
+        url: str | None = None,
+        instance: str | None = None,
+        proxies: ProxyConfiguration | None = None,
+        verify: bool | None = True,
+        private_endpoint: bool | None = False,
+        region: str | None = None,
+        plans_preference: list[str] | None = None,
+        channel: str | None = "ibm_quantum_platform",
+        tags: list[str] | None = None,
     ):
-        """Account constructor.
-
-        Args:
-            token: Account token to use.
-            url: Authentication URL.
-            instance: Service instance to use.
-            proxies: Proxy configuration.
-            verify: Whether to verify server's TLS certificate.
-            private_endpoint: Connect to private API URL.
-            region: Set a region preference. Accepted values are ``us-east`` or ``eu-de``.
-            plans_preference: A list of account types, ordered by preference.
-            channel: Channel identifier. Accepted values are ``ibm_cloud`` or ``ibm_quantum_platform``.
-                Defaults to ``ibm_quantum_platform``.
-            tags: List of instance tags.
-        """
         super().__init__(token, instance, proxies, verify)
-        resolved_url = url or (
-            IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_PLATFORM_API_URL
-        )
+        raw_url = url or IBM_QUANTUM_PLATFORM_API_URL
         self.channel = channel
-        self.url = resolved_url
+        self.url = raw_url
         self.private_endpoint = private_endpoint
         self.region = region
         self.plans_preference = plans_preference
@@ -288,9 +282,28 @@ class CloudAccount(Account):
             verify=self.verify,
         )
 
+    def _get_proxies_kwargs(self) -> dict:
+        proxies_kwargs = {}
+        if self.proxies is not None:
+            proxies_kwargs = self.proxies.to_request_params()
+        return proxies_kwargs
+
+    def get_iam_authentificator(self) -> IAMAuthenticator:
+        """Return the configured IAM Authentification service."""
+        iam_url = get_iam_api_url(self.url)
+        proxies_kwargs = self._get_proxies_kwargs()
+        return IAMAuthenticator(
+            apikey=self.token,
+            url=iam_url,
+            disable_ssl_verification=not self.verify,
+            **proxies_kwargs,
+        )
+
     def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
+        """Resolves the corresponding CRN, updating the ``instance`` attribute accordingly.
+
+        Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique
+        service instance name and updates the ``instance`` attribute accordingly.
 
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
@@ -318,16 +331,21 @@ class CloudAccount(Account):
         # overwrite with CRN value
         self.instance = crn[0]
 
-    def list_instances(self) -> List[Dict[str, Any]]:
+    def list_instances(self) -> list[dict[str, Any]]:
         """Retrieve all crns with the IBM Cloud Global Search API."""
-        iam_url = get_iam_api_url(self.url)
-        authenticator = IAMAuthenticator(self.token, url=iam_url)
+        authenticator = self.get_iam_authentificator()
         client = GlobalSearchV2(authenticator=authenticator)
         catalog = GlobalCatalogV1(authenticator=authenticator)
+
+        # Prepare the services.
         client.set_service_url(get_global_search_api_url(self.url))
         catalog.set_service_url(get_global_catalog_api_url(self.url))
+        client.configure_service("global_search")
+        catalog.configure_service("global_catalog")
+
         search_cursor = None
         all_crns = []
+        proxies_kwargs = self._get_proxies_kwargs()
         while True:
             try:
                 result = client.search(
@@ -341,27 +359,42 @@ class CloudAccount(Account):
                     ],
                     search_cursor=search_cursor,
                     limit=100,
+                    verify=self.verify,
+                    **proxies_kwargs,
                 ).get_result()
-            except:
+            except Exception as ex:
                 raise InvalidAccountError(
                     "Unable to retrieve instances. "
                     "Please check that you are using a valid API token."
-                )
+                ) from ex
             crns = []
             items = result.get("items", [])
             for item in items:
                 # don't add instances without backend allocation
                 allocations = item.get("doc", {}).get("extensions")
                 if allocations:
-                    catalog_result = catalog.get_catalog_entry(
-                        id=item.get("service_plan_unique_id")
-                    ).get_result()
-                    plan_name = (
-                        catalog_result.get("overview_ui", {}).get("en", {}).get("display_name", "")
-                    )
-                    pricing_type = (
-                        catalog_result.get("metadata", {}).get("pricing", {}).get("type", "")
-                    )
+                    try:
+                        catalog_result = catalog.get_catalog_entry(
+                            id=item.get("service_plan_unique_id"),
+                            verify=self.verify,
+                            **proxies_kwargs,
+                        ).get_result()
+                        plan_name = (
+                            catalog_result.get("overview_ui", {})
+                            .get("en", {})
+                            .get("display_name", "")
+                        )
+                        pricing_type = (
+                            catalog_result.get("metadata", {}).get("pricing", {}).get("type", "")
+                        )
+                    except (ApiException, KeyError):
+                        # The catalog does not allow querying archived entries, returning 403.
+                        logger.warning(
+                            "The plan and pricing type for instance %s could not be retrieved.",
+                            item.get("crn"),
+                        )
+                        plan_name = "unknown"
+                        pricing_type = "unknown"
                     crns.append(
                         {
                             "crn": item.get("crn"),
@@ -388,7 +421,7 @@ class CloudAccount(Account):
 
     @staticmethod
     def _assert_valid_preferences(
-        region: str, plans_preference: List[str], tags: List[str]
+        region: str, plans_preference: list[str], tags: list[str]
     ) -> None:
         """Assert that the account preferences are valid."""
         if region and (region not in ["us-east", "eu-de"] or not isinstance(region, str)):
@@ -402,5 +435,5 @@ class CloudAccount(Account):
             )
         if tags and not isinstance(tags, list):
             raise InvalidAccountError(
-                "Invalid `tags` value. Expected a list of strings. " f"got '{tags}' instead."
+                f"Invalid `tags` value. Expected a list of strings. got '{tags}' instead."
             )

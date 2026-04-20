@@ -6,19 +6,19 @@ Deprecation Notes
 
 - The utilityy function ``get_runtime_api_base_url`` has been deprecated. Use ``default_runtime_url_resolver`` instead. (`1914 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1914>`__)
 - The ``channel_strategy`` parameter has been deprecated.
-  The Q-CTRL Performance Management strategy will be removed on October 18th, 2024. 
+  The Q-CTRL Performance Management strategy will be removed on October 18th, 2024.
   To continue using Q-CTRL in your workflow, please explore the following options:
 
-    * If your organization has an existing IBM Quantum Premium Plan instance: migrate to 
-      the Q-CTRL Performance Management Function, found in the 
+    * If your organization has an existing IBM Quantum Premium Plan instance: migrate to
+      the Q-CTRL Performance Management Function, found in the
       `Qiskit Functions Catalog <https://quantum.ibm.com/functions>`__.
 
-    * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal, 
-      the same performance management product accessible directly through Q-CTRL. 
-      You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-authenticate-with-ibm-credentials>`__
+    * To continue using Qiskit Runtime with IBM Cloud: migrate to Q-CTRL Fire Opal,
+      the same performance management product accessible directly through Q-CTRL.
+      You can `connect your IBM Cloud API key and Qiskit Runtime CRN <https://docs.q-ctrl.com/fire-opal/discover/hardware-providers/how-to-migrate-from-performance-management-on-ibm-cloud>`__
       to Fire Opal. (`1931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1931>`__)
 
-- In a future release, ``RuntimeJob.status()`` will be returned as a string instead of 
+- In a future release, ``RuntimeJob.status()`` will be returned as a string instead of
   an instance of ``JobStatus``. (`1933 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1933>`__)
 
 
@@ -56,10 +56,10 @@ Upgrade Notes
 
   - The arguments backend and session for Sampler and Estimator have been removed and replaced with "mode"
   - The primitive ``Session`` property has been replaced with ``mode``
-  - Specifying options without the full dictionary structure is no longer supported 
+  - Specifying options without the full dictionary structure is no longer supported
   - ``Job.program_id()`` has been replaced with ``Job.primitive_id()``
   - ``Service.run()`` and ``Session.run()`` have been replaced with a private method, ``_run()``
-  - In ``Service.backend()``, "name" is now a required parameter 
+  - In ``Service.backend()``, "name" is now a required parameter
   - ``Service.get_backend()`` has been removed and replaced with ``backend()`` (`1907 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1907>`__)
 
 Bug Fixes

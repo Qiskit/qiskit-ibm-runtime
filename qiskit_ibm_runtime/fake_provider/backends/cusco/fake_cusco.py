@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Cusco device (127 qubit).
-"""
+"""Fake Cusco device (127 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend
@@ -21,7 +19,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeCusco(fake_backend.FakeBackendV2):
     """A fake 127 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_cusco.json"  # type: ignore
-    props_filename = "props_cusco.json"  # type: ignore
-    backend_name = "fake_cusco"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_cusco.json"
+    props_filename = "props_cusco.json"
+    backend_name = "fake_cusco"

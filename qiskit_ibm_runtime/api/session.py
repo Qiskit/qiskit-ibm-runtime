@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,7 +17,7 @@ import os
 import re
 import logging
 import sys
-from typing import Dict, Optional, Any, Tuple, Union
+from typing import Any
 from pathlib import PurePath
 import importlib.metadata
 
@@ -56,7 +56,6 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-
     if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
         return ""
 
@@ -81,7 +80,7 @@ def _get_client_header() -> str:
                 version_info += "*"
 
             pkg_versions[pkg_name] = version_info
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
     return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
@@ -154,6 +153,17 @@ class RetrySession(Session):
 
     This is a child class of ``requests.Session``. It has its own retry
     policy and handles IBM Quantum specific parameters.
+
+    Args:
+        base_url: Base URL for the session's requests.
+        retries_total: Number of total retries for the requests.
+        retries_connect: Number of connect retries for the requests.
+        backoff_factor: Backoff factor between retry attempts.
+        verify: Whether to enable SSL verification.
+        proxies: Proxy URLs mapped by protocol.
+        auth: Authentication handler.
+        timeout: Timeout for the requests, in the form of (connection_timeout,
+            total_timeout).
     """
 
     def __init__(
@@ -163,27 +173,14 @@ class RetrySession(Session):
         retries_connect: int = 3,
         backoff_factor: float = 0.5,
         verify: bool = True,
-        proxies: Optional[Dict[str, str]] = None,
-        auth: Optional[AuthBase] = None,
-        timeout: Tuple[float, Union[float, None]] = (5.0, None),
+        proxies: dict[str, str] | None = None,
+        auth: AuthBase | None = None,
+        timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
-        """RetrySession constructor.
-
-        Args:
-            base_url: Base URL for the session's requests.
-            retries_total: Number of total retries for the requests.
-            retries_connect: Number of connect retries for the requests.
-            backoff_factor: Backoff factor between retry attempts.
-            verify: Whether to enable SSL verification.
-            proxies: Proxy URLs mapped by protocol.
-            auth: Authentication handler.
-            timeout: Timeout for the requests, in the form of (connection_timeout,
-                total_timeout).
-        """
         super().__init__()
 
         self.base_url = base_url
-        self.custom_header: Optional[str] = None
+        self.custom_header: str | None = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
@@ -192,7 +189,7 @@ class RetrySession(Session):
         """RetrySession destructor. Closes the session."""
         try:
             self.close()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             # ignore errors that may happen during cleanup
             pass
 
@@ -218,7 +215,7 @@ class RetrySession(Session):
         self.mount("https://", retry_adapter)
 
     def _initialize_session_parameters(
-        self, verify: bool, proxies: Dict[str, str], auth: Optional[AuthBase] = None
+        self, verify: bool, proxies: dict[str, str], auth: AuthBase | None = None
     ) -> None:
         """Set the session parameters and attributes.
 
@@ -234,9 +231,7 @@ class RetrySession(Session):
         self.proxies = proxies or {}
         self.verify = verify
 
-    def request(  # type: ignore[override]
-        self, method: str, url: str, bare: bool = False, **kwargs: Any
-    ) -> Response:
+    def request(self, method: str, url: str, bare: bool = False, **kwargs: Any) -> Response:
         """Construct, prepare, and send a ``Request``.
 
         If `bare` is not specified, prepend the base URL to the input `url`.
@@ -256,7 +251,6 @@ class RetrySession(Session):
             RequestsApiError: If the request failed.
             IBMNotAuthorizedError: If the auth token is invalid.
         """
-        # pylint: disable=arguments-differ
         if bare:
             final_url = url
             # Explicitly pass `None` as the `access_token` param, disabling it.
@@ -343,7 +337,7 @@ class RetrySession(Session):
                         "Response uber-trace-id: %s",
                         ex.response.headers["uber-trace-id"],
                     )
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
             if status_code == 401:
@@ -358,7 +352,7 @@ class RetrySession(Session):
 
         return response
 
-    def _log_request_info(self, url: str, method: str, request_data: Dict[str, Any]) -> None:
+    def _log_request_info(self, url: str, method: str, request_data: dict[str, Any]) -> None:
         """Log the request data, filtering out specific information.
 
         Note:
@@ -388,14 +382,14 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
+                        request_data_to_log = f"Request Data: {filter_data(request_data)}."
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,
                         method.upper(),
                         request_data_to_log,
                     )
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 # Catch general exception so as not to disturb the program if filtering fails.
                 logger.info("Filtering failed when logging request information: %s", str(ex))
 
@@ -441,7 +435,7 @@ class RetrySession(Session):
                 headers.update({"X-Qx-Client-Application": f"{current}/{self.custom_header}"})
                 self.headers = headers
 
-    def __getstate__(self) -> Dict:
+    def __getstate__(self) -> dict:
         """Overwrite Session's getstate to include all attributes."""
         state = super().__getstate__()  # type: ignore
         state.update(self.__dict__)

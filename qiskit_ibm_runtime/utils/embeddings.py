@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,21 +9,20 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable=too-many-return-statements
 
-"""
-Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
-"""
+"""Utility class to represent an embedding of a set of qubits in a two-dimensional plane."""
 
-from typing import Iterable, List, Tuple, Union, Sequence
+from __future__ import annotations
+
+from collections.abc import Iterable, Sequence
+from itertools import product
 
 from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
 
 
 class Embedding:
-    r"""
-    A class to represent an embedding or arrangement of a set of qubits in a two-dimensional plane.
+    """Represents an embedding or arrangement of a set of qubits in a two-dimensional plane.
 
     Args:
         coordinates: A list of coordinates in the form ``(row, column)`` that specify the qubits'
@@ -33,8 +32,8 @@ class Embedding:
 
     def __init__(
         self,
-        coordinates: List[Tuple[int, int]],
-        coupling_map: Union[List[Tuple[int, int]], CouplingMap],
+        coordinates: list[tuple[int, int]],
+        coupling_map: list[tuple[int, int]] | CouplingMap,
     ) -> None:
         num_qubits = len(coordinates)
         if any(q0 > num_qubits or q1 > num_qubits for (q0, q1) in coupling_map):
@@ -46,8 +45,8 @@ class Embedding:
         )
 
     @classmethod
-    def from_backend(cls, backend: BackendV2) -> "Embedding":
-        r"""Generates an :class:`~.Embedding` object from a backend.
+    def from_backend(cls, backend: BackendV2) -> Embedding:
+        """Generates an :class:`~.Embedding` object from a backend.
 
         Args:
             backend: A backend to generate the :class:`~.Embedding` object from.
@@ -69,23 +68,19 @@ class Embedding:
         return cls(coordinates, coupling_map)
 
     @property
-    def coordinates(self) -> List[Tuple[int, int]]:
-        r"""
-        The coordinates in this embedding.
-        """
+    def coordinates(self) -> list[tuple[int, int]]:
+        """The coordinates in this embedding."""
         return self._coordinates
 
     @property
     def coupling_map(self) -> CouplingMap:
-        r"""
-        The coupling map in this embedding.
-        """
+        """The coupling map in this embedding."""
         return self._coupling_map
 
 
 def _heavy_hex_coords(
     rows: Sequence[Iterable[int]], row_major: bool = True
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     """Generate heavy hex coordinates for the given rows.
 
     Args:
@@ -112,9 +107,23 @@ def _heavy_hex_coords(
     return coordinates
 
 
-def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
-    r"""
-    Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
+def _square_lattice_coords(num_rows: int, num_cols: int) -> list[tuple[int, int]]:
+    """Generate square lattice coordinates.
+
+    Indexing starts at the top left, and is row major.
+
+    Args:
+        num_rows: The number of rows in the lattice.
+        num_cols: The number of columns in the lattice.
+
+    Returns:
+        A list of qubit coordinates, where list position corresponds with qubit index.
+    """
+    return list(product(range(num_rows), range(num_cols)))
+
+
+def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
+    """Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
 
     The coordinates are in the form ``(row, column)``.
 
@@ -182,10 +191,25 @@ def _get_qubits_coordinates(num_qubits: int) -> List[Tuple[int, int]]:
         rows = [range(10), [0, 4, 8]] + r + [range(11), [0, 4, 8]] + r + [range(1, 11)]
         return _heavy_hex_coords(rows, True)
 
+    if num_qubits == 120:
+        return _square_lattice_coords(12, 10)
+
     if num_qubits == 127:
         r1 = [range(15), [2, 6, 10, 14]]
         r2 = [range(15), [0, 4, 8, 12]]
         rows = [range(14), [0, 4, 8, 12]] + r1 + r2 + r1 + r2 + r1 + [range(1, 15)]
+        return _heavy_hex_coords(rows, True)
+
+    if num_qubits == 133:
+        r1 = [range(15), [0, 4, 8, 12]]
+        r2 = [range(15), [2, 6, 10, 14]]
+        rows = (r1 + r2) * 3 + r1
+        return _heavy_hex_coords(rows, True)
+
+    if num_qubits == 156:
+        r1 = [range(16), [3, 7, 11, 15]]
+        r2 = [range(16), [1, 5, 9, 13]]
+        rows = (r1 + r2) * 3 + r1 + [range(16)]
         return _heavy_hex_coords(rows, True)
 
     raise ValueError(f"Coordinates for {num_qubits}-qubit CPU are unknown.")

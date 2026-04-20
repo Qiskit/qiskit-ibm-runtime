@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -21,11 +21,12 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
    PauliLindbladError
    LayerError
-"""
+"""  # noqa: D205, D212, D415
 
 from __future__ import annotations
 
-from typing import Any, Iterator, Optional, Sequence, Union, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
+from collections.abc import Iterator, Sequence
 from numpy.typing import NDArray
 import numpy as np
 
@@ -87,27 +88,22 @@ class PauliLindbladError:
 
     @property
     def generators(self) -> PauliList:
-        r"""
-        The Pauli Lindblad generators of this :class:`~.PauliLindbladError`.
-        """
+        """The Pauli Lindblad generators of this :class:`~.PauliLindbladError`."""
         return self._generators
 
     @property
     def rates(self) -> NDArray[np.float64]:
-        r"""
-        The Lindblad generator rates of this quantum error.
-        """
+        """The Lindblad generator rates of this quantum error."""
         return self._rates
 
     @property
     def num_qubits(self) -> int:
-        r"""
-        The number of qubits in this :class:`~.PauliLindbladError`.
-        """
+        """The number of qubits in this :class:`~.PauliLindbladError`."""
         return self.generators.num_qubits
 
     def restrict_num_bodies(self, num_qubits: int) -> PauliLindbladError:
-        r"""
+        """Pauli-Lindblad error containing only those terms acting on exactly ``num_qubits`` qubits.
+
         The :class:`~.PauliLindbladError` containing only those terms acting on exactly
         ``num_qubits`` qubits.
 
@@ -150,9 +146,8 @@ class LayerError:
         self,
         circuit: QuantumCircuit,
         qubits: Sequence[int],
-        error: Optional[PauliLindbladError] = None,
+        error: PauliLindbladError | None = None,
     ) -> None:
-
         self._circuit = circuit
         self._qubits = list(qubits)
         self._error = error
@@ -165,49 +160,42 @@ class LayerError:
 
     @property
     def circuit(self) -> QuantumCircuit:
-        r"""
-        The circuit in this :class:`.~LayerError`.
-        """
+        """The circuit in this :class:`.~LayerError`."""
         return self._circuit
 
     @property
     def qubits(self) -> list[int]:
-        r"""
-        The qubits in this :class:`.~LayerError`.
-        """
+        """The qubits in this :class:`.~LayerError`."""
         return self._qubits
 
     @property
-    def error(self) -> Union[PauliLindbladError, None]:
-        r"""
-        The error channel in this :class:`.~LayerError`, or ``None`` if the error channel is either
-        unknown or explicitly disabled.
+    def error(self) -> PauliLindbladError | None:
+        """The error channel in this :class:`.~LayerError`, or ``None``.
+
+        Return ``None`` if the error channel is either unknown or explicitly disabled.
         """
         return self._error
 
     @property
     def num_qubits(self) -> int:
-        r"""
-        The number of qubits in this :class:`~.LayerError`.
-        """
+        """The number of qubits in this :class:`~.LayerError`."""
         return len(self.qubits)
 
     def draw_map(
         self,
-        embedding: Union[Embedding, BackendV2],
+        embedding: Embedding | BackendV2,
         colorscale: str = "Bluered",
         color_no_data: str = "lightgray",
         color_out_of_scale: str = "lightgreen",
         num_edge_segments: int = 16,
         edge_width: float = 4,
         height: int = 500,
-        highest_rate: Optional[float] = None,
+        highest_rate: float | None = None,
         background_color: str = "white",
         radius: float = 0.25,
         width: int = 800,
     ) -> PlotlyFigure:
-        r"""
-        Draw a map view of a this layer error.
+        """Draw a map view of a this layer error.
 
         Args:
             embedding: An :class:`~.Embedding` object containing the coordinates and coupling map
@@ -255,8 +243,6 @@ class LayerError:
             # Draw the layer error on embedding2
             layer_error.draw_map(embedding2)
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
-
         from ..visualization import draw_layer_error_map
 
         return draw_layer_error_map(
@@ -276,21 +262,20 @@ class LayerError:
 
     def draw_swarm(
         self,
-        num_bodies: Optional[int] = None,
-        max_rate: Optional[float] = None,
-        min_rate: Optional[float] = None,
-        connected: Optional[Union[list[Pauli], list[str]]] = None,
-        colors: Optional[list[str]] = None,
-        num_bins: Optional[int] = None,
-        opacities: Union[float, list[float]] = 0.4,
-        names: Optional[list[str]] = None,
-        x_coo: Optional[list[float]] = None,
-        marker_size: Optional[float] = None,
+        num_bodies: int | None = None,
+        max_rate: float | None = None,
+        min_rate: float | None = None,
+        connected: list[Pauli] | list[str] | None = None,
+        colors: list[str] | None = None,
+        num_bins: int | None = None,
+        opacities: float | list[float] = 0.4,
+        names: list[str] | None = None,
+        x_coo: list[float] | None = None,
+        marker_size: float | None = None,
         height: int = 500,
         width: int = 800,
     ) -> PlotlyFigure:
-        r"""
-        Draw a swarm plot of the rates in this layer error.
+        """Draw a swarm plot of the rates in this layer error.
 
         This function plots the rates along a vertical axes, offsetting the rates along the ``x``
         axis so that they do not overlap with each other.
@@ -302,26 +287,24 @@ class LayerError:
         Args:
             num_bodies: The weight of the generators to include in the plot, or ``None`` if all the
                 generators should be included.
-            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should be
-                set.
-            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should be
-                set.
+            max_rate: The largest rate to include in the plot, or ``None`` if no upper limit should
+                be set.
+            min_rate: The smallest rate to include in the plot, or ``None`` if no lower limit should
+                be set.
             connected: A list of generators whose markers are to be connected by lines.
-            colors: A list of colors for the markers in the plot, or ``None`` if these colors are to be
-                chosen automatically.
+            colors: A list of colors for the markers in the plot, or ``None`` if these colors are
+                to be chosen automatically.
             num_bins: The number of bins to place the rates into when calculating the ``x``-axis
                 offsets.
             opacities: A list of opacities for the markers.
             names: The names of the various layers as displayed in the legend. If ``None``, default
                 names are assigned based on the layers' position inside the ``layer_errors`` list.
-            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn around, or
-                ``None`` if these axes should be placed at regular intervals.
+            x_coo: The ``x``-axis coordinates of the vertical axes that the markers are drawn
+                around, or ``None`` if these axes should be placed at regular intervals.
             marker_size: The size of the marker in the plot.
             height: The height of the returned figure.
             width: The width of the returned figure.
         """
-        # pylint: disable=import-outside-toplevel, cyclic-import
-
         from ..visualization import draw_layer_errors_swarm
 
         return draw_layer_errors_swarm(
@@ -350,15 +333,15 @@ class LayerError:
 
 
 class NoiseLearnerResult:
-    """A container for the results of a noise learner experiment."""
+    """A container for the results of a noise learner experiment.
+
+    Args:
+        data: The data of a noise learner experiment.
+        metadata: Metadata that is common to all pub results; metadata specific to particular
+            pubs should be placed in their metadata fields. Keys are expected to be strings.
+    """
 
     def __init__(self, data: Sequence[LayerError], metadata: dict[str, Any] | None = None):
-        """
-        Args:
-            data: The data of a noise learner experiment.
-            metadata: Metadata that is common to all pub results; metadata specific to particular
-                pubs should be placed in their metadata fields. Keys are expected to be strings.
-        """
         self._data = list(data)
         self._metadata = {} if metadata is None else metadata.copy()
 

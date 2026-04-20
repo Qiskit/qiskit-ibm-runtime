@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,6 @@
 
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
-from typing import Optional
 import warnings
 
 from qiskit.circuit import Qubit
@@ -49,34 +48,33 @@ class PadDelay(BlockBasePadder):
         q_1: ──────┤ X ├───────┤ X ├
                    └───┘       └───┘
 
-    Note that the additional idle time of 60dt on the ``q_0`` wire coming from the duration difference
-    between ``Delay`` of 100dt (``q_0``) and ``XGate`` of 160 dt (``q_1``) is absorbed in
-    the delay instruction on the ``q_0`` wire, i.e. in total 160 dt.
+    Note that the additional idle time of 60dt on the ``q_0`` wire coming from the duration
+    difference between ``Delay`` of 100dt (``q_0``) and ``XGate`` of 160 dt (``q_1``) is absorbed
+    in the delay instruction on the ``q_0`` wire, i.e. in total 160 dt.
 
     See :class:`BlockBasePadder` pass for details.
+
+
+    Args:
+        durations: Durations of instructions to be used in scheduling.
+        fill_very_end: Set ``True`` to fill the end of circuit with delay.
+        schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
+            This is useful for timeline visualizations, but may cause issues for execution
+            on large backends.
+        block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
+            the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+            used.
+        target: The backend compilation target.
     """
 
     def __init__(
         self,
-        durations: InstructionDurations = None,
+        durations: InstructionDurations | None = None,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
-        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
-        target: Target = None,
+        block_ordering_callable: BlockOrderingCallableType | None = None,
+        target: Target | None = None,
     ):
-        """Create new padding delay pass.
-
-        Args:
-            durations: Durations of instructions to be used in scheduling.
-            fill_very_end: Set ``True`` to fill the end of circuit with delay.
-            schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
-                This is useful for timeline visualizations, but may cause issues for execution
-                on large backends.
-            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
-                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
-                used.
-        """
-
         if durations:
             warnings.warn(
                 "The `durations` input argument of `PadDelay` is deprecated "

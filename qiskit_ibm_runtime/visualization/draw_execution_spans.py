@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from itertools import cycle
 from datetime import datetime, timedelta
-from typing import Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from collections.abc import Iterable
 
 from ..execution_span import ExecutionSpan, ExecutionSpans
 from .utils import plotly_module
@@ -54,7 +55,7 @@ def draw_execution_spans(
     common_start: bool = False,
     normalize_y: bool = False,
     line_width: int = 4,
-    show_legend: bool = None,
+    show_legend: bool | None = None,
 ) -> PlotlyFigure:
     """Draw one or more :class:`~.ExecutionSpans` on a bar plot.
 
@@ -89,7 +90,7 @@ def draw_execution_spans(
 
     # make sure there are always at least as many names as span sets
     all_names.extend(
-        f"ExecutionSpans{_get_id(single_span, len(spans)>1)}"
+        f"ExecutionSpans{_get_id(single_span, len(spans) > 1)}"
         for single_span in spans[len(all_names) :]
     )
 

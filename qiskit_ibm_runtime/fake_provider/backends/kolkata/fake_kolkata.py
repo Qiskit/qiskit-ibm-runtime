@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021, 2023.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Kolkata device (27 qubit).
-"""
+"""Fake Kolkata device (27 qubit)."""
 
 import os
 from qiskit_ibm_runtime.fake_provider import fake_backend
@@ -21,7 +19,7 @@ from qiskit_ibm_runtime.fake_provider import fake_backend
 class FakeKolkataV2(fake_backend.FakeBackendV2):
     """A fake 27 qubit backend."""
 
-    dirname = os.path.dirname(__file__)  # type: ignore
-    conf_filename = "conf_kolkata.json"  # type: ignore
-    props_filename = "props_kolkata.json"  # type: ignore
-    backend_name = "fake_kolkata"  # type: ignore
+    dirname = os.path.dirname(__file__)
+    conf_filename = "conf_kolkata.json"
+    props_filename = "props_kolkata.json"
+    backend_name = "fake_kolkata"

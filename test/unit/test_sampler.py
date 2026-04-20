@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,10 +15,8 @@
 from unittest.mock import MagicMock
 
 from ddt import data, ddt, named_data, unpack
-from packaging.version import Version, parse as parse_version
 import numpy as np
 
-from qiskit.version import get_version_info as get_qiskit_version_info
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit import Parameter
@@ -41,6 +39,7 @@ class TestSamplerV2(IBMTestCase):
     """Class for testing the Estimator class."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self.circuit = QuantumCircuit(1, 1)
 
@@ -85,7 +84,7 @@ class TestSamplerV2(IBMTestCase):
             self.assertIn(list(opt.keys())[0], str(exc.exception))
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)
@@ -108,13 +107,11 @@ class TestSamplerV2(IBMTestCase):
         session = MagicMock(spec=MockSession, _backend="common_backend")
         options_vars = [
             (
-                SamplerOptions(  # pylint: disable=unexpected-keyword-arg
-                    dynamical_decoupling={"sequence_type": "XX"}
-                ),
+                SamplerOptions(dynamical_decoupling={"sequence_type": "XX"}),
                 {"dynamical_decoupling": {"sequence_type": "XX"}},
             ),
             (
-                SamplerOptions(default_shots=1000),  # pylint: disable=unexpected-keyword-arg
+                SamplerOptions(default_shots=1000),
                 {"default_shots": 1000},
             ),
             (
@@ -223,8 +220,7 @@ class TestSamplerV2(IBMTestCase):
             inst.run([dynamic_circuit, fractional_circuit])
 
     def test_gate_not_in_target(self):
-        """Test exception when circuits contain gates that are not basis gates"""
-        # pylint: disable=invalid-name,not-context-manager
+        """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         sampler = SamplerV2(mode=backend)
 
@@ -243,11 +239,12 @@ class TestSamplerV2(IBMTestCase):
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block(self, backend):
-        """Test no exception for 2q gates involving qubits that are not connected in
-        the coupling map, inside control operation blocks; and yes exception for
-        qubit pairs that are not connected"""
-        # pylint: disable=invalid-name,not-context-manager
+        """Test ISA inside condition block.
 
+        Test no exception for 2q gates involving qubits that are not connected in
+        the coupling map, inside control operation blocks; and yes exception for
+        qubit pairs that are not connected.
+        """
         circ = QuantumCircuit(5, 1)
         circ.x(0)
         circ.measure(0, 0)
@@ -262,13 +259,14 @@ class TestSamplerV2(IBMTestCase):
 
     @data(FakeSherbrooke(), FakeCusco())
     def test_isa_inside_condition_block_body_in_separate_circuit(self, backend):
-        """Test no exception for 2q gates involving qubits that are not connected in
+        """Test ISA inside condition block, with body in separate circuit.
+
+        Test no exception for 2q gates involving qubits that are not connected in
         the coupling map, inside control operation blocks; and yes exception for
         qubit pairs that are not connected.
         For the case where the control operation body is defined not in a
-        context, as in `test_isa_inside_condition_block`, but in a separate circuit."""
-        # pylint: disable=invalid-name,not-context-manager
-
+        context, as in `test_isa_inside_condition_block`, but in a separate circuit.
+        """
         body = QuantumCircuit(QuantumRegister(2, "inner"))
         body.ecr(0, 1)
 
@@ -285,7 +283,7 @@ class TestSamplerV2(IBMTestCase):
 
     @data(-1, 1, 2)
     def test_rzz_fixed_angle_validation(self, angle):
-        """Test exception when rzz gate is used with an angle outside the range [0, pi/2]"""
+        """Test exception when rzz gate is used with an angle outside the range [0, pi/2]."""
         backend = FakeFractionalBackend()
 
         circ = QuantumCircuit(2)
@@ -299,8 +297,11 @@ class TestSamplerV2(IBMTestCase):
 
     @data(-1, 1, 2)
     def test_rzz_parametrized_angle_validation(self, angle):
-        """Test exception when rzz gate is used with a parameter which is assigned a value outside
-        the range [0, pi/2]"""
+        """Test rzz gate with parameter outside range.
+
+        Test exception when rzz gate is used with a parameter which is assigned a value outside
+        the range [0, pi/2].
+        """
         backend = FakeFractionalBackend()
         param = Parameter("p")
 
@@ -316,8 +317,11 @@ class TestSamplerV2(IBMTestCase):
     @data([1.0, 2.0], [1.0, 0.0])
     @unpack
     def test_rzz_validation_param_exp(self, val1, val2):
-        """Test exception when rzz gate is used with a parameter expression, which is evaluated to
-        a value outside the range [0, pi/2]"""
+        """Test rzz gate with parameter expression evaluated outside range.
+
+        Test exception when rzz gate is used with a parameter expression, which is evaluated to
+        a value outside the range [0, pi/2].
+        """
         backend = FakeFractionalBackend()
         p1 = Parameter("p1")
         p2 = Parameter("p2")
@@ -336,11 +340,12 @@ class TestSamplerV2(IBMTestCase):
 
     @data(("a", -1.0), ("b", 2.0), ("d", 3.0), (-1.0, 1.0), (1.0, 2.0), None)
     def test_rzz_complex(self, flawed_params):
-        """Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
-        tests a more complex case. In addition, we test the currently non-existing case of dynamic
-        instructions."""
-        # pylint: disable=not-context-manager
+        """Test rzz validation for a complex case.
 
+        Testing rzz validation, a variation of test_rzz_parametrized_angle_validation which
+        tests a more complex case. In addition, we test the currently non-existing case of dynamic
+        instructions.
+        """
         # FakeFractionalBackend has both fractional and dynamic instructions
         backend = FakeFractionalBackend()
 
@@ -401,25 +406,21 @@ class TestSamplerV2(IBMTestCase):
         "avg_kerneled",
     )
     def test_backend_run_options(self, meas_type):
-        """Test translation of sampler options into backend run options"""
-
+        """Test translation of sampler options into backend run options."""
         # This test is checking that meas_level, meas_return, and noise_model
         # get through the backend's run() call when SamplerV2 falls back to
         # BackendSamplerV2 in local mode. To do this, it creates a dummy
         # backend class that returns a result of the right format so that the
         # sampler execution completes successfully.
 
-        if parse_version(get_qiskit_version_info()) < Version("1.3.0rc1"):
-            self.skipTest("Feature not supported on this version of Qiskit")
-
         class DummyJob:
-            """Enough of a job class to return a result"""
+            """Enough of a job class to return a result."""
 
             def __init__(self, run_options):
                 self.run_options = run_options
 
             def result(self):
-                """Return result object"""
+                """Return result object."""
                 shots = self.run_options["shots"]
 
                 if self.run_options["meas_level"] == 1:
@@ -448,7 +449,7 @@ class TestSamplerV2(IBMTestCase):
                 return result
 
         class DummyBackend(BackendV2):
-            """Test backend that saves run options into the result"""
+            """Test backend that saves run options into the result."""
 
             max_circuits = 1
             # The backend gets cloned inside of the sampler execution code, so
