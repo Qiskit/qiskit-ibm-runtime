@@ -461,7 +461,7 @@ class RuntimeDecoder(json.JSONDecoder):
                         f"options due to the following exception: {exception}"
                     )
 
-            if program_id == "noise-learner" and params:
+            if program_id == "noise-learner" and params and "schema_version" in params:
                 # `decoded` represents the input to an NLV3 program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
