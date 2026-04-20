@@ -16,12 +16,16 @@ from __future__ import annotations
 
 
 from pydantic.dataclasses import dataclass
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
 from .environment_options import LogLevelType
 
+# these config settings ensure we get validaton on attribute mutation, not just at construction
+# time, and also that we get a validaton error if someone spels an attribute name wrong
+_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 
-@dataclass
+
+@dataclass(config=_CONFIG)
 class ExecutionOptions:
     """Low-level execution options."""
 
@@ -39,7 +43,7 @@ class ExecutionOptions:
     """
 
 
-@dataclass
+@dataclass(config=_CONFIG)
 class EnvironmentOptions:
     """Options related to the execution environment."""
 
@@ -59,12 +63,10 @@ class EnvironmentOptions:
     private: bool = False
     """Boolean that indicates whether the job is marked as private.
 
-    When set to true,
-        input parameters are not returned, and the results can only be read once.
-        After the job is completed, input parameters are deleted from the service.
-        After the results are read, these are also deleted from the service.
-        When set to false, the input parameters and results follow the
-        standard retention behavior of the API.
+    When set to true, input parameters are not returned, and the results can only be read once.
+    After the job is completed, input parameters are deleted from the service. After the results are
+    read, these are also deleted from the service. When set to false, the input parameters and
+    results follow the standard retention behavior of the API.
     """
 
     max_execution_time: int | None = None
@@ -79,7 +81,7 @@ class EnvironmentOptions:
     """Runtime image used for this job."""
 
 
-@dataclass
+@dataclass(config=_CONFIG)
 class ExecutorOptions:
     """Options for the executor."""
 
