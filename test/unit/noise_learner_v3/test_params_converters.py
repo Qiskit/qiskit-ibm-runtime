@@ -29,17 +29,6 @@ from ddt import data, ddt
 @ddt
 class TestParamsConverters(IBMTestCase):
     """Tests for ParamConverters."""
-
-    def setUp(self):
-        """Test level setup."""
-        super().setUp()
-
-        self.boxing_pm = generate_preset_pass_manager(backend=FakeFez(), optimization_level=0)
-        self.boxing_pm.post_scheduling = generate_boxing_pass_manager(
-            enable_gates=True,
-            enable_measures=True,
-        )
-
     @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
     def test_round_trip(self, schema_version):
         """Test a round trip."""
@@ -52,7 +41,12 @@ class TestParamsConverters(IBMTestCase):
         circuit.rz(Parameter("lam"), 2)
         circuit.measure_all()
 
-        boxed_circuit = self.boxing_pm.run(circuit)
+        boxing_pm = generate_preset_pass_manager(backend=FakeFez(), optimization_level=0)
+        boxing_pm.post_scheduling = generate_boxing_pass_manager(
+            enable_gates=True,
+            enable_measures=True,
+        )
+        boxed_circuit = boxing_pm.run(circuit)
         instructions = find_unique_box_instructions(boxed_circuit)
 
         options = NoiseLearnerV3Options()
