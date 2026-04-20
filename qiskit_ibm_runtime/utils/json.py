@@ -451,8 +451,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
-                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
-                    quantum_program, options = converter.decoder(converter.model(**params))
+                    qp_converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    quantum_program, options = qp_converter.decoder(qp_converter.model(**params))
                     decoded["params"]["quantum_program"] = quantum_program
                     decoded["params"]["options"] = options
                 except Exception as exception:
@@ -471,8 +471,8 @@ class RuntimeDecoder(json.JSONDecoder):
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 
-                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
-                    instructions, options = converter.decoder(converter.model(**params))
+                    nl_converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
+                    instructions, options = nl_converter.decoder(nl_converter.model(**params))
                     decoded["params"]["instructions"] = instructions
                     decoded["params"]["options"] = options
                 except Exception as exception:
