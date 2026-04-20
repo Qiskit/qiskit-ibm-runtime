@@ -470,6 +470,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
+
                     converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
                     instructions, options = converter.decoder(converter.model(**params))
                     decoded["params"]["instructions"] = instructions

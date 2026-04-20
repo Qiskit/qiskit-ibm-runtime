@@ -48,7 +48,11 @@ class ParamsConverter(NamedTuple):
 
 
 NOISE_LEARNER_V3_PARAMS_CONVERTERS = {
-    "v0.1": ParamsConverter(ParamsModel_0_1, noise_learner_v3_inputs_from_0_1, noise_learner_v3_inputs_to_0_1),
-    "v0.2": ParamsConverter(ParamsModel_0_2, noise_learner_v3_inputs_from_0_2, noise_learner_v3_inputs_to_0_2),
+    "v0.1": ParamsConverter(
+        ParamsModel_0_1, noise_learner_v3_inputs_from_0_1, noise_learner_v3_inputs_to_0_1
+    ),
+    "v0.2": ParamsConverter(
+        ParamsModel_0_2, noise_learner_v3_inputs_from_0_2, noise_learner_v3_inputs_to_0_2
+    ),
 }
 """Converter to/from schema model for the inputs of NLV3."""

@@ -868,7 +868,7 @@ class TestRuntimeDecoder(IBMTestCase):
         options.layer_pair_depths = [0, 2, 4]
 
         # This is the format expected by `RuntimeDecoder.encode` when deserializing inputs of
-        # an NLV3 job        
+        # an NLV3 job
         params = {
             "program": {"id": "noise-learner"},
             "params": NOISE_LEARNER_V3_PARAMS_CONVERTERS[schema_version]

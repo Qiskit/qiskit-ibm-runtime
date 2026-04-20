@@ -29,6 +29,7 @@ from ddt import data, ddt
 @ddt
 class TestParamsConverters(IBMTestCase):
     """Tests for ParamConverters."""
+
     @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
     def test_round_trip(self, schema_version):
         """Test a round trip."""

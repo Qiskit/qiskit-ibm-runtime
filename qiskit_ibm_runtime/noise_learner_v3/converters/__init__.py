@@ -22,5 +22,5 @@ from .version_0_2 import (
     noise_learner_v3_inputs_from_0_2,
     noise_learner_v3_inputs_to_0_2,
     noise_learner_v3_result_from_0_2,
-    noise_learner_v3_result_to_0_2
+    noise_learner_v3_result_to_0_2,
 )
