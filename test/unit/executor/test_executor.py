@@ -13,6 +13,7 @@
 """Tests the `Executor` class."""
 
 from unittest.mock import patch
+from pydantic import ValidationError
 
 from test.utils import get_mocked_backend, get_mocked_session
 
@@ -122,6 +123,18 @@ class TestExecutorOptions(IBMTestCase):
         executor = Executor(mode=get_mocked_backend())
         executor.options = {"experimental": {"test": "value"}}
         self.assertEqual(executor.options.experimental, {"test": "value"})
+
+    def test_validation_on_mutation(self):
+        """Test validation errors are raised on mutation, not just construction."""
+        options = ExecutionOptions(init_qubits=False)
+        with self.assertRaises(ValidationError):
+            options.init_qubits = [0, 1]
+
+    def test_extra_variables_are_forbidden(self):
+        """Test that we can not set variables undefined by the model."""
+        options = ExecutionOptions()
+        with self.assertRaises(ValidationError):
+            options.not_a_variable = 0
 
 
 class TestExecutor(IBMTestCase):
