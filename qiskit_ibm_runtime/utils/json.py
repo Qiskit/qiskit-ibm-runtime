@@ -32,7 +32,6 @@ from qiskit_ibm_runtime.quantum_program.params_converters import (
     QUANTUM_PROGRAM_PARAMS_CONVERTERS,
 )
 
-
 try:
     from qiskit.quantum_info import PauliLindbladMap
 

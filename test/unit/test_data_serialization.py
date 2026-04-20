@@ -787,7 +787,7 @@ class TestExecutionSpansSerialization(IBMTestCase):
 
 @ddt
 class TestRuntimeDecoder(IBMTestCase):
-    """Tests for RuntimeDecoder class."""       
+    """Tests for RuntimeDecoder class."""
 
     @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
     def test_decoding_executor_params(self, schema_version):
