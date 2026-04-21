@@ -128,7 +128,7 @@ class NoiseLearnerV3:
             raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
 
         inputs = converter.encoder(instructions, self.options).model_dump()
-        inputs["version"] = 3  # TODO: this is a work-around for the dispatch
+        inputs["version"] = 3
         runtime_options = self.options.to_runtime_options()
         runtime_options["backend"] = self._backend.name
 
