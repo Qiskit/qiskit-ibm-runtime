@@ -28,9 +28,9 @@ from .utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from ibm_quantum_schemas.common import BaseParamsModel
+    from qiskit.providers import BackendV2
     from .batch import Batch
     from .session import Session
-    from .ibm_backend import IBMBackend
     from .runtime_job_v2 import RuntimeJobV2
     from .quantum_program import QuantumProgram
 
@@ -63,7 +63,7 @@ class Executor:
     Args:
         mode: The execution mode used to make the query. It can be:
 
-            * A :class:`IBMBackend` if you are using job mode.
+            * A :class:`BackendV2` if you are using job mode.
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
 
@@ -89,7 +89,7 @@ class Executor:
 
     def __init__(
         self,
-        mode: IBMBackend | Session | Batch | None,
+        mode: BackendV2 | Session | Batch | None,
         *,
         options: ExecutorOptions | dict | None = None,
     ):
@@ -169,3 +169,7 @@ class Executor:
             raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
 
         return self._run(converter.encoder(program, self.options))
+
+    def backend(self) -> BackendV2:
+        """Return the backend the primitive query will be run on."""
+        return self._backend
