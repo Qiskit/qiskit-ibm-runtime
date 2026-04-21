@@ -40,7 +40,7 @@ class ParamsConverter(NamedTuple):
     model: type[BaseParamsModel]
     """The model describing the NLV3 inputs, or 'params'."""
 
-    decoder: Callable[[BaseParamsModel], tuple[Iterable[CircuitInstruction], NoiseLearnerV3Options]]
+    decoder: Callable[[BaseParamsModel], tuple[list[CircuitInstruction], NoiseLearnerV3Options]]
     """A function to decode the inputs of NLV3."""
 
     encoder: Callable[[Iterable[CircuitInstruction], NoiseLearnerV3Options], BaseParamsModel]
