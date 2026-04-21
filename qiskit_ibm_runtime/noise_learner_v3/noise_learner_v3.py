@@ -15,24 +15,23 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
 from typing import TYPE_CHECKING
-
-from qiskit.circuit import CircuitInstruction
-from qiskit.providers import BackendV2
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
-from ..runtime_job_v2 import RuntimeJobV2
 from ..utils.default_session import get_cm_session
 from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from qiskit.circuit import CircuitInstruction
+    from qiskit.providers import BackendV2
+    from ..runtime_job_v2 import RuntimeJobV2
     from ..batch import Batch
     from ..session import Session
 
@@ -74,36 +73,34 @@ class NoiseLearnerV3:
     _PROGRAM_ID = "noise-learner"
     _DECODER = NoiseLearnerV3ResultDecoder
 
+    options: NoiseLearnerV3Options
+    """The options in this noise learner."""
+
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
         options: NoiseLearnerV3Options | None = None,
     ):
-        self._options = options or NoiseLearnerV3Options()
+        self.options = options or NoiseLearnerV3Options()
         if (
-            isinstance(self._options.experimental, UnsetType)
-            or self._options.experimental.get("image") is None
+            isinstance(self.options.experimental, UnsetType)
+            or self.options.experimental.get("image") is None
         ):
-            self._options.experimental = {}
+            self.options.experimental = {}
 
-        self._session, self._service, self._backend = get_mode_service_backend(mode)  # type: ignore[assignment]
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
 
-        if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
+        if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
-
-    @property
-    def options(self) -> NoiseLearnerV3Options:
-        """The options in this noise learner."""
-        return self._options
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Args:
-                instructions: The instructions to learn the noise of.
+            instructions: The instructions to learn the noise of.
 
         Returns:
-                The submitted job.
+            The submitted job.
 
         Raises:
             IBMInputValueError: If an instruction does not contain a box.
