@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
+from ..constants import SCHEMA_VERSION_NLV3
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
@@ -36,9 +37,6 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_SCHEMA_VERSION = "v0.2"
-"""The schema version used by default by NLV3 to encode the input params."""
 
 
 class NoiseLearnerV3:
@@ -120,9 +118,9 @@ class NoiseLearnerV3:
             validate_options(self.options, configuration())
 
         try:
-            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[SCHEMA_VERSION_NLV3]
         except KeyError:
-            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+            raise ValueError(f"No converters for schema version {SCHEMA_VERSION_NLV3}.")
 
         inputs = converter.encoder(instructions, self.options).model_dump()
         inputs["version"] = 3

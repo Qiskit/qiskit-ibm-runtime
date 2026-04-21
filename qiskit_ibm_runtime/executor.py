@@ -20,6 +20,7 @@ from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from .constants import SCHEMA_VERSION_EXECUTOR
 from .options.executor_options import ExecutorOptions
 from .quantum_program.result_decoders import QuantumProgramResultDecoder
 from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
@@ -36,9 +37,6 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger()
-
-DEFAULT_SCHEMA_VERSION = "v0.2"
-"""The schema version used by default by executor to encode the input params."""
 
 
 class Executor:
@@ -164,8 +162,8 @@ class Executor:
             A job.
         """
         try:
-            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[SCHEMA_VERSION_EXECUTOR]
         except KeyError:
-            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+            raise ValueError(f"No converters for schema version {SCHEMA_VERSION_EXECUTOR}.")
 
         return self._run(converter.encoder(program, self.options))
