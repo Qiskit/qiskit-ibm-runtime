@@ -59,6 +59,13 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
 
         job = learner.run(instructions)
 
+        params = job.inputs
+        # default option of experimental is Unset, and is then converted to {}
+        params["options"].experimental = {}
+
+        assert params["instructions"] == instructions
+        assert params["options"] == learner.options
+
         result = job.result()
         assert isinstance(result, NoiseLearnerV3Results)
         assert all(isinstance(datum, NoiseLearnerV3Result) for datum in result)
