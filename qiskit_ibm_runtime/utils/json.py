@@ -470,8 +470,8 @@ class RuntimeDecoder(json.JSONDecoder):
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 
-                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
-                    instructions, options = converter.decoder(converter.model(**params))
+                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]  # type: ignore[assignment]
+                    instructions, options = converter.decoder(converter.model(**params))  # type: ignore[assignment]
                     decoded["params"]["instructions"] = instructions
                     decoded["params"]["options"] = options
                 except Exception as exception:
