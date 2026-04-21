@@ -451,17 +451,16 @@ class RuntimeDecoder(json.JSONDecoder):
                 # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
-                    qp_converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
-                    quantum_program, qp_options = qp_converter.decoder(qp_converter.model(**params))
+                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    quantum_program, options = converter.decoder(converter.model(**params))
                     decoded["params"]["quantum_program"] = quantum_program
-                    decoded["params"]["options"] = qp_options
+                    decoded["params"]["options"] = options
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert executor 'params' to a pair of quantum program and "
                         f"options due to the following exception: {exception}"
                     )
-
-            if program_id == "noise-learner" and params and "schema_version" in params:
+            elif program_id == "noise-learner" and params and "schema_version" in params:
                 # `decoded` represents the input to an NLV3 program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
@@ -471,10 +470,10 @@ class RuntimeDecoder(json.JSONDecoder):
                         NOISE_LEARNER_V3_PARAMS_CONVERTERS,
                     )
 
-                    nl_converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
-                    instructions, nl_options = nl_converter.decoder(nl_converter.model(**params))
+                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]
+                    instructions, options = converter.decoder(converter.model(**params))
                     decoded["params"]["instructions"] = instructions
-                    decoded["params"]["options"] = nl_options
+                    decoded["params"]["options"] = options
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert NLV3 'params' to a pair of instructions and "
