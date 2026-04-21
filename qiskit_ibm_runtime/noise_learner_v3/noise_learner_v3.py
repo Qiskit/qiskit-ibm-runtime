@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
@@ -79,9 +79,11 @@ class NoiseLearnerV3:
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: NoiseLearnerV3Options | None = None,
+        options: NoiseLearnerV3Options | dict | None = None,
     ):
-        self.options = options or NoiseLearnerV3Options()
+        # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
+        self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
+
         if (
             isinstance(self.options.experimental, UnsetType)
             or self.options.experimental.get("image") is None
@@ -92,6 +94,21 @@ class NoiseLearnerV3:
 
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to an ``ExecutorOptions`` instance.
+        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
+        autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = NoiseLearnerV3Options(**value)
+            elif not isinstance(value, NoiseLearnerV3Options):
+                raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
