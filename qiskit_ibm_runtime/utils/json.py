@@ -437,7 +437,7 @@ class RuntimeDecoder(json.JSONDecoder):
     def decode(self, s: str) -> Any:  # type: ignore[override]
         """Return the Python representation of a string ``s`` containing a JSON document.
 
-        Applies additional conversion for executor program's ``params``, preserving the
+        Applies additional conversion for executor program and NLV3's ``params``, preserving the
         superclass ``decode()`` output in all other cases.
 
         Args:
@@ -446,6 +446,7 @@ class RuntimeDecoder(json.JSONDecoder):
         if isinstance(decoded := super().decode(s), dict):
             program_id = decoded.get("program", {}).get("id", None)
             params = decoded.get("params", {})
+
             if program_id == "executor" and params:
                 # `decoded` represents the input to an executor program. We use the converters to
                 # decode its inputs, or 'params'
@@ -457,6 +458,25 @@ class RuntimeDecoder(json.JSONDecoder):
                 except Exception as exception:
                     warnings.warn(
                         "Unable to convert executor 'params' to a pair of quantum program and "
+                        f"options due to the following exception: {exception}"
+                    )
+            elif program_id == "noise-learner" and params and "schema_version" in params:
+                # `decoded` represents the input to an NLV3 program. We use the converters to
+                # decode its inputs, or 'params'
+                try:
+                    # importing here and not at the top of the file,
+                    # to prevent circular imports
+                    from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
+                        NOISE_LEARNER_V3_PARAMS_CONVERTERS,
+                    )
+
+                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]  # type: ignore[assignment]
+                    instructions, options = converter.decoder(converter.model(**params))  # type: ignore[assignment]
+                    decoded["params"]["instructions"] = instructions
+                    decoded["params"]["options"] = options
+                except Exception as exception:
+                    warnings.warn(
+                        "Unable to convert NLV3 'params' to a pair of instructions and "
                         f"options due to the following exception: {exception}"
                     )
 

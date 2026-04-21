@@ -28,7 +28,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
 from ..runtime_job_v2 import RuntimeJobV2
 from ..utils.default_session import get_cm_session
-from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
+from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .validation import validate_instruction, validate_options
 
@@ -37,6 +37,9 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_SCHEMA_VERSION = "v0.1"
+"""The schema version used by default by NLV3 to encode the input params."""
 
 
 class NoiseLearnerV3:
@@ -119,8 +122,13 @@ class NoiseLearnerV3:
         if configuration := getattr(self._backend, "configuration", None):
             validate_options(self.options, configuration())
 
-        inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
-        inputs["version"] = 3  # TODO: this is a work-around for the dispatch
+        try:
+            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+
+        inputs = converter.encoder(instructions, self.options).model_dump()
+        inputs["version"] = 3
         runtime_options = self.options.to_runtime_options()
         runtime_options["backend"] = self._backend.name
 
