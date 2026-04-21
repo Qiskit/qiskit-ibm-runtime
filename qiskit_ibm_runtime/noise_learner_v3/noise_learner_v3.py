@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SCHEMA_VERSION = "v0.1"
+DEFAULT_SCHEMA_VERSION = "v0.2"
 """The schema version used by default by NLV3 to encode the input params."""
 
 
