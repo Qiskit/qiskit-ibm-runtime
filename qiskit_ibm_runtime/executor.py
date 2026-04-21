@@ -27,7 +27,6 @@ from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
-    from ibm_quantum_schemas.common import BaseParamsModel
     from qiskit.providers import BackendV2
     from .batch import Batch
     from .session import Session
@@ -125,7 +124,21 @@ class Executor:
             max_execution_time=self.options.environment.max_execution_time,
         )
 
-    def _run(self, params: BaseParamsModel) -> RuntimeJobV2:
+    def run(self, program: QuantumProgram) -> RuntimeJobV2:
+        """Run a quantum program.
+
+        Args:
+            program: The program to run.
+
+        Returns:
+            A job.
+        """
+        try:
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+
+        params = converter.encoder(program, self.options)
         runtime_options = self._runtime_options()
 
         if self._session:
@@ -153,22 +166,6 @@ class Executor:
             result_decoder=self._DECODER,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )
-
-    def run(self, program: QuantumProgram) -> RuntimeJobV2:
-        """Run a quantum program.
-
-        Args:
-            program: The program to run.
-
-        Returns:
-            A job.
-        """
-        try:
-            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
-        except KeyError:
-            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
-
-        return self._run(converter.encoder(program, self.options))
 
     def backend(self) -> BackendV2:
         """Return the backend the primitive query will be run on."""
