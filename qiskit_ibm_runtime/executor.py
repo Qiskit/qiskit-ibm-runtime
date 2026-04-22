@@ -37,9 +37,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger()
 
-DEFAULT_SCHEMA_VERSION = "v0.2"
-"""The schema version used by default by executor to encode the input params."""
-
 
 class Executor:
     r"""Class for running :class:`~.QuantumProgram`\\s.
@@ -83,6 +80,7 @@ class Executor:
 
     _PROGRAM_ID = "executor"
     _DECODER = QuantumProgramResultDecoder
+    _SCHEMA_VERSION = "v0.2"
 
     options: ExecutorOptions
     """The options of this executor."""
@@ -164,8 +162,8 @@ class Executor:
             A job.
         """
         try:
-            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
-            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         return self._run(converter.encoder(program, self.options))
