@@ -12,7 +12,6 @@
 
 """Tests the `NoiseLearnerV3` class."""
 
-from unittest import expectedFailure
 from unittest.mock import patch
 
 from pydantic import ValidationError
@@ -32,10 +31,8 @@ from ...ibm_test_case import IBMTestCase
 class TestNoiseLearnerV3Options(IBMTestCase):
     """Tests option setting on the ``NoiseLearnerV3`` class."""
 
-    @expectedFailure
     def test_default_options(self):
         """Test that default options are set when none are provided."""
-        # TODO: requires solving the Unset
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
         self.assertIsInstance(nlv3.options, NoiseLearnerV3Options)
         self.assertEqual(nlv3.options, NoiseLearnerV3Options())
