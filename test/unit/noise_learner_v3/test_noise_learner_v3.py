@@ -111,7 +111,11 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.experimental, {})
 
     def test_experimental_options_from_dict(self):
-        """Test constructing with experimental options in dict."""
+        """Test constructing with experimental options in dict.
+
+        This test requires `image` to be present in experimental options to avoid them being
+        removed.
+        """
         opts_dict = {"experimental": {"image": "foo", "foo": "bar", "baz": 123}}
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
         self.assertEqual(nlv3.options.experimental, {"image": "foo", "foo": "bar", "baz": 123})
@@ -122,7 +126,6 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         This test requires `image` to be present in experimental options to avoid them being
         removed.
         """
-        # TODO: requires image
         opts = NoiseLearnerV3Options(experimental={"image": "foo", "custom_key": "custom_value"})
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
         self.assertEqual(nlv3.options.experimental, {"image": "foo", "custom_key": "custom_value"})
@@ -139,7 +142,6 @@ class TestNoiseLearnerV3Options(IBMTestCase):
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
-        # TODO: validation on mutation not implemented yet
         options = NoiseLearnerV3Options()
         with self.assertRaises(ValidationError):
             options.num_randomizations = "invalid"
