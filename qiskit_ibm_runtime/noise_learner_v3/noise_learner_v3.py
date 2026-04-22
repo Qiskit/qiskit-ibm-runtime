@@ -84,12 +84,6 @@ class NoiseLearnerV3:
         # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
         self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
 
-        if (
-            isinstance(self.options.experimental, UnsetType)
-            or self.options.experimental.get("image") is None
-        ):
-            self.options.experimental = {}
-
         self._session, self._service, self._backend = get_mode_service_backend(mode)
 
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -107,6 +101,9 @@ class NoiseLearnerV3:
                 value = NoiseLearnerV3Options(**value)
             elif not isinstance(value, NoiseLearnerV3Options):
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
+
+            if isinstance(value.experimental, UnsetType) or value.experimental.get("image") is None:
+                value.experimental = {}
 
         super().__setattr__(name, value)
 

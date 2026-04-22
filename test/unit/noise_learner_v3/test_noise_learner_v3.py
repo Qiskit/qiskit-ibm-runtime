@@ -110,29 +110,32 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
         self.assertEqual(nlv3.options.experimental, {})
 
-    @expectedFailure
     def test_experimental_options_from_dict(self):
         """Test constructing with experimental options in dict."""
-        # TODO: requires image
-        opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
+        opts_dict = {"experimental": {"image": "foo", "foo": "bar", "baz": 123}}
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(nlv3.options.experimental, {"foo": "bar", "baz": 123})
+        self.assertEqual(nlv3.options.experimental, {"image": "foo", "foo": "bar", "baz": 123})
 
-    @expectedFailure
     def test_experimental_options_from_instance(self):
-        """Test constructing with an NoiseLearnerV3Options instance with experimental options."""
+        """Test constructing with an NoiseLearnerV3Options instance with experimental options.
+
+        This test requires `image` to be present in experimental options to avoid them being
+        removed.
+        """
         # TODO: requires image
-        opts = NoiseLearnerV3Options(experimental={"custom_key": "custom_value"})
+        opts = NoiseLearnerV3Options(experimental={"image": "foo", "custom_key": "custom_value"})
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
-        self.assertEqual(nlv3.options.experimental, {"custom_key": "custom_value"})
+        self.assertEqual(nlv3.options.experimental, {"image": "foo", "custom_key": "custom_value"})
 
     def test_experimental_options_setter(self):
-        """Test setting experimental options via the setter."""
-        # TODO: inconsistency (experimental not allowed if no image is specified in constructor,
-        # but allowed in setter)
+        """Test setting experimental options via the setter.
+
+        This test requires `image` to be present in experimental options to avoid them being
+        removed.
+        """
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
-        nlv3.options = {"experimental": {"test": "value"}}
-        self.assertEqual(nlv3.options.experimental, {"test": "value"})
+        nlv3.options = {"experimental": {"image": "foo", "test": "value"}}
+        self.assertEqual(nlv3.options.experimental, {"image": "foo", "test": "value"})
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
