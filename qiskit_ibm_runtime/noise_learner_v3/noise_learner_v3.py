@@ -92,9 +92,9 @@ class NoiseLearnerV3:
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
-        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options`` instance.
-        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
-        autocomplete features.
+        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options``
+        instance. This is an alternative to using ``@setter``, as the setter causes issues in
+        ``ipython`` autocomplete features.
         """
         if name == "options":
             if isinstance(value, dict):
