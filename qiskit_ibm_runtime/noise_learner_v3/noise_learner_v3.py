@@ -117,14 +117,14 @@ class NoiseLearnerV3:
             The submitted job.
 
         Raises:
-            IBMInputValueError: If an instruction does not contain a box.
-            IBMInputValueError: If an instruction contains a box without twirl annotation.
-            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do
-                not belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
-                for the backend in use.
-            IBMInputValueError: If an instruction a box with non-ISA gates.
-            IBMInputValueError: If an instruction cannot be learned by any of the supported
-                learning protocols.
+            IBMInputValueError: If the instructions cannot be used with the noise learner, such as:
+
+                * If an instruction contains a box without twirl annotation.
+                * If an instruction contains unphysical qubits, i.e., qubits that do not belong to
+                  the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
+                  for the backend in use.
+                * If an instruction a box with non-ISA gates.
+                * If an instruction cannot be learned by any of the supported learning protocols.
         """
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:
