@@ -1,13 +1,14 @@
 ---
 name: Enhancement request
-about: Suggest an idea or improvement for this project
+about: Suggest an improvement of existing functionality for this project
 title: ''
 labels: enhancement
 assignees: ''
+type: Enhancement
 
 ---
 
-**What is the expected feature or enhancement?**
+**What is the expected enhancement?**
 
 
 **Acceptance criteria**
