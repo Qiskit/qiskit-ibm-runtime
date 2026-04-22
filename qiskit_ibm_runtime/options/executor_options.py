@@ -16,16 +16,13 @@ from __future__ import annotations
 
 
 from pydantic.dataclasses import dataclass
-from pydantic import Field, ConfigDict
+from pydantic import Field
 
 from .environment_options import LogLevelType
-
-# these config settings ensure we get validaton on attribute mutation, not just at construction
-# time, and also that we get a validaton error if someone spels an attribute name wrong
-_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
+from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass(config=_CONFIG)
+@dataclass(config=PRIMITIVES_CONFIG)
 class ExecutionOptions:
     """Low-level execution options."""
 
@@ -43,7 +40,7 @@ class ExecutionOptions:
     """
 
 
-@dataclass(config=_CONFIG)
+@dataclass(config=PRIMITIVES_CONFIG)
 class EnvironmentOptions:
     """Options related to the execution environment."""
 
@@ -81,7 +78,7 @@ class EnvironmentOptions:
     """Runtime image used for this job."""
 
 
-@dataclass(config=_CONFIG)
+@dataclass(config=PRIMITIVES_CONFIG)
 class ExecutorOptions:
     """Options for the executor."""
 

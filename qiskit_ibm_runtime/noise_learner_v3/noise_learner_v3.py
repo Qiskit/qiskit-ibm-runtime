@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
@@ -77,19 +77,33 @@ class NoiseLearnerV3:
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: NoiseLearnerV3Options | None = None,
+        options: NoiseLearnerV3Options | dict | None = None,
     ):
-        self.options = options or NoiseLearnerV3Options()
-        if (
-            isinstance(self.options.experimental, UnsetType)
-            or self.options.experimental.get("image") is None
-        ):
-            self.options.experimental = {}
+        # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
+        self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
 
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options``
+        instance. This is an alternative to using ``@setter``, as the setter causes issues in
+        ``ipython`` autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = NoiseLearnerV3Options(**value)
+            elif not isinstance(value, NoiseLearnerV3Options):
+                raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
+
+            if isinstance(value.experimental, UnsetType) or value.experimental.get("image") is None:
+                value.experimental = {}
+
+        super().__setattr__(name, value)
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
@@ -101,14 +115,14 @@ class NoiseLearnerV3:
             The submitted job.
 
         Raises:
-            IBMInputValueError: If an instruction does not contain a box.
-            IBMInputValueError: If an instruction contains a box without twirl annotation.
-            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do
-                not belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
-                for the backend in use.
-            IBMInputValueError: If an instruction a box with non-ISA gates.
-            IBMInputValueError: If an instruction cannot be learned by any of the supported
-                learning protocols.
+            IBMInputValueError: If the instructions cannot be used with the noise learner, such as:
+
+                * If an instruction contains a box without twirl annotation.
+                * If an instruction contains unphysical qubits, i.e., qubits that do not belong to
+                  the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
+                  for the backend in use.
+                * If an instruction contains a box with non-ISA gates.
+                * If an instruction cannot be learned by any of the supported learning protocols.
         """
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:
