@@ -19,7 +19,6 @@ from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime.options.utils import UnsetType
 
-from ..constants import SCHEMA_VERSION_NLV3
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
@@ -70,6 +69,7 @@ class NoiseLearnerV3:
 
     _PROGRAM_ID = "noise-learner"
     _DECODER = NoiseLearnerV3ResultDecoder
+    _SCHEMA_VERSION = "v0.2"
 
     options: NoiseLearnerV3Options
     """The options in this noise learner."""
@@ -118,9 +118,9 @@ class NoiseLearnerV3:
             validate_options(self.options, configuration())
 
         try:
-            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[SCHEMA_VERSION_NLV3]
+            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
-            raise ValueError(f"No converters for schema version {SCHEMA_VERSION_NLV3}.")
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         inputs = converter.encoder(instructions, self.options).model_dump()
         inputs["version"] = 3

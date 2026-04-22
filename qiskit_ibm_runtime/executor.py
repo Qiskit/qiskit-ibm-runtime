@@ -20,7 +20,6 @@ from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from .constants import SCHEMA_VERSION_EXECUTOR
 from .options.executor_options import ExecutorOptions
 from .quantum_program.result_decoders import QuantumProgramResultDecoder
 from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
@@ -81,6 +80,7 @@ class Executor:
 
     _PROGRAM_ID = "executor"
     _DECODER = QuantumProgramResultDecoder
+    _SCHEMA_VERSION = "v0.2"
 
     options: ExecutorOptions
     """The options of this executor."""
@@ -162,8 +162,8 @@ class Executor:
             A job.
         """
         try:
-            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[SCHEMA_VERSION_EXECUTOR]
+            converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
-            raise ValueError(f"No converters for schema version {SCHEMA_VERSION_EXECUTOR}.")
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         return self._run(converter.encoder(program, self.options))

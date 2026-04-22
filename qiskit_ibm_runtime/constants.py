@@ -44,9 +44,3 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }
-
-SCHEMA_VERSION_EXECUTOR = "v0.2"
-"""The schema version used by default by executor to encode the input params."""
-
-SCHEMA_VERSION_NLV3 = "v0.2"
-"""The schema version used by default by noise learner V3 to encode the input params."""
