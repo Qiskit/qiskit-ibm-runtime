@@ -92,7 +92,7 @@ class NoiseLearnerV3:
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
 
-        Handle ``options`` as a special case, ensuring it is set to an ``ExecutorOptions`` instance.
+        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options`` instance.
         This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
         autocomplete features.
         """
@@ -123,7 +123,7 @@ class NoiseLearnerV3:
                 * If an instruction contains unphysical qubits, i.e., qubits that do not belong to
                   the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
                   for the backend in use.
-                * If an instruction a box with non-ISA gates.
+                * If an instruction contains a box with non-ISA gates.
                 * If an instruction cannot be learned by any of the supported learning protocols.
         """
         if target := getattr(self._backend, "target", None):

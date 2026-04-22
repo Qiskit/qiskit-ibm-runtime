@@ -62,7 +62,7 @@ class Executor:
     Args:
         mode: The execution mode used to make the query. It can be:
 
-            * A :class:`BackendV2` if you are using job mode.
+            * A :class:`~.BackendV2` if you are using job mode.
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
 
