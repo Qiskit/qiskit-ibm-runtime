@@ -18,11 +18,8 @@ from __future__ import annotations
 from pydantic.dataclasses import dataclass
 from pydantic import Field
 
+from .environment_options import LogLevelType
 from .utils import PRIMITIVES_CONFIG
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from .environment_options import LogLevelType
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
