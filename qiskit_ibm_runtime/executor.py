@@ -16,21 +16,24 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-
-from ibm_quantum_schemas.common import BaseParamsModel
+from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from .ibm_backend import IBMBackend
-from .session import Session
-from .batch import Batch
 from .options.executor_options import ExecutorOptions
-from .quantum_program import QuantumProgram
 from .quantum_program.result_decoders import QuantumProgramResultDecoder
 from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.default_session import get_cm_session
+
+if TYPE_CHECKING:
+    from ibm_quantum_schemas.common import BaseParamsModel
+    from .batch import Batch
+    from .session import Session
+    from .ibm_backend import IBMBackend
+    from .runtime_job_v2 import RuntimeJobV2
+    from .quantum_program import QuantumProgram
+
 
 logger = logging.getLogger()
 
@@ -81,31 +84,36 @@ class Executor:
     _PROGRAM_ID = "executor"
     _DECODER = QuantumProgramResultDecoder
 
+    options: ExecutorOptions
+    """The options of this executor."""
+
     def __init__(
         self,
         mode: IBMBackend | Session | Batch | None,
         *,
         options: ExecutorOptions | dict | None = None,
     ):
-        self.options = options if options is not None else ExecutorOptions()
+        # Coerced to `ExecutorOptions` via `__setattr__()`.
+        self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The executor is currently not supported in local mode.")
 
-    @property
-    def options(self) -> ExecutorOptions:
-        """The options of this executor."""
-        return self._options
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
 
-    @options.setter
-    def options(self, options: ExecutorOptions | dict) -> None:
-        if isinstance(options, dict):
-            self._options = ExecutorOptions(**options)
-        elif isinstance(options, ExecutorOptions):
-            self._options = options
-        else:
-            raise TypeError(f"Expected ExecutorOptions or dict, got {type(options)}")
+        Handle ``options`` as a special case, ensuring it is set to an ``ExecutorOptions`` instance.
+        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
+        autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = ExecutorOptions(**value)
+            elif not isinstance(value, ExecutorOptions):
+                raise TypeError(f"Expected ExecutorOptions or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def _runtime_options(self) -> RuntimeOptions:
         return RuntimeOptions(

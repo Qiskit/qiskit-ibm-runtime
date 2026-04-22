@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 class ParamsConverter(NamedTuple):
     """A helper to store params models and converters."""
 
-    model: BaseParamsModel
+    model: type[BaseParamsModel]
     """The model describing the executor inputs, or 'params'."""
 
     decoder: Callable[[BaseParamsModel], tuple[QuantumProgram, ExecutorOptions]]

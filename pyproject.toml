@@ -144,7 +144,7 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas==0.7rc1",
+    "ibm-quantum-schemas>=0.7.20260419,<1",
     "pydantic>=2.7.0",
     "qiskit>=2.2.0",
     "pybase64>=1.4",
