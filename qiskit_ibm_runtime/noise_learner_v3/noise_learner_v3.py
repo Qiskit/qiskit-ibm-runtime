@@ -37,9 +37,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_SCHEMA_VERSION = "v0.1"
-"""The schema version used by default by NLV3 to encode the input params."""
-
 
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
@@ -72,6 +69,7 @@ class NoiseLearnerV3:
 
     _PROGRAM_ID = "noise-learner"
     _DECODER = NoiseLearnerV3ResultDecoder
+    _SCHEMA_VERSION = "v0.2"
 
     options: NoiseLearnerV3Options
     """The options in this noise learner."""
@@ -134,9 +132,9 @@ class NoiseLearnerV3:
             validate_options(self.options, configuration())
 
         try:
-            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[DEFAULT_SCHEMA_VERSION]
+            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
         except KeyError:
-            raise ValueError(f"No converters for schema version {DEFAULT_SCHEMA_VERSION}.")
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         inputs = converter.encoder(instructions, self.options).model_dump()
         inputs["version"] = 3
