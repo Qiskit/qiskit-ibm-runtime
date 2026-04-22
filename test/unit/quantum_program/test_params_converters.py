@@ -22,7 +22,7 @@ from ddt import data, ddt
 
 
 @ddt
-class TestParamConverters(IBMTestCase):
+class TestParamsConverters(IBMTestCase):
     """Tests for ParamConverters."""
 
     @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
