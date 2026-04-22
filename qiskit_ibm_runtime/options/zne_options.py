@@ -142,7 +142,7 @@ class ZneOptions:
 
     If unset, this will default to ``[0, *noise_factors]``. This
     option does not affect execution or model fitting in any way, it only determines the
-    points at which the ``extrapolator``\\s are evaluated to be returned in the data
+    points at which the ``extrapolator``\s are evaluated to be returned in the data
     fields called ``evs_extrapolated`` and ``stds_extrapolated``.
     """
 
