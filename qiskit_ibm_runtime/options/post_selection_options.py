@@ -16,7 +16,6 @@ from typing import Literal
 
 from pydantic.dataclasses import dataclass
 
-from .options import BaseOptions
 from .utils import PRIMITIVES_CONFIG
 
 
@@ -25,7 +24,7 @@ DEFAULT_X_PULSE_TYPE = "xslow"
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
-class PostSelectionOptions(BaseOptions):
+class PostSelectionOptions:
     """Options for post selecting results."""
 
     enable: bool = False
