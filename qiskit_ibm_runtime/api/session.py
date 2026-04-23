@@ -64,6 +64,18 @@ def _get_client_header() -> str:
         "qiskit_aer",
         "qiskit_experiments",
         "qiskit_optimization",
+        "qiskit_addon_opt_mapper",
+        "qiskit_fermions",
+        "qiskit_addon_aqc_tensor",
+        "qiskit_addon_mpf",
+        "qiskit_addon_obp",
+        "qiskit_addon_cutting",
+        "qiskit_addon_pna",
+        "qiskit_addon_slc",
+        "qiskit_addon_sqd",
+        "qiskit_addon_utils",
+        "mthree",
+        "pauli_prop",
     ]
 
     pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
