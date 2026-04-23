@@ -98,10 +98,6 @@ class NoiseLearnerV3:
                 value = NoiseLearnerV3Options(**value)
             elif not isinstance(value, NoiseLearnerV3Options):
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
-
-            if value.experimental.get("image") is None:
-                value.experimental = {}
-
         super().__setattr__(name, value)
 
     def _runtime_options(self) -> RuntimeOptions:
