@@ -97,15 +97,3 @@ class NoiseLearnerV3Options:
         if any(i < 0 for i in value):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
         return value
-
-    @field_validator("environment", mode="before")
-    @classmethod
-    def cast_environment_dicts(cls, value: dict | EnvironmentOptions) -> EnvironmentOptions:
-        """Cast dictionaries to environment options."""
-        return EnvironmentOptions(**value) if isinstance(value, dict) else value
-
-    @field_validator("simulator", mode="before")
-    @classmethod
-    def cast_simulator_dicts(cls, value: dict | SimulatorOptions) -> SimulatorOptions:
-        """Cast dictionaries to simulator options."""
-        return SimulatorOptions(**value) if isinstance(value, dict) else value
