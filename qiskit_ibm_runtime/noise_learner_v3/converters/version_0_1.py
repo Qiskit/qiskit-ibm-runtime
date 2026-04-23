@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-
+from dataclasses import asdict
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
@@ -49,7 +49,7 @@ def noise_learner_v3_inputs_to_0_1(
         instructions=QpyModelV13ToV16.from_quantum_circuit(
             circuit, qpy_version=get_qpy_version(16)
         ),
-        options=options.to_options_model("v0.1"),
+        options=asdict(options),  # type: ignore[call-overload]
     )
 
 

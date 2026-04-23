@@ -12,7 +12,6 @@
 
 """Tests the `NoiseLearnerV3` class."""
 
-from unittest import expectedFailure
 from unittest.mock import patch
 
 from pydantic import ValidationError
@@ -20,11 +19,13 @@ from pydantic import ValidationError
 from test.utils import get_mocked_backend, get_mocked_session
 
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
-from qiskit_ibm_runtime.options.noise_learner_v3_options import (
+from qiskit_ibm_runtime.options import (
     EnvironmentOptions,
     NoiseLearnerV3Options,
     PostSelectionOptions,
+    SimulatorOptions,
 )
+from qiskit_ibm_runtime.runtime_options import RuntimeOptions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -32,20 +33,28 @@ from ...ibm_test_case import IBMTestCase
 class TestNoiseLearnerV3Options(IBMTestCase):
     """Tests option setting on the ``NoiseLearnerV3`` class."""
 
-    @expectedFailure
     def test_default_options(self):
         """Test that default options are set when none are provided."""
-        # TODO: requires solving the Unset
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
         self.assertIsInstance(nlv3.options, NoiseLearnerV3Options)
         self.assertEqual(nlv3.options, NoiseLearnerV3Options())
 
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
-        opts = NoiseLearnerV3Options(post_selection=PostSelectionOptions(strategy="edge"))
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
-        self.assertIs(nlv3.options, opts)
+        opts_dict = {
+            "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
+            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
+        }
+        options = NoiseLearnerV3Options(**opts_dict)
+        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=options)
+        self.assertTrue(nlv3.options.post_selection.enable)
+        self.assertEqual(nlv3.options.post_selection.x_pulse_type, "rx")
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
+        self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
+
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
+        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -60,6 +69,9 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
         self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
 
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
+        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
+
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
         nlv3 = NoiseLearnerV3(
@@ -69,6 +81,9 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.post_selection.x_pulse_type, "xslow")
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
         self.assertEqual(nlv3.options.environment, EnvironmentOptions())
+
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
+        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -111,34 +126,17 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.experimental, {})
 
     def test_experimental_options_from_dict(self):
-        """Test constructing with experimental options in dict.
-
-        This test requires `image` to be present in experimental options to avoid them being
-        removed.
-        """
-        opts_dict = {"experimental": {"image": "foo", "foo": "bar", "baz": 123}}
+        """Test constructing with experimental options in dict."""
+        opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(nlv3.options.experimental, {"image": "foo", "foo": "bar", "baz": 123})
+        self.assertEqual(nlv3.options.experimental, opts_dict["experimental"])
 
     def test_experimental_options_from_instance(self):
-        """Test constructing with an NoiseLearnerV3Options instance with experimental options.
-
-        This test requires `image` to be present in experimental options to avoid them being
-        removed.
-        """
-        opts = NoiseLearnerV3Options(experimental={"image": "foo", "custom_key": "custom_value"})
+        """Test constructing with an NoiseLearnerV3Options instance with experimental options."""
+        opts_dict = {"experimental": {"foo": "bar", "baz": 123}}
+        opts = NoiseLearnerV3Options(**opts_dict)
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
-        self.assertEqual(nlv3.options.experimental, {"image": "foo", "custom_key": "custom_value"})
-
-    def test_experimental_options_setter(self):
-        """Test setting experimental options via the setter.
-
-        This test requires `image` to be present in experimental options to avoid them being
-        removed.
-        """
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend())
-        nlv3.options = {"experimental": {"image": "foo", "test": "value"}}
-        self.assertEqual(nlv3.options.experimental, {"image": "foo", "test": "value"})
+        self.assertEqual(nlv3.options.experimental, opts_dict["experimental"])
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
@@ -175,3 +173,19 @@ class TestNoiseLearnerV3(IBMTestCase):
             noise_learner = NoiseLearnerV3(mode=backend)
             selected_run = noise_learner.run([])
             self.assertEqual(selected_run, "service")
+
+    def test_runtime_options(self):
+        """Test the ``_runtime_options`` method."""
+        learner = NoiseLearnerV3(mode=(backend := get_mocked_backend()))
+        learner.options.experimental = {"image": (my_image := "my_image")}
+        learner.options.max_execution_time = (max_execution_time := 3)
+        learner.options.environment.job_tags = (job_tags := ["my", "tags"])
+        learner.options.environment.private = (private := True)
+
+        runtime_options = learner._runtime_options()
+        self.assertIsInstance(runtime_options, RuntimeOptions)
+        self.assertEqual(runtime_options.backend, backend.name)
+        self.assertEqual(runtime_options.image, my_image)
+        self.assertEqual(runtime_options.job_tags, job_tags)
+        self.assertEqual(runtime_options.private, private)
+        self.assertEqual(runtime_options.max_execution_time, max_execution_time)

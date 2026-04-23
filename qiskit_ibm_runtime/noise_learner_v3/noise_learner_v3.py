@@ -17,8 +17,7 @@ from __future__ import annotations
 import logging
 from typing import Any, TYPE_CHECKING
 
-from qiskit_ibm_runtime.options.utils import UnsetType
-
+from ..runtime_options import RuntimeOptions
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
@@ -99,11 +98,17 @@ class NoiseLearnerV3:
                 value = NoiseLearnerV3Options(**value)
             elif not isinstance(value, NoiseLearnerV3Options):
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
-
-            if isinstance(value.experimental, UnsetType) or value.experimental.get("image") is None:
-                value.experimental = {}
-
         super().__setattr__(name, value)
+
+    def _runtime_options(self) -> RuntimeOptions:
+        return RuntimeOptions(
+            backend=self._backend.name,
+            image=self.options.experimental.get("image", None),
+            job_tags=self.options.environment.job_tags,  # type: ignore[union-attr]
+            log_level=self.options.environment.log_level,  # type: ignore[union-attr]
+            private=self.options.environment.private,  # type: ignore[union-attr]
+            max_execution_time=self.options.max_execution_time,
+        )
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
@@ -138,14 +143,13 @@ class NoiseLearnerV3:
 
         inputs = converter.encoder(instructions, self.options).model_dump()
         inputs["version"] = 3
-        runtime_options = self.options.to_runtime_options()
-        runtime_options["backend"] = self._backend.name
+        runtime_options = self._runtime_options()
 
         if self._session:
             run = self._session._run
         else:
             run = self._service._run
-            runtime_options["instance"] = self._backend._instance
+            runtime_options.instance = self._backend._instance
 
             if get_cm_session():
                 logger.warning(
