@@ -41,10 +41,20 @@ class TestNoiseLearnerV3Options(IBMTestCase):
 
     def test_options_from_instance(self):
         """Test constructing with an NoiseLearnerV3Options instance."""
-        opts = NoiseLearnerV3Options(post_selection=PostSelectionOptions(strategy="edge"))
-        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts)
-        self.assertIs(nlv3.options, opts)
+        opts_dict = {
+            "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
+            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
+        }
+        options = NoiseLearnerV3Options(**opts_dict)
+        nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=options)
+        self.assertTrue(nlv3.options.post_selection.enable)
+        self.assertEqual(nlv3.options.post_selection.x_pulse_type, "rx")
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
+        self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
+        self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
+
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
+        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""

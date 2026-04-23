@@ -70,7 +70,7 @@ class NoiseLearnerV3Options:
     default value ``backend.default_rep_delay`` is used.
     """
 
-    post_selection: PostSelectionOptions | dict = Field(default_factory=PostSelectionOptions)
+    post_selection: PostSelectionOptions = Field(default_factory=PostSelectionOptions)
     """Options for post selecting the results of noise learning circuits.
     """
 
@@ -81,8 +81,8 @@ class NoiseLearnerV3Options:
     """
 
     max_execution_time: int | None = None
-    environment: EnvironmentOptions | dict = Field(default_factory=EnvironmentOptions)
-    simulator: SimulatorOptions | dict = Field(default_factory=SimulatorOptions)
+    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
 
     _ge0 = make_constraint_validator(
         "num_randomizations",
