@@ -22,8 +22,8 @@ from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options.executor_options import (
     ExecutorOptions,
     ExecutionOptions,
-    EnvironmentOptions,
 )
+from qiskit_ibm_runtime.options.environment_options import EnvironmentOptionsV2
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 
 from ...ibm_test_case import IBMTestCase
@@ -64,7 +64,7 @@ class TestExecutorOptions(IBMTestCase):
         )
         self.assertFalse(executor.options.execution.init_qubits)
         self.assertIsNone(executor.options.execution.rep_delay)
-        self.assertEqual(executor.options.environment, EnvironmentOptions())
+        self.assertEqual(executor.options.environment, EnvironmentOptionsV2())
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""

@@ -18,7 +18,7 @@ from __future__ import annotations
 from pydantic.dataclasses import dataclass
 from pydantic import Field
 
-from .environment_options import LogLevelType
+from .environment_options import EnvironmentOptionsV2
 from .utils import PRIMITIVES_CONFIG
 
 
@@ -41,48 +41,10 @@ class ExecutionOptions:
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
-class EnvironmentOptions:
-    """Options related to the execution environment."""
-
-    log_level: LogLevelType = "WARNING"
-    """logging level to set in the execution environment.
-
-    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-    """
-
-    job_tags: list[str] = Field(default_factory=list)
-    """Tags to be assigned to the job.
-
-    The tags can subsequently be used as a filter in the
-    :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()` function call.
-    """
-
-    private: bool = False
-    """Boolean that indicates whether the job is marked as private.
-
-    When set to true, input parameters are not returned, and the results can only be read once.
-    After the job is completed, input parameters are deleted from the service. After the results are
-    read, these are also deleted from the service. When set to false, the input parameters and
-    results follow the standard retention behavior of the API.
-    """
-
-    max_execution_time: int | None = None
-    """Maximum execution time in seconds.
-
-    This value bounds system execution time (not wall clock time). System execution time is the
-    amount of time that the system is dedicated to processing your job. If a job exceeds
-    this time limit, it is forcibly cancelled.
-    """
-
-    image: str | None = None
-    """Runtime image used for this job."""
-
-
-@dataclass(config=PRIMITIVES_CONFIG)
 class ExecutorOptions:
     """Options for the executor."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptionsV2 = Field(default_factory=EnvironmentOptionsV2)
     """Options related to the execution environment."""
 
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pydantic import Field, ValidationInfo, field_validator
 
-from .environment_options import EnvironmentOptions
+from .environment_options import EnvironmentOptionsV2
 from .post_selection_options import PostSelectionOptions
 from .simulator_options import SimulatorOptions
 from .utils import (
@@ -81,7 +81,10 @@ class NoiseLearnerV3Options:
     """
 
     max_execution_time: int | None = None
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+
+    environment: EnvironmentOptionsV2 = Field(default_factory=EnvironmentOptionsV2)
+    """Options related to the execution environment."""
+
     simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
 
     _ge0 = make_constraint_validator(
