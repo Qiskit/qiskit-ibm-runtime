@@ -76,6 +76,7 @@ class NoiseLearnerV3Options:
     """Options related to the execution environment."""
 
     simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
+    """Simulator options."""
 
     _ge0 = make_constraint_validator(
         "num_randomizations",

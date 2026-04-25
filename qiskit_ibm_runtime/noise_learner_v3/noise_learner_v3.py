@@ -14,10 +14,10 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 import logging
 from typing import Any, TYPE_CHECKING
 
-from ..runtime_options import RuntimeOptions
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options.noise_learner_v3_options import NoiseLearnerV3Options
@@ -100,16 +100,6 @@ class NoiseLearnerV3:
                 raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
         super().__setattr__(name, value)
 
-    def _runtime_options(self) -> RuntimeOptions:
-        return RuntimeOptions(
-            backend=self._backend.name,
-            image=self.options.experimental.get("image", None),
-            job_tags=self.options.environment.job_tags,  # type: ignore[union-attr]
-            log_level=self.options.environment.log_level,  # type: ignore[union-attr]
-            private=self.options.environment.private,  # type: ignore[union-attr]
-            max_execution_time=self.options.environment.max_execution_time,
-        )
-
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
@@ -141,15 +131,14 @@ class NoiseLearnerV3:
         except KeyError:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
-        inputs = converter.encoder(instructions, self.options).model_dump()
-        inputs["version"] = 3
-        runtime_options = self._runtime_options()
+        params = converter.encoder(instructions, self.options)
+        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
+        runtime_options["backend"] = self._backend.name
 
         if self._session:
-            run = self._session._run
+            _run = self._session._run
         else:
-            run = self._service._run
-            runtime_options.instance = self._backend._instance
+            _run = self._service._run
 
             if get_cm_session():
                 logger.warning(
@@ -161,7 +150,10 @@ class NoiseLearnerV3:
                     self._PROGRAM_ID,
                 )
 
-        return run(
+        inputs = params.model_dump(mode="json")
+        inputs["version"] = 3
+
+        return _run(
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,

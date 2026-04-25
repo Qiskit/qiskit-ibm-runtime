@@ -50,7 +50,7 @@ def noise_learner_v3_inputs_to_0_2(
         circuit.append(instr, instr.qubits, instr.clbits)
 
     # Convert `options` to dict, moving the fields in `options.execution` to top-level.
-    schema_options = asdict(options)
+    schema_options = asdict(options)  # type: ignore[call-overload]
     for field in EXECUTION_FIELDS:
         schema_options[field] = schema_options["execution"][field]
     schema_options.pop("execution")

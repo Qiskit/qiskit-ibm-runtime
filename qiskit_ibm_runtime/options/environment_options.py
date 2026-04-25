@@ -12,7 +12,7 @@
 
 """Options related to the execution environment."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -96,5 +96,13 @@ class EnvironmentOptionsV2:
     this time limit, it is forcibly cancelled.
     """
 
-    image: str | None = None
+    image: (
+        Annotated[
+            str,
+            Field(
+                pattern="[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
+            ),
+        ]
+        | None
+    ) = None
     """Runtime image used for this job."""

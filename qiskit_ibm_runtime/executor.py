@@ -126,13 +126,13 @@ class Executor:
             raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
 
         params = converter.encoder(program, self.options)
-        runtime_options = asdict(self.options.environment)
+        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
         runtime_options["backend"] = self._backend.name
 
         if self._session:
-            run = self._session._run
+            _run = self._session._run
         else:
-            run = self._service._run
+            _run = self._service._run
 
             if get_cm_session():
                 logger.warning(
@@ -146,7 +146,7 @@ class Executor:
 
         inputs = params.model_dump(mode="json")
 
-        return run(
+        return _run(
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
