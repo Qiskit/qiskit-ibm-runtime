@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from pydantic import Field, ValidationInfo, field_validator
 
+from .execution_options import ExecutionOptions
 from .environment_options import EnvironmentOptionsV2
 from .post_selection_options import PostSelectionOptions
 from .simulator_options import SimulatorOptions
@@ -81,6 +82,9 @@ class NoiseLearnerV3Options:
     """
 
     max_execution_time: int | None = None
+
+    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    """Low-level execution options."""
 
     environment: EnvironmentOptionsV2 = Field(default_factory=EnvironmentOptionsV2)
     """Options related to the execution environment."""

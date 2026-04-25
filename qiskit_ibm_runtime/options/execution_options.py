@@ -12,7 +12,9 @@
 
 """Execution options."""
 
-from .utils import Unset, UnsetType, primitive_dataclass
+from pydantic.dataclasses import dataclass
+
+from .utils import Unset, UnsetType, primitive_dataclass, PRIMITIVES_CONFIG
 
 
 @primitive_dataclass
@@ -23,6 +25,24 @@ class ExecutionOptionsV2:
     """Whether to reset the qubits to the ground state for each shot. Default is ``True``."""
 
     rep_delay: UnsetType | float = Unset
+    """The repetition delay.
+
+    This is the delay between a measurement and the subsequent quantum circuit. This is only
+    supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must be from the
+    range supplied by ``backend.rep_delay_range``.
+
+    Default is given by ``backend.default_rep_delay``.
+    """
+
+
+@dataclass(config=PRIMITIVES_CONFIG)
+class ExecutionOptions:
+    """Low-level execution options."""
+
+    init_qubits: bool = True
+    """Whether to reset the qubits to the ground state for each shot."""
+
+    rep_delay: float | None = None
     """The repetition delay.
 
     This is the delay between a measurement and the subsequent quantum circuit. This is only
