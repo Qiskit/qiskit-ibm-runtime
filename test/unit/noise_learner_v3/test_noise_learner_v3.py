@@ -178,7 +178,7 @@ class TestNoiseLearnerV3(IBMTestCase):
         """Test the ``_runtime_options`` method."""
         learner = NoiseLearnerV3(mode=(backend := get_mocked_backend()))
         learner.options.experimental = {"image": (my_image := "my_image")}
-        learner.options.max_execution_time = (max_execution_time := 3)
+        learner.options.environment.max_execution_time = (max_execution_time := 3)
         learner.options.environment.job_tags = (job_tags := ["my", "tags"])
         learner.options.environment.private = (private := True)
 

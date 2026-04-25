@@ -33,6 +33,9 @@ from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
     NoiseLearnerV3Results,
 )
 
+EXECUTION_FIELDS = {"init_qubits", "rep_delay"}
+"""Fields that belong to ``options.execution`` in user-land, but in ``options`` in schemas."""
+
 
 def noise_learner_v3_inputs_to_0_2(
     instructions: Iterable[CircuitInstruction],
@@ -46,11 +49,17 @@ def noise_learner_v3_inputs_to_0_2(
     for instr in instructions:
         circuit.append(instr, instr.qubits, instr.clbits)
 
+    # Convert `options` to dict, moving the fields in `options.execution` to top-level.
+    schema_options = asdict(options)
+    for field in EXECUTION_FIELDS:
+        schema_options[field] = schema_options["execution"][field]
+    schema_options.pop("execution")
+
     return ParamsModel(
         instructions=QpyModelV13ToV17.from_quantum_circuit(
             circuit, qpy_version=get_qpy_version(17)
         ),
-        options=asdict(options),  # type: ignore[call-overload]
+        options=schema_options,  # type: ignore[call-overload]
     )
 
 
@@ -60,9 +69,14 @@ def noise_learner_v3_inputs_from_0_2(
     """Convert a V0.2 model to noise learner V3 inputs."""
     instructions = list(model.instructions.to_quantum_circuit())
 
-    options = NoiseLearnerV3Options(
-        **{key: val for key, val in model.options.model_dump().items() if val is not None}
+    # Convert `model.options` to dict, moving the fields that are part of `options.execution` from
+    # top-level.
+    top_level_dump = model.options.model_dump(exclude_none=True, exclude=EXECUTION_FIELDS)
+    top_level_dump["execution"] = model.options.model_dump(
+        exclude_none=True, include=EXECUTION_FIELDS
     )
+
+    options = NoiseLearnerV3Options(**top_level_dump)
     return instructions, options
 
 

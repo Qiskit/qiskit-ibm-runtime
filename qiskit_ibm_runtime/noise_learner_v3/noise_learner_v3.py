@@ -107,7 +107,7 @@ class NoiseLearnerV3:
             job_tags=self.options.environment.job_tags,  # type: ignore[union-attr]
             log_level=self.options.environment.log_level,  # type: ignore[union-attr]
             private=self.options.environment.private,  # type: ignore[union-attr]
-            max_execution_time=self.options.max_execution_time,
+            max_execution_time=self.options.environment.max_execution_time,
         )
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:

@@ -49,8 +49,8 @@ class TestConverters(IBMTestCase):
 
         options = NoiseLearnerV3Options()
         options.layer_pair_depths = [2, 4, 10]
-        options.init_qubits = False
-        options.rep_delay = 10**-6
+        options.execution.init_qubits = False
+        options.execution.rep_delay = 10**-6
         options.post_selection.enable = True
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
@@ -58,6 +58,9 @@ class TestConverters(IBMTestCase):
         encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_2(encoded)
 
+        print("--")
+        print(decoded[1])
+        print(options)
         assert decoded == (instructions, options)
 
     def test_converting_results(self):
