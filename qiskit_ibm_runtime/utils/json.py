@@ -460,7 +460,7 @@ class RuntimeDecoder(json.JSONDecoder):
                         "Unable to convert executor 'params' to a pair of quantum program and "
                         f"options due to the following exception: {exception}"
                     )
-            elif program_id == "noise-learner" and params and "schema_version" in params:
+            elif program_id == "noise-learner" and params and params["version"] == 3:
                 # `decoded` represents the input to an NLV3 program. We use the converters to
                 # decode its inputs, or 'params'
                 try:
