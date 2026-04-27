@@ -12,8 +12,6 @@
 
 """Tests for the noise learner."""
 
-from collections.abc import Iterator
-
 from ddt import ddt
 
 from qiskit import QuantumCircuit, transpile
