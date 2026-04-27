@@ -14,23 +14,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
-from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import ParamsModel as ParamsModel_0_2
 
-
 from .converters import (
     noise_learner_v3_inputs_from_0_1,
-    noise_learner_v3_inputs_to_0_1,
     noise_learner_v3_inputs_from_0_2,
+    noise_learner_v3_inputs_to_0_1,
     noise_learner_v3_inputs_to_0_2,
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from ibm_quantum_schemas.common import BaseParamsModel
     from qiskit.circuit import CircuitInstruction
+
     from qiskit_ibm_runtime.options_v3 import NoiseLearnerV3Options
 
 

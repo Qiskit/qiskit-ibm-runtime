@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from pydantic import ConfigDict
 
-
 PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 """Custom ``ConfigDict`` for pydantic dataclasses.
 

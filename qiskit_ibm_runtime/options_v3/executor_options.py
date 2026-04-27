@@ -14,12 +14,11 @@
 
 from __future__ import annotations
 
-
-from pydantic.dataclasses import dataclass
 from pydantic import Field
+from pydantic.dataclasses import dataclass
 
-from .execution_options import ExecutionOptions
 from .environment_options import EnvironmentOptions
+from .execution_options import ExecutionOptions
 from .utils import PRIMITIVES_CONFIG
 
 

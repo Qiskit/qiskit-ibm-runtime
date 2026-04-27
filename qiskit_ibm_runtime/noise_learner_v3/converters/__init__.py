@@ -13,8 +13,8 @@
 """Converters for NLV3."""
 
 from .version_0_1 import (
-    noise_learner_v3_inputs_to_0_1,
     noise_learner_v3_inputs_from_0_1,
+    noise_learner_v3_inputs_to_0_1,
     noise_learner_v3_result_from_0_1,
     noise_learner_v3_result_to_0_1,
 )

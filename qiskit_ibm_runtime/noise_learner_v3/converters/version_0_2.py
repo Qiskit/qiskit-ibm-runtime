@@ -14,24 +14,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import asdict
+from typing import TYPE_CHECKING
 
+from ibm_quantum_schemas.common import F64TensorModel, QpyModelV13ToV17
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
     ParamsModel,
 )
-from ibm_quantum_schemas.common import QpyModelV13ToV17, F64TensorModel
-from qiskit.circuit import CircuitInstruction, QuantumCircuit
+from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
-from ...utils.utils import get_qpy_version
 
 from ...options_v3 import NoiseLearnerV3Options
-from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
+from ...utils.utils import get_qpy_version
+from ..noise_learner_v3_result import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import CircuitInstruction
 
 EXECUTION_FIELDS = {"init_qubits", "rep_delay"}
 """Fields that belong to ``options.execution`` in user-land, but in ``options`` in schemas."""

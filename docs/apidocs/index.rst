@@ -11,6 +11,7 @@
    noise_learner
    noise_learner_result
    options
+   options_v3
    transpiler
    qiskit_ibm_runtime.transpiler.passes.scheduling
    fake_provider

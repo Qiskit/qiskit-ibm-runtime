@@ -17,12 +17,12 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import Field
+from pydantic.dataclasses import dataclass
 
-from .execution_options import ExecutionOptions
 from .environment_options import EnvironmentOptions
+from .execution_options import ExecutionOptions
 from .post_selection_options import PostSelectionOptions
 from .utils import PRIMITIVES_CONFIG
-from pydantic.dataclasses import dataclass
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
