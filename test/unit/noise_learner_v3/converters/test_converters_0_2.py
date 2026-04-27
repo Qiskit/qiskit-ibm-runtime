@@ -58,9 +58,6 @@ class TestConverters(IBMTestCase):
         encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
         decoded = noise_learner_v3_inputs_from_0_2(encoded)
 
-        print("--")
-        print(decoded[1])
-        print(options)
         assert decoded == (instructions, options)
 
     def test_converting_results(self):
