@@ -167,8 +167,10 @@ class NoiseLearner:
         runtime_options = NoiseLearnerOptions._get_runtime_options(options_dict)
 
         # Define the program inputs
-        inputs = {"circuits": circuits}
-        inputs.update(learner_options)
+        inputs: dict[str, Any] = {
+            "circuits": circuits,
+            **learner_options,
+        }
 
         calibration_id = None
         if self._backend:
