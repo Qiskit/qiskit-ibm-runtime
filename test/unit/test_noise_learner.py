@@ -12,6 +12,8 @@
 
 """Tests for the noise learner."""
 
+from collections.abc import Iterator
+
 from ddt import ddt
 
 from qiskit import QuantumCircuit, transpile
@@ -137,7 +139,7 @@ class TestNoiseLearner(IBMTestCase):
         """Regression test for iterator exhaustion issue."""
         backend = get_mocked_backend()
 
-        def circuit_generator(n: int):
+        def circuit_generator(n: int) -> Iterator[QuantumCircuit]:
             for _ in range(n):
                 qc = QuantumCircuit(2)
                 qc.cx(0, 1)
