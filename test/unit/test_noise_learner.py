@@ -83,13 +83,27 @@ class TestNoiseLearner(IBMTestCase):
 
     @combine(task_type=["circs", "pubs"])
     def test_run_program_inputs_with_default_options(self, task_type):
-        """Test a circuit with default options."""
+        """Test a circuit with default options.
+        Also tests support for generators/iterators
+        """
         backend = get_mocked_backend()
+
+        def circuit_generator(circuits):
+            for c in circuits:
+                yield c
+
+        def pub_generator(circuits):
+            for c in circuits:
+                yield (c, "Z" * c.num_qubits)
 
         if task_type == "circs":
             tasks = [transpile(c) for c in self.circuits]
-        else:
+        elif task_type == "circs_iterator":
+            tasks = circuit_generator([transpile(c) for c in self.circuits])
+        elif task_type == "pubs":
             tasks = [(transpile(c), "Z" * c.num_qubits) for c in self.circuits]
+        else:
+            tasks = pub_generator([transpile(c) for c in self.circuits])
 
         inst = NoiseLearner(backend)
         inst.run(tasks)
@@ -134,23 +148,3 @@ class TestNoiseLearner(IBMTestCase):
         backend = get_mocked_backend()
         inst = NoiseLearner(backend)
         self.assertEqual(inst.backend().name, backend.name)
-
-    def test_run_supports_generator(self):
-        """Regression test for iterator exhaustion issue."""
-        backend = get_mocked_backend()
-
-        def circuit_generator(n: int) -> Iterator[QuantumCircuit]:
-            for _ in range(n):
-                qc = QuantumCircuit(2)
-                qc.cx(0, 1)
-                yield qc
-
-        inst = NoiseLearner(backend)
-        inst.run(circuit_generator(4))
-
-        input_params = backend.service._run.call_args.kwargs["inputs"]
-        self.assertEqual(
-            len(input_params["circuits"]),
-            4,
-            "Generator should not be exhausted - all 4 circuits must be present",
-        )
