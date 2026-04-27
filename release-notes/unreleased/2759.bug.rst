@@ -1,7 +1,4 @@
-NoiseLearner
-~~~~~~~~~~~~
-
-- ``NoiseLearner.run()`` now correctly supports generators, ``map``,
+ ``NoiseLearner.run()`` now correctly supports generators, ``map``,
   ``filter``, generator expressions and other single-pass iterators.
   Previously these were exhausted after the initial type check, causing
   jobs to be submitted with zero circuits.
