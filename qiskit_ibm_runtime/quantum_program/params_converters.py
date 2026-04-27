@@ -34,7 +34,7 @@ from .converters import (
 
 if TYPE_CHECKING:
     from .quantum_program import QuantumProgram
-    from ..options import ExecutorOptions
+    from ..options_v3 import ExecutorOptions
 
 
 class ParamsConverter(NamedTuple):

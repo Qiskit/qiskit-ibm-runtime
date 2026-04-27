@@ -17,12 +17,10 @@ from __future__ import annotations
 from pydantic import Field, ValidationInfo, field_validator
 
 from .execution_options import ExecutionOptions
-from .environment_options import EnvironmentOptionsV2
+from .environment_options import EnvironmentOptions
 from .post_selection_options import PostSelectionOptions
-from .simulator_options import SimulatorOptions
-from .utils import (
+from ..options.utils import (
     make_constraint_validator,
-    skip_unset_validation,
 )
 from .utils import PRIMITIVES_CONFIG
 from pydantic.dataclasses import dataclass
@@ -72,11 +70,8 @@ class NoiseLearnerV3Options:
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
     """Low-level execution options."""
 
-    environment: EnvironmentOptionsV2 = Field(default_factory=EnvironmentOptionsV2)
+    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
-
-    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
-    """Simulator options."""
 
     _ge0 = make_constraint_validator(
         "num_randomizations",
@@ -86,7 +81,6 @@ class NoiseLearnerV3Options:
 
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
-    @skip_unset_validation
     def _nonnegative_list(cls, value: list[int], info: ValidationInfo) -> list[int]:
         if any(i < 0 for i in value):
             raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")

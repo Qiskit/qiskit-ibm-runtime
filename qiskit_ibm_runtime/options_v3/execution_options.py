@@ -12,17 +12,19 @@
 
 """Execution options."""
 
-from .utils import Unset, UnsetType, primitive_dataclass
+from pydantic.dataclasses import dataclass
+
+from .utils import PRIMITIVES_CONFIG
 
 
-@primitive_dataclass
-class ExecutionOptionsV2:
-    """Execution options for V2 primitives."""
+@dataclass(config=PRIMITIVES_CONFIG)
+class ExecutionOptions:
+    """Low-level execution options."""
 
-    init_qubits: UnsetType | bool = Unset
-    """Whether to reset the qubits to the ground state for each shot. Default is ``True``."""
+    init_qubits: bool = True
+    """Whether to reset the qubits to the ground state for each shot."""
 
-    rep_delay: UnsetType | float = Unset
+    rep_delay: float | None = None
     """The repetition delay.
 
     This is the delay between a measurement and the subsequent quantum circuit. This is only

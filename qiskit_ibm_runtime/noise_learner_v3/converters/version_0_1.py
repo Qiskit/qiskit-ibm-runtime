@@ -26,7 +26,7 @@ from qiskit.circuit import CircuitInstruction, QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 from ...utils.utils import get_qpy_version
 
-from ...options import NoiseLearnerV3Options
+from ...options_v3 import NoiseLearnerV3Options
 from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,

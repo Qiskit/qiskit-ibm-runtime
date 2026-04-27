@@ -19,13 +19,12 @@ from pydantic import ValidationError
 from test.utils import get_mocked_backend, get_mocked_session
 
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
-from qiskit_ibm_runtime.options import (
+from qiskit_ibm_runtime.options_v3 import (
     NoiseLearnerV3Options,
     PostSelectionOptions,
-    SimulatorOptions,
+    ExecutionOptions,
+    EnvironmentOptions,
 )
-from qiskit_ibm_runtime.options.execution_options import ExecutionOptions
-from qiskit_ibm_runtime.options.environment_options import EnvironmentOptionsV2
 
 from ...ibm_test_case import IBMTestCase
 
@@ -56,9 +55,8 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.environment.image, "my:image")
         self.assertEqual(nlv3.options.execution.rep_delay, 42)
 
-        self.assertIsInstance(nlv3.options.environment, EnvironmentOptionsV2)
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
         self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
@@ -76,9 +74,8 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.environment.image, "my:image")
         self.assertEqual(nlv3.options.execution.rep_delay, 42)
 
-        self.assertIsInstance(nlv3.options.environment, EnvironmentOptionsV2)
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
         self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
@@ -88,12 +85,11 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertFalse(nlv3.options.post_selection.enable)
         self.assertEqual(nlv3.options.post_selection.x_pulse_type, "xslow")
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
-        self.assertEqual(nlv3.options.environment, EnvironmentOptionsV2())
+        self.assertEqual(nlv3.options.environment, EnvironmentOptions())
         self.assertEqual(nlv3.options.execution, ExecutionOptions())
 
-        self.assertIsInstance(nlv3.options.environment, EnvironmentOptionsV2)
+        self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
         self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""

@@ -19,7 +19,7 @@ from pydantic.dataclasses import dataclass
 from pydantic import Field
 
 from .execution_options import ExecutionOptions
-from .environment_options import EnvironmentOptionsV2
+from .environment_options import EnvironmentOptions
 from .utils import PRIMITIVES_CONFIG
 
 
@@ -27,7 +27,7 @@ from .utils import PRIMITIVES_CONFIG
 class ExecutorOptions:
     """Options for the executor."""
 
-    environment: EnvironmentOptionsV2 = Field(default_factory=EnvironmentOptionsV2)
+    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
 
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)

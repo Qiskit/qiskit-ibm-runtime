@@ -40,7 +40,7 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
-from ...options.executor_options import ExecutorOptions
+from ...options_v3.executor_options import ExecutorOptions
 
 
 def quantum_program_from_1_0(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:

@@ -30,8 +30,8 @@ from .find_learning_protocol import find_learning_protocol
 from ..models.backend_configuration import BackendConfiguration
 
 from ..exceptions import IBMInputValueError
-from ..options import NoiseLearnerV3Options
-from ..options.post_selection_options import DEFAULT_X_PULSE_TYPE
+from ..options_v3 import NoiseLearnerV3Options
+from ..options_v3.post_selection_options import DEFAULT_X_PULSE_TYPE
 
 
 def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:

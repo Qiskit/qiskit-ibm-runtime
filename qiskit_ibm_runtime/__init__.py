@@ -229,12 +229,14 @@ from .noise_learner import (
 from .noise_learner_v3 import NoiseLearnerV3
 from .options import (
     EstimatorOptions,
-    ExecutorOptions,
     NoiseLearnerOptions,
-    NoiseLearnerV3Options,
     SamplerOptions,
     OptionsV2,
     OptionsV2 as Options,
+)
+from .options_v3 import (
+    ExecutorOptions,
+    NoiseLearnerV3Options,
 )
 
 # Setup the logger for the IBM Quantum Provider package.

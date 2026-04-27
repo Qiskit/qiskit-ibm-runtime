@@ -20,7 +20,7 @@ from typing import Any, TYPE_CHECKING
 
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options.noise_learner_v3_options import NoiseLearnerV3Options
+from ..options_v3.noise_learner_v3_options import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
 from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder

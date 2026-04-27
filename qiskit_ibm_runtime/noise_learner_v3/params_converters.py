@@ -31,7 +31,7 @@ from .converters import (
 
 if TYPE_CHECKING:
     from qiskit.circuit import CircuitInstruction
-    from qiskit_ibm_runtime.options import NoiseLearnerV3Options
+    from qiskit_ibm_runtime.options_v3 import NoiseLearnerV3Options
 
 
 class ParamsConverter(NamedTuple):

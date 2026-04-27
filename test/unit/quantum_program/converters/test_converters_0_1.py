@@ -36,7 +36,7 @@ from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_result_from_0_1,
     quantum_program_from_0_1,
 )
-from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
+from qiskit_ibm_runtime.options_v3.executor_options import ExecutorOptions, ExecutionOptions
 
 from ....ibm_test_case import IBMTestCase
 
