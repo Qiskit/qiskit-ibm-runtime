@@ -61,12 +61,3 @@ class PostSelectionOptions:
 
     Defaults to ``node``.
     """
-
-    @staticmethod
-    def _get_program_inputs(options: dict) -> dict:
-        """Convert the input options to program compatible inputs.
-
-        Returns:
-            Inputs acceptable by primitives.
-        """
-        raise NotImplementedError("Not implemented by `PostSelectionOptions`.")
