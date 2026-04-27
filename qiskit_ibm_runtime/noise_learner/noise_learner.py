@@ -156,10 +156,13 @@ class NoiseLearner:
             The submitted job.
 
         """
-        circuits = circuits if isinstance(circuits, list) else list(circuits)
-        if not all(isinstance(t, QuantumCircuit) for t in circuits):
-            coerced_pubs = [EstimatorPub.coerce(pub) for pub in circuits]
-            circuits = [p.circuit for p in coerced_pubs]
+        # Convert all inputs (QuantumCircuit or EstimatorPubLike) to a list of circuits
+        # in a single pass and also supports mixed inputs.
+        circuits = [
+            circuit if isinstance(circuit, QuantumCircuit)
+            else EstimatorPub.coerce(circuit).circuit
+            for circuit in circuits
+        ]
 
         # Store learner-specific and runtime options in different dictionaries
         options_dict = asdict(self.options)
