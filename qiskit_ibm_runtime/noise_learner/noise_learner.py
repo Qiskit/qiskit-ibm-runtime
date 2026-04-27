@@ -156,7 +156,7 @@ class NoiseLearner:
             The submitted job.
 
         """
-        circuits = list(circuits)
+        circuits = circuits if isinstance(circuits, list) else list(circuits)
         if not all(isinstance(t, QuantumCircuit) for t in circuits):
             coerced_pubs = [EstimatorPub.coerce(pub) for pub in circuits]
             circuits = [p.circuit for p in coerced_pubs]
