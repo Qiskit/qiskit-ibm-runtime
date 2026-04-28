@@ -159,8 +159,7 @@ class NoiseLearner:
         # Convert all inputs (QuantumCircuit or EstimatorPubLike) to a list of circuits
         # in a single pass and also supports mixed inputs.
         circuits = [
-            circuit if isinstance(circuit, QuantumCircuit)
-            else EstimatorPub.coerce(circuit).circuit
+            circuit if isinstance(circuit, QuantumCircuit) else EstimatorPub.coerce(circuit).circuit
             for circuit in circuits
         ]
 
