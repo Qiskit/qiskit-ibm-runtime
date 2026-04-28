@@ -1040,6 +1040,7 @@ class QiskitRuntimeService:
             program_id=program_id,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            session_id=session_id,
             tags=qrt_options.job_tags,
             service=self,
             version=version,
