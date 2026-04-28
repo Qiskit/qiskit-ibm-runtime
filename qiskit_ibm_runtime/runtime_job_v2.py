@@ -159,9 +159,17 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Returns:
             Post-processed result or original result if no post-processing applies
         """
-        # Only apply post-processing to QuantumProgramResult
         if not isinstance(result, QuantumProgramResult):
             return result
+        
+        if not (semantic_role := result._semantic_role):
+            return result
+        
+        if semantic_role == "sampler_v2":
+            try:
+                version = str(post_processor_info["version"])
+            except KeyError:
+                raise ValueError("Could not determine a post-processor version.")
 
         # Check post-processor in passthrough data
         post_processor_fn = None
@@ -169,7 +177,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             if isinstance(
                 post_processor_info := result.passthrough_data.get("post_processor"), dict
             ):
-                if post_processor_info.get("context") == "sampler_v2":
+                if semantic_role == "sampler_v2":
                     # A post processor must be defined to maintain the contracts.
                     try:
                         version = str(post_processor_info["version"])
