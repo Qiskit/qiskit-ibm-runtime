@@ -173,10 +173,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             if not isinstance(result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")
 
-            post_processor_info = result.passthrough_data.get("post_processor", {})
-
             try:
-                version = post_processor_info["version"]
+                version = result.passthrough_data.get("post_processor", {})["version"]
             except KeyError:
                 raise ValueError("Could not determine a post-processor version.")
 
