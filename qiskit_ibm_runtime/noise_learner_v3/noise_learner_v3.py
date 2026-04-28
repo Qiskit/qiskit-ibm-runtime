@@ -136,6 +136,7 @@ class NoiseLearnerV3:
         params = converter.encoder(instructions, self.options)
         runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
         runtime_options["backend"] = self._backend.name
+        runtime_options["instance"] = self._backend._instance
 
         if self._session:
             _run = self._session._run
