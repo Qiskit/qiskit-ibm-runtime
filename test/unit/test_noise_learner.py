@@ -79,7 +79,7 @@ class TestNoiseLearner(IBMTestCase):
         expected["support_qiskit"] = True
         self.assertEqual(input_params["options"], expected)
 
-    @combine(task_type=["circs", "pubs"])
+    @combine(task_type=["circs", "pubs", "circs_iterator", "pubs_iterator"])
     def test_run_program_inputs_with_default_options(self, task_type):
         """Test a circuit with default options.
         Also tests support for generators/iterators
