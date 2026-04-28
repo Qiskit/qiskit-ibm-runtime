@@ -195,6 +195,11 @@ class QuantumProgramResult:
         self.metadata = metadata or Metadata()
         self.passthrough_data = passthrough_data
 
+        # Semantic role indicating how execution results may be post-processed by runtime clients.
+        # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
+        # without notice. Third party clients should not set or depend on this value.
+        self._semantic_role: str | None = None
+
     def __iter__(self) -> Iterator[dict[str, np.ndarray]]:
         yield from self._data
 
