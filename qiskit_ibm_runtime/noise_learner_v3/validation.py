@@ -27,7 +27,7 @@ from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..options_v3.post_selection_options import DEFAULT_X_PULSE_TYPE
+from ..options_models.post_selection_options import DEFAULT_X_PULSE_TYPE
 from .find_learning_protocol import find_learning_protocol
 
 if TYPE_CHECKING:
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
     from qiskit.transpiler import Target
 
     from ..models.backend_configuration import BackendConfiguration
-    from ..options_v3 import NoiseLearnerV3Options
+    from ..options_models import NoiseLearnerV3Options
 
 
 def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:

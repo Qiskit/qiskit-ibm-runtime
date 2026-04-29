@@ -74,7 +74,7 @@ from ..utils import mock_wait_for_final_state, bell
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from qiskit_ibm_runtime.options_v3 import ExecutorOptions, NoiseLearnerV3Options
+from qiskit_ibm_runtime.options_models import ExecutorOptions, NoiseLearnerV3Options
 from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 
 

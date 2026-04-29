@@ -11,13 +11,14 @@
 # that they have been altered from the originals.
 
 """
-===========================================================
-Primitive V3 options (:mod:`qiskit_ibm_runtime.options_v3`)
-===========================================================
+===================================================================
+Primitive options models (:mod:`qiskit_ibm_runtime.options_models`)
+===================================================================
 
-.. currentmodule:: qiskit_ibm_runtime.options_v3
+.. currentmodule:: qiskit_ibm_runtime.options_models
 
-Options that can be passed to the Qiskit Runtime V3 primitives.
+Options that can be passed to the :class:`~qiskit_ibm_runtime.Executor` and
+:class:`~qiskit_ibm_runtime.NoiseLearnerV3`.
 
 Classes
 =======

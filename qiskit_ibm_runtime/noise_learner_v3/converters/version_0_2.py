@@ -26,7 +26,7 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
-from ...options_v3 import NoiseLearnerV3Options
+from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
 from ..noise_learner_v3_result import (
     NoiseLearnerV3Result,

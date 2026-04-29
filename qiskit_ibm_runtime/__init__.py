@@ -234,7 +234,7 @@ from .options import (
     OptionsV2,
     OptionsV2 as Options,
 )
-from .options_v3 import (
+from .options_models import (
     ExecutorOptions,
     NoiseLearnerV3Options,
 )
