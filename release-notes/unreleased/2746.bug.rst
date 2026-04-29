@@ -1,3 +1,0 @@
-For jobs that are cancelled due to exceeding the specified execution time (error ``1035``) and that
-under certain conditions contained an invalid ``status``, the ``status`` is now represented as an
-``ERROR`` status.
