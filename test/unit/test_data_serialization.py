@@ -25,7 +25,6 @@ from ddt import data, ddt
 
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
-
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliList, PauliLindbladMap
 from qiskit.result import Result, Counts
@@ -41,6 +40,11 @@ from qiskit.primitives.containers import (
     PrimitiveResult,
 )
 from qiskit_aer.noise import NoiseModel
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import find_unique_box_instructions
+
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 from qiskit_ibm_runtime.utils.noise_learner_result import (
@@ -70,7 +74,8 @@ from ..utils import mock_wait_for_final_state, bell
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from qiskit_ibm_runtime.options import ExecutorOptions
+from qiskit_ibm_runtime.options import ExecutorOptions, NoiseLearnerV3Options
+from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 
 
 @ddt
@@ -831,4 +836,68 @@ class TestRuntimeDecoder(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
         assert decoded["params"]["quantum_program"] == "foo"
+        assert decoded["params"]["options"] == "bar"
+
+    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
+    def test_decoding_noise_learner_v3_params(self, schema_version):
+        """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
+
+        The goal of this test is to check that when these 'params' are in the correct format,
+        i.e. the format in which they are returned when calling `job.inputs`,
+        the `RuntimeDecoder.encode` function returns a list of `CircuitInstruction` objects.
+        """
+        boxing_pm = generate_preset_pass_manager(backend=FakeNairobiV2(), optimization_level=0)
+        boxing_pm.post_scheduling = generate_boxing_pass_manager(
+            enable_gates=True,
+            enable_measures=True,
+        )
+
+        circuit = QuantumCircuit(3, name="GHZ with params")
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.rz(Parameter("theta"), 0)
+        circuit.rz(Parameter("phi"), 1)
+        circuit.rz(Parameter("lam"), 2)
+        circuit.measure_all()
+
+        boxed_circuit = boxing_pm.run(circuit)
+        instructions = find_unique_box_instructions(boxed_circuit)
+
+        options = NoiseLearnerV3Options()
+        options.layer_pair_depths = [0, 2, 4]
+
+        # This is the format expected by `RuntimeDecoder.encode` when deserializing inputs of
+        # an NLV3 job
+        params = {
+            "program": {"id": "noise-learner"},
+            "params": NOISE_LEARNER_V3_PARAMS_CONVERTERS[schema_version]
+            .encoder(instructions, options)
+            .model_dump(),
+        }
+        encoded = json.dumps(params, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+
+        assert decoded["params"]["instructions"] == instructions
+        assert decoded["params"]["options"] == options
+
+    @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
+    def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version):
+        """Test that inputs (or 'params') of NLV3 jobs can be decoded correctly.
+
+        The goal of this test is to check that when these 'params' are in an incorrect format,
+        the `RuntimeDecoder.encode` function raises a warning instead of an error.
+        """
+        # This is the format expected by `RuntimeDecoder.encode` when deserializing inputs of
+        # an executor job, but with program and options in an incorrect format.
+        params = {
+            "program": {"id": "executor"},
+            "params": {"instructions": "foo", "options": "bar"},
+        }
+        encoded = json.dumps(params, cls=RuntimeEncoder)
+
+        with self.assertWarnsRegex(Warning, "Unable to convert"):
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+
+        assert decoded["params"]["instructions"] == "foo"
         assert decoded["params"]["options"] == "bar"
