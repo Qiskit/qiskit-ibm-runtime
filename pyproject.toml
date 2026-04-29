@@ -236,7 +236,7 @@ test = [
 
 doc = [
     "autodoc_pydantic==2.2.0",
-    "matplotlib>=2.1",
+    "matplotlib>=3.10",
     "nbconvert>=5.3.1",
     "nbformat>=4.4.0",
     "nbqa==1.5.3",
