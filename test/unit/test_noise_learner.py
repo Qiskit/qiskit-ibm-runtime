@@ -149,7 +149,7 @@ class TestNoiseLearner(IBMTestCase):
         inst = NoiseLearner(backend)
         self.assertEqual(inst.backend().name, backend.name)
 
-        def test_get_inputs_options_return_annotation(self):
+    def test_get_inputs_options_return_annotation(self):
         """Test _get_inputs_options must return dict[str, Any]."""
         hints = get_type_hints(NoiseLearner._get_inputs_options)
         value_type = get_args(hints["return"])[1]
