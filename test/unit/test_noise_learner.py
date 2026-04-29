@@ -160,6 +160,6 @@ class TestNoiseLearner(IBMTestCase):
             msg=(
                 "_get_inputs_options return annotation should be dict[str, Any]. "
                 f"Got dict[str, {value_type}] instead. "
-                "Values include bool, int, list, dict — not only str."
+                "Values include bool, int, list, dict not only str."
             ),
         )
