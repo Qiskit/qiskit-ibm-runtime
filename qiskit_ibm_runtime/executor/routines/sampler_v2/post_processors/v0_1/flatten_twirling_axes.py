@@ -18,7 +18,7 @@ import numpy as np
 
 
 def flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
-    """Flatten the leading num_randomizations axis into the shots axis in-place.
+    """Flatten the leading ``num_randomizations`` axis into the shots axis in-place.
 
     When twirling is enabled, the executor returns measurement data with shape
     ``(num_rand, *pub_shape, shots_per_rand, num_bits)``. This function reshapes
