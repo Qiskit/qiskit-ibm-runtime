@@ -87,8 +87,7 @@ class TestNoiseLearner(IBMTestCase):
         backend = get_mocked_backend()
 
         def circuit_generator(circuits):
-            for c in circuits:
-                yield c
+            yield from circuits
 
         def pub_generator(circuits):
             for c in circuits:
