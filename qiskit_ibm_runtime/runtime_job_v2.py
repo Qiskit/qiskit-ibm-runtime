@@ -245,14 +245,15 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
         # Calculate the poll interval.
-        min_poll_interval = 0.1 if self._session_id else 0.5
-        if poll_interval and poll_interval < min_poll_interval:
+        min_poll_interval = 0.1
+        default_poll_interval = 0.1 if self._session_id else 0.5
+        if poll_interval and poll_interval < 0.1:
             logger.warning(
                 "The poll interval specified is lower than the minimal allowed. Using %s as the "
                 "poll interval.",
                 min_poll_interval,
             )
-        poll_interval = max(min_poll_interval, poll_interval or min_poll_interval)
+        poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
 
         try:
             start_time = time.time()

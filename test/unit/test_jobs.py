@@ -16,6 +16,8 @@ import random
 import time
 from unittest.mock import patch
 
+from ddt import ddt
+
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
@@ -38,6 +40,7 @@ from ..program import run_program
 from ..utils import mock_wait_for_final_state
 
 
+@ddt
 class TestRuntimeJob(IBMTestCase):
     """Class for testing runtime jobs."""
 
@@ -190,3 +193,34 @@ class TestRuntimeJob(IBMTestCase):
         with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_3):
             with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
                 run_program(service=service)
+
+    @run_cloud_fake
+    def test_wait_for_final_state_with_low_poll_interval(self, service):
+        """wait_for_final_state with poll_inverval lower than allowed should warn and use floor."""
+        job = run_program(service)
+        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
+            with patch("time.sleep", return_value=None) as patched_sleep:
+                with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+                    job.wait_for_final_state(poll_interval=0.09)
+                    message = logs.output[0]
+                    patched_sleep.assert_called_with(0.1)
+                    self.assertIn("Using 0.1 as the poll interval", message)
+
+    @run_cloud_fake
+    def test_wait_for_final_state_default_poll_interval(self, service):
+        """wait_for_final_state should default to 0.5 for regular jobs."""
+        job = run_program(service)
+        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
+            with patch("time.sleep", return_value=None) as patched_sleep:
+                job.wait_for_final_state()
+                patched_sleep.assert_called_with(0.5)
+
+    @run_cloud_fake
+    def test_wait_for_final_state_default_poll_interval_session(self, service):
+        """wait_for_final_state should default to 0.1 for session jobs."""
+        job = run_program(service)
+        job._session_id = "42"
+        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
+            with patch("time.sleep", return_value=None) as patched_sleep:
+                job.wait_for_final_state()
+                patched_sleep.assert_called_with(0.1)
