@@ -79,15 +79,29 @@ class TestNoiseLearner(IBMTestCase):
         expected["support_qiskit"] = True
         self.assertEqual(input_params["options"], expected)
 
-    @combine(task_type=["circs", "pubs"])
+    @combine(task_type=["circs", "pubs", "circs_iterator", "pubs_iterator"])
     def test_run_program_inputs_with_default_options(self, task_type):
-        """Test a circuit with default options."""
+        """Test a circuit with default options.
+
+        Also tests support for generators/iterators.
+        """
         backend = get_mocked_backend()
+
+        def circuit_generator(circuits):
+            yield from circuits
+
+        def pub_generator(circuits):
+            for c in circuits:
+                yield (c, "Z" * c.num_qubits)
 
         if task_type == "circs":
             tasks = [transpile(c) for c in self.circuits]
-        else:
+        elif task_type == "circs_iterator":
+            tasks = circuit_generator([transpile(c) for c in self.circuits])
+        elif task_type == "pubs":
             tasks = [(transpile(c), "Z" * c.num_qubits) for c in self.circuits]
+        else:
+            tasks = pub_generator([transpile(c) for c in self.circuits])
 
         inst = NoiseLearner(backend)
         inst.run(tasks)
