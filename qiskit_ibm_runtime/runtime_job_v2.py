@@ -118,7 +118,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 of the job.
 
                 * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
-                * For session jobs, the default and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value are ``100ms``.
 
         Returns:
             Runtime job result.
