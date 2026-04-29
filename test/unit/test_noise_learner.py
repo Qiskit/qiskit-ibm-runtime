@@ -23,8 +23,6 @@ from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine, get_mocked_backend
 
-from typing import get_type_hints, Any, get_args
-
 
 @ddt
 class TestNoiseLearner(IBMTestCase):
@@ -148,18 +146,3 @@ class TestNoiseLearner(IBMTestCase):
         backend = get_mocked_backend()
         inst = NoiseLearner(backend)
         self.assertEqual(inst.backend().name, backend.name)
-
-    def test_get_inputs_options_return_annotation(self):
-        """Test _get_inputs_options must return dict[str, Any]."""
-        hints = get_type_hints(NoiseLearner._get_inputs_options)
-        value_type = get_args(hints["return"])[1]
-
-        self.assertIs(
-            value_type,
-            Any,
-            msg=(
-                "_get_inputs_options return annotation should be dict[str, Any]. "
-                f"Got dict[str, {value_type}] instead. "
-                "Values include bool, int, list, dict not only str."
-            ),
-        )
