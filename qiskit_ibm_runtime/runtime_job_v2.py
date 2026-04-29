@@ -46,9 +46,6 @@ API_TO_JOB_STATUS: dict[str, JobStatus] = {
     "COMPLETED": "DONE",
     "FAILED": "ERROR",
     "CANCELLED": "CANCELLED",
-    # This status can be emitted from the API: we interpret it as CANCELLED. It is later
-    # changed to `ERROR` at `RuntimeJobV2._status_from_job_response()`.
-    "CANCELLED - RAN TOO LONG": "CANCELLED",
 }
 
 
