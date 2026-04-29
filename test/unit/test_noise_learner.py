@@ -82,8 +82,9 @@ class TestNoiseLearner(IBMTestCase):
     @combine(task_type=["circs", "pubs", "circs_iterator", "pubs_iterator"])
     def test_run_program_inputs_with_default_options(self, task_type):
         """Test a circuit with default options.
+        """Test a circuit with default options.
 
-        Also tests support for generators/iterators
+        Also tests support for generators/iterators.
         """
         backend = get_mocked_backend()
 
