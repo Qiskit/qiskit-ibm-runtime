@@ -140,7 +140,7 @@ requires-python=">=3.10"
 dependencies = [
     "requests>=2.32.4",
     "requests-ntlm>=1.1.0",
-    "numpy>=1.26.2",
+    "numpy>=1.26.0",
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
