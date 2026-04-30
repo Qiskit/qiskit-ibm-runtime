@@ -69,19 +69,18 @@ class SamplerOptions:
     )
     """Suboptions for dynamical decoupling.
 
-    See :class:`DynamicalDecouplingOptions` for all available options.
+    See :class:`~.DynamicalDecouplingOptions` for all available options.
     """
 
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
 
-    See :class:`.SamplerExecutionOptions` for all available options."""
+    See :class:`~.SamplerExecutionOptions` for all available options."""
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Pauli twirling options.
 
-    See :class:`~qiskit_ibm_runtime.executor.routines.options.twirling_options.TwirlingOptions`
-    for all available options.
+    See :class:`~.TwirlingOptions` for all available options.
     """
 
     experimental: dict | None = None
@@ -95,7 +94,7 @@ class SamplerOptions:
     """Options related to the execution environment."""
 
     def to_executor_options(self) -> ExecutorOptions:
-        """Map SamplerOptions to ExecutorOptions, , ignoring all irrelevant fields.
+        """Map sampler options to executor options, ignoring all irrelevant fields.
 
         Returns:
             Mapped executor options.

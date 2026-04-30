@@ -52,7 +52,6 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -65,6 +64,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
 
@@ -350,7 +350,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -366,6 +365,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
@@ -394,7 +394,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -411,6 +410,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
@@ -434,7 +434,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = False
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": False,
@@ -448,6 +447,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         # Should raise ValueError
         with self.assertRaises(ValueError) as context:
@@ -475,7 +475,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -488,6 +487,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
@@ -522,7 +522,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -542,6 +541,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
@@ -564,7 +564,6 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         options.twirling.enable_gates = True
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": True,
@@ -575,6 +574,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         qp_result = QuantumProgramResult(
             data=[{"meas": meas_data}], metadata=Metadata(), passthrough_data=passthrough_data
         )
+        qp_result._semantic_role = "sampler_v2"
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
@@ -621,7 +621,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         options.twirling.enable_gates = twirling_enabled
         passthrough_data = {
             "post_processor": {
-                "context": "sampler_v2",
                 "version": "v0.1",
                 "options": asdict(options),
                 "twirling": twirling_enabled,
@@ -629,11 +628,14 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             }
         }
 
-        return QuantumProgramResult(
+        result = QuantumProgramResult(
             data=data,
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
+        result._semantic_role = "sampler_v2"
+
+        return result
 
     def test_twirled_no_sweep_flattened(self):
         """Twirled non-parametric pub: (num_rand, shots_per_rand, bits) -> (total_shots, bits)."""
@@ -705,7 +707,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
 
         # Build result with options but WITHOUT twirling flag
         post_processor_data = {
-            "context": "sampler_v2",
             "version": "v0.1",
             "options": options_dict,
             "meas_type": "classified",
@@ -716,6 +717,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data={"post_processor": post_processor_data},
         )
+        qp_result._semantic_role = "sampler_v2"
 
         # Should raise ValueError
         with self.assertRaises(ValueError) as context:
@@ -737,7 +739,6 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
 
         # Build result with options but WITHOUT meas_type
         post_processor_data = {
-            "context": "sampler_v2",
             "version": "v0.1",
             "options": options_dict,
             "twirling": True,
@@ -748,6 +749,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             metadata=Metadata(),
             passthrough_data={"post_processor": post_processor_data},
         )
+        qp_result._semantic_role = "sampler_v2"
 
         # Should raise ValueError
         with self.assertRaises(ValueError) as context:
