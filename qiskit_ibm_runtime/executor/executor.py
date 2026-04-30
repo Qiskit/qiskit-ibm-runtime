@@ -20,17 +20,17 @@ from typing import Any, TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from .options_models.executor_options import ExecutorOptions
-from .quantum_program.result_decoders import QuantumProgramResultDecoder
-from .quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from .utils.default_session import get_cm_session
+from ..options_models.executor_options import ExecutorOptions
+from ..quantum_program.result_decoders import QuantumProgramResultDecoder
+from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
-    from .batch import Batch
-    from .session import Session
-    from .runtime_job_v2 import RuntimeJobV2
-    from .quantum_program import QuantumProgram
+    from ..batch import Batch
+    from ..session import Session
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..quantum_program import QuantumProgram
 
 
 logger = logging.getLogger()
