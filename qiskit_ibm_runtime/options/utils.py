@@ -32,14 +32,6 @@ if TYPE_CHECKING:
     from ..options.options import BaseOptions
 
 
-PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
-"""Custom ``ConfigDict`` for pydantic dataclasses.
-
-These config settings ensure we get validation on attribute mutation, not just at construction
-time, and also that we get a validation error if someone spells an attribute name wrong.
-"""
-
-
 def set_default_error_levels(
     options: dict,
     backend: Backend,

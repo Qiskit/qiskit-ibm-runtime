@@ -19,7 +19,7 @@ from unittest.mock import patch
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
-from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm_runtime.base_runtime_job import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,

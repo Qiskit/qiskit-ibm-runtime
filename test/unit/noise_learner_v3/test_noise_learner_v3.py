@@ -19,13 +19,12 @@ from pydantic import ValidationError
 from test.utils import get_mocked_backend, get_mocked_session
 
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
-from qiskit_ibm_runtime.options import (
-    EnvironmentOptions,
+from qiskit_ibm_runtime.options_models import (
     NoiseLearnerV3Options,
     PostSelectionOptions,
-    SimulatorOptions,
+    ExecutionOptions,
+    EnvironmentOptions,
 )
-from qiskit_ibm_runtime.runtime_options import RuntimeOptions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -43,7 +42,8 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         """Test constructing with an NoiseLearnerV3Options instance."""
         opts_dict = {
             "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
-            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
+            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"], "image": "my:image"},
+            "execution": {"rep_delay": 42},
         }
         options = NoiseLearnerV3Options(**opts_dict)
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=options)
@@ -52,15 +52,18 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
         self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
         self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
+        self.assertEqual(nlv3.options.environment.image, "my:image")
+        self.assertEqual(nlv3.options.execution.rep_delay, 42)
 
         self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
+        self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
 
     def test_options_from_dict(self):
         """Test constructing with a nested dict."""
         opts_dict = {
             "post_selection": {"enable": True, "x_pulse_type": "rx", "strategy": "edge"},
-            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"]},
+            "environment": {"log_level": "DEBUG", "job_tags": ["tag1"], "image": "my:image"},
+            "execution": {"rep_delay": 42},
         }
         nlv3 = NoiseLearnerV3(mode=get_mocked_backend(), options=opts_dict)
         self.assertTrue(nlv3.options.post_selection.enable)
@@ -68,9 +71,11 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
         self.assertEqual(nlv3.options.environment.log_level, "DEBUG")
         self.assertEqual(nlv3.options.environment.job_tags, ["tag1"])
+        self.assertEqual(nlv3.options.environment.image, "my:image")
+        self.assertEqual(nlv3.options.execution.rep_delay, 42)
 
         self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
+        self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
 
     def test_options_from_partial_dict(self):
         """Test constructing with a nested dict when only specifying some of the options."""
@@ -81,9 +86,10 @@ class TestNoiseLearnerV3Options(IBMTestCase):
         self.assertEqual(nlv3.options.post_selection.x_pulse_type, "xslow")
         self.assertEqual(nlv3.options.post_selection.strategy, "edge")
         self.assertEqual(nlv3.options.environment, EnvironmentOptions())
+        self.assertEqual(nlv3.options.execution, ExecutionOptions())
 
         self.assertIsInstance(nlv3.options.environment, EnvironmentOptions)
-        self.assertIsInstance(nlv3.options.simulator, SimulatorOptions)
+        self.assertIsInstance(nlv3.options.execution, ExecutionOptions)
 
     def test_options_constructor_invalid_type(self):
         """Test that an invalid options type raises TypeError."""
@@ -173,19 +179,3 @@ class TestNoiseLearnerV3(IBMTestCase):
             noise_learner = NoiseLearnerV3(mode=backend)
             selected_run = noise_learner.run([])
             self.assertEqual(selected_run, "service")
-
-    def test_runtime_options(self):
-        """Test the ``_runtime_options`` method."""
-        learner = NoiseLearnerV3(mode=(backend := get_mocked_backend()))
-        learner.options.experimental = {"image": (my_image := "my_image")}
-        learner.options.max_execution_time = (max_execution_time := 3)
-        learner.options.environment.job_tags = (job_tags := ["my", "tags"])
-        learner.options.environment.private = (private := True)
-
-        runtime_options = learner._runtime_options()
-        self.assertIsInstance(runtime_options, RuntimeOptions)
-        self.assertEqual(runtime_options.backend, backend.name)
-        self.assertEqual(runtime_options.image, my_image)
-        self.assertEqual(runtime_options.job_tags, job_tags)
-        self.assertEqual(runtime_options.private, private)
-        self.assertEqual(runtime_options.max_execution_time, max_execution_time)
