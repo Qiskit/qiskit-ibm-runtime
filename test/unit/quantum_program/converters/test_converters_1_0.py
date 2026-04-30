@@ -39,7 +39,7 @@ from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_result_from_1_0,
     quantum_program_from_1_0,
 )
-from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions, ExecutionOptions
 
 from ....ibm_test_case import IBMTestCase
 
@@ -64,6 +64,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             meas_level=meas_level,
             passthrough_data=passthrough_data,
         )
+        quantum_program._semantic_role = (semantic_role := "sampler-v2")
 
         circuit1 = QuantumCircuit(1)
         circuit1.rx(Parameter("p"), 0)
@@ -105,6 +106,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         quantum_program_model = params_model.quantum_program
         self.assertEqual(quantum_program_model.shots, shots)
         self.assertEqual(quantum_program_model.passthrough_data, passthrough_data)
+        self.assertEqual(quantum_program_model.semantic_role, semantic_role)
         self.assertEqual(quantum_program_model.meas_level, meas_level)
 
         circuit_item_model = quantum_program_model.items[0]

@@ -14,24 +14,30 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 from qiskit.circuit import (
-    CircuitInstruction,
+    BoxOp,
     ControlFlowOp,
     ParameterExpression,
     QuantumRegister,
-    BoxOp,
 )
-from qiskit.transpiler import Target
 from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
-from .find_learning_protocol import find_learning_protocol
-from ..models.backend_configuration import BackendConfiguration
-
 from ..exceptions import IBMInputValueError
-from ..options import NoiseLearnerV3Options
-from ..options.post_selection_options import DEFAULT_X_PULSE_TYPE
+from ..options_models.post_selection_options import DEFAULT_X_PULSE_TYPE
+from .find_learning_protocol import find_learning_protocol
+
+if TYPE_CHECKING:
+    from qiskit.circuit import (
+        CircuitInstruction,
+    )
+    from qiskit.transpiler import Target
+
+    from ..models.backend_configuration import BackendConfiguration
+    from ..options_models import NoiseLearnerV3Options
 
 
 def validate_options(options: NoiseLearnerV3Options, configuration: BackendConfiguration) -> None:

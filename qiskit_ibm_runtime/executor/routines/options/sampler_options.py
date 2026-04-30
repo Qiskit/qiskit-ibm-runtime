@@ -22,9 +22,8 @@ from pydantic.dataclasses import dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .twirling_options import TwirlingOptions
 from .environment_options import EnvironmentOptions
-from ....options.executor_options import ExecutorOptions
-
-from ....options.executor_options import ExecutionOptions
+from ....options_models.executor_options import ExecutorOptions
+from ....options_models.executor_options import ExecutionOptions
 
 
 @dataclass
@@ -33,9 +32,8 @@ class SamplerExecutionOptions(ExecutionOptions):
 
     Args:
         init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Inherited from :class:`~qiskit_ibm_runtime.options.executor_options.ExecutionOptions`.
-        rep_delay: The repetition delay. Inherited from
-            :class:`~qiskit_ibm_runtime.options.executor_options.ExecutionOptions`.
+            Inherited from :class:`~.ExecutionOptions`.
+        rep_delay: The repetition delay. Inherited from :class:`~.ExecutionOptions`.
         meas_type: How to process and return measurement results. This option sets
             the return type of all classical registers in all sampler pub results.
 

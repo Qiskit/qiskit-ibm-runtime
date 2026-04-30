@@ -34,7 +34,7 @@ from ....batch import Batch
 from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
 from ....quantum_program.quantum_program import CircuitItem, SamplexItem
 from ....quantum_program.datatree import is_datatree_compatible
-from ....options.executor_options import ExecutorOptions
+from ....options_models.executor_options import ExecutorOptions
 from ....exceptions import IBMInputValueError
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
 from ..options.sampler_options import SamplerOptions
@@ -61,8 +61,7 @@ def prepare(
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
             with passthrough_data configured for
             :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2` post-processing.
-        - :class:`~qiskit_ibm_runtime.options.executor_options.ExecutorOptions` mapped from
-            :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`.
+        - :class:`~.ExecutorOptions` mapped from :class:`~.SamplerOptions`.
 
     Raises:
         IBMInputValueError: If circuits contain boxes or if shots are not specified.
