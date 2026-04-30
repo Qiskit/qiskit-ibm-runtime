@@ -246,7 +246,7 @@ class NoiseLearner:
             self._options = NoiseLearnerOptions(**options)
 
     @staticmethod
-    def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
+    def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, Any]:
         """Returns a filtered dictionary of options for the program inputs.
 
         Returns a dictionary of options that must be included in the program inputs,
