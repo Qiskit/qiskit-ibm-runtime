@@ -15,8 +15,9 @@
 import random
 import time
 from unittest.mock import patch
+import warnings
 
-from ddt import ddt
+from ddt import ddt, data
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
@@ -195,32 +196,35 @@ class TestRuntimeJob(IBMTestCase):
                 run_program(service=service)
 
     @run_cloud_fake
-    def test_wait_for_final_state_with_low_poll_interval(self, service):
-        """wait_for_final_state with poll_inverval lower than allowed should warn and use floor."""
-        job = run_program(service)
-        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
-            with patch("time.sleep", return_value=None) as patched_sleep:
-                with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
-                    job.wait_for_final_state(poll_interval=0.09)
-                    message = logs.output[0]
-                    patched_sleep.assert_called_with(0.1)
-                    self.assertIn("Using 0.1 as the poll interval", message)
+    @data((None, 0.5), ("some_session_id", 0.1))
+    def test_wait_for_final_state_poll_interval_defaults(self, id_and_default, service):
+        """wait_for_final_state should use default values if `None` provided."""
+        session_id, default = id_and_default
 
-    @run_cloud_fake
-    def test_wait_for_final_state_default_poll_interval(self, service):
-        """wait_for_final_state should default to 0.5 for regular jobs."""
         job = run_program(service)
+        job._session_id = session_id
         with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
             with patch("time.sleep", return_value=None) as patched_sleep:
                 job.wait_for_final_state()
-                patched_sleep.assert_called_with(0.5)
+                patched_sleep.assert_called_with(default)
 
     @run_cloud_fake
-    def test_wait_for_final_state_default_poll_interval_session(self, service):
-        """wait_for_final_state should default to 0.1 for session jobs."""
+    @data(0.99, 0.1, 1.23)
+    def test_wait_for_final_state_poll_inverval_custom(self, value, service):
+        """Test wait_for_final_state when passing a custom poll interval."""
         job = run_program(service)
-        job._session_id = "42"
+        expected_interval = value
         with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
             with patch("time.sleep", return_value=None) as patched_sleep:
-                job.wait_for_final_state()
-                patched_sleep.assert_called_with(0.1)
+                with warnings.catch_warnings(record=True) as warn_cm:
+                    job.wait_for_final_state(poll_interval=value)
+
+                    # Values lower than the floor: limit to the floor, emit warning.
+                    if value < 0.1:
+                        expected_interval = 0.1
+                        self.assertIn("Using 0.1 as the poll interval", str(warn_cm[0]))
+                    # Other values: use them as-is, no warning.
+                    else:
+                        self.assertEqual(len(warn_cm), 0)
+
+                    patched_sleep.assert_called_with(expected_interval)

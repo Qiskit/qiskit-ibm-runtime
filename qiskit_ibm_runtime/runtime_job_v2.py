@@ -19,6 +19,7 @@ from collections.abc import Sequence
 from concurrent import futures
 import logging
 import time
+import warnings
 
 from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
@@ -248,10 +249,9 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         min_poll_interval = 0.1
         default_poll_interval = 0.1 if self._session_id else 0.5
         if poll_interval and poll_interval < 0.1:
-            logger.warning(
-                "The poll interval specified is lower than the minimal allowed. Using %s as the "
-                "poll interval.",
-                min_poll_interval,
+            warnings.warn(
+                "The poll interval specified is lower than the minimal allowed. Using "
+                f"{min_poll_interval} as the poll interval."
             )
         poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
 
