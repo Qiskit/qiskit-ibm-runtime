@@ -176,7 +176,6 @@ def prepare(
 
     passthrough_data = {
         "post_processor": {
-            "context": "sampler_v2",
             "version": "v0.1",
             "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
             "meas_type": options.execution.meas_type,
@@ -191,6 +190,7 @@ def prepare(
         passthrough_data=passthrough_data,
         meas_level=options.execution.meas_type,
     )
+    quantum_program._semantic_role = "sampler_v2"
 
     # Map options to executor options
     executor_options = options.to_executor_options()

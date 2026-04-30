@@ -147,6 +147,7 @@ def quantum_program_to_1_0(program: QuantumProgram, options: ExecutorOptions) ->
             items=model_items,
             meas_level=program.meas_level,
             passthrough_data=program.passthrough_data,
+            semantic_role=program._semantic_role,
         ),
         options=options_dict,
     )

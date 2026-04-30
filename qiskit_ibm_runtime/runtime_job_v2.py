@@ -144,53 +144,50 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         return result
 
-    def _apply_post_processing(
-        self,
-        result: Any,
-    ) -> Any:
+    @staticmethod
+    def _apply_post_processing(result: Any) -> Any:
         """Apply post-processing to the decoded result.
 
-        Post-processing is only applied if the result is a QuantumProgramResult
-        (from Executor jobs). Other result types are returned unchanged.
+        Post-processing is only applied if the result is a QuantumProgramResult (from Executor
+        jobs) and ``result._semantic_role`` has a supported value. Otherwise, the result is returned
+        unchanged.
 
         Args:
-            result: The decoded result
+            result: The decoded result.
 
         Returns:
-            Post-processed result or original result if no post-processing applies
+            Post-processed result or original result if no post-processing applies.
         """
-        # Only apply post-processing to QuantumProgramResult
         if not isinstance(result, QuantumProgramResult):
             return result
 
-        # Check post-processor in passthrough data
-        post_processor_fn = None
-        if isinstance(result.passthrough_data, dict):
-            if isinstance(
-                post_processor_info := result.passthrough_data.get("post_processor"), dict
-            ):
-                if post_processor_info.get("context") == "sampler_v2":
-                    # A post processor must be defined to maintain the contracts.
-                    try:
-                        version = str(post_processor_info["version"])
-                    except KeyError:
-                        raise ValueError("Could not determine a post-processor version.")
+        if not (semantic_role := result._semantic_role):
+            return result
 
-                    # TODO: Circular import issue. Consider changing file structure.
-                    from .executor.routines.sampler_v2.post_processors import (  # pylint: disable=import-outside-toplevel
-                        SAMPLER_POST_PROCESSORS,
-                    )
+        if semantic_role == "sampler_v2":
+            # TODO: Circular import issue. Consider changing file structure.
+            from .executor.routines.sampler_v2.post_processors import (  # pylint: disable=import-outside-toplevel
+                SAMPLER_POST_PROCESSORS,
+            )
 
-                    try:
-                        post_processor_fn = SAMPLER_POST_PROCESSORS[version]
-                    except KeyError:
-                        raise ValueError(f"No post-processor found for version {version}.")
+            if not isinstance(result.passthrough_data, dict):
+                raise ValueError("Expected passthrough data to be of dict-like format.")
 
-        # Apply post-processing if we have a processor
-        if post_processor_fn:
+            try:
+                version = result.passthrough_data.get("post_processor", {})["version"]
+            except KeyError:
+                raise ValueError("Could not determine a post-processor version.")
+
+            try:
+                post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+            except KeyError:
+                raise ValueError(f"No post-processor found for version {version}.")
+
             return post_processor_fn(result)
 
-        return result
+        raise ValueError(
+            f"No post-processor found for result with 'semantic_role' {semantic_role}."
+        )
 
     def cancel(self) -> None:
         """Cancel the job.
