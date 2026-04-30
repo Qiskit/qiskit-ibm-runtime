@@ -18,7 +18,6 @@ from pydantic.dataclasses import dataclass
 
 from .utils import PRIMITIVES_CONFIG
 
-
 DEFAULT_X_PULSE_TYPE = "xslow"
 """The default for :meth:`.PostSelectionOptions.x_pulse_type`."""
 
@@ -61,12 +60,3 @@ class PostSelectionOptions:
 
     Defaults to ``node``.
     """
-
-    @staticmethod
-    def _get_program_inputs(options: dict) -> dict:
-        """Convert the input options to program compatible inputs.
-
-        Returns:
-            Inputs acceptable by primitives.
-        """
-        raise NotImplementedError("Not implemented by `PostSelectionOptions`.")
