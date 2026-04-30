@@ -92,7 +92,7 @@ class QiskitRuntimeService:
     instance is active at a given time. Methods such as :meth:`.backend`, :meth:`.backends`,
     :meth:`.job` and :meth:`.jobs` can result in changing the active instance. It is recommended
     to use the :meth:`.active_instance` method for checking which instance is active, or use a
-    separate :class:`~QiskitRuntimeService` object per instance for more finer-grained control.
+    separate :class:`~.QiskitRuntimeService` object per instance for more finer-grained control.
 
     Also note that only one account per API token can be used. The API token is linked to the
     account it was created in. If you want to use multiple accounts, you must create multiple
