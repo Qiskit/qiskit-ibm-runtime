@@ -352,8 +352,8 @@ class Session:
             service: Instance of the ``QiskitRuntimeService`` class. If using multiple instances,
                 note that the active cloud instance in the ``service`` will be replaced with the
                 one that has access to that ``session_id``. Please check the
-                :class:`~QiskitRuntimeService` documentation on using multiple instances and the
-                :meth:`QiskitRuntimeService.active_instance` method for checking which is the
+                :class:`~.QiskitRuntimeService` documentation on using multiple instances and the
+                :meth:`~.QiskitRuntimeService.active_instance` method for checking which is the
                 active instance.
             use_fractional_gates: Whether or not to allow fractional gates for the backend
                 that is used to create the session.
