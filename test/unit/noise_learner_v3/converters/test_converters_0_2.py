@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # typ
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
-from qiskit_ibm_runtime.options import NoiseLearnerV3Options
+from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 
 from ....ibm_test_case import IBMTestCase
 
@@ -49,8 +49,8 @@ class TestConverters(IBMTestCase):
 
         options = NoiseLearnerV3Options()
         options.layer_pair_depths = [2, 4, 10]
-        options.init_qubits = False
-        options.rep_delay = 10**-6
+        options.execution.init_qubits = False
+        options.execution.rep_delay = 10**-6
         options.post_selection.enable = True
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
