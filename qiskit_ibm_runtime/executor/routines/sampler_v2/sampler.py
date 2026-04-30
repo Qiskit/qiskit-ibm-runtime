@@ -421,7 +421,7 @@ class SamplerV2(BaseSamplerV2):
     def quantum_program_result_to_primitive_result(
         result: QuantumProgramResult,
         metadata: dict[str, Any] | None = None,
-        meas_type: Literal["classified", "kerneled"] = "classified",
+        meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
         circuits_metadata: list[dict] | None = None,
     ) -> PrimitiveResult:
         """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
@@ -435,6 +435,8 @@ class SamplerV2(BaseSamplerV2):
             * ``"classified"``: Returns a BitArray with classified measurement outcomes.
             * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
               trace, in arbitrary units.
+            * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
+              in arbitrary units.
             circuits_metadata: Optional list of circuit metadata dicts, one per pub.
 
         Returns:
@@ -468,7 +470,7 @@ class SamplerV2(BaseSamplerV2):
             for creg_name, meas_data in item_data.items():
                 if meas_type == "classified":
                     array = BitArray.from_bool_array(meas_data)
-                elif meas_type == "kerneled":
+                elif meas_type == "kerneled" or meas_type == "avg_kerneled":
                     array = meas_data
                 arrays[creg_name] = array
 
