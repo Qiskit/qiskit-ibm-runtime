@@ -19,6 +19,7 @@ from collections.abc import Sequence
 from concurrent import futures
 import logging
 import time
+import warnings
 
 from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
@@ -107,12 +108,18 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
+        poll_interval: float | None = None,
     ) -> Any:
         """Return the results of the job.
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            poll_interval: Number of seconds to wait between querying the service for the status
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value are ``100ms``.
 
         Returns:
             Runtime job result.
@@ -123,7 +130,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
-        self.wait_for_final_state(timeout=timeout)
+        self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
         if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
             if self._reason_code == 1305:
@@ -223,15 +230,31 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     def wait_for_final_state(
         self,
         timeout: float | None = None,
+        poll_interval: float | None = None,
     ) -> None:
         """Poll for the job status from the API until the status is in a final state.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+            poll_interval: Number of seconds to wait between querying the service for the status
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value is ``100ms``.
 
         Raises:
             RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
+        # Calculate the poll interval.
+        min_poll_interval = 0.1
+        default_poll_interval = 0.1 if self._session_id else 0.5
+        if poll_interval and poll_interval < 0.1:
+            warnings.warn(
+                "The poll interval specified is lower than the minimal allowed. Using "
+                f"{min_poll_interval} as the poll interval."
+            )
+        poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
+
         try:
             start_time = time.time()
             status = self.status()
@@ -241,7 +264,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                     raise RuntimeJobTimeoutError(
                         f"Timed out waiting for job to complete after {timeout} secs."
                     )
-                time.sleep(0.1)
+                time.sleep(poll_interval)
                 status = self.status()
         except futures.TimeoutError:
             raise RuntimeJobTimeoutError(
