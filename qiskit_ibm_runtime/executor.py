@@ -85,8 +85,7 @@ class Executor:
 
     def __init__(
         self,
-        mode: BackendV2 | Session | Batch | None,
-        *,
+        mode: BackendV2 | Session | Batch | None = None,
         options: ExecutorOptions | dict | None = None,
     ):
         # Coerced to `ExecutorOptions` via `__setattr__()`.
