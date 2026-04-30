@@ -43,11 +43,13 @@ class SimulatorOptions:
 
     Default: ``None``.
     """
+
     seed_simulator: UnsetType | int = Unset
     """Random seed to control sampling.
 
     Default: ``None``.
     """
+
     coupling_map: UnsetType | list[list[int]] | CouplingMap = Unset
     """Directed coupling map to target in mapping.
 
@@ -57,6 +59,7 @@ class SimulatorOptions:
 
     Default: ``None``, which implies no connectivity constraints.
     """
+
     basis_gates: UnsetType | list[str] = Unset
     """List of basis gate names to unroll to.
 

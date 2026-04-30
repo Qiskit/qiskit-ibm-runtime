@@ -55,13 +55,13 @@ class RuntimeOptions:
     """
 
     backend: str | Backend | None = None
-    image: str | None = None
+    image: str | None = None  # TODO: can come from `options` or `options.experimental`
     log_level: str | None = None
-    instance: str | None = None
+    instance: str | None = None  # TODO: check if it is currently used
     job_tags: list[str] | None = None
     max_execution_time: int | None = None
-    session_time: int | None = None
-    private: bool | None = False
+    session_time: int | None = None  # TODO: check if it is currently used / can really be modified
+    private: bool | None = False  # TODO: check if it can really be modified
 
     def __init__(
         self,
