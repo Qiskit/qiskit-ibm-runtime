@@ -14,27 +14,25 @@
 
 from __future__ import annotations
 
-from pydantic import Field, ValidationInfo, field_validator
+from typing import Annotated
+
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 
 from .environment_options import EnvironmentOptions
+from .execution_options import ExecutionOptions
 from .post_selection_options import PostSelectionOptions
-from .simulator_options import SimulatorOptions
-from .utils import (
-    make_constraint_validator,
-    skip_unset_validation,
-)
 from .utils import PRIMITIVES_CONFIG
-from pydantic.dataclasses import dataclass
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
 class NoiseLearnerV3Options:
     """Options for :class:`.NoiseLearnerV3`."""
 
-    shots_per_randomization: int = 128
+    shots_per_randomization: Annotated[int, Field(ge=1)] = 128
     """The total number of shots to use per randomized learning circuit."""
 
-    num_randomizations: int = 32
+    num_randomizations: Annotated[int, Field(ge=1)] = 32
     """The number of random circuits to use per learning circuit configuration.
 
     For TREX experiments, a configuration is a measurement basis.
@@ -47,7 +45,7 @@ class NoiseLearnerV3Options:
     :attr:`~shots_per_randomization` each.
     """
 
-    layer_pair_depths: list[int] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
+    layer_pair_depths: list[Annotated[int, Field(ge=0)]] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
     """The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
 
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -56,18 +54,6 @@ class NoiseLearnerV3Options:
 
     .. note::
         This field is ignored by TREX experiments.
-    """
-
-    init_qubits: bool = True
-    """Whether to reset the qubits to the ground state for each shot."""
-
-    rep_delay: float | None = None
-    """The repetition delay.
-
-    This is the delay between the end of one circuit and the start of the next within a shot loop.
-    This is only supported on backends that have ``backend.dynamic_reprate_enabled=True``. It must
-    be from the range supplied by ``backend.rep_delay_range``. When this value is ``None``, the
-    default value ``backend.default_rep_delay`` is used.
     """
 
     post_selection: PostSelectionOptions = Field(default_factory=PostSelectionOptions)
@@ -80,20 +66,8 @@ class NoiseLearnerV3Options:
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    max_execution_time: int | None = None
+    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    """Low-level execution options."""
+
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
-    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
-
-    _ge0 = make_constraint_validator(
-        "num_randomizations",
-        "shots_per_randomization",
-        ge=1,  # type: ignore[arg-type]
-    )
-
-    @field_validator("layer_pair_depths", mode="after")
-    @classmethod
-    @skip_unset_validation
-    def _nonnegative_list(cls, value: list[int], info: ValidationInfo) -> list[int]:
-        if any(i < 0 for i in value):
-            raise ValueError(f"`{cls.__name__}.{info.field_name}` option value must all be >= 0.")
-        return value
+    """Options related to the execution environment."""

@@ -14,16 +14,19 @@
 
 from __future__ import annotations
 
-from typing import Union
-from collections.abc import Iterable, Sequence
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
-from qiskit.circuit import BoxOp, CircuitInstruction
+from qiskit.circuit import BoxOp
 from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
-
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from numpy.typing import NDArray
+    from qiskit.circuit import CircuitInstruction
 
 MetadataLeafTypes = int | str | float
 MetadataValue = Union[MetadataLeafTypes, "Metadata", list["MetadataValue"]]

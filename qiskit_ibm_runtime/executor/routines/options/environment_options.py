@@ -19,7 +19,7 @@ from typing import Literal
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ....options.executor_options import EnvironmentOptions as ExecutorEnvironmentOptions
+from ....options_models.executor_options import EnvironmentOptions as ExecutorEnvironmentOptions
 
 
 @dataclass

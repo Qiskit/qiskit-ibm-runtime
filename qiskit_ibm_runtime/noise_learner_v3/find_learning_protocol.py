@@ -15,8 +15,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 
-from qiskit.circuit import BoxOp
 from qiskit.exceptions import QiskitError
 from qiskit.quantum_info import Clifford
 from samplomatic.utils import undress_box
@@ -24,6 +24,9 @@ from samplomatic.utils import undress_box
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from .learning_protocol import LearningProtocol
+
+if TYPE_CHECKING:
+    from qiskit.circuit import BoxOp
 
 
 def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:

@@ -22,9 +22,8 @@ from pydantic.dataclasses import dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .twirling_options import TwirlingOptions
 from .environment_options import EnvironmentOptions
-from ....options.executor_options import ExecutorOptions
-
-from ....options.executor_options import ExecutionOptions
+from ....options_models.executor_options import ExecutorOptions
+from ....options_models.executor_options import ExecutionOptions
 
 
 @dataclass
