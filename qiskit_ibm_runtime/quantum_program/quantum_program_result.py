@@ -208,7 +208,7 @@ class QuantumProgramItemResult(MutableMapping):
     def __delitem__(self, key: str) -> None:
         del self._result[key]
 
-    def __iter__(self) -> np.ndarray:
+    def __iter__(self) -> str:
         return iter(self._result)
 
     def __len__(self) -> int:
