@@ -29,7 +29,7 @@ from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
-from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
+from .constants import DEFAULT_DECODERS
 from .exceptions import (
     IBMError,
     IBMApiError,
@@ -41,6 +41,13 @@ from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 
 logger = logging.getLogger(__name__)
+
+
+API_TO_JOB_ERROR_MESSAGE = {
+    "FAILED": "Job {} has failed:\n{}",
+    "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
+    "Job was cancelled:\n{}",
+}
 
 
 class BaseRuntimeJob(ABC):

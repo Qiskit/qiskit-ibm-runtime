@@ -87,48 +87,42 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             self.assertEqual(processed, result)
 
     def test_apply_post_processing_no_processor(self):
-        """Test that QuantumProgramResult without processor is returned unchanged."""
+        """Test that QuantumProgramResult with unset semantic role is returned unchanged."""
         job = self._create_job()
         qp_result = QuantumProgramResult(data=[{"c": np.array([[0, 1]])}], metadata=Metadata())
 
         processed = job._apply_post_processing(qp_result)
         self.assertEqual(processed, qp_result)
 
-    def test_apply_post_processing_with_passthrough_data(self):
-        """Test post-processing with passthrough_data."""
+    def test_apply_post_processing_with_semantic_role(self):
+        """Test post-processing for QuantumProgramResult with set semantic role."""
         job = self._create_job()
         qp_result = QuantumProgramResult(
             data=[{"c": np.array([[0, 1]])}],
             metadata=Metadata(),
-            passthrough_data={
-                "post_processor": {
-                    "context": "sampler_v2",
-                    "version": "v0.1",
-                }
-            },
+            passthrough_data={"post_processor": {"version": "v0.1"}},
         )
+        qp_result._semantic_role = "sampler_v2"
 
         # Apply with passthrough_data (uses pre-registered "v0.1" processor)
         processed = job._apply_post_processing(qp_result)
         self.assertEqual(processed, "processed_result")
 
-    def test_passthrough_data_wrong_context(self):
-        """Test that passthrough_data with wrong context is ignored."""
+    def test_passthrough_data_unsupported_semantic_role(self):
+        """Test that results with unsupported semantic role raise an error."""
         job = self._create_job()
         qp_result = QuantumProgramResult(
             data=[{"c": np.array([[0, 1]])}],
             metadata=Metadata(),
-            passthrough_data={
-                "post_processor": {
-                    "context": "wrong_context",
-                    "version": "v0.1",
-                }
-            },
+            passthrough_data={"post_processor": {"version": "v0.1"}},
         )
+        qp_result._semantic_role = "unsupported_semantic_role"
 
-        # Should return unchanged since context is not registered
-        processed = job._apply_post_processing(qp_result)
-        self.assertEqual(processed, qp_result)
+        # Should raise an error since semantic role is not supported
+        with self.assertRaises(ValueError) as context:
+            job._apply_post_processing(qp_result)
+
+        self.assertIn("No post-processor found for result with", str(context.exception))
 
     def test_passthrough_data_missing_version(self):
         """Test that passthrough_data without version raises ValueError for sampler_v2."""
@@ -137,12 +131,10 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
             data=[{"c": np.array([[0, 1]])}],
             metadata=Metadata(),
             passthrough_data={
-                "post_processor": {
-                    "context": "sampler_v2",
-                    # Missing "version" field
-                }
+                "post_processor": {}  # Missing "version" field
             },
         )
+        qp_result._semantic_role = "sampler_v2"
 
         # Should raise ValueError since version is required for sampler_v2 context
         with self.assertRaises(ValueError) as context:
