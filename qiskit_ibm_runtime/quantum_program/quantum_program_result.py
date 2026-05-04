@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, MutableMapping
+from collections.abc import Iterable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
@@ -77,7 +77,7 @@ class SchedulerTiming:
 
 
 @dataclass
-class StretchValue:
+class StretchValues:
     """Circuit stretch value resolutions.
 
     All timing information is expressed in terms of multiples of the quantity ``dt``, time step
@@ -108,7 +108,7 @@ class ItemMetadata:
     scheduler_timing: SchedulerTiming | None = None
     """Scheduled circuit timing information, if it is available."""
 
-    stretch_values: list[StretchValue] | None = None
+    stretch_values: list[StretchValues] | None = None
     """Stretch value resolution, if it is available."""
 
 
@@ -273,7 +273,7 @@ class QuantumProgramResult:
 
     def __init__(
         self,
-        data: list[dict[str, np.ndarray] | QuantumProgramItemResult],
+        data: Sequence[dict[str, np.ndarray] | QuantumProgramItemResult],
         metadata: Metadata | None = None,
         passthrough_data: DataTree | None = None,
     ):
