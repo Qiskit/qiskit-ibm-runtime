@@ -44,7 +44,7 @@ Deprecation Notes
    longer be supported after March 1, 2024. See the transpilation
    documentation (`transpile <https://quantum.cloud.ibm.com/docs/guides/transpile>`__) for instructions to
    transform circuits and the primitive examples
-   (`run/primitives-examples <https://quantum.cloud.ibm.com/docs/guides/primitives-examples>`__) to see this
+   (`run/primitives-examples <https://quantum.cloud.ibm.com/docs/guides/estimator-examples>`__) to see this
    coupled with operator transformations.
 
 Bug Fixes

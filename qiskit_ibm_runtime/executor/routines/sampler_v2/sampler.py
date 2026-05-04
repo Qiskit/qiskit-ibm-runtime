@@ -94,7 +94,7 @@ def prepare(
     if not twirling_enabled:
         # No twirling path: validate no boxes, create CircuitItem objects
         for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i, len(pubs))
+            logger.info("Processing pub %d/%d", i + 1, len(pubs))
             validate_no_boxes(pub.circuit)
 
             # Apply DD if enabled
@@ -131,7 +131,7 @@ def prepare(
         )
 
         for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i, len(pubs))
+            logger.info("Processing pub %d/%d", i + 1, len(pubs))
             boxed_circuit = boxing_pm.run(pub.circuit)
             template_circuit, samplex = build(boxed_circuit)
 
