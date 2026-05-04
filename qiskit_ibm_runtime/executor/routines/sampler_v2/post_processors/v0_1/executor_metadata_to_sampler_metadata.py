@@ -13,12 +13,16 @@
 """Utility functions for executor-based SamplerV2."""
 
 from __future__ import annotations
+
 from collections import defaultdict
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
 
 
 def executor_metadata_to_sampler_metadata(

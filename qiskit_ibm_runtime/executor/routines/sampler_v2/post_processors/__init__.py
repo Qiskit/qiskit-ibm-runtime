@@ -13,5 +13,4 @@
 """Post-processors for executor-based SamplerV2."""
 
 from .utils import SAMPLER_POST_PROCESSORS
-
 from .v0_1.post_processor import sampler_v2_post_processor_v0_1

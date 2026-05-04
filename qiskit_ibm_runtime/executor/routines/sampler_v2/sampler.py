@@ -14,30 +14,36 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 import logging
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from qiskit.primitives.base import BaseSamplerV2
-from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
-from qiskit.providers import BackendV2
 from qiskit.primitives import PrimitiveResult
+from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
-from samplomatic.transpiler import generate_boxing_pass_manager
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
+from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ....runtime_job_v2 import RuntimeJobV2
-from ....executor import Executor
-from ..dynamical_decoupling import generate_dd_pass_manager
-from ....session import Session
-from ....batch import Batch
-from ....quantum_program import QuantumProgram, QuantumProgramResult, QuantumProgramItem
-from ....quantum_program.quantum_program import CircuitItem, SamplexItem
-from ....quantum_program.datatree import is_datatree_compatible
-from ....options_models.executor_options import ExecutorOptions
 from ....exceptions import IBMInputValueError
-from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
+from ....executor import Executor
 from ....options_models.sampler_options import SamplerOptions
+from ....quantum_program import QuantumProgram
+from ....quantum_program.datatree import is_datatree_compatible
+from ....quantum_program.quantum_program import CircuitItem, SamplexItem
+from ..dynamical_decoupling import generate_dd_pass_manager
+from ..utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from qiskit.primitives.containers.sampler_pub import SamplerPubLike
+    from qiskit.providers import BackendV2
+
+    from ....batch import Batch
+    from ....options_models.executor_options import ExecutorOptions
+    from ....quantum_program import QuantumProgramItem, QuantumProgramResult
+    from ....runtime_job_v2 import RuntimeJobV2
+    from ....session import Session
 
 logger = logging.getLogger(__name__)
 

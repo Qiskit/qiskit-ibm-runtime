@@ -15,11 +15,15 @@
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
-from qiskit.circuit import BoxOp, QuantumCircuit
-from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.circuit import BoxOp
 
 from ...exceptions import IBMInputValueError
+
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 
 def validate_no_boxes(circuit: QuantumCircuit) -> None:

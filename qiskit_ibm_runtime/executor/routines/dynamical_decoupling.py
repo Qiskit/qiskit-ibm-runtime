@@ -13,12 +13,11 @@
 """Dynamical decoupling utilities for executor routines."""
 
 from __future__ import annotations
-from typing import Literal
+
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from qiskit.circuit import Gate
 from qiskit.circuit.library import RZGate, XGate
-from qiskit.providers import BackendV2
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import (
     ALAPScheduleAnalysis,
@@ -28,7 +27,11 @@ from qiskit.transpiler.passes import (
     TimeUnitConversion,
 )
 
-from ...options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate
+    from qiskit.providers import BackendV2
+
+    from ...options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
 
 
 def make_dd_sequence(

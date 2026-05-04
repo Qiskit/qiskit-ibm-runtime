@@ -13,15 +13,18 @@
 """Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
 
 from __future__ import annotations
-from typing import cast
+
+from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ......quantum_program.quantum_program_result import QuantumProgramResult
 from ...sampler import SamplerV2
 from ..utils import register_post_processor
 from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
 from .flatten_twirling_axes import flatten_twirling_axes
+
+if TYPE_CHECKING:
+    from ......quantum_program.quantum_program_result import QuantumProgramResult
 
 
 @register_post_processor("v0.1")
@@ -70,7 +73,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             f"'{type(result.passthrough_data)}'."
         )
 
-    passthrough = cast(dict, result.passthrough_data or {})
+    passthrough = cast("dict", result.passthrough_data or {})
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
     if (twirling := post_processor_data.get("twirling", None)) is None:
