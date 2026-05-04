@@ -74,7 +74,7 @@ def make_dd_sequence(
     for i, sequence in enumerate(dd_sequence_list):
         # First and last intervals are half-sized, middle intervals are full-sized
         spacing.append(delay / 2 if i == 0 else delay)
-        # Mutligate sequences happen with no delay
+        # Multigate sequences happen with no delay
         spacing.extend([0] * (len(sequence) - 1))
         dd_sequence.extend(sequence)
     spacing.append(delay / 2)
