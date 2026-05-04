@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, MutableMapping
+from collections.abc import Iterable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
@@ -227,7 +227,7 @@ class QuantumProgramResult:
 
     def __init__(
         self,
-        data: list[dict[str, np.ndarray] | QuantumProgramItemResult],
+        data: Sequence[dict[str, np.ndarray] | QuantumProgramItemResult],
         metadata: Metadata | None = None,
         passthrough_data: DataTree | None = None,
     ):
