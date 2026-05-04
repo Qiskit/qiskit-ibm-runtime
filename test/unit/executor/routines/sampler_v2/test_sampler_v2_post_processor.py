@@ -272,21 +272,29 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
 
     @data("kerneled", "avg_kerneled")
     def test_data_integrity_kerneled(self, meas_type):
-        """Test that kerneled and avg_kerneled measurements pass through."""
+        """Test that kerneled and avg_kerneled measurements pass through and suffixes are removed."""
         # Create specific measurement data to verify integrity
         meas_data = np.array(
             [1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j],
             dtype=np.complex128,
         )
 
+        # Use register name with suffix as it would come from the executor
+        suffix = "_avg_iq" if meas_type == "avg_kerneled" else "_iq"
+        register_name_with_suffix = f"meas{suffix}"
+
         qp_result = QuantumProgramResult(
-            data=[{"meas": meas_data}],
+            data=[{register_name_with_suffix: meas_data}],
             metadata=Metadata(),
         )
 
         result = SamplerV2.quantum_program_result_to_primitive_result(
             qp_result, meas_type=meas_type
         )
+
+        # Verify suffix was removed and data is accessible without suffix
+        self.assertIn("meas", result[0].data)
+        self.assertNotIn(register_name_with_suffix, result[0].data)
         result_array = result[0].data.meas
 
         # Verify the result array contains the same data

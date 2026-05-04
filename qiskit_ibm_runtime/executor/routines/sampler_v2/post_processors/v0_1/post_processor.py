@@ -70,6 +70,15 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
+    # Remove suffixes from register names for kerneled measurements
+    if meas_type in ("kerneled", "avg_kerneled"):
+        suffix = "_avg_iq" if meas_type == "avg_kerneled" else "_iq"
+        for item in result:
+            for key in list(item.keys()):
+                if key.endswith(suffix):
+                    new_key = key[: -len(suffix)]
+                    item[new_key] = item.pop(key)
+
     # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
     # places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
