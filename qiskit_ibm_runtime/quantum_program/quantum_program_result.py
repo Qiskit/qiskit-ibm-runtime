@@ -62,8 +62,54 @@ class ChunkSpan:
 
 
 @dataclass
+class SchedulerTiming:
+    """The timing of a scheduled circuit.
+
+    All timing information is expressed in terms of multiples of the quantity ``dt``, time step
+    duration of the control electronics, which can be queried in backend and target properties.
+    """
+
+    timing: str
+    """A description of circuit timing in a comma-separated text format."""
+
+    circuit_duration: int
+    """The duration of the circuit in ``dt`` steps."""
+
+
+@dataclass
+class StretchValue:
+    """Circuit stretch value resolutions.
+
+    All timing information is expressed in terms of multiples of the quantity ``dt``, time step
+    duration of the control electronics, which can be queried in backend and target properties.
+    """
+
+    name: str
+    """The name of the stretch."""
+
+    value: int
+    """The resolved stretch value, up to the remainder, in units of ``dt``."""
+
+    remainder: int
+    """The time left over if ``value`` were to be used each stretch, in units of ``dt``."""
+
+    expanded_values: list[tuple[int, int]]
+    """A sequence of pairs ``(time, duration)`` indicating the time and duration of each delay.
+
+    All units are ``dt``, where the ``time`` denotes the absolute time of a delay in the circuit
+    schedule, and the ``duration`` denotes the total duration of the delay.
+    """
+
+
+@dataclass
 class ItemMetadata:
     """Metadata about the execution of a single item of a quantum program."""
+
+    scheduler_timing: SchedulerTiming | None = None
+    """Scheduled circuit timing information, if it is available."""
+
+    stretch_values: list[StretchValue] | None = None
+    """Stretch value resolution, if it is available."""
 
 
 @dataclass
