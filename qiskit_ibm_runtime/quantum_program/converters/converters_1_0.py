@@ -175,7 +175,7 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
         ]
     )
 
-    data: list[QuantumProgramItemResult] = []
+    data = []
     for item in model.data:
         timings = item.metadata.scheduler_timing
         scheduler_timing = SchedulerTiming(**dict(timings)) if timings else None
