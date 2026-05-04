@@ -14,9 +14,7 @@
 
 from __future__ import annotations
 
-from collections.abc import MutableMapping
-
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, MutableMapping
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
@@ -208,7 +206,7 @@ class QuantumProgramItemResult(MutableMapping):
     def __delitem__(self, key: str) -> None:
         del self._result[key]
 
-    def __iter__(self) -> str:
+    def __iter__(self) -> Iterator[str]:
         return iter(self._result)
 
     def __len__(self) -> int:
