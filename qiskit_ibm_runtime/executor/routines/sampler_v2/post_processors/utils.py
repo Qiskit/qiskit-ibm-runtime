@@ -14,14 +14,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-from qiskit.primitives import PrimitiveResult
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-from .....quantum_program.quantum_program_result import QuantumProgramResult
+    from qiskit.primitives import PrimitiveResult
 
-# Type alias for sampler post-processor functions
-PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
+    from .....quantum_program.quantum_program_result import QuantumProgramResult
+
+    # Type alias for sampler post-processor functions
+    PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]
 
 # Registry for sampler post-processing functions
 SAMPLER_POST_PROCESSORS: dict[str, PostProcessorFunc] = {}
