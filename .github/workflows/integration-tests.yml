@@ -87,3 +87,39 @@ jobs:
           pip install -e '.[test,performance]'
       - name: Run benchmarks
         run: make benchmark
+  unit-tests-lowest-versions:
+    name: Run unit tests with lowest versions - python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+        os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
+        exclude:
+          - os: "macos-latest"
+            python-version: '3.10'
+            # numpy 1.26.x does not provide cp313 wheels, and mingw-w64 compiled numpy raises
+            # RuntimeWarning at test/unit/test_data_serialization::TestDataSerialization
+          - os: "windows-latest"
+            python-version: '3.13'
+    env:
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+      PYTEST_ADDOPTS: "--durations=10"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install extremal-python-dependencies==0.1.0
+          extremal-python-dependencies pin-dependencies-to-minimum --inplace
+          pip install -e '.[test,performance,visualization]'
+      - name: Run unit tests
+        run: make unit-test-coverage
