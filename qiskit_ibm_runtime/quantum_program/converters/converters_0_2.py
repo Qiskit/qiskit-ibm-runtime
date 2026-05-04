@@ -38,7 +38,13 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+from ..quantum_program_result import (
+    QuantumProgramResult,
+    ChunkPart,
+    ChunkSpan,
+    Metadata,
+    QuantumProgramItemResult,
+)
 from ...options_models.executor_options import ExecutorOptions
 
 
@@ -170,7 +176,10 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
     )
 
     return QuantumProgramResult(
-        data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
+        data=[
+            QuantumProgramItemResult({name: val.to_numpy() for name, val in item.results.items()})
+            for item in model.data
+        ],
         metadata=metadata,
         passthrough_data=model.passthrough_data,
     )
