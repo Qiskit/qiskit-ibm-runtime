@@ -275,6 +275,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         """Test that kerneled and avg_kerneled measurements pass through,
         and verifies that the suffixes _iq and _avg_ia are removed. from register names.
         """
+        
         # Create specific measurement data to verify integrity
         meas_data = np.array(
             [1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j],
