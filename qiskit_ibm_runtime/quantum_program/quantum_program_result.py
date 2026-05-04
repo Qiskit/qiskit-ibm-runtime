@@ -14,11 +14,13 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
-from typing import overload, TYPE_CHECKING
+from typing import overload, TYPE_CHECKING, Any
 import numpy as np
 
 from .datatree import DataTree
@@ -59,6 +61,11 @@ class ChunkSpan:
 
     parts: list[ChunkPart]
     """A description of which parts of a quantum program are contained in this chunk."""
+
+
+@dataclass
+class ItemMetadata:
+    """Metadata about the execution of a single item of a quantum program."""
 
 
 @dataclass
@@ -174,6 +181,41 @@ class ChunkTiming:
         return draw_chunk_timings(
             self, names=name, normalize_y=normalize_y, line_width=line_width, tz=tz
         )
+
+
+class QuantumProgramItemResult(MutableMapping):
+    """A container to store results for a single item of a :class:`QuantumProgram`.
+
+    Args:
+        result: A dictionary with array-valued data.
+        metadata: The metadata produced for the individual item.
+    """
+
+    def __init__(
+        self,
+        result: dict[str, np.ndarray],
+        metadata: ItemMetadata | None = None,
+    ):
+        self._result = result
+        self.metadata = metadata or ItemMetadata()
+
+    def __getitem__(self, key: str) -> np.ndarray:
+        return self._result[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self._result[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self._result[key]
+
+    def __iter__(self) -> np.ndarray:
+        return iter(self._result)
+
+    def __len__(self) -> int:
+        return len(self._result)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
 
 
 class QuantumProgramResult:
