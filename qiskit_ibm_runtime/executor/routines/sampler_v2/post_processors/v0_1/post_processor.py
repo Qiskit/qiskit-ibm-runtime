@@ -48,10 +48,21 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Apply measurement twirling bit flips
     prefix = "measurement_flips."
     for item in result:
-        for key in list(item.keys()):
-            if key.startswith(prefix):
-                item[key[len(prefix) :]] ^= item.pop(key)
-    # TODO: This could fail if the user manually specifies a register starting with the prefix.
+        flip_keys = [key for key in item.keys() if key.startswith(prefix)]
+
+        for flip_key in flip_keys:
+            target_key = flip_key[len(prefix) :]
+
+            # Validate that target key exists
+            if target_key not in item:
+                raise ValueError(
+                    f"Measurement flip key '{flip_key}' references non-existent "
+                    f"register '{target_key}'. Available registers: {list(item.keys())}"
+                )
+
+            # Apply XOR and remove flip key
+            flip_data = item.pop(flip_key)
+            item[target_key] ^= flip_data
 
     if not isinstance(result.passthrough_data, dict):
         raise ValueError(
