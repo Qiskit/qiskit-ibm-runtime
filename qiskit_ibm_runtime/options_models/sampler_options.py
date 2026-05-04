@@ -22,8 +22,8 @@ from pydantic.dataclasses import dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .twirling_options import TwirlingOptions
 from .environment_options import EnvironmentOptions
-from ....options_models.executor_options import ExecutorOptions
-from ....options_models.executor_options import ExecutionOptions
+from .executor_options import ExecutorOptions
+from .executor_options import ExecutionOptions
 
 
 @dataclass
@@ -101,7 +101,7 @@ class SamplerOptions:
         """
         executor_options = ExecutorOptions()
 
-        executor_options.environment = self.environment.to_executor_options()
+        executor_options.environment = self.environment
         executor_options.execution = self.execution.to_executor_options()
 
         executor_options.environment.max_execution_time = self.max_execution_time

@@ -28,7 +28,7 @@ from qiskit.transpiler.passes import (
     TimeUnitConversion,
 )
 
-from .options.dynamical_decoupling_options import DynamicalDecouplingOptions
+from ...options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
 
 
 def make_dd_sequence(

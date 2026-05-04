@@ -37,7 +37,7 @@ from ....quantum_program.datatree import is_datatree_compatible
 from ....options_models.executor_options import ExecutorOptions
 from ....exceptions import IBMInputValueError
 from ..utils import validate_no_boxes, extract_shots_from_pubs, calculate_twirling_shots
-from ..options.sampler_options import SamplerOptions
+from ....options_models.sampler_options import SamplerOptions
 
 logger = logging.getLogger(__name__)
 

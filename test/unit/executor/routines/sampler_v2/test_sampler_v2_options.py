@@ -14,7 +14,7 @@
 
 import unittest
 
-from qiskit_ibm_runtime.executor.routines.options import SamplerOptions
+from qiskit_ibm_runtime.options_models import SamplerOptions
 
 
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):

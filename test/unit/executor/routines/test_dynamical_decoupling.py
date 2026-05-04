@@ -27,7 +27,7 @@ from qiskit.transpiler.passes import (
 )
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
-from qiskit_ibm_runtime.executor.routines.options.dynamical_decoupling_options import (
+from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
 )
 from qiskit_ibm_runtime.executor.routines.dynamical_decoupling import (
