@@ -24,14 +24,14 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ....exceptions import IBMInputValueError
-from ....executor import Executor
-from ....options_models.sampler_options import SamplerOptions
-from ....quantum_program import QuantumProgram
-from ....quantum_program.datatree import is_datatree_compatible
-from ....quantum_program.quantum_program import CircuitItem, SamplexItem
-from ..dynamical_decoupling import generate_dd_pass_manager
-from ..utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
+from ..exceptions import IBMInputValueError
+from ..executor import Executor
+from ..options_models.sampler_options import SamplerOptions
+from ..quantum_program import QuantumProgram
+from ..quantum_program.datatree import is_datatree_compatible
+from ..quantum_program.quantum_program import CircuitItem, SamplexItem
+from ..executor.dynamical_decoupling import generate_dd_pass_manager
+from .utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -39,11 +39,11 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
-    from ....batch import Batch
-    from ....options_models.executor_options import ExecutorOptions
-    from ....quantum_program import QuantumProgramItem, QuantumProgramResult
-    from ....runtime_job_v2 import RuntimeJobV2
-    from ....session import Session
+    from ..batch import Batch
+    from ..options_models.executor_options import ExecutorOptions
+    from ..quantum_program import QuantumProgramItem, QuantumProgramResult
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ def prepare(
         A tuple containing:
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
             with passthrough_data configured for
-            :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2` post-processing.
+            :class:`~qiskit_ibm_runtime.sampler_v2.SamplerV2` post-processing.
         - :class:`~.ExecutorOptions` mapped from :class:`~.SamplerOptions`.
 
     Raises:
@@ -242,7 +242,7 @@ class SamplerV2(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.executor.routines import SamplerV2
+            from qiskit_ibm_runtime.sampler_v2 import SamplerV2
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
@@ -283,7 +283,7 @@ class SamplerV2(BaseSamplerV2):
 
         options: Sampler options.
             See
-            :class:`~qiskit_ibm_runtime.executor.routines.options.sampler_options.SamplerOptions`
+            :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
             for all available options.
         custom_prepare: Optional custom prepare function to replace the default conversion
             logic. If ``None``, the default function is used.

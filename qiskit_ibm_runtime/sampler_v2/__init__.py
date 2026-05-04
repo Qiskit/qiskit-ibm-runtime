@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor routines."""
+"""Executor-based SamplerV2"""
 
-from .sampler_v2 import SamplerV2
+from .sampler import SamplerV2
+from .post_processors.registry import SAMPLER_POST_PROCESSORS

@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from qiskit.circuit import Gate
     from qiskit.providers import BackendV2
 
-    from ...options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
+    from ..options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
 
 
 def make_dd_sequence(

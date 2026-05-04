@@ -19,8 +19,8 @@ import numpy as np
 
 from qiskit.primitives import PrimitiveResult
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2 import SamplerV2
-from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v0_1 import (
+from qiskit_ibm_runtime.sampler_v2 import SamplerV2
+from qiskit_ibm_runtime.sampler_v2.post_processors.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions

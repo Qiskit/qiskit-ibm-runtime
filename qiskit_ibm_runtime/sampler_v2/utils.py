@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 
 from qiskit.circuit import BoxOp
 
-from ...exceptions import IBMInputValueError
+from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
     from qiskit.circuit import QuantumCircuit

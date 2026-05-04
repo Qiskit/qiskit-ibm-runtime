@@ -30,7 +30,7 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
 )
-from qiskit_ibm_runtime.executor.routines.dynamical_decoupling import (
+from qiskit_ibm_runtime.executor.dynamical_decoupling import (
     make_dd_sequence,
     generate_dd_pass_manager,
 )

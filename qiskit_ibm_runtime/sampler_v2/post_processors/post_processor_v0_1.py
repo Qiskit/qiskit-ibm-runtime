@@ -18,13 +18,12 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ...sampler import SamplerV2
-from ..utils import register_post_processor
-from .executor_metadata_to_sampler_metadata import executor_metadata_to_sampler_metadata
-from .flatten_twirling_axes import flatten_twirling_axes
+from ..sampler import SamplerV2
+from .registry import register_post_processor
+from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes
 
 if TYPE_CHECKING:
-    from ......quantum_program.quantum_program_result import QuantumProgramResult
+    from ...quantum_program.quantum_program_result import QuantumProgramResult
 
 
 @register_post_processor("v0.1")
@@ -32,10 +31,10 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     """Convert a quantum program result to a primitives result, for a V2 sampler.
 
     Convert :class:`~.QuantumProgramResult` to a :class:`~qiskit.primitives.PrimitiveResult`,
-    for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
+    for :class:`~qiskit_ibm_runtime.sampler_v2.SamplerV2`.
 
     This function transforms the raw quantum program execution results into the
-    format expected by :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`,
+    format expected by :class:`~qiskit_ibm_runtime.sampler_v2.SamplerV2`,
     creating :class:`~qiskit.primitives.containers.BitArray` objects and
     :class:`~qiskit.primitives.containers.SamplerPubResult` containers for each pub.
 
@@ -43,7 +42,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         result: The raw quantum program result containing measurement data.
 
     Returns:
-        Primitive result for :class:`~qiskit_ibm_runtime.executor.routines.sampler_v2.SamplerV2`.
+        Primitive result for :class:`~qiskit_ibm_runtime.sampler_v2.SamplerV2`.
     """
     if len(result) == 0:
         return PrimitiveResult([])

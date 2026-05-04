@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from qiskit.primitives import PrimitiveResult
 
-    from .....quantum_program.quantum_program_result import QuantumProgramResult
+    from ...quantum_program.quantum_program_result import QuantumProgramResult
 
     # Type alias for sampler post-processor functions
     PostProcessorFunc = Callable[[QuantumProgramResult], PrimitiveResult]

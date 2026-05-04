@@ -10,6 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""V0.1 post processor for executor-based SamplerV2"""
+"""Tests for SamplerV2 post-processors."""
 
-from .post_processor import sampler_v2_post_processor_v0_1
+from qiskit_ibm_runtime.sampler_v2.post_processors.registry import SAMPLER_POST_PROCESSORS
+
+
+def test_available_post_processors():
+    """Test the available post-processors."""
+    assert "v0.1" in SAMPLER_POST_PROCESSORS

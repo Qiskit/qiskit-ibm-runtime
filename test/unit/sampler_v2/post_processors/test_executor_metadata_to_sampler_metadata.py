@@ -10,8 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=line-too-long
-
 """Tests for ``executor_metadata_to_sampler_metadata``."""
 
 from __future__ import annotations
@@ -22,7 +20,7 @@ from datetime import datetime
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
 
-from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors.v0_1.executor_metadata_to_sampler_metadata import (  # noqa: E501
+from qiskit_ibm_runtime.sampler_v2.post_processors.utils import (
     executor_metadata_to_sampler_metadata,
 )
 
