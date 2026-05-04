@@ -16,8 +16,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from ......quantum_program.quantum_program_result import QuantumProgramItemResult
 
-def flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
+
+def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading ``num_randomizations`` axis into the shots axis in-place.
 
     When twirling is enabled, the executor returns measurement data with shape

@@ -22,6 +22,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     ChunkTiming,
     Metadata,
     QuantumProgramResult,
+    QuantumProgramItemResult,
 )
 
 from ...ibm_test_case import IBMTestCase
@@ -46,8 +47,8 @@ class TestQuantumProgramResult(IBMTestCase):
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
 
-        result1 = {"meas": meas1}
-        result2 = {"meas": meas2, "measurement_flips.meas": meas_flips}
+        result1 = QuantumProgramItemResult({"meas": meas1})
+        result2 = QuantumProgramItemResult({"meas": meas2, "measurement_flips.meas": meas_flips})
         result = QuantumProgramResult([result1, result2])
 
         # test __len__
@@ -55,7 +56,7 @@ class TestQuantumProgramResult(IBMTestCase):
 
         # test __iter__
         for res, expected_res in zip(result, [result1, result2]):
-            self.assertDictEqual(res, expected_res)
+            self.assertEqual(res, expected_res)
 
         # test __getitem__
         self.assertEqual([result[0], result[1]], [result1, result2])

@@ -229,11 +229,16 @@ class QuantumProgramResult:
 
     def __init__(
         self,
-        data: list[dict[str, np.ndarray]],
+        data: list[dict[str, np.ndarray] | QuantumProgramItemResult],
         metadata: Metadata | None = None,
         passthrough_data: DataTree | None = None,
     ):
-        self._data = data
+        self._data = [
+            datum
+            if isinstance(datum, QuantumProgramItemResult)
+            else QuantumProgramItemResult(datum)
+            for datum in data
+        ]
         self.metadata = metadata or Metadata()
         self.passthrough_data = passthrough_data
 
@@ -242,10 +247,10 @@ class QuantumProgramResult:
         # without notice. Third party clients should not set or depend on this value.
         self._semantic_role: str | None = None
 
-    def __iter__(self) -> Iterator[dict[str, np.ndarray]]:
+    def __iter__(self) -> Iterator[QuantumProgramItemResult]:
         yield from self._data
 
-    def __getitem__(self, idx: int) -> dict[str, np.ndarray]:
+    def __getitem__(self, idx: int) -> QuantumProgramItemResult:
         return self._data[idx]
 
     def __len__(self) -> int:
