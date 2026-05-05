@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,15 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""DataTree."""
+"""Executor"""
 
-from __future__ import annotations
-
-from typing import TypeAlias
-from numpy.typing import NDArray
-
-
-DataTree: TypeAlias = (
-    list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
-)
-"""Arbitrary nesting of lists and dicts with typed leaves."""
+from .executor import Executor
