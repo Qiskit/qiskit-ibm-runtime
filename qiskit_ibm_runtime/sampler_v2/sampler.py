@@ -15,33 +15,33 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING
 
-from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.base import BaseSamplerV2
-from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from ..exceptions import IBMInputValueError
 from ..executor import Executor
+from ..executor.dynamical_decoupling import generate_dd_pass_manager
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
-from ..executor.dynamical_decoupling import generate_dd_pass_manager
+from .converters import sampler_options_to_executor_options
 from .utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+    from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
     from ..options_models.executor_options import ExecutorOptions
-    from ..quantum_program import QuantumProgramItem, QuantumProgramResult
+    from ..quantum_program import QuantumProgramItem
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -198,7 +198,7 @@ def prepare(
     quantum_program._semantic_role = "sampler_v2"
 
     # Map options to executor options
-    executor_options = options.to_executor_options()
+    executor_options = sampler_options_to_executor_options(options)
 
     return quantum_program, executor_options
 
@@ -281,13 +281,14 @@ class SamplerV2(BaseSamplerV2):
             <https://quantum.cloud.ibm.com/docs/guides/execution-modes>`_
             for more information about execution modes.
 
-        options: Sampler options.
-            See
-            :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
+        options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
             for all available options.
         custom_prepare: Optional custom prepare function to replace the default conversion
             logic. If ``None``, the default function is used.
     """
+
+    options: SamplerOptions
+    """The options of this Sampler."""
 
     def __init__(
         self,
@@ -305,16 +306,26 @@ class SamplerV2(BaseSamplerV2):
 
         self._executor = Executor(mode=mode)
 
-        # Initialize options
-        if options is None:
-            self._options = SamplerOptions()
-        elif isinstance(options, dict):
-            self._options = SamplerOptions(**options)
-        else:
-            self._options = options
+        # Coerced to `SamplerOptions` via `__setattr__()`.
+        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
 
         # Initialize prepare function
         self._prepare = custom_prepare if custom_prepare is not None else prepare
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to an ``SamplerOptions`` instance.
+        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
+        autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = SamplerOptions(**value)
+            elif not isinstance(value, SamplerOptions):
+                raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
@@ -347,7 +358,7 @@ class SamplerV2(BaseSamplerV2):
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         # Determine default shots: run parameter takes precedence over options.default_shots
-        default_shots = shots if shots is not None else self._options.default_shots
+        default_shots = shots if shots is not None else self.options.default_shots
 
         # Get backend from executor
         backend = self._executor._backend
@@ -360,7 +371,7 @@ class SamplerV2(BaseSamplerV2):
         # Convert pubs to QuantumProgram and map options using the prepare function
         logger.info("Starting pre-processing")
         quantum_program, executor_options = self._prepare(
-            coerced_pubs, self._options, backend, default_shots
+            coerced_pubs, self.options, backend, default_shots
         )
 
         # Set executor options
@@ -375,15 +386,6 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return self._executor.run(quantum_program)
-
-    @property
-    def options(self) -> SamplerOptions:
-        """Return the options.
-
-        Returns:
-            The sampler options.
-        """
-        return self._options
 
     @property
     def custom_prepare(
@@ -421,72 +423,3 @@ class SamplerV2(BaseSamplerV2):
         if fn is not None and not callable(fn):
             raise TypeError(f"custom_prepare must be callable or None, got {type(fn).__name__}")
         self._prepare = fn if fn is not None else prepare
-
-    @staticmethod
-    def quantum_program_result_to_primitive_result(
-        result: QuantumProgramResult,
-        metadata: dict[str, Any] | None = None,
-        meas_type: Literal["classified", "kerneled"] = "classified",
-        circuits_metadata: list[dict] | None = None,
-    ) -> PrimitiveResult:
-        """Convert :class:`~.QuantumProgramResult` to :class:`~qiskit.primitives.PrimitiveResult`.
-
-        Args:
-            result: The (possibly post-processed) quantum program result.
-            metadata: The metadata to attach to the result.
-            meas_type: How to process and return measurement results. This option sets the return
-                type of all classical registers in all sampler pub results.
-
-            * ``"classified"``: Returns a BitArray with classified measurement outcomes.
-            * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
-              trace, in arbitrary units.
-            circuits_metadata: Optional list of circuit metadata dicts, one per pub.
-
-        Returns:
-            The converted primitive result.
-
-        Raises:
-            ValueError: If data is malformed or inconsistent, or if ``circuits_metadata``
-                length doesn't match number of pubs.
-        """
-        # Validate circuits_metadata length if provided
-        circuits_metadata = circuits_metadata or [None] * len(result)
-        if circuits_metadata is not None and len(circuits_metadata) != len(result):
-            raise ValueError(
-                f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
-                f"number of pubs ({len(result)})."
-            )
-
-        # Build SamplerPubResult for each pub
-        pub_results = []
-        for idx, item_data in enumerate(result):
-            # Validate that measurement data exists
-            if not item_data:
-                raise ValueError(f"Pub {idx} has no measurement data")
-
-            # Infer pub_shape from the first classical register's data
-            # meas_data shape: (...pub_shape..., num_shots, num_bits)
-            first_meas_data = next(iter(item_data.values()))
-            pub_shape = first_meas_data.shape[:-2]
-
-            arrays = {}
-            for creg_name, meas_data in item_data.items():
-                if meas_type == "classified":
-                    array = BitArray.from_bool_array(meas_data)
-                elif meas_type == "kerneled":
-                    array = meas_data
-                arrays[creg_name] = array
-
-            data_bin = DataBin(**arrays, shape=pub_shape)
-
-            # Get circuit metadata for this pub if available
-            pub_metadata = {}
-            if circuits_metadata is not None:
-                circuit_meta = circuits_metadata[idx]
-                if circuit_meta is not None:
-                    pub_metadata["circuit_metadata"] = circuit_meta
-
-            pub_result = SamplerPubResult(data=data_bin, metadata=pub_metadata)
-            pub_results.append(pub_result)
-
-        return PrimitiveResult(pub_results, metadata=metadata or {})

@@ -12,5 +12,5 @@
 
 """Executor-based SamplerV2"""
 
-from .sampler import SamplerV2
 from .post_processors.registry import SAMPLER_POST_PROCESSORS
+from .sampler import SamplerV2

@@ -15,6 +15,7 @@
 import unittest
 
 from qiskit_ibm_runtime.options_models import SamplerOptions
+from qiskit_ibm_runtime.sampler_v2.converters import sampler_options_to_executor_options
 
 
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
@@ -23,7 +24,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
     def test_default_options_mapping(self):
         """Test that default options are correctly mapped."""
         options = SamplerOptions()
-        executor_options = options.to_executor_options()
+        executor_options = sampler_options_to_executor_options(options)
 
         # Check default execution options
         self.assertEqual(executor_options.execution.init_qubits, True)
@@ -40,7 +41,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that image is None when experimental is None."""
         options = SamplerOptions()
         options.experimental = None
-        executor_options = options.to_executor_options()
+        executor_options = sampler_options_to_executor_options(options)
 
         self.assertIsNone(executor_options.environment.image)
 
@@ -48,7 +49,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that other experimental keys don't affect mapping."""
         options = SamplerOptions()
         options.experimental = {"image": "test:v1", "other_key": "value"}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_options_to_executor_options(options)
 
         # Only image should be mapped
         self.assertEqual(executor_options.environment.image, "test:v1")
@@ -64,7 +65,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         options.max_execution_time = 300
         options.experimental = {"image": "test-image:latest"}
 
-        executor_options = options.to_executor_options()
+        executor_options = sampler_options_to_executor_options(options)
 
         self.assertEqual(executor_options.execution.init_qubits, False)
         self.assertEqual(executor_options.execution.rep_delay, 0.0002)
@@ -78,7 +79,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that experimental dict is carried over to executor options."""
         options = SamplerOptions()
         options.experimental = {"custom_key": "custom_value", "another_key": 123}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_options_to_executor_options(options)
 
         # Check that experimental dict is carried over
         self.assertEqual(executor_options.experimental["custom_key"], "custom_value")

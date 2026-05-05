@@ -19,7 +19,7 @@ import numpy as np
 
 from qiskit.primitives import PrimitiveResult
 
-from qiskit_ibm_runtime.sampler_v2 import SamplerV2
+from qiskit_ibm_runtime.sampler_v2.converters import quantum_program_result_to_primitive_result
 from qiskit_ibm_runtime.sampler_v2.post_processors.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
@@ -66,7 +66,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         )
         qp_result._semantic_role = "sampler_v2"
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
 
         # Verify both registers are present
         pub_result = result[0]
@@ -93,7 +93,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
 
         # Verify number of pubs
         self.assertEqual(len(result), 3)
@@ -111,7 +111,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError) as context:
-            SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+            quantum_program_result_to_primitive_result(qp_result)
 
         self.assertIn("no measurement data", str(context.exception).lower())
 
@@ -123,7 +123,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         )
 
         metadata = {"metadata": "val"}
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result, metadata)
+        result = quantum_program_result_to_primitive_result(qp_result, metadata)
 
         # Verify metadata is present
         self.assertEqual(result.metadata, metadata)
@@ -145,7 +145,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             {},
         ]
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(
+        result = quantum_program_result_to_primitive_result(
             qp_result, metadata=None, circuits_metadata=circuits_metadata
         )
 
@@ -164,7 +164,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
 
         circuits_metadata = [None]
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(
+        result = quantum_program_result_to_primitive_result(
             qp_result, metadata=None, circuits_metadata=circuits_metadata
         )
 
@@ -180,7 +180,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(
+        result = quantum_program_result_to_primitive_result(
             qp_result, metadata=None, circuits_metadata=None
         )
 
@@ -206,7 +206,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         ]
 
         with self.assertRaises(ValueError) as context:
-            SamplerV2.quantum_program_result_to_primitive_result(
+            quantum_program_result_to_primitive_result(
                 qp_result, metadata=None, circuits_metadata=circuits_metadata
             )
 
@@ -224,7 +224,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
 
         # Verify custom register names are preserved
         pub_result = result[0]
@@ -257,7 +257,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
         bit_array = result[0].data.meas
 
         # Verify the BitArray contains the same data
@@ -281,9 +281,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(
-            qp_result, meas_type="kerneled"
-        )
+        result = quantum_program_result_to_primitive_result(qp_result, meas_type="kerneled")
         result_array = result[0].data.meas
 
         # Verify the result array contains the same data
@@ -301,7 +299,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
 
         # Verify pub shape is empty tuple
         pub_result = result[0]
@@ -321,7 +319,7 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             metadata=Metadata(),
         )
 
-        result = SamplerV2.quantum_program_result_to_primitive_result(qp_result)
+        result = quantum_program_result_to_primitive_result(qp_result)
 
         # Verify complex shape is preserved
         pub_result = result[0]

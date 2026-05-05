@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ..sampler import SamplerV2
+from ..converters import quantum_program_result_to_primitive_result
 from .registry import register_post_processor
 from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes
 
@@ -109,7 +109,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         result.metadata, num_randomizations, shots, pub_shapes
     )
 
-    sampler_result = SamplerV2.quantum_program_result_to_primitive_result(
+    sampler_result = quantum_program_result_to_primitive_result(
         result, metadata, meas_type, circuits_metadata
     )
     return sampler_result

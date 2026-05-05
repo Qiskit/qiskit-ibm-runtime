@@ -18,8 +18,10 @@ from typing import Literal
 
 from pydantic.dataclasses import dataclass
 
+from .utils import PRIMITIVES_CONFIG
 
-@dataclass
+
+@dataclass(config=PRIMITIVES_CONFIG)
 class TwirlingOptions:
     """Twirling options."""
 

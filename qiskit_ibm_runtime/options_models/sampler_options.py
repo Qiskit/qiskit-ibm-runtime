@@ -20,13 +20,13 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .twirling_options import TwirlingOptions
 from .environment_options import EnvironmentOptions
-from .executor_options import ExecutorOptions
 from .executor_options import ExecutionOptions
+from .twirling_options import TwirlingOptions
+from .utils import PRIMITIVES_CONFIG
 
 
-@dataclass
+@dataclass(config=PRIMITIVES_CONFIG)
 class SamplerExecutionOptions(ExecutionOptions):
     """Execution options for the sampler primitive.
 
@@ -46,18 +46,8 @@ class SamplerExecutionOptions(ExecutionOptions):
 
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
 
-    def to_executor_options(self) -> ExecutionOptions:
-        """Convert to execution options.
 
-        This drops the ``meas_type`` field, which is passed as part of the
-        :class:`~.QuantumProgramResult`.
-        """
-        fields = dict(vars(self))
-        fields.pop("meas_type")
-        return ExecutionOptions(**fields)
-
-
-@dataclass
+@dataclass(config=PRIMITIVES_CONFIG)
 class SamplerOptions:
     """Options for the executor-based SamplerV2."""
 
@@ -92,22 +82,3 @@ class SamplerOptions:
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
-
-    def to_executor_options(self) -> ExecutorOptions:
-        """Map sampler options to executor options, ignoring all irrelevant fields.
-
-        Returns:
-            Mapped executor options.
-        """
-        executor_options = ExecutorOptions()
-
-        executor_options.environment = self.environment
-        executor_options.execution = self.execution.to_executor_options()
-
-        executor_options.environment.max_execution_time = self.max_execution_time
-
-        if self.experimental:
-            executor_options.environment.image = self.experimental.pop("image", None)
-            executor_options.experimental.update(self.experimental)
-
-        return executor_options
