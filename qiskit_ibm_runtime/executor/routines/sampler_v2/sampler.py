@@ -467,23 +467,12 @@ class SamplerV2(BaseSamplerV2):
 
             arrays = {}
             for creg_name, meas_data in item_data.items():
-                # Determine final register name (remove suffix for kerneled measurements)
-                final_creg_name = creg_name
-
                 if meas_type == "classified":
-                    array = BitArray.from_bool_array(meas_data)
+                    arrays[creg_name] = BitArray.from_bool_array(meas_data)
                 elif meas_type == "kerneled":
-                    array = meas_data
-                    suffix = "_iq"
-                    if creg_name.endswith(suffix):
-                        final_creg_name = creg_name[: -len(suffix)]
+                    arrays[creg_name.removesuffix("_iq")] = meas_data
                 elif meas_type == "avg_kerneled":
-                    array = meas_data
-                    suffix = "_avg_iq"
-                    if creg_name.endswith(suffix):
-                        final_creg_name = creg_name[: -len(suffix)]
-
-                arrays[final_creg_name] = array
+                    arrays[creg_name.removesuffix("_avg_iq")] = meas_data
 
             data_bin = DataBin(**arrays, shape=pub_shape)
 
