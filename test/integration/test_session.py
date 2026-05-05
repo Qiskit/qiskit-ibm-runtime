@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -41,7 +41,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         psi1 = pm.run(real_amplitudes(num_qubits=2, reps=2))
 
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         theta1 = [0, 1, 1, 2, 3, 5]
 
@@ -64,7 +63,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_session_from_id(self, service):
-        """Test creating a session from a given id"""
+        """Test creating a session from a given id."""
         backend = service.backend(self.dependencies.qpu)
         if backend.configuration().simulator:
             raise SkipTest("No proper backends available")

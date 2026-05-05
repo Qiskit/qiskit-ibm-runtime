@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -25,12 +25,11 @@ from datetime import datetime
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
-# pylint: disable=unused-import,cyclic-import
 
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
-from .constants import DEFAULT_DECODERS, API_TO_JOB_ERROR_MESSAGE
+from .constants import DEFAULT_DECODERS
 from .exceptions import (
     IBMError,
     IBMApiError,
@@ -44,8 +43,30 @@ from .api.exceptions import RequestsApiError
 logger = logging.getLogger(__name__)
 
 
+API_TO_JOB_ERROR_MESSAGE = {
+    "FAILED": "Job {} has failed:\n{}",
+    "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
+    "Job was cancelled:\n{}",
+}
+
+
 class BaseRuntimeJob(ABC):
-    """Base Runtime Job class."""
+    """Base Runtime Job class.
+
+    Args:
+        backend: The backend instance used to run this job.
+        api_client: Object for connecting to the server.
+        job_id: Job ID.
+        program_id: ID of the program this job is for.
+        creation_date: Job creation date, in UTC.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        image: Runtime image used for this job: image_name:tag.
+        service: Runtime service.
+        session_id: Job ID of the first job in a runtime session.
+        tags: Tags assigned to the job.
+        version: Primitive version.
+        private: Marks job as private.
+    """
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
@@ -67,22 +88,6 @@ class BaseRuntimeJob(ABC):
         version: int | None = None,
         private: bool | None = False,
     ) -> None:
-        """RuntimeJob constructor.
-
-        Args:
-            backend: The backend instance used to run this job.
-            api_client: Object for connecting to the server.
-            job_id: Job ID.
-            program_id: ID of the program this job is for.
-            creation_date: Job creation date, in UTC.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            image: Runtime image used for this job: image_name:tag.
-            service: Runtime service.
-            session_id: Job ID of the first job in a runtime session.
-            tags: Tags assigned to the job.
-            version: Primitive version.
-            private: Marks job as private.
-        """
         self._backend = backend
         self._job_id = job_id
         self._api_client = api_client
@@ -167,8 +172,8 @@ class BaseRuntimeJob(ABC):
         else:
             raise IBMApiError(
                 "An unexpected error occurred when updating the "
-                "tags for job {}. The tags were not updated for "
-                "the job.".format(self.job_id())
+                f"tags for job {self.job_id()}. The tags were not updated for "
+                "the job."
             )
 
     def properties(self, refresh: bool = False) -> BackendProperties | None:
@@ -299,13 +304,13 @@ class BaseRuntimeJob(ABC):
         Returns:
             Input parameters used in this job.
         """
-
         response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
         return response.get("params", {})
 
     @property
     def primitive_id(self) -> str:
         """Primitive name.
+
         Returns:
             Primitive this job is for.
         """

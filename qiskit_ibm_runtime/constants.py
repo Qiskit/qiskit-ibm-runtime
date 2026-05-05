@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,29 +12,13 @@
 
 """Constant values."""
 
-from qiskit.providers.jobstatus import JobStatus
-
-from qiskit_ibm_runtime.quantum_program.quantum_program_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
 from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.sampler_result_decoder import SamplerResultDecoder
 from .utils.runner_result import RunnerResult
 
-
-API_TO_JOB_STATUS = {
-    "QUEUED": JobStatus.QUEUED,
-    "RUNNING": JobStatus.RUNNING,
-    "COMPLETED": JobStatus.DONE,
-    "FAILED": JobStatus.ERROR,
-    "CANCELLED": JobStatus.CANCELLED,
-}
-
-API_TO_JOB_ERROR_MESSAGE = {
-    "FAILED": "Job {} has failed:\n{}",
-    "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
-    "Job was cancelled:\n{}",
-}
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "sampler": [ResultDecoder, SamplerResultDecoder],
@@ -44,13 +28,3 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }
-
-DEFAULT_POST_SELECTION_SUFFIX = "_ps"
-"""
-The default suffix to append to the names of the classical registers used for post selection.
-"""
-
-DEFAULT_SPECTATOR_CREG_NAME = "spec"
-"""
-The default name of the classical register used for measuring spectator qubits.
-"""

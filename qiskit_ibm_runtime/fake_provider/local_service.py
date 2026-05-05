@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -29,8 +29,8 @@ from qiskit.providers.backend import BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
-from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
+from .fake_backend import FakeBackendV2
+from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
 from ..ibm_backend import IBMBackend
 from ..runtime_options import RuntimeOptions
@@ -41,24 +41,16 @@ logger = logging.getLogger(__name__)
 class QiskitRuntimeLocalService:
     """Class for local testing mode."""
 
-    def __init__(self) -> None:
-        """QiskitRuntimeLocalService constructor.
-
-
-        Returns:
-            An instance of QiskitRuntimeService.
-
-        """
-
     def backend(
         self,
         name: str | None = None,
-        instance: str | None = None,  # pylint: disable=unused-argument
+        instance: str | None = None,
     ) -> FakeBackendV2:
         """Return a single fake backend matching the specified filters.
 
         Args:
             name: The name of the backend.
+            instance: The service instance to use.
 
         Returns:
             A backend matching the filtering.
@@ -81,13 +73,17 @@ class QiskitRuntimeLocalService:
             filters: More complex filters, such as lambda functions.
                 For example::
 
-                    from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+                    from qiskit_ibm_runtime.fake_provider.local_service import (
+                        QiskitRuntimeLocalService
+                    )
 
                     QiskitRuntimeService.backends(
                         filters=lambda backend: (backend.online_date.year == 2021)
                     )
                     QiskitRuntimeLocalService.backends(
-                        filters=lambda backend: (backend.num_qubits > 30 and backend.num_qubits < 100)
+                        filters=lambda backend: (
+                            backend.num_qubits > 30 and backend.num_qubits < 100
+                        )
                     )
 
         Returns:
@@ -102,7 +98,6 @@ class QiskitRuntimeLocalService:
 
         if name:
             if name == "aer_simulator":
-                # pylint: disable=import-outside-toplevel
                 from qiskit_aer import AerSimulator
 
                 backends = [AerSimulator()]
@@ -132,7 +127,9 @@ class QiskitRuntimeLocalService:
         min_num_qubits: int | None = None,
         filters: Callable[[FakeBackendV2], bool] | None = None,
     ) -> FakeBackendV2:
-        """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
+        """Return a randomly-chosen fake backend.
+
+        Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
         fake backend.
 
         Args:

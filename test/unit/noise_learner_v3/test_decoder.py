@@ -34,6 +34,7 @@ class TestDecoder(IBMTestCase):
     """Tests the decoder for the noise learner v3 model."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         generators = [
@@ -68,8 +69,7 @@ class TestDecoder(IBMTestCase):
             assert datum_in.metadata == datum_out.metadata
 
     def test_no_schema_version(self):
-        """Verify that an error is raised if the encoded string
-        does not specify any schema version."""
+        """Verify an error is raised if the encoded string does not specify any schema version."""
         encoded_as_json = json.loads(self.encoded)
         del encoded_as_json["schema_version"]
         encoded_as_str = json.dumps(encoded_as_json)
@@ -77,8 +77,7 @@ class TestDecoder(IBMTestCase):
             NoiseLearnerV3ResultDecoder.decode(encoded_as_str)
 
     def test_unknown_schema_version(self):
-        """Verify that an error is raised if the schema version specified in the encoded string
-        does not exist."""
+        """Verify an error is raised if the schema version specified does not exist."""
         encoded_as_json = json.loads(self.encoded)
         encoded_as_json["schema_version"] = "unknown"
         encoded_as_str = json.dumps(encoded_as_json)

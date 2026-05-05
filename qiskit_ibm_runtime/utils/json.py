@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,8 +9,6 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable=method-hidden
-# pylint: disable=too-many-return-statements
 
 """Utility functions for the runtime service."""
 
@@ -30,6 +28,9 @@ from collections.abc import Callable
 
 import dateutil.parser
 import numpy as np
+from qiskit_ibm_runtime.quantum_program.params_converters import (
+    QUANTUM_PROGRAM_PARAMS_CONVERTERS,
+)
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -66,7 +67,7 @@ from qiskit.primitives.containers import (
 )
 from qiskit.utils import LazyImportTester
 
-from qiskit_ibm_runtime.options.zne_options import (  # pylint: disable=ungrouped-imports
+from qiskit_ibm_runtime.options.zne_options import (
     ExtrapolatorType,
 )
 from qiskit_ibm_runtime.execution_span import (
@@ -193,7 +194,7 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
 
 
 def _set_int_keys_flag(obj: dict) -> dict | list:
-    """Recursively sets '__int_keys__' flag if dictionary uses integer keys
+    """Recursively sets '__int_keys__' flag if dictionary uses integer keys.
 
     Args:
         obj: dictionary
@@ -210,7 +211,7 @@ def _set_int_keys_flag(obj: dict) -> dict | list:
 
 
 def _cast_strings_keys_to_int(obj: dict) -> dict:
-    """Casts string to int keys in dictionary when '__int_keys__' flag is set
+    """Casts string to int keys in dictionary when '__int_keys__' flag is set.
 
     Args:
         obj: dictionary
@@ -239,7 +240,8 @@ def _cast_strings_keys_to_int(obj: dict) -> dict:
 class RuntimeEncoder(json.JSONEncoder):
     """JSON Encoder used by runtime service."""
 
-    def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
+    def default(self, obj: Any) -> Any:
+        """Return a serializable object for ``obj``."""
         if isinstance(obj, CouplingMap):
             return list(obj)
         if isinstance(obj, date):
@@ -391,7 +393,7 @@ class RuntimeEncoder(json.JSONEncoder):
             # Guard import so qiskit_aer is not imported unnecessarily. If a
             # NoiseModel instance has been created, qiskit_aer must already have
             # been imported.
-            from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
+            from qiskit_aer.noise import NoiseModel
 
             if isinstance(obj, NoiseModel):
                 return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
@@ -416,7 +418,7 @@ class RuntimeEncoder(json.JSONEncoder):
             # Guard import so scipy is not imported unnecessarily. If an
             # spmatrix instance has been created, scipy must already have
             # been imported.
-            from scipy.sparse import save_npz, spmatrix  # pylint: disable=import-outside-toplevel
+            from scipy.sparse import save_npz, spmatrix
 
             if isinstance(obj, spmatrix):
                 value = _serialize_and_encode(obj, save_npz, compress=False)
@@ -431,6 +433,54 @@ class RuntimeDecoder(json.JSONDecoder):
         if "encoding" in kwargs:
             kwargs.pop("encoding")
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def decode(self, s: str) -> Any:  # type: ignore[override]
+        """Return the Python representation of a string ``s`` containing a JSON document.
+
+        Applies additional conversion for executor program and NLV3's ``params``, preserving the
+        superclass ``decode()`` output in all other cases.
+
+        Args:
+            s: a string containing a JSON document.
+        """
+        if isinstance(decoded := super().decode(s), dict):
+            program_id = decoded.get("program", {}).get("id", None)
+            params = decoded.get("params", {})
+
+            if program_id == "executor" and params:
+                # `decoded` represents the input to an executor program. We use the converters to
+                # decode its inputs, or 'params'
+                try:
+                    converter = QUANTUM_PROGRAM_PARAMS_CONVERTERS[params["schema_version"]]
+                    quantum_program, options = converter.decoder(converter.model(**params))
+                    decoded["params"]["quantum_program"] = quantum_program
+                    decoded["params"]["options"] = options
+                except Exception as exception:
+                    warnings.warn(
+                        "Unable to convert executor 'params' to a pair of quantum program and "
+                        f"options due to the following exception: {exception}"
+                    )
+            elif program_id == "noise-learner" and params and "schema_version" in params:
+                # `decoded` represents the input to an NLV3 program. We use the converters to
+                # decode its inputs, or 'params'
+                try:
+                    # importing here and not at the top of the file,
+                    # to prevent circular imports
+                    from qiskit_ibm_runtime.noise_learner_v3.params_converters import (
+                        NOISE_LEARNER_V3_PARAMS_CONVERTERS,
+                    )
+
+                    converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[params["schema_version"]]  # type: ignore[assignment]
+                    instructions, options = converter.decoder(converter.model(**params))  # type: ignore[assignment]
+                    decoded["params"]["instructions"] = instructions
+                    decoded["params"]["options"] = options
+                except Exception as exception:
+                    warnings.warn(
+                        "Unable to convert NLV3 'params' to a pair of instructions and "
+                        f"options due to the following exception: {exception}"
+                    )
+
+        return decoded
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
@@ -455,8 +505,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
-                # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
-                # to deserialize load qpy circuit and return first instruction object in that circuit.
+                # Standalone instructions are encoded as the sole instruction in a QPY serialized
+                # circuit to deserialize load qpy circuit and return first instruction object in
+                # that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":
@@ -479,7 +530,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 if HAS_SCIPY:
-                    from scipy.sparse import load_npz  # pylint: disable=import-outside-toplevel
+                    from scipy.sparse import load_npz
 
                     return _decode_and_deserialize(obj_val, load_npz, False)
                 warnings.warn("Scipy is needed to restore sparse matrix.")
@@ -564,10 +615,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return obj_val
             if obj_type == "NoiseModel":
                 if HAS_AER:
-                    # pylint: disable=import-outside-toplevel
                     from qiskit_aer.noise import NoiseModel
 
-                    # pylint: enable=import-outside-toplevel
                     return NoiseModel.from_dict(obj_val)
                 warnings.warn("Qiskit Aer is needed to restore noise model.")
                 return obj_val

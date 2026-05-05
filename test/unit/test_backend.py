@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for the backend functions."""
+
 import copy
 from unittest import mock
 
@@ -122,7 +123,6 @@ class TestBackend(IBMTestCase):
     @staticmethod
     def test_faulty_edge_not_used():
         """Test faulty edge is not raised if not used."""
-
         fake_backend = FakeManilaV2()
         coupling_map = fake_backend.configuration().coupling_map
 
@@ -164,9 +164,7 @@ class TestBackend(IBMTestCase):
         return out_backend
 
     def test_single_dynamic_circuit_submission(self):
-        """Test submitting single circuit with dynamic=True"""
-        # pylint: disable=not-context-manager
-
+        """Test submitting single circuit with dynamic=True."""
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
 
@@ -181,9 +179,7 @@ class TestBackend(IBMTestCase):
         mock_run.assert_called_once()
 
     def test_multi_dynamic_circuit_submission(self):
-        """Test submitting multiple circuits with dynamic=True"""
-        # pylint: disable=not-context-manager
-
+        """Test submitting multiple circuits with dynamic=True."""
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
 
@@ -200,9 +196,7 @@ class TestBackend(IBMTestCase):
         mock_run.assert_called_once()
 
     def test_single_openqasm3_submission(self):
-        """Test submitting a single openqasm3 strings with dynamic=True"""
-        # pylint: disable=not-context-manager
-
+        """Test submitting a single openqasm3 strings with dynamic=True."""
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
 
@@ -219,9 +213,7 @@ class TestBackend(IBMTestCase):
         mock_run.assert_called_once()
 
     def test_runtime_image_selection_submission(self):
-        """Test image selection from runtime"""
-        # pylint: disable=not-context-manager
-
+        """Test image selection from runtime."""
         backend = self._create_dc_test_backend()
         sampler = SamplerV2(backend)
 
@@ -236,7 +228,7 @@ class TestBackend(IBMTestCase):
         mock_run.assert_called_once()
 
     def test_deepcopy(self):
-        """Test that deepcopy of a backend works properly"""
+        """Test that deepcopy of a backend works properly."""
         backend = self._create_dc_test_backend()
         backend_copy = copy.deepcopy(backend)
         self.assertEqual(backend_copy.name, backend.name)
@@ -261,7 +253,6 @@ class TestBackend(IBMTestCase):
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
-
         backend = FakeSherbrooke()
         backend._get_conf_dict_from_json()
         backend._set_props_dict_from_json()
@@ -287,7 +278,6 @@ class TestBackend(IBMTestCase):
         even though instruction is not provided by the backend,
         since these are the necessary instructions that the transpiler may assume.
         """
-
         # Filter out faulty Q1
         fake_backend = FakeManilaV2()
         faulty_qubit = 1
@@ -301,7 +291,6 @@ class TestBackend(IBMTestCase):
 
     def test_convert_to_target(self):
         """Test converting legacy data structure to V2 target model with missing qubit property."""
-
         fake_backend = FakeManilaV2()
         faulty_qubit = 1
         faulty_backend = create_faulty_backend(fake_backend, faulty_q1_property=faulty_qubit)

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020, 2023.
+# (C) Copyright IBM 2020-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
-# pylint: disable=missing-module-docstring
+"""Tests for fake backends."""
 
 from ddt import ddt, data
 
@@ -36,8 +35,11 @@ FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
 @ddt
 class TestFakeBackends(IBMTestCase):
+    """Test case for fake backends."""
+
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
         cls.circuit = QuantumCircuit(2)
         cls.circuit.h(0)
@@ -50,6 +52,7 @@ class TestFakeBackends(IBMTestCase):
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_properties(self, backend):
+        """Test converting backend properties to dict."""
         properties = backend.properties()
         if properties:
             self.assertIsInstance(backend.properties().to_dict(), dict)
@@ -58,17 +61,20 @@ class TestFakeBackends(IBMTestCase):
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_convert_to_target(self, backend):
+        """Test backend target's dt."""
         target = backend.target
         if target.dt is not None:
             self.assertLess(target.dt, 1e-6)
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_backend_v2_dtm(self, backend):
+        """Test backend dtm"."""
         if backend.dtm:
             self.assertLess(backend.dtm, 1e-6)
 
     @data(*FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_configuration(self, backend):
+        """Test backend configuration."""
         configuration = backend.configuration()
         if configuration.open_pulse:
             self.assertLess(configuration.dt, 1e-6)
@@ -95,8 +101,9 @@ class TestFakeBackends(IBMTestCase):
             self.assertEqual(configuration.rep_times, roundtrip_config.rep_times)
 
     def test_delay_circuit(self):
+        """Test transpiling with delay."""
         backend = FakeMumbaiV2()
-        qc = QuantumCircuit(2)  # pylint: disable=invalid-name
+        qc = QuantumCircuit(2)
         qc.delay(502, 0, unit="ns")
         qc.x(1)
         qc.delay(250, 1, unit="ns")
@@ -105,12 +112,14 @@ class TestFakeBackends(IBMTestCase):
         self.assertIn("delay", res.count_ops())
 
     def test_non_cx_tests(self):
+        """Test using non cx gates."""
         backend = FakePrague()
         self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
         self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
 
     def test_backend_configuration_attributes(self):
+        """Test specific backend configuration attributes."""
         backend = FakeMumbaiV2()
         self.assertTrue(backend.dynamic_reprate_enabled)
         self.assertTrue(backend.rep_delay_range)

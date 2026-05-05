@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -79,6 +79,21 @@ class Session:
             pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Counts: {pub_result.data.cr.get_counts()}")
+
+    Args:
+        backend: Instance of ``Backend`` class.
+
+        max_time:
+            Maximum amount of time, a runtime session can be open before being
+            forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+            This value must be less than the
+            `system imposed maximum
+            <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
+        create_new: If True, the POST session API endpoint will be called to create a new
+            session. Prevents creating a new session when ``from_id()`` is called.
+
+    Raises:
+        ValueError: If an input value is invalid.
     """
 
     def __init__(
@@ -87,23 +102,7 @@ class Session:
         max_time: int | str | None = None,
         *,
         create_new: bool | None = True,
-    ):  # pylint: disable=line-too-long
-        """Session constructor.
-
-        Args:
-            backend: Instance of ``Backend`` class.
-
-            max_time:
-                Maximum amount of time, a runtime session can be open before being
-                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-                This value must be less than the
-                `system imposed maximum
-                <https://quantum.cloud.ibm.com/docs/guides/max-execution-time>`_.
-            create_new: If True, the POST session API endpoint will be called to create a new session.
-                Prevents creating a new session when ``from_id()`` is called.
-        Raises:
-            ValueError: If an input value is invalid.
-        """
+    ):
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
         self._backend: BackendV2 | None = None
         self._instance = None
@@ -155,6 +154,7 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             calibration_id: The calibration id to use with the program execution
 
         Returns:
@@ -197,9 +197,12 @@ class Session:
             self._service._get_api_client(self._instance).cancel_session(self._session_id)
 
     def close(self) -> None:
-        """Close the session so new jobs will no longer be accepted, but existing
+        """Close the session so new jobs will no longer be accepted.
+
+        Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
-        are no more pending jobs."""
+        are no more pending jobs.
+        """
         self._active = False
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             self._service._get_api_client(self._instance).close_session(self._session_id)
@@ -265,9 +268,10 @@ class Session:
 
             * ``id``: id of the session.
             * ``backend_name``: backend used for the session.
-            * ``interactive_timeout``: The maximum idle time (in seconds) between jobs that
-              is allowed to occur before the session is deactivated.
-            * ``max_time``: Maximum allowed time (in seconds) for the session, subject to plan limits.
+            * ``interactive_timeout``: The maximum idle time (in seconds) between jobs that is
+              allowed to occur before the session is deactivated.
+            * ``max_time``: Maximum allowed time (in seconds) for the session, subject to plan
+              limits.
             * ``active_timeout``: The maximum time (in seconds) a session can stay active.
             * ``state``: State of the session - open, active, inactive, or closed.
             * ``accepting_jobs``: Whether or not the session is accepting jobs.
@@ -322,8 +326,16 @@ class Session:
         return self._service  # type: ignore[return-value]
 
     @classmethod
-    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> Session:
-        """Construct a Session object with a given ``session_id``. For example:
+    def from_id(
+        cls,
+        session_id: str,
+        service: QiskitRuntimeService,
+        use_fractional_gates: bool = False,
+        calibration_id: str | None = None,
+    ) -> Session:
+        """Construct a Session object with a given ``session_id``.
+
+        For example:
 
         .. code-block::
 
@@ -335,11 +347,20 @@ class Session:
             new_session = Session.from_id(existing_session_id, service)
 
         Args:
-            session_id: the id of the session to be created. This must be an already
+            session_id: The id of the session to be created. This must be an already
                 existing session id.
-            service: instance of the ``QiskitRuntimeService`` class.
+            service: Instance of the ``QiskitRuntimeService`` class. If using multiple instances,
+                note that the active cloud instance in the ``service`` will be replaced with the
+                one that has access to that ``session_id``. Please check the
+                :class:`~.QiskitRuntimeService` documentation on using multiple instances and the
+                :meth:`~.QiskitRuntimeService.active_instance` method for checking which is the
+                active instance.
+            use_fractional_gates: Whether or not to allow fractional gates for the backend
+                that is used to create the session.
+            calibration_id: The calibration id for the backend that is used to create the
+                session.
 
-         Raises:
+        Raises:
             IBMInputValueError: If given `session_id` does not exist.
             IBMRuntimeError: If the backend of the session is unknown.
 
@@ -370,7 +391,11 @@ class Session:
             raise IBMRuntimeError(
                 "The backend of this session is unknown. Try running a job first."
             )
-        backend = service.backend(backend_name)
+        backend = service.backend(
+            backend_name,
+            use_fractional_gates=use_fractional_gates,
+            calibration_id=calibration_id,
+        )
         mode = response.get("mode")
         state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()

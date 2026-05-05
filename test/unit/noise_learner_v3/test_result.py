@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -48,8 +48,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
         self.assertEqual(len(result), 15)
 
     def test_from_generators_different_lengths(self):
-        """Test that ``NoiseLearnerV3Result.from_generators`` raises if the specified generators
-        and rates have different lengths"""
+        """Test ``.from_generators`` raises if the generators and rates have different lengths."""
         generators = [
             QubitSparsePauliList.from_label(pauli1 + pauli0)
             for pauli1 in "IXYZ"
@@ -60,8 +59,7 @@ class TestNoiseLearnerV3Result(IBMTestCase):
             NoiseLearnerV3Result.from_generators(generators, rates)
 
     def test_from_generators_different_num_qubits(self):
-        """Test that ``NoiseLearnerV3Result.from_generators`` raises if the specified generators
-        have different numbers of qubits."""
+        """Test ``.from_generators`` raises if the generators have different numbers of qubits."""
         generators = [
             QubitSparsePauliList.from_label(pauli1 + pauli0)
             for pauli1 in "IXYZ"
@@ -120,6 +118,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
     """Tests the ``NoiseLearnerV3Results`` class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self.generators = [
             QubitSparsePauliList.from_label(pauli1 + pauli0)
@@ -134,8 +133,10 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         self.inject_noise_annotations = [InjectNoise(ref) for ref in ["hi", "bye"]]
 
     def test_properties_of_iterable(self):
-        """Test elementary methods of ``NoiseLearnerV3Results``: ``__init__``, ``__len__``,
-        ``__get_item__``."""
+        """Test elementary methods of ``NoiseLearnerV3Results``.
+
+        Elements: ``__init__``, ``__len__``, ``__get_item__``.
+        """
         results = NoiseLearnerV3Results(self.results, metadata := {"this is": "metadata"})
         self.assertEqual(results.data, self.results, metadata)
         self.assertEqual(results[1], self.results[1])
@@ -183,8 +184,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
         )
 
     def test_to_dict_wrong_num_of_instructions(self):
-        """Test that ``NoiseLearnerV3Results.to_dict`` raises if the number of instructions
-        does not match the number of the results."""
+        """Test ``.to_dict`` raises if number of instructions does not match number of results."""
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
             circuit.cx(0, 1)
@@ -195,8 +195,11 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, True)
 
     def test_to_dict_invalid_for_require_refs_true(self):
-        """Test that ``NoiseLearnerV3Results.to_dict`` raises if an instruction does not contain
-        the ``InjectNoise`` annotation, when ``requires_ref`` is ``True``."""
+        """Test raising if an instruction does not contain InjectNoise annotation when requires_ref.
+
+        Test that ``NoiseLearnerV3Results.to_dict`` raises if an instruction does not contain
+        the ``InjectNoise`` annotation, when ``requires_ref`` is ``True``.
+        """
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
             circuit.cx(0, 1)
@@ -209,8 +212,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data, True)
 
     def test_to_dict_unboxed_instruction(self):
-        """Test that ``NoiseLearnerV3Results.to_dict`` raises if there is an instruction not in a
-        box."""
+        """Test ``.to_dict`` raises if there is an instruction not in a box."""
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
             circuit.cx(0, 1)
@@ -222,8 +224,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             NoiseLearnerV3Results(self.results).to_dict(circuit.data)
 
     def test_to_dict_ref_used_twice(self):
-        """Test that ``NoiseLearnerV3Results.to_dict`` raises if an annotation reference is
-        repeated."""
+        """Test ``.to_dict`` raises if an annotation reference is repeated."""
         circuit = QuantumCircuit(2)
         with circuit.box(annotations=[Twirl(), self.inject_noise_annotations[0]]):
             circuit.cx(0, 1)

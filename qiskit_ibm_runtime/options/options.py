@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -44,7 +44,7 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
 
     marker = "▸" if is_section else ""
     spacer_style = "display: inline-block; text-align: right; margin-right: 10px;"
-    spacer = f"<div style='width: {20*(1 + indent)}px; {spacer_style}'>{marker}</div>"
+    spacer = f"<div style='width: {20 * (1 + indent)}px; {spacer_style}'>{marker}</div>"
 
     yield "  <tr>"
     yield f"    <{tag} {style}>{spacer}{name}</{tag}>"
@@ -137,7 +137,7 @@ class OptionsV2(BaseOptions):
             :class:`SimulatorOptions` for all available options.
     """
 
-    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
+    _VERSION: int = Field(2, frozen=True)
 
     # Options not really related to primitives.
     max_execution_time: UnsetType | int = Unset

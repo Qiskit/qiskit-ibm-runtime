@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2024
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -61,7 +61,6 @@ Base primitive options
 
    EstimatorOptions
    SamplerOptions
-   ExecutorOptions
 
 
 Suboptions
@@ -72,14 +71,12 @@ Suboptions
    :nosignatures:
 
    NoiseLearnerOptions
-   NoiseLearnerV3Options
    DynamicalDecouplingOptions
    ResilienceOptionsV2
    LayerNoiseLearningOptions
    MeasureNoiseLearningOptions
    PecOptions
    ZneOptions
-   PostSelectionOptions
    TwirlingOptions
    ExecutionOptionsV2
    SamplerExecutionOptionsV2
@@ -92,14 +89,11 @@ from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .estimator_options import EstimatorOptions
 from .execution_options import ExecutionOptionsV2
-from .executor_options import ExecutorOptions
 from .layer_noise_learning_options import LayerNoiseLearningOptions
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .noise_learner_options import NoiseLearnerOptions
-from .noise_learner_v3_options import NoiseLearnerV3Options
 from .options import OptionsV2
 from .pec_options import PecOptions
-from .post_selection_options import PostSelectionOptions
 from .resilience_options import ResilienceOptionsV2
 from .sampler_execution_options import SamplerExecutionOptionsV2
 from .sampler_options import SamplerOptions

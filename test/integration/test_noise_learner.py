@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -31,6 +31,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     """Integration tests for NoiseLearner."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
 
         self._backend = self.service.backend(self.dependencies.qpu)
@@ -55,7 +56,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         }
 
     @run_integration_test
-    def test_with_default_options(self, service):  # pylint: disable=unused-argument
+    def test_with_default_options(self, service):
         """Test noise learner with default options."""
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=self._backend, options=options)
@@ -67,7 +68,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, self.default_input_options, 3)
 
     @run_integration_test
-    def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
+    def test_with_non_default_options(self, service):
         """Test noise learner with non-default options."""
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
@@ -84,7 +85,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, input_options, 1)
 
     @run_integration_test
-    def test_with_no_layers(self, service):  # pylint: disable=unused-argument
+    def test_with_no_layers(self, service):
         """Test noise learner when `max_layers_to_learn` is `0`."""
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
@@ -101,10 +102,10 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, input_options, 0)
 
     @run_integration_test
-    def test_learner_plus_estimator(self, service):  # pylint: disable=unused-argument
+    def test_learner_plus_estimator(self, service):
         """Test feeding noise learner data to estimator."""
         options = EstimatorOptions()
-        options.resilience.zne_mitigation = True  # pylint: disable=assigning-non-slot
+        options.resilience.zne_mitigation = True
         options.resilience.zne.amplifier = "pea"
         options.resilience.layer_noise_learning.layer_pair_depths = [0, 1]
 

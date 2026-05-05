@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -16,7 +16,12 @@ from ..session import RetrySession
 
 
 class RestAdapterBase:
-    """Base class for REST adapters."""
+    """Base class for REST adapters.
+
+    Args:
+        session: Session to be used in the adapter.
+        prefix_url: String to be prepend to all URLs.
+    """
 
     URL_MAP: dict[str, str] = {}
     """Mapping between the internal name of an endpoint and the actual URL."""
@@ -28,12 +33,6 @@ class RestAdapterBase:
     _HEADER_API_VERSION = {"IBM-API-Version": "2025-05-01"}
 
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
-        """RestAdapterBase constructor.
-
-        Args:
-            session: Session to be used in the adapter.
-            prefix_url: String to be prepend to all URLs.
-        """
         self.session = session
         self.session.headers = self._HEADER_API_VERSION
         self.prefix_url = prefix_url
@@ -47,4 +46,4 @@ class RestAdapterBase:
         Returns:
             The resolved URL of the endpoint (relative to the session base URL).
         """
-        return "{}{}".format(self.prefix_url, self.URL_MAP[identifier])
+        return f"{self.prefix_url}{self.URL_MAP[identifier]}"

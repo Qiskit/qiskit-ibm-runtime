@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -56,12 +56,12 @@ class TestOptionsV2(IBMTestCase):
     def test_kwargs_options(self, opt_cls):
         """Test specifying arbitrary options."""
         with self.assertRaises(ValidationError) as exc:
-            _ = opt_cls(foo="foo")  # pylint: disable=unexpected-keyword-arg
+            _ = opt_cls(foo="foo")
         self.assertIn("foo", str(exc.exception))
 
     @data(EstimatorOptions, SamplerOptions)
     def test_coupling_map_options(self, opt_cls):
-        """Check that coupling_map is processed correctly for various types"""
+        """Check that coupling_map is processed correctly for various types."""
         coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
         coupling_maps = [
             coupling_map,
@@ -81,7 +81,6 @@ class TestOptionsV2(IBMTestCase):
     )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
-
         options = opt_cls()
         options.simulator.seed_simulator = 42
         options.simulator.set_backend(fake_backend)

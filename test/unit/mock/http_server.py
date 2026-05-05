@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -48,17 +48,14 @@ class BaseHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Process a GET request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_POST(self):
         """Process a POST request."""
-        # pylint: disable=invalid-name
         self._respond()
 
     def do_PUT(self):
         """Process a PUT request."""
-        # pylint: disable=invalid-name
         self._respond()
 
 
@@ -88,7 +85,7 @@ class SimpleServer:
 
     IP_ADDRESS = "127.0.0.1"
     PORT = 8123
-    URL = "http://{}:{}".format(IP_ADDRESS, PORT)
+    URL = f"http://{IP_ADDRESS}:{PORT}"
 
     def __init__(self, handler_class):
         """SimpleServer constructor.

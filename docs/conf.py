@@ -1,6 +1,6 @@
-# This code is a Qiskit project.
+# This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,6 +9,8 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+
+"""Sphinx configuration."""
 
 # -- Path setup --------------------------------------------------------------
 import importlib
@@ -29,7 +31,7 @@ language = "en"
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-release = '0.45.0'
+release = "0.46.1"
 # The version of `ibm-quantum-schemas`
 ibm_quantum_schemas_release = importlib.metadata.version("ibm-quantum-schemas")
 
@@ -80,10 +82,13 @@ if not hasattr(typing, "Self"):
     try:
         from typing_extensions import Self
     except ImportError:
-        class Self:
+
+        class Self:  # type: ignore[no-redef]
             """Dummy fallback for 'Self' for older python versions."""
+
             pass
-    typing.Self = Self
+
+    typing.Self = Self  # type: ignore[attr-defined]
 
 # ----------------------------------------------------------------------------------
 # Intersphinx
@@ -196,8 +201,10 @@ def determine_github_branch() -> str:
 GITHUB_BRANCH = determine_github_branch()
 
 
-def linkcode_resolve(domain, info):
-    def is_valid_code_object(obj):
+def linkcode_resolve(domain: str, info: dict) -> str | None:
+    """Return the GitHub URL for an entity."""
+
+    def is_valid_code_object(obj: typing.Any) -> bool:
         return inspect.isclass(obj) or inspect.ismethod(obj) or inspect.isfunction(obj)
 
     if domain != "py":

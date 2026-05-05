@@ -12,29 +12,31 @@
 
 """Tests the quantum program converters."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 from samplomatic import Twirl, InjectNoise, build
 
-from ibm_quantum_schemas.models.executor.version_0_1.models import (
+from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel,
     QuantumProgramResultItemModel,
     ChunkPart,
     ChunkSpan,
     MetadataModel,
 )
-from ibm_quantum_schemas.models.tensor_model import TensorModel
+from ibm_quantum_schemas.common import TensorModel
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_to_0_1,
     quantum_program_result_from_0_1,
+    quantum_program_from_0_1,
 )
-from qiskit_ibm_runtime.options.executor_options import ExecutorOptions, ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions, ExecutionOptions
 
 from ....ibm_test_case import IBMTestCase
 
@@ -43,7 +45,7 @@ class TestQuantumProgramConverters(IBMTestCase):
     """Tests the quantum program converters."""
 
     def test_quantum_program_to_0_1(self):
-        """Test the function ``quantum_program_to_0_1``"""
+        """Test the function ``quantum_program_to_0_1``."""
         shots = 100
 
         noise_models = [
@@ -123,8 +125,7 @@ class TestQuantumProgramConverters(IBMTestCase):
             )
 
     def test_quantum_program_to_0_1_no_argument(self):
-        """Test the function ``quantum_program_to_0_1`` when there are no circuit arguments, samplex
-        arguments, and chunk size"""
+        """Test when there are no circuit arguments, samplex arguments, and chunk size."""
         quantum_program = QuantumProgram(100)
 
         circuit1 = QuantumCircuit(1)
@@ -155,12 +156,12 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(samplex_item_model.samplex_arguments, {})
 
     def test_quantum_program_result_from_0_1(self):
-        """Test the function ``quantum_program_result_from_0_1``"""
+        """Test the function ``quantum_program_result_from_0_1``."""
         meas1 = np.array([[False], [True], [True]])
         meas2 = np.array([[True, True], [True, False], [False, False]])
         meas_flips = np.array([[False, False]])
-        chunk_start = datetime(2025, 12, 30, 14, 10)
-        chunk_stop = datetime(2025, 12, 30, 14, 15)
+        chunk_start = datetime(2025, 12, 30, 14, 10, tzinfo=timezone.utc)
+        chunk_stop = datetime(2025, 12, 30, 14, 15, tzinfo=timezone.utc)
 
         chunk_model = ChunkSpan(
             start=chunk_start,
@@ -193,3 +194,37 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(result.metadata.chunk_timing[0].parts[0].size, 1)
         self.assertEqual(result.metadata.chunk_timing[0].parts[1].idx_item, 1)
         self.assertEqual(result.metadata.chunk_timing[0].parts[1].size, 1)
+
+    def test_roundtrip(self):
+        """Test a roundtrip."""
+        quantum_program = QuantumProgram(100)
+
+        circuit1 = QuantumCircuit(1)
+        quantum_program.append_circuit_item(circuit1)
+
+        circuit2 = QuantumCircuit(2)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.cx(0, 1)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.measure_all()
+
+        template_circuit, samplex = build(circuit2)
+        quantum_program.append_samplex_item(
+            template_circuit,
+            samplex=samplex,
+        )
+
+        options = ExecutorOptions()
+        options.execution.init_qubits = False
+
+        params_model = quantum_program_to_0_1(quantum_program, options)
+        quantum_program_out, options_out = quantum_program_from_0_1(params_model)
+
+        assert options_out == options
+
+        items = quantum_program_out.items
+        assert len(items) == 2
+        assert isinstance(items[0], CircuitItem)
+        assert items[0].circuit == quantum_program.items[0].circuit
+        assert isinstance(items[1], SamplexItem)
+        assert items[1].circuit == quantum_program.items[1].circuit

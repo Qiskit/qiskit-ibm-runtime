@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,8 +11,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility script to verify that all images have alt text"""
+"""Utility script to verify that all images have alt text."""
 
+from argparse import ArgumentParser
 from pathlib import Path
 import multiprocessing
 import sys
@@ -27,14 +28,17 @@ ALLOWLIST_MISSING_ALT_TEXT = [
 
 
 def is_image(line: str) -> bool:
+    """Check if the line contains an image statement."""
     return line.strip().startswith((".. image:", ".. plot:"))
 
 
 def is_option(line: str) -> bool:
+    """Check if the line contains an option statement."""
     return line.strip().startswith(":")
 
 
 def is_valid_image(options: list[str]) -> bool:
+    """Check if the lines declare a valid image."""
     alt_exists = any(option.strip().startswith(":alt:") for option in options)
     nofigs_exists = any(option.strip().startswith(":nofigs:") for option in options)
 
@@ -44,10 +48,9 @@ def is_valid_image(options: list[str]) -> bool:
 
 
 def validate_image(file_path: str) -> tuple[str, list[str]]:
-    """Validate all the images of a single file"""
-
+    """Validate all the images of a single file."""
     if file_path in ALLOWLIST_MISSING_ALT_TEXT:
-        return [file_path, []]
+        return (file_path, [])
 
     invalid_images: list[str] = []
 
@@ -62,14 +65,15 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
                 options.append(line)
                 continue
 
-            # Else, the prior image_found has no more options so we should determine if it was valid.
+            # Else, the prior image_found has no more options so we should determine if it was
+            # valid.
             #
-            # Note that, either way, we do not early exit out of the loop iteration because this `line`
-            # might be the start of a new image.
+            # Note that, either way, we do not early exit out of the loop iteration because this
+            # `line` might be the start of a new image.
             if not is_valid_image(options):
                 image_line = line_index - len(options)
                 invalid_images.append(
-                    f"- Error in line {image_line}: {lines[image_line-1].strip()}"
+                    f"- Error in line {image_line}: {lines[image_line - 1].strip()}"
                 )
 
         image_found = is_image(line)
@@ -78,9 +82,8 @@ def validate_image(file_path: str) -> tuple[str, list[str]]:
     return (file_path, invalid_images)
 
 
-def main() -> None:
-    files = glob.glob("qiskit_ibm_runtime/**/*.py", recursive=True)
-
+def main(files: list[str]) -> None:
+    """Main entry point."""
     with multiprocessing.Pool() as pool:
         results = pool.map(validate_image, files)
 
@@ -99,7 +102,10 @@ def main() -> None:
             print(image_error, file=sys.stderr)
 
     print(
-        "\nAlt text is crucial for making documentation accessible to all users. It should serve the same purpose as the images on the page, conveying the same meaning rather than describing visual characteristics. When an image contains words that are important to understanding the content, the alt text should include those words as well.",
+        "\nAlt text is crucial for making documentation accessible to all users. It should serve "
+        "the same purpose as the images on the page, conveying the same meaning rather than "
+        "describing visual characteristics. When an image contains words that are important to "
+        "understanding the content, the alt text should include those words as well.",
         file=sys.stderr,
     )
 
@@ -107,4 +113,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    parser = ArgumentParser(description="Utility script to verify that all images have alt text..")
+    parser.add_argument(
+        "paths",
+        type=str,
+        nargs="*",
+        help="Path of files to check. If empty, it will check all files in 'qiskit_ibm_runtime/`",
+    )
+
+    args = parser.parse_args()
+    default_files = glob.glob("qiskit_ibm_runtime/**/*.py", recursive=True)
+    main(args.paths or default_files)

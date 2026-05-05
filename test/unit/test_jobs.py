@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -19,7 +19,7 @@ from unittest.mock import patch
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
-from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm_runtime.base_runtime_job import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,

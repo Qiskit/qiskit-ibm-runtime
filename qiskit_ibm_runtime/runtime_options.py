@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,16 +28,40 @@ class RuntimeOptions:
 
     The ``RuntimeOptions`` class is deprecated. This class was originally only used to support
     custom programs, it should not import imported externally.
+
+    Args:
+        backend: target backend to run on.
+        image: the runtime image used to execute the primitive, specified in
+            the form of ``image_name:tag``. Not all accounts are
+            authorized to select a different image.
+        log_level: logging level to set in the execution environment. The valid
+            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+            The default level is ``WARNING``.
+        instance: This is only supported on the new IBM Quantum Platform.
+        job_tags: Tags to be assigned to the job. The tags can subsequently be used
+            as a filter in the :meth:`jobs()` function call.
+        max_execution_time: Maximum execution time in seconds, which is based
+            on system execution time (not wall clock time). System execution time is the
+            amount of time that the system is dedicated to processing your job. If a job exceeds
+            this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
+            clock time.
+        session_time: Length of session in seconds.
+        private: Boolean that indicates whether the job is marked as private. When set to true,
+            input parameters are not returned, and the results can only be read once.
+            After the job is completed, input parameters are deleted from the service.
+            After the results are read, these are also deleted from the service.
+            When set to false, the input parameters and results follow the
+            standard retention behavior of the API.
     """
 
     backend: str | Backend | None = None
-    image: str | None = None
+    image: str | None = None  # TODO: can come from `options` or `options.experimental`
     log_level: str | None = None
-    instance: str | None = None
+    instance: str | None = None  # TODO: check if it is currently used
     job_tags: list[str] | None = None
     max_execution_time: int | None = None
-    session_time: int | None = None
-    private: bool | None = False
+    session_time: int | None = None  # TODO: check if it is currently used / can really be modified
+    private: bool | None = False  # TODO: check if it can really be modified
 
     def __init__(
         self,
@@ -50,32 +74,6 @@ class RuntimeOptions:
         session_time: int | None = None,
         private: bool | None = False,
     ) -> None:
-        """RuntimeOptions constructor.
-
-        Args:
-            backend: target backend to run on.
-            image: the runtime image used to execute the primitive, specified in
-                the form of ``image_name:tag``. Not all accounts are
-                authorized to select a different image.
-            log_level: logging level to set in the execution environment. The valid
-                log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                The default level is ``WARNING``.
-            instance: This is only supported on the new IBM Quantum Platform.
-            job_tags: Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds, which is based
-                on system execution time (not wall clock time). System execution time is the
-                amount of time that the system is dedicated to processing your job. If a job exceeds
-                this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
-                clock time.
-            session_time: Length of session in seconds.
-            private: Boolean that indicates whether the job is marked as private. When set to true,
-                input parameters are not returned, and the results can only be read once.
-                After the job is completed, input parameters are deleted from the service.
-                After the results are read, these are also deleted from the service.
-                When set to false, the input parameters and results follow the
-                standard retention behavior of the API.
-        """
         self.backend = backend
         self.image = image
         self.log_level = log_level
@@ -85,7 +83,7 @@ class RuntimeOptions:
         self.session_time = session_time
         self.private = private
 
-    def validate(self, channel: str) -> None:  # pylint: disable=unused-argument
+    def validate(self, channel: str) -> None:
         """Validate options.
 
         Args:
@@ -94,7 +92,6 @@ class RuntimeOptions:
         Raises:
             IBMInputValueError: If one or more option is invalid.
         """
-
         if self.image and not re.match(
             "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
             self.image,

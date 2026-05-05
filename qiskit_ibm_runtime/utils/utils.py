@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -25,10 +25,10 @@ from itertools import chain
 import numpy as np
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
-from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from ibm_platform_services import ResourceControllerV2
 from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Instruction
@@ -85,9 +85,10 @@ def is_simulator(backend: BackendV2) -> bool:
 
 
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: dict) -> str:
-    """
-    A section of is_isa_circuit, separated to allow recursive calls
-    within blocks of conditional operations.
+    """Helper for checking if a circuit is an ISA circuit.
+
+    A section of is_isa_circuit, separated to allow recursive calls within blocks of conditional
+    operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation
@@ -127,8 +128,10 @@ def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target, qubit_map: d
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
-    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
-    only uses instructions that exist in the target.
+    """Checks if the circuit is an ISA circuit.
+
+    An ISA circuit means that it has a layout and that it only uses instructions that exist in the
+    target.
 
     Args:
         circuit: A single QuantumCircuit
@@ -148,10 +151,11 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
 
 
 def _is_valid_rzz_pub_helper(circuit: QuantumCircuit) -> str | set[Parameter]:
-    """
+    """Helper for validating ``rzz`` gates in pubs.
+
     For rzz gates:
     - Verify that numeric angles are in the range [0, pi/2]
-    - Collect parameterized angles
+    - Collect parameterized angles.
 
     Returns one of the following:
     - A string, containing an error message, if a numeric angle is outside of the range [0, pi/2]
@@ -257,7 +261,7 @@ def are_circuits_dynamic(circuits: list[QuantumCircuit], qasm_default: bool = Tr
 
 
 def is_fractional_gate(gate: Instruction) -> bool:
-    """Test if a gate is considered fractional by IBM
+    """Test if a gate is considered fractional by IBM.
 
     Fractional gates produce a rotation based on a continuous input parameter
     and require a non-zero gate duration. The latter distinction excludes gates
@@ -319,6 +323,7 @@ def resolve_crn(channel: str, url: str, instance: str, token: str) -> list[str]:
             client = ResourceControllerV2(authenticator=authenticator)
             client.set_service_url(get_resource_controller_api_url(url))
             client.set_http_client(session)
+            client.configure_service("resource_controller")
             list_response = client.list_resource_instances(name=instance)
             result = list_response.get_result()
             row_count = result["rows_count"]
@@ -344,7 +349,7 @@ def default_runtime_url_resolver(
     url: str,
     instance: str,
     private_endpoint: bool = False,
-    channel: str = "ibm_quantum_platform",  # pylint: disable=unused-argument
+    channel: str = "ibm_quantum_platform",
 ) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
@@ -354,10 +359,10 @@ def default_runtime_url_resolver(
         private_endpoint: Connect to private API URL.
         channel: This input parameter is currently UNUSED and kept for
             backwards compatibility purposes only.
+
     Returns:
         Runtime API base URL
     """
-
     # URL won't be modified if it contains "experimental"
     api_host = url
 
@@ -376,15 +381,14 @@ def default_runtime_url_resolver(
             #  - for other regions, ie. eu-de: "https://eu-de.quantum.cloud.ibm.com/api/v1"
             region = _location_from_crn(instance)
             region_prefix = "" if region == "us-east" else f"{region}."
-            api_host = (
-                f"{parsed_url.scheme}://{region_prefix}" f"quantum.{parsed_url.hostname}/api/v1"
-            )
+            api_host = f"{parsed_url.scheme}://{region_prefix}quantum.{parsed_url.hostname}/api/v1"
 
     return api_host
 
 
 def _is_experimental_runtime_url(url: str) -> bool:
     """Checks if the provided url points to an experimental runtime cluster.
+
     This type of URLs is used for internal development purposes only.
 
     Args:
@@ -543,14 +547,12 @@ class RefreshQueue(Queue):
     A FIFO queue with a bounded size. Once the queue is full, when a new item
     is being added, the oldest item on the queue is discarded to make space for
     the new item.
+
+    Args:
+        maxsize: Maximum size of the queue.
     """
 
     def __init__(self, maxsize: int):
-        """RefreshQueue constructor.
-
-        Args:
-            maxsize: Maximum size of the queue.
-        """
         self.condition = Condition()
         super().__init__(maxsize=maxsize)
 
@@ -562,8 +564,6 @@ class RefreshQueue(Queue):
         Args:
             item: Item to put into the queue.
         """
-        # pylint: disable=arguments-differ
-
         with self.condition:
             if self.full():
                 super().get(block=False)
@@ -602,4 +602,5 @@ class CallableStr(str):
     """A callable string."""
 
     def __call__(self) -> str:
+        """Return the string when called as a function."""
         return self

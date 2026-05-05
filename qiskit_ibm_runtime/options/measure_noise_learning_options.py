@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,19 +28,21 @@ class MeasureNoiseLearningOptions:
     """
 
     num_randomizations: UnsetType | int = Unset
-    r"""The number of random circuits to draw for the measurement
-        learning experiment. 
-        
-        Default: 32.
+    """The number of random circuits to draw for the measurement learning experiment.
+
+    Default: 32.
     """
+
     shots_per_randomization: UnsetType | int | Literal["auto"] = Unset
-    r"""The number of shots to use for the learning experiment
-        per random circuit. If "auto", the value will be chosen automatically
-        based on the input PUBs. 
-        
-        Default: "auto".
+    """The number of shots to use for the learning experiment per random circuit.
+
+    If "auto", the value will be chosen automatically based on the input PUBs.
+
+    Default: "auto".
     """
 
     _ge1 = make_constraint_validator(
-        "num_randomizations", "shots_per_randomization", ge=1  # type: ignore[arg-type]
+        "num_randomizations",
+        "shots_per_randomization",
+        ge=1,  # type: ignore[arg-type]
     )

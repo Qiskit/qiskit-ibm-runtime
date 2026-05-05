@@ -1,14 +1,11 @@
-Contributing
-============
+# Contributing
 
 First read the overall project contributing guidelines. These are all
 included in the qiskit documentation:
 
 https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 
-
 ## Contributing to qiskit-ibm-runtime
------------------------------------
 
 In addition to the general guidelines there are specific details for
 contributing to qiskit-ibm-runtime, these are documented below.
@@ -17,48 +14,50 @@ contributing to qiskit-ibm-runtime, these are documented below.
 
 To install from source download this repository and follow the next steps.
 
-- Create a virtual environment
-``` {.bash}
-python3 -m venv .venv
-```
-- Activate your virtual environment
-``` {.bash}
-source .venv/bin/activate
-```
-- Install the dependencies
-``` {.bash}
-pip install -e .
-```
-- Install the visualization dependencies
-``` {.bash}
-pip install -e ".[visualization]"
-```
-- Install the development dependencies
-``` {.bash}
-pip install -e ".[dev]"
-```
+* Create a virtual environment
+
+  ```sh
+  python3 -m venv .venv
+  ```
+
+* Activate your virtual environment
+
+  ```sh
+  source .venv/bin/activate
+  ```
+
+* Install the dependencies package in editable mode, with the development dependencies
+
+  ```sh
+  pip install -e ".[dev]"
+  ```
+
+  The `dev` extra install all the dependencies that a developer needs. The full list of extras
+  supported by the package can be found at the `[project.optional-dependencies]` section of
+  [pyproject.toml].
 
 ### Open an issue
 
 * For documentation issues relating to pages in the Guides, Tutorials, and Migration guides sections of https://quantum.cloud.ibm.com/docs, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+
 * For issues relating to API reference pages (any page that contains /api/ in the url), please open an issue in the repo specific to that API reference.
 
 ### Pull request checklist
 
 Before pushing your contribution please ensure that:
 
-1. The code follows the code style of this project. For convenience, you can 
+1. The code follows the code style of this project. For convenience, you can
    check [Style guide](#style-guide)
 2. If it makes sense, add tests that cover the new changes.
 3. All tests pass. For convenience, you can verify the [Test Types](#test).
 4. The documentation has been updated accordingly. In particular, if a
    function or class has been modified during your contribution, please update
-   the *docstring* accordingly. For convenience, you can check [Building the 
+   the *docstring* accordingly. For convenience, you can check [Building the
    Documentation Locally](#building-documentation-locally).
 
 ### Pull request creation
 
-When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal 
+When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal
 etc), please ensure that you add a release note.
 
 ### Changelog generation
@@ -113,11 +112,11 @@ file once you open up the PR and have its number.
 
 Then, identify which type of change your release note is:
 
-- `feat` (new feature)
-- `upgrade` (upgrade note)
-- `deprecation` (deprecation)
-- `bug` (bug fix)
-- `other` (other note)
+* `feat` (new feature)
+* `upgrade` (upgrade note)
+* `deprecation` (deprecation)
+* `bug` (bug fix)
+* `other` (other note)
 
 Now, create a new file in the `release-notes/unreleased` folder in the format `<github-number>.<type>.rst`,
 such as `156.bug.rst` or `231.feat.rst`.
@@ -168,7 +167,7 @@ sure they're included with the code in your PR.
 
 You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
-running `pipx install towncrier`. 
+running `pipx install towncrier`.
 
 Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the file `unreleased.rst` to Git!
 
@@ -187,36 +186,54 @@ and the release notes in particular will be located at
 ### Test
 
 #### Test Types
-There are three different types of tests in `qiskit-ibm-runtime`. The 
-implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) 
-Unit testing framework.
+
+There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon
+the well-documented [unittest] Unit testing framework, and the default test runner used in this
+project is [pytest].
 
 ##### 1. Unit tests
-Run locally without connecting to an external system. They are short-running, 
-stable and give a basic level of confidence during development.
+
+These tests run locally without connecting to an external system. They are short-running, stable
+and give a basic level of confidence during development.
 
 To execute all unit tests, run:
+
 ``` {.bash}
 make unit-test
 ```
 
 ##### 2. Integration tests
-Executed against an external system configured via a (token, instance, url) 
-tuple. Detailed coverage of happy and non-happy paths. They are long-running and
-unstable at times. A successful test run gives a high level of confidence that 
-client and APIs work well together.
+
+The integration tests are executed against an external system which is configured via environment
+variables. They provide coverage of happy and non-happy paths, and are long-running and unstable at
+times. A successful test run gives a high level of confidence that the client and the service
+work well together.
 
 To execute all integration tests, run
+
 ``` {.bash}
 make integration-test
 ```
 
-###### Configuration
+##### 3. Smoke tests
 
-Integration tests require an environment configuration and can be run against the IBM Quantum Platform API
-(`ibm_quantum_platform` channel).
+The smoke tests are a small suite of tests that exercise the critical functionality of the package.
+They are executed against an external system (configured in the same way as for the integration
+tests), and a successful ensures the main functionality of the package is not affected
 
-Sample configuration for IBM Cloud (ibm_quantum_platform)
+To execute the smoke tests, run
+
+``` {.bash}
+make smoke-test
+```
+
+#### Configuration
+
+Integration and smoke tests require an environment configuration and can be run against the IBM
+Quantum Platform API (`ibm_quantum_platform` channel).
+
+Sample configuration for IBM Cloud (ibm_quantum_platform):
+
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
 QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
@@ -224,53 +241,70 @@ QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value 
 QISKIT_IBM_QPU=...                                              # The Quantum Processing Unit to use
 ```
 
-
 To enable test cases against external system in your private fork, make sure to set above values as
-[encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
-The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
-upon. 
+[encrypted environment secrets]. The names of the environments must match the ones that the
+[CI workflow](.github/workflows/ci.yml) relies upon.
 
-For example, in your github fork settings, add the environment you want to run tests on (ibm-cloud-production, ibm-cloud-staging). Then add the appropriate environment secrets (QISKIT_IBM_INSTANCE, QISKIT_IBM_TOKEN, QISKIT_IBM_URL, QISKIT_IBM_DEVICE).
+For example, in your github fork settings, add the environment you want to run tests on
+(`ibm-cloud-production`, `ibm-cloud-staging`). Then add the appropriate environment secrets
+(`QISKIT_IBM_INSTANCE`, `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL`, `QISKIT_IBM_QPU`).
+
+#### Benchmarking
+
+Experimental support for benchmarking is available via:
+
+```sh
+make benchmark
+```
 
 ### Style guide
 
-Please submit clean code and please make effort to follow existing
-conventions in order to keep it as readable as possible. We use:
-* [black] as the tool for ensuring consistent code formatting
-* [pylint] as a linter providing deeper analysis for potential style and
-  functionality issues, as well as good practices
-* [ruff] as an additional linter, introduced recently for additional style
-  and functionality checks
+Please submit clean code and please make effort to follow existing conventions in order to keep it
+as readable as possible. We use:
+
+* [ruff] as a linter providing deeper analysis for potential style and functionality issues, as
+  well as conformance to good practices
 * [mypy] as a static type checker for type hinting
+* [pre-commit] for automating running the above tools
 
-To ensure your changes respect the style guidelines, you can run the following
-commands:
+To ensure your changes respect the style guidelines, you can install the `pre-commit` hooks:
 
-``` {.sh}
-make lint
-make style
-make mypy
+```sh
+pre-commit install
 ```
 
-If `make style` results in an error, you can run `make black` for automatically
-update your code to conform to the style. Similarly, if `make lint` fails in the
-`ruff` check, you can run `make ruff` for attempting to apply automated fixes,
-if available. However, for a subset of the `ruff` errors, as well as for the
-`pylint` and `mypy` errors, you will have to fix the issues manually by updating
-your code.
+In this way, they will run automatically with every commit. You can also run them manually with the
+following command:
 
-If you edit any documentation, refer to [IBM Quantum's writing style
-guide](https://github.com/IBM/ibm-quantum-style-guide). You can use
-[Vale](https://vale.sh) to automatically check some of these rules for you.
-With Vale installed, run the following command
+```sh
+pre-commit run
+```
+
+This will run the tools against your staged changes, and will automatically update your code to
+conform to the style in some instances (for example, a subset of the `ruff` issues). For
+other errors, you will have to fix the issues manually by updating your code, and re-run again.
+Please refer to the tools' documentation for more information on running them manually and
+customizing your workflow if needed.
+
+If you edit any documentation, refer to [IBM Quantum's writing style guide]. You can use
+[Vale](https://vale.sh) to automatically check some of these rules for you. With Vale installed,
+run the following command
 
 ```sh
 make docs-test
 ```
 
-This test also runs on CI and will fail if Vale encounters any spelling
-mistakes. To add a word to the dictionary, add it to
-`test/docs/dictionary.txt`.
+This test also runs on CI and will fail if Vale encounters any spelling mistakes. To add a word to
+the dictionary, add it to `test/docs/dictionary.txt`.
+
+### Using the `git blame` ignored revisions list
+
+This repository contains a list of commits for `git blame` to ignore: commits that are style or
+linting changes that affect formatting, and thus tend to be disruptive when comparing changes in
+the repository history. When issuing a PR that contains a significant amount of style changes,
+please update the `.git-blame-ignore-revs` file adding an entry to the end of the file, and a
+comment pointing to the pull request. Please check the [Ignore commits in the blame view]
+GitHub documentation for instructions on using the ignore list locally and for general information.
 
 ### Development Cycle
 
@@ -331,7 +365,12 @@ qiskit-bot should also automatically create the GitHub Release for you.
 Finally, you need to cherry-pick the release notes prep from `stable/*` to
 the `main` branch, such as from `stable/0.21` to `main`.
 
-[black]: https://github.com/psf/black
-[pylint]: https://www.pylint.org/
 [ruff]: https://github.com/astral-sh/ruff
 [mypy]: http://mypy-lang.org/
+[pytest]: https://pytest.org/
+[pre-commit]: https://pre-commit.com/
+[unittest]: https://docs.python.org/3/library/unittest.html
+[encrypted environment secrets]: https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment
+[IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
+[pyproject.toml]: ./pyproject.toml
+[Ignore commits in the blame view]: https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#ignore-commits-in-the-blame-view

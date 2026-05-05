@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -69,6 +69,7 @@ class CloudAuth(AuthBase):
         return False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        """Return the prepared request when calling the auth hook as a function."""
         r.headers.update(self.get_headers())
         return r
 
@@ -87,7 +88,7 @@ class CloudAuth(AuthBase):
         try:
             access_token = self.tm.get_token()
             return {"Service-CRN": self.crn, "Authorization": f"Bearer {access_token}"}
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             warnings.warn(
                 f"Unable to retrieve IBM Cloud access token. API Key will be used instead. {ex}"
             )

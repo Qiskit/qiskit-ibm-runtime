@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -95,8 +95,6 @@ class TestEstimatorOptions(IBMTestCase):
 
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
-        # pylint: disable=unexpected-keyword-arg
-
         noise_model = NoiseModel.from_backend(FakeManilaV2())
         resilience_level = 2
         simulator = {
@@ -226,7 +224,7 @@ class TestEstimatorOptions(IBMTestCase):
         self.assertDictEqual(options, opt_dict)
 
     def test_zero_resilience_level(self):
-        """Test resilience_level=0"""
+        """Test resilience_level=0."""
         opt_dict = {"resilience_level": 0}
         backend = get_mocked_backend()
         estimator = Estimator(mode=backend, options=opt_dict)

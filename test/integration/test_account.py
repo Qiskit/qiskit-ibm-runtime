@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,14 +15,14 @@
 from unittest.mock import patch
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
 from ibm_cloud_sdk_core import ApiException
 from ibm_platform_services import (
     ResourceControllerV2,
     GlobalSearchV2,
-)  # pylint: disable=import-error
+)
 
 from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
@@ -72,7 +72,6 @@ class TestQuantumPlatform(IBMIntegrationTestCase):
 
     def test_initializing_service_no_instance(self):
         """Test initializing without an instance."""
-
         # no default instance and no filters
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service = QiskitRuntimeService(
@@ -328,7 +327,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
     def test_local_channel(self):
-        """Test local channel mode"""
+        """Test local channel mode."""
         local_service = QiskitRuntimeService(
             channel="local",
         )
@@ -343,7 +342,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = QiskitRuntimeService(
@@ -357,7 +355,6 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
-
         service_instance_name = "-non-existing-service-name-"
         with (
             self.subTest(instance="-non-existing-service-name-"),

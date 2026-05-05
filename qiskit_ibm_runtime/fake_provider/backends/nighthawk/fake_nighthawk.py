@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Fake Nighthawk device (120 qubit).
-"""
+"""Fake Nighthawk device (120 qubit)."""
 
 import os
 import warnings
@@ -23,19 +21,17 @@ DISPLAY_WARNING = True
 
 
 class FakeNighthawk(fake_backend.FakeBackendV2):
-    """
-    A fake 120 qubit backend. Its coupling map and basis gates match those of a
-    real Nighthawk backend, but the properties are not  intended to represent
-    typical Nighthawk error values. You can use this fake backend to, for
-    example, transpile and optimize your circuits in preparation of the
-    forthcoming Nighthawk backends.
+    """A fake 120 qubit backend.
 
-    For a 100-qubit square lattice Ising circuit with 10 Trotter steps,
-    fake_nighthawk showed a 600% improvement in circuit depth compared to
-    a Heron backend.
+    Its coupling map and basis gates match those of a real Nighthawk backend, but the properties
+    are not intended to represent typical Nighthawk error values. You can use this fake backend to,
+    for example, transpile and optimize your circuits in preparation of the forthcoming Nighthawk
+    backends.
+
+    For a 100-qubit square lattice Ising circuit with 10 Trotter steps, fake_nighthawk showed a
+    600% improvement in circuit depth compared to a Heron backend.
 
     # Example
-
 
     ```
     from qiskit import QuantumCircuit
@@ -71,7 +67,7 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore
         # Only display the warning statement once
-        global DISPLAY_WARNING  # pylint: disable=global-statement
+        global DISPLAY_WARNING
         if DISPLAY_WARNING:
             warnings.warn(
                 "Properties of fake_nighthawk are not intended to represent "
@@ -82,4 +78,5 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
         super().__init__(*args, **kwargs)
 
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
+        """Retrieve the newest backend configuration and refresh the current backend target."""
         raise NotImplementedError("fake_nighthawk does not have calibration data to pull.")

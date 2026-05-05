@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -50,12 +50,140 @@ SERVICE_NAME = "runtime"
 
 
 class QiskitRuntimeService:
-    """Class for interacting with the Qiskit Runtime service."""
+    """Class for interacting with the Qiskit Runtime service.
+
+    Recommended uses:
+
+    * Direct instantiation:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            service = QiskitRuntimeService(
+                channel="ibm_quantum_platform", # optional
+                token="API_KEY",
+                instance="CRN" # recommended
+                )
+
+    * Saving default acccount:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            QiskitRuntimeService.save_account(
+                token="API_KEY",
+                instance="CRN",
+                set_as_default = True
+                )
+
+            service = QiskitRuntimeService()
+
+    The minimum required information for service authentication to a non-local channel is the
+    ``token``. The ``local`` channel doesn't require authentication.
+    For non-local channels, it is recommended to always provide the relevant ``instance``
+    to minimize API calls. If an ``instance`` is not defined, the service will fetch all
+    instances accessible within the account, filtered by ``region``, ``plans_preference``, and
+    ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
+    over paid instances.
+
+    When using multiple instances, :class:`~.QiskitRuntimeService` will internally manage which
+    instance is active at a given time. Methods such as :meth:`.backend`, :meth:`.backends`,
+    :meth:`.job` and :meth:`.jobs` can result in changing the active instance. It is recommended
+    to use the :meth:`.active_instance` method for checking which instance is active, or use a
+    separate :class:`~.QiskitRuntimeService` object per instance for more fine-grained control.
+
+    Also note that only one account per API token can be used. The API token is linked to the
+    account it was created in. If you want to use multiple accounts, you must create multiple
+    API tokens.
+
+    The service will attempt to load an account from file if (a) no explicit ``token``
+    was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
+    ``token`` was provided to the service constructor. The account will be selected based on
+    the following criteria:
+
+    - If a ``filename`` is specified, account details will be loaded from ``filename``,
+        else they will be loaded from the default configuration file.
+
+    - If a ``name`` is specified, the corresponding account details will be loaded from
+        the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
+        ``plans_preference``, and the advanced configuration parameters: ``url``,
+        ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
+        **Important Note**: An explicit ``instance`` value provided during instantiation
+        will **overwrite** the value of the loaded ``instance``.
+
+    - If no ``name`` is specified: if ``channel`` is specified, the service will load the
+        default account associated with that channel from the configuration file. Else,
+        it will fall back to the overall default account, defined when calling
+        :meth:`.save_account` with ``set_as_default=True``.
+
+    Args:
+        channel: String that identifies the service platform. This is
+            set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
+            and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
+            path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
+            If ``local`` is selected, the local testing mode will be used, and
+            primitive queries will run on a local simulator. For more details, check the
+            `Qiskit Runtime local testing mode
+            <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
+            For non-local modes, the channel is used to resolve the default API URL value.
+            ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
+            its URL will be redirected to the new ``ibm_quantum_platform`` address.
+        token: IBM Cloud API key. Providing an API key is required for IQP
+            authentication. If not provided explicitly, the default saved account will be
+            queried for this API key.
+        url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local
+            channels accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``,
+            ``ibm_cloud``).
+            This URL is processed by a ``url_resolver`` to route requests to the correct
+            service entrypoint. If you provide a custom ``url``, you must also supply a
+            matching ``url_resolver``. The default resolver rewrites the base URL to
+            ``https://quantum.cloud.ibm.com/api/v[x]``.
+        filename: Full path of the file where the account is created.
+            Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
+        name: Name of the account to load from file.
+        instance: The service instance to use.
+            For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
+            Name (CRN) or the service name. If set, it will define an instance for
+            service instantiation, if not set, the service will fetch all instances accessible
+            within the account following the specified filtering criteria.
+        proxies: Proxy configuration. Supported optional keys are ``urls`` (a
+            dictionary mapping protocol or protocol and host to the URL of the proxy, documented
+            at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+            ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+            authentication)
+        verify: Whether to verify the server's TLS certificate.
+        private_endpoint: Connect to private API URL.
+        url_resolver: Function used to resolve the runtime URL. If not
+            provided, a default resolver will be used to access different service endpoints.
+        region: Set a region preference for automatic instance selection.
+            This argument is **ignored** if an ``instance`` is specified.
+            Accepted values are ``us-east`` or ``eu-de``.
+            An instance with this region will be prioritized if an instance is not passed in.
+        plans_preference: A list of account plan names
+            ordered by priority for automatic instance selection.
+            This argument is **ignored** if an ``instance`` is specified.
+            Only instances with the given plan names will be considered.
+            For example, if you want to avoid using your premium accounts you can just
+            pass in ``"open"`` to only use your open plan instances.
+            Accepted values include (but are not limited to): ``open``, ``premium``,
+            ``flex``, ``on-prem``, ``pay-as-you-go``.
+        tags: Set a list of tags to filter available instances for automatic
+            instance selection. This argument is **ignored** if an ``instance`` is specified.
+
+    Returns:
+        An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService`
+        if local channel is set.
+
+    Raises:
+        IBMInputValueError: If an input is invalid.
+    """
 
     def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+        """Construct a ``QiskitRuntimeService`` instance."""
         channel = kwargs.get("channel", None)
         if channel == "local":
-            # pylint: disable=import-outside-toplevel
             from .fake_provider.local_service import QiskitRuntimeLocalService
 
             return super().__new__(QiskitRuntimeLocalService)
@@ -78,128 +206,6 @@ class QiskitRuntimeService:
         plans_preference: list[str] | None = None,
         tags: list[str] | None = None,
     ) -> None:
-        """QiskitRuntimeService constructor.
-
-        Recommended uses:
-
-        * Direct instantiation:
-
-            .. code-block:: python
-
-                from qiskit_ibm_runtime import QiskitRuntimeService
-
-                service = QiskitRuntimeService(
-                    channel="ibm_quantum_platform", # optional
-                    token="API_KEY",
-                    instance="CRN" # recommended
-                    )
-
-        * Saving default acccount:
-
-            .. code-block:: python
-
-                from qiskit_ibm_runtime import QiskitRuntimeService
-
-                QiskitRuntimeService.save_account(
-                    token="API_KEY",
-                    instance="CRN",
-                    set_as_default = True
-                    )
-
-                service = QiskitRuntimeService()
-
-        The minimum required information for service authentication to a non-local channel is the
-        ``token``. The ``local`` channel doesn't require authentication.
-        For non-local channels, it is recommended to always provide the relevant ``instance``
-        to minimize API calls. If an ``instance`` is not defined, the service will fetch all
-        instances accessible within the account, filtered by ``region``, ``plans_preference``,
-        and ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
-        over paid instances.
-
-        Also note that only one account per API token can be used. The API token is linked to the
-        account it was created in. If you want to use multiple accounts, you must create multiple
-        API tokens.
-
-        The service will attempt to load an account from file if (a) no explicit ``token``
-        was provided during instantiation  or (b) a ``name`` is specified, even if an explicit
-        ``token`` was provided to the service constructor. The account will be selected based on
-        the following criteria:
-
-        - If a ``filename`` is specified, account details will be loaded from ``filename``,
-          else they will be loaded from the default configuration file.
-
-        - If a ``name`` is specified, the corresponding account details will be loaded from
-          the configuration file, including ``channel``, ``token``, ``instance``, ``region``,
-          ``plans_preference``, and the advanced configuration parameters: ``url``,
-          ``url_resolver``, ``private_endpoint``,  ``verify``, and  ``proxies``.
-          **Important Note**: An explicit ``instance`` value provided during instantiation
-          will **overwrite** the value of the loaded ``instance``.
-
-        - If no ``name`` is specified: if ``channel`` is specified, the service will load the
-          default account associated with that channel from the configuration file. Else,
-          it will fall back to the overall default account, defined when calling :meth:`.save_account`
-          with ``set_as_default=True``.
-
-        Args:
-            Optional[ChannelType] channel: String that identifies the service platform. This is
-                set to ``ibm_quantum_platform`` by default, but can additionally take ``local``
-                and ``ibm_cloud`` as values. ``ibm_cloud`` is a legacy option and points to the same
-                path as ``ibm_quantum_platform``, the recommended value is `ibm_quantum_platform``.
-                If ``local`` is selected, the local testing mode will be used, and
-                primitive queries will run on a local simulator. For more details, check the
-                `Qiskit Runtime local testing mode
-                <https://quantum.cloud.ibm.com/docs/guides/local-testing-mode>`_  documentation.
-                For non-local modes, the channel is used to resolve the default API URL value.
-                ``ibm_cloud`` was the identifier for the legacy IBM Cloud platform, and
-                its URL will be redirected to the new ``ibm_quantum_platform`` address.
-            Optional[str] token: IBM Cloud API key. Providing an API key is required for IQP
-                authentication. If not provided explicitly, the default saved account will be
-                queried for this API key.
-            Optional[str] url: Base API URL. Defaults to ``https://cloud.ibm.com`` for non-local channels
-                accessing the IBM Quantum Platform (e.g., ``ibm_quantum_platform``, ``ibm_cloud``).
-                This URL is processed by a ``url_resolver`` to route requests to the correct
-                service entrypoint. If you provide a custom ``url``, you must also supply a
-                matching ``url_resolver``. The default resolver rewrites the base URL to
-                ``https://quantum.cloud.ibm.com/api/v[x]``.
-            Optional[str] filename: Full path of the file where the account is created.
-                Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE.
-            Optional[str] name: Name of the account to load from file.
-            Optional[str] instance: The service instance to use.
-                For ``ibm_cloud`` and ``ibm_quantum_platform``, this is the Cloud Resource
-                Name (CRN) or the service name. If set, it will define an instance for
-                service instantiation, if not set, the service will fetch all instances accessible
-                within the account following the specified filtering criteria.
-            Optional[dict] proxies: Proxy configuration. Supported optional keys are
-                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
-                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
-                authentication)
-            Optional[bool] verify: Whether to verify the server's TLS certificate.
-            Optional[bool] private_endpoint: Connect to private API URL.
-            Optional[Callable] url_resolver: Function used to resolve the runtime URL. If not provided,
-                a default resolver will be used to access different service endpoints.
-            Optional[str] region: Set a region preference for automatic instance selection.
-                This argument is **ignored** if an ``instance`` is specified.
-                Accepted values are ``us-east`` or ``eu-de``.
-                An instance with this region will be prioritized if an instance is not passed in.
-            Optional[List[str]] plans_preference: A list of account plan names
-                ordered by priority for automatic instance selection.
-                This argument is **ignored** if an ``instance`` is specified.
-                Only instances with the given plan names will be considered.
-                For example, if you want to avoid using your premium accounts you can just
-                pass in ``"open"`` to only use your open plan instances.
-                Accepted values include (but are not limited to): ``open``, ``premium``,
-                ``flex``, ``on-prem``, ``pay-as-you-go``.
-            Optional[List[str]] tags: Set a list of tags to filter available instances for automatic
-                instance selection. This argument is **ignored** if an ``instance`` is specified.
-
-        Returns:
-            An instance of :class:`.QiskitRuntimeService` or :class:`.QiskitRuntimeLocalService` if local
-            channel is set.
-
-        Raises:
-            IBMInputValueError: If an input is invalid.
-        """
         super().__init__()
         self._all_instances: list[dict[str, Any]] = []
         self._saved_instances: list[str] = []
@@ -242,8 +248,8 @@ class QiskitRuntimeService:
         if self._account.instance:
             if self._account.instance not in [inst["crn"] for inst in self.instances()]:
                 raise IBMInputValueError(
-                    "The given API token is associated with an account that does not have access to "
-                    f"the instance {self._account.instance}. "
+                    "The given API token is associated with an account that does not have access "
+                    f"to the instance {self._account.instance}. "
                     "To use this instance, use an API token generated from the account "
                     "with this instance available."
                 )
@@ -266,7 +272,7 @@ class QiskitRuntimeService:
                 joined_plan_names = ", ".join(instance_plan_names)
                 plans_preference_str = f"), and available plans: ({joined_plan_names})"
 
-            filters = f"(tags: {tags_str}, " f"region: {region_str}" f"{plans_preference_str}"
+            filters = f"(tags: {tags_str}, region: {region_str}{plans_preference_str}"
 
             logger.warning(
                 "Instance was not set at service instantiation. %s"
@@ -302,7 +308,7 @@ class QiskitRuntimeService:
             self._backends_list = self._active_api_client.list_backends()
             return [backend["name"] for backend in self._backends_list]
         # On staging there some invalid instances returned that 403 when retrieving backends
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             logger.warning("Invalid instance %s", instance)
             return []
 
@@ -430,7 +436,8 @@ class QiskitRuntimeService:
             )
         elif url:
             raise ValueError(
-                "'url' is not valid as a standalone parameter. Try also passing in 'token' or 'name'."
+                "'url' is not valid as a standalone parameter. Try also passing in 'token' or "
+                "'name'."
             )
 
         # channel is not defined yet, get it from the AccountManager
@@ -460,7 +467,6 @@ class QiskitRuntimeService:
 
     def _get_crn_from_instance_name(self, account: Account, instance: str) -> str:
         """Get the crn from the instance service name."""
-
         if not self._all_instances:
             self._all_instances = account.list_instances()
         matching_instances = [item for item in self._all_instances if item["name"] == instance]
@@ -472,7 +478,7 @@ class QiskitRuntimeService:
             return matching_instances[0]["crn"]
         else:
             raise IBMInputValueError(
-                f"The instance specified ({instance}) is not a valid " "instance name."
+                f"The instance specified ({instance}) is not a valid instance name."
             )
 
     @staticmethod
@@ -493,6 +499,7 @@ class QiskitRuntimeService:
         instance: str | None = None,
     ) -> RuntimeClient:
         """Return the saved api client for a given instance for all channels.
+
         If no instance is provided, return the current active api client.
 
         Args:
@@ -513,7 +520,9 @@ class QiskitRuntimeService:
             return client
 
     def _get_api_clients(self) -> dict[str, RuntimeClient]:
-        """Return dictionary of saved api clients identified by their corresponding instance
+        """Return a dictionary of saved api clients.
+
+        Return a dictionary of saved api clients identified by their corresponding instance
         for all channels.
 
         Returns:
@@ -521,7 +530,6 @@ class QiskitRuntimeService:
         """
         return self._api_clients
 
-    # pylint: disable=arguments-differ
     def backends(
         self,
         name: str | None = None,
@@ -560,7 +568,8 @@ class QiskitRuntimeService:
                 If ``None``, then both fractional gates and control flow operations are
                 included in the backends.
             calibration_id: The calibration id used for instantiating the backend. This should only
-                be used when selecting a single backend as the calibration id is defined per backend.
+                be used when selecting a single backend as the calibration id is defined per
+                backend.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -712,6 +721,7 @@ class QiskitRuntimeService:
                 None to include both fractional gates and control flow
                 operations.  See :meth:`~.QiskitRuntimeService.backends` for
                 further details.
+            calibration_id: The calibration id to use for the IBM backend.
 
         Returns:
             A backend object.
@@ -756,7 +766,7 @@ class QiskitRuntimeService:
                 # but that doesn't work with new IQP since we different api clients are being used
 
                 self._backend_configs[backend_name] = config
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             return None
 
@@ -827,8 +837,9 @@ class QiskitRuntimeService:
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
-                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
-                documented at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the
+                proxy, documented at
+                https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.
@@ -842,13 +853,12 @@ class QiskitRuntimeService:
                 (``open``, ``premium``, etc.), ordered by preference. An instance with the first
                 value in the list will be prioritized and only instances
                 with the given plan names will be considered. For example, if you want to avoid
-                using your premium accounts you can just pass in ``"open"`` to only use your open plan
-                instances. ``plans_preference`` is ignored if an ``instance`` is specified.
+                using your premium accounts you can just pass in ``"open"`` to only use your open
+                plan instances. ``plans_preference`` is ignored if an ``instance`` is specified.
             tags: Set a list of tags to filter available instances. Instances with these tags
                 will be prioritized if an instance is not passed in.
 
         """
-
         AccountManager.save(
             token=token,
             url=url,
@@ -971,10 +981,11 @@ class QiskitRuntimeService:
             options: Runtime options that control the execution environment.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 If more than one decoder is specified, the first is used for interim results and
-                the second final results. If not specified, a program-specific decoder or the default
-                ``ResultDecoder`` is used.
+                the second final results. If not specified, a program-specific decoder or the
+                default ``ResultDecoder`` is used.
             session_id: Job ID of the first job in a runtime session.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            calibration_id: The calibration id to use for the IBM backend.
 
         Returns:
             A ``RuntimeJobV2`` instance representing the execution.
@@ -984,7 +995,6 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
         self._check_instance_usage()
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
@@ -1208,18 +1218,20 @@ class QiskitRuntimeService:
         usage_dict = self.usage()
 
         if usage_dict.get("usage_limit_reached"):
+            active_instance = quote(self.active_instance(), safe="")
             if usage_dict.get("usage_limit_seconds") and usage_dict["usage_remaining_seconds"] <= 0:
                 warnings.warn(
-                    "This instance has met its usage limit. Workloads will not run until time is made "
-                    "available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    "This instance has met its usage limit. Workloads will not run until time is"
+                    "made available. Check "
+                    f"https://quantum.cloud.ibm.com/instances/{active_instance} "
                     "for more details."
                 )
             else:
                 warnings.warn(
-                    "There is currently no more time available for this instance's plan on the account. "
+                    "There is currently no more time available for this instance's plan on the "
+                    "account. "
                     "Workloads will not run until time is made available. Check "
-                    f"https://quantum.cloud.ibm.com/instances/{quote(self.active_instance(), safe='')} "
+                    f"https://quantum.cloud.ibm.com/instances/{active_instance} "
                     "for more details."
                 )
 
@@ -1277,6 +1289,8 @@ class QiskitRuntimeService:
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
 
+            kwargs: Additional arguments passed to the backend query.
+
         Returns:
             The backend with the fewest number of pending jobs.
 
@@ -1324,13 +1338,15 @@ class QiskitRuntimeService:
             # We don't know whether or not the backend has a valid config
             try:
                 return self.backend(name=back["name"])
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
 
     def instances(self) -> Sequence[dict[str, Any]]:
-        """Return a list that contains a series of dictionaries with the
-            following instance identifiers per instance: "crn", "plan", "name".
+        """Return a list of instances available for the active account.
+
+        Return a list that contains a series of dictionaries with the following instance
+        identifiers per instance: "crn", "plan", "name".
 
         Returns:
             A list with instances available for the active account.
@@ -1353,7 +1369,7 @@ class QiskitRuntimeService:
         return self._channel
 
     def __repr__(self) -> str:
-        return "<{}>".format(self.__class__.__name__)
+        return f"<{self.__class__.__name__}>"
 
     def __eq__(self, other: Any) -> bool:
         return (

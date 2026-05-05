@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -30,6 +30,7 @@ class TestNeat(IBMTestCase):
     """Class for testing the Neat class."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
 
         noise_strength = 0.05
@@ -60,7 +61,7 @@ class TestNeat(IBMTestCase):
         self.obs2_ziz = SparsePauliOp(["ZIZ"]).apply_layout(self.c2.layout)
 
     def test_ideal_sim(self):
-        r"""Test the ``ideal_sim`` method."""
+        """Test the ``ideal_sim`` method."""
         analyzer = Neat(self.backend)
 
         r1 = analyzer.ideal_sim([(self.c1, self.obs1_xx)])
@@ -81,7 +82,7 @@ class TestNeat(IBMTestCase):
         self.assertListEqual(r3[1].vals.tolist(), [1, 0, 1])
 
     def test_noisy_sim(self):
-        r"""Test the ``noisy_sim`` method."""
+        """Test the ``noisy_sim`` method."""
         analyzer = Neat(self.backend, self.noise_model)
 
         r1 = analyzer.noisy_sim([(self.c1, self.obs1_xx)])
@@ -102,9 +103,7 @@ class TestNeat(IBMTestCase):
         self.assertListEqual(list(r3[1].vals.shape), [3])
 
     def test_non_clifford_error(self):
-        r"""
-        Tests that ``_simulate`` errors when pubs are not Clifford if ``cliffordize`` is ``False``.
-        """
+        """Tests ``_simulate`` erroring when pubs are not Clifford if not ``cliffordize`."""
         qc = QuantumCircuit(3)
         qc.rz(0.02, 0)
         pubs = [(qc, "ZZZ")]
@@ -124,7 +123,7 @@ class TestNeat(IBMTestCase):
         self.assertEqual(r2[0].vals, 1)
 
     def test_to_clifford(self):
-        r"""Tests the ``to_clifford`` method."""
+        """Tests the ``to_clifford`` method."""
         qc = QuantumCircuit(2, 2)
         qc.id(0)
         qc.sx(0)

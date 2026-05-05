@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2023-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -37,7 +37,6 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
-# pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .batch import Batch
 
@@ -45,13 +44,14 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-def get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) -> tuple[
+def get_mode_service_backend(
+    mode: BackendV2 | Session | Batch | None = None,
+) -> tuple[
     Session | Batch | None,
     QiskitRuntimeService | QiskitRuntimeLocalService | None,
     BackendV2 | None,
 ]:
-    """
-    A utility function that returns mode, service, and backend for a given execution mode.
+    """A utility function that returns mode, service, and backend for a given execution mode.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be
@@ -60,7 +60,6 @@ def get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) ->
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
     """
-
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):
@@ -93,7 +92,22 @@ def get_mode_service_backend(mode: BackendV2 | Session | Batch | None = None) ->
 
 
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
-    """Base class for Qiskit Runtime primitives."""
+    """Base class for Qiskit Runtime primitives.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+        options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
+            and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
+            on estimator and sampler options, respectively.
+
+    Raises:
+        ValueError: Invalid arguments are given.
+    """
 
     _options_class: type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
@@ -103,22 +117,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         mode: BackendV2 | Session | Batch | str | None = None,
         options: dict | OptionsT | None = None,
     ):
-        """Initializes the primitive.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-            options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
-                and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
-                on estimator and sampler options, respectively.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
         self._mode, self._service, self._backend = get_mode_service_backend(mode)
         self._set_options(options)
 
@@ -166,9 +164,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         if self._backend:
             if get_cm_session():
                 logger.warning(
-                    "Even though a session/batch context manager is open this job will run in job mode "
-                    "because the %s primitive was initialized outside the context manager. "
-                    "Move the %s initialization inside the context manager to run in a session/batch.",
+                    "Even though a session/batch context manager is open this job will run in job "
+                    "mode because the %s primitive was initialized outside the context manager. "
+                    "Move the %s initialization inside the context manager to run in a "
+                    "session/batch.",
                     self._program_id(),
                     self._program_id(),
                 )
@@ -203,7 +202,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @property
     def options(self) -> OptionsT:
-        """Return options"""
+        """Return options."""
         return self._options
 
     def backend(self) -> BackendV2:
@@ -227,7 +226,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that program inputs (options) are valid.
 
         Raises:
             ValueError: if resilience_level is out of the allowed range.

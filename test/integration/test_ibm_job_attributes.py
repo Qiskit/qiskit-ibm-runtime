@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -44,7 +44,6 @@ class TestIBMJobAttributes(IBMTestCase):
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
@@ -83,10 +82,8 @@ class TestIBMJobAttributes(IBMTestCase):
 
         self.assertTrue(
             (start_datetime <= job.creation_date <= end_datetime),
-            "job creation date {} is not "
-            "between the start date time {} and end date time {}".format(
-                job.creation_date, start_datetime, end_datetime
-            ),
+            f"job creation date {job.creation_date} is not "
+            f"between the start date time {start_datetime} and end date time {end_datetime}",
         )
 
     def test_job_tags(self):
@@ -105,7 +102,7 @@ class TestIBMJobAttributes(IBMTestCase):
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
         for tags in no_rjobs_tags:
             rjobs = self.service.jobs(job_tags=tags, created_after=self.last_week)
-            self.assertEqual(len(rjobs), 0, "Expected job {}, got {}".format(job.job_id(), rjobs))
+            self.assertEqual(len(rjobs), 0, f"Expected job {job.job_id()}, got {rjobs}")
 
         has_rjobs_tags = [job_tags, job_tags[1:3]]
         for tags in has_rjobs_tags:
@@ -114,9 +111,7 @@ class TestIBMJobAttributes(IBMTestCase):
                     job_tags=tags,
                     created_after=self.last_week,
                 )
-                self.assertEqual(
-                    len(rjobs), 1, "Expected job {}, got {}".format(job.job_id(), rjobs)
-                )
+                self.assertEqual(len(rjobs), 1, f"Expected job {job.job_id()}, got {rjobs}")
                 self.assertEqual(rjobs[0].job_id(), job.job_id())
                 self.assertEqual(set(rjobs[0].tags), set(job_tags))
 
@@ -129,7 +124,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
         tags_to_replace_subtests = [
             [],  # empty tags.
-            ["{}_new_tag_{}".format(uuid.uuid4().hex[:5], i) for i in range(2)],  # unique tags.
+            [f"{uuid.uuid4().hex[:5]}_new_tag_{i}" for i in range(2)],  # unique tags.
             initial_job_tags + ["foo"],
         ]
         for tags_to_replace in tags_to_replace_subtests:
@@ -143,7 +138,6 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
-
         with self.assertRaises(ValidationError):
             sampler = Sampler(mode=self.sim_backend)
             sampler.options.environment.job_tags = "foo"

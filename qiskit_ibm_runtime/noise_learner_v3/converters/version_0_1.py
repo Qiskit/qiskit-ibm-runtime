@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,28 +10,33 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Transport conversion functions"""
+"""Transport conversion functions."""
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from dataclasses import asdict
+from typing import TYPE_CHECKING
 
-from ibm_quantum_schemas.models.noise_learner_v3.version_0_1.models import (
+from ibm_quantum_schemas.common import F64TensorModel, QpyModelV13ToV16
+from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     NoiseLearnerV3ResultModel,
     NoiseLearnerV3ResultsModel,
     ParamsModel,
 )
-from ibm_quantum_schemas.models.qpy_model import QpyModelV13ToV16
-from ibm_quantum_schemas.models.tensor_model import F64TensorModel
-from qiskit.circuit import CircuitInstruction, QuantumCircuit
+from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
-from ...utils.utils import get_qpy_version
 
-from ...options import NoiseLearnerV3Options
-from ..noise_learner_v3_result import (  # type: ignore[attr-defined]
+from ...options_models import NoiseLearnerV3Options
+from ...utils.utils import get_qpy_version
+from ..noise_learner_v3_result import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import CircuitInstruction
 
 
 def noise_learner_v3_inputs_to_0_1(
@@ -50,7 +55,7 @@ def noise_learner_v3_inputs_to_0_1(
         instructions=QpyModelV13ToV16.from_quantum_circuit(
             circuit, qpy_version=get_qpy_version(16)
         ),
-        options=options.to_options_model("v0.1"),
+        options=asdict(options),  # type: ignore[call-overload]
     )
 
 
@@ -86,7 +91,7 @@ def noise_learner_v3_result_to_0_1(
 def noise_learner_v3_result_from_0_1(
     model: NoiseLearnerV3ResultsModel,
 ) -> NoiseLearnerV3Results:
-    """Convert a V0.1 model to noise learner v3 results"""
+    """Convert a V0.1 model to noise learner v3 results."""
     return NoiseLearnerV3Results(
         data=[
             NoiseLearnerV3Result.from_generators(

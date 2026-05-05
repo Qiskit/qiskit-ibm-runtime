@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -46,9 +46,10 @@ class IBMTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = "{}.log".format(os.path.splitext(inspect.getfile(cls))[0])
+        filename = f"{os.path.splitext(inspect.getfile(cls))[0]}.log"
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
@@ -77,7 +78,7 @@ class IBMTestCase(TestCase):
         if logger.level is logging.NOTSET:
             try:
                 logger.setLevel(cls.log.level)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
                     logger,
@@ -114,7 +115,6 @@ class IBMTestCase(TestCase):
                 `places` are specified).
             AssertionError: if the dictionaries are not almost equal.
         """
-
         error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
 
         if error_msg:
@@ -149,7 +149,7 @@ class IBMTestCase(TestCase):
         """
 
         def valid_comparison(value):
-            """compare value to delta, within places accuracy"""
+            """Compare value to delta, within places accuracy."""
             if places is not None:
                 return round(value, places) == 0
             else:
@@ -161,10 +161,10 @@ class IBMTestCase(TestCase):
         if places is not None:
             if delta is not None:
                 raise TypeError("specify delta or places not both")
-            msg_suffix = " within {} places".format(places)
+            msg_suffix = f" within {places} places"
         else:
             delta = delta or 1e-8
-            msg_suffix = " within {} delta".format(delta)
+            msg_suffix = f" within {delta} delta"
 
         # Compare all keys in both dicts, populating error_msg.
         error_msg = ""
@@ -200,7 +200,6 @@ class IBMIntegrationTestCase(IBMTestCase):
     @integration_test_setup()
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
@@ -228,8 +227,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     @classmethod
     def setUpClass(cls):
         """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls.program_ids = {}
         cls.sim_backends = {}

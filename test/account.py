@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,8 +28,6 @@ from qiskit_ibm_runtime.accounts.account import (
 class custom_envs(ContextDecorator):
     """Context manager that modifies environment variables."""
 
-    # pylint: disable=invalid-name
-
     def __init__(self, new_environ):
         """custom_envs constructor.
 
@@ -51,8 +49,6 @@ class custom_envs(ContextDecorator):
 
 class no_envs(ContextDecorator):
     """Context manager that disables environment variables."""
-
-    # pylint: disable=invalid-name
 
     def __init__(self, vars_to_remove):
         """no_envs constructor.
@@ -77,8 +73,6 @@ class no_envs(ContextDecorator):
 class no_file(ContextDecorator):
     """Context manager that disallows access to a file."""
 
-    # pylint: disable=invalid-name
-
     def __init__(self, filename):
         self.filename = filename
         # Store the original `os.path.isfile` function, for mocking.
@@ -100,8 +94,6 @@ class no_file(ContextDecorator):
 
 class temporary_account_config_file(ContextDecorator):
     """Context manager that uses a temporary json file."""
-
-    # pylint: disable=invalid-name
 
     def __init__(self, contents=None, **kwargs):
         # Create a temporary file with the contents.
@@ -133,7 +125,7 @@ def get_account_config_contents(
     proxies=None,
     set_default=None,
 ):
-    """Generate account config file content"""
+    """Generate account config file content."""
     token = token or uuid.uuid4().hex
     if name is None:
         name = (

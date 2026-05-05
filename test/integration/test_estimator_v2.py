@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests for Estimator V2"""
+"""Integration tests for Estimator V2."""
 
 from unittest import skip
 
@@ -29,17 +29,17 @@ class TestEstimatorV2(IBMIntegrationTestCase):
     """Integration tests for Estimator V2 Primitive."""
 
     def setUp(self) -> None:
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
 
     def test_estimator_v2_session(self):
-        """Verify correct results are returned"""
+        """Verify correct results are returned."""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
 
         psi1 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(real_amplitudes(num_qubits=2, reps=3))
 
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(psi1.layout)
         H2 = SparsePauliOp.from_list([("IZ", 1)]).apply_layout(psi2.layout)
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)]).apply_layout(psi1.layout)

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Sampler Execution options."""
+
 from typing import Literal
 from .execution_options import ExecutionOptionsV2
 from .utils import primitive_dataclass, Unset, UnsetType
@@ -18,9 +19,7 @@ from .utils import primitive_dataclass, Unset, UnsetType
 
 @primitive_dataclass
 class SamplerExecutionOptionsV2(ExecutionOptionsV2):
-    r"""Extension of :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2`
-    for the sampler primitive.
-    """
+    """Extends :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2` for the sampler primitive."""
 
     meas_type: UnsetType | Literal["classified", "kerneled", "avg_kerneled"] = Unset
     r"""How to process and return measurement results.

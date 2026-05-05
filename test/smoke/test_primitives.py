@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -36,6 +36,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
     """Smoke tests."""
 
     def setUp(self):
+        """Test level setup."""
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
@@ -69,7 +70,6 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
 
     def test_estimator(self):
         """Test estimator job."""
-        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)]).apply_layout(
             self._psi1.layout
         )

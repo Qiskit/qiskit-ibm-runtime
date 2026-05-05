@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -28,6 +28,7 @@ class LearningProtocol(str, Enum):
 
 LearningProtocolLiteral = LearningProtocol | Literal["pauli_lindblad", "trex"]
 """The supported learning protocols.
+
  * ``pauli_lindblad``: Pauli Lindblad learning from arXiv:2201.09866..
  * ``trex``: Readout learning protocol.
 """

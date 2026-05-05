@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Circuit-runner result class"""
+"""Circuit-runner result class."""
 
 from __future__ import annotations
 
@@ -67,9 +67,7 @@ class RunnerResult(Result, ResultDecoder):
                 out.shots = shots
                 dict_list.append(out)
             else:
-                raise QiskitError(
-                    'No quasi-probability distribution for experiment "{}"'.format(repr(key))
-                )
+                raise QiskitError(f'No quasi-probability distribution for experiment "{repr(key)}"')
 
         # Return first item of dict_list if size is 1
         if len(dict_list) == 1:

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024.
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -24,7 +24,6 @@ from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
-# pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
 from .exceptions import (
     RuntimeJobFailureError,
@@ -37,6 +36,7 @@ from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob
+from .quantum_program.quantum_program_result import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,22 @@ API_TO_JOB_STATUS: dict[str, JobStatus] = {
 
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
-    """Representation of a runtime V2 primitive execution."""
+    """Representation of a runtime V2 primitive execution.
+
+    Args:
+        backend: The backend instance used to run this job.
+        api_client: Object for connecting to the server.
+        job_id: Job ID.
+        program_id: ID of the program this job is for.
+        creation_date: Job creation date, in UTC.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        image: Runtime image used for this job: image_name:tag.
+        service: Runtime service.
+        session_id: Job ID of the first job in a runtime session.
+        tags: Tags assigned to the job.
+        version: Primitive version.
+        private: Marks job as private.
+    """
 
     JOB_FINAL_STATES: tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
     ERROR = "ERROR"
@@ -71,22 +86,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         version: int | None = None,
         private: bool | None = False,
     ) -> None:
-        """RuntimeJob constructor.
-
-        Args:
-            backend: The backend instance used to run this job.
-            api_client: Object for connecting to the server.
-            job_id: Job ID.
-            program_id: ID of the program this job is for.
-            creation_date: Job creation date, in UTC.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            image: Runtime image used for this job: image_name:tag.
-            service: Runtime service.
-            session_id: Job ID of the first job in a runtime session.
-            tags: Tags assigned to the job.
-            version: Primitive version.
-            private: Marks job as private.
-        """
         BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
             self,
@@ -105,7 +104,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         )
         self._status: JobStatus = "INITIALIZING"
 
-    def result(  # pylint: disable=arguments-differ
+    def result(
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
@@ -117,7 +116,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
 
         Returns:
-            Runtime job result.
+            Runtime job result (post-processed if applicable).
 
         Raises:
             RuntimeJobFailureError: If the job failed.
@@ -133,12 +132,62 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
         if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
-                "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
+                f"Unable to retrieve result for job {self.job_id()}. Job was cancelled."
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
+        result = _decoder.decode(result_raw) if result_raw else None
 
-        return _decoder.decode(result_raw) if result_raw else None
+        # Apply post-processing only if result is QuantumProgramResult
+        if result is not None:
+            result = self._apply_post_processing(result)
+
+        return result
+
+    @staticmethod
+    def _apply_post_processing(result: Any) -> Any:
+        """Apply post-processing to the decoded result.
+
+        Post-processing is only applied if the result is a QuantumProgramResult (from Executor
+        jobs) and ``result._semantic_role`` has a supported value. Otherwise, the result is returned
+        unchanged.
+
+        Args:
+            result: The decoded result.
+
+        Returns:
+            Post-processed result or original result if no post-processing applies.
+        """
+        if not isinstance(result, QuantumProgramResult):
+            return result
+
+        if not (semantic_role := result._semantic_role):
+            return result
+
+        if semantic_role == "sampler_v2":
+            # TODO: Circular import issue. Consider changing file structure.
+            from .executor.routines.sampler_v2.post_processors import (  # pylint: disable=import-outside-toplevel
+                SAMPLER_POST_PROCESSORS,
+            )
+
+            if not isinstance(result.passthrough_data, dict):
+                raise ValueError("Expected passthrough data to be of dict-like format.")
+
+            try:
+                version = result.passthrough_data.get("post_processor", {})["version"]
+            except KeyError:
+                raise ValueError("Could not determine a post-processor version.")
+
+            try:
+                post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+            except KeyError:
+                raise ValueError(f"No post-processor found for version {version}.")
+
+            return post_processor_fn(result)
+
+        raise ValueError(
+            f"No post-processor found for result with 'semantic_role' {semantic_role}."
+        )
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -222,7 +271,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 return ""
             raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
 
-    def wait_for_final_state(  # pylint: disable=arguments-differ
+    def wait_for_final_state(
         self,
         timeout: float | None = None,
     ) -> None:

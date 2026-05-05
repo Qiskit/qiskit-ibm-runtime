@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020, 2023.
+# (C) Copyright IBM 2020-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=missing-class-docstring,missing-function-docstring
-# pylint: disable=missing-module-docstring
+"""Tests for fake backends."""
 
 import operator
 
@@ -43,6 +42,7 @@ class TestFakeBackends(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         super().setUpClass()
         cls.circuit = QuantumCircuit(2)
         cls.circuit.h(0)
@@ -84,16 +84,16 @@ class TestFakeBackends(IBMTestCase):
 
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
+    """Test case for refreshing fake backends."""
 
     @classmethod
     def setUpClass(cls):
-        # pylint: disable=arguments-differ
-        # pylint: disable=no-value-for-parameter
+        """Initial class level setup."""
         super().setUpClass()
 
     @production_only
     def test_refresh_method(self):
-        """Test refresh method"""
+        """Test refresh method."""
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
         # change some configuration

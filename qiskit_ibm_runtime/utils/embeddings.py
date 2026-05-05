@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024
+# (C) Copyright IBM 2024-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,11 +9,8 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# pylint: disable=too-many-return-statements
 
-"""
-Utility class to represent an embedding of a set of qubits in a two-dimensional plane.
-"""
+"""Utility class to represent an embedding of a set of qubits in a two-dimensional plane."""
 
 from __future__ import annotations
 
@@ -25,8 +22,7 @@ from qiskit.transpiler import CouplingMap
 
 
 class Embedding:
-    r"""
-    A class to represent an embedding or arrangement of a set of qubits in a two-dimensional plane.
+    """Represents an embedding or arrangement of a set of qubits in a two-dimensional plane.
 
     Args:
         coordinates: A list of coordinates in the form ``(row, column)`` that specify the qubits'
@@ -50,7 +46,7 @@ class Embedding:
 
     @classmethod
     def from_backend(cls, backend: BackendV2) -> Embedding:
-        r"""Generates an :class:`~.Embedding` object from a backend.
+        """Generates an :class:`~.Embedding` object from a backend.
 
         Args:
             backend: A backend to generate the :class:`~.Embedding` object from.
@@ -73,16 +69,12 @@ class Embedding:
 
     @property
     def coordinates(self) -> list[tuple[int, int]]:
-        r"""
-        The coordinates in this embedding.
-        """
+        """The coordinates in this embedding."""
         return self._coordinates
 
     @property
     def coupling_map(self) -> CouplingMap:
-        r"""
-        The coupling map in this embedding.
-        """
+        """The coupling map in this embedding."""
         return self._coupling_map
 
 
@@ -131,8 +123,7 @@ def _square_lattice_coords(num_rows: int, num_cols: int) -> list[tuple[int, int]
 
 
 def _get_qubits_coordinates(num_qubits: int) -> list[tuple[int, int]]:
-    r"""
-    Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
+    """Return a list of coordinates for drawing a set of qubits on a two-dimensional plane.
 
     The coordinates are in the form ``(row, column)``.
 

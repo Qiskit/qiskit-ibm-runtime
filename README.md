@@ -3,7 +3,7 @@
 [![CI](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml/badge.svg)](https://github.com/Qiskit/qiskit-ibm-runtime/actions/workflows/ci.yml)
 [![](https://img.shields.io/github/release/Qiskit/qiskit-ibm-runtime.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ibm-runtime/releases)
 [![](https://img.shields.io/pypi/dm/qiskit-ibm-runtime.svg?style=popout-square)](https://pypi.org/project/qiskit-ibm-runtime/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Coverage Status](https://coveralls.io/repos/github/Qiskit/qiskit-ibm-runtime/badge.svg?branch=main)](https://coveralls.io/github/Qiskit/qiskit-ibm-runtime?branch=main)
 
 
@@ -18,8 +18,15 @@ This module provides the interface to access the Qiskit Runtime service on IBM Q
 
 You can install this package using pip:
 
-```bash
+```sh
 pip install qiskit-ibm-runtime
+```
+
+Optional dependencies that provide additional features can be install by specifying the package
+extras `performance` and `visualization` when installing:
+
+```sh
+pip install qiskit-ibm-runtime[performance,visualization]
 ```
 
 ## Account setup
@@ -306,7 +313,7 @@ If you do not specify an instance, then the code will select one in the followin
 2. If your account has access to multiple instances, but only one can access the requested backend, the instance with access is selected.
 3. In all other cases, the code selects the first instance that has access to the backend.
 
-Priority of instance order can also be set with the ``region`` and ``plans_preference`` parameters. The official [release notes](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/release-notes#0400-2025-05-28) have examples on how these values can be used. 
+Priority of instance order can also be set with the ``region`` and ``plans_preference`` parameters. The official [release notes](https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/release-notes#0400-2025-05-28) have examples on how these values can be used.
 
 ## Access your IBM Quantum backends
 

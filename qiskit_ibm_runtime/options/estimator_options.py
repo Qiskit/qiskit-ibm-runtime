@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Estimator options."""
-
 
 from pydantic import Field
 
@@ -36,78 +35,88 @@ class EstimatorOptions(OptionsV2):
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     default_precision: UnsetType | float = Unset
-    r"""The default precision to use for any PUB or ``run()``
-        call that does not specify one.
-        Each Estimator PUB can specify its own precision. If the ``run()`` method
-        is given a precision, then that value is used for all PUBs in the ``run()``
-        call that do not specify their own. 
-        
-        Default: 0.015625 (1 / sqrt(4096)).
+    """The default precision to use for any PUB or ``run()`` call that does not specify one.
+
+    Each Estimator PUB can specify its own precision. If the ``run()`` method
+    is given a precision, then that value is used for all PUBs in the ``run()``
+    call that do not specify their own.
+
+    Default: 0.015625 (1 / sqrt(4096)).
     """
+
     default_shots: UnsetType | int | None = Unset
-    r"""The total number of shots to use per circuit per configuration.
+    """The total number of shots to use per circuit per configuration.
 
-        .. note::
-            If set, this value overrides :attr:`~default_precision`.
+    .. note::
+        If set, this value overrides :attr:`~default_precision`.
 
-        A configuration is a combination of a specific parameter value binding set and a
-        physical measurement basis. A physical measurement basis groups together some
-        collection of qubit-wise commuting observables for some specific circuit/parameter
-        value set to create a single measurement with basis rotations that is inserted into
-        hardware executions.
+    A configuration is a combination of a specific parameter value binding set and a
+    physical measurement basis. A physical measurement basis groups together some
+    collection of qubit-wise commuting observables for some specific circuit/parameter
+    value set to create a single measurement with basis rotations that is inserted into
+    hardware executions.
 
-        If twirling is enabled, the value of this option will be divided over circuit
-        randomizations, with a smaller number of shots per randomization. See the
-        :attr:`~twirling` options.
+    If twirling is enabled, the value of this option will be divided over circuit
+    randomizations, with a smaller number of shots per randomization. See the
+    :attr:`~twirling` options.
 
-        Default: ``None``.
+    Default: ``None``.
     """
     resilience_level: UnsetType | int = Unset
-    r"""How much resilience to build against errors.
-        Higher levels generate more accurate results,
-        at the expense of longer processing times.
 
-        * 0: No mitigation.
-        * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
-        * 2: Medium mitigation costs. Typically reduces bias in estimators but
-          is not guaranteed to be zero bias.
+    """How much resilience to build against errors.
 
-        Refer to the
-        `Configure error mitigation for Qiskit Runtime
-        <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
-        for more information about the error mitigation methods used at each level.
+    Higher levels generate more accurate results,
+    at the expense of longer processing times.
 
-        Default: 1.
+    * 0: No mitigation.
+    * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
+    * 2: Medium mitigation costs. Typically reduces bias in estimators but
+        is not guaranteed to be zero bias.
+
+    Refer to the
+    `Configure error mitigation for Qiskit Runtime
+    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
+    for more information about the error mitigation methods used at each level.
+
+    Default: 1.
     """
+
     seed_estimator: UnsetType | int = Unset
-    r"""Seed used to control sampling. 
-    
-        Default: ``None``.
+    """Seed used to control sampling.
+
+    Default: ``None``.
     """
+
     dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(
         default_factory=DynamicalDecouplingOptions
     )
-    r"""Suboptions for dynamical decoupling. See
-        :class:`DynamicalDecouplingOptions` for all available options.
+    """Suboptions for dynamical decoupling.
+
+    See :class:`DynamicalDecouplingOptions` for all available options.
     """
     resilience: ResilienceOptionsV2 | Dict = Field(default_factory=ResilienceOptionsV2)
-    r"""Advanced resilience options to fine-tune the resilience strategy.
-        See :class:`ResilienceOptionsV2` for all available options.
+    """Advanced resilience options to fine-tune the resilience strategy.
+
+    See :class:`ResilienceOptionsV2` for all available options.
     """
     execution: ExecutionOptionsV2 | Dict = Field(default_factory=ExecutionOptionsV2)
-    r"""Execution time options. See :class:`ExecutionOptionsV2` for all available options.
-    """
+    """Execution time options. See :class:`ExecutionOptionsV2` for all available options."""
     twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
-    r"""
-    Pauli twirling options. See :class:`TwirlingOptions` for all available options.
+    """Pauli twirling options.
+
+    See :class:`TwirlingOptions` for all available options.
     """
     experimental: UnsetType | dict = Unset
-    r"""Experimental options. These options are subject to change without notification, and
-        stability is not guaranteed.
+    """Experimental options.
+
+    These options are subject to change without notification, and stability is not guaranteed.
     """
 
     _gt0 = make_constraint_validator("default_precision", gt=0)  # type: ignore[arg-type]
     _ge0 = make_constraint_validator("default_shots", ge=0)  # type: ignore[arg-type]
     _res_lvl = make_constraint_validator(
-        "resilience_level", ge=0, le=MAX_RESILIENCE_LEVEL  # type: ignore[arg-type]
+        "resilience_level",
+        ge=0,  # type: ignore[arg-type]
+        le=MAX_RESILIENCE_LEVEL,  # type: ignore[arg-type]
     )

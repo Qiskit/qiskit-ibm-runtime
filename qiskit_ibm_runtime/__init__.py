@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022, 2024.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -207,8 +207,8 @@ from .ibm_backend import IBMBackend
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
-from .session import Session  # pylint: disable=cyclic-import
-from .batch import Batch  # pylint: disable=cyclic-import
+from .session import Session
+from .batch import Batch
 
 from .quantum_program import QuantumProgram
 
@@ -216,25 +216,27 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import (  # pylint: disable=reimported
+from .estimator import (
     EstimatorV2,
     EstimatorV2 as Estimator,
 )
 from .executor import Executor
-from .sampler import SamplerV2, SamplerV2 as Sampler  # pylint: disable=reimported
-from .noise_learner import (  # pylint: disable=reimported
+from .sampler import SamplerV2, SamplerV2 as Sampler
+from .noise_learner import (
     NoiseLearner,
     NoiseLearner as NoiseLearnerV2,
 )
 from .noise_learner_v3 import NoiseLearnerV3
-from .options import (  # pylint: disable=reimported
+from .options import (
     EstimatorOptions,
-    ExecutorOptions,
     NoiseLearnerOptions,
-    NoiseLearnerV3Options,
     SamplerOptions,
     OptionsV2,
     OptionsV2 as Options,
+)
+from .options_models import (
+    ExecutorOptions,
+    NoiseLearnerV3Options,
 )
 
 # Setup the logger for the IBM Quantum Provider package.
@@ -244,7 +246,9 @@ setup_logger(logger)
 # Constants used by the IBM Quantum logger.
 QISKIT_IBM_RUNTIME_LOGGER_NAME = "qiskit_ibm_runtime"
 """The name of the IBM Quantum logger."""
+
 QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
+
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""

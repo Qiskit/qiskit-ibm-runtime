@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -24,6 +24,7 @@ class TestBatch(IBMTestCase):
     """Class for testing the Batch class."""
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 

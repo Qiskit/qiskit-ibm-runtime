@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -22,15 +22,14 @@ class ApiError(IBMError):
 
 
 class RequestsApiError(ApiError):
-    """Exception re-raising a RequestException."""
+    """Exception re-raising a RequestException.
+
+    Args:
+        message: Exception message.
+        status_code: Response status code. -1 for unknown status code.
+    """
 
     def __init__(self, message: str, status_code: int = -1):
-        """RequestsApiError constructor.
-
-        Args:
-            message: Exception message.
-            status_code: Response status code. -1 for unknown status code.
-        """
         super().__init__(message)
         self.status_code = status_code
 

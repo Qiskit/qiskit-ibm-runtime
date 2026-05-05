@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -52,11 +52,13 @@ class TestPrimitivesV2(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
+        """Initial class level setup."""
         cls.circ = bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
     def tearDown(self) -> None:
+        """Test level teardown."""
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
@@ -135,7 +137,7 @@ class TestPrimitivesV2(IBMTestCase):
         class MockQRTService:
             """Mock class used to create a new QiskitRuntimeService."""
 
-            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+            def __new__(cls, *args, **kwargs):
                 return mock_service_inst
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
@@ -244,7 +246,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @data(SamplerV2, EstimatorV2)
     def test_init_with_mode_as_batch(self, primitive):
-        """Test initializing a primitive with mode as a Batch"""
+        """Test initializing a primitive with mode as a Batch."""
         backend = get_mocked_backend()
         batch = get_mocked_batch(backend)
         batch.reset_mock()
@@ -258,7 +260,6 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single cirucit."""
-
         circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
@@ -685,8 +686,11 @@ class TestGetModeServiceBackend(IBMTestCase):
             self.assertEqual(result[2], backend)
 
     def test_mode_is_backend_inside_session_context_manager(self):
-        """Test ``get_mode_service_backend`` inside a session context manager,
-        when the input mode is an ``IBMBackend``."""
+        """Test ``get_mode_service_backend`` inside a session context manager (IBMBackend mode).
+
+        Test ``get_mode_service_backend`` inside a session context manager,
+        when the input mode is an ``IBMBackend``.
+        """
         backend = get_mocked_backend()
         service = backend.service
         with Session(backend=backend) as session:

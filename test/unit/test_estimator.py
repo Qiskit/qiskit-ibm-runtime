@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -87,7 +87,6 @@ class TestEstimatorV2(IBMTestCase):
 
     def test_invalid_estimator_precision_option(self):
         """Test exception when precision is invalid."""
-
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
@@ -111,7 +110,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         options_vars = [
             (
-                EstimatorOptions(default_shots=1024),  # pylint: disable=unexpected-keyword-arg
+                EstimatorOptions(default_shots=1024),
                 {"default_shots": 1024},
             ),
             (
@@ -241,7 +240,7 @@ class TestEstimatorV2(IBMTestCase):
                     estimator.run([(circuit, obs)])
 
     def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
-        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        """Test running on dynamic circuits with dynamical decoupling enabled is not allowed."""
         dynamic_circuit = QuantumCircuit(3, 1)
         dynamic_circuit.h(0)
         dynamic_circuit.measure(0, 0)
@@ -269,8 +268,7 @@ class TestEstimatorV2(IBMTestCase):
             inst.run(pubs=[(circ, obs)])
 
     def test_gate_not_in_target(self):
-        """Test exception when circuits contain gates that are not basis gates"""
-        # pylint: disable=invalid-name,not-context-manager
+        """Test exception when circuits contain gates that are not basis gates."""
         backend = FakeSherbrooke()
         estimator = EstimatorV2(mode=backend)
         observable = SparsePauliOp("Z")

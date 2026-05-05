@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2021-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -56,20 +56,26 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-
     if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
         return ""
 
     qiskit_pkgs = [
         "qiskit",
-        "qiskit_terra",
         "qiskit_aer",
         "qiskit_experiments",
-        "qiskit_nature",
-        "qiskit_machine_learning",
         "qiskit_optimization",
-        "qiskit_finance",
-        "circuit_knitting_toolbox",
+        "qiskit_addon_opt_mapper",
+        "qiskit_fermions",
+        "qiskit_addon_aqc_tensor",
+        "qiskit_addon_mpf",
+        "qiskit_addon_obp",
+        "qiskit_addon_cutting",
+        "qiskit_addon_pna",
+        "qiskit_addon_slc",
+        "qiskit_addon_sqd",
+        "qiskit_addon_utils",
+        "mthree",
+        "pauli_prop",
     ]
 
     pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
@@ -81,7 +87,7 @@ def _get_client_header() -> str:
                 version_info += "*"
 
             pkg_versions[pkg_name] = version_info
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             pass
     return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
@@ -154,6 +160,17 @@ class RetrySession(Session):
 
     This is a child class of ``requests.Session``. It has its own retry
     policy and handles IBM Quantum specific parameters.
+
+    Args:
+        base_url: Base URL for the session's requests.
+        retries_total: Number of total retries for the requests.
+        retries_connect: Number of connect retries for the requests.
+        backoff_factor: Backoff factor between retry attempts.
+        verify: Whether to enable SSL verification.
+        proxies: Proxy URLs mapped by protocol.
+        auth: Authentication handler.
+        timeout: Timeout for the requests, in the form of (connection_timeout,
+            total_timeout).
     """
 
     def __init__(
@@ -167,19 +184,6 @@ class RetrySession(Session):
         auth: AuthBase | None = None,
         timeout: tuple[float, float | None] = (5.0, None),
     ) -> None:
-        """RetrySession constructor.
-
-        Args:
-            base_url: Base URL for the session's requests.
-            retries_total: Number of total retries for the requests.
-            retries_connect: Number of connect retries for the requests.
-            backoff_factor: Backoff factor between retry attempts.
-            verify: Whether to enable SSL verification.
-            proxies: Proxy URLs mapped by protocol.
-            auth: Authentication handler.
-            timeout: Timeout for the requests, in the form of (connection_timeout,
-                total_timeout).
-        """
         super().__init__()
 
         self.base_url = base_url
@@ -192,7 +196,7 @@ class RetrySession(Session):
         """RetrySession destructor. Closes the session."""
         try:
             self.close()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             # ignore errors that may happen during cleanup
             pass
 
@@ -254,7 +258,6 @@ class RetrySession(Session):
             RequestsApiError: If the request failed.
             IBMNotAuthorizedError: If the auth token is invalid.
         """
-        # pylint: disable=arguments-differ
         if bare:
             final_url = url
             # Explicitly pass `None` as the `access_token` param, disabling it.
@@ -341,7 +344,7 @@ class RetrySession(Session):
                         "Response uber-trace-id: %s",
                         ex.response.headers["uber-trace-id"],
                     )
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
             if status_code == 401:
@@ -386,14 +389,14 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
+                        request_data_to_log = f"Request Data: {filter_data(request_data)}."
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,
                         method.upper(),
                         request_data_to_log,
                     )
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:
                 # Catch general exception so as not to disturb the program if filtering fails.
                 logger.info("Filtering failed when logging request information: %s", str(ex))
 

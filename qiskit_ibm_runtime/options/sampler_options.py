@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Sampler options."""
-
 
 from pydantic import Field
 
@@ -29,26 +28,29 @@ class SamplerOptions(OptionsV2):
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     default_shots: UnsetType | int = Unset
-    r"""The default number of shots to use if none are specified in the PUBs
-        or in the run method. 
-        
+    """The default number of shots to use if none are specified in the PUBs
+        or in the run method.
+
         Default: 4096.
     """
     dynamical_decoupling: DynamicalDecouplingOptions | Dict = Field(
         default_factory=DynamicalDecouplingOptions
     )
-    r"""Suboptions for dynamical decoupling. See
-        :class:`DynamicalDecouplingOptions` for all available options.
+    """Suboptions for dynamical decoupling.
+    See :class:`DynamicalDecouplingOptions` for all available options.
     """
-    execution: SamplerExecutionOptionsV2 | Dict = Field(default_factory=SamplerExecutionOptionsV2)
-    r"""
-    Execution time options. See :class:`SamplerExecutionOptionsV2`
-        for all available options.
-    """
-    twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
-    r"""Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
+    execution: SamplerExecutionOptionsV2 | Dict = Field(default_factory=SamplerExecutionOptionsV2)
+    """Execution time options.
+
+    See :class:`SamplerExecutionOptionsV2` for all available options.
     """
+
+    twirling: TwirlingOptions | Dict = Field(default_factory=TwirlingOptions)
+    """Pauli twirling options.
+
+    See :class:`TwirlingOptions` for all available options.
+    """
+
     experimental: UnsetType | dict = Unset
-    r"""Experimental options.
-    """
+    """Experimental options."""

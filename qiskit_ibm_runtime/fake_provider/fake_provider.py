@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2023.
+# (C) Copyright IBM 2019-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,12 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=wildcard-import,unused-argument
 # ruff: noqa: F405 undefined-local-with-import-star-usage
 
-"""
-Fake provider class that provides access to fake backends.
-"""
+"""Fake provider class that provides access to fake backends."""
 
 from typing import Any
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -32,9 +29,7 @@ class FakeProviderForBackendV2:
     """
 
     def backend(self, name: str | None = None, **kwargs: Any) -> FakeBackendV2:
-        """
-        Filter backends in provider by name.
-        """
+        """Filter backends in provider by name."""
         backend = self._backends[0]
         if name:
             filtered_backends = [backend for backend in self._backends if backend.name == name]

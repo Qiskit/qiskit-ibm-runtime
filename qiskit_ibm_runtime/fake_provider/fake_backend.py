@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2023.
+# (C) Copyright IBM 2019-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,10 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=no-name-in-module
-"""
-Base class for dummy backends.
-"""
+"""Base class for dummy backends."""
+
 from typing import Any
 import logging
 import warnings
@@ -53,20 +51,17 @@ logger = logging.getLogger(__name__)
 
 
 class FakeBackendV2(BackendV2):
-    """A fake backend class for testing and noisy simulation using real backend
-    snapshots.
-    """
+    """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
     # directory and file names for real backend snapshots.
-    dirname = None
-    conf_filename = None
-    props_filename = None
-    backend_name = None
+    dirname: str | None = None
+    conf_filename: str | None = None
+    props_filename: str | None = None
+    backend_name: str | None = None
 
     def __init__(self) -> None:
-        """FakeBackendV2 initializer."""
         self._conf_dict = self._get_conf_dict_from_json()
-        self._props_dict = None
+        self._props_dict: dict | None = None
         super().__init__(
             provider=None,
             name=self._conf_dict.get("backend_name"),
@@ -75,31 +70,27 @@ class FakeBackendV2(BackendV2):
             backend_version=self._conf_dict.get("backend_version"),
         )
         self._target = None
-        self.sim = None
+        self.sim: BackendV2 | None = None
 
     def __getattr__(self, name: str) -> Any:
-        """Gets attribute from self or configuration
+        """Gets attribute from self or configuration.
 
         This magic method executes when user accesses an attribute that
         does not yet exist on the class.
         """
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_target", "_conf_dict", "_props_dict"]:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         # Check if the attribute now is available in backend configuration
         try:
             return self.configuration().__getattribute__(name)
         except AttributeError:
-            raise AttributeError(
-                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
-            )
+            raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
     def _setup_sim(self) -> None:
         if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
+            from qiskit_aer import AerSimulator
 
             self.sim = AerSimulator()
             if self.target and self._props_dict:
@@ -131,9 +122,7 @@ class FakeBackendV2(BackendV2):
         return "qasm3" in supported_features
 
     def _load_json(self, filename: str) -> dict:
-        with open(  # pylint: disable=unspecified-encoding
-            os.path.join(self.dirname, filename)
-        ) as f_json:
+        with open(os.path.join(self.dirname, filename)) as f_json:
             the_json = json.load(f_json)
         return the_json
 
@@ -144,7 +133,6 @@ class FakeBackendV2(BackendV2):
             The status of the backend.
 
         """
-
         api_status = {
             "backend_name": self.name,
             "backend_version": "",
@@ -156,7 +144,7 @@ class FakeBackendV2(BackendV2):
         return BackendStatus.from_dict(api_status)
 
     def properties(self, refresh: bool = False) -> BackendProperties:
-        """Return the backend properties
+        """Return the backend properties.
 
         Args:
             refresh: If ``True``, re-retrieve the backend properties from the local file.
@@ -172,7 +160,7 @@ class FakeBackendV2(BackendV2):
         """Return the backend configuration."""
         return BackendConfiguration.from_dict(self._conf_dict)
 
-    def check_faulty(self, circuit: QuantumCircuit) -> None:  # pylint: disable=redefined-outer-name
+    def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
 
         Args:
@@ -234,16 +222,17 @@ class FakeBackendV2(BackendV2):
 
     @property
     def max_circuits(self) -> None:
-        """This property used to return the `max_experiments` value from the
+        """Return the  maximum number of circuits that can be run in a single job.
+
+        This property used to return the `max_experiments` value from the
         backend configuration but this value is no longer an accurate representation
         of backend circuit limits. New fields will be added to indicate new limits.
         """
-
         return None
 
     @classmethod
     def _default_options(cls) -> Options:
-        """Return the default options
+        """Return the default options.
 
         This method will return a :class:`qiskit.providers.Options`
         subclass object that will be used for the default options. These
@@ -254,7 +243,7 @@ class FakeBackendV2(BackendV2):
             An options object with default values set
         """
         if _optionals.HAS_AER:
-            from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
+            from qiskit_aer import AerSimulator
 
             return AerSimulator._default_options()
         else:
@@ -262,7 +251,7 @@ class FakeBackendV2(BackendV2):
 
     @property
     def dtm(self) -> float:
-        """Return the system time resolution of output signals
+        """Return the system time resolution of output signals.
 
         Returns:
             The output signal timestep in seconds.
@@ -319,15 +308,14 @@ class FakeBackendV2(BackendV2):
         This is a temporary fix until qiskit-aer supports building noise model
         from a BackendV2 object.
         """
-
-        from qiskit.circuit import Delay  # pylint: disable=import-outside-toplevel
-        from qiskit_aer.noise import NoiseModel  # pylint: disable=import-outside-toplevel
-        from qiskit_aer.noise.device.models import (  # pylint: disable=import-outside-toplevel
+        from qiskit.circuit import Delay
+        from qiskit_aer.noise import NoiseModel
+        from qiskit_aer.noise.device.models import (
             _excited_population,
             basic_device_gate_errors,
             basic_device_readout_errors,
         )
-        from qiskit_aer.noise.passes import (  # pylint: disable=import-outside-toplevel
+        from qiskit_aer.noise.passes import (
             RelaxationNoisePass,
         )
 
@@ -337,7 +325,7 @@ class FakeBackendV2(BackendV2):
         properties = BackendProperties.from_dict(self._props_dict)
         basis_gates = self.configuration().basis_gates
         num_qubits = self.num_qubits
-        dt = self.dt  # pylint: disable=invalid-name
+        dt = self.dt
 
         noise_model = NoiseModel(basis_gates=basis_gates)
 
@@ -389,7 +377,7 @@ class FakeBackendV2(BackendV2):
         return noise_model
 
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
-        """Update the data files from its real counterpart
+        """Update the data files from its real counterpart.
 
         This method pulls the latest backend data files from their real counterpart and
         overwrites the corresponding files in the local installation:
@@ -412,8 +400,9 @@ class FakeBackendV2(BackendV2):
         """
         if not isinstance(service, QiskitRuntimeService):
             raise ValueError(
-                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
-                " required to retrieve the real backend's current properties and settings."
+                "The provided service to update the fake backend is invalid. A "
+                " QiskitRuntimeService is required to retrieve the real backend's current "
+                "properties and settings."
             )
 
         prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]
@@ -458,5 +447,5 @@ class FakeBackendV2(BackendV2):
                 self.backend_name,
             )
 
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))

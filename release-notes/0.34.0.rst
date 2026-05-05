@@ -6,7 +6,7 @@ New Features
 
 - Added the ``draw_zne_evs`` and ``draw_zne_extrapolators`` functions to visualize data from
   experiments using ZNE.
-  Added ``EstimatorPubResult`` with methods ``draw_zne_evs`` and 
+  Added ``EstimatorPubResult`` with methods ``draw_zne_evs`` and
   ``draw_zne_extrapolators``, invoking the corresponding visualization functions. (`1820 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1820>`__)
 - Added support for noise model and level 1 data to local sampler
 
@@ -22,14 +22,14 @@ New Features
   testing mode, where previously only level 2 (classified) data was
   supported. (`1990 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1990>`__)
 - A new function ``validate_rzz_pubs`` was added. The function verifies that ``rzz`` parameters are in the range between ``0`` and ``pi/2``, for numeric parameters (e.g., ``rzz(np.pi/4, 0)``), and for unbounded parameters (``rzz(theta, 0)``) with values to substitute provided in the pub. Parameter expressions (e.g., ``rzz(theta + phi, 0)``) are still not validated. (`2021 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2021>`__)
-- Added a new transpiler translation plugin :class:`~.IBMFractionalTranslationPlugin` 
+- Added a new transpiler translation plugin :class:`~.IBMFractionalTranslationPlugin`
   and a pass :class:`~.FoldRzzAngle`.
   This plugin is automatically applied for backends
   retrieved with the ``use_fractional_gates`` opt-in,
   and the folding pass is added when the backend target includes the ``RZZ`` gate.
 
   The new pass modifies the input quantum circuit, so that all ``RZZ`` gates in the
-  circuit have an angle parameter within [0, pi/2] which is supported 
+  circuit have an angle parameter within [0, pi/2] which is supported
   by IBM Quantum processors. (`2043 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2043>`__)
 
 Upgrade Notes
@@ -37,14 +37,14 @@ Upgrade Notes
 
 - The deprecations from the ``0.26.0`` release have been removed.
 
-  - Passing a backend as a string into ``Session``, ``Batch``, 
+  - Passing a backend as a string into ``Session``, ``Batch``,
     ``Sampler``, and ``Estimator`` is no longer valid. Use the actual backend
     object instead.
   - Previously, passing a backend as the mode into ``SamplerV2`` or ``EstimatorV2``
     ran jobs in job mode, even if a session context manager was open. These jobs will now
     run inside of the open session. Additionally, if a backend that is different
     from the session backend is passed in as the mode, an error will be raised.
-  - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``. (`2027 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2027>`__) 
+  - ``Service`` is no longer a valid parameter in ``Session`` and ``Batch``. (`2027 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2027>`__)
 
 
 Bug Fixes
@@ -52,7 +52,7 @@ Bug Fixes
 
 - Fixed an issue where ``FakeBackendV2.refresh()`` wouldn't always
   refresh the backend properties, defaults, and configuration. (`2020 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2020>`__)
-- ``CouplingMap`` was added to :class:`~.RuntimeEncoder` so it can now be passed to 
+- ``CouplingMap`` was added to :class:`~.RuntimeEncoder` so it can now be passed to
   the :class:`~.NoiseLearner` program. (`2026 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2026>`__)
 - The behavior of the ``use_fractional_gates`` argument of
   :meth:`.QiskitRuntimeService.backend` has been changed. When the option is set
@@ -67,14 +67,14 @@ Bug Fixes
   instructions, it will need to be updated (note that setting
   ``use_fractional_gates`` to ``None`` will load all instructions without
   filtering). (`2031 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2031>`__)
-- Invalid or non-existing backend configurations on the server will no longer 
+- Invalid or non-existing backend configurations on the server will no longer
   prevent all backends from being retrieved with ``service.backends()``. (`2048 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2048>`__)
 - Pin ``pydantic`` dependency version to ``<2.10`` to avoid a regression breaking
   the build process. (`2049 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2049>`__)
 
 Other Notes
 -----------
-  
+
 - The ``requirements.txt`` and ``setup.py`` files have been removed in favor of a new dependency management
   approach using ``pyproject``. This transition simplifies the development workflow. Dependencies
   are now managed directly through the `pyproject.toml` file.

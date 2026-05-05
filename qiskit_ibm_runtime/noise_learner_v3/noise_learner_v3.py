@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,25 +15,25 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
-from typing import TYPE_CHECKING
-
-from qiskit.circuit import CircuitInstruction
-from qiskit.providers import BackendV2
-
-from qiskit_ibm_runtime.options.utils import UnsetType
+from dataclasses import asdict
+from typing import TYPE_CHECKING, Any
 
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..options.noise_learner_v3_options import NoiseLearnerV3Options
-from ..runtime_job_v2 import RuntimeJobV2
+from ..options_models.noise_learner_v3_options import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
-from .converters.version_0_1 import noise_learner_v3_inputs_to_0_1
 from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
+from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from .validation import validate_instruction, validate_options
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import CircuitInstruction
+    from qiskit.providers import BackendV2
+
     from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
 logger = logging.getLogger(__name__)
@@ -42,11 +42,11 @@ logger = logging.getLogger(__name__)
 class NoiseLearnerV3:
     """Class for executing noise learning experiments.
 
-    The noise learner allows characterizing the noise processes affecting target instructions, based on
-    the Pauli-Lindblad noise model described in [1]. The instructions provided to the :meth:`~run`
-    method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing ISA operations.
-    The result of a noise learner job contains a list of :class:`.NoiseLearnerV3Result` objects, one for
-    each given instruction.
+    The noise learner allows characterizing the noise processes affecting target instructions, based
+    on the Pauli-Lindblad noise model described in [1]. The instructions provided to the
+    :meth:`~run` method must contain a twirled-annotated :class:`~.qiskit.circuit.BoxOp` containing
+    ISA operations. The result of a noise learner job contains a list of
+    :class:`.NoiseLearnerV3Result` objects, one for each given instruction.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
@@ -70,49 +70,56 @@ class NoiseLearnerV3:
 
     _PROGRAM_ID = "noise-learner"
     _DECODER = NoiseLearnerV3ResultDecoder
+    _SCHEMA_VERSION = "v0.2"
+
+    options: NoiseLearnerV3Options
+    """The options in this noise learner."""
 
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
-        options: NoiseLearnerV3Options | None = None,
+        options: NoiseLearnerV3Options | dict | None = None,
     ):
-        self._options = options or NoiseLearnerV3Options()
-        if (
-            isinstance(self._options.experimental, UnsetType)
-            or self._options.experimental.get("image") is None
-        ):
-            self._options.experimental = {}
+        # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
+        self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
 
-        self._session, self._service, self._backend = get_mode_service_backend(
-            mode
-        )  # type: ignore[assignment]
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
 
-        if isinstance(self._service, QiskitRuntimeLocalService):  # type: ignore[unreachable]
+        if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearnerV3`` is currently not supported in local mode.")
 
-    @property
-    def options(self) -> NoiseLearnerV3Options:
-        """The options in this noise learner."""
-        return self._options
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to a ``NoiseLearnerV3Options``
+        instance. This is an alternative to using ``@setter``, as the setter causes issues in
+        ``ipython`` autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = NoiseLearnerV3Options(**value)
+            elif not isinstance(value, NoiseLearnerV3Options):
+                raise TypeError(f"Expected NoiseLearnerV3Options or dict, got {type(value)}")
+        super().__setattr__(name, value)
 
     def run(self, instructions: Iterable[CircuitInstruction]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
-            Args:
-                instructions: The instructions to learn the noise of.
+        Args:
+            instructions: The instructions to learn the noise of.
 
-            Returns:
-                The submitted job.
+        Returns:
+            The submitted job.
 
         Raises:
-            IBMInputValueError: If an instruction does not contain a box.
-            IBMInputValueError: If an instruction contains a box without twirl annotation.
-            IBMInputValueError: If an instruction contains unphysical qubits, i.e., qubits that do not
-                belong to the "physical" register ``QuantumRegister(backend.num_qubits, 'q')`` for the
-                backend in use.
-            IBMInputValueError: If an instruction a box with non-ISA gates.
-            IBMInputValueError: If an instruction cannot be learned by any of the supported learning
-                protocols.
+            IBMInputValueError: If the instructions cannot be used with the noise learner, such as:
+
+                * If an instruction contains a box without twirl annotation.
+                * If an instruction contains unphysical qubits, i.e., qubits that do not belong to
+                  the "physical" register ``QuantumRegister(backend.num_qubits, 'q')``
+                  for the backend in use.
+                * If an instruction contains a box with non-ISA gates.
+                * If an instruction cannot be learned by any of the supported learning protocols.
         """
         if target := getattr(self._backend, "target", None):
             for instruction in instructions:
@@ -121,16 +128,20 @@ class NoiseLearnerV3:
         if configuration := getattr(self._backend, "configuration", None):
             validate_options(self.options, configuration())
 
-        inputs = noise_learner_v3_inputs_to_0_1(instructions, self.options).model_dump()
-        inputs["version"] = 3  # TODO: this is a work-around for the dispatch
-        runtime_options = self.options.to_runtime_options()
+        try:
+            converter = NOISE_LEARNER_V3_PARAMS_CONVERTERS[self._SCHEMA_VERSION]
+        except KeyError:
+            raise ValueError(f"No converters for schema version {self._SCHEMA_VERSION}.")
+
+        params = converter.encoder(instructions, self.options)
+        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
         runtime_options["backend"] = self._backend.name
+        runtime_options["instance"] = self._backend._instance
 
         if self._session:
-            run = self._session._run
+            _run = self._session._run
         else:
-            run = self._service._run
-            runtime_options["instance"] = self._backend._instance
+            _run = self._service._run
 
             if get_cm_session():
                 logger.warning(
@@ -142,7 +153,10 @@ class NoiseLearnerV3:
                     self._PROGRAM_ID,
                 )
 
-        return run(
+        inputs = params.model_dump(mode="json")
+        inputs["version"] = 3
+
+        return _run(
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
