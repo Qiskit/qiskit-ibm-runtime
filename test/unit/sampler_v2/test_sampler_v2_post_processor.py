@@ -16,6 +16,7 @@ import unittest
 from dataclasses import asdict
 
 import numpy as np
+from ddt import data, ddt
 
 from qiskit.primitives import PrimitiveResult
 
@@ -30,6 +31,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
 )
 
 
+@ddt
 class TestSamplerV2StaticMethod(unittest.TestCase):
     """Test SamplerV2.quantum_program_result_to_primitive_result() static method.
 
@@ -268,20 +270,32 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         reconstructed = bit_array.get_bitstrings()
         self.assertEqual(len(reconstructed), num_shots)
 
-    def test_data_integrity_kerneled(self):
-        """Test that kerneled measurements pass through."""
+    @data("kerneled", "avg_kerneled")
+    def test_data_integrity_kerneled(self, meas_type):
+        """Test that kerneled and avg_kerneled measurements pass through.
+
+        Verifies that the suffixes _iq and _avg_ia are removed from register names.
+        """
         # Create specific measurement data to verify integrity
         meas_data = np.array(
             [1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, 0 + 0j, 1 + 0j, 0 + 1j],
             dtype=np.complex128,
         )
 
+        # Use register name with suffix as it would come from the executor
+        suffix = "_avg_iq" if meas_type == "avg_kerneled" else "_iq"
+        register_name_with_suffix = f"meas{suffix}"
+
         qp_result = QuantumProgramResult(
-            data=[{"meas": meas_data}],
+            data=[{register_name_with_suffix: meas_data}],
             metadata=Metadata(),
         )
 
-        result = quantum_program_result_to_primitive_result(qp_result, meas_type="kerneled")
+        result = quantum_program_result_to_primitive_result(qp_result, meas_type=meas_type)
+
+        # Verify suffix was removed and data is accessible without suffix
+        self.assertIn("meas", result[0].data)
+        self.assertNotIn(register_name_with_suffix, result[0].data)
         result_array = result[0].data.meas
 
         # Verify the result array contains the same data
