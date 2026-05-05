@@ -115,7 +115,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
-            poll_interval: Number of seconds to wait between querying the service for the status
+            poll_interval: Number of seconds to wait between successive queries of the job's status.
                 of the job.
 
                 * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
