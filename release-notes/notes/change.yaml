@@ -1,0 +1,9 @@
+upgrade:
+  - |
+    :class:`~qiskit_ibm_runtime.EstimatorV2` now raises ``ValueError`` when
+    resilience options such as ``zne_mitigation`` or ``pec_mitigation`` are
+    set while running in local testing mode (i.e. with a non-cloud backend
+    such as :class:`~qiskit_aer.AerSimulator` or a fake backend). Previously
+    these options were silently dropped with only a generic warning, which
+    could lead users to believe their results were error-mitigated when they
+    were not.

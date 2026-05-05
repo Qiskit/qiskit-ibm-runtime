@@ -113,6 +113,27 @@ class TestLocalModeV2(IBMTestCase):
             warning_messages = "".join([str(warn.message) for warn in warns])
             self.assertIn("dynamical_decoupling", warning_messages)
 
+    @combine(
+        backend=[FakeManilaV2(), AerSimulator()],
+        resilience_option=[
+            "zne_mitigation",
+            "pec_mitigation",
+            "measure_mitigation",
+        ],
+    )
+    def test_estimator_v2_rejects_unsupported_resilience_options(
+        self, backend, resilience_option
+    ):
+        """Resilience options that change the meaning of the result are not
+        supported in local testing mode and must raise rather than be silently
+        dropped. See issue #2777."""
+        options = {"resilience": {resilience_option: True}}
+        inst = EstimatorV2(mode=backend, options=options)
+        with self.assertRaisesRegex(
+            ValueError, "not supported in local testing mode"
+        ):
+            inst.run(**get_primitive_inputs(inst, backend=backend))
+
     @combine(session_cls=[Session, Batch], backend=[FakeManilaV2(), AerSimulator()])
     def test_sampler_v2_session(self, session_cls, backend):
         """Testing running v2 sampler inside session."""

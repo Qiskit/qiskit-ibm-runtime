@@ -218,6 +218,30 @@ class QiskitRuntimeLocalService:
         """
         options_copy = copy.deepcopy(options)
 
+        # Resilience options materially change the *meaning* of estimator results.
+        # Local mode does not implement them, so silently dropping them produces
+        # misleading output. Raise instead of warn for these.
+        if primitive == "estimator":
+            resilience = options_copy.get("resilience", {})
+            unsupported = [
+                name for name in (
+                    "zne_mitigation",
+                    "pec_mitigation",
+                    "measure_mitigation",
+                    "measure_noise_learning",
+                    "layer_noise_learning",
+                    "zne",
+                    "pec",
+                )
+                if resilience.get(name)
+            ]
+            if unsupported:
+                raise ValueError(
+                    f"The following resilience options are not supported in local "
+                    f"testing mode: {unsupported}. To use these mitigations, run on "
+                    f"a real backend via QiskitRuntimeService."
+                )
+
         prim_options = {}
         sim_options = options_copy.get("simulator", {})
         if seed_simulator := sim_options.pop("seed_simulator", None):
