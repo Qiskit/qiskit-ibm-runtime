@@ -41,8 +41,8 @@ You can also use the ``update()`` method to do bulk update. For example::
    estimator = EstimatorV2(mode=backend)
    estimator.options.update(resilience_level=1)
 
-Refer to :class:`SamplerOptions` and :class:`EstimatorOptions` for V2 Sampler and
-V2 Estimator options, respectively.
+Refer to :class:`qiskit_ibm_runtime.options.SamplerOptions` and :class:`EstimatorOptions` for V2
+Sampler and V2 Estimator options, respectively.
 
 .. note::
    If an option is not specified, the server default value is used. The
