@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from ..options_models import ExecutionOptions, ExecutorOptions
+from ..options_models import EnvironmentOptions, ExecutionOptions, ExecutorOptions
 
 if TYPE_CHECKING:
     from ..options_models import SamplerOptions
@@ -38,9 +38,10 @@ def sampler_options_to_executor_options(options: SamplerOptions) -> ExecutorOpti
     """
     executor_options = ExecutorOptions()
 
-    executor_options.environment = options.environment
+    environment_options = asdict(options.environment)  # type: ignore[call-overload]
     execution_options = asdict(options.execution)  # type: ignore[call-overload]
     execution_options.pop("meas_type")
+    executor_options.environment = EnvironmentOptions(**environment_options)
     executor_options.execution = ExecutionOptions(**execution_options)
 
     executor_options.environment.max_execution_time = options.max_execution_time

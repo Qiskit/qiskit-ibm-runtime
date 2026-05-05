@@ -14,37 +14,14 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .environment_options import EnvironmentOptions
-from .executor_options import ExecutionOptions
+from .environment_options import SamplerEnvironmentOptions
+from .execution_options import SamplerExecutionOptions
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
-
-
-@dataclass(config=PRIMITIVES_CONFIG)
-class SamplerExecutionOptions(ExecutionOptions):
-    """Execution options for the sampler primitive.
-
-    Args:
-        init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Inherited from :class:`~.ExecutionOptions`.
-        rep_delay: The repetition delay. Inherited from :class:`~.ExecutionOptions`.
-        meas_type: How to process and return measurement results. This option sets
-            the return type of all classical registers in all sampler pub results.
-
-            * ``"classified"``: Returns a BitArray with classified measurement outcomes.
-            * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
-              trace, in arbitrary units.
-            * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
-              in arbitrary units.
-    """
-
-    meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
@@ -80,5 +57,5 @@ class SamplerOptions:
     """Maximum execution time in seconds, based on system execution time (not wall clock time).
     """
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: SamplerEnvironmentOptions = Field(default_factory=SamplerEnvironmentOptions)
     """Options related to the execution environment."""
