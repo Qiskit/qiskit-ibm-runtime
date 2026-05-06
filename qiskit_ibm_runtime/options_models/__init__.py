@@ -32,7 +32,6 @@ Base primitive options
 
    ExecutorOptions
    NoiseLearnerV3Options
-   SamplerOptions
 
 
 Suboptions
