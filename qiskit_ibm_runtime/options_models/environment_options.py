@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from ..options.utils import match_max_execution_time_and_max_usage
@@ -85,7 +85,7 @@ class EnvironmentOptions:
     ) = None
     """Runtime image used for this job."""
 
-    @model_validator(mode="after")
-    def match_max_execution_time_and_max_usage(self) -> EnvironmentOptions:
+    def __post_init__(self) -> None:
         """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
-        return match_max_execution_time_and_max_usage(self)
+        # TODO: using post_init instead of validator does not validate on re-assign.
+        match_max_execution_time_and_max_usage(self)
