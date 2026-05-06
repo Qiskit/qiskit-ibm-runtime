@@ -22,7 +22,7 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
-from qiskit_ibm_runtime.quantum_program import QuantumProgramResult
+from qiskit_ibm_runtime.quantum_program import QuantumProgramResult, QuantumProgramItemResult
 from ...ibm_test_case import IBMIntegrationTestCase
 
 
@@ -76,7 +76,7 @@ class TestExecutor(IBMIntegrationTestCase):
         self.assertEqual(results.passthrough_data, passthrough_data)
 
         result = results[0]
-        self.assertIsInstance(result, dict)
+        self.assertIsInstance(result, QuantumProgramItemResult)
         self.assertEqual(list(result.keys()), ["meas"])
         self.assertIsInstance(result["meas"], np.ndarray)
         self.assertEqual(result["meas"].shape, shape + (shots, circuit.num_qubits))
@@ -123,7 +123,7 @@ class TestExecutor(IBMIntegrationTestCase):
         self.assertEqual(results.passthrough_data, passthrough_data)
 
         result = results[0]
-        self.assertIsInstance(result, dict)
+        self.assertIsInstance(result, QuantumProgramItemResult)
         self.assertEqual(len(result.keys()), 2)
         self.assertEqual(set(result.keys()), {"meas", "measurement_flips.meas"})
         self.assertIsInstance(result["meas"], np.ndarray)
