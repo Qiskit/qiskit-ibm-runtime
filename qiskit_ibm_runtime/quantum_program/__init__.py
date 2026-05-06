@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025, 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -33,10 +33,12 @@ Classes
     :toctree: ../stubs/
     :nosignatures:
 
+    ItemMetadata
     QuantumProgram
     QuantumProgramItem
+    QuantumProgramItemResult
     QuantumProgramResult
 """
 
 from .quantum_program import QuantumProgram, QuantumProgramItem
-from .quantum_program_result import QuantumProgramResult
+from .quantum_program_result import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata
