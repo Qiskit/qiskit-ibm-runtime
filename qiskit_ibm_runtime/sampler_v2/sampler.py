@@ -29,7 +29,6 @@ from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
-from .converters import sampler_options_to_executor_options
 from .utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
 
 if TYPE_CHECKING:
@@ -198,7 +197,7 @@ def prepare(
     quantum_program._semantic_role = "sampler_v2"
 
     # Map options to executor options
-    executor_options = sampler_options_to_executor_options(options)
+    executor_options = options.to_executor_options()
 
     return quantum_program, executor_options
 

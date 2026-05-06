@@ -14,12 +14,15 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .environment_options import SamplerEnvironmentOptions
-from .execution_options import SamplerExecutionOptions
+from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
+from .execution_options import ExecutionOptions, SamplerExecutionOptions
+from .executor_options import ExecutorOptions
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
@@ -59,3 +62,24 @@ class SamplerOptions:
 
     environment: SamplerEnvironmentOptions = Field(default_factory=SamplerEnvironmentOptions)
     """Options related to the execution environment."""
+
+    def to_executor_options(self) -> ExecutorOptions:
+        """Map sampler options to executor options, ignoring all irrelevant fields.
+
+        Returns:
+            Mapped executor options.
+        """
+        executor_options = ExecutorOptions()
+
+        environment_options = asdict(self.environment)  # type: ignore[call-overload]
+        execution_options = asdict(self.execution)  # type: ignore[call-overload]
+        execution_options.pop("meas_type")
+        executor_options.environment = EnvironmentOptions(**environment_options)
+        executor_options.execution = ExecutionOptions(**execution_options)
+
+        executor_options.environment.max_execution_time = self.max_execution_time
+        if self.experimental:
+            executor_options.environment.image = self.experimental.pop("image", None)
+            executor_options.experimental.update(self.experimental)
+
+        return executor_options
