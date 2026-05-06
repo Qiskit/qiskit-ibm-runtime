@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
+from qiskit_ibm_runtime.quantum_program.quantum_program_result import QuantumProgramItemResult
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -140,7 +141,7 @@ def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) ->
         raise ValueError("Not enough pub shapes.")
 
 
-def flatten_twirling_axes(item: dict[str, np.ndarray], pub_shape: tuple[int, ...]) -> None:
+def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading ``num_randomizations`` axis into the shots axis in-place.
 
     When twirling is enabled, the executor returns measurement data with shape
