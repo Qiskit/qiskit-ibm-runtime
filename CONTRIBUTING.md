@@ -247,7 +247,7 @@ To enable test cases against external system in your private fork, make sure to 
 
 For example, in your github fork settings, add the environment you want to run tests on
 (`ibm-cloud-production`, `ibm-cloud-staging`). Then add the appropriate environment secrets
-(`QISKIT_IBM_INSTANCE`, `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL`, `QISKIT_IBM_DEVICE`).
+(`QISKIT_IBM_INSTANCE`, `QISKIT_IBM_TOKEN`, `QISKIT_IBM_URL`, `QISKIT_IBM_QPU`).
 
 #### Benchmarking
 
@@ -262,7 +262,6 @@ make benchmark
 Please submit clean code and please make effort to follow existing conventions in order to keep it
 as readable as possible. We use:
 
-* [black] as the tool for ensuring consistent code formatting
 * [ruff] as a linter providing deeper analysis for potential style and functionality issues, as
   well as conformance to good practices
 * [mypy] as a static type checker for type hinting
@@ -282,7 +281,7 @@ pre-commit run
 ```
 
 This will run the tools against your staged changes, and will automatically update your code to
-conform to the style in some instances (for the `black` and a subset of the `ruff` issues). For
+conform to the style in some instances (for example, a subset of the `ruff` issues). For
 other errors, you will have to fix the issues manually by updating your code, and re-run again.
 Please refer to the tools' documentation for more information on running them manually and
 customizing your workflow if needed.
@@ -297,6 +296,15 @@ make docs-test
 
 This test also runs on CI and will fail if Vale encounters any spelling mistakes. To add a word to
 the dictionary, add it to `test/docs/dictionary.txt`.
+
+### Using the `git blame` ignored revisions list
+
+This repository contains a list of commits for `git blame` to ignore: commits that are style or
+linting changes that affect formatting, and thus tend to be disruptive when comparing changes in
+the repository history. When issuing a PR that contains a significant amount of style changes,
+please update the `.git-blame-ignore-revs` file adding an entry to the end of the file, and a
+comment pointing to the pull request. Please check the [Ignore commits in the blame view]
+GitHub documentation for instructions on using the ignore list locally and for general information.
 
 ### Development Cycle
 
@@ -357,7 +365,6 @@ qiskit-bot should also automatically create the GitHub Release for you.
 Finally, you need to cherry-pick the release notes prep from `stable/*` to
 the `main` branch, such as from `stable/0.21` to `main`.
 
-[black]: https://github.com/psf/black
 [ruff]: https://github.com/astral-sh/ruff
 [mypy]: http://mypy-lang.org/
 [pytest]: https://pytest.org/
@@ -366,3 +373,4 @@ the `main` branch, such as from `stable/0.21` to `main`.
 [encrypted environment secrets]: https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment
 [IBM Quantum's writing style guide]: https://github.com/IBM/ibm-quantum-style-guide
 [pyproject.toml]: ./pyproject.toml
+[Ignore commits in the blame view]: https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#ignore-commits-in-the-blame-view

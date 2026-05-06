@@ -15,45 +15,36 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from datetime import datetime as python_datetime
 from copy import deepcopy
 
-from qiskit import QuantumCircuit
 from qiskit.result import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
-from qiskit.transpiler.target import Target
 
-from ibm_quantum_schemas.executor.version_0_1 import (
-    QuantumProgramResultModel,
-)
-
-from . import qiskit_runtime_service
-from .api.clients import RuntimeClient
 from .exceptions import (
     IBMBackendApiProtocolError,
     IBMBackendError,
 )
 from .models import (
-    BackendProperties,
     BackendStatus,
     GateConfig,
     QasmBackendConfiguration,
 )
-from .options.executor_options import ExecutorOptions
-from .quantum_program import QuantumProgram
-from .quantum_program.converters import (
-    quantum_program_to_0_2,
-    quantum_program_result_from_0_2,
-)
-from .runtime_job_v2 import RuntimeJobV2
 from .utils import local_to_utc
 from .utils.backend_converter import convert_to_target
 from .utils.backend_decoder import (
     configuration_from_server_data,
     properties_from_server_data,
 )
+
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+    from qiskit.transpiler.target import Target
+    from . import QiskitRuntimeService
+    from .models import BackendProperties
+    from .api.clients import RuntimeClient
 
 
 logger = logging.getLogger(__name__)
@@ -164,7 +155,7 @@ class IBMBackend(Backend):
     def __init__(
         self,
         configuration: QasmBackendConfiguration,
-        service: qiskit_runtime_service.QiskitRuntimeService,
+        service: QiskitRuntimeService,
         api_client: RuntimeClient,
         instance: str | None = None,
         calibration_id: str | None = None,
@@ -219,58 +210,6 @@ class IBMBackend(Backend):
         except AttributeError:
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
-    def submit(
-        self, program: QuantumProgram, options: ExecutorOptions | None = None
-    ) -> RuntimeJobV2:
-        """Submit a quantum program for execution.
-
-        Args:
-            program: The program to execute.
-            options: Execution options.
-
-        Returns:
-            A job.
-        """
-        options = options or ExecutorOptions()
-        program_id = "executor"
-        model = quantum_program_to_0_2(program, options)
-
-        params = model.model_dump()
-        params["version"] = 2  # TODO: this is a work-around for the dispatch while we use 'execute'
-        response = self._service._active_api_client._api.program_run(
-            program_id=program_id,
-            backend_name=self.name,
-            image=options.environment.image,
-            log_level=options.environment.log_level,
-            session_id=None,
-            job_tags=options.environment.job_tags,
-            max_usage=None,
-            start_session=False,
-            session_time=None,
-            params=params,
-        )
-
-        class Decoder:
-            """Decoder."""
-
-            @classmethod
-            def decode(cls, data: str):  # type: ignore[no-untyped-def]
-                """Decode."""
-                obj = QuantumProgramResultModel.model_validate_json(data)
-                return quantum_program_result_from_0_2(obj)
-
-        return RuntimeJobV2(
-            backend=self,
-            api_client=self._service._active_api_client,
-            job_id=response["id"],
-            program_id=program_id,
-            result_decoder=Decoder,  # type: ignore[arg-type]
-            image=options.environment.image,
-            service=self._service,
-            version=model.schema_version,
-            private=False,
-        )
-
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration and properties to Target object."""
         if refresh or not self._target:
@@ -305,7 +244,7 @@ class IBMBackend(Backend):
         return self._calibration_id
 
     @property
-    def service(self) -> qiskit_runtime_service.QiskitRuntimeService:
+    def service(self) -> QiskitRuntimeService:
         """Return the ``service`` object.
 
         Returns:
@@ -574,7 +513,7 @@ class IBMRetiredBackend(IBMBackend):
     def __init__(
         self,
         configuration: QasmBackendConfiguration,
-        service: qiskit_runtime_service.QiskitRuntimeService,
+        service: QiskitRuntimeService,
         api_client: RuntimeClient | None = None,
     ) -> None:
         super().__init__(configuration, service, api_client)

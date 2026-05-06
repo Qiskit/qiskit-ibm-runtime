@@ -1,10 +1,6 @@
 [build-system]
-requires = ["setuptools >= 65.0.2", "setuptools_scm[toml]>=6.2"]
+requires = ["setuptools >= 66.1.0", "setuptools_scm[toml]>=8.1.0"]
 build-backend = "setuptools.build_meta"
-
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312', 'py313']
 
 [tool.towncrier]
 single_file = false
@@ -144,14 +140,14 @@ requires-python=">=3.10"
 dependencies = [
     "requests>=2.32.4",
     "requests-ntlm>=1.1.0",
-    "numpy>=1.26",
+    "numpy>=1.26.2",
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.5.20260320",
-    "pydantic>=2.7.0",
+    "ibm-quantum-schemas>=0.7.20260419,<1",
+    "pydantic>=2.11.0",
     "qiskit>=2.2.0",
-    "pybase64>=1.4",
+    "pybase64>=1.4.0",
     "samplomatic>=0.13.0"
 ]
 
@@ -181,7 +177,6 @@ common = [
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
-    "black~=24.1",
     "ruff~=0.14.10",
     "coverage>=6.3",
     "pylatexenc",
@@ -216,7 +211,7 @@ visualization = [
 
 performance = [
     "qiskit-aer>=0.17.0",
-    "scipy>=1.0"
+    "scipy>=1.15",
 ]
 
 # Developer extras.
@@ -227,24 +222,23 @@ style = [
 ]
 
 style_local = [
-    "black~=24.1",
     "mypy==1.19.0",
     "ruff~=0.14.10",
 ]
 
 test = [
-    "ddt>=1.2.0,!=1.4.0,!=1.4.3",
+    "ddt>=1.7.2",
     "pytest>=8.1",
     "pproxy==2.7.8",
-    "coverage>=6.3",
+    "coverage>=7.13.5",
     "pytest-benchmark==5.2.3",
 ]
 
 doc = [
     "autodoc_pydantic==2.2.0",
-    "matplotlib>=2.1",
-    "nbconvert>=5.3.1",
-    "nbformat>=4.4.0",
+    "matplotlib>=3.10",
+    "nbconvert>=6.4.3",
+    "nbformat>=5.0.2",
     "nbqa==1.5.3",
     "nbsphinx",
     "packaging",

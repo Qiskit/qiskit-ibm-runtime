@@ -24,7 +24,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
 
-from ..utils.datatree import DataTree
+from .datatree import DataTree
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
@@ -236,6 +236,11 @@ class QuantumProgram:
         self.noise_maps = noise_maps or {}
         self.meas_level = meas_level
         self.passthrough_data = passthrough_data
+
+        # Semantic role indicating how execution results may be post-processed by runtime clients.
+        # Reserved system values include 'sampler-v2' and 'estimator-v2', and are subject to change
+        # without notice. Third party clients should not set or depend on this value.
+        self._semantic_role: str | None = None
 
     def append_circuit_item(
         self,

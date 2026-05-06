@@ -38,7 +38,7 @@ from ibm_quantum_schemas.common import (
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
-from ...options.executor_options import ExecutorOptions
+from ...options_models.executor_options import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 
 
@@ -88,8 +88,9 @@ def quantum_program_from_0_1(model: ParamsModel) -> tuple[QuantumProgram, Execut
     quantum_program = QuantumProgram(shots=program_model.shots, items=items)
 
     options = ExecutorOptions()
-    options.execution.init_qubits = model.options.init_qubits
-    options.execution.rep_delay = model.options.rep_delay
+    model_options = model.options.model_copy(deep=True)
+    options.execution.init_qubits = model_options.init_qubits
+    options.execution.rep_delay = model_options.rep_delay
 
     return quantum_program, options
 

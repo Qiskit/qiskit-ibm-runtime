@@ -15,11 +15,14 @@
 import random
 import time
 from unittest.mock import patch
+import warnings
+
+from ddt import ddt, data
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
-from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm_runtime.base_runtime_job import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,
@@ -38,6 +41,7 @@ from ..program import run_program
 from ..utils import mock_wait_for_final_state
 
 
+@ddt
 class TestRuntimeJob(IBMTestCase):
     """Class for testing runtime jobs."""
 
@@ -190,3 +194,37 @@ class TestRuntimeJob(IBMTestCase):
         with patch.object(BaseFakeRuntimeClient, "cloud_usage", return_value=instance_usage_msg_3):
             with self.assertWarnsRegex(UserWarning, r"There is currently no more time available"):
                 run_program(service=service)
+
+    @run_cloud_fake
+    @data((None, 0.5), ("some_session_id", 0.1))
+    def test_wait_for_final_state_poll_interval_defaults(self, id_and_default, service):
+        """wait_for_final_state should use default values if `None` provided."""
+        session_id, default = id_and_default
+
+        job = run_program(service)
+        job._session_id = session_id
+        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
+            with patch("time.sleep", return_value=None) as patched_sleep:
+                job.wait_for_final_state()
+                patched_sleep.assert_called_with(default)
+
+    @run_cloud_fake
+    @data(0.99, 0.1, 1.23)
+    def test_wait_for_final_state_poll_inverval_custom(self, value, service):
+        """Test wait_for_final_state when passing a custom poll interval."""
+        job = run_program(service)
+        expected_interval = value
+        with patch.object(RuntimeJobV2, "status", side_effect=["WAITING", "DONE"]):
+            with patch("time.sleep", return_value=None) as patched_sleep:
+                with warnings.catch_warnings(record=True) as warn_cm:
+                    job.wait_for_final_state(poll_interval=value)
+
+                    # Values lower than the floor: limit to the floor, emit warning.
+                    if value < 0.1:
+                        expected_interval = 0.1
+                        self.assertIn("Using 0.1 as the poll interval", str(warn_cm[0]))
+                    # Other values: use them as-is, no warning.
+                    else:
+                        self.assertEqual(len(warn_cm), 0)
+
+                    patched_sleep.assert_called_with(expected_interval)

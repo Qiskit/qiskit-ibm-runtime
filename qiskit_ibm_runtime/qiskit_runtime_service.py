@@ -88,6 +88,12 @@ class QiskitRuntimeService:
     ``tags``. If ``plans_preference`` is not set, free and trial instances will be prioritized
     over paid instances.
 
+    When using multiple instances, :class:`~.QiskitRuntimeService` will internally manage which
+    instance is active at a given time. Methods such as :meth:`.backend`, :meth:`.backends`,
+    :meth:`.job` and :meth:`.jobs` can result in changing the active instance. It is recommended
+    to use the :meth:`.active_instance` method for checking which instance is active, or use a
+    separate :class:`~.QiskitRuntimeService` object per instance for more fine-grained control.
+
     Also note that only one account per API token can be used. The API token is linked to the
     account it was created in. If you want to use multiple accounts, you must create multiple
     API tokens.
@@ -1040,6 +1046,7 @@ class QiskitRuntimeService:
             program_id=program_id,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            session_id=session_id,
             tags=qrt_options.job_tags,
             service=self,
             version=version,

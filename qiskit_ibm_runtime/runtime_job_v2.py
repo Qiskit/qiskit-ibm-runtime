@@ -19,6 +19,7 @@ from collections.abc import Sequence
 from concurrent import futures
 import logging
 import time
+import warnings
 
 from qiskit.providers.backend import Backend
 from qiskit.primitives.containers import PrimitiveResult
@@ -36,6 +37,7 @@ from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob
+from .quantum_program.quantum_program_result import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -107,15 +109,21 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: float | None = None,
         decoder: type[ResultDecoder] | None = None,
+        poll_interval: float | None = None,
     ) -> Any:
         """Return the results of the job.
 
         Args:
             timeout: Number of seconds to wait for job.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            poll_interval: Number of seconds to wait between successive queries of the job's status.
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value are ``100ms``.
 
         Returns:
-            Runtime job result.
+            Runtime job result (post-processed if applicable).
 
         Raises:
             RuntimeJobFailureError: If the job failed.
@@ -123,7 +131,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
-        self.wait_for_final_state(timeout=timeout)
+        self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
         if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
             if self._reason_code == 1305:
@@ -135,8 +143,58 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
+        result = _decoder.decode(result_raw) if result_raw else None
 
-        return _decoder.decode(result_raw) if result_raw else None
+        # Apply post-processing only if result is QuantumProgramResult
+        if result is not None:
+            result = self._apply_post_processing(result)
+
+        return result
+
+    @staticmethod
+    def _apply_post_processing(result: Any) -> Any:
+        """Apply post-processing to the decoded result.
+
+        Post-processing is only applied if the result is a QuantumProgramResult (from Executor
+        jobs) and ``result._semantic_role`` has a supported value. Otherwise, the result is returned
+        unchanged.
+
+        Args:
+            result: The decoded result.
+
+        Returns:
+            Post-processed result or original result if no post-processing applies.
+        """
+        if not isinstance(result, QuantumProgramResult):
+            return result
+
+        if not (semantic_role := result._semantic_role):
+            return result
+
+        if semantic_role == "sampler_v2":
+            # TODO: Circular import issue. Consider changing file structure.
+            from .executor.routines.sampler_v2.post_processors import (  # pylint: disable=import-outside-toplevel
+                SAMPLER_POST_PROCESSORS,
+            )
+
+            if not isinstance(result.passthrough_data, dict):
+                raise ValueError("Expected passthrough data to be of dict-like format.")
+
+            try:
+                version = result.passthrough_data.get("post_processor", {})["version"]
+            except KeyError:
+                raise ValueError("Could not determine a post-processor version.")
+
+            try:
+                post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+            except KeyError:
+                raise ValueError(f"No post-processor found for version {version}.")
+
+            return post_processor_fn(result)
+
+        raise ValueError(
+            f"No post-processor found for result with 'semantic_role' {semantic_role}."
+        )
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -223,15 +281,31 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     def wait_for_final_state(
         self,
         timeout: float | None = None,
+        poll_interval: float | None = None,
     ) -> None:
         """Poll for the job status from the API until the status is in a final state.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+            poll_interval: Number of seconds to wait between querying the service for the status
+                of the job.
+
+                * For non-session jobs, the default is ``500ms``, and the floor value is ``100ms``.
+                * For session jobs, the default and the floor value is ``100ms``.
 
         Raises:
             RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
+        # Calculate the poll interval.
+        min_poll_interval = 0.1
+        default_poll_interval = 0.1 if self._session_id else 0.5
+        if poll_interval and poll_interval < 0.1:
+            warnings.warn(
+                "The poll interval specified is lower than the minimal allowed. Using "
+                f"{min_poll_interval} as the poll interval."
+            )
+        poll_interval = max(min_poll_interval, poll_interval or default_poll_interval)
+
         try:
             start_time = time.time()
             status = self.status()
@@ -241,7 +315,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                     raise RuntimeJobTimeoutError(
                         f"Timed out waiting for job to complete after {timeout} secs."
                     )
-                time.sleep(0.1)
+                time.sleep(poll_interval)
                 status = self.status()
         except futures.TimeoutError:
             raise RuntimeJobTimeoutError(

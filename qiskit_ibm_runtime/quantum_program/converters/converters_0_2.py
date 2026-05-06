@@ -39,7 +39,7 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
-from ...options.executor_options import ExecutorOptions
+from ...options_models.executor_options import ExecutorOptions
 
 
 def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:
@@ -85,12 +85,18 @@ def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, Execut
         else:
             raise ValueError("Unexpected model item type.")
 
-    quantum_program = QuantumProgram(shots=program_model.shots, items=items)
+    quantum_program = QuantumProgram(
+        shots=program_model.shots,
+        items=items,
+        meas_level=program_model.meas_level,
+        passthrough_data=program_model.passthrough_data,
+    )
 
     options = ExecutorOptions()
-    options.execution.init_qubits = model.options.init_qubits
-    options.execution.rep_delay = model.options.rep_delay
-    options.experimental = model.options.experimental
+    model_options = model.options.model_copy(deep=True)
+    options.execution.init_qubits = model_options.init_qubits
+    options.execution.rep_delay = model_options.rep_delay
+    options.experimental = model_options.experimental
 
     return quantum_program, options
 
