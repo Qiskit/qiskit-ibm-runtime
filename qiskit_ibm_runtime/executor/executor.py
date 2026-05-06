@@ -13,6 +13,7 @@
 """Executor."""
 
 from __future__ import annotations
+from time import time
 
 from dataclasses import asdict
 import logging
@@ -144,7 +145,10 @@ class Executor:
                     self._PROGRAM_ID,
                 )
 
+        s = time()
         inputs = params.model_dump(mode="json")
+        e = time()
+        print(f"Producing inputs: {e - s}")
 
         return _run(
             program_id=self._PROGRAM_ID,

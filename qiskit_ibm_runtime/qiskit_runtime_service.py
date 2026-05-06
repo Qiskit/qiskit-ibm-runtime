@@ -1016,6 +1016,7 @@ class QiskitRuntimeService:
 
         version = inputs.get("version", 1) if inputs else 1
         try:
+            print("trying..")
             response = self._active_api_client.program_run(
                 program_id=program_id,
                 backend_name=qrt_options.get_backend_name(),

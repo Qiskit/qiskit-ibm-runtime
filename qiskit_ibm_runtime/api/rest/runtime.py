@@ -13,6 +13,7 @@
 """Runtime REST adapter."""
 
 from __future__ import annotations
+from time import time
 
 import logging
 from datetime import datetime
@@ -122,9 +123,15 @@ class Runtime(RestAdapterBase):
         if calibration_id is not None:
             payload["calibration_id"] = calibration_id
         data = json.dumps(payload, cls=RuntimeEncoder)
-        return self.session.post(
+
+        s = time()
+        request = self.session.post(
             url, data=data, timeout=900, headers=self._HEADER_JSON_CONTENT
         ).json()
+        e = time()
+        print(f"Posting the request: {e - s}")
+
+        return request
 
     def jobs_get(
         self,
