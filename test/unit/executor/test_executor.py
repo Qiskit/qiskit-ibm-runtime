@@ -136,6 +136,22 @@ class TestExecutorOptions(IBMTestCase):
         with self.assertRaises(ValidationError):
             options.not_a_variable = 0
 
+    def test_max_execution_time_deprecation(self):
+        """Test max_execution_time deprecation in favor of max_usage setting."""
+        with self.assertWarns(DeprecationWarning):
+            options = EnvironmentOptions(max_execution_time=123)
+        self.assertEqual(options.max_execution_time, 123)
+        self.assertEqual(options.max_usage, 123)
+
+        options = EnvironmentOptions(max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
+
+        with self.assertWarns(DeprecationWarning):
+            options = EnvironmentOptions(max_execution_time=123, max_usage=321)
+        self.assertEqual(options.max_execution_time, 321)
+        self.assertEqual(options.max_usage, 321)
+
 
 class TestExecutor(IBMTestCase):
     """Tests the ``Executor`` class."""

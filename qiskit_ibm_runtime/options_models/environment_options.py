@@ -12,10 +12,14 @@
 
 """Options related to the execution environment."""
 
+from __future__ import annotations
+
 from typing import Annotated, Literal
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
+
+from ..options.utils import match_max_execution_time_and_max_usage
 
 from .utils import PRIMITIVES_CONFIG
 
@@ -62,6 +66,14 @@ class EnvironmentOptions:
     this time limit, it is forcibly cancelled.
     """
 
+    max_usage: int | None = None
+    """Maximum usage in seconds.
+
+    This value bounds system usage (not wall clock time). System usage is the amount of time that
+    the system is dedicated to processing your job. If a job exceeds this time limit, it is
+    forcibly cancelled.
+    """
+
     image: (
         Annotated[
             str,
@@ -72,3 +84,8 @@ class EnvironmentOptions:
         | None
     ) = None
     """Runtime image used for this job."""
+
+    def __post_init__(self) -> None:
+        """Validate deprecated usage of `max_execution_time`, in favor of `max_usage`."""
+        # TODO: using post_init instead of validator does not validate on re-assign.
+        match_max_execution_time_and_max_usage(self)

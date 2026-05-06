@@ -102,7 +102,7 @@ class TestLocalModeV2(IBMTestCase):
     def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
         """Test V2 primitive with not accepted options."""
         options = {
-            "max_execution_time": 200,
+            "max_usage": 200,
             "dynamical_decoupling": {"enable": True},
             "simulator": {"seed_simulator": 42},
         }

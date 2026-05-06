@@ -27,7 +27,7 @@ def run_program(
     backend_name=None,
     log_level=None,
     job_tags=None,
-    max_execution_time=None,
+    max_usage=None,
     session_id=None,
 ):
     """Run a program."""
@@ -37,7 +37,7 @@ def run_program(
         "image": image,
         "log_level": log_level,
         "job_tags": job_tags,
-        "max_execution_time": max_execution_time,
+        "max_usage": max_usage,
         "instance": instance,
         "session_time": None,
     }

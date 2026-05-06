@@ -68,7 +68,7 @@ class TestPrimitivesV2(IBMTestCase):
         options_vars = [
             {},
             {
-                "max_execution_time": 100,
+                "max_usage": 100,
                 "execution": {"init_qubits": True},
             },
             {"default_shots": 1000},
@@ -122,10 +122,10 @@ class TestPrimitivesV2(IBMTestCase):
         """Test modifying original options does not affect primitives."""
         backend = get_mocked_backend()
         options = primitive._options_class()
-        options.max_execution_time = 100
+        options.max_usage = 100
         inst = primitive(mode=backend, options=options)
-        options.max_execution_time = 200
-        self.assertEqual(inst.options.max_execution_time, 100)
+        options.max_usage = 200
+        self.assertEqual(inst.options.max_usage, 100)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_str(self, primitive):
@@ -375,8 +375,8 @@ class TestPrimitivesV2(IBMTestCase):
         options_vars = [
             {"environment": {"log_level": "DEBUG"}},
             {"environment": {"job_tags": ["foo", "bar"]}},
-            {"max_execution_time": 600},
-            {"environment": {"log_level": "INFO"}, "max_execution_time": 800},
+            {"max_usage": 600},
+            {"environment": {"log_level": "INFO"}, "max_usage": 800},
         ]
         for options in options_vars:
             with self.subTest(options=options):

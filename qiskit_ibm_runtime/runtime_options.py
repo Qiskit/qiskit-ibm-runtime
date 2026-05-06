@@ -20,6 +20,7 @@ from qiskit.providers.backend import Backend
 
 from .exceptions import IBMInputValueError
 from .utils import validate_job_tags
+from .options.utils import match_max_execution_time_and_max_usage
 
 
 @dataclass(init=False)
@@ -40,11 +41,15 @@ class RuntimeOptions:
         instance: This is only supported on the new IBM Quantum Platform.
         job_tags: Tags to be assigned to the job. The tags can subsequently be used
             as a filter in the :meth:`jobs()` function call.
-        max_execution_time: Maximum execution time in seconds, which is based
+        max_execution_time: (DEPRECATED) Maximum execution time in seconds, which is based
             on system execution time (not wall clock time). System execution time is the
             amount of time that the system is dedicated to processing your job. If a job exceeds
             this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
             clock time.
+        max_usage: Maximum usage in seconds, which is based on system execution time (not wall
+            clock time). System execution time is the amount of time that the system is
+            dedicated to processing your job. If a job exceeds this time limit, it is forcibly
+            cancelled. Simulator jobs continue to use wall clock time.
         session_time: Length of session in seconds.
         private: Boolean that indicates whether the job is marked as private. When set to true,
             input parameters are not returned, and the results can only be read once.
@@ -60,6 +65,7 @@ class RuntimeOptions:
     instance: str | None = None  # TODO: check if it is currently used
     job_tags: list[str] | None = None
     max_execution_time: int | None = None
+    max_usage: int | None = None
     session_time: int | None = None  # TODO: check if it is currently used / can really be modified
     private: bool | None = False  # TODO: check if it can really be modified
 
@@ -71,6 +77,7 @@ class RuntimeOptions:
         instance: str | None = None,
         job_tags: list[str] | None = None,
         max_execution_time: int | None = None,
+        max_usage: int | None = None,
         session_time: int | None = None,
         private: bool | None = False,
     ) -> None:
@@ -80,8 +87,11 @@ class RuntimeOptions:
         self.instance = instance
         self.job_tags = job_tags
         self.max_execution_time = max_execution_time
+        self.max_usage = max_usage
         self.session_time = session_time
         self.private = private
+
+        match_max_execution_time_and_max_usage(self)
 
     def validate(self, channel: str) -> None:
         """Validate options.

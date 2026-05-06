@@ -63,7 +63,7 @@ class TestSamplerOptions(IBMTestCase):
         twirling = {"enable_gates": True, "enable_measure": True, "strategy": "active-circuit"}
 
         opt = SamplerOptions(
-            max_execution_time=100,
+            max_usage=100,
             environment=environment,
             simulator=simulator,
             default_shots=1000,
@@ -117,7 +117,7 @@ class TestSamplerOptions(IBMTestCase):
 
     @data(
         {"default_shots": 4000},
-        {"max_execution_time": 200},
+        {"max_usage": 200},
         {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {
             "dynamical_decoupling": {"sequence_type": "XX"},
