@@ -12,7 +12,7 @@
 
 """Tests for SamplerV2 post-processors."""
 
-from qiskit_ibm_runtime.sampler_v2.post_processors.registry import SAMPLER_POST_PROCESSORS
+from qiskit_ibm_runtime.executor_sampler.post_processors.registry import SAMPLER_POST_PROCESSORS
 
 
 def test_available_post_processors():

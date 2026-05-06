@@ -23,7 +23,7 @@ from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime.sampler_v2 import SamplerV2
+from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from ..ibm_test_case import IBMIntegrationTestCase
 

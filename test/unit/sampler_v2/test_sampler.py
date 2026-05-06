@@ -23,8 +23,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.sampler_v2 import SamplerV2
-from qiskit_ibm_runtime.sampler_v2.sampler import prepare
+from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.executor_sampler.sampler import prepare
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
@@ -54,7 +54,7 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_quantum_program_structure(self, mock_run):
         """Test QuantumProgram structure for multiple simple circuits."""
         mock_run.return_value = MagicMock()
@@ -87,7 +87,7 @@ class TestSamplerV2SimpleCircuits(unittest.TestCase):
 
         self.assertEqual(quantum_program.items[2].circuit, circuit3)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots(self, mock_run):
         """Test that default shots (4096) are used when not specified."""
         mock_run.return_value = MagicMock()
@@ -110,7 +110,7 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_single_parameter_multiple_values(self, mock_run):
         """Test parametric circuit with single parameter and multiple values."""
         mock_run.return_value = MagicMock()
@@ -132,7 +132,7 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         expected = np.array([[0.1], [0.2], [0.3], [0.4]])
         np.testing.assert_array_almost_equal(item.circuit_arguments, expected)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_parameters_multiple_sets(self, mock_run):
         """Test parametric circuit with multiple parameters and multiple value sets."""
         mock_run.return_value = MagicMock()
@@ -156,7 +156,7 @@ class TestSamplerV2ParametricCircuits(unittest.TestCase):
         expected = np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]])
         np.testing.assert_array_almost_equal(item.circuit_arguments, expected)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_mixed_parametric_and_simple_circuits(self, mock_run):
         """Test mix of parametric and non-parametric circuits."""
         mock_run.return_value = MagicMock()
@@ -199,7 +199,7 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_multiple_circuits_one_with_box_raises_error(self, mock_run):
         """Test that BoxOp in any circuit raises an error."""
         circuit1 = QuantumCircuit(1, 1)
@@ -221,7 +221,7 @@ class TestSamplerV2CircuitValidation(unittest.TestCase):
         self.assertIn("BoxOp", str(context.exception))
         mock_run.assert_not_called()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_invalid_circuit_metadata_raises_error(self, mock_run):
         """Test that circuit with invalid metadata (not DataTree compatible) raises an error."""
         circuit = QuantumCircuit(1, 1)
@@ -250,7 +250,7 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_shots_when_not_specified(self, mock_run):
         """Test that default shots (4096) are used when not specified."""
         mock_run.return_value = MagicMock()
@@ -265,7 +265,7 @@ class TestSamplerV2ShotsHandling(unittest.TestCase):
         quantum_program = mock_run.call_args[0][0]
         self.assertEqual(quantum_program.shots, 4096)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_shots_consistency_across_pubs(self, mock_run):
         """Test that all pubs use the same shots value."""
         mock_run.return_value = MagicMock()
@@ -294,7 +294,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_circuit_preservation(self, mock_run):
         """Test that circuits are preserved exactly in QuantumProgram."""
         mock_run.return_value = MagicMock()
@@ -322,7 +322,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         # Circuit has h, cx, cx, barrier, and measure operations (measure_all may add multiple ops)
         self.assertGreaterEqual(len(item.circuit.data), 5)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_parameter_value_types(self, mock_run):
         """Test that parameter values are correctly converted to numpy arrays."""
         mock_run.return_value = MagicMock()
@@ -343,7 +343,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         self.assertIsInstance(item.circuit_arguments, np.ndarray)
         self.assertEqual(item.circuit_arguments.dtype, np.float64)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_quantum_program_items_order(self, mock_run):
         """Test that QuantumProgram items maintain the order of input pubs."""
         mock_run.return_value = MagicMock()
@@ -364,7 +364,7 @@ class TestSamplerV2QuantumProgramIntegrity(unittest.TestCase):
         for i, item in enumerate(quantum_program.items):
             self.assertEqual(item.circuit.name, f"circuit_{i}")
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_circuit_item_shape_property(self, mock_run):
         """Test CircuitItem.shape property is correct for different parameter configurations."""
         mock_run.return_value = MagicMock()
@@ -681,8 +681,8 @@ class TestPrepareTwirling(unittest.TestCase):
         self.assertEqual(len(qp.items), 1)
         self.assertIsInstance(qp.items[0], SamplexItem)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.build")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_boxing_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_boxing_pass_manager")
     def test_prepare_calls_boxing_pm_with_correct_params(self, mock_boxing_pm, mock_build):
         """Test that prepare() calls boxing pass manager with correct twirling parameters."""
         # Setup mocks
@@ -718,8 +718,8 @@ class TestPrepareTwirling(unittest.TestCase):
                 self.assertEqual(call_kwargs["enable_gates"], bool(enable_gates))
                 self.assertEqual(call_kwargs["enable_measures"], bool(enable_measure))
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.build")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_boxing_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_boxing_pass_manager")
     def test_prepare_calls_samplomatic_build(self, mock_boxing_pm, mock_build):
         """Test that prepare() calls samplomatic.build with boxed circuit."""
         # Setup mocks
@@ -784,8 +784,8 @@ class TestPrepareTwirling(unittest.TestCase):
                 # Verify SamplexItem shape (should be num_randomizations)
                 self.assertEqual(qp.items[0].shape, expected_shape)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.build")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_boxing_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.build")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_boxing_pass_manager")
     def test_prepare_handles_strategy_option(self, mock_boxing_pm, mock_build):
         """Test that prepare() passes twirling strategy to boxing pass manager."""
         # Setup mocks
@@ -916,7 +916,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_default_prepare_used_when_no_fn_given(self, mock_run):
         """Test that default prepare is called when no custom fn is provided."""
         mock_run.return_value = MagicMock()
@@ -935,7 +935,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         sampler.run([circuit], shots=1024)
         self.assertEqual(mock_run.call_count, 1)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_custom_prepare_fn_via_constructor(self, mock_run):
         """Test that custom custom_prepare passed to __init__ is called instead of default."""
         mock_run.return_value = MagicMock()
@@ -963,7 +963,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         self.assertTrue(custom_prepare_called)
         self.assertEqual(mock_run.call_count, 1)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_custom_prepare_fn_via_property_setter(self, mock_run):
         """Test that custom custom_prepare set via property is called."""
         mock_run.return_value = MagicMock()
@@ -991,7 +991,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         self.assertTrue(custom_prepare_called)
         self.assertEqual(mock_run.call_count, 1)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_custom_prepare_fn_receives_correct_args(self, mock_run):
         """Test that custom fn is called with correct arguments."""
         mock_run.return_value = MagicMock()
@@ -1029,7 +1029,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         # Verify default_shots
         self.assertEqual(received_args["default_shots"], 2048)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_restore_default_by_setting_none(self, mock_run):
         """Test that setting custom_prepare = None restores the default prepare."""
         mock_run.return_value = MagicMock()
@@ -1056,7 +1056,7 @@ class TestSamplerV2CustomPrepareFn(unittest.TestCase):
         sampler.run([circuit], shots=1024)
         self.assertEqual(mock_run.call_count, 1)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_custom_prepare_fn_return_value_used(self, mock_run):
         """Test that the QuantumProgram returned by custom fn is passed to executor."""
         mock_run.return_value = MagicMock()
@@ -1108,8 +1108,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_dd_pass_manager")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_generate_dd_pm):
         """Test that DD pass manager is generated and used when DD is enabled."""
         # Setup mock pass manager
@@ -1147,8 +1147,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify the pass manager's run method was called on the circuit
         mock_pm.run.assert_called()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_dd_pass_manager")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_generate_dd_pm):
         """Test that DD pass manager is not generated when DD is disabled."""
         mock_run.return_value = MagicMock()
@@ -1169,8 +1169,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify generate_dd_pass_manager was NOT called
         mock_generate_dd_pm.assert_not_called()
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_dd_pass_manager")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_dd_applied_to_multiple_circuits(self, mock_run, mock_generate_dd_pm):
         """Test that DD is applied to all circuits when multiple pubs are provided."""
         # Setup mock pass manager
@@ -1202,8 +1202,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Verify the pass manager's run method was called for each circuit
         self.assertEqual(mock_pm.run.call_count, 2)
 
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.generate_dd_pass_manager")
-    @patch("qiskit_ibm_runtime.sampler_v2.sampler.Executor.run")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
     def test_dd_with_twirling_enabled(self, mock_run, mock_generate_dd_pm):
         """Test that DD pass manager is called when both DD and twirling are enabled."""
         # Setup mock pass manager

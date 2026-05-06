@@ -65,7 +65,7 @@ def prepare(
         A tuple containing:
         - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
             with passthrough_data configured for
-            :class:`~qiskit_ibm_runtime.sampler_v2.SamplerV2` post-processing.
+            :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2` post-processing.
         - :class:`~.ExecutorOptions` mapped from :class:`~.SamplerOptions`.
 
     Raises:
@@ -241,7 +241,7 @@ class SamplerV2(BaseSamplerV2):
 
             from qiskit import QuantumCircuit
             from qiskit_ibm_runtime import QiskitRuntimeService
-            from qiskit_ibm_runtime.sampler_v2 import SamplerV2
+            from qiskit_ibm_runtime.executor_sampler import SamplerV2
 
             service = QiskitRuntimeService()
             backend = service.least_busy(operational=True, simulator=False)
