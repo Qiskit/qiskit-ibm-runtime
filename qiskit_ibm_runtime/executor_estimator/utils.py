@@ -10,10 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Helper functions for observable processing in EstimatorV2.
+"""Helper functions for wrapper EstimatorV2.
 
-NOTE: These functions are temporary and will be moved to a permanent location
-(qiskit-addons or qiskit core) in the future.
+NOTE: At least some of these functions are temporary and will be moved to a
+permanent location (qiskit-addons or qiskit core) in the future.
 """
 
 from __future__ import annotations
@@ -127,109 +127,6 @@ def get_bases(observables: ObservablesArray) -> PauliList:
         raise ValueError("No measurement bases found. Only identity in the observables.")
 
     return PauliList(non_identity_bases)
-
-
-def project_to_z(term: str) -> np.ndarray:
-    """Project observable term to Z computational basis.
-
-    Maps X,Y,Z → "Z", projectors 0,1,+,-,r,l → "0"/"1", I → "I"
-
-    Args:
-        term: Observable term string.
-
-    Returns:
-        Array of projected characters.
-    """
-    return np.array([CHAR_TO_Z_CHARS[ch] for ch in str(term)])
-
-
-def identify_measure_basis(pauli: Pauli, measure_bases: list[Pauli]) -> int:
-    """Find which measurement basis can measure the given Pauli.
-
-    A basis is compatible if, on every qubit where ``pauli`` is non-identity,
-    the basis measures the exact same Pauli axis. Identity positions in
-    ``pauli`` may correspond to any axis in the measurement basis.
-
-    Args:
-        pauli: Pauli operator to measure.
-        measure_bases: List of available measurement bases.
-
-    Returns:
-        Index of the first compatible basis.
-
-    Raises:
-        ValueError: If no compatible basis found.
-    """
-    pauli_support = np.logical_or(pauli.z, pauli.x)
-
-    for basis_idx, basis in enumerate(measure_bases):
-        # On all non-identity positions of ``pauli``, the measurement basis
-        # must match both the z/x symplectic components exactly.
-        if np.array_equal(pauli.z[pauli_support], basis.z[pauli_support]) and np.array_equal(
-            pauli.x[pauli_support], basis.x[pauli_support]
-        ):
-            return basis_idx
-
-    raise ValueError(f"Cannot compute eval of {pauli} from the given bases elements.")
-
-
-def compute_exp_val(observable_term: str, datum: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Compute expectation value and variance of an observable term from measurement data.
-
-    Args:
-        observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
-        datum: Boolean array of measurement outcomes, shape
-            (num_randomizations, ..., shots_per_randomization, num_qubits)
-
-    Returns:
-        Tuple of (expectation_values, variance), each with shape (...,)
-
-    Algorithm:
-    1. Project term to Z basis
-    2. Compute eigenvalues: prod(1 - 2*bit) for Z positions
-    3. Apply projector filters for 0/1 positions
-    4. Average over shots and randomizations for expectation value
-    5. Compute variance: E[X²] - E[X]²
-    """
-    z_term = project_to_z(observable_term)
-
-    # Compute masks
-    # Reverse to match endian-ness
-    is_Z = (z_term == "Z")[::-1]
-    is_0 = (z_term == "0")[::-1]
-    is_1 = (z_term == "1")[::-1]
-
-    any_0s = np.any(is_0)
-    any_1s = np.any(is_1)
-    any_Zs = np.any(is_Z)
-
-    if any_Zs:
-        evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1)
-    else:
-        evals = np.ones(datum.shape[:-1])
-
-    # Apply projector filters for "0" and "1"
-    if any_0s | any_1s:
-        keep = np.ones(datum.shape[:-1], dtype=bool)
-        if any_0s:
-            keep &= np.all(~datum[..., is_0], axis=-1)
-        if any_1s:
-            keep &= np.all(datum[..., is_1], axis=-1)
-        evals = np.where(keep, evals, 0)
-
-    shots = datum.shape[0] * datum.shape[-2]  # randomizations * shots_per_randomizations
-
-    # Compute expectation value
-    exp_val = np.sum(evals, axis=(0, -1)) / shots
-
-    # Compute standard deviation (standard error of the mean)
-    # variance = E[X²] - E[X]²
-    evals_squared = evals**2
-    mean_squared = np.sum(evals_squared, axis=(0, -1)) / shots
-    variance = mean_squared - exp_val**2
-
-    # Ensure we always return numpy arrays (even for scalar results)
-    return np.asarray(exp_val), np.asarray(variance)
 
 
 def resolve_precision(
