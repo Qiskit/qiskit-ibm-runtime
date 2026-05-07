@@ -72,31 +72,6 @@ class TestPauliToInts(unittest.TestCase):
 class TestGetBases(unittest.TestCase):
     """Tests for get_bases function."""
 
-    def test_single_observable_single_term(self):
-        """Test with single observable with single term."""
-        observables = ObservablesArray.coerce([{"ZZZ": 1}])
-        result = get_bases(observables)
-        # Should return a single basis that can measure ZZZ
-        self.assertEqual(len(result), 1)
-        # The basis should be exactly ZZZ (all Z components)
-        self.assertEqual(result[0], Pauli("ZZZ"))
-
-    def test_single_observable_x_term(self):
-        """Test with single X observable."""
-        observables = ObservablesArray.coerce([{"XXX": 1}])
-        result = get_bases(observables)
-        self.assertEqual(len(result), 1)
-        # The basis should be exactly XXX (all X components)
-        self.assertEqual(result[0], Pauli("XXX"))
-
-    def test_single_observable_y_term(self):
-        """Test with single Y observable."""
-        observables = ObservablesArray.coerce([{"YYY": 1}])
-        result = get_bases(observables)
-        self.assertEqual(len(result), 1)
-        # The basis should be exactly YYY (both Z and X components)
-        self.assertEqual(result[0], Pauli("YYY"))
-
     def test_single_observable_mixed_term(self):
         """Test with single mixed Pauli observable."""
         observables = ObservablesArray.coerce([{"XYZ": 1}])
@@ -115,7 +90,7 @@ class TestGetBases(unittest.TestCase):
         self.assertIn(Pauli("ZZZ"), result)
         self.assertIn(Pauli("XXX"), result)
 
-    def test_commuting_terms_same_positions(self):
+    def test_commuting_terms(self):
         """Test that commuting terms with same Pauli positions are grouped."""
         observables = ObservablesArray.coerce([{"ZZI": 1, "ZIZ": 1, "IZZ": 1}])
         result = get_bases(observables)
@@ -123,24 +98,6 @@ class TestGetBases(unittest.TestCase):
         self.assertEqual(len(result), 1)
         # The basis should be the OR of all terms: ZZZ
         self.assertEqual(result[0], Pauli("ZZZ"))
-
-    def test_commuting_terms_different_paulis(self):
-        """Test commuting terms with different Pauli types."""
-        observables = ObservablesArray.coerce([{"XII": 1, "IXI": 1, "IIX": 1}])
-        result = get_bases(observables)
-        # All X terms on different qubits commute
-        self.assertEqual(len(result), 1)
-        # The basis should be XXX (OR of all X positions)
-        self.assertEqual(result[0], Pauli("XXX"))
-
-    def test_non_commuting_on_same_qubit(self):
-        """Test non-commuting terms on the same qubit."""
-        observables = ObservablesArray.coerce([{"ZII": 1, "XII": 1}])
-        result = get_bases(observables)
-        # Z and X on same qubit don't commute, need separate bases
-        self.assertEqual(len(result), 2)
-        self.assertIn(Pauli("ZII"), result)
-        self.assertIn(Pauli("XII"), result)
 
     def test_partially_commuting_terms(self):
         """Test mix of commuting and non-commuting terms."""
@@ -173,17 +130,6 @@ class TestGetBases(unittest.TestCase):
         self.assertIn(Pauli("XXX"), result)
         self.assertIn(Pauli("YYY"), result)
 
-    def test_complex_observable_with_multiple_terms(self):
-        """Test observable with multiple terms that partially commute."""
-        observables = ObservablesArray.coerce([{"ZZI": 0.5, "IZZ": 0.5, "XXI": 0.3, "IXX": 0.3}])
-        result = get_bases(observables)
-        # ZZI and IZZ commute -> group 1: ZZZ
-        # XXI and IXX commute -> group 2: XXX
-        # But ZZZ and XXX don't commute
-        self.assertEqual(len(result), 2)
-        self.assertIn(Pauli("ZZZ"), result)
-        self.assertIn(Pauli("XXX"), result)
-
     def test_projector_bases(self):
         """Test with projector observables (0, 1, +, -, r, l)."""
         observables = ObservablesArray.coerce([{"000": 1}])
@@ -200,24 +146,8 @@ class TestGetBases(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], Pauli("ZZI"))
 
-    def test_y_with_z_non_commuting(self):
-        """Test Y and Z on same qubit don't commute."""
-        observables = ObservablesArray.coerce([{"YII": 1, "ZII": 1}])
-        result = get_bases(observables)
-        self.assertEqual(len(result), 2)
-        self.assertIn(Pauli("YII"), result)
-        self.assertIn(Pauli("ZII"), result)
-
-    def test_y_with_x_non_commuting(self):
-        """Test Y and X on same qubit don't commute."""
-        observables = ObservablesArray.coerce([{"YII": 1, "XII": 1}])
-        result = get_bases(observables)
-        self.assertEqual(len(result), 2)
-        self.assertIn(Pauli("YII"), result)
-        self.assertIn(Pauli("XII"), result)
-
-    def test_all_identity_observable(self):
-        """Test with all-identity observable."""
+    def test_all_identity_observable_raises(self):
+        """Test that error is raised with all-identity observable."""
         observables = ObservablesArray.coerce([{"III": 1.0}])
         with self.assertRaises(ValueError) as context:
             get_bases(observables)

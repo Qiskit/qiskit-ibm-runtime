@@ -27,16 +27,7 @@ from qiskit_ibm_runtime.executor_estimator.prepare import prepare
 from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
-
-def create_mock_backend():
-    """Create a mock backend for testing."""
-    backend = MagicMock()
-    backend.name = "fake_backend"
-    backend.target = FakeManilaV2().target
-    return backend
 
 
 class TestPrepareFunction(unittest.TestCase):
@@ -44,7 +35,6 @@ class TestPrepareFunction(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = create_mock_backend()
         self.options = EstimatorOptions()
 
     def test_prepare_general_case(self):
