@@ -22,9 +22,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     QuantumProgramResult,
     Metadata,
 )
-from qiskit_ibm_runtime.executor.routines.sampler_v2.post_processors import (
-    SAMPLER_POST_PROCESSORS,
-)
+from qiskit_ibm_runtime.executor_sampler import SAMPLER_POST_PROCESSORS
 
 
 class TestRuntimeJobPostProcessing(unittest.TestCase):
@@ -52,7 +50,7 @@ class TestRuntimeJobPostProcessing(unittest.TestCase):
         SAMPLER_POST_PROCESSORS["failing_version"] = self._failing_processor
 
     @staticmethod
-    def _simple_processor(qp_result):  # pylint: disable=unused-argument
+    def _simple_processor(qp_result):
         """Simple test processor that returns a fixed string."""
         return "processed_result"
 

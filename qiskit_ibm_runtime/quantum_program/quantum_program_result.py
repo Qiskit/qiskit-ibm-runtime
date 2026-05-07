@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
@@ -59,6 +59,11 @@ class ChunkSpan:
 
     parts: list[ChunkPart]
     """A description of which parts of a quantum program are contained in this chunk."""
+
+
+@dataclass
+class ItemMetadata:
+    """Metadata about the execution of a single item of a quantum program."""
 
 
 @dataclass
@@ -176,6 +181,41 @@ class ChunkTiming:
         )
 
 
+class QuantumProgramItemResult(MutableMapping):
+    """A container to store results for a single item of a :class:`QuantumProgram`.
+
+    Args:
+        result: A dictionary with array-valued data.
+        metadata: The metadata produced for the individual item.
+    """
+
+    def __init__(
+        self,
+        result: dict[str, np.ndarray],
+        metadata: ItemMetadata | None = None,
+    ):
+        self._result = result
+        self.metadata = metadata or ItemMetadata()
+
+    def __getitem__(self, key: str) -> np.ndarray:
+        return self._result[key]
+
+    def __setitem__(self, key: str, value: np.array) -> None:
+        self._result[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self._result[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._result)
+
+    def __len__(self) -> int:
+        return len(self._result)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self._result}, metadata={self.metadata})"
+
+
 class QuantumProgramResult:
     """A container to store results from executing a :class:`QuantumProgram`.
 
@@ -187,11 +227,16 @@ class QuantumProgramResult:
 
     def __init__(
         self,
-        data: list[dict[str, np.ndarray]],
+        data: Sequence[dict[str, np.ndarray] | QuantumProgramItemResult],
         metadata: Metadata | None = None,
         passthrough_data: DataTree | None = None,
     ):
-        self._data = data
+        self._data = [
+            datum
+            if isinstance(datum, QuantumProgramItemResult)
+            else QuantumProgramItemResult(datum)
+            for datum in data
+        ]
         self.metadata = metadata or Metadata()
         self.passthrough_data = passthrough_data
 
@@ -200,10 +245,10 @@ class QuantumProgramResult:
         # without notice. Third party clients should not set or depend on this value.
         self._semantic_role: str | None = None
 
-    def __iter__(self) -> Iterator[dict[str, np.ndarray]]:
+    def __iter__(self) -> Iterator[QuantumProgramItemResult]:
         yield from self._data
 
-    def __getitem__(self, idx: int) -> dict[str, np.ndarray]:
+    def __getitem__(self, idx: int) -> QuantumProgramItemResult:
         return self._data[idx]
 
     def __len__(self) -> int:

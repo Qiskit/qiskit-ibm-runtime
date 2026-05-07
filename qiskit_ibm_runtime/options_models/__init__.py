@@ -52,3 +52,4 @@ from .execution_options import ExecutionOptions
 from .executor_options import ExecutorOptions
 from .noise_learner_v3_options import NoiseLearnerV3Options
 from .post_selection_options import PostSelectionOptions
+from .sampler_options import SamplerOptions
