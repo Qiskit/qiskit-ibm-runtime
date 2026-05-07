@@ -86,9 +86,13 @@ class QuantumProgramResultDecoder(ResultDecoder):
 
         if semantic_role == "sampler_v2":
             # TODO: Circular import issue. Consider changing file structure.
-            from ..executor_sampler.post_processors.registry import (
-                SAMPLER_POST_PROCESSORS,
+            from ..executor_sampler.post_processors.post_processor_v0_1 import (
+                sampler_v2_post_processor_v0_1
             )
+
+            SAMPLER_POST_PROCESSORS = {
+               "v0.1": sampler_v2_post_processor_v0_1,
+            }
 
             try:
                 if not isinstance(result.passthrough_data, dict):

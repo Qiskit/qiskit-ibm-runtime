@@ -22,7 +22,6 @@ from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
     QuantumProgramResult,
     Metadata,
 )
-from qiskit_ibm_runtime.executor_sampler import SAMPLER_POST_PROCESSORS
 
 
 class TestRuntimeJobPostProcessing(unittest.TestCase):
