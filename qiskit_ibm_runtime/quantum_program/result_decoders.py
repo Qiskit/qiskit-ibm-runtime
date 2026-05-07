@@ -115,9 +115,8 @@ class QuantumProgramResultDecoder(ResultDecoder):
                 return post_processor_fn(result)
             except Exception:
                 logger.exception(
-                    "Unable to apply %s post-processing for converting "
-                    "the results. The original QuantumProgramResult results is "
-                    "returned instead.",
+                    "Unable to apply %s post-processing for converting the results. The original "
+                    "QuantumProgramResult is returned instead.",
                     semantic_role,
                 )
 
