@@ -14,6 +14,7 @@
 
 import unittest
 
+from ddt import ddt, data, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -22,6 +23,7 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.utils import (
     validate_no_boxes,
     extract_shots_from_pubs,
+    calculate_twirling_shots,
 )
 
 
@@ -169,3 +171,39 @@ class TestExtractShotsFromPubs(unittest.TestCase):
         shots = extract_shots_from_pubs([], default_shots=4096)
 
         self.assertEqual(shots, 4096)
+
+
+@ddt
+class TestCalculateTwirlingShots(unittest.TestCase):
+    """Tests for calculate_twirling_shots function."""
+
+    @data(
+        # (shots, n_rand, shots_per_rand, expected_n_rand, expected_shots_per_rand)
+        # Both auto
+        (1000, "auto", "auto", 16, 64),
+        (10000, "auto", "auto", 32, 313),
+        # Only num_randomizations auto
+        (1000, "auto", 100, 10, 100),
+        # Only shots_per_randomization auto
+        (1000, 20, "auto", 20, 50),
+        # Both specified
+        (1000, 25, 40, 25, 40),
+    )
+    @unpack
+    def test_calculate_twirling_shots(
+        self,
+        pub_shots,
+        num_randomizations,
+        shots_per_randomization,
+        expected_num_rand,
+        expected_shots_per_rand,
+    ):
+        """Test calculate_twirling_shots with various parameter combinations."""
+        num_rand, shots_per_rand = calculate_twirling_shots(
+            pub_shots, num_randomizations, shots_per_randomization
+        )
+
+        self.assertEqual(num_rand, expected_num_rand)
+        self.assertEqual(shots_per_rand, expected_shots_per_rand)
+        self.assertIsInstance(num_rand, int)
+        self.assertIsInstance(shots_per_rand, int)
