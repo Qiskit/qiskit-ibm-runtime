@@ -173,7 +173,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
         if semantic_role == "sampler_v2":
             # TODO: Circular import issue. Consider changing file structure.
-            from .executor.routines.sampler_v2.post_processors import (  # pylint: disable=import-outside-toplevel
+            from .executor_sampler.post_processors.registry import (
                 SAMPLER_POST_PROCESSORS,
             )
 
