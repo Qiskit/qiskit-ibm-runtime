@@ -13,7 +13,6 @@
 """Executor."""
 
 from __future__ import annotations
-from time import time
 
 import logging
 from dataclasses import asdict
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
     from ..session import Session
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class Executor:
@@ -147,10 +146,7 @@ class Executor:
                     self._PROGRAM_ID,
                 )
 
-        s = time()
         inputs = params.model_dump(mode="json")
-        e = time()
-        print(f"Producing inputs: {e - s}")
 
         return _run(
             program_id=self._PROGRAM_ID,

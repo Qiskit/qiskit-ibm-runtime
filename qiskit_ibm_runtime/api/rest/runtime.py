@@ -13,7 +13,6 @@
 """Runtime REST adapter."""
 
 from __future__ import annotations
-from time import time
 
 import logging
 from datetime import datetime
@@ -124,12 +123,14 @@ class Runtime(RestAdapterBase):
             payload["calibration_id"] = calibration_id
         data = json.dumps(payload, cls=RuntimeEncoder)
 
-        s = time()
+        logger.info("Posting the API request.")
         request = self.session.post(
             url, data=data, timeout=900, headers=self._HEADER_JSON_CONTENT
         ).json()
-        e = time()
-        print(f"Posting the request: {e - s}")
+
+        if logger.getEffectiveLevel() <= logging.INFO:
+            byte_size = len(data.encode("utf-8"))
+            logger.info("Payload size: %d MB.", byte_size / 10**6)
 
         return request
 
