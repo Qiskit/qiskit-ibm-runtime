@@ -20,12 +20,15 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import QuantumProgramItemResult
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata
+    from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+        ChunkSpan,
+        Metadata,
+        QuantumProgramItemResult,
+    )
 
 
 def executor_metadata_to_sampler_metadata(

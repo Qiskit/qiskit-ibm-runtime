@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from ibm_quantum_schemas.executor.version_0_1 import (
     QuantumProgramResultModel as QuantumProgramResultModel_0_1,
@@ -25,15 +26,18 @@ from ibm_quantum_schemas.executor.version_0_2 import (
 from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
-from qiskit.primitives.containers import PrimitiveResult
 
-from ..quantum_program.quantum_program_result import QuantumProgramResult
 from ..utils.result_decoder import ResultDecoder
 from .converters import (
     quantum_program_result_from_0_1,
     quantum_program_result_from_0_2,
     quantum_program_result_from_1_0,
 )
+
+if TYPE_CHECKING:
+    from qiskit.primitives.containers import PrimitiveResult
+
+    from ..quantum_program.quantum_program_result import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
