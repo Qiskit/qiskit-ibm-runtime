@@ -10,9 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Noise learner results."""
+
 # TODO: legacy import, a deprecation warning, note and/or doc tweaks are needed
-from ..results.noise_learner import (
+from ..results.noise_learner import (  # noqa: F401
     PauliLindbladError,
     LayerError,
-    NoiseLearnerResult
+    NoiseLearnerResult,
 )

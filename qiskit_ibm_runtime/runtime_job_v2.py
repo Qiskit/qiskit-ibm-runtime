@@ -135,7 +135,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """
         if decoder and not isinstance(decoder, Sequence):
             decoder = [decoder]
-        decoders: Sequence[type[ResultDecoder]] = decoder or self._result_decoders
+        decoders: Sequence[type[ResultDecoder]] = decoder or self._result_decoders  # type: ignore[assignment]
 
         self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
         if self._status == "ERROR":
