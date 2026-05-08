@@ -11,6 +11,3 @@
 # that they have been altered from the originals.
 
 """V0.1 post processor for executor-based SamplerV2"""
-
-# Import in order to register.
-from .post_processor_v0_1 import sampler_v2_post_processor_v0_1
