@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ..converters import quantum_program_result_to_primitive_result
+from ..converters import quantum_program_item_result_to_sampler_pub_result
 from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
@@ -76,7 +76,16 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Compute the shape of the input PUBs
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
-    for item, pub_shape in zip(result, pub_shapes):
+    # Extract circuit metadata if present and validate length
+    circuits_metadata = post_processor_data.get("circuits_metadata", None) or [None] * len(result)
+    if circuits_metadata is not None and len(circuits_metadata) != len(result):
+        raise ValueError(
+            f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
+            f"number of pubs ({len(result)})."
+        )
+
+    pub_results = []
+    for item, circuits_metadata, pub_shape in zip(result, circuits_metadata, pub_shapes):
         if len(item) == 0:
             raise ValueError("Found an item without data.")
 
@@ -85,14 +94,12 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         if twirling:
             flatten_twirling_axes(item, pub_shape)
 
-    # Extract circuit metadata if present
-    circuits_metadata = post_processor_data.get("circuits_metadata", None)
+        pub_results.append(
+            quantum_program_item_result_to_sampler_pub_result(item, meas_type, circuits_metadata)
+        )
 
     metadata = executor_metadata_to_sampler_metadata(
         result.metadata, num_randomizations, shots, pub_shapes
     )
 
-    sampler_result = quantum_program_result_to_primitive_result(
-        result, metadata, meas_type, circuits_metadata
-    )
-    return sampler_result
+    return PrimitiveResult(pub_results, metadata=metadata or {})
