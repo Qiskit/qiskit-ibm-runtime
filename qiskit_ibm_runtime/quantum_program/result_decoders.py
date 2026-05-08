@@ -75,8 +75,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
     ) -> QuantumProgramResult | PrimitiveResult:
         """Apply post-processing to the decoded result.
 
-        Post-processing is only applied if the result is a QuantumProgramResult (from Executor
-        jobs) and ``result._semantic_role`` has a supported value. Otherwise, the result is returned
+        Post-processing is only applied if ``result._semantic_role`` has a supported value. Otherwise, the result is returned
         unchanged.
 
         Args:
