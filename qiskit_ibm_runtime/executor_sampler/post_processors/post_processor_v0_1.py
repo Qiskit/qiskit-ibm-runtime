@@ -67,6 +67,12 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     else:
         num_randomizations = 0
 
+    # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
+    # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
+    if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
+        raise ValueError("Unable to uniquely identify the shots per PUB.")
+    shots = next(iter(set_shots))
+
     for item in result:
         if len(item) == 0:
             raise ValueError("Found an item without data.")
@@ -77,12 +83,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
-
-    # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
-    # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
-    if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
-        raise ValueError("Unable to uniquely identify the shots per PUB.")
-    shots = next(iter(set_shots))
 
     if twirling:
         for item, shape in zip(result, pub_shapes):
