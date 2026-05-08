@@ -59,6 +59,14 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
 
+    # Compute the ``num_randomizations`` from the left-most axis of the result arrays
+    if twirling:
+        if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
+            raise ValueError("Unable to uniquely identity the number of randomizations.")
+        num_randomizations = next(iter(set_num_randomizations))
+    else:
+        num_randomizations = 0
+
     for item in result:
         if len(item) == 0:
             raise ValueError("Found an item without data.")
@@ -75,14 +83,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
         raise ValueError("Unable to uniquely identify the shots per PUB.")
     shots = next(iter(set_shots))
-
-    # Compute the ``num_randomizations`` from the left-most axis of the result arrays
-    if twirling:
-        if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
-            raise ValueError("Unable to uniquely identity the number of randomizations.")
-        num_randomizations = next(iter(set_num_randomizations))
-    else:
-        num_randomizations = 0
 
     if twirling:
         for item, shape in zip(result, pub_shapes):
