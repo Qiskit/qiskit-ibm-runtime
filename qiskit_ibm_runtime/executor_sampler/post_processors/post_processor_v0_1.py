@@ -60,13 +60,14 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'meas_type' in passthrough data.")
 
     for item in result:
+        if len(item) == 0:
+            raise ValueError("Found an item without data.")
+
         undo_twirling(item)
 
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
-    # places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
