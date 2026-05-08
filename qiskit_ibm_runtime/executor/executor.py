@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from ..session import Session
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class Executor:
