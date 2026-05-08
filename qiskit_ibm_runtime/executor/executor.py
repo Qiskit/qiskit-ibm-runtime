@@ -152,6 +152,7 @@ class Executor:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
+            # TODO: unify
             result_decoder=self._DECODER,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )
