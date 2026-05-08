@@ -20,7 +20,7 @@ from dataclasses import asdict
 
 from pydantic import model_validator, Field
 
-from ..utils.noise_learner_result import LayerError, NoiseLearnerResult
+from ..results.noise_learner import LayerError, NoiseLearnerResult
 from .utils import Unset, UnsetType, Dict, primitive_dataclass
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .zne_options import ZneOptions

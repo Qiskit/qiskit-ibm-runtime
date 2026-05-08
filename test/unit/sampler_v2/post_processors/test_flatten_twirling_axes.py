@@ -18,7 +18,7 @@ import unittest
 
 import numpy as np
 
-from qiskit_ibm_runtime.executor_sampler.post_processors.utils import (
+from qiskit_ibm_runtime.decoders.executor_sampler.utils import (
     flatten_twirling_axes,
 )
 

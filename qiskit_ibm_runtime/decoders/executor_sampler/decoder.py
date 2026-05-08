@@ -17,18 +17,24 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from .result_decoder import ResultDecoder
+from ..result_decoder import ResultDecoder
+
+from .post_processor_v0_1 import sampler_v2_post_processor_v0_1
 
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ..quantum_program.quantum_program_result import QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
+SAMPLER_POST_PROCESSORS = {
+    "v0.1": sampler_v2_post_processor_v0_1,
+}
+
 
 class ExecutorSamplerResultDecoder(ResultDecoder):
-    """Decoder for ExecutorSampler results (from QuantumProgramResults)."""
+    """Decoder for ExecutorSampler results (from QuantumProgramResult)."""
 
     @classmethod
     def decode(cls, raw_result: QuantumProgramResult) -> QuantumProgramResult | PrimitiveResult:
@@ -48,13 +54,6 @@ class ExecutorSamplerResultDecoder(ResultDecoder):
 
         if semantic_role == "sampler_v2":
             # TODO: Circular import issue. Consider changing file structure.
-            from ..executor_sampler.post_processors.post_processor_v0_1 import (
-                sampler_v2_post_processor_v0_1,
-            )
-
-            SAMPLER_POST_PROCESSORS = {
-                "v0.1": sampler_v2_post_processor_v0_1,
-            }
 
             if not isinstance(raw_result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")

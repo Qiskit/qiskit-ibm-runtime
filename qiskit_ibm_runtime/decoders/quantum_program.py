@@ -37,7 +37,7 @@ from ..quantum_program.converters import (
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ..quantum_program.quantum_program_result import QuantumProgramResult
+    from ..results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ AVAILABLE_DECODERS = {
 
 
 class QuantumProgramResultDecoder(ResultDecoder):
-    """Decoder for quantum program results."""
+    """Decoder for Quantum Program results."""
 
     @classmethod
     def decode(cls, raw_result: str) -> QuantumProgramResult | PrimitiveResult:

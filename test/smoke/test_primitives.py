@@ -23,11 +23,13 @@ from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.noise_learner_v3 import (
     NoiseLearnerV3,
+)
+from qiskit_ibm_runtime.options import NoiseLearnerOptions
+from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
+from qiskit_ibm_runtime.results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
-from qiskit_ibm_runtime.options import NoiseLearnerOptions
-from qiskit_ibm_runtime.utils.noise_learner_result import NoiseLearnerResult
 
 from ..ibm_test_case import IBMIntegrationTestCase
 

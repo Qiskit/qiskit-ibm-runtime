@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_1,
@@ -24,12 +24,11 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
 
-from .result_decoder import ResultDecoder
-from ..noise_learner_v3.converters.version_0_1 import noise_learner_v3_result_from_0_1
-from ..noise_learner_v3.converters.version_0_2 import noise_learner_v3_result_from_0_2
+from ..result_decoder import ResultDecoder
+from .converters import noise_learner_v3_result_from_0_1, noise_learner_v3_result_from_0_2
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results
+    from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +42,10 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
     """Decoder for noise learner V3."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
+    def decode(cls, raw_result: dict) -> NoiseLearnerV3Results:  # type: ignore[no-untyped-def]
         """Decode raw json to result type."""
-        decoded: dict[str, Any] = super().decode(raw_result)
-
         try:
-            schema_version = decoded["schema_version"]
+            schema_version = raw_result["schema_version"]
         except KeyError:
             raise ValueError("Missing schema version.")
 
@@ -57,4 +54,4 @@ class NoiseLearnerV3ResultDecoder(ResultDecoder):
         except KeyError:
             raise ValueError(f"No decoder found for schema version {schema_version}.")
 
-        return decoder(model.model_validate_json(raw_result))
+        return decoder(model.model_validate(raw_result))

@@ -15,19 +15,18 @@
 from collections.abc import Sequence
 
 from .decoders.quantum_program import QuantumProgramResultDecoder
-from .decoders.executor_sampler import ExecutorSamplerResultDecoder
+from .decoders.executor_sampler.decoder import ExecutorSamplerResultDecoder
 from .decoders.result_decoder import ResultDecoder
 from .decoders.noise_learner import NoiseLearnerResultDecoder
-from .decoders.estimator import EstimatorResultDecoder
-from .decoders.sampler import SamplerResultDecoder
+from .decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 from .decoders.runner import RunnerResult
 
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | Sequence[type[ResultDecoder]]] = {
-    "sampler": SamplerResultDecoder,
-    "estimator": EstimatorResultDecoder,
+    "sampler": ResultDecoder,
+    "estimator": ResultDecoder,
     "executor": [QuantumProgramResultDecoder, ExecutorSamplerResultDecoder],
-    "noise-learner": NoiseLearnerResultDecoder,
+    "noise-learner": [NoiseLearnerResultDecoder, NoiseLearnerV3ResultDecoder],
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }

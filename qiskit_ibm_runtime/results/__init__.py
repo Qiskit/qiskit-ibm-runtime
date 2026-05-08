@@ -10,19 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Estimator result decoder."""
-
-from qiskit.primitives.containers import PrimitiveResult
-
-from .result_decoder import ResultDecoder
-
-
-class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results."""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> PrimitiveResult:
-        """Convert the result to EstimatorResult."""
-        decoded: dict = super().decode(raw_result)
-
-        return decoded
+"""Results for the different programs."""

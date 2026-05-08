@@ -19,7 +19,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime import NoiseLearnerV3
-from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3Results, NoiseLearnerV3Result
+from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results, NoiseLearnerV3Result
 from ..ibm_test_case import IBMIntegrationTestCase
 
 

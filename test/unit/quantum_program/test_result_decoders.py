@@ -29,12 +29,12 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+from qiskit_ibm_runtime.results.quantum_program import (
     Metadata,
     QuantumProgramResult,
 )
 from qiskit_ibm_runtime.decoders.quantum_program import QuantumProgramResultDecoder
-from qiskit_ibm_runtime.decoders.executor_sampler import ExecutorSamplerResultDecoder
+from qiskit_ibm_runtime.decoders.executor_sampler.decoder import ExecutorSamplerResultDecoder
 
 from ...ibm_test_case import IBMTestCase
 

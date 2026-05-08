@@ -24,12 +24,10 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
     ParamsModel,
 )
 from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import QubitSparsePauliList
 
 from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
-from ..noise_learner_v3_result import (
-    NoiseLearnerV3Result,
+from ...results.noise_learner_v3 import (
     NoiseLearnerV3Results,
 )
 
@@ -85,26 +83,4 @@ def noise_learner_v3_result_to_0_1(
             )
             for datum in result.data
         ],
-    )
-
-
-def noise_learner_v3_result_from_0_1(
-    model: NoiseLearnerV3ResultsModel,
-) -> NoiseLearnerV3Results:
-    """Convert a V0.1 model to noise learner v3 results."""
-    return NoiseLearnerV3Results(
-        data=[
-            NoiseLearnerV3Result.from_generators(
-                generators=[
-                    QubitSparsePauliList.from_sparse_list(
-                        [tuple(term) for term in sparse_list], datum.num_qubits
-                    )
-                    for sparse_list in datum.generators_sparse
-                ],
-                rates=datum.rates.to_numpy(),
-                rates_std=datum.rates_std.to_numpy(),
-                metadata=datum.metadata.model_dump(),
-            )
-            for datum in model.data
-        ]
     )

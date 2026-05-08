@@ -41,4 +41,4 @@ Classes
 """
 
 from .quantum_program import QuantumProgram, QuantumProgramItem
-from .quantum_program_result import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata
+from ..results.quantum_program import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata

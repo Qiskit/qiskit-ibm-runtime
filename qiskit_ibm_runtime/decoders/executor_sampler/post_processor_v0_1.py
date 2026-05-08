@@ -18,11 +18,11 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ..converters import quantum_program_result_to_primitive_result
+from .converters import quantum_program_result_to_primitive_result
 from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes
 
 if TYPE_CHECKING:
-    from ...quantum_program.quantum_program_result import QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramResult
 
 
 def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:

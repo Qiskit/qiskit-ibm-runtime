@@ -39,7 +39,7 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+from ...results.quantum_program import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
 from ...options_models.executor_options import ExecutorOptions
 
 
