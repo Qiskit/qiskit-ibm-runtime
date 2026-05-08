@@ -18,7 +18,7 @@ from collections.abc import Iterable, Iterator, MutableMapping, Sequence
 from dataclasses import dataclass, field
 import datetime
 from datetime import timezone
-from typing import overload, TYPE_CHECKING, Any
+from typing import overload, TYPE_CHECKING
 import numpy as np
 
 from .datatree import DataTree
@@ -246,7 +246,7 @@ class QuantumProgramItemResult(MutableMapping):
     def __getitem__(self, key: str) -> np.ndarray:
         return self._result[key]
 
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: np.array) -> None:
         self._result[key] = value
 
     def __delitem__(self, key: str) -> None:

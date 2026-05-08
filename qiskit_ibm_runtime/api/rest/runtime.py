@@ -122,9 +122,17 @@ class Runtime(RestAdapterBase):
         if calibration_id is not None:
             payload["calibration_id"] = calibration_id
         data = json.dumps(payload, cls=RuntimeEncoder)
-        return self.session.post(
+
+        logger.info("Posting the API request.")
+        request = self.session.post(
             url, data=data, timeout=900, headers=self._HEADER_JSON_CONTENT
         ).json()
+
+        if logger.getEffectiveLevel() <= logging.INFO:
+            byte_size = len(data.encode("utf-8"))
+            logger.info("Payload size: %d MB.", byte_size / 10**6)
+
+        return request
 
     def jobs_get(
         self,

@@ -14,26 +14,28 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import logging
-from typing import Any, TYPE_CHECKING
+from dataclasses import asdict
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+
 from ..options_models.executor_options import ExecutorOptions
-from ..quantum_program.result_decoders import QuantumProgramResultDecoder
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
+from ..quantum_program.result_decoders import QuantumProgramResultDecoder
 from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+
     from ..batch import Batch
-    from ..session import Session
-    from ..runtime_job_v2 import RuntimeJobV2
     from ..quantum_program import QuantumProgram
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class Executor:
