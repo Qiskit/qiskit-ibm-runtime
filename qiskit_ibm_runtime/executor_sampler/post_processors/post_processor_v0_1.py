@@ -73,20 +73,20 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Unable to uniquely identify the shots per PUB.")
     shots = next(iter(set_shots))
 
-    for item in result:
+    # Compute the shape of the input PUBs
+    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
+
+    for item, pub_shape in zip(result, pub_shapes):
         if len(item) == 0:
             raise ValueError("Found an item without data.")
 
         undo_twirling(item)
 
+        if twirling:
+            flatten_twirling_axes(item, pub_shape)
+
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
-
-    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
-
-    if twirling:
-        for item, shape in zip(result, pub_shapes):
-            flatten_twirling_axes(item, shape)
 
     metadata = executor_metadata_to_sampler_metadata(
         result.metadata, num_randomizations, shots, pub_shapes
