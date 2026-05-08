@@ -35,7 +35,7 @@ from .exceptions import (
     IBMApiError,
     IBMRuntimeError,
 )
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -59,7 +59,10 @@ class BaseRuntimeJob(ABC):
         job_id: Job ID.
         program_id: ID of the program this job is for.
         creation_date: Job creation date, in UTC.
-        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+            of such subclasses. If more than one decoder is specified, they will be called in
+            chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+            decoder. If not specified, the default ``ResultDecoder`` is used.
         image: Runtime image used for this job: image_name:tag.
         service: Runtime service.
         session_id: Job ID of the first job in a runtime session.
@@ -106,11 +109,12 @@ class BaseRuntimeJob(ABC):
         self._status: RuntimeJobStatus | str = None
         self._private = private
 
+        # Store the list of decoders for this job.
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
-        if isinstance(decoder, Sequence):
-            _, self._final_result_decoder = decoder
+        if not isinstance(decoder, Sequence):
+            self._result_decoders: Sequence[type[ResultDecoder]] = [decoder]
         else:
-            self._final_result_decoder = decoder
+            self._result_decoders = decoder
 
     @property
     def private(self) -> bool:

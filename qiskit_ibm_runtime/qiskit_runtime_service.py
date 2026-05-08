@@ -36,7 +36,7 @@ from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError
 from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
@@ -979,10 +979,11 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-                If more than one decoder is specified, the first is used for interim results and
-                the second final results. If not specified, a program-specific decoder or the
-                default ``ResultDecoder`` is used.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+                of such subclasses. If more than one decoder is specified, they will be called in
+                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+                decoder. If not specified, a program-specific decoder or the default
+                ``ResultDecoder`` is used.
             session_id: Job ID of the first job in a runtime session.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             calibration_id: The calibration id to use for the IBM backend.

@@ -12,19 +12,21 @@
 
 """Constant values."""
 
-from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
-from .utils.result_decoder import ResultDecoder
-from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
-from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.sampler_result_decoder import SamplerResultDecoder
-from .utils.runner_result import RunnerResult
+from collections.abc import Sequence
+
+from .decoders.quantum_program import QuantumProgramResultDecoder
+from .decoders.executor_sampler.decoder import ExecutorSamplerResultDecoder
+from .decoders.result_decoder import ResultDecoder
+from .decoders.noise_learner import NoiseLearnerResultDecoder
+from .decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
+from .decoders.runner import RunnerResult
 
 
-DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
-    "sampler": [ResultDecoder, SamplerResultDecoder],
-    "estimator": [ResultDecoder, EstimatorResultDecoder],
-    "executor": QuantumProgramResultDecoder,
-    "noise-learner": NoiseLearnerResultDecoder,
+DEFAULT_DECODERS: dict[str, type[ResultDecoder] | Sequence[type[ResultDecoder]]] = {
+    "sampler": ResultDecoder,
+    "estimator": ResultDecoder,
+    "executor": [QuantumProgramResultDecoder, ExecutorSamplerResultDecoder],
+    "noise-learner": [NoiseLearnerResultDecoder, NoiseLearnerV3ResultDecoder],
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }

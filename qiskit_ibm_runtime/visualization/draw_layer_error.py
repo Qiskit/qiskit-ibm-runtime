@@ -20,7 +20,7 @@ from qiskit.providers.backend import BackendV2
 from qiskit.quantum_info import Pauli
 
 from ..utils.embeddings import Embedding
-from ..utils.noise_learner_result import LayerError
+from ..results.noise_learner import LayerError
 from .utils import get_rgb_color, pie_slice, plotly_module
 
 if TYPE_CHECKING:

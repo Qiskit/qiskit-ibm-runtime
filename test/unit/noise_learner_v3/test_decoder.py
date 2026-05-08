@@ -19,10 +19,9 @@ from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_result_to_0_1,
 )
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
-    NoiseLearnerV3ResultDecoder,
-)
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
+from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
+
+from qiskit_ibm_runtime.results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
@@ -61,7 +60,8 @@ class TestDecoder(IBMTestCase):
 
     def test_decoder(self):
         """Tests the decoder."""
-        decoded = NoiseLearnerV3ResultDecoder.decode(self.encoded)
+        encoded_as_json = json.loads(self.encoded)
+        decoded = NoiseLearnerV3ResultDecoder.decode(encoded_as_json)
         for datum_in, datum_out in zip(self.results.data, decoded.data):
             assert datum_in._generators == datum_out._generators
             assert np.allclose(datum_in._rates, datum_out._rates)
@@ -72,14 +72,12 @@ class TestDecoder(IBMTestCase):
         """Verify an error is raised if the encoded string does not specify any schema version."""
         encoded_as_json = json.loads(self.encoded)
         del encoded_as_json["schema_version"]
-        encoded_as_str = json.dumps(encoded_as_json)
         with self.assertRaisesRegex(ValueError, "Missing schema version."):
-            NoiseLearnerV3ResultDecoder.decode(encoded_as_str)
+            NoiseLearnerV3ResultDecoder.decode(encoded_as_json)
 
     def test_unknown_schema_version(self):
         """Verify an error is raised if the schema version specified does not exist."""
         encoded_as_json = json.loads(self.encoded)
         encoded_as_json["schema_version"] = "unknown"
-        encoded_as_str = json.dumps(encoded_as_json)
         with self.assertRaisesRegex(ValueError, "No decoder found for schema version unknown."):
-            NoiseLearnerV3ResultDecoder.decode(encoded_as_str)
+            NoiseLearnerV3ResultDecoder.decode(encoded_as_json)

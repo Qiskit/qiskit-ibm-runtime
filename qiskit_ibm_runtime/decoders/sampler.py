@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021-2026.
+# (C) Copyright IBM 2022-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,19 +10,26 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Estimator result decoder."""
+"""Sampler result decoder."""
 
-from qiskit.primitives.containers import PrimitiveResult
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .result_decoder import ResultDecoder
 
+if TYPE_CHECKING:
+    from qiskit.primitives import PrimitiveResult
 
-class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results."""
+
+class SamplerResultDecoder(ResultDecoder):
+    """Class used to decode sampler results."""
 
     @classmethod
     def decode(cls, raw_result: str) -> PrimitiveResult:
-        """Convert the result to EstimatorResult."""
+        """Convert the result to SamplerResult."""
         decoded: dict = super().decode(raw_result)
 
         return decoded
+
+        # TODO: Handle V2 result that is returned in dict format

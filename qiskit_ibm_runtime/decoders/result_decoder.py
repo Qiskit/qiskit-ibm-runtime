@@ -21,9 +21,8 @@ from qiskit_ibm_runtime.utils import RuntimeDecoder
 class ResultDecoder:
     """Runtime job result decoder.
 
-    You can subclass this class and overwrite the :meth:`decode` method
-    to create a custom result decoder for the
-    results of your runtime program. For example::
+    You can subclass this class and overwrite the :meth:`decode` method to create a custom result
+    decoder for the results of your runtime program. For example::
 
         class MyResultDecoder(ResultDecoder):
 
@@ -35,10 +34,15 @@ class ResultDecoder:
     Users of your program will need to pass in the subclass when invoking
     :meth:`qiskit_ibm_runtime.RuntimeJobV2.result` or
     :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run`.
+
+    Result decoders are chainable: when passing a sequence of result decoders to a function, they
+    will be invoked sequentially. The first decoder in the sequence will receive a raw ``json``
+    string as the ``data`` argument, and subsequent decoders will have the output of the previous
+    one as its input.
     """
 
     @classmethod
-    def decode(cls, data: str) -> Any:
+    def decode(cls, data: Any) -> Any:
         """Decode the result data.
 
         Args:

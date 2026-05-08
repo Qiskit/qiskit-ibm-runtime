@@ -29,11 +29,12 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+from qiskit_ibm_runtime.results.quantum_program import (
     Metadata,
     QuantumProgramResult,
 )
-from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.quantum_program import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.executor_sampler.decoder import ExecutorSamplerResultDecoder
 
 from ...ibm_test_case import IBMTestCase
 
@@ -108,7 +109,7 @@ class TestDecoder(IBMTestCase):
             QuantumProgramResultDecoder.decode(encoded_as_str)
 
 
-class TestDecoderPostProcessing(unittest.TestCase):
+class TestExecutorSamplerResultDecoder(unittest.TestCase):
     """Test QuantumProgram to Sampler V2 decoder post-processing logic."""
 
     def setUp(self):
@@ -142,18 +143,18 @@ class TestDecoderPostProcessing(unittest.TestCase):
     def test_valid_result(self):
         """A QuantumProgramResult from a Sampler job should be post-processed."""
         self.qp_result._semantic_role = "sampler_v2"
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+        processed = ExecutorSamplerResultDecoder.decode(self.qp_result)
         self.assertIsInstance(processed, PrimitiveResult)
 
     def test_no_semantic_role(self):
         """A QuantumProgramResult with unset semantic role is returned unchanged."""
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+        processed = ExecutorSamplerResultDecoder.decode(self.qp_result)
         self.assertEqual(processed, self.qp_result)
 
     def test_unsupported_semantic_role(self):
         """A QuantumProgramResult with unsupported semantic role is returned unchanged."""
         self.qp_result._semantic_role = "unsupported_semantic_role"
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+        processed = ExecutorSamplerResultDecoder.decode(self.qp_result)
         self.assertEqual(processed, self.qp_result)
 
     def test_passthrough_data_missing_version(self):
@@ -161,11 +162,11 @@ class TestDecoderPostProcessing(unittest.TestCase):
         self.qp_result._semantic_role = "sampler_v2"
         self.qp_result.passthrough_data["post_processor"].pop("version")
         with self.assertRaises(ValueError):
-            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+            ExecutorSamplerResultDecoder.decode(self.qp_result)
 
     def test_passthrough_data_unsupported_version(self):
         """A QuantumProgramResult with no post_processor version is returned unchanged."""
         self.qp_result._semantic_role = "sampler_v2"
         self.qp_result.passthrough_data["post_processor"]["version"] = "non-existing"
         with self.assertRaises(ValueError):
-            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+            ExecutorSamplerResultDecoder.decode(self.qp_result)

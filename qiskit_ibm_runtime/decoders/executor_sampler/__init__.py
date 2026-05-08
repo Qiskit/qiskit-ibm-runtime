@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2024-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,11 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Noise learner results."""
-
-# TODO: legacy import, a deprecation warning, note and/or doc tweaks are needed
-from ..results.noise_learner import (  # noqa: F401
-    PauliLindbladError,
-    LayerError,
-    NoiseLearnerResult,
-)
+"""Result decoder for executor-based Sampler."""

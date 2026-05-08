@@ -10,23 +10,17 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-========================================================================================
-EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`)
-========================================================================================
-
-.. autosummary::
-   :toctree: ../stubs/
-"""  # noqa: D205, D212, D415
+"""EstimatorPubResult result classes."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from collections.abc import Sequence
 
 from qiskit.primitives.containers import PubResult
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from plotly.graph_objects import Figure as PlotlyFigure
 
 

@@ -14,31 +14,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
+from ..results.noise_learner import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
-
-if TYPE_CHECKING:
-    from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
     """Class used to decode noise learner results."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:
+    def decode(cls, raw_result: str) -> NoiseLearnerResult | dict:
         """Convert the result to NoiseLearnerResult."""
-        if "schema_version" in raw_result:
-            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
-                NoiseLearnerV3ResultDecoder,
-            )
-
-            return NoiseLearnerV3ResultDecoder().decode(raw_result)
-
-        # Decode for legacy noise learner
         decoded: dict = super().decode(raw_result)
 
+        # For noise learner v3, delegate onto the next decoder.
+        if "schema_version" in decoded:
+            return decoded
+
+        # For legacy noise learner.
         data = []
         for layer in decoded["data"]:
             if isinstance(layer, LayerError):

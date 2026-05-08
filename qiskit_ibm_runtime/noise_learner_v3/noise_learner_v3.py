@@ -18,11 +18,11 @@ import logging
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
+from ..constants import DEFAULT_DECODERS
 from ..base_primitive import get_mode_service_backend
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.noise_learner_v3_options import NoiseLearnerV3Options
 from ..utils.default_session import get_cm_session
-from .noise_learner_v3_decoders import NoiseLearnerV3ResultDecoder
 from .params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from .validation import validate_instruction, validate_options
 
@@ -69,7 +69,6 @@ class NoiseLearnerV3:
     """
 
     _PROGRAM_ID = "noise-learner"
-    _DECODER = NoiseLearnerV3ResultDecoder
     _SCHEMA_VERSION = "v0.2"
 
     options: NoiseLearnerV3Options
@@ -160,7 +159,7 @@ class NoiseLearnerV3:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
-            result_decoder=self._DECODER,
+            result_decoder=DEFAULT_DECODERS[self._PROGRAM_ID],
             calibration_id=getattr(self._backend, "calibration_id", None),
         )
 
