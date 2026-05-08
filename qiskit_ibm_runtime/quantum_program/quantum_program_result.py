@@ -106,10 +106,16 @@ class ItemMetadata:
     """Metadata about the execution of a single item of a quantum program."""
 
     scheduler_timing: SchedulerTiming | None = None
-    """Scheduled circuit timing information, if it is available."""
+    """Scheduled circuit timing information, if it is available.
+
+    Note: This feature is experimental and subject to change without notice.
+    """
 
     stretch_values: list[StretchValues] | None = None
-    """Stretch value resolution, if it is available."""
+    """Stretch value resolution, if it is available.
+
+    Note: This feature is experimental and subject to change without notice.
+    """
 
 
 @dataclass
