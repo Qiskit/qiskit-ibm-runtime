@@ -81,8 +81,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
-
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
     # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
     if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
@@ -97,6 +95,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     else:
         num_randomizations = 0
 
+    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
     if twirling:
         for item, shape in zip(result, pub_shapes):
             flatten_twirling_axes(item, shape)
