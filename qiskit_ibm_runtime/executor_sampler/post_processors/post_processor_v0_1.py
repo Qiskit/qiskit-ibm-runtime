@@ -81,8 +81,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
-    # places.
     pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
