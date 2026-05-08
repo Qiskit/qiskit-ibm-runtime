@@ -160,18 +160,12 @@ class TestDecoderPostProcessing(unittest.TestCase):
         """A QuantumProgramResult with no post_processor version is returned unchanged."""
         self.qp_result._semantic_role = "sampler_v2"
         self.qp_result.passthrough_data["post_processor"].pop("version")
-        with self.assertLogs("qiskit_ibm_runtime", "ERROR") as context:
-            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-
-        self.assertEqual(processed, self.qp_result)
-        self.assertIn("Unable to apply", str(context.records[0]))
+        with self.assertRaises(ValueError):
+            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
 
     def test_passthrough_data_unsupported_version(self):
         """A QuantumProgramResult with no post_processor version is returned unchanged."""
         self.qp_result._semantic_role = "sampler_v2"
-        self.qp_result.passthrough_data["post_processor"] = "non_existing"
-        with self.assertLogs("qiskit_ibm_runtime", "ERROR") as context:
-            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-
-        self.assertEqual(processed, self.qp_result)
-        self.assertIn("Unable to apply", str(context.records[0]))
+        self.qp_result.passthrough_data["post_processor"]["version"] = "non-existing"
+        with self.assertRaises(ValueError):
+            QuantumProgramResultDecoder._apply_post_processing(self.qp_result)

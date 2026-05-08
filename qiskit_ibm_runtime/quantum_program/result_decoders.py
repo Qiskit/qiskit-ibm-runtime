@@ -75,8 +75,8 @@ class QuantumProgramResultDecoder(ResultDecoder):
     ) -> QuantumProgramResult | PrimitiveResult:
         """Apply post-processing to the decoded result.
 
-        Post-processing is only applied if ``result._semantic_role`` has a supported value. Otherwise, the result is returned
-        unchanged.
+        Post-processing is only applied if ``result._semantic_role`` has a supported value.
+        Otherwise, the result is returned unchanged.
 
         Args:
             result: The decoded result.
@@ -97,26 +97,19 @@ class QuantumProgramResultDecoder(ResultDecoder):
                 "v0.1": sampler_v2_post_processor_v0_1,
             }
 
+            if not isinstance(result.passthrough_data, dict):
+                raise ValueError("Expected passthrough data to be of dict-like format.")
+
             try:
-                if not isinstance(result.passthrough_data, dict):
-                    raise ValueError("Expected passthrough data to be of dict-like format.")
+                version = result.passthrough_data.get("post_processor", {})["version"]
+            except KeyError:
+                raise ValueError("Could not determine a post-processor version.")
 
-                try:
-                    version = result.passthrough_data.get("post_processor", {})["version"]
-                except KeyError:
-                    raise ValueError("Could not determine a post-processor version.")
+            try:
+                post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+            except KeyError:
+                raise ValueError(f"No post-processor found for version {version}.")
 
-                try:
-                    post_processor_fn = SAMPLER_POST_PROCESSORS[version]
-                except KeyError:
-                    raise ValueError(f"No post-processor found for version {version}.")
-
-                return post_processor_fn(result)
-            except Exception:
-                logger.exception(
-                    "Unable to apply %s post-processing for converting the results. The original "
-                    "QuantumProgramResult is returned instead.",
-                    semantic_role,
-                )
+            return post_processor_fn(result)
 
         return result
