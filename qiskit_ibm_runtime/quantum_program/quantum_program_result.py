@@ -106,7 +106,28 @@ class ItemMetadata:
     """Metadata about the execution of a single item of a quantum program."""
 
     scheduler_timing: SchedulerTiming | None = None
-    """Scheduled circuit timing information, if it is available.
+    """Scheduler circuit timing information, if it is available.
+
+    When available, the timing information can be visualized using the
+    :meth:`.qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing` method
+    as in the snippet below.
+
+    .. code-block::python
+
+        from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
+
+        # Retrieve the timings from the job item's metadata
+        result = job.result()
+        timings = result[0].metadata.scheduler_timing.timing
+
+        # Create a figure from the metadata
+        fig = draw_circuit_schedule_timing(
+            circuit_schedule=timings,
+            included_channels=None,
+            filter_readout_channels=False,
+            filter_barriers=False,
+            width=1000,
+        )
 
     Note: This feature is experimental and subject to change without notice.
     """
