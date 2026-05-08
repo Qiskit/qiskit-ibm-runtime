@@ -12,9 +12,14 @@
 
 """Sampler result decoder."""
 
-from qiskit.primitives import PrimitiveResult
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .result_decoder import ResultDecoder
+
+if TYPE_CHECKING:
+    from qiskit.primitives import PrimitiveResult
 
 
 class SamplerResultDecoder(ResultDecoder):

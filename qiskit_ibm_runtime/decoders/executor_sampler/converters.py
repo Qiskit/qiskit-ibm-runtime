@@ -20,7 +20,7 @@ from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 if TYPE_CHECKING:
-    from ...quantum_program import QuantumProgramResult
+    from ..quantum_program import QuantumProgramResult
 
 
 def quantum_program_result_to_primitive_result(

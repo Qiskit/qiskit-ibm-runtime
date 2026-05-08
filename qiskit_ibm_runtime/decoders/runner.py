@@ -14,15 +14,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import json
+from typing import TYPE_CHECKING
 
-from qiskit.result import Result, QuasiDistribution
-from qiskit.result.postprocess import _hex_to_bin
 from qiskit.exceptions import QiskitError
+from qiskit.result import QuasiDistribution, Result
+from qiskit.result.postprocess import _hex_to_bin
 
-from .result_decoder import ResultDecoder
 from ..utils.json import RuntimeDecoder
+from .result_decoder import ResultDecoder
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class RunnerResult(Result, ResultDecoder):

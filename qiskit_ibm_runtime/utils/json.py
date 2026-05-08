@@ -94,6 +94,8 @@ HAS_SCIPY = LazyImportTester(
     install="pip install scipy",
 )
 
+# In qiskit-ibm-runtime 0.47, a new `result` module was introduced. These two dicts map the old
+# module names to the current module names, for use in the `__module__` serialized entries.
 RENAMED_MODULES = {
     "qiskit_ibm_runtime.utils.noise_learner_result": "qiskit_ibm_runtime.results.noise_learner",
     "qiskit_ibm_runtime.quantum_program.quantum_program_result": "qiskit_ibm_runtime.results.quantum_program",  # noqa: E501

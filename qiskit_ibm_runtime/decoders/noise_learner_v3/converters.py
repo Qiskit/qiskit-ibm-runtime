@@ -14,20 +14,22 @@
 
 from __future__ import annotations
 
-from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
-    NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModelV01,
-)
-from qiskit.quantum_info import QubitSparsePauliList
+from typing import TYPE_CHECKING
 
+from qiskit.quantum_info import QubitSparsePauliList
 
 from ...results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
 
-from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
-    NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModelV02,
-)
+if TYPE_CHECKING:
+    from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
+        NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModelV01,
+    )
+    from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
+        NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModelV02,
+    )
 
 
 EXECUTION_FIELDS = {"init_qubits", "rep_delay"}

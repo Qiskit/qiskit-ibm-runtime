@@ -10,4 +10,27 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Results for the different programs."""
+"""
+==================================================
+Result classes (:mod:`qiskit_ibm_runtime.results`)
+==================================================
+
+.. autosummary::
+   :toctree: ../stubs/
+   :nosignatures:
+
+   EstimatorPubResult
+   NoiseLearnerResult
+   PauliLindbladError
+   LayerError
+   NoiseLearnerV3Result
+   NoiseLearnerV3Results
+   ItemMetadata
+   QuantumProgramResult
+   QuantumProgramItemResult
+"""  # noqa: D205, D212, D415
+
+from .estimator_pub import EstimatorPubResult
+from .noise_learner import NoiseLearnerResult, PauliLindbladError, LayerError
+from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
+from .quantum_program import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata

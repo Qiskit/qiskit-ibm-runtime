@@ -9,7 +9,7 @@
 
    runtime_service
    noise_learner
-   noise_learner_result
+   results
    options
    options_models
    transpiler

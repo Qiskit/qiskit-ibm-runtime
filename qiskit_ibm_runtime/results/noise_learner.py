@@ -25,19 +25,20 @@ NoiseLearner result classes (:mod:`qiskit_ibm_runtime.utils.noise_learner_result
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
-from collections.abc import Iterator, Sequence
-from numpy.typing import NDArray
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
-from qiskit.providers.backend import BackendV2
-from qiskit.circuit import QuantumCircuit
-from qiskit.quantum_info import PauliList, Pauli
-
-from ..utils.embeddings import Embedding
-
 if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
+
+    from numpy.typing import NDArray
     from plotly.graph_objects import Figure as PlotlyFigure
+    from qiskit.circuit import QuantumCircuit
+    from qiskit.providers.backend import BackendV2
+    from qiskit.quantum_info import Pauli, PauliList
+
+    from ..utils.embeddings import Embedding
 
 
 class PauliLindbladError:

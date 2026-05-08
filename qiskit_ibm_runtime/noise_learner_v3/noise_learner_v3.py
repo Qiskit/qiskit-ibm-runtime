@@ -159,7 +159,6 @@ class NoiseLearnerV3:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
-            # TODO: unify
             result_decoder=DEFAULT_DECODERS[self._PROGRAM_ID],
             calibration_id=getattr(self._backend, "calibration_id", None),
         )

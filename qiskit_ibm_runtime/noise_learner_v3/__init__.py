@@ -27,8 +27,6 @@ Classes
    :toctree: ../stubs/
 
    NoiseLearnerV3
-   NoiseLearnerV3Result
-   NoiseLearnerV3Results
 
 """
 
