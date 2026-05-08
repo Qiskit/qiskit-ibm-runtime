@@ -17,7 +17,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from ..utils.result_decoder import ResultDecoder
+from .result_decoder import ResultDecoder
 
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult

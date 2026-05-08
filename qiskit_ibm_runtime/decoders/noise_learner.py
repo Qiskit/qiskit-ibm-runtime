@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
+from ..utils.noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
 
 if TYPE_CHECKING:
@@ -30,7 +30,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:
         """Convert the result to NoiseLearnerResult."""
         if "schema_version" in raw_result:
-            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
+            from qiskit_ibm_runtime.decoders.noise_learner_v3 import (
                 NoiseLearnerV3ResultDecoder,
             )
 

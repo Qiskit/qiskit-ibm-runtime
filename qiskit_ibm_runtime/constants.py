@@ -14,13 +14,13 @@
 
 from collections.abc import Sequence
 
-from .quantum_program.result_decoders import QuantumProgramResultDecoder
-from .quantum_program.executor_sampler import ExecutorSamplerResultDecoder
-from .utils.result_decoder import ResultDecoder
-from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
-from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.sampler_result_decoder import SamplerResultDecoder
-from .utils.runner_result import RunnerResult
+from .decoders.quantum_program import QuantumProgramResultDecoder
+from .decoders.executor_sampler import ExecutorSamplerResultDecoder
+from .decoders.result_decoder import ResultDecoder
+from .decoders.noise_learner import NoiseLearnerResultDecoder
+from .decoders.estimator import EstimatorResultDecoder
+from .decoders.sampler import SamplerResultDecoder
+from .decoders.runner import RunnerResult
 
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | Sequence[type[ResultDecoder]]] = {

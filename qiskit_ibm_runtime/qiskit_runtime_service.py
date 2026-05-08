@@ -36,7 +36,7 @@ from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError
 from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .runtime_job_v2 import RuntimeJobV2
 from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters

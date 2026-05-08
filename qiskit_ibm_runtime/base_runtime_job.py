@@ -35,7 +35,7 @@ from .exceptions import (
     IBMApiError,
     IBMRuntimeError,
 )
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError

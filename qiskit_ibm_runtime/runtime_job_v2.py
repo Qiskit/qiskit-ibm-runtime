@@ -34,7 +34,7 @@ from .exceptions import (
     RuntimeJobMaxTimeoutError,
     RuntimeJobTimeoutError,
 )
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .base_runtime_job import BaseRuntimeJob

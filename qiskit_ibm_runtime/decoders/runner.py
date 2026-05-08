@@ -22,7 +22,7 @@ from qiskit.result.postprocess import _hex_to_bin
 from qiskit.exceptions import QiskitError
 
 from .result_decoder import ResultDecoder
-from .json import RuntimeDecoder
+from ..utils.json import RuntimeDecoder
 
 
 class RunnerResult(Result, ResultDecoder):

@@ -25,7 +25,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
 from .runtime_job_v2 import RuntimeJobV2
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.converters import hms_to_seconds

@@ -27,8 +27,8 @@ from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
 
-from ..utils.result_decoder import ResultDecoder
-from .converters import (
+from .result_decoder import ResultDecoder
+from ..quantum_program.converters import (
     quantum_program_result_from_0_1,
     quantum_program_result_from_0_2,
     quantum_program_result_from_1_0,
