@@ -27,4 +27,4 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
 """  # noqa: D205, D212, D415
 
 from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
-from .quantum_program import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata
+from .quantum_program import ItemMetadata, QuantumProgramItemResult, QuantumProgramResult

@@ -14,17 +14,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, MutableMapping, Sequence
+from collections.abc import MutableMapping
 from dataclasses import dataclass, field
-import datetime
-from datetime import timezone
-from typing import overload, TYPE_CHECKING
-import numpy as np
-
-from ..quantum_program.datatree import DataTree
+from typing import TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
+    import datetime
+    from collections.abc import Iterable, Iterator, Sequence
+    from datetime import timezone
+
+    import numpy as np
     from plotly.graph_objects import Figure as PlotlyFigure
+
+    from ..quantum_program.datatree import DataTree
 
 
 @dataclass
