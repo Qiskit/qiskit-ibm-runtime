@@ -20,9 +20,9 @@ from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_inputs_from_0_1,
     noise_learner_v3_inputs_to_0_1,
-    noise_learner_v3_result_from_0_1,
     noise_learner_v3_result_to_0_1,
 )
+from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_1
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,

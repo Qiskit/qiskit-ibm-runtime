@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Transport conversion functions."""
+
 from __future__ import annotations
 
 from datetime import timezone
@@ -25,6 +26,7 @@ from ...quantum_program.quantum_program_result import (
 
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_0_1 import QuantumProgramResultModel
+
 
 def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
     """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
@@ -62,6 +64,7 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
         metadata=metadata,
         passthrough_data=model.passthrough_data,
     )
+
 
 def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> QuantumProgramResult:
     """Convert a V1.0 model to a :class:`QuantumProgramResult`."""
