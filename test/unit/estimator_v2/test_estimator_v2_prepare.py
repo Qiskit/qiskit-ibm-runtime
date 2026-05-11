@@ -179,7 +179,7 @@ class TestPrepareFunction(unittest.TestCase):
         circuit.cx(0, 1)
 
         # Add a classical register with the reserved name
-        reserved_creg = ClassicalRegister(2, "wrapper_estimator_data")
+        reserved_creg = ClassicalRegister(2, "_meas")
         circuit.add_register(reserved_creg)
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
@@ -189,5 +189,5 @@ class TestPrepareFunction(unittest.TestCase):
         with self.assertRaises(IBMInputValueError) as context:
             prepare([pub], self.options.twirling, 1024)
 
-        self.assertIn("wrapper_estimator_data", str(context.exception))
+        self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))

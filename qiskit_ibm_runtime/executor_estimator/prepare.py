@@ -16,8 +16,14 @@ from __future__ import annotations
 
 import logging
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from ..options_models.twirling_options import TwirlingOptions
+
 import numpy as np
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from qiskit.circuit import ClassicalRegister
@@ -27,36 +33,35 @@ from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from ..quantum_program.datatree import is_datatree_compatible
 from ..exceptions import IBMInputValueError
-from ..options_models.twirling_options import TwirlingOptions
 from .utils import get_bases, pauli_to_ints
-from ..executor_sampler.utils import calculate_twirling_shots
+from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 logger = logging.getLogger(__name__)
 
 
 def prepare(
-    pubs: list[EstimatorPub],
+    pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
 ) -> QuantumProgram:
-    """Convert a list of ``EstimatorPub`` objects to a ``QuantumProgram``.
+    """Convert estimator PUBs to a quantum program.
 
     Args:
         pubs: List of estimator pubs to convert.
-        twirling_options: ``TwirlingOptions`` object.
+        twirling_options: The twirling options.
         shots: The number of shots to use. Will be overridden by
-            `num_randomizations * shots_per_randomization` when both are specified explicitly
+            ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
-        with passthrough_data configured for
+        with ``passthrough data`` configured for
         :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2` post-processing.
 
     Raises:
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
-            reserved classical register name ``wrapper_estimator_data``.
+            reserved classical register name ``_meas``.
     """
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
@@ -82,23 +87,17 @@ def prepare(
         # Remove any existing final measurements
         prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
 
-        # TODO: Adjust so change basis is applied only to the last box.
-        if prepared_circuit.count_ops().get("measure", 0) > 0:
+        if prepared_circuit.get_instructions("measure"):
             raise IBMInputValueError(
                 f"Pub {i} contains mid-circuit measurements, which are temporarily not supported"
                 " by EstimatorV2. Only final measurements are allowed."
             )
 
-        # TODO: Optimization - We can measure only the needed qubits.
-        # TODO: Optimization - We can remove the old classical registers which are not needed,
-        # to minimize the returned data.
-        creg = ClassicalRegister(prepared_circuit.num_qubits, "wrapper_estimator_data")
+        creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
         try:
             prepared_circuit.add_register(creg)
         except CircuitError:
-            raise IBMInputValueError(
-                "Name `wrapper_estimator_data` is reserved for a dedicated classical register."
-            )
+            raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
 
         prepared_circuit.measure(prepared_circuit.qubits, creg)
 

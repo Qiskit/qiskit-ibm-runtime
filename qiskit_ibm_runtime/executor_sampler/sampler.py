@@ -29,7 +29,8 @@ from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
-from .utils import calculate_twirling_shots, extract_shots_from_pubs, validate_no_boxes
+from .utils import extract_shots_from_pubs, validate_no_boxes
+from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
