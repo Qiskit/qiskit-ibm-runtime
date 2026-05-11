@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import TYPE_CHECKING, Literal
+from typing import Any, TYPE_CHECKING, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
@@ -53,6 +53,7 @@ def sampler_options_to_executor_options(options: SamplerOptions) -> ExecutorOpti
 
 def quantum_program_item_result_to_sampler_pub_result(
     item: QuantumProgramItemResult,
+    num_randomizations: int,
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
     circuit_metadata: dict | None = None,
 ) -> SamplerPubResult:
@@ -60,6 +61,7 @@ def quantum_program_item_result_to_sampler_pub_result(
 
     Args:
         item: The result of a single item of a quantum program.
+        num_randomizations: The number of randomizations.
         meas_type: The measurement type.
         circuit_metadata: The metadata attached to the circuit in the input PUB.
 
@@ -82,9 +84,11 @@ def quantum_program_item_result_to_sampler_pub_result(
 
     data_bin = DataBin(**arrays, shape=pub_shape)
 
-    # Get circuit metadata for this pub if available
-    pub_metadata = {}
-    if circuit_metadata is not None:
+    # Construct the metadata for the result
+    pub_metadata: dict[str, Any] = {"circuit_metadata": {}}
+    if circuit_metadata:
         pub_metadata["circuit_metadata"] = circuit_metadata
+    if num_randomizations > 0:
+        pub_metadata["num_randomizations"] = num_randomizations
 
     return SamplerPubResult(data=data_bin, metadata=pub_metadata)
