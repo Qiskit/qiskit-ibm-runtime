@@ -62,7 +62,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     # Compute the ``num_randomizations`` from the left-most axis of the result arrays
     if twirling:
         if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
-            raise ValueError("Unable to uniquely identity the number of randomizations.")
+            raise ValueError("Unable to uniquely identify the number of randomizations.")
         num_randomizations = next(iter(set_num_randomizations))
     else:
         num_randomizations = 0
