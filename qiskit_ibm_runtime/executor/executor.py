@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 
 from ..options_models.executor_options import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from ..quantum_program.result_decoders import QuantumProgramResultDecoder
+from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:

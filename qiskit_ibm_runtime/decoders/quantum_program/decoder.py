@@ -27,7 +27,7 @@ from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
 
-from ..utils.result_decoder import ResultDecoder
+from ...utils.result_decoder import ResultDecoder
 from .converters import (
     quantum_program_result_from_0_1,
     quantum_program_result_from_0_2,
@@ -37,7 +37,7 @@ from .converters import (
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ..quantum_program.quantum_program_result import QuantumProgramResult
+    from ...quantum_program.quantum_program_result import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
 
         if semantic_role == "sampler_v2":
             # TODO: Circular import issue. Consider changing file structure.
-            from ..executor_sampler.post_processors.post_processor_v0_1 import (
+            from ...executor_sampler.post_processors.post_processor_v0_1 import (
                 sampler_v2_post_processor_v0_1,
             )
 

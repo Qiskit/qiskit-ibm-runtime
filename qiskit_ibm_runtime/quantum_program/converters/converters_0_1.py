@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import timezone
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
@@ -25,7 +24,6 @@ from ibm_quantum_schemas.executor.version_0_1 import (
     CircuitItemModel,
     SamplexItemModel,
     QuantumProgramModel,
-    QuantumProgramResultModel,
 )
 from ibm_quantum_schemas.common import (
     PauliLindbladMapModel,
@@ -37,7 +35,7 @@ from ibm_quantum_schemas.common import (
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ..quantum_program_result import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+
 from ...options_models.executor_options import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 
@@ -135,22 +133,4 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
     return ParamsModel(
         quantum_program=QuantumProgramModel(shots=program.shots, items=model_items),
         options=asdict(options.execution),  # type: ignore[call-overload]
-    )
-
-
-def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
-    """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
-    metadata = Metadata(
-        chunk_timing=[
-            ChunkSpan(
-                span.start.replace(tzinfo=timezone.utc),
-                span.stop.replace(tzinfo=timezone.utc),
-                [ChunkPart(part.idx_item, part.size) for part in span.parts],
-            )
-            for span in model.metadata.chunk_timing
-        ]
-    )
-    return QuantumProgramResult(
-        data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
-        metadata=metadata,
     )

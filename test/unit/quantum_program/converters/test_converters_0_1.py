@@ -33,9 +33,9 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_to_0_1,
-    quantum_program_result_from_0_1,
     quantum_program_from_0_1,
 )
+from qiskit_ibm_runtime.decoders.quantum_program.converters import quantum_program_result_from_0_1
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions, ExecutionOptions
 
 from ....ibm_test_case import IBMTestCase
