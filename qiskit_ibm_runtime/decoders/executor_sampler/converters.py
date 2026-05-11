@@ -14,42 +14,13 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from ..options_models import EnvironmentOptions, ExecutionOptions, ExecutorOptions
-
 if TYPE_CHECKING:
-    from ..options_models import SamplerOptions
-    from ..quantum_program import QuantumProgramResult
-
-
-def sampler_options_to_executor_options(options: SamplerOptions) -> ExecutorOptions:
-    """Map sampler options to executor options, ignoring all irrelevant fields.
-
-    Args:
-        options: Instance of sampler options.
-
-    Returns:
-        Mapped executor options.
-    """
-    executor_options = ExecutorOptions()
-
-    environment_options = asdict(options.environment)  # type: ignore[call-overload]
-    execution_options = asdict(options.execution)  # type: ignore[call-overload]
-    execution_options.pop("meas_type")
-    executor_options.environment = EnvironmentOptions(**environment_options)
-    executor_options.execution = ExecutionOptions(**execution_options)
-
-    executor_options.environment.max_execution_time = options.max_execution_time
-    if options.experimental:
-        executor_options.environment.image = options.experimental.pop("image", None)
-        executor_options.experimental.update(options.experimental)
-
-    return executor_options
+    from ...quantum_program import QuantumProgramResult
 
 
 def quantum_program_result_to_primitive_result(

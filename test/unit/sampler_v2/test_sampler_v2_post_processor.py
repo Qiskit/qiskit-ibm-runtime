@@ -20,10 +20,10 @@ from ddt import data, ddt
 
 from qiskit.primitives import PrimitiveResult
 
-from qiskit_ibm_runtime.executor_sampler.converters import (
+from qiskit_ibm_runtime.decoders.executor_sampler.converters import (
     quantum_program_result_to_primitive_result,
 )
-from qiskit_ibm_runtime.executor_sampler.post_processors.post_processor_v0_1 import (
+from qiskit_ibm_runtime.decoders.executor_sampler.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
