@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
 from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
     NoiseLearnerV3ResultDecoder,
 )
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
+from qiskit_ibm_runtime.results.noise_learner_v3 import (  # type: ignore[attr-defined]
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
