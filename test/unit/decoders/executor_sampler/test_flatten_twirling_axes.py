@@ -18,9 +18,7 @@ import unittest
 
 import numpy as np
 
-from qiskit_ibm_runtime.decoders.executor_sampler.utils import (
-    flatten_twirling_axes,
-)
+from qiskit_ibm_runtime.decoders.executor_sampler.utils import flatten_twirling_axes
 
 
 class TestFlattenTwirlingAxes(unittest.TestCase):

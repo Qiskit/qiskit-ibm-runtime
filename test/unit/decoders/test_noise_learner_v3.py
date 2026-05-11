@@ -19,10 +19,8 @@ from qiskit.quantum_info import QubitSparsePauliList
 from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_result_to_0_1,
 )
-from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import (
-    NoiseLearnerV3ResultDecoder,
-)
-from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (  # type: ignore[attr-defined]
+from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
+from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
