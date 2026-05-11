@@ -24,7 +24,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import ClassicalRegister
 
 from qiskit_ibm_runtime.executor_estimator.prepare import prepare
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
+from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -32,10 +32,6 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 class TestPrepareFunction(unittest.TestCase):
     """Tests for the prepare function."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        self.options = EstimatorOptions()
 
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
@@ -58,7 +54,7 @@ class TestPrepareFunction(unittest.TestCase):
         pub2 = EstimatorPub.coerce((circuit2, observables2, parameter_values2))
 
         shots = 1024
-        quantum_program = prepare([pub1, pub2], self.options.twirling, shots)
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
@@ -96,10 +92,10 @@ class TestPrepareFunction(unittest.TestCase):
         mock_boxing_pm.run.side_effect = lambda circuit: circuit
         mock_generate_boxing_pm.return_value = mock_boxing_pm
 
-        options = EstimatorOptions()
-        options.twirling.enable_gates = True
-        options.twirling.enable_measure = False
-        options.twirling.strategy = "all"
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = False
+        twirling_options.strategy = "all"
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -117,7 +113,7 @@ class TestPrepareFunction(unittest.TestCase):
             "qiskit_ibm_runtime.executor_estimator.prepare.build",
             return_value=(circuit, mock_samplex),
         ):
-            prepare([pub], options.twirling, 1024)
+            prepare([pub], twirling_options, 1024)
 
         mock_generate_boxing_pm.assert_called_once_with(
             enable_gates=True,
@@ -128,11 +124,11 @@ class TestPrepareFunction(unittest.TestCase):
 
     def test_prepare_with_twirling_enabled(self):
         """Test prepare with gate and measurement twirling enabled."""
-        options = EstimatorOptions()
-        options.twirling.enable_gates = True
-        options.twirling.enable_measure = True
-        options.twirling.num_randomizations = 4
-        options.twirling.shots_per_randomization = 256
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+        twirling_options.num_randomizations = 4
+        twirling_options.shots_per_randomization = 256
 
         circuit = QuantumCircuit(2)
         circuit.rx(0.1, 0)
@@ -141,7 +137,7 @@ class TestPrepareFunction(unittest.TestCase):
         observables = ObservablesArray.coerce([{"ZI": 1}, {"IZ": 1}])
         pub = EstimatorPub.coerce((circuit, observables))
 
-        quantum_program = prepare([pub], options.twirling, 2000)
+        quantum_program = prepare([pub], twirling_options, 2000)
 
         item = cast(SamplexItem, quantum_program.items[0])
         self.assertEqual(quantum_program.shots, 256)
@@ -167,7 +163,7 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Should raise an error - mid-circuit measurements are not supported
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], self.options.twirling, shots)
+            prepare([pub], TwirlingOptions(), shots)
 
         self.assertIn("mid-circuit measurements", str(context.exception))
 
@@ -187,7 +183,7 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Should raise an error - the classical register name is reserved
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], self.options.twirling, 1024)
+            prepare([pub], TwirlingOptions(), 1024)
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
