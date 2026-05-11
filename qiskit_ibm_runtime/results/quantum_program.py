@@ -21,7 +21,7 @@ from datetime import timezone
 from typing import overload, TYPE_CHECKING
 import numpy as np
 
-from .datatree import DataTree
+from ..quantum_program.datatree import DataTree
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure

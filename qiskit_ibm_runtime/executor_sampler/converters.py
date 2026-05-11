@@ -24,7 +24,7 @@ from ..options_models import EnvironmentOptions, ExecutionOptions, ExecutorOptio
 
 if TYPE_CHECKING:
     from ..options_models import SamplerOptions
-    from ..quantum_program import QuantumProgramResult
+    from ..results import QuantumProgramResult
 
 
 def sampler_options_to_executor_options(options: SamplerOptions) -> ExecutorOptions:

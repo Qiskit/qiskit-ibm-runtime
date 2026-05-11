@@ -20,7 +20,7 @@ from .noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladE
 from .result_decoder import ResultDecoder
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results
+    from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
 
 
 class NoiseLearnerResultDecoder(ResultDecoder):
