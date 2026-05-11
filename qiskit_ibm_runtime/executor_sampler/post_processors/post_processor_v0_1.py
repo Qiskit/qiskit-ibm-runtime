@@ -18,8 +18,8 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ..converters import quantum_program_result_to_primitive_result
-from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes
+from ..converters import quantum_program_item_result_to_sampler_pub_result
+from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
     from ...quantum_program.quantum_program_result import QuantumProgramResult
@@ -45,25 +45,6 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if len(result) == 0:
         return PrimitiveResult([])
 
-    # Apply measurement twirling bit flips
-    prefix = "measurement_flips."
-    for item in result:
-        flip_keys = [key for key in item.keys() if key.startswith(prefix)]
-
-        for flip_key in flip_keys:
-            target_key = flip_key[len(prefix) :]
-
-            # Validate that target key exists
-            if target_key not in item:
-                raise ValueError(
-                    f"Measurement flip key '{flip_key}' references non-existent "
-                    f"register '{target_key}'. Available registers: {list(item.keys())}"
-                )
-
-            # Apply XOR and remove flip key
-            flip_data = item.pop(flip_key)
-            item[target_key] ^= flip_data
-
     if not isinstance(result.passthrough_data, dict):
         raise ValueError(
             "Wrong type for passthrough data: Expected a 'dict', found "
@@ -78,12 +59,13 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
 
-    # Extract circuit metadata if present
-    circuits_metadata = post_processor_data.get("circuits_metadata", None)
-
-    # TODO: This will fail for PUBs with no measurements, but it will also fail in many other
-    # places.
-    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
+    # Compute the ``num_randomizations`` from the left-most axis of the result arrays
+    if twirling:
+        if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
+            raise ValueError("Unable to uniquely identify the number of randomizations.")
+        num_randomizations = next(iter(set_num_randomizations))
+    else:
+        num_randomizations = 0
 
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
     # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
@@ -91,23 +73,32 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Unable to uniquely identify the shots per PUB.")
     shots = next(iter(set_shots))
 
-    # Compute the ``num_randomizations`` from the left-most axis of the result arrays
-    if twirling:
-        if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
-            raise ValueError("Unable to uniquely identity the number of randomizations.")
-        num_randomizations = next(iter(set_num_randomizations))
-    else:
-        num_randomizations = 0
+    # Compute the shape of the input PUBs
+    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
 
-    if twirling:
-        for item, shape in zip(result, pub_shapes):
-            flatten_twirling_axes(item, shape)
+    # Extract circuit metadata if present and validate length
+    circuits_metadata = post_processor_data.get("circuits_metadata", None) or [None] * len(result)
+    if circuits_metadata is not None and len(circuits_metadata) != len(result):
+        raise ValueError(
+            f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
+            f"number of pubs ({len(result)})."
+        )
+
+    pub_results = []
+    for item, metadatum, pub_shape in zip(result, circuits_metadata, pub_shapes):
+        if len(item) == 0:
+            raise ValueError("Found an item without data.")
+
+        undo_twirling(item)
+
+        if twirling:
+            flatten_twirling_axes(item, pub_shape)
+
+        pub_result = quantum_program_item_result_to_sampler_pub_result(item, meas_type, metadatum)
+        pub_results.append(pub_result)
 
     metadata = executor_metadata_to_sampler_metadata(
         result.metadata, num_randomizations, shots, pub_shapes
     )
 
-    sampler_result = quantum_program_result_to_primitive_result(
-        result, metadata, meas_type, circuits_metadata
-    )
-    return sampler_result
+    return PrimitiveResult(pub_results, metadata=metadata or {})
