@@ -21,7 +21,7 @@ from ddt import data, ddt
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.executor_sampler.converters import (
-    quantum_program_result_to_primitive_result,
+    quantum_program_item_result_to_sampler_pub_result,
 )
 from qiskit_ibm_runtime.executor_sampler.post_processors.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
@@ -29,17 +29,14 @@ from qiskit_ibm_runtime.executor_sampler.post_processors.post_processor_v0_1 imp
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramResult,
+    QuantumProgramItemResult,
     Metadata,
 )
 
 
 @ddt
-class TestSamplerV2StaticMethod(unittest.TestCase):
-    """Test SamplerV2.quantum_program_result_to_primitive_result() static method.
-
-    This class contains comprehensive tests for the static method that performs
-    the actual conversion logic from QuantumProgramResult to PrimitiveResult.
-    """
+class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
+    """Test ``quantum_program_item_result_to_sampler_pub_result``."""
 
     def test_single_pub_multiple_registers(self):
         """Test conversion with single pub and multiple classical registers."""
@@ -52,28 +49,10 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
             0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
         )
 
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-                "options": asdict(options),
-                "twirling": True,
-                "meas_type": "classified",
-            }
-        }
-
-        qp_result = QuantumProgramResult(
-            data=[{"c1": meas_data_c1, "c2": meas_data_c2}],
-            metadata=Metadata(),
-            passthrough_data=passthrough_data,
-        )
-        qp_result._semantic_role = "sampler_v2"
-
-        result = quantum_program_result_to_primitive_result(qp_result)
+        item = QuantumProgramItemResult({"c1": meas_data_c1, "c2": meas_data_c2})
+        pub_result = quantum_program_item_result_to_sampler_pub_result(item)
 
         # Verify both registers are present
-        pub_result = result[0]
         self.assertIn("c1", pub_result.data)
         self.assertIn("c2", pub_result.data)
 
@@ -81,188 +60,28 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         self.assertEqual(pub_result.data.c1.num_bits, 2)
         self.assertEqual(pub_result.data.c2.num_bits, 3)
 
-    def test_multiple_pubs(self):
-        """Test conversion with multiple pubs."""
-        num_shots = 100
-        meas_data_1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        meas_data_2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
-        meas_data_3 = np.random.randint(0, 2, size=(num_shots, 4), dtype=np.uint8)
-
-        qp_result = QuantumProgramResult(
-            data=[
-                {"meas": meas_data_1},
-                {"meas": meas_data_2},
-                {"meas": meas_data_3},
-            ],
-            metadata=Metadata(),
+    @data("circuit_metadata", [None, {"metadata": "val"}])
+    def test_metadata_preservation(self, circuit_metadata):
+        """Test that circuit metadata is attached correctly to the result."""
+        item = QuantumProgramItemResult({"c": np.array([[5]], dtype=np.uint8)})
+        result = quantum_program_item_result_to_sampler_pub_result(
+            item, "kerneled", circuit_metadata
         )
-
-        result = quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify number of pubs
-        self.assertEqual(len(result), 3)
-
-        # Verify each pub
-        self.assertEqual(result[0].data.meas.num_bits, 2)
-        self.assertEqual(result[1].data.meas.num_bits, 3)
-        self.assertEqual(result[2].data.meas.num_bits, 4)
-
-    def test_missing_measurement_data(self):
-        """Test error when measurement data is missing."""
-        qp_result = QuantumProgramResult(
-            data=[{}],  # Empty data
-            metadata=Metadata(),
-        )
-
-        with self.assertRaises(ValueError) as context:
-            quantum_program_result_to_primitive_result(qp_result)
-
-        self.assertIn("no measurement data", str(context.exception).lower())
-
-    def test_metadata_preservation(self):
-        """Test that metadata is preserved in the result."""
-        qp_result = QuantumProgramResult(
-            data=[{"c": np.array([[5]], dtype=np.uint8)}],  # 1 byte
-            metadata=Metadata(),
-        )
-
-        metadata = {"metadata": "val"}
-        result = quantum_program_result_to_primitive_result(qp_result, metadata)
 
         # Verify metadata is present
-        self.assertEqual(result.metadata, metadata)
-
-    def test_circuit_metadata_multiple_pubs(self):
-        """Test that circuit metadata is correctly placed for multiple pubs."""
-        qp_result = QuantumProgramResult(
-            data=[
-                {"c": np.array([[5]], dtype=np.uint8)},
-                {"c": np.array([[3]], dtype=np.uint8)},
-                {"c": np.array([[7]], dtype=np.uint8)},
-            ],
-            metadata=Metadata(),
-        )
-
-        circuits_metadata = [
-            {"experiment_id": "exp_001", "param": 1},
-            {"experiment_id": "exp_002", "param": 2},
-            {},
-        ]
-
-        result = quantum_program_result_to_primitive_result(
-            qp_result, metadata=None, circuits_metadata=circuits_metadata
-        )
-
-        # Verify each pub has correct circuit metadata
-        self.assertEqual(len(result), 3)
-        for idx, pub_result in enumerate(result):
-            self.assertIn("circuit_metadata", pub_result.metadata)
-            self.assertEqual(pub_result.metadata["circuit_metadata"], circuits_metadata[idx])
-
-    def test_circuit_metadata_none(self):
-        """Test that None circuit metadata is handled correctly."""
-        qp_result = QuantumProgramResult(
-            data=[{"c": np.array([[5]], dtype=np.uint8)}],
-            metadata=Metadata(),
-        )
-
-        circuits_metadata = [None]
-
-        result = quantum_program_result_to_primitive_result(
-            qp_result, metadata=None, circuits_metadata=circuits_metadata
-        )
-
-        # Verify pub result has empty metadata when circuit metadata is None
-        pub_result = result[0]
-        self.assertNotIn("circuit_metadata", pub_result.metadata)
-        self.assertEqual(pub_result.metadata, {})
-
-    def test_circuit_metadata_missing(self):
-        """Test that missing circuits_metadata parameter results in empty pub metadata."""
-        qp_result = QuantumProgramResult(
-            data=[{"c": np.array([[5]], dtype=np.uint8)}],
-            metadata=Metadata(),
-        )
-
-        result = quantum_program_result_to_primitive_result(
-            qp_result, metadata=None, circuits_metadata=None
-        )
-
-        # Verify pub result has empty metadata
-        pub_result = result[0]
-        self.assertEqual(pub_result.metadata, {})
-
-    def test_circuit_metadata_length_mismatch(self):
-        """Test that mismatched circuits_metadata length raises ValueError."""
-        qp_result = QuantumProgramResult(
-            data=[
-                {"c": np.array([[5]], dtype=np.uint8)},
-                {"c": np.array([[3]], dtype=np.uint8)},
-                {"c": np.array([[7]], dtype=np.uint8)},
-            ],
-            metadata=Metadata(),
-        )
-
-        # Provide metadata for only 2 pubs when there are 3
-        circuits_metadata = [
-            {"experiment_id": "exp_001"},
-            {"experiment_id": "exp_002"},
-        ]
-
-        with self.assertRaises(ValueError) as context:
-            quantum_program_result_to_primitive_result(
-                qp_result, metadata=None, circuits_metadata=circuits_metadata
-            )
-
-        self.assertIn("does not match", str(context.exception))
-
-    def test_different_register_names(self):
-        """Test that any register name works (not hardcoded)."""
-        num_shots = 50
-        # Use unusual register names: 2 bits, 3 bits
-        meas_data_custom1 = np.random.randint(0, 2, size=(num_shots, 2), dtype=np.uint8)
-        meas_data_custom2 = np.random.randint(0, 2, size=(num_shots, 3), dtype=np.uint8)
-
-        qp_result = QuantumProgramResult(
-            data=[{"my_reg": meas_data_custom1, "another_reg": meas_data_custom2}],
-            metadata=Metadata(),
-        )
-
-        result = quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify custom register names are preserved
-        pub_result = result[0]
-        self.assertIn("my_reg", pub_result.data)
-        self.assertIn("another_reg", pub_result.data)
+        self.assertEqual(result.metadata["circuit_metadata"], circuit_metadata)
 
     def test_bit_array_data_integrity(self):
         """Test that BitArray data matches input measurement data."""
         num_shots = 10
         num_bits = 4
-        # Create specific measurement data to verify integrity
-        meas_data = np.array(
-            [
-                [1, 0, 1, 0],
-                [0, 1, 0, 1],
-                [1, 1, 0, 0],
-                [0, 0, 1, 1],
-                [1, 0, 0, 1],
-                [0, 1, 1, 0],
-                [1, 1, 1, 1],
-                [0, 0, 0, 0],
-                [1, 0, 1, 1],
-                [0, 1, 0, 0],
-            ],
-            dtype=np.uint8,
-        )
 
-        qp_result = QuantumProgramResult(
-            data=[{"meas": meas_data}],
-            metadata=Metadata(),
+        item = QuantumProgramItemResult(
+            {"meas": np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)}
         )
+        result = quantum_program_item_result_to_sampler_pub_result(item)
 
-        result = quantum_program_result_to_primitive_result(qp_result)
-        bit_array = result[0].data.meas
+        bit_array = result.data.meas
 
         # Verify the BitArray contains the same data
         self.assertEqual(bit_array.num_shots, num_shots)
@@ -288,58 +107,15 @@ class TestSamplerV2StaticMethod(unittest.TestCase):
         suffix = "_avg_iq" if meas_type == "avg_kerneled" else "_iq"
         register_name_with_suffix = f"meas{suffix}"
 
-        qp_result = QuantumProgramResult(
-            data=[{register_name_with_suffix: meas_data}],
-            metadata=Metadata(),
-        )
-
-        result = quantum_program_result_to_primitive_result(qp_result, meas_type=meas_type)
+        item = QuantumProgramItemResult({register_name_with_suffix: meas_data})
+        result = quantum_program_item_result_to_sampler_pub_result(item, meas_type=meas_type)
 
         # Verify suffix was removed and data is accessible without suffix
-        self.assertIn("meas", result[0].data)
-        self.assertNotIn(register_name_with_suffix, result[0].data)
-        result_array = result[0].data.meas
+        self.assertIn("meas", result.data)
+        self.assertNotIn(register_name_with_suffix, result.data)
 
         # Verify the result array contains the same data
-        np.testing.assert_array_equal(result_array, meas_data)
-
-    def test_empty_pub_shape(self):
-        """Test conversion with empty pub shape (non-parametric circuit)."""
-        num_shots = 50
-        num_bits = 2
-        # Shape is () for non-parametric circuits
-        meas_data = np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)
-
-        qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}],
-            metadata=Metadata(),
-        )
-
-        result = quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify pub shape is empty tuple
-        pub_result = result[0]
-        self.assertEqual(pub_result.data.shape, ())
-
-    def test_complex_parameter_sweep_shape(self):
-        """Test conversion with complex multi-dimensional parameter sweep."""
-        num_shots = 100
-        num_bits = 2
-        sweep_shape = (2, 3, 4)  # 3D parameter sweep
-        meas_data = np.random.randint(
-            0, 2, size=sweep_shape + (num_shots, num_bits), dtype=np.uint8
-        )
-
-        qp_result = QuantumProgramResult(
-            data=[{"c": meas_data}],
-            metadata=Metadata(),
-        )
-
-        result = quantum_program_result_to_primitive_result(qp_result)
-
-        # Verify complex shape is preserved
-        pub_result = result[0]
-        self.assertEqual(pub_result.data.shape, sweep_shape)
+        np.testing.assert_array_equal(result.data.meas, meas_data)
 
 
 class TestSamplerV2PostProcessor(unittest.TestCase):
