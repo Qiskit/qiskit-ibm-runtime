@@ -10,28 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-=============================================================
-Noise learner V3 (:mod:`qiskit_ibm_runtime.noise_learner_v3`)
-=============================================================
-
-.. currentmodule:: qiskit_ibm_runtime.noise_learner_v3
-
-The tools to characterize the noise processes affecting the instructions in noisy
-quantum circuits.
-
-Classes
-=======
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   NoiseLearnerV3
-
-"""
-
-from .noise_learner_v3 import NoiseLearnerV3
+"""Noise learner V3 results."""
 
 # These imports are to be removed in next qiskit-ibm-runtime release. Please import directly via
 # the qiskit_ibm_runtime.results module.
-from .noise_learner_v3_result import NoiseLearnerV3Result, NoiseLearnerV3Results
+from ..results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results  # noqa: F401
