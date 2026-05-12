@@ -62,12 +62,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
 
-    # Extract data from passthrough
-    if (observables_lists := passthrough.get("observables", None)) is None:
-        raise ValueError("Missing 'observables' in passthrough data.")
+    # Extract data from post_processor
+    if (observables_lists := post_processor_data.get("observables", None)) is None:
+        raise ValueError("Missing 'observables' in post_processor data.")
 
-    if (measure_bases_lists := passthrough.get("measure_bases", None)) is None:
-        raise ValueError("Missing 'measure_bases' in passthrough data.")
+    if (measure_bases_lists := post_processor_data.get("measure_bases", None)) is None:
+        raise ValueError("Missing 'measure_bases' in post_processor data.")
 
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)

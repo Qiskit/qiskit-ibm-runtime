@@ -34,9 +34,9 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             "post_processor": {
                 "version": "v0.1",
                 "circuits_metadata": circuits_metadata or [None],
+                "observables": observables,
+                "measure_bases": measure_bases,
             },
-            "observables": observables,
-            "measure_bases": measure_bases,
         }
         quantum_result = QuantumProgramResult(
             data=result_data, metadata=None, passthrough_data=passthrough_data
@@ -105,9 +105,9 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             "post_processor": {
                 "version": "v0.1",
                 "circuits_metadata": [None, None],
+                "observables": [[{"ZZ": 1.0}], [{"ZZ": 1.0}]],
+                "measure_bases": [["ZZ"], ["ZZ"]],
             },
-            "observables": [[{"ZZ": 1.0}], [{"ZZ": 1.0}]],
-            "measure_bases": [["ZZ"], ["ZZ"]],
         }
         quantum_result = QuantumProgramResult(
             data=result_data, metadata=None, passthrough_data=passthrough_data
@@ -235,9 +235,9 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             "post_processor": {
                 "version": "v0.1",
                 "circuits_metadata": [None],
+                "observables": observables,
+                "measure_bases": [["ZZ"]],
             },
-            "observables": observables,
-            "measure_bases": [["ZZ"]],
         }
 
         quantum_result = QuantumProgramResult(
