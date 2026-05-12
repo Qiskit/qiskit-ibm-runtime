@@ -38,7 +38,3 @@ Classes
 """
 
 from .quantum_program import QuantumProgram, QuantumProgramItem
-
-# These imports are to be removed in next qiskit-ibm-runtime release. Please import directly via
-# the qiskit_ibm_runtime.results module.
-from .quantum_program_result import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata
