@@ -18,7 +18,7 @@ import unittest
 from datetime import datetime
 
 from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import ChunkSpan, Metadata, ChunkPart
+from qiskit_ibm_runtime.results.quantum_program import ChunkSpan, Metadata, ChunkPart
 
 from qiskit_ibm_runtime.decoders.executor_sampler.utils import (
     executor_metadata_to_sampler_metadata,

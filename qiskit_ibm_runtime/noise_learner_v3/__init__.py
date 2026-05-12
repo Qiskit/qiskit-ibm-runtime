@@ -27,13 +27,11 @@ Classes
    :toctree: ../stubs/
 
    NoiseLearnerV3
-   NoiseLearnerV3Result
-   NoiseLearnerV3Results
 
 """
 
 from .noise_learner_v3 import NoiseLearnerV3
-from .noise_learner_v3_result import (
-    NoiseLearnerV3Result,
-    NoiseLearnerV3Results,
-)
+
+# These imports are to be removed in next qiskit-ibm-runtime release. Please import directly via
+# the qiskit_ibm_runtime.results module.
+from .noise_learner_v3_result import NoiseLearnerV3Result, NoiseLearnerV3Results

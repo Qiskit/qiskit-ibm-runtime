@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.decoders.executor_sampler.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramResult,
     QuantumProgramItemResult,
     Metadata,

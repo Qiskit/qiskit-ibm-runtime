@@ -28,7 +28,7 @@ from qiskit.circuit import QuantumCircuit
 
 from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
-from ..noise_learner_v3_result import (
+from ...results.noise_learner_v3 import (
     NoiseLearnerV3Results,
 )
 

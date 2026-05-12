@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import timezone
 from typing import TYPE_CHECKING
 
-from ...quantum_program.quantum_program_result import (
+from ...results.quantum_program import (
     ChunkPart,
     ChunkSpan,
     Metadata,

@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Literal
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 if TYPE_CHECKING:
-    from ...quantum_program import QuantumProgramItemResult
+    from ...results import QuantumProgramItemResult
 
 
 def quantum_program_item_result_to_sampler_pub_result(
