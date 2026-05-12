@@ -24,11 +24,37 @@ from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+    from qiskit_ibm_runtime.results.quantum_program import (
         ChunkSpan,
         Metadata,
         QuantumProgramItemResult,
     )
+
+TWIRLING_PREFIX = "measurement_flips."
+"""The prefix used to store the twirling bitflips."""
+
+
+def undo_twirling(item: QuantumProgramItemResult) -> None:
+    """Undo twirling bit flips.
+
+    This function modifies ``item`` in place, mutating the measurement results and
+    popping the arrays that store the bitflips.
+    """
+    flip_keys = [key for key in item.keys() if key.startswith(TWIRLING_PREFIX)]
+
+    for flip_key in flip_keys:
+        target_key = flip_key[len(TWIRLING_PREFIX) :]
+
+        # Validate that target key exists
+        if target_key not in item:
+            raise ValueError(
+                f"Measurement flip key '{flip_key}' references non-existent "
+                f"register '{target_key}'. Available registers: {list(item.keys())}"
+            )
+
+        # Apply XOR and remove flip key
+        flip_data = item.pop(flip_key)
+        item[target_key] ^= flip_data
 
 
 def executor_metadata_to_sampler_metadata(

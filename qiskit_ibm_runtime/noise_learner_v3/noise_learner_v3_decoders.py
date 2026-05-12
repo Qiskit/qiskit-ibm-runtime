@@ -29,7 +29,7 @@ from .converters.version_0_1 import noise_learner_v3_result_from_0_1
 from .converters.version_0_2 import noise_learner_v3_result_from_0_2
 
 if TYPE_CHECKING:
-    from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_result import NoiseLearnerV3Results
+    from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
 
 logger = logging.getLogger(__name__)
 
