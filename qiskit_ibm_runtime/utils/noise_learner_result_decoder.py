@@ -30,7 +30,7 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     def decode(cls, raw_result: str) -> NoiseLearnerResult | NoiseLearnerV3Results:
         """Convert the result to NoiseLearnerResult."""
         if "schema_version" in raw_result:
-            from qiskit_ibm_runtime.noise_learner_v3.noise_learner_v3_decoders import (
+            from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import (
                 NoiseLearnerV3ResultDecoder,
             )
 

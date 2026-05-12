@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, cast
 
 from qiskit.primitives import PrimitiveResult
 
-from ..converters import quantum_program_item_result_to_sampler_pub_result
+from .converters import quantum_program_item_result_to_sampler_pub_result
 from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
