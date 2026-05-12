@@ -25,9 +25,7 @@ from qiskit_ibm_runtime.exceptions import (
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only
-from ..serialization import (
-    SerializableClass,
-)
+from ..serialization import SerializableClass
 from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 
 

@@ -27,9 +27,7 @@ from qiskit.circuit import QuantumCircuit
 
 from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
-from ...results.noise_learner_v3 import (
-    NoiseLearnerV3Results,
-)
+from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
