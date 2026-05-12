@@ -27,7 +27,7 @@ from samplomatic.samplex import Samplex
 from .datatree import DataTree
 
 if TYPE_CHECKING:
-    from ..ibm_backend import IBMBackend
+    pass
 
 
 def _desc_arr(arr: Any) -> str:
@@ -313,9 +313,6 @@ class QuantumProgram:
                 chunk_size=chunk_size,
             )
         )
-
-    def validate(self, backend: IBMBackend) -> None:
-        """Validate this quantum program against the given backend."""
 
     def __repr__(self) -> str:
         if not self.items:
