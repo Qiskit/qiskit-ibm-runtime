@@ -22,7 +22,7 @@ from ..converters import quantum_program_item_result_to_sampler_pub_result
 from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
-    from ...quantum_program.quantum_program_result import QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramResult
 
 
 def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
