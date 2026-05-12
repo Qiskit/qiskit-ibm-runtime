@@ -1,30 +1,12 @@
 0.47.0 (2026-05-12)
 ===================
 
-Upgrade Notes
--------------
-
-- The ``RuntimeJobV2.result()`` and ``RuntimeJobV2.wait_for_final_state()`` methods now accept an
-  optional ``poll_interval`` parameter, that allows customizing the interval between requests to the
-  service. The default is now ``0.5`` seconds for non-session job, and ``0.1`` seconds for session
-  jobs. (`2762 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2762>`__)
-
-
-Deprecation Notes
------------------
-
-- The Python package ``extras`` have been refactored:
-
-  * ``common`` and ``documentation`` are deprecated, and will be removed in ``v0.48``.
-  * ``performance`` has been introduced, for optional non-developer dependencies that provide
-    additional performance or functionality.
-  * the development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
-    ``doc``), with the ``dev`` extra continuing to allow a full development suite to be installed. (`2707 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2707>`__)
-
-
 New Features
 ------------
 
+- Added the `Executor` and `QuantumProgram` classes, which allow taking full advantage of the set of
+  capabilities offered by the `Samplomatic<https://github.com/Qiskit/samplomatic>_` package.
+- Added the `NoiseLearnerV3` class to learn the noise of instructions that contain annotated boxes.
 - Added a script to fetch configuration and properties of a real backend
   One new fake backend, ``FakeKingston``, has been added. This is a 156-qubit Heron r2 device. (`2711 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2711>`__)
 - The interactions with the IBM Cloud Platform Services (which happens during
@@ -46,6 +28,27 @@ New Features
   Using this updated script, the following missing fake backends have been added:
   ``FakeAachen``, ``FakeBerlin``, ``FakeBoston``, ``FakeBrussels``,
   ``FakeMiami``, ``FakePittsburgh``, and ``FakeStrasbourg``. (`2736 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2736>`__)
+
+
+Upgrade Notes
+-------------
+
+- The ``RuntimeJobV2.result()`` and ``RuntimeJobV2.wait_for_final_state()`` methods now accept an
+  optional ``poll_interval`` parameter, that allows customizing the interval between requests to the
+  service. The default is now ``0.5`` seconds for non-session job, and ``0.1`` seconds for session
+  jobs. (`2762 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2762>`__)
+
+
+Deprecation Notes
+-----------------
+
+- The Python package ``extras`` have been refactored:
+
+  * ``common`` and ``documentation`` are deprecated, and will be removed in ``v0.48``.
+  * ``performance`` has been introduced, for optional non-developer dependencies that provide
+    additional performance or functionality.
+  * the development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
+    ``doc``), with the ``dev`` extra continuing to allow a full development suite to be installed. (`2707 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2707>`__)
 
 
 Bug Fixes
