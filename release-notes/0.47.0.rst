@@ -19,7 +19,7 @@ New Features
   the execution timing of one or more instances of the new chunk timings container class,
   :class:`.ChunkTiming`, on an interactive barchart. A convenience :meth:`.ChunkTiming.draw`
   method is also available for the single-result case via ``job.result().timing.draw()``. (`2727 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2727>`__)
-- Building on top of the fake backend snapshot script introduced in ``#2711``,
+- Building on top of the fake backend snapshot script introduced in `2711 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2736>`__,
   the script now also generates ``__init__.py`` and ``fake_<backend_name>.py``
   files for each backend, and adds a new ``-a``/``--account`` argument
   to select a named account when fetching backend data from different cloud
