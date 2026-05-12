@@ -63,6 +63,6 @@ Bug Fixes
   ``calibration_id`` set during the initial instantiation of the original ``Session`` nor the the value of ``use_fractional_gates``
   set during the initial instantiation of the backend. (`2652 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2652>`__)
 - ``NoiseLearner.run()`` now correctly supports generators, ``map``,
-  ``filter``, generator expressions and other single-pass iterators.
+  ``filter``, generator expressions, and other single-pass iterators.
   Previously these were exhausted after the initial type check, causing
   jobs to be submitted with zero circuits. (`2759 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2759>`__)
