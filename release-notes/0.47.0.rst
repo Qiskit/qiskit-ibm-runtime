@@ -47,7 +47,7 @@ Deprecation Notes
   * ``common`` and ``documentation`` are deprecated, and will be removed in ``v0.48``.
   * ``performance`` has been introduced, for optional non-developer dependencies that provide
     additional performance or functionality.
-  * the development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
+  * The development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
     ``doc``), with the ``dev`` extra continuing to allow a full development suite to be installed. (`2707 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2707>`__)
 
 
