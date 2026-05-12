@@ -1,0 +1,65 @@
+0.47.0 (2026-05-12)
+===================
+
+Upgrade Notes
+-------------
+
+- The ``RuntimeJobV2.result()`` and ``RuntimeJobV2.wait_for_final_state()`` methods now accept an
+  optional ``poll_interval`` parameter, that allows customizing the interval between requests to the
+  service. The default is now ``0.5`` seconds for non-session job, and ``0.1`` seconds for session
+  jobs. (`2762 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2762>`__)
+
+
+Deprecation Notes
+-----------------
+
+- The Python package ``extras`` have been refactored:
+
+  * ``common`` and ``documentation`` are deprecated, and will be removed in ``v0.48``.
+  * ``performance`` has been introduced, for optional non-developer dependencies that provide
+    additional performance or functionality.
+  * the development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
+    ``doc``), with the ``dev`` extra continuing to allow a full development suite to be installed. (`2707 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2707>`__)
+
+
+New Features
+------------
+
+- Added a script to fetch configuration and properties of a real backend
+  One new fake backend, ``FakeKingston``, has been added. This is a 156-qubit Heron r2 device. (`2711 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2711>`__)
+- The interactions with the IBM Cloud Platform Services (which happens during
+  ``QiskitRuntimeService`` instantation, with the service names ``global_search``,
+  ``global_catalog`` and ``resource_controller``) now adhere to the
+  `IBM Cloud SDK configuration mechanisms
+  <https://github.com/IBM/ibm-cloud-sdk-common/blob/main/README.md#using-external-configuration>`_,
+  allowing for custom configuration to be passed via environment variables or credential files. (`2712 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2712>`__)
+- Added :func:`.draw_chunk_timings` to :mod:`qiskit_ibm_runtime.visualization` for plotting
+  the execution timing of one or more instances of the new chunk timings container class,
+  :class:`.ChunkTiming`, on an interactive barchart. A convenience :meth:`.ChunkTiming.draw`
+  method is also available for the single-result case via ``job.result().timing.draw()``. (`2727 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2727>`__)
+- Building on top of the fake backend snapshot script introduced in ``#2711``,
+  the script now also generates ``__init__.py`` and ``fake_<backend_name>.py``
+  files for each backend, and adds a new ``-a``/``--account`` argument
+  to select a named account when fetching backend data from different cloud
+  regions (for example, US vs EU).
+
+  Using this updated script, the following missing fake backends have been added:
+  ``FakeAachen``, ``FakeBerlin``, ``FakeBoston``, ``FakeBrussels``,
+  ``FakeMiami``, ``FakePittsburgh``, and ``FakeStrasbourg``. (`2736 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2736>`__)
+
+
+Bug Fixes
+---------
+
+- The ``proxies`` and ``ssl_verification`` arguments for ``QiskitRuntimeService``
+  are nowpropagated to the underlying HTTP requests to ```GlobalSearchV2``,
+  ``GlobalCatalogV1`` and ``IAMAuthenticator`` services, allowing to instantiate
+  ``QiskitRuntimeService`` correctly when using a proxy. (`2592 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2592>`__)
+- Added ability to specify ``calibration_id`` and ``use_fractional_gates`` when initializing a session from a ``session_id``.
+  This fixes known bugs, namely that instantiating a ``Session`` object via ``from_id`` does not preserve the value of
+  ``calibration_id`` set during the initial instantiation of the original ``Session`` nor the the value of ``use_fractional_gates``
+  set during the initial instantiation of the backend. (`2652 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2652>`__)
+- ``NoiseLearner.run()`` now correctly supports generators, ``map``,
+  ``filter``, generator expressions and other single-pass iterators.
+  Previously these were exhausted after the initial type check, causing
+  jobs to be submitted with zero circuits. (`2759 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2759>`__)

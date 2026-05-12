@@ -1,7 +1,0 @@
-The Python package ``extras`` have been refactored:
-
-* ``common`` and ``documentation`` are deprecated, and will be removed in ``v0.48``.
-* ``performance`` has been introduced, for optional non-developer dependencies that provide
-  additional performance or functionality.
-* the development dependencies now have finer granularity (``style``, ``style_local``, ``test``,
-  ``doc``), with the ``dev`` extra continuing to allow a full development suite to be installed.
