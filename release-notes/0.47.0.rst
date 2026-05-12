@@ -56,7 +56,7 @@ Bug Fixes
 
 - The ``proxies`` and ``ssl_verification`` arguments for ``QiskitRuntimeService``
   are nowpropagated to the underlying HTTP requests to ```GlobalSearchV2``,
-  ``GlobalCatalogV1`` and ``IAMAuthenticator`` services, allowing to instantiate
+  ``GlobalCatalogV1``, and ``IAMAuthenticator`` services, allowing to instantiate
   ``QiskitRuntimeService`` correctly when using a proxy. (`2592 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2592>`__)
 - Added ability to specify ``calibration_id`` and ``use_fractional_gates`` when initializing a session from a ``session_id``.
   This fixes known bugs, namely that instantiating a ``Session`` object via ``from_id`` does not preserve the value of
