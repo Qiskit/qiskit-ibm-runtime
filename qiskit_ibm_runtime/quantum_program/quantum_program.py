@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 from collections.abc import Iterable
 
 import numpy as np
@@ -25,9 +25,6 @@ from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
 
 from .datatree import DataTree
-
-if TYPE_CHECKING:
-    pass
 
 
 def _desc_arr(arr: Any) -> str:
