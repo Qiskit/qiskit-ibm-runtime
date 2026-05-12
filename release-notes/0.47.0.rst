@@ -7,7 +7,7 @@ New Features
 - Added the `Executor` and `QuantumProgram` classes, which allow taking full advantage of the set of
   capabilities offered by the `Samplomatic <https://github.com/Qiskit/samplomatic>_` package.
 - Added the `NoiseLearnerV3` class to learn the noise of instructions that contain annotated boxes.
-- Added a script to fetch configuration and properties of a real backend
+- Added a script to fetch configuration and properties of a real backend.
   One new fake backend, ``FakeKingston``, has been added. This is a 156-qubit Heron r2 device. (`2711 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2711>`__)
 - The interactions with the IBM Cloud Platform Services (which happens during
   ``QiskitRuntimeService`` instantation, with the service names ``global_search``,
