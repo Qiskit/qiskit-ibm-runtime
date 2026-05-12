@@ -38,7 +38,16 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ...results.quantum_program import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+from ...results.quantum_program import (
+    QuantumProgramResult,
+    ChunkPart,
+    ChunkSpan,
+    Metadata,
+    QuantumProgramItemResult,
+    ItemMetadata,
+    SchedulerTiming,
+    StretchValues,
+)
 from ...options_models.executor_options import ExecutorOptions
 
 
@@ -169,8 +178,23 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
         ]
     )
 
+    data = []
+    for item in model.data:
+        timings = item.metadata.scheduler_timing
+        scheduler_timing = SchedulerTiming(**dict(timings)) if timings else None
+
+        stretches = item.metadata.stretch_values
+        stretch_values = [StretchValues(**dict(s)) for s in stretches] if stretches else None
+
+        data.append(
+            QuantumProgramItemResult(
+                result={name: val.to_numpy() for name, val in item.results.items()},
+                metadata=ItemMetadata(
+                    scheduler_timing=scheduler_timing, stretch_values=stretch_values
+                ),
+            )
+        )
+
     return QuantumProgramResult(
-        data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
-        metadata=metadata,
-        passthrough_data=model.passthrough_data,
+        data=data, metadata=metadata, passthrough_data=model.passthrough_data
     )

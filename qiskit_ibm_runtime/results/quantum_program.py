@@ -64,8 +64,81 @@ class ChunkSpan:
 
 
 @dataclass
+class SchedulerTiming:
+    """The timing of a scheduled circuit.
+
+    All timing information is expressed in terms of multiples of the quantity ``dt``, time step
+    duration of the control electronics, which can be queried in backend and target properties.
+    """
+
+    timing: str
+    """A description of circuit timing in a comma-separated text format."""
+
+    circuit_duration: int
+    """The duration of the circuit in ``dt`` steps."""
+
+
+@dataclass
+class StretchValues:
+    """Circuit stretch value resolutions.
+
+    All timing information is expressed in terms of multiples of the quantity ``dt``, time step
+    duration of the control electronics, which can be queried in backend and target properties.
+    """
+
+    name: str
+    """The name of the stretch."""
+
+    value: int
+    """The resolved stretch value, up to the remainder, in units of ``dt``."""
+
+    remainder: int
+    """The time left over if ``value`` were to be used each stretch, in units of ``dt``."""
+
+    expanded_values: list[tuple[int, int]]
+    """A sequence of pairs ``(time, duration)`` indicating the time and duration of each delay.
+
+    All units are ``dt``, where the ``time`` denotes the absolute time of a delay in the circuit
+    schedule, and the ``duration`` denotes the total duration of the delay.
+    """
+
+
+@dataclass
 class ItemMetadata:
     """Metadata about the execution of a single item of a quantum program."""
+
+    scheduler_timing: SchedulerTiming | None = None
+    """Scheduler circuit timing information, if it is available.
+
+    When available, the timing information can be visualized using the
+    :meth:`.qiskit_ibm_runtime.visualization.draw_circuit_schedule_timing` method
+    as in the snippet below.
+
+    .. code-block::python
+
+        from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
+
+        # Retrieve the timings from the job item's metadata
+        result = job.result()
+        timings = result[0].metadata.scheduler_timing.timing
+
+        # Create a figure from the metadata
+        fig = draw_circuit_schedule_timing(
+            circuit_schedule=timings,
+            included_channels=None,
+            filter_readout_channels=False,
+            filter_barriers=False,
+            width=1000,
+        )
+
+    Note: This feature is experimental and subject to change without notice.
+    """
+
+    stretch_values: list[StretchValues] | None = None
+    """Stretch value resolution, if it is available.
+
+    Note: This feature is experimental and subject to change without notice.
+    """
 
 
 @dataclass

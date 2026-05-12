@@ -36,6 +36,24 @@ class ExecutionOptions:
     Default is given by ``backend.default_rep_delay``.
     """
 
+    scheduler_timing: bool = False
+    """Whether to return circuit schedule timing of each provided quantum circuit.
+
+    Setting this value to ``True`` will cause corresponding metadata of every program item to be
+    populated in the returned data.
+
+    Note: This feature is experimental and subject to change without notice.
+    """
+
+    stretch_values: bool = False
+    """Whether to return numeric resolutions of stretches for each provided quantum circuit.
+
+    Setting this value to ``True`` will cause corresponding metadata of every program item to be
+    populated in the returned data.
+
+    Note: This feature is experimental and subject to change without notice.
+    """
+
 
 @dataclass(config=PRIMITIVES_CONFIG)
 class SamplerExecutionOptions(ExecutionOptions):

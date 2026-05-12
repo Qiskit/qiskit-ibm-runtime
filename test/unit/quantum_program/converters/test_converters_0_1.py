@@ -85,7 +85,9 @@ class TestQuantumProgramConverters(IBMTestCase):
             chunk_size=7,
         )
 
-        options = ExecutorOptions(execution=ExecutionOptions(init_qubits=False))
+        options = ExecutorOptions(
+            execution=ExecutionOptions(init_qubits=False, scheduler_timing=True)
+        )
 
         params_model = quantum_program_to_0_1(quantum_program, options)
 

@@ -37,7 +37,13 @@ from ibm_quantum_schemas.common import (
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ...results.quantum_program import QuantumProgramResult, ChunkPart, ChunkSpan, Metadata
+from ...results.quantum_program import (
+    QuantumProgramResult,
+    ChunkPart,
+    ChunkSpan,
+    Metadata,
+    QuantumProgramItemResult,
+)
 from ...options_models.executor_options import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 
@@ -151,6 +157,9 @@ def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> Quantum
         ]
     )
     return QuantumProgramResult(
-        data=[{name: val.to_numpy() for name, val in item.results.items()} for item in model.data],
+        data=[
+            QuantumProgramItemResult({name: val.to_numpy() for name, val in item.results.items()})
+            for item in model.data
+        ],
         metadata=metadata,
     )
