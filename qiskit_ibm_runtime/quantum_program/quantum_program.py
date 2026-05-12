@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import abc
 import math
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 from collections.abc import Iterable
 
 import numpy as np
@@ -25,9 +25,6 @@ from qiskit.quantum_info import PauliLindbladMap
 from samplomatic.samplex import Samplex
 
 from .datatree import DataTree
-
-if TYPE_CHECKING:
-    from ..ibm_backend import IBMBackend
 
 
 def _desc_arr(arr: Any) -> str:
@@ -313,9 +310,6 @@ class QuantumProgram:
                 chunk_size=chunk_size,
             )
         )
-
-    def validate(self, backend: IBMBackend) -> None:
-        """Validate this quantum program against the given backend."""
 
     def __repr__(self) -> str:
         if not self.items:

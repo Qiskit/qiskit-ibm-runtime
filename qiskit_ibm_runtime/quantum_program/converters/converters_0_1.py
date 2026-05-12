@@ -37,7 +37,7 @@ from ibm_quantum_schemas.common import (
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-from ..quantum_program_result import (
+from ...results.quantum_program import (
     QuantumProgramResult,
     ChunkPart,
     ChunkSpan,

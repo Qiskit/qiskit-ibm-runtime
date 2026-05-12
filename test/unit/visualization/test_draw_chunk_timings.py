@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 
 import ddt
 
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+from qiskit_ibm_runtime.results.quantum_program import (
     ChunkPart,
     ChunkSpan,
     ChunkTiming,

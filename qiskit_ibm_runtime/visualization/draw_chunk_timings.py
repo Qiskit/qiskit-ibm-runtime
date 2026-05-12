@@ -19,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from collections.abc import Iterable
 
-from ..quantum_program.quantum_program_result import ChunkTiming, ChunkSpan
+from ..results.quantum_program import ChunkTiming, ChunkSpan
 from .utils import plotly_module
 
 if TYPE_CHECKING:
