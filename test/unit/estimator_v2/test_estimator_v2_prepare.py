@@ -78,12 +78,12 @@ class TestPrepareFunction(unittest.TestCase):
 
         passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
-        self.assertEqual(len(passthrough["observables"]), 2)
-        self.assertEqual(len(passthrough["observables"][0]), 3)
-        self.assertEqual(len(passthrough["observables"][1]), 2)
-        self.assertEqual(len(passthrough["measure_bases"]), 2)
-        self.assertEqual(len(passthrough["measure_bases"][0]), 3)
-        self.assertEqual(len(passthrough["measure_bases"][1]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
+        self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["measure_bases"]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][0]), 3)
+        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][1]), 2)
 
     @patch("qiskit_ibm_runtime.executor_estimator.prepare.generate_boxing_pass_manager")
     def test_prepare_passes_twirling_values_to_boxing_pass_manager(self, mock_generate_boxing_pm):
@@ -139,10 +139,10 @@ class TestPrepareFunction(unittest.TestCase):
 
         quantum_program = prepare([pub], twirling_options, 2000)
 
-        item = cast(SamplexItem, quantum_program.items[0])
+        self.assertIsInstance(quantum_program.items[0], SamplexItem)
         self.assertEqual(quantum_program.shots, 256)
-        self.assertEqual(item.shape, (4, 1))
-        self.assertEqual(item.circuit.num_parameters, 3 * circuit.num_qubits)
+        self.assertEqual(quantum_program.items[0].shape, (4, 1))
+        self.assertEqual(quantum_program.items[0].circuit.num_parameters, 3 * circuit.num_qubits)
 
     def test_prepare_with_mid_circuit_measurements_raises(self):
         """Test that prepare raises error for circuits with mid-circuit measurements."""

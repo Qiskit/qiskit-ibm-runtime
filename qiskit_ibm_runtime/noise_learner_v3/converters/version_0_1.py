@@ -28,7 +28,7 @@ from qiskit.quantum_info import QubitSparsePauliList
 
 from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
-from ..noise_learner_v3_result import (
+from ...results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )

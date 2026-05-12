@@ -71,7 +71,7 @@ def prepare(
         )
     else:
         num_randomizations = 1
-        shots_per_randomization = int(shots)
+        shots_per_randomization = shots
 
     # Create items
     items: list[SamplexItem] = []
@@ -124,7 +124,6 @@ def prepare(
             samplex_args = {}
             param_shape = ()
 
-        # Item shape: (num_randomizations,) + param_shape + (num_bases,)
         item_shape = (num_randomizations,) + param_shape + (len(measure_bases),)
 
         # Add basis changes to samplex_arguments
@@ -166,9 +165,9 @@ def prepare(
         "post_processor": {
             "version": "v0.1",
             "circuits_metadata": circuits_metadata,
+            "observables": observables_list,
+            "measure_bases": measure_bases_list,
         },
-        "observables": observables_list,
-        "measure_bases": measure_bases_list,
     }
 
     # Create QuantumProgram
