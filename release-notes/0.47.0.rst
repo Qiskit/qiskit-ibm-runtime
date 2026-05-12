@@ -23,7 +23,7 @@ New Features
   the script now also generates ``__init__.py`` and ``fake_<backend_name>.py``
   files for each backend, and adds a new ``-a``/``--account`` argument
   to select a named account when fetching backend data from different cloud
-  regions (for example, US vs EU).
+  regions (for example, `us-east` versus `eu-de`).
 
   Using this updated script, the following missing fake backends have been added:
   ``FakeAachen``, ``FakeBerlin``, ``FakeBoston``, ``FakeBrussels``,
