@@ -34,7 +34,7 @@ Upgrade Notes
 -------------
 
 - The ``RuntimeJobV2.result()`` and ``RuntimeJobV2.wait_for_final_state()`` methods now accept an
-  optional ``poll_interval`` parameter, that allows customizing the interval between requests to the
+  optional ``poll_interval`` parameter, which allows customizing the interval between requests to the
   service. The default is now ``0.5`` seconds for non-session job, and ``0.1`` seconds for session
   jobs. (`2762 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2762>`__)
 
