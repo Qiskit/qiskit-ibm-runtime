@@ -13,10 +13,10 @@
 """Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
 
 from __future__ import annotations
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...quantum_program.quantum_program_result import QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramResult
 
 import numpy as np
 from qiskit.primitives import PrimitiveResult, DataBin
@@ -52,13 +52,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if len(result) == 0:
         return PrimitiveResult([])
 
-    if not isinstance(result.passthrough_data, dict):
+    if not isinstance(passthrough := result.passthrough_data, dict):
         raise ValueError(
             "Wrong type for passthrough data: Expected a 'dict', found "
             f"'{type(result.passthrough_data)}'."
         )
 
-    passthrough = cast(dict, result.passthrough_data)
     if (post_processor_data := passthrough.get("post_processor", None)) is None:
         raise ValueError("Missing 'post_processor' in passthrough data.")
 
