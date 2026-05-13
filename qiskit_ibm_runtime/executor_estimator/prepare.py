@@ -24,8 +24,9 @@ if TYPE_CHECKING:
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from samplomatic import build
+from samplomatic import build, ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import replace_annotations, get_annotation
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 
@@ -40,9 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 def prepare(
-    pubs: Sequence[EstimatorPub],
-    twirling_options: TwirlingOptions,
-    shots: int,
+    pubs: Sequence[EstimatorPub], twirling_options: TwirlingOptions, shots: int
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -87,29 +86,31 @@ def prepare(
         # Remove any existing final measurements
         prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
 
-        if prepared_circuit.get_instructions("measure"):
-            raise IBMInputValueError(
-                f"Pub {i} contains mid-circuit measurements, which are temporarily not supported"
-                " by EstimatorV2. Only final measurements are allowed."
-            )
-
+        # Add final measurements
         creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
         try:
             prepared_circuit.add_register(creg)
         except CircuitError:
             raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
-
         prepared_circuit.measure(prepared_circuit.qubits, creg)
 
+        # Add boxes
         boxing_pm = generate_boxing_pass_manager(
             enable_gates=twirling_options.enable_gates,
             enable_measures=True,
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
             measure_annotations="all" if twirling_options.enable_measure else "change_basis",
         )
-        prepared_circuit = boxing_pm.run(prepared_circuit)
+        boxed_circuit = boxing_pm.run(prepared_circuit)
 
-        template, samplex = build(prepared_circuit)
+        # Remove change basis annotations from every box except the last one
+        basis_changes_ref = get_annotation(boxed_circuit[-1].operation, ChangeBasis).ref
+        boxed_circuit = replace_annotations(
+            boxed_circuit,
+            lambda a: [] if (isinstance(a, ChangeBasis) and a.ref != basis_changes_ref) else [a],
+        )
+
+        template, samplex = build(boxed_circuit)
 
         # Prepare samplex_arguments
         if pub.parameter_values.num_parameters > 0:
@@ -126,14 +127,13 @@ def prepare(
 
         item_shape = (num_randomizations,) + param_shape + (len(measure_bases),)
 
-        # Add basis changes to samplex_arguments
-        basis_changes_specs = samplex.inputs().get_specs("basis_changes")
-        basis_changes_name = basis_changes_specs[0].name
-        # Create basis array with shape (num_bases, num_qubits)
-        measure_bases_int = np.array([pauli_to_ints(basis) for basis in measure_bases])
-
         samplex_arguments = samplex.inputs().make_broadcastable()
-        samplex_arguments.bind(**{**samplex_args, basis_changes_name: measure_bases_int})
+        samplex_arguments.bind(
+            **{
+                **samplex_args,
+                basis_changes_ref: np.array([pauli_to_ints(basis) for basis in measure_bases]),
+            }
+        )
 
         # Create SamplexItem
         items.append(
