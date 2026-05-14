@@ -137,7 +137,7 @@ def prepare(
                 )
                 break
         else:
-            # This should be reachable
+            # This should not be reachable
             raise ValueError("Could not find a change basis annotation.")
 
         # Create SamplexItem
