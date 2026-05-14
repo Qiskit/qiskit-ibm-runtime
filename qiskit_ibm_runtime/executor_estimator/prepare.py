@@ -123,11 +123,10 @@ def prepare(
 
         item_shape = (num_randomizations,) + param_shape + (len(measure_bases),)
 
-        for spec in samplex.inputs().specs:
-            if spec.name.startswith("basis_changes."):
-                # Default to np.zeros, to ensure that every mid-circuit measurement
-                # that may be present is performed without basis changing gates
-                samplex_args[spec.name] = np.zeros(spec.shape)
+        for spec in samplex.inputs().get_specs("basis_changes"):
+            # Default to np.zeros, to ensure that every mid-circuit measurement
+            # that may be present is performed without basis changing gates
+            samplex_args[spec.name] = np.zeros(spec.shape)
 
         # Finalize basis changing gates for the final measurements
         for instr in boxed_circuit.reverse_ops():
