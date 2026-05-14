@@ -23,11 +23,10 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from ..options_models.twirling_options import TwirlingOptions
 
-from qiskit.circuit import BoxOp
 import numpy as np
 from samplomatic import build, ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import replace_annotations, get_annotation
+from samplomatic.utils import get_annotation
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 
@@ -95,6 +94,7 @@ def prepare(
             prepared_circuit.add_register(creg)
         except CircuitError:
             raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
+        prepared_circuit.barrier()
         prepared_circuit.measure(prepared_circuit.qubits, creg)
 
         # Add boxes
@@ -105,24 +105,6 @@ def prepare(
             measure_annotations="all" if twirling_options.enable_measure else "change_basis",
         )
         boxed_circuit = boxing_pm.run(prepared_circuit)
-
-        # Gather all change basis annotations
-        change_basis_annotations = [
-            a
-            for instr in boxed_circuit
-            if (
-                isinstance(instr.operation, BoxOp)
-                and (a := get_annotation(instr.operation, ChangeBasis))
-            )
-        ]
-
-        # Remove change basis annotations from every box except the last one
-        change_basis_ref = change_basis_annotations[-1].ref
-        if len(change_basis_annotations):
-            boxed_circuit = replace_annotations(
-                boxed_circuit,
-                lambda a: [] if (isinstance(a, ChangeBasis) and a.ref != change_basis_ref) else [a],
-            )
 
         template, samplex = build(boxed_circuit)
 
@@ -141,22 +123,30 @@ def prepare(
 
         item_shape = (num_randomizations,) + param_shape + (len(measure_bases),)
 
-        samplex_arguments = samplex.inputs().make_broadcastable()
-        samplex_arguments.bind(
-            **{
-                **samplex_args,
-                f"basis_changes.{change_basis_ref}": np.array(
+        for spec in samplex.inputs().specs:
+            if spec.name.startswith("basis_changes."):
+                # Default to np.zeros, to ensure that every mid-circuit measurement
+                # that may be present is performed without basis changing gates
+                samplex_args[spec.name] = np.zeros(spec.shape)
+
+        # Finalize basis changing gates for the final measurements
+        for instr in boxed_circuit.reverse_ops():
+            op = instr.operation
+            if op.name == "box" and (change_basis := get_annotation(op, ChangeBasis)):
+                samplex_args[f"basis_changes.{change_basis.ref}"] = np.array(
                     [pauli_to_ints(basis) for basis in measure_bases]
-                ),
-            }
-        )
+                )
+                break
+        else:
+            # This should be reachable
+            raise ValueError("Could not find a change basis annotation.")
 
         # Create SamplexItem
         items.append(
             SamplexItem(
                 circuit=template,
                 samplex=samplex,
-                samplex_arguments=samplex_arguments,
+                samplex_arguments=samplex_args,
                 shape=item_shape,
             )
         )

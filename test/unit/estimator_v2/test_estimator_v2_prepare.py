@@ -13,7 +13,7 @@
 """Unit tests for EstimatorV2 prepare function."""
 
 import unittest
-from ddt import data, ddt
+from ddt import ddt
 from typing import Any, cast
 import numpy as np
 
@@ -28,6 +28,8 @@ from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+from ...utils import combine
 
 
 @ddt
@@ -108,10 +110,15 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(quantum_program.items[0].shape, (4, 1))
         self.assertEqual(quantum_program.items[0].circuit.num_parameters, 3 * circuit.num_qubits)
 
-    @data(True)
-    def test_prepare_with_mid_circuit_measurements(self, enable_gates):
+    @combine(enable_gates=[True, False], enable_measure=[True, False])
+    def test_prepare_with_mid_circuit_measurements(self, enable_gates, enable_measure):
         """Test the prepare function for circuits with mid-circuit measurements."""
-        # Create a circuit with mid-circuit measurements
+        if enable_measure:
+            self.skipTest(
+                "Mid-circuit measurements are not yet fully supported by samplomatic, see"
+                "Samplomatic issue #361."
+            )
+
         circuit = QuantumCircuit(3, 3)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -121,18 +128,34 @@ class TestPrepareFunction(unittest.TestCase):
         circuit.h(0)
         circuit.cx(0, 2)
 
-        observable = SparsePauliOp.from_list([("ZZZ", 1)])
+        observable = SparsePauliOp.from_list([("ZZZ", 1), ("XXX", 1), ("YYY", 1), ("IZI", 1)])
         pub = EstimatorPub.coerce((circuit, observable))
 
         twirling_options = TwirlingOptions()
         twirling_options.enable_gates = enable_gates
+        twirling_options.enable_measure = enable_measure
+        twirling_options.num_randomizations = 7
+        twirling_options.strategy = "all"
         program = prepare(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
         self.assertEqual(len(program.items), 1)
         self.assertIsInstance(program.items[0], SamplexItem)
-        self.assertEqual(len(program.items[0].samplex.inputs().specs), 1)
-        self.assertTrue(program.items[0].samplex.inputs().specs[0].name.startswith("basis_changes"))
+        self.assertEqual(len(program.items[0].samplex.inputs().specs), 2)
+
+        # 7 randomizations, 3 basis
+        self.assertEqual(program.items[0].shape, (7 if enable_gates or enable_measure else 1, 3))
+
+        name0 = program.items[0].samplex.inputs().specs[0].name
+        self.assertTrue(name0.startswith("basis_changes"))
         self.assertEqual(program.items[0].samplex.inputs().specs[0].shape, (3,))
+        np.testing.assert_array_equal(program.items[0].samplex_arguments[name0], np.zeros(3))
+
+        name1 = program.items[0].samplex.inputs().specs[1].name
+        self.assertTrue(name1.startswith("basis_changes"))
+        self.assertEqual(program.items[0].samplex.inputs().specs[1].shape, (3,))
+        np.testing.assert_array_equal(
+            program.items[0].samplex_arguments[name1], np.array([[2, 2, 2], [3, 3, 3], [1, 1, 1]])
+        )
 
     def test_prepare_with_reserved_classical_register_name_raises(self):
         """Test that prepare raises error when circuit uses reserved classical register name."""
