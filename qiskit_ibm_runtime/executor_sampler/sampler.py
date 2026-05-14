@@ -33,7 +33,7 @@ from .utils import extract_shots_from_pubs, validate_no_boxes
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable
+    from collections.abc import Iterable
     from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
@@ -216,27 +216,6 @@ class SamplerV2(BaseSamplerV2):
       instructions.
     - Dynamical decoupling is incompatible with dynamic circuits.
 
-    **Custom Prepare Function:**
-
-    You can inject a custom prepare function to replace the default conversion logic
-    from SamplerPub objects to QuantumProgram. The custom function must have the
-    following signature:
-
-    ```python
-
-        def my_prepare(
-            pubs: list[SamplerPub],
-            options: SamplerOptions,
-            backend: BackendV2,
-            default_shots: int | None = None,
-        ) -> tuple[QuantumProgram, ExecutorOptions]:
-            ...
-    ```
-
-    The custom function can be provided either at initialization via the ``custom_prepare``
-    parameter or later via the ``custom_prepare`` property. Set to ``None`` to restore
-    the default prepare function.
-
     Example:
         .. code-block:: python
 
@@ -260,16 +239,6 @@ class SamplerV2(BaseSamplerV2):
             job = sampler.run([circuit])
             result = job.result()
 
-            # Example with custom prepare function
-            def my_prepare(pubs, options, backend, default_shots=None):
-                # Custom logic here
-                ...
-                return quantum_program, executor_options
-
-            sampler = SamplerV2(mode=backend, custom_prepare=my_prepare)
-            # Or set it later:
-            # sampler.custom_prepare = my_prepare
-
     Args:
         mode: The execution mode used to make the primitive query. It can be:
 
@@ -283,8 +252,6 @@ class SamplerV2(BaseSamplerV2):
 
         options: Sampler options. See :class:`~qiskit_ibm_runtime.model_options.SamplerOptions`
             for all available options.
-        custom_prepare: Optional custom prepare function to replace the default conversion
-            logic. If ``None``, the default function is used.
     """
 
     options: SamplerOptions
@@ -294,13 +261,6 @@ class SamplerV2(BaseSamplerV2):
         self,
         mode: BackendV2 | Session | Batch | None = None,
         options: SamplerOptions | dict | None = None,
-        custom_prepare: (
-            Callable[
-                [list[SamplerPub], SamplerOptions, BackendV2, int | None],
-                tuple[QuantumProgram, ExecutorOptions],
-            ]
-            | None
-        ) = None,
     ):
         super().__init__()
 
@@ -308,9 +268,6 @@ class SamplerV2(BaseSamplerV2):
 
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
-
-        # Initialize prepare function
-        self._prepare = custom_prepare if custom_prepare is not None else prepare
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute ``name`` to ``value``.
@@ -370,7 +327,7 @@ class SamplerV2(BaseSamplerV2):
 
         # Convert pubs to QuantumProgram and map options using the prepare function
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = self._prepare(
+        quantum_program, executor_options = prepare(
             coerced_pubs, self.options, backend, default_shots
         )
 
@@ -386,40 +343,3 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return self._executor.run(quantum_program)
-
-    @property
-    def custom_prepare(
-        self,
-    ) -> Callable[
-        [list[SamplerPub], SamplerOptions, BackendV2, int | None],
-        tuple[QuantumProgram, ExecutorOptions],
-    ]:
-        """Return the prepare function.
-
-        Returns:
-            The currently active prepare function.
-        """
-        return self._prepare
-
-    @custom_prepare.setter
-    def custom_prepare(
-        self,
-        fn: (
-            Callable[
-                [list[SamplerPub], SamplerOptions, BackendV2, int | None],
-                tuple[QuantumProgram, ExecutorOptions],
-            ]
-            | None
-        ),
-    ) -> None:
-        """Set the prepare function.
-
-        Args:
-            fn: The prepare function to use. Pass None to restore the default prepare function.
-
-        Raises:
-            TypeError: If fn is not None and not callable.
-        """
-        if fn is not None and not callable(fn):
-            raise TypeError(f"custom_prepare must be callable or None, got {type(fn).__name__}")
-        self._prepare = fn if fn is not None else prepare
