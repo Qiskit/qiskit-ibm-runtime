@@ -14,7 +14,6 @@
 
 import unittest
 from typing import Any, cast
-from unittest.mock import MagicMock, patch
 import numpy as np
 
 from qiskit import QuantumCircuit
@@ -85,43 +84,6 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(len(passthrough["post_processor"]["measure_bases"][0]), 3)
         self.assertEqual(len(passthrough["post_processor"]["measure_bases"][1]), 2)
 
-    @patch("qiskit_ibm_runtime.executor_estimator.prepare.generate_boxing_pass_manager")
-    def test_prepare_passes_twirling_values_to_boxing_pass_manager(self, mock_generate_boxing_pm):
-        """Test that boxing pass manager receives the expected twirling values."""
-        mock_boxing_pm = MagicMock()
-        mock_boxing_pm.run.side_effect = lambda circuit: circuit
-        mock_generate_boxing_pm.return_value = mock_boxing_pm
-
-        twirling_options = TwirlingOptions()
-        twirling_options.enable_gates = True
-        twirling_options.enable_measure = False
-        twirling_options.strategy = "all"
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-        pub = EstimatorPub.coerce((circuit, observable))
-
-        mock_samplex = MagicMock()
-        basis_changes_spec = MagicMock()
-        basis_changes_spec.name = "basis_changes"
-        mock_samplex.inputs.return_value.get_specs.return_value = [basis_changes_spec]
-        mock_samplex.inputs.return_value.make_broadcastable.return_value = MagicMock()
-
-        with patch(
-            "qiskit_ibm_runtime.executor_estimator.prepare.build",
-            return_value=(circuit, mock_samplex),
-        ):
-            prepare([pub], twirling_options, 1024)
-
-        mock_generate_boxing_pm.assert_called_once_with(
-            enable_gates=True,
-            enable_measures=True,
-            twirling_strategy="all",
-            measure_annotations="change_basis",
-        )
-
     def test_prepare_with_twirling_enabled(self):
         """Test prepare with gate and measurement twirling enabled."""
         twirling_options = TwirlingOptions()
@@ -144,8 +106,8 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(quantum_program.items[0].shape, (4, 1))
         self.assertEqual(quantum_program.items[0].circuit.num_parameters, 3 * circuit.num_qubits)
 
-    def test_prepare_with_mid_circuit_measurements_raises(self):
-        """Test that prepare raises error for circuits with mid-circuit measurements."""
+    def test_prepare_with_mid_circuit_measurements(self):
+        """Test the prepare function for circuits with mid-circuit measurements."""
         # Create a circuit with mid-circuit measurements
         circuit = QuantumCircuit(3, 3)
         circuit.h(0)
@@ -159,13 +121,12 @@ class TestPrepareFunction(unittest.TestCase):
         observable = SparsePauliOp.from_list([("ZZZ", 1)])
         pub = EstimatorPub.coerce((circuit, observable))
 
-        shots = 1024
+        program = prepare(pubs=[pub], twirling_options=TwirlingOptions(), shots=1024)
 
-        # Should raise an error - mid-circuit measurements are not supported
-        with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], TwirlingOptions(), shots)
-
-        self.assertIn("mid-circuit measurements", str(context.exception))
+        self.assertEqual(len(program.items), 1)
+        self.assertIsInstance(program.items[0], SamplexItem)
+        self.assertTrue(program.items[0].samplex.inputs().specs[0].name.startswith("basis_changes"))
+        self.assertEqual(program.items[0].samplex.inputs().specs[0].shape, (3,))
 
     def test_prepare_with_reserved_classical_register_name_raises(self):
         """Test that prepare raises error when circuit uses reserved classical register name."""

@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from ..options_models.twirling_options import TwirlingOptions
 
+from qiskit.circuit import BoxOp
 import numpy as np
 from samplomatic import build, ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
@@ -103,12 +104,23 @@ def prepare(
         )
         boxed_circuit = boxing_pm.run(prepared_circuit)
 
+        # Gather all change basis annotations
+        change_basis_annotations = [
+            a
+            for instr in boxed_circuit
+            if (
+                isinstance(instr.operation, BoxOp)
+                and (a := get_annotation(instr.operation, ChangeBasis))
+            )
+        ]
+
         # Remove change basis annotations from every box except the last one
-        basis_changes_ref = get_annotation(boxed_circuit[-1].operation, ChangeBasis).ref
-        boxed_circuit = replace_annotations(
-            boxed_circuit,
-            lambda a: [] if (isinstance(a, ChangeBasis) and a.ref != basis_changes_ref) else [a],
-        )
+        change_basis_ref = change_basis_annotations[-1].ref
+        if len(change_basis_annotations):
+            boxed_circuit = replace_annotations(
+                boxed_circuit,
+                lambda a: [] if (isinstance(a, ChangeBasis) and a.ref != change_basis_ref) else [a],
+            )
 
         template, samplex = build(boxed_circuit)
 
@@ -132,7 +144,7 @@ def prepare(
             **{
                 **samplex_args,
                 "basis_changes": {
-                    basis_changes_ref: np.array([pauli_to_ints(basis) for basis in measure_bases])
+                    change_basis_ref: np.array([pauli_to_ints(basis) for basis in measure_bases])
                 },
             }
         )
