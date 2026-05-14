@@ -42,7 +42,9 @@ logger = logging.getLogger(__name__)
 
 
 def prepare(
-    pubs: Sequence[EstimatorPub], twirling_options: TwirlingOptions, shots: int
+    pubs: Sequence[EstimatorPub],
+    twirling_options: TwirlingOptions,
+    shots: int,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
