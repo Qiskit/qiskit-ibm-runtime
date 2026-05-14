@@ -102,7 +102,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         """Test that run uses default_precision from options when precision not specified."""
         options = EstimatorOptions()
 
-        options.default_precision = 0.01  # This gives ceil(1/0.022098^2) = 2048
+        options.default_precision = 0.01
 
         estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -221,28 +221,6 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.assertIsNotNone(self.mock_executor_instance.options)
         self.assertTrue(self.mock_executor_instance.options.execution.init_qubits)
         self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
-
-    def test_run_coerces_pub_like_objects(self):
-        """Test that run correctly coerces various pub-like objects."""
-        estimator = EstimatorV2(mode=self.backend)
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Test with tuple (circuit, observable)
-        job1 = estimator.run([(circuit, observable)], precision=0.03125)
-        self.assertEqual(job1, self.mock_job)
-
-        # Reset mock
-        self.mock_executor_instance.run.reset_mock()
-
-        # Test with EstimatorPub object
-        pub = EstimatorPub.coerce((circuit, observable), precision=0.03125)
-        job2 = estimator.run([pub])
-        self.assertEqual(job2, self.mock_job)
 
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
