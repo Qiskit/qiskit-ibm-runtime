@@ -145,9 +145,9 @@ def prepare(
         samplex_arguments.bind(
             **{
                 **samplex_args,
-                "basis_changes": {
-                    change_basis_ref: np.array([pauli_to_ints(basis) for basis in measure_bases])
-                },
+                f"basis_changes.{change_basis_ref}": np.array(
+                    [pauli_to_ints(basis) for basis in measure_bases]
+                ),
             }
         )
 
