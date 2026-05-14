@@ -131,7 +131,7 @@ def get_bases(observables: ObservablesArray) -> PauliList:
     return PauliList(non_identity_bases)
 
 
-def project_to_z(term: str) -> np.ndarray:
+def project_to_z(term: str) -> np.ndarray[int]:
     """Project observable term to Z computational basis.
 
     Maps X,Y,Z → "Z", projectors 0,1,+,-,r,l → "0"/"1", I → "I"

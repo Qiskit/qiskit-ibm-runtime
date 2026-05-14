@@ -73,25 +73,16 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
-    if len(circuits_metadata) != len(result):
+    if len({len(circuits_metadata), len(observables_lists), len(measure_bases_lists), len(result)}) != 1:
         raise ValueError(
-            f"Number of circuit metadata items ({len(circuits_metadata)}) does not match "
-            f"number of pubs ({len(result)})."
+            f"Number of circuit metadata items ({len(circuits_metadata)}) , observables ({len(observables_lists)}), "
+            f"basis ({len(measure_bases_lists)}), and results ({len(result)}) are not equal."
         )
 
-    # Validate observables and measure_bases lengths
-    if len(observables_lists) != len(result):
-        raise ValueError(
-            f"Number of observables lists ({len(observables_lists)}) does not match "
-            f"number of pubs ({len(result)})."
-        )
-
-    if len(measure_bases_lists) != len(result):
-        raise ValueError(
-            f"Number of measure bases ({len(measure_bases_lists)}) does not match "
-            f"number of pubs ({len(result)})."
-        )
-
+    if any("_meas" not in item_result for item_result in result):
+        # feel free to choose a different error msg
+        raise ValueError("Unable to find standard creg.")
+    
     shots = result[0]["_meas"].shape[0] * result[0]["_meas"].shape[-2]
 
     # Build EstimatorPubResult for each pub
@@ -144,10 +135,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             exp_vals_array, stds_array, param_shape, obs_shape
         )
 
-        data_bin = DataBin(
-            evs=exp_vals_array,
-            stds=stds_array,
-        )
+        data_bin = DataBin(evs=exp_vals_array, stds=stds_array)
 
         # Get circuit metadata for this pub if available
         pub_metadata = {}
