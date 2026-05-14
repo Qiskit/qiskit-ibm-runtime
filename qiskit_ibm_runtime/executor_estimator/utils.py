@@ -22,7 +22,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import ObservablesArray
+    from qiskit.primitives import EstimatorPub
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import numpy as np
 from qiskit.quantum_info import Pauli, PauliList
 
@@ -129,3 +131,37 @@ def get_bases(observables: ObservablesArray) -> PauliList:
         raise ValueError("No measurement bases found. Only identity in the observables.")
 
     return PauliList(non_identity_bases)
+
+
+def resolve_precision(
+    pubs: list[EstimatorPub],
+    run_precision: float | None = None,
+) -> float | None:
+    """Resolve precision from multiple sources with clear precedence.
+
+    Precedence order (highest to lowest):
+    1. Individual pub precision (must be consistent across all pubs)
+    2. run() method precision parameter (run_precision)
+
+    Args:
+        pubs: List of estimator pubs (may contain precision values).
+        run_precision: Precision specified in run() method.
+
+    Returns:
+        The resolved precision value, or None if no precision is specified anywhere.
+
+    Raises:
+        IBMInputValueError: If pubs have different precision values.
+    """
+    # Extract precision from pubs, using fallback for pubs without explicit precision
+    pub_precisions = {pub.precision if pub.precision is not None else run_precision for pub in pubs}
+
+    # Remove None if it's still there (no precision specified anywhere)
+    pub_precisions = {p for p in pub_precisions if p is not None}
+
+    if not pub_precisions:
+        return None
+
+    if len(pub_precisions) != 1:
+        raise IBMInputValueError(f"All pubs must have the same precision. Found: {pub_precisions}")
+    return next(iter(pub_precisions))
