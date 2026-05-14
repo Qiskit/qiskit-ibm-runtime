@@ -13,6 +13,7 @@
 """Unit tests for EstimatorV2 prepare function."""
 
 import unittest
+from ddt import data, ddt
 from typing import Any, cast
 import numpy as np
 
@@ -29,6 +30,7 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
+@ddt
 class TestPrepareFunction(unittest.TestCase):
     """Tests for the prepare function."""
 
@@ -106,7 +108,8 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(quantum_program.items[0].shape, (4, 1))
         self.assertEqual(quantum_program.items[0].circuit.num_parameters, 3 * circuit.num_qubits)
 
-    def test_prepare_with_mid_circuit_measurements(self):
+    @data(True)
+    def test_prepare_with_mid_circuit_measurements(self, enable_gates):
         """Test the prepare function for circuits with mid-circuit measurements."""
         # Create a circuit with mid-circuit measurements
         circuit = QuantumCircuit(3, 3)
@@ -121,10 +124,13 @@ class TestPrepareFunction(unittest.TestCase):
         observable = SparsePauliOp.from_list([("ZZZ", 1)])
         pub = EstimatorPub.coerce((circuit, observable))
 
-        program = prepare(pubs=[pub], twirling_options=TwirlingOptions(), shots=1024)
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = enable_gates
+        program = prepare(pubs=[pub], twirling_options=twirling_options, shots=1024)
 
         self.assertEqual(len(program.items), 1)
         self.assertIsInstance(program.items[0], SamplexItem)
+        self.assertEqual(len(program.items[0].samplex.inputs().specs), 1)
         self.assertTrue(program.items[0].samplex.inputs().specs[0].name.startswith("basis_changes"))
         self.assertEqual(program.items[0].samplex.inputs().specs[0].shape, (3,))
 
