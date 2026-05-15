@@ -206,15 +206,15 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
     bcast_shape = pub.shape
 
     # Step 1.
-    # Generate a map between param ndindices to observable terms that need to be measured
-    # and their ndindices
-    param_obs_map: dict[tuple] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
+    # Generate a map between param ndindices to pauli basis and the observable terms that they
+    # measure
+    param_obs_map: dict[set] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
     for bcast_index in np.ndindex(bcast_shape):
         param_index = unbroadcast_index(bcast_index, parameter_values.shape)
         obs = observables[unbroadcast_index(bcast_index, observables.shape)]
-        for basis, _ in obs.items():
-            pauli = get_pauli_basis(basis)  # map to pauli form
-            param_obs_map[param_index][pauli].add(basis)
+        for obs_term, _ in obs.items():
+            pauli_basis = get_pauli_basis(obs_term)
+            param_obs_map[param_index][pauli_basis].add(obs_term)
 
     # Step 2.
     # Collect the Paulis to measure for each parameter value in commuting sets
@@ -226,32 +226,29 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
 
     # Figure out measurement Pauli basis for each set of commuting Paulis
     param_basis_map = {}
-    total_size = 0
     for param_index, meas_groups in param_meas_groups_map.items():
-        meas_paulis = []
-        total_size += len(meas_groups)
-        meas_paulis = [
+        param_basis_map[param_index] = [
             Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
             for paulis in meas_groups
         ]
-        param_basis_map[param_index] = meas_paulis
 
-    # Step 3.
+    # Step 3. Flatten the params.
     if parameter_values.ndim == 0:
         # The PUB has no params. We can just return the basis, which live inside the only
-        # item in `param_basis_map`.
-        basis = next(iter(param_basis_map.values()))
-        return (), np.array([pauli_to_ints(bases) for bases in basis])
+        # item in `param_basis_map` with key `()`.
+        return (), np.array([pauli_to_ints(bases) for bases in param_basis_map[()]])
 
-    # If the PUB included parameters, we flatten them into a 1D array and generate a corresponding
+    # If the PUB has parameters, we flatten params into a 1D array and generate a corresponding
     # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
     num_basis = sum(len(basis) for basis in param_basis_map.values())
-    flat_params = (
-        np.empty((num_basis, parameter_values.num_parameters), dtype=float)
-        if parameter_values.shape
-        else np.empty((num_basis,))
+    flat_params = np.empty(
+        (
+            num_basis,
+            parameter_values.num_parameters,
+        ),
+        dtype=float,
     )
-    change_basis = np.empty((num_basis, pub.circuit.num_qubits), dtype=int)
+    change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():
