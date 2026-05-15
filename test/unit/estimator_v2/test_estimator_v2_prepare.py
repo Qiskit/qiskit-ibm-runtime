@@ -16,6 +16,7 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 import numpy as np
+from ddt import ddt, data
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
@@ -30,8 +31,62 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
+@ddt
 class TestPrepareFunction(unittest.TestCase):
     """Tests for the prepare function."""
+
+    @data(
+        [(2, 2), (2, 2), (1, 4)],
+        [(2, 2, 1), (2, 2), (1, 6)],
+        [(2, 2), (2, 2, 1), (1, 8)],
+        [(), (2, 2, 1), (1, 3)],
+    )
+    def test_shapes(self, shapes):
+        """Test preparing with different shapes of observables and params."""
+        param_shape, obs_shape, item_shape = shapes
+
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
+
+    @data(
+        [(2, 2), (2, 2), (1, 5)],
+        [(2, 2, 1), (2, 2), (1, 8)],
+        [(2, 2), (2, 2, 1), (1, 10)],
+        [(), (2, 2, 1), (1, 4)],
+    )
+    def test_shapes_with_nested_observables(self, shapes):
+        """Test preparing with different shapes of (nested) observables and params."""
+        param_shape, obs_shape, item_shape = shapes
+
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
+        assert False
 
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
@@ -68,13 +123,10 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertIsInstance(item2, SamplexItem)
 
         self.assertEqual(item1.shape, (1, 3))
-        self.assertEqual(item2.shape, (1, 2, 2))
+        self.assertEqual(item2.shape, (1, 2))
 
         self.assertNotIn("parameter_values", item1.samplex_arguments)
-        np.testing.assert_allclose(
-            item2.samplex_arguments["parameter_values"],
-            parameter_values2.reshape((2, 1, 2)),
-        )
+        np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
 
         passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")

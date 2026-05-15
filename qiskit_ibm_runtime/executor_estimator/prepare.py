@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import logging
 
 from typing import TYPE_CHECKING
@@ -28,12 +29,13 @@ from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
+from qiskit.quantum_info import PauliList, Pauli
 
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from ..quantum_program.datatree import is_datatree_compatible
 from ..exceptions import IBMInputValueError
-from .utils import get_bases, pauli_to_ints
+from .utils import get_bases, pauli_to_ints, unbroadcast_index, get_pauli_basis
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 logger = logging.getLogger(__name__)
@@ -109,39 +111,27 @@ def prepare(
         )
         prepared_circuit = boxing_pm.run(prepared_circuit)
 
+        # Build the template and the samplex
         template, samplex = build(prepared_circuit)
 
-        # Prepare samplex_arguments
-        if pub.parameter_values.num_parameters > 0:
-            param_array = pub.parameter_values.as_array()
-            param_shape = pub.parameter_values.shape
-            samplex_args = {
-                "parameter_values": param_array.reshape(
-                    param_shape + (1, pub.parameter_values.num_parameters)
-                )
-            }
-        else:
-            samplex_args = {}
-            param_shape = ()
-
-        item_shape = (num_randomizations,) + param_shape + (len(measure_bases),)
-
-        # Add basis changes to samplex_arguments
+        # Get the name of the basis changing ref
         basis_changes_specs = samplex.inputs().get_specs("basis_changes")
         basis_changes_name = basis_changes_specs[0].name
-        # Create basis array with shape (num_bases, num_qubits)
-        measure_bases_int = np.array([pauli_to_ints(basis) for basis in measure_bases])
 
-        samplex_arguments = samplex.inputs().make_broadcastable()
-        samplex_arguments.bind(**{**samplex_args, basis_changes_name: measure_bases_int})
+        # Prepare samplex_arguments
+        flat_params, change_basis = compute_samplex_arguments(pub)
+        samplex_arguments = {basis_changes_name: change_basis}
+        if samplex.inputs().get_specs("parameter_values"):
+            samplex_arguments["parameter_values"] = flat_params
 
         # Create SamplexItem
+        shape = (num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
                 samplex=samplex,
                 samplex_arguments=samplex_arguments,
-                shape=item_shape,
+                shape=shape,
             )
         )
 
@@ -181,3 +171,87 @@ def prepare(
     quantum_program._semantic_role = "estimator_v2"
 
     return quantum_program
+
+
+def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.array[int]]:
+    """Compute parameter values and basis changes to be used as inputs by the samplex.
+
+    To minimize the total number of circuits executions, this function takes the following
+    steps:
+        1. It creates a map between subsets of parameters and the observables that need to
+           be measured for each subset, applying broadcasting rules to params and observables.
+        2. It replaces the observables in that map with the minimal set of Pauli basis that
+           can be used to measure all such observables.
+        3. It flattens the map into two 1D arrays of equal lenght, containing the subsets of
+           parameters and basis changing gates respectively. When a subset of parameter maps
+           to more than one basis changing gate, the flattened array contains multiple copies
+           of it.
+
+    Overall, the two 1D arrays returned contain ``N`` elements, where ``N`` is the total number
+    of basis changing gates that need to be measured across all the different parameter sets.
+    Zipping them yields parameter–basis pairs, where each parameter value must be measured using
+    its associated change basis.
+
+    The two arrays have the format required by samplomatic and can be pass straight to the samplex
+    via ``samplex.inputs()``.
+
+    Args:
+        pub: An estimator PUB.
+
+    Return:
+        A tuple containing an array of parameter values and an array of basis changing gates.
+    """
+    parameter_values = pub.parameter_values
+    observables = pub.observables
+    bcast_shape = pub.shape
+
+    # Step 1.
+    # Generate a map between param ndindices to pauli basis and the observable terms that they
+    # measure
+    param_obs_map: dict[set] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
+    for bcast_index in np.ndindex(bcast_shape):
+        param_index = unbroadcast_index(bcast_index, parameter_values.shape)
+        obs = observables[unbroadcast_index(bcast_index, observables.shape)]
+        for obs_term, _ in obs.items():
+            pauli_basis = get_pauli_basis(obs_term)
+            param_obs_map[param_index][pauli_basis].add(obs_term)
+
+    # Step 2.
+    # Collect the Paulis to measure for each parameter value in commuting sets
+    param_meas_groups_map = {}
+    for param_index, pauli_map in param_obs_map.items():
+        pauli_set = list(pauli_map)
+        meas_groups = PauliList(pauli_set).group_commuting(qubit_wise=True)
+        param_meas_groups_map[param_index] = meas_groups
+
+    # Figure out measurement Pauli basis for each set of commuting Paulis
+    param_basis_map = {}
+    for param_index, meas_groups in param_meas_groups_map.items():
+        param_basis_map[param_index] = [
+            Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
+            for paulis in meas_groups
+        ]
+
+    # Step 3. Flatten the params.
+    if parameter_values.ndim == 0:
+        # The PUB has no params. We can just return the basis, which live inside the only
+        # item in `param_basis_map` with key `()`.
+        return (), np.array([pauli_to_ints(bases) for bases in param_basis_map[()]])
+
+    # If the PUB has parameters, we flatten params into a 1D array and generate a corresponding
+    # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
+    num_basis = sum(len(basis) for basis in param_basis_map.values())
+    flat_params = np.empty(
+        (num_basis, parameter_values.num_parameters),
+        dtype=float,
+    )
+    change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
+
+    basis_idx = 0
+    for ndindex, basis in param_basis_map.items():
+        for bases in basis:
+            change_basis[basis_idx] = pauli_to_ints(bases)
+            flat_params[basis_idx] = parameter_values.as_array()[ndindex]
+            basis_idx += 1
+
+    return flat_params, change_basis

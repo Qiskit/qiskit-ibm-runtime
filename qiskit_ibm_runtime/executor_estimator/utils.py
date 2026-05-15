@@ -19,6 +19,7 @@ permanent location (qiskit-addons or qiskit core) in the future.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from functools import lru_cache
 
 if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import ObservablesArray
@@ -129,3 +130,38 @@ def get_bases(observables: ObservablesArray) -> PauliList:
         raise ValueError("No measurement bases found. Only identity in the observables.")
 
     return PauliList(non_identity_bases)
+
+
+def unbroadcast_index(
+    bc_index: tuple[int | slice, ...], shape: tuple[int, ...]
+) -> tuple[int | slice, ...]:
+    """Index an array using an index from a compatible broadcasted shape.
+
+    An ND-array ``arr`` is broadcastable to any shape ``bc_shape = (*pad_shape, *arr.shape)``.
+    This function allows indexing ``arr`` using an ND-index or slice from ``bc_shape`` and
+    will return the index for ``arr`` that accesses the same value.
+
+    Args:
+        bc_index: An ND-index from a broadcasted shape.
+        shape: The shape of the broadcasting compatible array to index.
+
+    Returns:
+        The equivalent un-broadcasted ND-index of the array with specified shape.
+    """
+
+    @lru_cache
+    def _pad_broadcast_shape(shape: tuple[int, ...], ndims: int) -> tuple[int | slice, ...]:
+        # Pad a shape with trivial dimensions.
+        shape_ndims = len(shape)
+        pad = ndims - shape_ndims
+        if pad > 0:
+            return pad * (1,) + shape
+        return shape
+
+    shape_ndims = len(shape)
+    if shape_ndims == 0:
+        return ()
+
+    pad_shape = _pad_broadcast_shape(shape, len(bc_index))
+    bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
+    return bc_index[-shape_ndims:]
