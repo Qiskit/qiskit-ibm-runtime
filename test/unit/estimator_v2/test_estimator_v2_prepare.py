@@ -61,6 +61,33 @@ class TestPrepareFunction(unittest.TestCase):
 
         self.assertEqual(program.items[0].shape, item_shape)
 
+    @data(
+        [(2, 2), (2, 2), (1, 5)],
+        [(2, 2, 1), (2, 2), (1, 8)],
+        [(2, 2), (2, 2, 1), (1, 10)],
+        [(), (2, 2, 1), (1, 4)],
+    )
+    def test_shapes_with_nested_observables(self, shapes):
+        """Test preparing with different shapes of (nested) observables and params."""
+        param_shape, obs_shape, item_shape = shapes
+
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
+        assert False
+
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
         circuit1 = QuantumCircuit(2)
