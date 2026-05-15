@@ -178,17 +178,19 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
 
     To minimize the total number of circuits executions, this function takes the following
     steps:
-        *  It creates a map between subsets of parameters and the observables that need to
+        1. It creates a map between subsets of parameters and the observables that need to
            be measured for each subset, applying broadcasting rules to params and observables.
-        *  It replaces the observables in that map with the minimal set of Pauli basis that
+        2. It replaces the observables in that map with the minimal set of Pauli basis that
            can be used to measure all such observables.
-        *  It flattens the map into two 1D arrays of equal lenght, containing the subsets of
+        3. It flattens the map into two 1D arrays of equal lenght, containing the subsets of
            parameters and basis changing gates respectively. When a subset of parameter maps
            to more than one basis changing gate, the flattened array contains multiple copies
            of it.
 
     Overall, the two 1D arrays returned contain ``N`` elements, where ``N`` is the total number
     of basis changing gates that need to be measured across all the different parameter sets.
+    Zipping them yields parameter–basis pairs, where each parameter value must be measured using
+    its associated change basis.
 
     The two arrays have the format required by samplomatic and can be pass straight to the samplex
     via ``samplex.inputs()``.
@@ -203,61 +205,47 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
     observables = pub.observables
     bcast_shape = pub.shape
 
-    # Collect maps of the set of bases and Pauli's that need to be measured
-    # for each broadcast parameter value.
-
-    # A map between param ndindices to observables that need to be measured
+    # Step 1.
+    # Generate a map between param ndindices to observable terms that need to be measured
     # and their ndindices
-    param_pauli_map: dict[tuple] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
-
-    # A map between param ndindices to observables that need to be measured
-    # and their coefficients
-    param_index_map = defaultdict(lambda: defaultdict(list))  # type: ignore[var-annotated]
-
-    # A map between param ndindices to observables that need to be measured
-    # and the Pauli basis that they can be measured in
-    param_coeffs_map = defaultdict(lambda: defaultdict(list))  # type: ignore[var-annotated]
+    param_obs_map: dict[tuple] = defaultdict(lambda: defaultdict(set))  # type: ignore[type-arg]
     for bcast_index in np.ndindex(bcast_shape):
         param_index = unbroadcast_index(bcast_index, parameter_values.shape)
         obs = observables[unbroadcast_index(bcast_index, observables.shape)]
-        for basis, coeff in obs.items():
-            pauli = get_pauli_basis(basis)
+        for basis, _ in obs.items():
+            pauli = get_pauli_basis(basis)  # map to pauli form
+            param_obs_map[param_index][pauli].add(basis)
 
-            param_index_map[param_index][basis].append(bcast_index)
-            param_coeffs_map[param_index][basis].append(coeff)
-            param_pauli_map[param_index][pauli].add(basis)
-
-    # Collect sets of Paulis to measure for each parameter value
-    param_meas_groups = {}
-    for param_index, pauli_map in param_pauli_map.items():
+    # Step 2.
+    # Collect the Paulis to measure for each parameter value in commuting sets
+    param_meas_groups_map = {}
+    for param_index, pauli_map in param_obs_map.items():
         pauli_set = list(pauli_map)
         meas_groups = PauliList(pauli_set).group_commuting(qubit_wise=True)
-        param_meas_groups[param_index] = meas_groups
+        param_meas_groups_map[param_index] = meas_groups
 
-    # Figure out measurement Pauli basis for each measurement group non-identity Pauli
-    # measure basis.
-    param_meas_paulis = {}
+    # Figure out measurement Pauli basis for each set of commuting Paulis
+    param_basis_map = {}
     total_size = 0
-    for param_index, meas_groups in param_meas_groups.items():
+    for param_index, meas_groups in param_meas_groups_map.items():
         meas_paulis = []
         total_size += len(meas_groups)
         meas_paulis = [
             Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
             for paulis in meas_groups
         ]
-        param_meas_paulis[param_index] = meas_paulis
+        param_basis_map[param_index] = meas_paulis
 
-    num_basis = sum(len(basis) for basis in param_meas_paulis.values())
-
+    # Step 3.
     if parameter_values.shape == ():
         # The PUB has no params. We can just return the basis, which live inside the only
-        # item in `param_meas_paulis`.
-        basis = next(iter(param_meas_paulis.values()))
+        # item in `param_basis_map`.
+        basis = next(iter(param_basis_map.values()))
         return (), np.array([pauli_to_ints(bases) for bases in basis])
 
     # If the PUB included parameters, we flatten them into a 1D array and generate a corresponding
-    # 1D `change_basis` array. Zipping `flat_params` with `change_basis` yields parameter–basis
-    # pairs, where each parameter value must be measured using its associated change basis.
+    # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
+    num_basis = sum(len(basis) for basis in param_basis_map.values())
     flat_params = (
         np.empty((num_basis, parameter_values.shape[-1]), dtype=float)
         if parameter_values.shape
@@ -266,7 +254,7 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
     change_basis = np.empty((num_basis, pub.circuit.num_qubits), dtype=int)
 
     basis_idx = 0
-    for ndindex, basis in param_meas_paulis.items():
+    for ndindex, basis in param_basis_map.items():
         for bases in basis:
             change_basis[basis_idx] = pauli_to_ints(bases)
             flat_params[basis_idx] = parameter_values.as_array()[ndindex]
