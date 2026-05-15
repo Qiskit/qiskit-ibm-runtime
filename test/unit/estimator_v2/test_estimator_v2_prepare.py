@@ -16,6 +16,7 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 import numpy as np
+from ddt import ddt, data
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
@@ -30,8 +31,34 @@ from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
+@ddt
 class TestPrepareFunction(unittest.TestCase):
     """Tests for the prepare function."""
+
+    @data(
+        [(2, 2), (2, 2), (1, 4)],
+        [(2, 2, 1), (2, 2), (1, 6)],
+        [(2, 2), (2, 2, 1), (1, 8)],
+    )
+    def test_shapes(self, shapes):
+        """Test preparing with differnt shapes of observables and params."""
+        print(shapes)
+        param_shape, obs_shape, item_shape = shapes
+
+        circuit = QuantumCircuit(3)
+        for idx in range(7):
+            circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
 
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
