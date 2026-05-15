@@ -237,7 +237,7 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
         param_basis_map[param_index] = meas_paulis
 
     # Step 3.
-    if parameter_values.shape == ():
+    if parameter_values.ndim == 0:
         # The PUB has no params. We can just return the basis, which live inside the only
         # item in `param_basis_map`.
         basis = next(iter(param_basis_map.values()))
@@ -252,8 +252,6 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
         else np.empty((num_basis,))
     )
     change_basis = np.empty((num_basis, pub.circuit.num_qubits), dtype=int)
-
-    print(num_basis)
 
     basis_idx = 0
     for ndindex, basis in param_basis_map.items():

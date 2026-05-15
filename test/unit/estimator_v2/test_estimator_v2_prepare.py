@@ -39,15 +39,16 @@ class TestPrepareFunction(unittest.TestCase):
         [(2, 2), (2, 2), (1, 4)],
         [(2, 2, 1), (2, 2), (1, 6)],
         [(2, 2), (2, 2, 1), (1, 8)],
+        [(), (2, 2, 1), (1, 3)],
     )
     def test_shapes(self, shapes):
         """Test preparing with differnt shapes of observables and params."""
-        print(shapes)
         param_shape, obs_shape, item_shape = shapes
 
         circuit = QuantumCircuit(3)
-        for idx in range(7):
-            circuit.rz(Parameter(f"th_{idx}"), 0)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
         circuit.cx(0, 1)
         circuit.measure_all()
 
