@@ -68,13 +68,10 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertIsInstance(item2, SamplexItem)
 
         self.assertEqual(item1.shape, (1, 3))
-        self.assertEqual(item2.shape, (1, 2, 2))
+        self.assertEqual(item2.shape, (1, 2))
 
         self.assertNotIn("parameter_values", item1.samplex_arguments)
-        np.testing.assert_allclose(
-            item2.samplex_arguments["parameter_values"],
-            parameter_values2.reshape((2, 1, 2)),
-        )
+        np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
 
         passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
