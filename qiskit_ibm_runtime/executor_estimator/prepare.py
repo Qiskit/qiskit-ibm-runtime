@@ -242,10 +242,7 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
     # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
     num_basis = sum(len(basis) for basis in param_basis_map.values())
     flat_params = np.empty(
-        (
-            num_basis,
-            parameter_values.num_parameters,
-        ),
+        (num_basis, parameter_values.num_parameters),
         dtype=float,
     )
     change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)

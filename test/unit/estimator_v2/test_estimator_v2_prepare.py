@@ -42,7 +42,7 @@ class TestPrepareFunction(unittest.TestCase):
         [(), (2, 2, 1), (1, 3)],
     )
     def test_shapes(self, shapes):
-        """Test preparing with differnt shapes of observables and params."""
+        """Test preparing with different shapes of observables and params."""
         param_shape, obs_shape, item_shape = shapes
 
         circuit = QuantumCircuit(3)
