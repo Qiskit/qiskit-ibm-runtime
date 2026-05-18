@@ -46,7 +46,7 @@ def create_mock_backend():
     return backend
 
 
-def create_sampler_for_prepare_tests(backend=None, options=None):
+def create_sampler_for_prepare_tests(options=None):
     """Create a SamplerV2 instance for testing the prepare method.
 
     Args:
@@ -56,8 +56,7 @@ def create_sampler_for_prepare_tests(backend=None, options=None):
     Returns:
         SamplerV2 instance configured for testing.
     """
-    if backend is None:
-        backend = create_mock_backend()
+    backend = create_mock_backend()
     if options is None:
         options = SamplerOptions()
 
