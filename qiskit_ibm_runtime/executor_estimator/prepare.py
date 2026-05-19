@@ -119,10 +119,10 @@ def prepare(
         basis_changes_name = basis_changes_specs[0].name
 
         # Prepare samplex_arguments
-        flat_params, change_basis = compute_samplex_arguments(pub)
+        flat_parameter_values, change_basis, _param_basis_map = compute_samplex_arguments(pub)
         samplex_arguments = {basis_changes_name: change_basis}
         if samplex.inputs().get_specs("parameter_values"):
-            samplex_arguments["parameter_values"] = flat_params
+            samplex_arguments["parameter_values"] = flat_parameter_values
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
@@ -173,7 +173,9 @@ def prepare(
     return quantum_program
 
 
-def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.array[int]]:
+def compute_samplex_arguments(
+    pub: EstimatorPub,
+) -> tuple[np.array[float], np.array[int], list[tuple[tuple[int, ...], PauliList]]]:
     """Compute parameter values and basis changes to be used as inputs by the samplex.
 
     To minimize the total number of circuits executions, this function takes the following
@@ -199,7 +201,15 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
         pub: An estimator PUB.
 
     Return:
-        A tuple containing an array of parameter values and an array of basis changing gates.
+        A tuple containing:
+            * ``flat_parameter_values``: A 1-D array of parameter values in the format expected by
+              ``samplex.inputs()``.
+            * ``change_basis``: A 1-D array of basis changing gates in the format expected by
+              ``samplex.inputs()``.
+            * ``param_basis_pairs``: A list of tuples ``(ndindex, basis)``, where the i-th element
+              contains:
+                - ``ndindex`` the N-dimensional index of the parameter in ``pub.parameter_values``.
+                - ``basis`` the corresponding measurement basis associated with that parameter.
     """
     parameter_values = pub.parameter_values
     observables = pub.observables
@@ -227,31 +237,39 @@ def compute_samplex_arguments(pub: EstimatorPub) -> tuple[np.array[float], np.ar
     # Figure out measurement Pauli basis for each set of commuting Paulis
     param_basis_map = {}
     for param_index, meas_groups in param_meas_groups_map.items():
-        param_basis_map[param_index] = [
-            Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
-            for paulis in meas_groups
-        ]
+        param_basis_map[param_index] = PauliList(
+            [
+                Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
+                for paulis in meas_groups
+            ]
+        )
 
     # Step 3. Flatten the params.
     if parameter_values.ndim == 0:
         # The PUB has no params. We can just return the basis, which live inside the only
         # item in `param_basis_map` with key `()`.
-        return (), np.array([pauli_to_ints(bases) for bases in param_basis_map[()]])
+        flat_parameter_values = ()
+        change_basis = np.array([pauli_to_ints(bases) for bases in param_basis_map[()]])
+    else:
+        # If the PUB has parameters, we flatten params into a 1D array and generate a corresponding
+        # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
+        num_basis = sum(len(basis) for basis in param_basis_map.values())
+        flat_parameter_values = np.empty(
+            (num_basis, parameter_values.num_parameters),
+            dtype=float,
+        )
+        change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
-    # If the PUB has parameters, we flatten params into a 1D array and generate a corresponding
-    # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
-    num_basis = sum(len(basis) for basis in param_basis_map.values())
-    flat_params = np.empty(
-        (num_basis, parameter_values.num_parameters),
-        dtype=float,
-    )
-    change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
+        basis_idx = 0
+        for ndindex, basis in param_basis_map.items():
+            for bases in basis:
+                change_basis[basis_idx] = pauli_to_ints(bases)
+                flat_parameter_values[basis_idx] = parameter_values.as_array()[ndindex]
+                basis_idx += 1
 
-    basis_idx = 0
-    for ndindex, basis in param_basis_map.items():
-        for bases in basis:
-            change_basis[basis_idx] = pauli_to_ints(bases)
-            flat_params[basis_idx] = parameter_values.as_array()[ndindex]
-            basis_idx += 1
+    # Step 4. Log info.
+    param_basis_pairs: list[tuple[tuple[int, ...], Pauli]] = [
+        (ndindex, bases) for ndindex, basis in param_basis_map.items() for bases in basis
+    ]
 
-    return flat_params, change_basis
+    return flat_parameter_values, change_basis, param_basis_pairs
