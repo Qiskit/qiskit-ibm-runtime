@@ -86,7 +86,6 @@ class TestPrepareFunction(unittest.TestCase):
         program = prepare([pub], TwirlingOptions(), 10)
 
         self.assertEqual(program.items[0].shape, item_shape)
-        assert False
 
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
