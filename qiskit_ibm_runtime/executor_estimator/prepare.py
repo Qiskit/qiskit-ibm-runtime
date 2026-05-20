@@ -175,7 +175,7 @@ def prepare(
 
 def compute_samplex_arguments(
     pub: EstimatorPub,
-) -> tuple[np.array[float], np.array[int], list[tuple[tuple[int, ...], PauliList]]]:
+) -> tuple[np.array[float], np.array[int], list[tuple[tuple[int, ...], str]]]:
     """Compute parameter values and basis changes to be used as inputs by the samplex.
 
     To minimize the total number of circuits executions, this function takes the following
@@ -237,12 +237,10 @@ def compute_samplex_arguments(
     # Figure out measurement Pauli basis for each set of commuting Paulis
     param_basis_map = {}
     for param_index, meas_groups in param_meas_groups_map.items():
-        param_basis_map[param_index] = PauliList(
-            [
-                Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
-                for paulis in meas_groups
-            ]
-        )
+        param_basis_map[param_index] = [
+            Pauli((np.logical_or.reduce(paulis.z), np.logical_or.reduce(paulis.x)))
+            for paulis in meas_groups
+        ]
 
     # Step 3. Flatten the params.
     # We flatten params into a 1D array and generate a corresponding 1D `change_basis` array. Both
@@ -262,8 +260,8 @@ def compute_samplex_arguments(
             basis_idx += 1
 
     # Step 4. Log info.
-    param_basis_pairs: list[tuple[tuple[int, ...], Pauli]] = [
-        (ndindex, bases) for ndindex, basis in param_basis_map.items() for bases in basis
+    param_basis_pairs: list[tuple[tuple[int, ...], str]] = [
+        (ndindex, bases.to_label()) for ndindex, basis in param_basis_map.items() for bases in basis
     ]
 
     return flat_parameter_values, change_basis, param_basis_pairs

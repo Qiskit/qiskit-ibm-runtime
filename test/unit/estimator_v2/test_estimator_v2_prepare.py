@@ -259,11 +259,71 @@ class TestComputeSamplexArguments(unittest.TestCase):
             np.random.random(param_shape + (circuit.num_parameters,)),
         )
         pub = EstimatorPub.coerce(pub_like)
+
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
         num_basis = len(param_basis_pairs)
 
         self.assertEqual(flat_parameter_values.ndim, 2)
-        self.assertEqual(flat_parameter_values.shape, (num_basis, circuit.num_parameters))
+        self.assertEqual(flat_parameter_values.shape, (num_basis, pub.circuit.num_parameters))
 
         self.assertEqual(change_basis.ndim, 2)
-        self.assertEqual(change_basis.shape, (num_basis, circuit.num_qubits))
+        self.assertEqual(change_basis.shape, (num_basis, pub.circuit.num_qubits))
+
+    @data(
+        [
+            (2, 2),
+            (2, 2),
+            [
+                ((0, 0), "ZZZ"),
+                ((0, 1), "XXX"),
+                ((1, 0), "YYY"),
+                ((1, 1), "IYI"),
+            ],
+        ],
+        [
+            (2, 2),
+            (2, 2, 1),
+            [
+                ((0, 0), "ZZZ"),
+                ((0, 0), "YYY"),
+                ((0, 1), "ZZZ"),
+                ((0, 1), "YYY"),
+                ((1, 0), "XXX"),
+                ((1, 0), "IYI"),
+                ((1, 1), "XXX"),
+                ((1, 1), "IYI"),
+            ],
+        ],
+        [
+            (2, 2, 1),
+            (2, 2),
+            [
+                ((0, 0, 0), "ZZZ"),
+                ((0, 0, 0), "XXX"),
+                ((0, 1, 0), "YYY"),
+                ((1, 0, 0), "ZZZ"),
+                ((1, 0, 0), "XXX"),
+                ((1, 1, 0), "YYY"),
+            ],
+        ],
+        [(), (2, 2), [((), "ZZZ"), ((), "XXX"), ((), "YYY")]],
+    )
+    @unpack
+    def test_param_basis_pairs(self, param_shape, obs_shape, expected_pairs):
+        """Test the shapes of the returned params and change basis arrays."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pub_like = (
+            circuit,
+            ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape),
+            np.random.random(param_shape + (circuit.num_parameters,)),
+        )
+        pub = EstimatorPub.coerce(pub_like)
+
+        _, _, param_basis_pairs = compute_samplex_arguments(pub)
+        self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)
