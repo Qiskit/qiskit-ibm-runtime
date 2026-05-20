@@ -201,15 +201,21 @@ def compute_samplex_arguments(
         pub: An estimator PUB.
 
     Return:
-        A tuple containing:
-            * ``flat_parameter_values``: A 1-D array of parameter values in the format expected by
-              ``samplex.inputs()``.
-            * ``change_basis``: A 1-D array of basis changing gates in the format expected by
-              ``samplex.inputs()``.
-            * ``param_basis_pairs``: A list of tuples ``(ndindex, basis)``, where the i-th element
-              contains:
-                - ``ndindex`` the N-dimensional index of the parameter in ``pub.parameter_values``.
-                - ``basis`` the corresponding measurement basis associated with that parameter.
+        A tuple ``(flat_parameter_values, change_basis, param_basis_pairs)`` where:
+
+            * ``flat_parameter_values`` is a 1-D array of parameter values in the format expected
+            by ``samplex.inputs()``. The array is of length ``N``, the total number of
+            basis-changing gates required across all parameter sets.
+
+            * ``change_basis`` is a 1-D array of length ``N`` containing the basis-changing gates
+            associated with ``flat_parameter_values``, also in the format expected by
+            ``samplex.inputs()``.
+
+            * ``param_basis_pairs`` is a list of ``N`` tuples ``(ndindex, basis)`` describing the
+            correspondence between the two arrays. For the i-th tuple:
+                - ``ndindex`` is the N-dimensional index of the parameter entry in
+                    ``pub.parameter_values``.
+                - ``basis`` is the measurement basis associated with that parameter entry.
     """
     parameter_values = pub.parameter_values
     observables = pub.observables
