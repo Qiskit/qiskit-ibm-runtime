@@ -245,27 +245,21 @@ def compute_samplex_arguments(
         )
 
     # Step 3. Flatten the params.
-    if parameter_values.ndim == 0:
-        # The PUB has no params. We can just return the basis, which live inside the only
-        # item in `param_basis_map` with key `()`.
-        flat_parameter_values = ()
-        change_basis = np.array([pauli_to_ints(bases) for bases in param_basis_map[()]])
-    else:
-        # If the PUB has parameters, we flatten params into a 1D array and generate a corresponding
-        # 1D `change_basis` array. Both arrays contain ``num_basis`` elements.
-        num_basis = sum(len(basis) for basis in param_basis_map.values())
-        flat_parameter_values = np.empty(
-            (num_basis, parameter_values.num_parameters),
-            dtype=float,
-        )
-        change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
+    # We flatten params into a 1D array and generate a corresponding 1D `change_basis` array. Both
+    # arrays contain ``num_basis`` elements.
+    num_basis = sum(len(basis) for basis in param_basis_map.values())
+    flat_parameter_values = np.empty(
+        (num_basis, parameter_values.num_parameters),
+        dtype=float,
+    )
+    change_basis = np.empty((num_basis, observables.num_qubits), dtype=int)
 
-        basis_idx = 0
-        for ndindex, basis in param_basis_map.items():
-            for bases in basis:
-                change_basis[basis_idx] = pauli_to_ints(bases)
-                flat_parameter_values[basis_idx] = parameter_values.as_array()[ndindex]
-                basis_idx += 1
+    basis_idx = 0
+    for ndindex, basis in param_basis_map.items():
+        for bases in basis:
+            change_basis[basis_idx] = pauli_to_ints(bases)
+            flat_parameter_values[basis_idx] = parameter_values.as_array()[ndindex]
+            basis_idx += 1
 
     # Step 4. Log info.
     param_basis_pairs: list[tuple[tuple[int, ...], Pauli]] = [

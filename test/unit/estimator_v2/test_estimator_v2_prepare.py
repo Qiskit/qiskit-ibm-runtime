@@ -16,7 +16,7 @@ import unittest
 from typing import Any, cast
 from unittest.mock import MagicMock, patch
 import numpy as np
-from ddt import ddt, data
+from ddt import ddt, data, unpack
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
@@ -24,7 +24,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub, Observables
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import ClassicalRegister
 
-from qiskit_ibm_runtime.executor_estimator.prepare import prepare
+from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
@@ -41,10 +41,9 @@ class TestPrepareFunction(unittest.TestCase):
         [(2, 2), (2, 2, 1), (1, 8)],
         [(), (2, 2, 1), (1, 3)],
     )
-    def test_shapes(self, shapes):
+    @unpack
+    def test_shapes(self, param_shape, obs_shape, item_shape):
         """Test preparing with different shapes of observables and params."""
-        param_shape, obs_shape, item_shape = shapes
-
         circuit = QuantumCircuit(3)
         if param_shape:
             for idx in range(7):
@@ -67,10 +66,9 @@ class TestPrepareFunction(unittest.TestCase):
         [(2, 2), (2, 2, 1), (1, 10)],
         [(), (2, 2, 1), (1, 4)],
     )
-    def test_shapes_with_nested_observables(self, shapes):
+    @unpack
+    def test_shapes_with_nested_observables(self, param_shape, obs_shape, item_shape):
         """Test preparing with different shapes of (nested) observables and params."""
-        param_shape, obs_shape, item_shape = shapes
-
         circuit = QuantumCircuit(3)
         if param_shape:
             for idx in range(7):
@@ -238,3 +236,34 @@ class TestPrepareFunction(unittest.TestCase):
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
+
+
+@ddt
+class TestComputeSamplexArguments(unittest.TestCase):
+    """Tests for ``compute_samplex_arguments``."""
+
+    @data([(2, 2), (2, 2)], [(2, 2, 1), (2, 2)], [(2, 2), (2, 2, 1)], [(), (2, 2, 1)])
+    @unpack
+    def test_shapes_returned_arrays(self, param_shape, obs_shape):
+        """Test the shapes of the returned params and change basis arrays."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pub_like = (
+            circuit,
+            ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape),
+            np.random.random(param_shape + (circuit.num_parameters,)),
+        )
+        pub = EstimatorPub.coerce(pub_like)
+        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
+        num_basis = len(param_basis_pairs)
+
+        self.assertEqual(flat_parameter_values.ndim, 2)
+        self.assertEqual(flat_parameter_values.shape, (num_basis, circuit.num_parameters))
+
+        self.assertEqual(change_basis.ndim, 2)
+        self.assertEqual(change_basis.shape, (num_basis, circuit.num_qubits))
