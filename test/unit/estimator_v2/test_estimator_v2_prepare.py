@@ -310,7 +310,7 @@ class TestComputeSamplexArguments(unittest.TestCase):
     )
     @unpack
     def test_param_basis_pairs(self, param_shape, obs_shape, expected_pairs):
-        """Test the shapes of the returned params and change basis arrays."""
+        """Test the shapes of the returned ``param_basis_pairs`` list."""
         circuit = QuantumCircuit(3)
         if param_shape:
             for idx in range(7):
