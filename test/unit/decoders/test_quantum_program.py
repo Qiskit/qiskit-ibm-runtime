@@ -33,7 +33,7 @@ from qiskit_ibm_runtime.results.quantum_program import (
     Metadata,
     QuantumProgramResult,
 )
-from qiskit_ibm_runtime.quantum_program.result_decoders import QuantumProgramResultDecoder
+from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
 
 from ...ibm_test_case import IBMTestCase
 
