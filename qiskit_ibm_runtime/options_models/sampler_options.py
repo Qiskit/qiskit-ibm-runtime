@@ -79,7 +79,7 @@ class SamplerOptions:
 
         executor_options.environment.max_execution_time = self.max_execution_time
         if self.experimental:
-            executor_options.environment.image = self.experimental.pop("image", None)
+            executor_options.environment.image = self.experimental.get("image", None)
             executor_options.experimental.update(self.experimental)
 
         return executor_options
