@@ -20,6 +20,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import numpy.typing as npt
     from collections.abc import Sequence
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from ..options_models.twirling_options import TwirlingOptions
@@ -181,7 +182,7 @@ def prepare(
 
 def compute_samplex_arguments(
     pub: EstimatorPub,
-) -> tuple[np.array[float], np.array[int], list[tuple[tuple[int, ...], str]]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[int], list[tuple[tuple[int, ...], str]]]:
     """Compute parameter values and basis changes to be used as inputs by the samplex.
 
     To minimize the total number of circuits executions, this function takes the following
