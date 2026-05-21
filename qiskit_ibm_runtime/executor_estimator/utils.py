@@ -18,11 +18,7 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 from functools import lru_cache
-
-if TYPE_CHECKING:
-    pass
 
 import numpy as np
 from qiskit.quantum_info import Pauli
