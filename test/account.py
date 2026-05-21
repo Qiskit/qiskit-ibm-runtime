@@ -20,9 +20,7 @@ from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
 from qiskit_ibm_runtime.accounts import management
-from qiskit_ibm_runtime.accounts.account import (
-    IBM_QUANTUM_PLATFORM_API_URL,
-)
+from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
 
 
 class custom_envs(ContextDecorator):
