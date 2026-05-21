@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 from qiskit.quantum_info import QubitSparsePauliList
 
-from ...noise_learner_v3.noise_learner_v3_result import (
+from ...results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
