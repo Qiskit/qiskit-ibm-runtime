@@ -22,10 +22,10 @@ from typing import TYPE_CHECKING
 from functools import lru_cache
 
 if TYPE_CHECKING:
-    from qiskit.primitives.containers.estimator_pub import ObservablesArray
+    pass
 
 import numpy as np
-from qiskit.quantum_info import Pauli, PauliList
+from qiskit.quantum_info import Pauli
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
@@ -82,54 +82,6 @@ def pauli_to_ints(pauli: Pauli) -> list[int]:
         so we reverse the list.
     """
     return [LOOKUP_TABLE[p] for p in pauli.to_label()][::-1]
-
-
-def get_bases(observables: ObservablesArray) -> PauliList:
-    """Find minimal set of measurement bases for all observable terms.
-
-    Groups commuting Pauli terms and returns one basis per group.
-    Uses qubit-wise commutation checking.
-
-    Args:
-        observables: Array of observables to measure.
-
-    Returns:
-        PauliList of measurement bases.
-    """
-    all_bases = []
-
-    # Convert to numpy array of dicts using __array__() method
-    # This works for both scalar (shape=()) and array cases
-    obs_array = np.asarray(observables)
-
-    # Use np.ndenumerate to iterate over all elements
-    for _, obs_dict in np.ndenumerate(obs_array):
-        for term, coeff in obs_dict.items():
-            basis = get_pauli_basis(term)
-            all_bases.append(basis)
-
-    # Handle empty case
-    if not all_bases:
-        raise ValueError(
-            "No measurement bases found. Observables array is empty or contains no terms."
-        )
-
-    groups = PauliList(all_bases).group_commuting(qubit_wise=True)
-    bases = PauliList(
-        [((np.logical_or.reduce(group.z), np.logical_or.reduce(group.x))) for group in groups]
-    )
-
-    # Filter out all-identity bases (where both z and x are all False)
-    non_identity_bases = []
-    for basis in bases:
-        if np.any(basis.z) or np.any(basis.x):
-            non_identity_bases.append(basis)
-
-    # Handle identity case
-    if not non_identity_bases:
-        raise ValueError("No measurement bases found. Only identity in the observables.")
-
-    return PauliList(non_identity_bases)
 
 
 def unbroadcast_index(

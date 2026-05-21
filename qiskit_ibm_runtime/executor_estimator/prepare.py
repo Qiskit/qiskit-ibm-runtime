@@ -36,7 +36,7 @@ from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from ..quantum_program.datatree import is_datatree_compatible
 from ..exceptions import IBMInputValueError
-from .utils import get_bases, pauli_to_ints, unbroadcast_index, get_pauli_basis
+from .utils import pauli_to_ints, unbroadcast_index, get_pauli_basis
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 logger = logging.getLogger(__name__)
@@ -79,15 +79,11 @@ def prepare(
     # Create items
     items: list[SamplexItem] = []
     observables_list = []
-    measure_bases_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
-
-        # Determine measurement bases
-        measure_bases = get_bases(pub.observables)
 
         # Remove any existing final measurements
         prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
@@ -140,7 +136,6 @@ def prepare(
 
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
-        measure_bases_list.append(measure_bases.to_labels())
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
@@ -161,7 +156,6 @@ def prepare(
             "version": "v0.1",
             "circuits_metadata": circuits_metadata,
             "observables": observables_list,
-            "measure_bases": measure_bases_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
         },

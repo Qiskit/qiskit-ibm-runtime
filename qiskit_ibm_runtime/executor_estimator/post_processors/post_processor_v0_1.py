@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 import numpy as np
 from qiskit.primitives import PrimitiveResult, DataBin
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
-from qiskit.quantum_info import PauliList, Pauli
+from qiskit.quantum_info import Pauli
 
 from ...utils.estimator_pub_result import EstimatorPubResult
 from ..utils import (
@@ -66,9 +66,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if (observables_lists := post_processor_data.get("observables", None)) is None:
         raise ValueError("Missing 'observables' in post_processor data.")
 
-    if (measure_bases_lists := post_processor_data.get("measure_bases", None)) is None:
-        raise ValueError("Missing 'measure_bases' in post_processor data.")
-
     if (param_basis_pairs_lists := post_processor_data.get("param_basis_pairs", None)) is None:
         raise ValueError("Missing 'param_basis_pairs' in post_processor data.")
 
@@ -80,23 +77,15 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
-    if (
-        len(
-            {
-                len(circuits_metadata),
-                len(observables_lists),
-                len(measure_bases_lists),
-                len(param_basis_pairs_lists),
-                len(param_shapes_list),
-                len(result),
-            }
-        )
-        != 1
-    ):
+    if {
+        len(circuits_metadata),
+        len(observables_lists),
+        len(param_basis_pairs_lists),
+        len(param_shapes_list),
+    } != {len(result)}:
         raise ValueError(
             f"Number of circuit metadata items ({len(circuits_metadata)}), "
             f"observables ({len(observables_lists)}), "
-            f"basis ({len(measure_bases_lists)}), "
             f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
             f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
         )
@@ -108,18 +97,16 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Build EstimatorPubResult for each pub
     pub_results = []
-    for idx, (item_data, observables, measure_bases, param_basis_pairs, param_shape) in enumerate(
+    for idx, (item_data, observables, param_basis_pairs, param_shape) in enumerate(
         zip(
             result,
             observables_lists,
-            measure_bases_lists,
             param_basis_pairs_lists,
             param_shapes_list,
         )
     ):
         # Reconstruct observables and measure_bases
         observables = ObservablesArray(observables)
-        measure_bases = PauliList(measure_bases)
         param_shape = tuple(param_shape)
 
         # Get measurement data
