@@ -33,7 +33,7 @@ from .utils import extract_shots_from_pubs, validate_no_boxes
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
     from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
@@ -46,161 +46,6 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
-
-
-def prepare(
-    pubs: list[SamplerPub],
-    options: SamplerOptions,
-    backend: BackendV2,
-    default_shots: int | None = None,
-) -> tuple[QuantumProgram, ExecutorOptions]:
-    """Convert a list of sampler PUBs to a quantum program and map options.
-
-    Args:
-        pubs: List of sampler PUBs to convert.
-        options: ``SamplerOptions`` to validate and map to ``ExecutorOptions``.
-        backend: Backend to use for dynamical decoupling timing information.
-        default_shots: Default number of shots if not specified in PUBs.
-
-    Returns:
-        A tuple containing:
-        - :class:`~.QuantumProgram` with :class:`~.CircuitItem` objects for each pub,
-            with passthrough_data configured for
-            :class:`~qiskit_ibm_runtime.executor_sampler.SamplerV2` post-processing.
-        - :class:`~.ExecutorOptions` mapped from :class:`~.SamplerOptions`.
-
-    Raises:
-        IBMInputValueError: If circuits contain boxes or if shots are not specified.
-        ValueError: If dynamical decoupling is enabled with dynamic circuits.
-    """
-    # Extract and validate shots from pubs
-    shots = extract_shots_from_pubs(pubs, default_shots)
-
-    twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
-
-    # Create DD pass manager if enabled
-    dd_pass_manager = None
-    if options.dynamical_decoupling.enable:
-        # Validate that circuits don't have control flow (dynamic circuits)
-        for pub in pubs:
-            if pub.circuit.has_control_flow_op():
-                raise ValueError(
-                    "Dynamical decoupling is not compatible with dynamic circuits "
-                    "(circuits with control flow operations)."
-                )
-        dd_pass_manager = generate_dd_pass_manager(
-            backend=backend,
-            options=options.dynamical_decoupling,
-        )
-
-    # Create items based on whether twirling is enabled
-    items: list[QuantumProgramItem] = []
-    program_shots = shots  # Default: use pub shots
-
-    if not twirling_enabled:
-        # No twirling path: validate no boxes, create CircuitItem objects
-        for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i + 1, len(pubs))
-            validate_no_boxes(pub.circuit)
-
-            # Apply DD if enabled
-            circuit = pub.circuit
-            if dd_pass_manager is not None:
-                circuit = dd_pass_manager.run(circuit)
-
-            # Convert parameter values to numpy array
-            if pub.parameter_values.num_parameters > 0:
-                param_values = pub.parameter_values.as_array()
-            else:
-                param_values = None
-
-            items.append(
-                CircuitItem(
-                    circuit=circuit,
-                    circuit_arguments=param_values,
-                )
-            )
-    else:
-        # Twirling path: create SamplexItem objects
-        num_rand, shots_per_rand = calculate_twirling_shots(
-            shots,
-            options.twirling.num_randomizations,
-            options.twirling.shots_per_randomization,
-        )
-
-        program_shots = shots_per_rand
-
-        boxing_pm = generate_boxing_pass_manager(
-            enable_gates=bool(options.twirling.enable_gates),
-            enable_measures=bool(options.twirling.enable_measure),
-            twirling_strategy=options.twirling.strategy.replace("-", "_"),
-        )
-
-        for i, pub in enumerate(pubs):
-            logger.info("Processing pub %d/%d", i + 1, len(pubs))
-            boxed_circuit = boxing_pm.run(pub.circuit)
-            template_circuit, samplex = build(boxed_circuit)
-
-            # Apply DD to template circuit if enabled
-            if dd_pass_manager is not None:
-                template_circuit = dd_pass_manager.run(template_circuit)
-
-            # Prepare samplex_arguments
-            if pub.parameter_values.num_parameters > 0:
-                param_array = pub.parameter_values.as_array()
-                samplex_args = {"parameter_values": param_array}
-                # Shape should be (num_rand,) + parameter_sweep_shape
-                param_shape = param_array.shape[:-1]  # Remove last dimension (num_parameters)
-                item_shape = (num_rand,) + param_shape
-            else:
-                samplex_args = {}
-                param_shape = ()
-                item_shape = (num_rand,)
-
-            # Create SamplexItem
-            items.append(
-                SamplexItem(
-                    circuit=template_circuit,
-                    samplex=samplex,
-                    samplex_arguments=samplex_args,
-                    shape=item_shape,
-                )
-            )
-
-    # Collect circuit metadata from each pub
-    circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-    # Validate that circuit metadata is compatible with DataTree format
-    for idx, metadata in enumerate(circuits_metadata):
-        if metadata is not None and not is_datatree_compatible(metadata):
-            raise IBMInputValueError(
-                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                f"numpy arrays, or primitive types (str, int, float, bool, None)."
-            )
-
-    passthrough_data = {
-        "post_processor": {
-            "version": "v0.1",
-            "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
-            "meas_type": options.execution.meas_type,
-            "circuits_metadata": circuits_metadata,
-        }
-    }
-
-    # Create QuantumProgram
-    quantum_program = QuantumProgram(
-        shots=program_shots,
-        items=items,
-        passthrough_data=passthrough_data,
-        meas_level=options.execution.meas_type,
-    )
-    quantum_program._semantic_role = "sampler_v2"
-
-    # Map options to executor options
-    executor_options = options.to_executor_options()
-
-    return quantum_program, executor_options
 
 
 class SamplerV2(BaseSamplerV2):
@@ -317,19 +162,9 @@ class SamplerV2(BaseSamplerV2):
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else self.options.default_shots
 
-        # Get backend from executor
-        backend = self._executor._backend
-        if backend is None:
-            raise ValueError(
-                "Backend is required for SamplerV2. "
-                "Please provide a backend when initializing the sampler."
-            )
-
-        # Convert pubs to QuantumProgram and map options using the prepare function
+        # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(
-            coerced_pubs, self.options, backend, default_shots
-        )
+        quantum_program, executor_options = self.prepare(coerced_pubs, default_shots)
 
         # Set executor options
         self._executor.options = executor_options
@@ -343,3 +178,172 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return self._executor.run(quantum_program)
+
+    def prepare(
+        self,
+        pubs: Sequence[SamplerPub],
+        default_shots: int | None = None,
+    ) -> tuple[QuantumProgram, ExecutorOptions]:
+        """Convert a sequence of sampler PUBs to a quantum program and map options.
+
+        This method processes sampler PUBs (Primitive Unified Blocs) and converts them into
+        a :class:`~.QuantumProgram` suitable for execution, along with the corresponding
+        :class:`~.ExecutorOptions`.
+
+        Args:
+            pubs: List of sampler PUBs to convert.
+            default_shots: Default number of shots if not specified in PUBs. If ``None``,
+                uses the value from ``self.options.default_shots``.
+
+        Returns:
+            A tuple containing:
+
+            - :class:`~.QuantumProgram` with :class:`~.CircuitItem` or :class:`~.SamplexItem`
+              objects for each pub, with passthrough_data configured for post-processing.
+            - :class:`~.ExecutorOptions` mapped from the sampler's options.
+
+        Raises:
+            ValueError: If backend is not provided or if dynamical decoupling is enabled
+                with dynamic circuits.
+            IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
+                (when twirling is disabled) or if shots are not properly specified.
+        """
+        # Get backend from executor
+        backend = self._executor._backend
+        if backend is None:
+            raise ValueError(
+                "Backend is required for prepare(). "
+                "Please provide a backend when initializing the sampler."
+            )
+
+        # Use instance options
+        options = self.options
+
+        # Extract and validate shots from pubs
+        shots = extract_shots_from_pubs(pubs, default_shots)
+
+        twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
+
+        # Create DD pass manager if enabled
+        dd_pass_manager = None
+        if options.dynamical_decoupling.enable:
+            # Validate that circuits don't have control flow (dynamic circuits)
+            for pub in pubs:
+                if pub.circuit.has_control_flow_op():
+                    raise ValueError(
+                        "Dynamical decoupling is not compatible with dynamic circuits "
+                        "(circuits with control flow operations)."
+                    )
+            dd_pass_manager = generate_dd_pass_manager(
+                backend=backend,
+                options=options.dynamical_decoupling,
+            )
+
+        # Create items based on whether twirling is enabled
+        items: list[QuantumProgramItem] = []
+        program_shots = shots  # Default: use pub shots
+
+        if not twirling_enabled:
+            # No twirling path: validate no boxes, create CircuitItem objects
+            for i, pub in enumerate(pubs):
+                logger.info("Processing pub %d/%d", i + 1, len(pubs))
+                validate_no_boxes(pub.circuit)
+
+                # Apply DD if enabled
+                circuit = pub.circuit
+                if dd_pass_manager is not None:
+                    circuit = dd_pass_manager.run(circuit)
+
+                # Convert parameter values to numpy array
+                if pub.parameter_values.num_parameters > 0:
+                    param_values = pub.parameter_values.as_array()
+                else:
+                    param_values = None
+
+                items.append(
+                    CircuitItem(
+                        circuit=circuit,
+                        circuit_arguments=param_values,
+                    )
+                )
+        else:
+            # Twirling path: create SamplexItem objects
+            num_rand, shots_per_rand = calculate_twirling_shots(
+                shots,
+                options.twirling.num_randomizations,
+                options.twirling.shots_per_randomization,
+            )
+
+            program_shots = shots_per_rand
+
+            boxing_pm = generate_boxing_pass_manager(
+                enable_gates=bool(options.twirling.enable_gates),
+                enable_measures=bool(options.twirling.enable_measure),
+                twirling_strategy=options.twirling.strategy.replace("-", "_"),
+            )
+
+            for i, pub in enumerate(pubs):
+                logger.info("Processing pub %d/%d", i + 1, len(pubs))
+                boxed_circuit = boxing_pm.run(pub.circuit)
+                template_circuit, samplex = build(boxed_circuit)
+
+                # Apply DD to template circuit if enabled
+                if dd_pass_manager is not None:
+                    template_circuit = dd_pass_manager.run(template_circuit)
+
+                # Prepare samplex_arguments
+                if pub.parameter_values.num_parameters > 0:
+                    param_array = pub.parameter_values.as_array()
+                    samplex_args = {"parameter_values": param_array}
+                    # Shape should be (num_rand,) + parameter_sweep_shape
+                    param_shape = param_array.shape[:-1]  # Remove last dimension (num_parameters)
+                    item_shape = (num_rand,) + param_shape
+                else:
+                    samplex_args = {}
+                    param_shape = ()
+                    item_shape = (num_rand,)
+
+                # Create SamplexItem
+                items.append(
+                    SamplexItem(
+                        circuit=template_circuit,
+                        samplex=samplex,
+                        samplex_arguments=samplex_args,
+                        shape=item_shape,
+                    )
+                )
+
+        # Collect circuit metadata from each pub
+        circuits_metadata = [pub.circuit.metadata for pub in pubs]
+
+        # Validate that circuit metadata is compatible with DataTree format
+        for idx, metadata in enumerate(circuits_metadata):
+            if metadata is not None and not is_datatree_compatible(metadata):
+                raise IBMInputValueError(
+                    f"Circuit metadata at index {idx} is not compatible with DataTree format. "
+                    f"Metadata must be a nested structure of lists, dicts (with string keys), "
+                    f"numpy arrays, or primitive types (str, int, float, bool, None)."
+                )
+
+        passthrough_data = {
+            "post_processor": {
+                "version": "v0.1",
+                "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
+                "meas_type": options.execution.meas_type,
+                "circuits_metadata": circuits_metadata,
+            }
+        }
+
+        # Create QuantumProgram
+        quantum_program = QuantumProgram(
+            shots=program_shots,
+            items=items,
+            passthrough_data=passthrough_data,
+            meas_level=options.execution.meas_type,
+        )
+        quantum_program._semantic_role = "sampler_v2"
+
+        # Map options to executor options
+        executor_options = options.to_executor_options()
+
+        return quantum_program, executor_options
