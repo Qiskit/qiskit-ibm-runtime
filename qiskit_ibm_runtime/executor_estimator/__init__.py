@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025-2026.
+# (C) Copyright IBM 2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,8 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""QuantumProgramResult."""
-
-# These imports are to be removed in next qiskit-ibm-runtime release. Please import directly via
-# the qiskit_ibm_runtime.results module.
-from ..results.quantum_program import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata  # noqa: F401
+"""Executor-based EstimatorV2"""

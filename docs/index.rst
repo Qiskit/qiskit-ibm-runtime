@@ -11,4 +11,5 @@ https://github.com/Qiskit/documentation.
 
     Documentation home <self>
     API Reference <apidocs/index>
+    Guides <guides/index>
     Release Notes <release_notes>
