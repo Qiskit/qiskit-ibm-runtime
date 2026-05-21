@@ -155,7 +155,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             # Get the available (measurement_basis, config_idx) pairs for this parameter index
             param_basis_list = config_lookup.get(param_index, [])
             if not param_basis_list:
-                continue
+                raise ValueError(
+                    f"No measurement basis configurations found for parameter index {param_index}"
+                )
 
             exp_val = 0.0
             variance = 0.0
