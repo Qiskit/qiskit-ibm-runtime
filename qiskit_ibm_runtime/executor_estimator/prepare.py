@@ -79,6 +79,8 @@ def prepare(
     items: list[SamplexItem] = []
     observables_list = []
     measure_bases_list = []
+    param_basis_pairs_list = []
+    param_shapes_list = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
@@ -119,7 +121,7 @@ def prepare(
         basis_changes_name = basis_changes_specs[0].name
 
         # Prepare samplex_arguments
-        flat_parameter_values, change_basis, _param_basis_map = compute_samplex_arguments(pub)
+        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
         samplex_arguments = {basis_changes_name: change_basis}
         if samplex.inputs().get_specs("parameter_values"):
             samplex_arguments["parameter_values"] = flat_parameter_values
@@ -138,6 +140,8 @@ def prepare(
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
         measure_bases_list.append(measure_bases.to_labels())
+        param_basis_pairs_list.append(param_basis_pairs)
+        param_shapes_list.append(pub.parameter_values.shape)
 
     # Collect circuit metadata from each pub
     circuits_metadata = [pub.circuit.metadata for pub in pubs]
@@ -157,6 +161,8 @@ def prepare(
             "circuits_metadata": circuits_metadata,
             "observables": observables_list,
             "measure_bases": measure_bases_list,
+            "param_basis_pairs": param_basis_pairs_list,
+            "param_shapes": param_shapes_list,
         },
     }
 

@@ -181,7 +181,7 @@ def project_to_z(term: str) -> np.ndarray[int]:
     return np.array([CHAR_TO_Z_CHARS[ch] for ch in str(term)])
 
 
-def identify_measure_basis(pauli: Pauli, measure_bases: list[Pauli]) -> int:
+def identify_measure_basis(pauli: Pauli, measure_bases: list[tuple[Pauli, int]]) -> int:
     """Find which measurement basis can measure the given Pauli.
 
     A basis is compatible if, on every qubit where ``pauli`` is non-identity,
@@ -190,23 +190,23 @@ def identify_measure_basis(pauli: Pauli, measure_bases: list[Pauli]) -> int:
 
     Args:
         pauli: Pauli operator to measure.
-        measure_bases: List of available measurement bases.
+        measure_bases: List of (measurement_basis, config_idx) tuples.
 
     Returns:
-        Index of the first compatible basis.
+        The config_idx of the compatible basis.
 
     Raises:
         ValueError: If no compatible basis found.
     """
     pauli_support = np.logical_or(pauli.z, pauli.x)
 
-    for basis_idx, basis in enumerate(measure_bases):
+    for basis, config_idx in measure_bases:
         # On all non-identity positions of ``pauli``, the measurement basis
         # must match both the z/x symplectic components exactly.
         if np.array_equal(pauli.z[pauli_support], basis.z[pauli_support]) and np.array_equal(
             pauli.x[pauli_support], basis.x[pauli_support]
         ):
-            return basis_idx
+            return config_idx
 
     raise ValueError(f"Cannot compute eval of {pauli} from the given bases elements.")
 
@@ -261,63 +261,3 @@ def compute_exp_val(observable_term: str, datum: np.ndarray) -> tuple[np.ndarray
 
     # Ensure we always return numpy arrays (even for scalar results)
     return np.asarray(exp_val), np.asarray(variance)
-
-
-def broadcast_expectation_values(
-    exp_vals_array: np.ndarray,
-    stds_array: np.ndarray,
-    param_shape: tuple,
-    obs_shape: tuple,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Broadcast expectation values and standard deviations to output shape.
-
-    This function handles broadcasting of parameter and observable shapes to create
-    the final output arrays. It supports all combinations:
-
-    Args:
-        exp_vals_array: Array of expectation values with shape obs_shape + param_shape.
-        stds_array: Array of standard deviations with shape obs_shape + param_shape.
-        param_shape: Shape of parameter sweep (empty tuple for scalar).
-        obs_shape: Shape of observables array (empty tuple for scalar).
-
-    Returns:
-        Tuple of (expectation_values, standard_deviations), each with shape
-        np.broadcast_shapes(param_shape, obs_shape).
-    """
-    output_shape = np.broadcast_shapes(param_shape, obs_shape)
-
-    # Handle scalar case: both param_shape and obs_shape are ()
-    if output_shape == ():
-        return exp_vals_array.item(), stds_array.item()
-
-    # Calculate dimensions
-    num_obs = int(np.prod(obs_shape)) if obs_shape else 1
-    num_params = int(np.prod(param_shape)) if param_shape else 1
-
-    # Reshape input arrays to (num_obs,) + param_shape for easier indexing
-    evs_lookup = exp_vals_array.reshape((num_obs,) + param_shape)
-    stds_lookup = stds_array.reshape((num_obs,) + param_shape)
-
-    # Create index arrays for broadcasting
-    # Shape: param_shape or (1,) for scalar
-    param_indices = np.arange(num_params).reshape(param_shape or (1,))
-    # Shape: obs_shape or (1,) for scalar
-    obs_indices = np.arange(num_obs).reshape(obs_shape or (1,))
-
-    # Broadcast indices to output shape
-    param_bc = np.broadcast_to(param_indices, output_shape)
-    obs_bc = np.broadcast_to(obs_indices, output_shape)
-
-    # Vectorized lookup using advanced indexing
-    if param_shape:
-        # Unravel param indices for multi-dimensional indexing
-        param_unraveled = np.unravel_index(param_bc.ravel(), param_shape)
-        index_tuple = (obs_bc.ravel(),) + param_unraveled
-        evs_result = evs_lookup[index_tuple].reshape(output_shape)
-        stds_result = stds_lookup[index_tuple].reshape(output_shape)
-    else:
-        # Scalar params: just index by obs
-        evs_result = evs_lookup[obs_bc]
-        stds_result = stds_lookup[obs_bc]
-
-    return evs_result, stds_result

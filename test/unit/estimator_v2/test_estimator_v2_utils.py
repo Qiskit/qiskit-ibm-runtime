@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.executor_estimator.utils import (
     project_to_z,
     identify_measure_basis,
     compute_exp_val,
-    broadcast_expectation_values,
 )
 
 
@@ -189,36 +188,36 @@ class TestIdentifyMeasureBasis(unittest.TestCase):
     def test_identify_measure_basis(self):
         """Test identify_measure_basis with various observable and basis combinations."""
         test_cases = [
-            # (observable, bases, expected_index, description)
-            ("ZZZ", [Pauli("ZZZ")], 0, "single basis match"),
-            ("ZZZ", [Pauli("ZZZ"), Pauli("ZXZ")], 0, "multiple bases first match"),
-            ("ZZI", [Pauli("ZZZ")], 0, "compatible basis with identity positions"),
-            ("XXX", [Pauli("ZZZ"), Pauli("XXX")], 1, "multiple bases second match"),
-            ("XYZ", [Pauli("XYZ")], 0, "compatible mixed paulis"),
-            ("III", [Pauli("ZZZ")], 0, "identity"),
+            # (observable, bases_with_indices, expected_config_idx, description)
+            ("ZZZ", [(Pauli("ZZZ"), 0)], 0, "single basis match"),
+            ("ZZZ", [(Pauli("ZZZ"), 0), (Pauli("ZXZ"), 1)], 0, "multiple bases first match"),
+            ("ZZI", [(Pauli("ZZZ"), 0)], 0, "compatible basis with identity positions"),
+            ("XXX", [(Pauli("ZZZ"), 0), (Pauli("XXX"), 1)], 1, "multiple bases second match"),
+            ("XYZ", [(Pauli("XYZ"), 5)], 5, "compatible mixed paulis"),
+            ("III", [(Pauli("ZZZ"), 10)], 10, "identity"),
         ]
 
-        for observable, bases, expected_index, description in test_cases:
+        for observable, bases_with_indices, expected_config_idx, description in test_cases:
             with self.subTest(description=description, observable=observable):
                 pauli = Pauli(observable)
-                result = identify_measure_basis(pauli, bases)
-                self.assertEqual(result, expected_index)
+                result = identify_measure_basis(pauli, bases_with_indices)
+                self.assertEqual(result, expected_config_idx)
 
     def test_identify_measure_basis_errors(self):
         """Test identify_measure_basis raises errors for incompatible observables."""
         error_cases = [
-            # (observable, bases, description)
-            ("XXX", [Pauli("ZZZ")], "X vs Z conflict"),
-            ("YII", [Pauli("ZII")], "Y vs Z conflict"),
-            ("YII", [Pauli("XII")], "Y vs X conflict"),
+            # (observable, bases_with_indices, description)
+            ("XXX", [(Pauli("ZZZ"), 0)], "X vs Z conflict"),
+            ("YII", [(Pauli("ZII"), 0)], "Y vs Z conflict"),
+            ("YII", [(Pauli("XII"), 0)], "Y vs X conflict"),
             ("ZZZ", [], "empty bases list"),
         ]
 
-        for observable, bases, description in error_cases:
+        for observable, bases_with_indices, description in error_cases:
             with self.subTest(description=description, observable=observable):
                 pauli = Pauli(observable)
                 with self.assertRaises(ValueError, msg=f"Failed to raise error for {description}"):
-                    identify_measure_basis(pauli, bases)
+                    identify_measure_basis(pauli, bases_with_indices)
 
 
 class TestComputeExpVal(unittest.TestCase):
@@ -288,102 +287,3 @@ class TestComputeExpVal(unittest.TestCase):
 
         expected_variance = 1.0 - (10 / 30) ** 2
         np.testing.assert_almost_equal(variance, expected_variance, decimal=10)
-
-
-class TestBroadcastExpectationValues(unittest.TestCase):
-    """Tests for broadcast_expectation_values function."""
-
-    def test_output_shape(self):
-        """Test broadcasting with various compatible parameter and observable shapes."""
-        test_cases = [
-            # (param_shape, obs_shape, output_shape, description)
-            ((), (), (), "scalar params, scalar obs"),
-            ((), (3,), (3,), "scalar params, 1D obs"),
-            ((4,), (), (4,), "1D params, scalar obs"),
-            ((3,), (3,), (3,), "1D params, 1D obs"),
-            ((2,), (5, 1), (5, 2), "1D params, 2D obs"),
-            ((2, 3), (), (2, 3), "2D params, scalar obs"),
-            ((), (2, 3), (2, 3), "scalar params, 2D obs"),
-            ((3,), (2, 3), (2, 3), "1D params, 2D obs - compatible"),
-            ((2, 3), (2, 3), (2, 3), "2D params, 2D obs - same shape"),
-            ((4,), (2, 4), (2, 4), "1D params, 2D obs - trailing match"),
-        ]
-
-        for param_shape, obs_shape, output_shape, description in test_cases:
-            with self.subTest(description=description):
-                # Create input arrays with shape obs_shape + param_shape
-                input_shape = obs_shape + param_shape
-
-                if input_shape == ():
-                    exp_vals = np.array(0.5)
-                    stds = np.array(0.1)
-                else:
-                    num_elements = int(np.prod(input_shape))
-                    exp_vals = np.arange(num_elements).reshape(input_shape) * 0.1
-                    stds = np.arange(num_elements).reshape(input_shape) * 0.01
-
-                result_evs, result_stds = broadcast_expectation_values(
-                    exp_vals, stds, param_shape, obs_shape
-                )
-
-                # Check output shape
-                if output_shape == ():
-                    self.assertIsInstance(result_evs, (float, np.floating))
-                    self.assertIsInstance(result_stds, (float, np.floating))
-                else:
-                    self.assertEqual(result_evs.shape, output_shape)
-                    self.assertEqual(result_stds.shape, output_shape)
-
-    def test_output_values_complex_case(self):
-        """Test broadcasting with actual value verification for complex shapes.
-
-        Tests params shape (2, 1, 3) and observables shape (2, 3).
-        Expected output shape: (2, 2, 3) via broadcasting.
-        """
-        param_shape = (2, 1, 3)
-        obs_shape = (2, 3)
-
-        # Input shape is obs_shape + param_shape = (2, 3, 2, 1, 3)
-        input_shape = obs_shape + param_shape
-
-        # Create input arrays with known values for verification
-        exp_vals = np.arange(np.prod(input_shape)).reshape(input_shape) * 0.1
-        stds = np.arange(np.prod(input_shape)).reshape(input_shape) * 0.01
-
-        result_evs, result_stds = broadcast_expectation_values(
-            exp_vals, stds, param_shape, obs_shape
-        )
-
-        # Verify output shape
-        expected_shape = (2, 2, 3)  # np.broadcast_shapes((2, 1, 3), (2, 3))
-        self.assertEqual(result_evs.shape, expected_shape)
-        self.assertEqual(result_stds.shape, expected_shape)
-
-        # Manually construct expected output by following the broadcasting logic
-        # For output[i, j, k]:
-        # - obs dimension: (i, j) maps to obs_shape indices
-        # - param dimension: (i, 0, k) due to broadcasting (middle dim is 1)
-        # - Input index: obs_shape indices + param_shape indices
-        expected_evs = np.zeros(expected_shape)
-        expected_stds = np.zeros(expected_shape)
-
-        for i in range(2):
-            for j in range(2):  # Output shape is (2, 2, 3), so j goes to 2
-                for k in range(3):
-                    # When broadcasting param_shape (2, 1, 3) with obs_shape (2, 3):
-                    # - param (2, 1, 3) aligns as: [2, 1, 3]
-                    # - obs (2, 3) aligns as:      [   2, 3]
-                    # - output is:                 [2, 2, 3]
-                    # So for output[i, j, k]:
-                    # - param indices: [i, 0, k] (middle dim broadcasts from 1)
-                    # - obs indices: [j, k] (obs aligns with last 2 dims of output)
-                    param_i, param_j, param_k = i, 0, k
-                    obs_i, obs_j = j, k
-                    # Full input index: obs_shape + param_shape
-                    input_idx = (obs_i, obs_j, param_i, param_j, param_k)
-                    expected_evs[i, j, k] = exp_vals[input_idx]
-                    expected_stds[i, j, k] = stds[input_idx]
-
-        # Compare all values
-        np.testing.assert_array_almost_equal(result_evs, expected_evs)
-        np.testing.assert_array_almost_equal(result_stds, expected_stds)

@@ -27,7 +27,15 @@ from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 class TestEstimatorV2PostProcessor(unittest.TestCase):
     """Tests for estimator_v2_post_processor_v0_1."""
 
-    def _create_quantum_result(self, meas_data, observables, measure_bases, circuits_metadata=None):
+    def _create_quantum_result(
+        self,
+        meas_data,
+        observables,
+        measure_bases,
+        param_basis_pairs,
+        param_shapes,
+        circuits_metadata=None,
+    ):
         """Helper to create QuantumProgramResult with common structure."""
         result_data = [{"_meas": meas_data}]
         passthrough_data = {
@@ -36,6 +44,8 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 "circuits_metadata": circuits_metadata or [None],
                 "observables": observables,
                 "measure_bases": measure_bases,
+                "param_basis_pairs": param_basis_pairs,
+                "param_shapes": param_shapes,
             },
         }
         quantum_result = QuantumProgramResult(
@@ -47,11 +57,15 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
     def test_post_processor_single_pub_single_observable(self):
         """Test post-processor with single pub and single observable."""
         # Create mock measurement data: 8x 00 (+1), 1x 01 (-1), 1x 10 (-1)
-        # Shape: (num_randomizations, num_bases, shots, num_qubits)
+        # num_configs = 1 (one param-basis pair)
         meas_data = np.array([[[[False, False]] * 8 + [[False, True], [True, False]]]])
 
         quantum_result = self._create_quantum_result(
-            meas_data, observables=[[{"ZZ": 1.0}]], measure_bases=[["ZZ"]]
+            meas_data,
+            observables=[[{"ZZ": 1.0}]],
+            measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([], "ZZ")]],  # Single scalar param, single basis
+            param_shapes=[[]],  # Scalar parameter shape
         )
         primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
 
@@ -63,18 +77,22 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_multiple_observables(self):
         """Test post-processor with multiple observables."""
-        # Two bases: Z basis for ZZ, X basis for XX (all 00 measurements)
+        # Two configs: one for ZZ, one for XX (all 00 measurements)
         meas_data = np.array(
             [
                 [
-                    [[False, False]] * 10,  # Basis 0 (Z basis)
-                    [[False, False]] * 10,  # Basis 1 (X basis)
+                    [[False, False]] * 10,  # Config 0 (ZZ basis)
+                    [[False, False]] * 10,  # Config 1 (XX basis)
                 ]
             ]
         )
 
         quantum_result = self._create_quantum_result(
-            meas_data, observables=[[{"ZZ": 1.0}, {"XX": 1.0}]], measure_bases=[["ZZ", "XX"]]
+            meas_data,
+            observables=[[{"ZZ": 1.0}, {"XX": 1.0}]],
+            measure_bases=[["ZZ", "XX"]],
+            param_basis_pairs=[[([], "ZZ"), ([], "XX")]],  # Two observables, scalar params
+            param_shapes=[[]],
         )
         primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
 
@@ -82,10 +100,15 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_with_coefficients(self):
         """Test post-processor with observable coefficients."""
+        # New shape: (num_randomizations, num_configs, shots, num_qubits)
         meas_data = np.array([[[[False, False]] * 10]])  # All 00 -> +1
 
         quantum_result = self._create_quantum_result(
-            meas_data, observables=[[{"ZZ": 2.0}]], measure_bases=[["ZZ"]]
+            meas_data,
+            observables=[[{"ZZ": 2.0}]],
+            measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([], "ZZ")]],
+            param_shapes=[[]],
         )
         primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
 
@@ -107,6 +130,8 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 "circuits_metadata": [None, None],
                 "observables": [[{"ZZ": 1.0}], [{"ZZ": 1.0}]],
                 "measure_bases": [["ZZ"], ["ZZ"]],
+                "param_basis_pairs": [[([], "ZZ")], [([], "ZZ")]],
+                "param_shapes": [[], []],
             },
         }
         quantum_result = QuantumProgramResult(
@@ -122,18 +147,22 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_with_parameter_sweep(self):
         """Test post-processor with parameter sweep."""
-        # Shape: (num_randomizations, num_param_values, num_bases, shots, num_qubits)
+        # Two configs: one for param 0, one for param 1
         meas_data = np.array(
             [
                 [
-                    [[[False, False]] * 5],  # Parameter value 0: all 00
-                    [[[True, True]] * 5],  # Parameter value 1: all 11
+                    [[False, False]] * 5,  # Config 0: Parameter value 0, all 00
+                    [[True, True]] * 5,  # Config 1: Parameter value 1, all 11
                 ]
             ]
         )
 
         quantum_result = self._create_quantum_result(
-            meas_data, observables=[[{"ZZ": 1.0}]], measure_bases=[["ZZ"]]
+            meas_data,
+            observables=[[{"ZZ": 1.0}]],
+            measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([0], "ZZ"), ([1], "ZZ")]],  # Two param values
+            param_shapes=[[2]],
         )
         primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
 
@@ -184,6 +213,8 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             meas_data,
             observables=[[{"ZZ": 1.0}]],
             measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([], "ZZ")]],
+            param_shapes=[[]],
             circuits_metadata=[circuit_metadata],
         )
         primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
@@ -191,77 +222,3 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         pub_result = primitive_result[0]
         self.assertIn("circuit_metadata", pub_result.metadata)
         self.assertEqual(pub_result.metadata["circuit_metadata"], circuit_metadata)
-
-    def test_post_processor_complex_broadcasting_with_checkerboard(self):
-        """Test post-processor with complex broadcasting and checkerboard observable pattern."""
-        # param_shape = (3, 4, 1, 1), obs_shape = (4, 3)
-        # broadcast((3,4,1,1), (4,3)) = (3,4,4,3)
-
-        # Create measurement data:
-        # (num_randomizations, 3, 4, 1, 1, num_bases, shots, qubits)
-        # Use 1 basis for simplicity (all observables are ZZ)
-        meas_data = np.zeros((1, 3, 4, 1, 1, 1, 10, 2), dtype=bool)
-
-        # Fill with a pattern: param (i,j,0,0) gives measurement based on (i+j) % 4
-        for i in range(3):
-            for j in range(4):
-                pattern = (i + j) % 4
-                if pattern == 0:  # 00 -> +1
-                    meas_data[0, i, j, 0, 0, 0, :, :] = False
-                elif pattern == 1:  # 01 -> -1
-                    meas_data[0, i, j, 0, 0, 0, :, 0] = False
-                    meas_data[0, i, j, 0, 0, 0, :, 1] = True
-                elif pattern == 2:  # 10 -> -1
-                    meas_data[0, i, j, 0, 0, 0, :, 0] = True
-                    meas_data[0, i, j, 0, 0, 0, :, 1] = False
-                else:  # 11 -> +1
-                    meas_data[0, i, j, 0, 0, 0, :, :] = True
-
-        result_data = [{"_meas": meas_data}]
-
-        # Create 4x3 observables array with checkerboard coefficients
-        # Coefficient is +1 if (i+j) is even, -1 if odd
-        # Need to structure as nested list to get shape (4, 3)
-        observables = [
-            [
-                [{"ZZ": 1.0}, {"ZZ": -1.0}, {"ZZ": 1.0}],  # row 0: +, -, +
-                [{"ZZ": -1.0}, {"ZZ": 1.0}, {"ZZ": -1.0}],  # row 1: -, +, -
-                [{"ZZ": 1.0}, {"ZZ": -1.0}, {"ZZ": 1.0}],  # row 2: +, -, +
-                [{"ZZ": -1.0}, {"ZZ": 1.0}, {"ZZ": -1.0}],  # row 3: -, +, -
-            ]
-        ]
-
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-                "circuits_metadata": [None],
-                "observables": observables,
-                "measure_bases": [["ZZ"]],
-            },
-        }
-
-        quantum_result = QuantumProgramResult(
-            data=result_data, metadata=None, passthrough_data=passthrough_data
-        )
-        quantum_result._semantic_role = "estimator_v2"
-
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
-
-        # Verify shape: broadcast((3,4,1,1), (4,3)) = (3,4,4,3)
-        evs = primitive_result[0].data.evs
-        self.assertEqual(evs.shape, (3, 4, 4, 3))
-
-        # Verify specific values: measurement * coefficient
-        # measurement: +1 if (param_i+param_j)%4 in {0,3}, -1 if in {1,2}
-        # coefficient: +1 if (obs_i+obs_j) even, -1 if odd
-        test_cases = [
-            ((0, 0, 0, 0), 1.0),  # meas:(0+0)%4=0→+1, coeff:(0+0)even→+1 = +1
-            ((0, 1, 0, 1), 1.0),  # meas:(0+1)%4=1→-1, coeff:(0+1)odd→-1 = +1
-            ((1, 0, 1, 0), 1.0),  # meas:(1+0)%4=1→-1, coeff:(1+0)odd→-1 = +1
-            ((2, 2, 2, 2), 1.0),  # meas:(2+2)%4=0→+1, coeff:(2+2)even→+1 = +1
-            ((1, 2, 3, 1), 1.0),  # meas:(1+2)%4=3→+1, coeff:(3+1)even→+1 = +1
-            ((0, 2, 1, 2), 1.0),  # meas:(0+2)%4=2→-1, coeff:(1+2)odd→-1 = +1
-            ((0, 1, 0, 0), -1.0),  # meas:(0+1)%4=1→-1, coeff:(0+0)even→+1 = -1
-        ]
-        for indices, expected in test_cases:
-            self.assertAlmostEqual(evs[indices], expected)
