@@ -102,7 +102,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         )
 
     if any("_meas" not in item_result for item_result in result):
-        # feel free to choose a different error msg
         raise ValueError("Dedicated creg `_meas` is missing from the results.")
 
     shots = result[0]["_meas"].shape[0] * result[0]["_meas"].shape[-2]
