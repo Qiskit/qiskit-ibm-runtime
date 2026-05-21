@@ -14,7 +14,7 @@
 
 from .decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
-from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
+from .decoders.noise_learner import NoiseLearnerResultDecoder
 from .utils.runner_result import RunnerResult
 
 
