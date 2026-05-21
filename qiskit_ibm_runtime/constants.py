@@ -15,14 +15,12 @@
 from .decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
 from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
-from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.sampler_result_decoder import SamplerResultDecoder
 from .utils.runner_result import RunnerResult
 
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
-    "sampler": [ResultDecoder, SamplerResultDecoder],
-    "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "sampler": ResultDecoder,
+    "estimator": ResultDecoder,
     "executor": QuantumProgramResultDecoder,
     "noise-learner": NoiseLearnerResultDecoder,
     "circuit-runner": RunnerResult,
