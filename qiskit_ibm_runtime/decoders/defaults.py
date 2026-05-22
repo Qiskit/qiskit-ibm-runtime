@@ -10,12 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Constant values."""
+"""Mapping between program names and decoders."""
 
-from .decoders.quantum_program.decoder import QuantumProgramResultDecoder
-from .utils.result_decoder import ResultDecoder
-from .decoders.noise_learner import NoiseLearnerResultDecoder
-from .decoders.runner import RunnerResultDecoder
+from .quantum_program.decoder import QuantumProgramResultDecoder
+from .result_decoder import ResultDecoder
+from .noise_learner import NoiseLearnerResultDecoder
+from .runner import RunnerResultDecoder
 
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {

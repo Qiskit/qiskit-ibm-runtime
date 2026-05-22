@@ -24,7 +24,7 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
 
-from ...utils.result_decoder import ResultDecoder
+from ..result_decoder import ResultDecoder
 from .converters import noise_learner_v3_result_from_0_1, noise_learner_v3_result_from_0_2
 
 if TYPE_CHECKING:

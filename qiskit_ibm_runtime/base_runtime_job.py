@@ -29,13 +29,13 @@ from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils import utc_to_local, validate_job_tags
-from .constants import DEFAULT_DECODERS
+from .decoders.defaults import DEFAULT_DECODERS
 from .exceptions import (
     IBMError,
     IBMApiError,
     IBMRuntimeError,
 )
-from .utils.result_decoder import ResultDecoder
+from .decoders.result_decoder import ResultDecoder
 from .models import BackendProperties
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError

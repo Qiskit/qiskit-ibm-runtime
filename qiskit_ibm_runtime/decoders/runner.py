@@ -16,7 +16,7 @@ from __future__ import annotations
 
 
 from ..results.runner import RunnerResult
-from ..utils.result_decoder import ResultDecoder
+from .result_decoder import ResultDecoder
 
 
 class RunnerResultDecoder(ResultDecoder):
