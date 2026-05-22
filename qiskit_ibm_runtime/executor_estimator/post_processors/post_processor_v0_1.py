@@ -17,7 +17,8 @@ from typing import TYPE_CHECKING
 from collections import defaultdict
 
 if TYPE_CHECKING:
-    from ...results.quantum_program import QuantumProgramResult
+    import numpy.typing as npt
+    from ...results.quantum_program import QuantumProgramItemResult, QuantumProgramResult
 
 import numpy as np
 from qiskit.primitives import PrimitiveResult, DataBin
@@ -93,82 +94,20 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if any("_meas" not in item_result for item_result in result):
         raise ValueError("Dedicated creg `_meas` is missing from the results.")
 
-    shots = result[0]["_meas"].shape[0] * result[0]["_meas"].shape[-2]
-
     # Build EstimatorPubResult for each pub
     pub_results = []
-    for idx, (item_data, observables, param_basis_pairs, param_shape) in enumerate(
-        zip(
-            result,
-            observables_lists,
-            param_basis_pairs_lists,
-            param_shapes_list,
-        )
+    for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
     ):
         # Reconstruct observables and measure_bases
-        observables = ObservablesArray(observables)
+        observables = ObservablesArray(observables_label)
         param_shape = tuple(param_shape)
 
-        # Get measurement data
-        # Shape: (num_randomizations, num_configs, shots, num_bits)
-        # where num_configs is the total number of (param_index, basis) pairs
-        meas_data = item_data.pop("_meas")
-        # Apply measurement flips if present
-        if "measurement_flips._meas" in item_data:
-            meas_data ^= item_data.pop("measurement_flips._meas")
-
-        # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
-        # This allows us to find all available measurement bases for a given parameter
-        config_lookup = defaultdict(list)
-        for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
-            config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
-
-        obs_shape = observables.shape
-        output_shape = np.broadcast_shapes(param_shape, obs_shape)
-
-        # Compute expectation values for all observables
-        exp_vals_array = np.zeros(output_shape, dtype=float)
-        stds_array = np.zeros(output_shape, dtype=float)
-
-        # Loop over the broadcast output shape
-        for bcast_index in np.ndindex(output_shape):
-            # Unbroadcast to get the actual parameter and observable indices
-            param_index = unbroadcast_index(bcast_index, param_shape)
-            obs_index = unbroadcast_index(bcast_index, obs_shape)
-
-            # Get the observable for this index
-            observable = observables[obs_index]
-
-            # Get the available (measurement_basis, config_idx) pairs for this parameter index
-            param_basis_list = config_lookup.get(param_index, [])
-            if not param_basis_list:
-                raise ValueError(
-                    f"No measurement basis configurations found for parameter index {param_index}"
-                )
-
-            exp_val = 0.0
-            variance = 0.0
-
-            for observable_term, coeff in observable.items():
-                # Find which basis can measure this term
-                pauli_basis = Pauli(get_pauli_basis(observable_term))
-
-                # Use identify_measure_basis to find the configuration index directly
-                config_idx = identify_measure_basis(pauli_basis, param_basis_list)
-
-                # Get measurement data for this configuration
-                # Shape: (num_randomizations, shots, num_qubits)
-                datum = meas_data[:, config_idx, :, :]
-                term_exp_val, term_variance = compute_exp_val(observable_term, datum)
-
-                # Accumulate with coefficient
-                exp_val += coeff * term_exp_val
-                variance += (coeff**2) * term_variance
-
-            exp_vals_array[bcast_index] = exp_val
-            stds_array[bcast_index] = np.sqrt(variance / shots)  # Standard error
-
-        data_bin = DataBin(evs=exp_vals_array, stds=stds_array)
+        # Calculate exp vals and place them in a databin
+        exp_vals, stds = process_expectation_values(
+            item_result, observables, param_shape, param_basis_pairs
+        )
+        data_bin = DataBin(evs=exp_vals, stds=stds)
 
         # Get circuit metadata for this pub if available
         pub_metadata = {}
@@ -179,3 +118,99 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         pub_results.append(pub_result)
 
     return PrimitiveResult(pub_results, metadata=result.metadata or {})
+
+
+def process_expectation_values(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
+    """Process expectation values for a single item result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+
+    Returns:
+        A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
+        are standard deviations.
+
+    Raises:
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    # Get measurement data
+    data = item_result["_meas"]
+    if data.ndim != 4:
+        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
+
+    # Get num_shots
+    # Shape: (num_randomizations, num_configs, shots, num_bits)
+    # where num_configs is the total number of (param_index, basis) pairs
+    shots = data.shape[0] * data.shape[-2]
+
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
+    # This allows us to find all available measurement bases for a given parameter
+    config_lookup = defaultdict(list)
+    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
+        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
+
+    try:
+        output_shape = np.broadcast_shapes(param_shape, observables.shape)
+    except ValueError:
+        raise ValueError(
+            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
+            f"{observables.shape}"
+        )
+
+    # Compute expectation values for all observables
+    exp_vals = np.empty(output_shape, dtype=float)
+    stds = np.empty(output_shape, dtype=float)
+
+    # Loop over the broadcast output shape
+    for bcast_index in np.ndindex(output_shape):
+        # Unbroadcast to get the actual parameter and observable indices
+        param_index = unbroadcast_index(bcast_index, param_shape)
+        obs_index = unbroadcast_index(bcast_index, observables.shape)
+
+        # Get the observable for this index
+        observable = observables[obs_index]
+
+        # Get the available (measurement_basis, config_idx) pairs for this parameter index
+        try:
+            param_basis_list = config_lookup[param_index]  # type: ignore[index]
+        except KeyError:
+            raise ValueError(
+                f"No measurement basis configurations found for parameter index {param_index}"
+            )
+
+        exp_val = 0.0
+        variance = 0.0
+        for observable_term, coeff in observable.items():
+            # Find which basis can measure this term
+            pauli_basis = Pauli(get_pauli_basis(observable_term))
+
+            # Use identify_measure_basis to find the configuration index directly
+            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
+
+            # Get measurement data for this configuration
+            # Shape: (num_randomizations, shots, num_qubits)
+            datum = data[:, config_idx, :, :]
+            term_exp_val, term_variance = compute_exp_val(observable_term, datum)
+
+            # Accumulate with coefficient
+            exp_val += coeff * term_exp_val
+            variance += (coeff**2) * term_variance
+
+        exp_vals[bcast_index] = exp_val
+        stds[bcast_index] = np.sqrt(variance / shots)  # Standard error
+
+    return exp_vals, stds
