@@ -166,7 +166,6 @@ def process_expectation_values(
 
     try:
         output_shape = np.broadcast_shapes(param_shape, observables.shape)
-        print(output_shape, param_shape, observables.shape)
     except ValueError:
         raise ValueError(
             f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "

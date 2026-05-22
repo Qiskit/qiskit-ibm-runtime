@@ -14,9 +14,12 @@
 
 import unittest
 import numpy as np
+from ddt import ddt, data, unpack
 
 from qiskit.primitives import PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
+from qiskit.quantum_info import random_pauli_list
+
 
 from qiskit_ibm_runtime.results.quantum_program import (
     QuantumProgramResult,
@@ -26,9 +29,10 @@ from qiskit_ibm_runtime.executor_estimator.post_processors.post_processor_v0_1 i
     estimator_v2_post_processor_v0_1,
     process_expectation_values,
 )
-from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+from qiskit_ibm_runtime.executor_estimator.utils import unbroadcast_index
 
 
+@ddt
 class TestProcessExpectationValues(unittest.TestCase):
     """Tests for the ``process_expectation_values`` method."""
 
@@ -37,14 +41,24 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
         item_result = QuantumProgramItemResult({"meas": data})
         with self.assertRaisesRegex(ValueError, "Dedicated creg ``'_meas'``"):
-            process_expectation_values(item_result, ObservablesArray({"ZZ": 1}), (), [])
+            process_expectation_values(
+                item_result=item_result,
+                observables=ObservablesArray({"ZZ": 1}),
+                param_shape=(),
+                param_basis_pairs=[],
+            )
 
     def test_ndim_raises(self):
         """Test that item result with invalid ndim raises."""
         data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
         item_result = QuantumProgramItemResult({"_meas": data})
         with self.assertRaisesRegex(ValueError, "has ``2`` axes"):
-            process_expectation_values(item_result, ObservablesArray({"ZZ": 1}), (), [])
+            process_expectation_values(
+                item_result=item_result,
+                observables=ObservablesArray({"ZZ": 1}),
+                param_shape=(),
+                param_basis_pairs=[],
+            )
 
     def test_non_broadcastable_shapes_raises(self):
         """Test that invalid param shape and observable shape raises."""
@@ -52,8 +66,82 @@ class TestProcessExpectationValues(unittest.TestCase):
         item_result = QuantumProgramItemResult({"_meas": data})
         with self.assertRaisesRegex(ValueError, "cannot reshape"):
             process_expectation_values(
-                item_result, ObservablesArray({"ZZ": 1, "XX": 19}).reshape(1, 2), (3, 10), []
+                item_result=item_result,
+                observables=ObservablesArray({"ZZ": 1, "XX": 19}).reshape(1, 2),
+                param_shape=(3, 10),
+                param_basis_pairs=[],
             )
+
+    def test_evs_1d_obs_no_params(self):
+        """Test exp val calculation with a size 1, 1D observable and no params."""
+        # Create mock measurement data: 8x 00 (+1), 1x 01 (-1), 1x 10 (-1)
+        # num_configs = 1 (one param-basis pair)
+        data = np.array([[[[0, 0]] * 8 + [[0, 1], [1, 0]]]]).astype(bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+
+        coeff = 1.3
+        evs, _ = process_expectation_values(
+            item_result=item_result,
+            observables=ObservablesArray({"ZZ": coeff}),
+            param_shape=(),
+            param_basis_pairs=[((), "ZZ")],
+        )
+
+        # Verify result: coeff * (8 * (+1) + 2 * (-1)) = coeff * 6, average =  coeff * 6 / 10
+        self.assertAlmostEqual(evs, 0.6 * 1.3)
+
+    def test_evs_2d_obs_no_params(self):
+        """Test post-processor with 2D observables and no params."""
+        # Two configs: one for ZZ, one for XX (all 00 measurements)
+        data = np.zeros((1, 2, 10, 2), dtype=bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+
+        observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
+        evs, _ = process_expectation_values(
+            item_result=item_result,
+            observables=observables,
+            param_shape=(),
+            param_basis_pairs=[([], "ZZ"), ([], "XX")],
+        )
+
+        self.assertTrue(all(evs == np.ones(observables.shape, dtype=bool)))
+
+    @data(
+        [(2, 2), (2, 2)],
+        [(3, 4, 1, 1), (4, 3)],
+        [(4, 3), (3, 4, 1, 1)],
+        [(4, 3), ()],
+        [(), (4, 3)],
+    )
+    @unpack
+    def test_evs_shape_with_non_trivial_broadcasting(self, obs_shape, param_shape):
+        """Test shape of evs for params and observables of different shapes."""
+        num_qubits = 33
+        num_paulis = int(np.prod(obs_shape))
+        random_paulis = random_pauli_list(num_qubits, num_paulis, phase=False)
+        observables = ObservablesArray(random_paulis).reshape(obs_shape)
+
+        param_basis_pairs = []
+        for bcast_index in np.ndindex(output_shape := np.broadcast_shapes(obs_shape, param_shape)):
+            param_index = unbroadcast_index(bcast_index, param_shape)
+            obs_index = unbroadcast_index(bcast_index, observables.shape)
+            observable = observables[obs_index]
+            basis = next(iter(observable.keys()))  # observable is a dict from label to coeff
+            param_basis_pairs.append([param_index, basis])
+
+        num_basis = sum(len(basis) for _param_idx, basis in param_basis_pairs)
+        data = np.zeros((1, num_basis, 10, num_qubits), dtype=bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+
+        evs, stds = process_expectation_values(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=param_basis_pairs,
+        )
+
+        self.assertTupleEqual(evs.shape, output_shape)
+        self.assertTupleEqual(stds.shape, output_shape)
 
 
 class TestEstimatorV2PostProcessor(unittest.TestCase):
@@ -86,67 +174,6 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         quantum_result._semantic_role = "estimator_v2"
         return quantum_result
 
-    def test_post_processor_single_pub_single_observable(self):
-        """Test post-processor with single pub and single observable."""
-        # Create mock measurement data: 8x 00 (+1), 1x 01 (-1), 1x 10 (-1)
-        # num_configs = 1 (one param-basis pair)
-        meas_data = np.array([[[[False, False]] * 8 + [[False, True], [True, False]]]])
-
-        quantum_result = self._create_quantum_result(
-            meas_data,
-            observables=[[{"ZZ": 1.0}]],
-            measure_bases=[["ZZ"]],
-            param_basis_pairs=[[([], "ZZ")]],  # Single scalar param, single basis
-            param_shapes=[[]],  # Scalar parameter shape
-        )
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
-
-        # Verify result: 8 * (+1) + 2 * (-1) = 6, average = 6/10 = 0.6
-        self.assertIsInstance(primitive_result, PrimitiveResult)
-        self.assertEqual(len(primitive_result), 1)
-        self.assertIsInstance(primitive_result[0], EstimatorPubResult)
-        self.assertAlmostEqual(primitive_result[0].data.evs[0], 0.6)
-
-    def test_post_processor_multiple_observables(self):
-        """Test post-processor with multiple observables."""
-        # Two configs: one for ZZ, one for XX (all 00 measurements)
-        meas_data = np.array(
-            [
-                [
-                    [[False, False]] * 10,  # Config 0 (ZZ basis)
-                    [[False, False]] * 10,  # Config 1 (XX basis)
-                ]
-            ]
-        )
-
-        quantum_result = self._create_quantum_result(
-            meas_data,
-            observables=[[{"ZZ": 1.0}, {"XX": 1.0}]],
-            measure_bases=[["ZZ", "XX"]],
-            param_basis_pairs=[[([], "ZZ"), ([], "XX")]],  # Two observables, scalar params
-            param_shapes=[[]],
-        )
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
-
-        self.assertEqual(len(primitive_result[0].data.evs), 2)
-
-    def test_post_processor_with_coefficients(self):
-        """Test post-processor with observable coefficients."""
-        # New shape: (num_randomizations, num_configs, shots, num_qubits)
-        meas_data = np.array([[[[False, False]] * 10]])  # All 00 -> +1
-
-        quantum_result = self._create_quantum_result(
-            meas_data,
-            observables=[[{"ZZ": 2.0}]],
-            measure_bases=[["ZZ"]],
-            param_basis_pairs=[[([], "ZZ")]],
-            param_shapes=[[]],
-        )
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
-
-        # Expectation value: 2.0 * 1.0 = 2.0
-        self.assertAlmostEqual(primitive_result[0].data.evs[0], 2.0)
-
     def test_post_processor_multiple_pubs(self):
         """Test post-processor with multiple pubs."""
         meas_data_1 = np.array([[[[False, False]] * 10]])  # All 00 -> +1
@@ -176,33 +203,6 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(primitive_result), 2)
         self.assertAlmostEqual(primitive_result[0].data.evs[0], 1.0)
         self.assertAlmostEqual(primitive_result[1].data.evs[0], 1.0)
-
-    def test_post_processor_with_parameter_sweep(self):
-        """Test post-processor with parameter sweep."""
-        # Two configs: one for param 0, one for param 1
-        meas_data = np.array(
-            [
-                [
-                    [[False, False]] * 5,  # Config 0: Parameter value 0, all 00
-                    [[True, True]] * 5,  # Config 1: Parameter value 1, all 11
-                ]
-            ]
-        )
-
-        quantum_result = self._create_quantum_result(
-            meas_data,
-            observables=[[{"ZZ": 1.0}]],
-            measure_bases=[["ZZ"]],
-            param_basis_pairs=[[([0], "ZZ"), ([1], "ZZ")]],  # Two param values
-            param_shapes=[[2]],
-        )
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
-
-        # Verify shape: param_shape=(2,), obs_shape=(1,) -> broadcast to (2,)
-        evs = primitive_result[0].data.evs
-        self.assertEqual(evs.shape, (2,))
-        self.assertAlmostEqual(evs[0], 1.0)  # All 00 -> +1
-        self.assertAlmostEqual(evs[1], 1.0)  # All 11 -> +1
 
     def test_post_processor_missing_passthrough_data(self):
         """Test post-processor raises error with missing passthrough data."""
