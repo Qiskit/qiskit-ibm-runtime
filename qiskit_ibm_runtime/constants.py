@@ -15,7 +15,7 @@
 from .decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from .utils.result_decoder import ResultDecoder
 from .decoders.noise_learner import NoiseLearnerResultDecoder
-from .utils.runner_result import RunnerResult
+from .decoders.runner import RunnerResultDecoder
 
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
@@ -23,6 +23,6 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "estimator": ResultDecoder,
     "executor": QuantumProgramResultDecoder,
     "noise-learner": NoiseLearnerResultDecoder,
-    "circuit-runner": RunnerResult,
-    "qasm3-runner": RunnerResult,
+    "circuit-runner": RunnerResultDecoder,
+    "qasm3-runner": RunnerResultDecoder,
 }
