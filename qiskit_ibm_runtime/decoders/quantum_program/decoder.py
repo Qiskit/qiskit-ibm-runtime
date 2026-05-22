@@ -27,17 +27,24 @@ from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
 
-from ..utils.result_decoder import ResultDecoder
+from ...utils.result_decoder import ResultDecoder
+from ..executor_sampler.post_processor_v0_1 import (
+    sampler_v2_post_processor_v0_1,
+)
 from .converters import (
     quantum_program_result_from_0_1,
     quantum_program_result_from_0_2,
     quantum_program_result_from_1_0,
 )
 
+SAMPLER_POST_PROCESSORS = {
+    "v0.1": sampler_v2_post_processor_v0_1,
+}
+
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
 
-    from ..results.quantum_program import QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramResult
 
 logger = logging.getLogger(__name__)
 
@@ -88,15 +95,6 @@ class QuantumProgramResultDecoder(ResultDecoder):
             return result
 
         if semantic_role == "sampler_v2":
-            # TODO: Circular import issue. Consider changing file structure.
-            from ..executor_sampler.post_processors.post_processor_v0_1 import (
-                sampler_v2_post_processor_v0_1,
-            )
-
-            SAMPLER_POST_PROCESSORS = {
-                "v0.1": sampler_v2_post_processor_v0_1,
-            }
-
             if not isinstance(result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")
 

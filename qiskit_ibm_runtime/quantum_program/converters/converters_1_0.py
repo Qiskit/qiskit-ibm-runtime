@@ -15,10 +15,10 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import timezone
 
 import numpy as np
 from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
+from datetime import timezone
 
 from qiskit.circuit import QuantumCircuit
 from ibm_quantum_schemas.executor.version_1_0 import (
