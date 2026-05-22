@@ -145,9 +145,9 @@ class TestProcessExpectationValues(unittest.TestCase):
 
 
 class TestEstimatorV2PostProcessor(unittest.TestCase):
-    """Tests for estimator_v2_post_processor_v0_1."""
+    """Tests for ``estimator_v2_post_processor_v0_1``."""
 
-    def _create_quantum_result(
+    def _create_result(
         self,
         meas_data,
         observables,
@@ -156,7 +156,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         param_shapes,
         circuits_metadata=None,
     ):
-        """Helper to create QuantumProgramResult with common structure."""
+        """Helper to create ``QuantumProgramResult`` with common structure."""
         result_data = [{"_meas": meas_data}]
         passthrough_data = {
             "post_processor": {
@@ -168,20 +168,20 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 "param_shapes": param_shapes,
             },
         }
-        quantum_result = QuantumProgramResult(
+        result = QuantumProgramResult(
             data=result_data, metadata=None, passthrough_data=passthrough_data
         )
-        quantum_result._semantic_role = "estimator_v2"
-        return quantum_result
+        result._semantic_role = "estimator_v2"
+        return result
 
     def test_post_processor_multiple_pubs(self):
         """Test post-processor with multiple pubs."""
-        meas_data_1 = np.array([[[[False, False]] * 10]])  # All 00 -> +1
-        meas_data_2 = np.array([[[[True, True]] * 10]])  # All 11 -> +1
+        meas_data_1 = np.zeros((1, 1, 10, 2)).astype(bool)  # All 00 -> +1
+        meas_data_2 = np.ones((1, 1, 10, 2)).astype(bool)  # All 11 -> +1
 
         result_data = [
-            {"_meas": meas_data_1},
-            {"_meas": meas_data_2},
+            QuantumProgramItemResult({"_meas": meas_data_1}),
+            QuantumProgramItemResult({"_meas": meas_data_2}),
         ]
         passthrough_data = {
             "post_processor": {
@@ -193,12 +193,12 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 "param_shapes": [[], []],
             },
         }
-        quantum_result = QuantumProgramResult(
+        result = QuantumProgramResult(
             data=result_data, metadata=None, passthrough_data=passthrough_data
         )
-        quantum_result._semantic_role = "estimator_v2"
+        result._semantic_role = "estimator_v2"
 
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertEqual(len(primitive_result), 2)
         self.assertAlmostEqual(primitive_result[0].data.evs[0], 1.0)
@@ -206,32 +206,30 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
     def test_post_processor_missing_passthrough_data(self):
         """Test post-processor raises error with missing passthrough data."""
-        quantum_result = QuantumProgramResult(
-            data=[{"_meas": np.array([[[False]]])}],
+        result = QuantumProgramResult(
+            data=QuantumProgramItemResult([{"_meas": np.array([[[False]]])}]),
             metadata=None,
             passthrough_data={},
         )
 
-        with self.assertRaises(ValueError) as context:
-            estimator_v2_post_processor_v0_1(quantum_result)
-        self.assertIn("post_processor", str(context.exception))
+        with self.assertRaisesRegex(ValueError, "post_processor"):
+            estimator_v2_post_processor_v0_1(result)
 
     def test_post_processor_missing_observables(self):
         """Test post-processor raises error with missing observables."""
-        quantum_result = QuantumProgramResult(
-            data=[{"_meas": np.array([[[False]]])}],
+        result = QuantumProgramResult(
+            data=[QuantumProgramItemResult({"_meas": np.array([[[False]]])})],
             metadata=None,
             passthrough_data={"post_processor": {"version": "v0.1"}},
         )
 
-        with self.assertRaises(ValueError) as context:
-            estimator_v2_post_processor_v0_1(quantum_result)
-        self.assertIn("observables", str(context.exception))
+        with self.assertRaisesRegex(ValueError, "observables"):
+            estimator_v2_post_processor_v0_1(result)
 
     def test_post_processor_empty_result(self):
         """Test post-processor with empty result."""
-        quantum_result = QuantumProgramResult(data=[], metadata=None, passthrough_data={})
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
+        result = QuantumProgramResult(data=[], metadata=None, passthrough_data={})
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         self.assertIsInstance(primitive_result, PrimitiveResult)
         self.assertEqual(len(primitive_result), 0)
@@ -241,7 +239,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         meas_data = np.array([[[[False, False]] * 10]])
         circuit_metadata = {"experiment_id": "test_123", "custom_field": "value"}
 
-        quantum_result = self._create_quantum_result(
+        result = self._create_result(
             meas_data,
             observables=[[{"ZZ": 1.0}]],
             measure_bases=[["ZZ"]],
@@ -249,7 +247,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             param_shapes=[[]],
             circuits_metadata=[circuit_metadata],
         )
-        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
+        primitive_result = estimator_v2_post_processor_v0_1(result)
 
         pub_result = primitive_result[0]
         self.assertIn("circuit_metadata", pub_result.metadata)
