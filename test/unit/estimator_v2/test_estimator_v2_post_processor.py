@@ -29,12 +29,27 @@ from qiskit_ibm_runtime.executor_estimator.post_processors.post_processor_v0_1 i
     estimator_v2_post_processor_v0_1,
     process_expectation_values,
 )
-from qiskit_ibm_runtime.executor_estimator.utils import unbroadcast_index
+from qiskit_ibm_runtime.executor_estimator.utils import unbroadcast_index, get_pauli_basis
 
 
 @ddt
 class TestProcessExpectationValues(unittest.TestCase):
     """Tests for the ``process_expectation_values`` method."""
+
+    def get_param_basis_pairs(self, observables, param_shape):
+        """Helper to compute values for ``param_basis_pairs``.
+
+        Assumes that all the elements of ``observables`` anti-commute, and does not attempt
+        to do any grouping.
+        """
+        param_basis_pairs = []
+        for bcast_index in np.ndindex(np.broadcast_shapes(observables.shape, param_shape)):
+            param_index = unbroadcast_index(bcast_index, param_shape)
+            obs_index = unbroadcast_index(bcast_index, observables.shape)
+            observable = observables[obs_index]
+            basis = next(iter(observable.keys()))  # observable is a dict from label to coeff
+            param_basis_pairs.append([param_index, get_pauli_basis(basis)])
+        return param_basis_pairs
 
     def test_no_meas_creg(self):
         """Test that item result without ``'meas'`` key raises."""
@@ -107,6 +122,60 @@ class TestProcessExpectationValues(unittest.TestCase):
         self.assertTrue(all(evs == np.ones(observables.shape, dtype=bool)))
 
     @data(
+        [(4,), (4,), np.array([0.5, 1, 1, 1])],
+        [(2, 2), (2, 2), np.array([[0.5, 1], [1, 1]])],
+    )
+    @unpack
+    def test_evs_values_without_twirling(self, obs_shape, param_shape, expected_evs):
+        """Test the correctness of evs when twirling is OFF.
+
+        Expects shapes that broadcast into ``(4,)``.
+        """
+        # 4 non-commuting observables -> always 4 basis
+        obs_like = [{"000": 1 / 2, "111": 1 / 2}, {"+++": 1}, {"rrr": 1}, {"+r0": 1}]
+        observables = ObservablesArray(obs_like).reshape(obs_shape)
+
+        data = np.zeros((1, 4, 10, observables.num_qubits), dtype=bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+
+        evs, _ = process_expectation_values(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
+        )
+        self.assertTrue(np.all(evs == expected_evs), msg=evs)
+
+    @data(
+        [(4,), (4,), np.array([0.5, 1, 1, 1])],
+        [(2, 2), (2, 2), np.array([[0.5, 1], [1, 1]])],
+    )
+    @unpack
+    def test_evs_values_with_twirling(self, obs_shape, param_shape, expected_evs):
+        """Test the correctness of evs when twirling is ON.
+
+        Expects shapes that broadcast into ``(4,)``.
+        """
+        # 4 non-commuting observables -> always 4 basis
+        obs_like = [{"000": 1 / 2, "111": 1 / 2}, {"+++": 1}, {"rrr": 1}, {"+r0": 1}]
+        observables = ObservablesArray(obs_like).reshape(obs_shape)
+
+        data_shape = (18, 4, 10, observables.num_qubits)
+        flips = np.random.randint(0, 2, size=data_shape).astype(bool)
+        twirled_data = flips
+        item_result = QuantumProgramItemResult(
+            {"_meas": twirled_data, "measurement_flips._meas": flips}
+        )
+
+        evs, _ = process_expectation_values(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
+        )
+        self.assertTrue(np.all(evs == expected_evs), msg=evs)
+
+    @data(
         [(2, 2), (2, 2)],
         [(3, 4, 1, 1), (4, 3)],
         [(4, 3), (3, 4, 1, 1)],
@@ -121,13 +190,7 @@ class TestProcessExpectationValues(unittest.TestCase):
         random_paulis = random_pauli_list(num_qubits, num_paulis, phase=False)
         observables = ObservablesArray(random_paulis).reshape(obs_shape)
 
-        param_basis_pairs = []
-        for bcast_index in np.ndindex(output_shape := np.broadcast_shapes(obs_shape, param_shape)):
-            param_index = unbroadcast_index(bcast_index, param_shape)
-            obs_index = unbroadcast_index(bcast_index, observables.shape)
-            observable = observables[obs_index]
-            basis = next(iter(observable.keys()))  # observable is a dict from label to coeff
-            param_basis_pairs.append([param_index, basis])
+        param_basis_pairs = self.get_param_basis_pairs(observables, param_shape)
 
         num_basis = sum(len(basis) for _param_idx, basis in param_basis_pairs)
         data = np.zeros((1, num_basis, 10, num_qubits), dtype=bool)
@@ -140,8 +203,9 @@ class TestProcessExpectationValues(unittest.TestCase):
             param_basis_pairs=param_basis_pairs,
         )
 
-        self.assertTupleEqual(evs.shape, output_shape)
-        self.assertTupleEqual(stds.shape, output_shape)
+        expected_shape = np.broadcast_shapes(obs_shape, param_shape)
+        self.assertTupleEqual(evs.shape, expected_shape)
+        self.assertTupleEqual(stds.shape, expected_shape)
 
 
 class TestEstimatorV2PostProcessor(unittest.TestCase):
