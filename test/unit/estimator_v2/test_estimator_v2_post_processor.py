@@ -16,12 +16,44 @@ import unittest
 import numpy as np
 
 from qiskit.primitives import PrimitiveResult
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
 
-from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
+from qiskit_ibm_runtime.results.quantum_program import (
+    QuantumProgramResult,
+    QuantumProgramItemResult,
+)
 from qiskit_ibm_runtime.executor_estimator.post_processors.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
+    process_expectation_values,
 )
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+
+
+class TestProcessExpectationValues(unittest.TestCase):
+    """Tests for the ``process_expectation_values`` method."""
+
+    def test_no_meas_creg(self):
+        """Test that item result without ``'meas'`` key raises."""
+        data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
+        item_result = QuantumProgramItemResult({"meas": data})
+        with self.assertRaisesRegex(ValueError, "Dedicated creg ``'_meas'``"):
+            process_expectation_values(item_result, ObservablesArray({"ZZ": 1}), (), [])
+
+    def test_ndim_raises(self):
+        """Test that item result with invalid ndim raises."""
+        data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+        with self.assertRaisesRegex(ValueError, "has ``2`` axes"):
+            process_expectation_values(item_result, ObservablesArray({"ZZ": 1}), (), [])
+
+    def test_non_broadcastable_shapes_raises(self):
+        """Test that invalid param shape and observable shape raises."""
+        data = np.random.randint(0, 2, size=(1, 1, 1, 10)).astype(bool)
+        item_result = QuantumProgramItemResult({"_meas": data})
+        with self.assertRaisesRegex(ValueError, "cannot reshape"):
+            process_expectation_values(
+                item_result, ObservablesArray({"ZZ": 1, "XX": 19}).reshape(1, 2), (3, 10), []
+            )
 
 
 class TestEstimatorV2PostProcessor(unittest.TestCase):

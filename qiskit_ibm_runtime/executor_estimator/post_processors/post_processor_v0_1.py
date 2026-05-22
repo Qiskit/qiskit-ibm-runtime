@@ -91,9 +91,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
         )
 
-    if any("_meas" not in item_result for item_result in result):
-        raise ValueError("Dedicated creg `_meas` is missing from the results.")
-
     # Build EstimatorPubResult for each pub
     pub_results = []
     for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
@@ -139,18 +136,22 @@ def process_expectation_values(
         are standard deviations.
 
     Raises:
+        ValueError: If ``item_result`` has no ``'_meas'`` key.
         ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
         ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
             each other.
     """
-    # Get measurement data
-    data = item_result["_meas"]
+    try:
+        data = item_result["_meas"]
+    except KeyError:
+        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
+
     if data.ndim != 4:
+        # Shape: (num_randomizations, num_configs, shots, num_bits)
+        # where num_configs is the total number of (param_index, basis) pairs
         raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
 
     # Get num_shots
-    # Shape: (num_randomizations, num_configs, shots, num_bits)
-    # where num_configs is the total number of (param_index, basis) pairs
     shots = data.shape[0] * data.shape[-2]
 
     # Apply measurement flips if present
@@ -165,6 +166,7 @@ def process_expectation_values(
 
     try:
         output_shape = np.broadcast_shapes(param_shape, observables.shape)
+        print(output_shape, param_shape, observables.shape)
     except ValueError:
         raise ValueError(
             f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
