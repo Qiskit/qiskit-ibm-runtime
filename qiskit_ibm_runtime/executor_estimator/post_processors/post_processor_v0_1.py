@@ -98,12 +98,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Build EstimatorPubResult for each pub
     pub_results = []
     for idx, (item_data, observables, param_basis_pairs, param_shape) in enumerate(
-        zip(
-            result,
-            observables_lists,
-            param_basis_pairs_lists,
-            param_shapes_list
-        )
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
     ):
         # Reconstruct observables and measure_bases
         observables = ObservablesArray(observables)
