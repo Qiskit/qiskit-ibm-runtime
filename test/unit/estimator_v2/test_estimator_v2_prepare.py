@@ -130,9 +130,10 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
         self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][0]), 3)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][1]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["param_basis_pairs"]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["param_shapes"]), 2)
+        self.assertEqual(passthrough["post_processor"]["param_shapes"][0], ())
+        self.assertEqual(passthrough["post_processor"]["param_shapes"][1], (2,))
 
     @patch("qiskit_ibm_runtime.executor_estimator.prepare.generate_boxing_pass_manager")
     def test_prepare_passes_twirling_values_to_boxing_pass_manager(self, mock_generate_boxing_pm):
