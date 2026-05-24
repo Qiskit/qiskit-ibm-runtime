@@ -102,7 +102,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             result,
             observables_lists,
             param_basis_pairs_lists,
-            param_shapes_list,
+            param_shapes_list
         )
     ):
         # Reconstruct observables and measure_bases
@@ -127,8 +127,8 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         output_shape = np.broadcast_shapes(param_shape, obs_shape)
 
         # Compute expectation values for all observables
-        exp_vals_array = np.zeros(output_shape, dtype=float)
-        stds_array = np.zeros(output_shape, dtype=float)
+        exp_vals_array = np.empty(output_shape, dtype=float)
+        stds_array = np.empty(output_shape, dtype=float)
 
         # Loop over the broadcast output shape
         for bcast_index in np.ndindex(output_shape):
@@ -140,8 +140,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             observable = observables[obs_index]
 
             # Get the available (measurement_basis, config_idx) pairs for this parameter index
-            param_basis_list = config_lookup.get(param_index, [])
-            if not param_basis_list:
+            try:
+                param_basis_list = config_lookup[param_index]
+            except KeyError:
                 raise ValueError(
                     f"No measurement basis configurations found for parameter index {param_index}"
                 )
@@ -178,4 +179,4 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         pub_result = EstimatorPubResult(data=data_bin, metadata=pub_metadata)
         pub_results.append(pub_result)
 
-    return PrimitiveResult(pub_results, metadata=result.metadata or {})
+    return PrimitiveResult(pub_results)
