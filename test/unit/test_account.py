@@ -31,9 +31,7 @@ from qiskit_ibm_runtime.accounts import (
     AccountNotFoundError,
     InvalidAccountError,
 )
-from qiskit_ibm_runtime.accounts.account import (
-    IBM_QUANTUM_PLATFORM_API_URL,
-)
+from qiskit_ibm_runtime.accounts.account import IBM_QUANTUM_PLATFORM_API_URL
 from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,

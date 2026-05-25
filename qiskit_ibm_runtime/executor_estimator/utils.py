@@ -18,13 +18,10 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from qiskit.primitives.containers.estimator_pub import ObservablesArray
+from functools import lru_cache
 
 import numpy as np
-from qiskit.quantum_info import Pauli, PauliList
+from qiskit.quantum_info import Pauli
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
@@ -83,49 +80,132 @@ def pauli_to_ints(pauli: Pauli) -> list[int]:
     return [LOOKUP_TABLE[p] for p in pauli.to_label()][::-1]
 
 
-def get_bases(observables: ObservablesArray) -> PauliList:
-    """Find minimal set of measurement bases for all observable terms.
+def unbroadcast_index(
+    bc_index: tuple[int | slice, ...], shape: tuple[int, ...]
+) -> tuple[int | slice, ...]:
+    """Index an array using an index from a compatible broadcasted shape.
 
-    Groups commuting Pauli terms and returns one basis per group.
-    Uses qubit-wise commutation checking.
+    An ND-array ``arr`` is broadcastable to any shape ``bc_shape = (*pad_shape, *arr.shape)``.
+    This function allows indexing ``arr`` using an ND-index or slice from ``bc_shape`` and
+    will return the index for ``arr`` that accesses the same value.
 
     Args:
-        observables: Array of observables to measure.
+        bc_index: An ND-index from a broadcasted shape.
+        shape: The shape of the broadcasting compatible array to index.
 
     Returns:
-        PauliList of measurement bases.
+        The equivalent un-broadcasted ND-index of the array with specified shape.
     """
-    all_bases = []
 
-    # Convert to numpy array of dicts using __array__() method
-    # This works for both scalar (shape=()) and array cases
-    obs_array = np.asarray(observables)
+    @lru_cache
+    def _pad_broadcast_shape(shape: tuple[int, ...], ndims: int) -> tuple[int | slice, ...]:
+        # Pad a shape with trivial dimensions.
+        shape_ndims = len(shape)
+        pad = ndims - shape_ndims
+        if pad > 0:
+            return pad * (1,) + shape
+        return shape
 
-    # Use np.ndenumerate to iterate over all elements
-    for _, obs_dict in np.ndenumerate(obs_array):
-        for term, coeff in obs_dict.items():
-            basis = get_pauli_basis(term)
-            all_bases.append(basis)
+    shape_ndims = len(shape)
+    if shape_ndims == 0:
+        return ()
 
-    # Handle empty case
-    if not all_bases:
-        raise ValueError(
-            "No measurement bases found. Observables array is empty or contains no terms."
-        )
+    pad_shape = _pad_broadcast_shape(shape, len(bc_index))
+    bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
+    return bc_index[-shape_ndims:]
 
-    groups = PauliList(all_bases).group_commuting(qubit_wise=True)
-    bases = PauliList(
-        [((np.logical_or.reduce(group.z), np.logical_or.reduce(group.x))) for group in groups]
-    )
 
-    # Filter out all-identity bases (where both z and x are all False)
-    non_identity_bases = []
-    for basis in bases:
-        if np.any(basis.z) or np.any(basis.x):
-            non_identity_bases.append(basis)
+def project_to_z(term: str) -> np.ndarray[int]:
+    """Project observable term to Z computational basis.
 
-    # Handle identity case
-    if not non_identity_bases:
-        raise ValueError("No measurement bases found. Only identity in the observables.")
+    Maps X,Y,Z → "Z", projectors 0,1,+,-,r,l → "0"/"1", I → "I"
 
-    return PauliList(non_identity_bases)
+    Args:
+        term: Observable term string.
+
+    Returns:
+        Array of projected characters.
+    """
+    return np.array([CHAR_TO_Z_CHARS[ch] for ch in str(term)])
+
+
+def identify_measure_basis(pauli: Pauli, measure_bases: list[tuple[Pauli, int]]) -> int:
+    """Find which measurement basis can measure the given Pauli.
+
+    A basis is compatible if, on every qubit where ``pauli`` is non-identity,
+    the basis measures the exact same Pauli axis. Identity positions in
+    ``pauli`` may correspond to any axis in the measurement basis.
+
+    Args:
+        pauli: Pauli operator to measure.
+        measure_bases: List of (measurement_basis, config_idx) tuples.
+
+    Returns:
+        The config_idx of the compatible basis.
+
+    Raises:
+        ValueError: If no compatible basis found.
+    """
+    pauli_support = np.logical_or(pauli.z, pauli.x)
+
+    for basis, config_idx in measure_bases:
+        # On all non-identity positions of ``pauli``, the measurement basis
+        # must match both the z/x symplectic components exactly.
+        if np.array_equal(pauli.z[pauli_support], basis.z[pauli_support]) and np.array_equal(
+            pauli.x[pauli_support], basis.x[pauli_support]
+        ):
+            return config_idx
+
+    raise ValueError(f"Cannot compute eval of {pauli} from the given bases elements.")
+
+
+def compute_exp_val(observable_term: str, datum: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Compute expectation value and variance of an observable term from measurement data.
+
+    Args:
+        observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
+        datum: Boolean array of measurement outcomes, shape
+            (num_randomizations, ..., shots_per_randomization, num_qubits)
+
+    Returns:
+        Tuple of (expectation_values, variance), each with shape (...,)
+    """
+    z_term = project_to_z(observable_term)
+
+    # Compute masks
+    # Reverse to match endian-ness
+    is_Z = (z_term == "Z")[::-1]
+    is_0 = (z_term == "0")[::-1]
+    is_1 = (z_term == "1")[::-1]
+
+    any_0s = np.any(is_0)
+    any_1s = np.any(is_1)
+    any_Zs = np.any(is_Z)
+
+    if any_Zs:
+        evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1)
+    else:
+        evals = np.ones(datum.shape[:-1])
+
+    # Apply projector filters for "0" and "1"
+    if any_0s | any_1s:
+        keep = np.ones(datum.shape[:-1], dtype=bool)
+        if any_0s:
+            keep &= np.all(~datum[..., is_0], axis=-1)
+        if any_1s:
+            keep &= np.all(datum[..., is_1], axis=-1)
+        evals = np.where(keep, evals, 0)
+
+    shots = datum.shape[0] * datum.shape[-2]  # randomizations * shots_per_randomizations
+
+    # Compute expectation value
+    exp_val = np.sum(evals, axis=(0, -1)) / shots
+
+    # Compute standard deviation (standard error of the mean)
+    # variance = E[X²] - E[X]²
+    evals_squared = evals**2
+    mean_squared = np.sum(evals_squared, axis=(0, -1)) / shots
+    variance = mean_squared - exp_val**2
+
+    # Ensure we always return numpy arrays (even for scalar results)
+    return np.asarray(exp_val), np.asarray(variance)

@@ -16,6 +16,7 @@ import unittest
 from ddt import ddt
 from typing import Any, cast
 import numpy as np
+from ddt import data, unpack
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
@@ -23,7 +24,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub, Observables
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit import ClassicalRegister
 
-from qiskit_ibm_runtime.executor_estimator.prepare import prepare
+from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
@@ -35,6 +36,56 @@ from ...utils import combine
 @ddt
 class TestPrepareFunction(unittest.TestCase):
     """Tests for the prepare function."""
+
+    @data(
+        [(2, 2), (2, 2), (1, 4)],
+        [(2, 2, 1), (2, 2), (1, 6)],
+        [(2, 2), (2, 2, 1), (1, 8)],
+        [(), (2, 2, 1), (1, 3)],
+    )
+    @unpack
+    def test_shapes(self, param_shape, obs_shape, item_shape):
+        """Test preparing with different shapes of observables and params."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
+
+    @data(
+        [(2, 2), (2, 2), (1, 5)],
+        [(2, 2, 1), (2, 2), (1, 8)],
+        [(2, 2), (2, 2, 1), (1, 10)],
+        [(), (2, 2, 1), (1, 4)],
+    )
+    @unpack
+    def test_shapes_with_nested_observables(self, param_shape, obs_shape, item_shape):
+        """Test preparing with different shapes of (nested) observables and params."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        params = np.random.random(param_shape + (circuit.num_parameters,))
+
+        obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
+
+        pub = EstimatorPub.coerce((circuit, obs, params))
+        program = prepare([pub], TwirlingOptions(), 10)
+
+        self.assertEqual(program.items[0].shape, item_shape)
 
     def test_prepare_general_case(self):
         """Test prepare with multiple pubs, observables, and parameter values."""
@@ -71,22 +122,20 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertIsInstance(item2, SamplexItem)
 
         self.assertEqual(item1.shape, (1, 3))
-        self.assertEqual(item2.shape, (1, 2, 2))
+        self.assertEqual(item2.shape, (1, 2))
 
         self.assertNotIn("parameter_values", item1.samplex_arguments)
-        np.testing.assert_allclose(
-            item2.samplex_arguments["parameter_values"],
-            parameter_values2.reshape((2, 1, 2)),
-        )
+        np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
 
         passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
         self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
         self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"]), 2)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][0]), 3)
-        self.assertEqual(len(passthrough["post_processor"]["measure_bases"][1]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["param_basis_pairs"]), 2)
+        self.assertEqual(len(passthrough["post_processor"]["param_shapes"]), 2)
+        self.assertEqual(passthrough["post_processor"]["param_shapes"][0], ())
+        self.assertEqual(passthrough["post_processor"]["param_shapes"][1], (2,))
 
     def test_prepare_with_twirling_enabled(self):
         """Test prepare with gate and measurement twirling enabled."""
@@ -177,3 +226,94 @@ class TestPrepareFunction(unittest.TestCase):
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
+
+
+@ddt
+class TestComputeSamplexArguments(unittest.TestCase):
+    """Tests for ``compute_samplex_arguments``."""
+
+    @data([(2, 2), (2, 2)], [(2, 2, 1), (2, 2)], [(2, 2), (2, 2, 1)], [(), (2, 2, 1)])
+    @unpack
+    def test_shapes_returned_arrays(self, param_shape, obs_shape):
+        """Test the shapes of the returned params and change basis arrays."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pub_like = (
+            circuit,
+            ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape),
+            np.random.random(param_shape + (circuit.num_parameters,)),
+        )
+        pub = EstimatorPub.coerce(pub_like)
+
+        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
+        num_basis = len(param_basis_pairs)
+
+        self.assertEqual(flat_parameter_values.ndim, 2)
+        self.assertEqual(flat_parameter_values.shape, (num_basis, pub.circuit.num_parameters))
+
+        self.assertEqual(change_basis.ndim, 2)
+        self.assertEqual(change_basis.shape, (num_basis, pub.circuit.num_qubits))
+
+    @data(
+        [
+            (2, 2),
+            (2, 2),
+            [
+                ((0, 0), "ZZZ"),
+                ((0, 1), "XXX"),
+                ((1, 0), "YYY"),
+                ((1, 1), "IYI"),
+            ],
+        ],
+        [
+            (2, 2),
+            (2, 2, 1),
+            [
+                ((0, 0), "ZZZ"),
+                ((0, 0), "YYY"),
+                ((0, 1), "ZZZ"),
+                ((0, 1), "YYY"),
+                ((1, 0), "XXX"),
+                ((1, 0), "IYI"),
+                ((1, 1), "XXX"),
+                ((1, 1), "IYI"),
+            ],
+        ],
+        [
+            (2, 2, 1),
+            (2, 2),
+            [
+                ((0, 0, 0), "ZZZ"),
+                ((0, 0, 0), "XXX"),
+                ((0, 1, 0), "YYY"),
+                ((1, 0, 0), "ZZZ"),
+                ((1, 0, 0), "XXX"),
+                ((1, 1, 0), "YYY"),
+            ],
+        ],
+        [(), (2, 2), [((), "ZZZ"), ((), "XXX"), ((), "YYY")]],
+    )
+    @unpack
+    def test_param_basis_pairs(self, param_shape, obs_shape, expected_pairs):
+        """Test the shapes of the returned ``param_basis_pairs`` list."""
+        circuit = QuantumCircuit(3)
+        if param_shape:
+            for idx in range(7):
+                circuit.rz(Parameter(f"th_{idx}"), 0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        pub_like = (
+            circuit,
+            ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape),
+            np.random.random(param_shape + (circuit.num_parameters,)),
+        )
+        pub = EstimatorPub.coerce(pub_like)
+
+        _, _, param_basis_pairs = compute_samplex_arguments(pub)
+        self.assertListEqual(param_basis_pairs, expected_pairs, msg=param_basis_pairs)

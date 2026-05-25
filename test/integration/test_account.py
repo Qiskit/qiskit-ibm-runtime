@@ -15,9 +15,7 @@
 from unittest.mock import patch
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (
-    IAMAuthenticator,
-)
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
 from ibm_platform_services import (
     ResourceControllerV2,

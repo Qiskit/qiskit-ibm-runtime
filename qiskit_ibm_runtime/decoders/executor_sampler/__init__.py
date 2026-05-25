@@ -10,6 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based EstimatorV2"""
-
-from .post_processors.registry import ESTIMATOR_POST_PROCESSORS
+"""Result decoder for executor-based Sampler."""
