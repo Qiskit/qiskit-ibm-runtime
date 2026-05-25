@@ -77,7 +77,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )
-from qiskit_ibm_runtime.results.estimator import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
 from ..results.noise_learner import NoiseLearnerResult
 

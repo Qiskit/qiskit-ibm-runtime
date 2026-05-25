@@ -46,7 +46,7 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit_ibm_runtime.results.estimator import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
     LayerError,

@@ -28,7 +28,7 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
-from ...results.estimator import EstimatorPubResult
+from ...results.estimator_pub import EstimatorPubResult
 from .utils import compute_exp_val, identify_measure_basis
 
 
