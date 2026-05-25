@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-
 from ..results.runner import RunnerResult
 from .result_decoder import ResultDecoder
 

@@ -16,9 +16,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 from ..utils.noise_learner_result import LayerError, NoiseLearnerResult, PauliLindbladError
 from .result_decoder import ResultDecoder
-from ..decoders.noise_learner_v3.decoder import NoiseLearnerV3ResultDecoder
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results

@@ -12,11 +12,10 @@
 
 """Mapping between program names and decoders."""
 
+from .noise_learner import NoiseLearnerResultDecoder
 from .quantum_program.decoder import QuantumProgramResultDecoder
 from .result_decoder import ResultDecoder
-from .noise_learner import NoiseLearnerResultDecoder
 from .runner import RunnerResultDecoder
-
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "sampler": ResultDecoder,
