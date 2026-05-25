@@ -13,14 +13,14 @@
 """Unit tests for EstimatorV2 post-processor."""
 
 import unittest
-import numpy as np
 
+import numpy as np
 from qiskit.primitives import PrimitiveResult
 
-from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
-from qiskit_ibm_runtime.executor_estimator.post_processors.post_processor_v0_1 import (
+from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
 )
+from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
 
 
