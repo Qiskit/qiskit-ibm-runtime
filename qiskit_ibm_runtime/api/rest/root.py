@@ -14,7 +14,6 @@
 
 import logging
 from typing import Any
-import json
 
 from .base import RestAdapterBase
 from .program_job import ProgramJob
@@ -44,30 +43,6 @@ class Api(RestAdapterBase):
         return ProgramJob(self.session, job_id)
 
     # Client functions.
-
-    def version(self) -> dict[str, str | bool]:
-        """Return the version information.
-
-        Returns:
-            A dictionary with information about the API version,
-            with the following keys:
-
-                * ``new_api`` (bool): Whether the new API is being used
-
-            And the following optional keys:
-
-                * ``api-*`` (str): The versions of each individual API component
-        """
-        url = self.get_url("version")
-        response = self.session.get(url, headers=self._HEADER_JSON_ACCEPT)
-
-        try:
-            version_info = response.json()
-            version_info["new_api"] = True
-        except json.JSONDecodeError:
-            return {"new_api": False, "api": response.text}
-
-        return version_info
 
     def login(self, api_token: str) -> dict[str, Any]:
         """Login with token.
