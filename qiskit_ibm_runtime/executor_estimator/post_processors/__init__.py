@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Executor-based EstimatorV2"""
+"""V0.1 post processor for executor-based EstimatorV2"""
 
-from .post_processors.registry import ESTIMATOR_POST_PROCESSORS
+# Import in order to register.
+from .post_processor_v0_1 import estimator_v2_post_processor_v0_1
