@@ -340,6 +340,16 @@ print(backend.coupling_map)
 
 Now you're set up and ready to check out some of the [tutorials].
 
+## Usage data collection
+
+By default, this package collects usage data and sends it to IBM Quantum as part of API request. The data includes installed Qiskit package versions (e.g. `qiskit`, `qiskit-aer`) and which Qiskit modules initiated the request. This information helps IBM improve the SDK.
+
+To opt out, set the `USAGE_DATA_OPT_OUT` environment variable to `True` before running your program:
+
+```bash
+export USAGE_DATA_OPT_OUT=True
+```
+
 ## Contribution guidelines
 
 If you'd like to contribute to qiskit-ibm-runtime, please take a look at our
