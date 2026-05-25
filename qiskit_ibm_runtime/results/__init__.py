@@ -19,6 +19,7 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    :toctree: ../stubs/
    :nosignatures:
 
+   EstimatorPubResult
    NoiseLearnerV3Result
    NoiseLearnerV3Results
    ItemMetadata
@@ -26,5 +27,6 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    QuantumProgramItemResult
 """  # noqa: D205, D212, D415
 
+from .estimator import EstimatorPubResult
 from .noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 from .quantum_program import ItemMetadata, QuantumProgramItemResult, QuantumProgramResult
