@@ -15,14 +15,19 @@
 import datetime
 
 import numpy as np
+from ddt import ddt
+from ...utils import combine
 
-from qiskit_ibm_runtime.quantum_program.quantum_program_result import (
+from qiskit_ibm_runtime.results.quantum_program import (
     ChunkPart,
     ChunkSpan,
     ChunkTiming,
+    ItemMetadata,
     Metadata,
     QuantumProgramResult,
     QuantumProgramItemResult,
+    StretchValues,
+    SchedulerTiming,
 )
 
 from ...ibm_test_case import IBMTestCase
@@ -72,6 +77,29 @@ class TestQuantumProgramResult(IBMTestCase):
         """Test `timing` is empty when no spans are present in metadata."""
         result = QuantumProgramResult([])
         self.assertEqual(len(result.timing), 0)
+
+
+@ddt
+class TestQuantumProgramItemResult(IBMTestCase):
+    """Tests the ``QuantumProgramItemResult`` class."""
+
+    @combine(
+        stretch_values=[None, [StretchValues("name", 2, 3, [(0, 1)])]],
+        scheduler_timing=[None, SchedulerTiming("dt", 10)],
+    )
+    def test_quantum_program_item_result(self, stretch_values, scheduler_timing):
+        """Tests the ``QuantumProgramItemResult`` class."""
+        meas = np.array([[False], [True], [True]])
+        meas_flips = np.array([[False, False]])
+
+        metadata = ItemMetadata(stretch_values=stretch_values, scheduler_timing=scheduler_timing)
+
+        item_result = QuantumProgramItemResult(
+            {"meas": meas, "measurement_flips.meas": meas_flips}, metadata
+        )
+        self.assertTrue((item_result["meas"] == meas).all())
+        self.assertTrue((item_result["measurement_flips.meas"] == meas_flips).all())
+        self.assertEqual(item_result.metadata, metadata)
 
 
 class TestChunkTiming(IBMTestCase):

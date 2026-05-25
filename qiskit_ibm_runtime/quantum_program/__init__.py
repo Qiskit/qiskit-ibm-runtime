@@ -33,12 +33,10 @@ Classes
     :toctree: ../stubs/
     :nosignatures:
 
-    ItemMetadata
     QuantumProgram
     QuantumProgramItem
-    QuantumProgramItemResult
-    QuantumProgramResult
+    CircuitItem
+    SamplexItem
 """
 
-from .quantum_program import QuantumProgram, QuantumProgramItem
-from .quantum_program_result import QuantumProgramResult, QuantumProgramItemResult, ItemMetadata
+from .quantum_program import QuantumProgram, QuantumProgramItem, CircuitItem, SamplexItem

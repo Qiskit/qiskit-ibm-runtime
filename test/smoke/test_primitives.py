@@ -21,8 +21,8 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.noise_learner_v3 import (
-    NoiseLearnerV3,
+from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
+from qiskit_ibm_runtime.results import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
