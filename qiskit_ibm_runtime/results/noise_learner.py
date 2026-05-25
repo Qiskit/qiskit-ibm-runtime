@@ -207,7 +207,7 @@ class LayerError:
             from qiskit import QuantumCircuit
             from qiskit.quantum_info import PauliList
             from qiskit_ibm_runtime.utils.embeddings import Embedding
-            from qiskit_ibm_runtime.utils.noise_learner_result import LayerError, PauliLindbladError
+            from qiskit_ibm_runtime.results import LayerError, PauliLindbladError
 
             # A five-qubit 1-D embedding with nearest neighbouring connectivity
             coordinates1 = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5)]
