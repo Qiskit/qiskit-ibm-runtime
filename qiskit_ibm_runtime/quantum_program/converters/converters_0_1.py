@@ -35,7 +35,6 @@ from ibm_quantum_schemas.common import (
 
 
 from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
-
 from ...options_models.executor_options import ExecutorOptions
 from ...utils.utils import get_qpy_version, get_ssv_version
 
