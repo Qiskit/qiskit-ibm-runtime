@@ -150,6 +150,7 @@ class TestFlattenTwirlingAxes(unittest.TestCase):
         expected = np.array([[0], [1], [2], [3], [4], [5]], dtype=np.uint8)
         np.testing.assert_array_equal(item["meas"], expected)
 
+
 class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
     """Tests for ``executor_metadata_to_sampler_metadata``."""
 
