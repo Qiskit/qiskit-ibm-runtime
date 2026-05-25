@@ -101,15 +101,6 @@ class TestQuantumProgramItemResult(IBMTestCase):
         self.assertTrue((item_result["measurement_flips.meas"] == meas_flips).all())
         self.assertEqual(item_result.metadata, metadata)
 
-    # def test_quantum_program_item_result_metadata(self):
-    #     """Tests the ``QuantumProgramItemResult`` class with set metadata."""
-    #     metadata = ItemMetadata(
-    #         stretch_values=stretch_values,
-    #         scheduler_timing=scheduler_timing
-    #     ),
-    #     item_result = QuantumProgramItemResult({}, metadata=metadata)
-    #     self.assertEqual(item_result.metadata, metadata)
-
 
 class TestChunkTiming(IBMTestCase):
     """Tests the ``ChunkTiming`` class."""
