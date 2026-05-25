@@ -13,28 +13,23 @@
 """Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
 
 import numpy as np
-from qiskit.primitives import PrimitiveResult, DataBin
+from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
+from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...utils.estimator_pub_result import EstimatorPubResult
-from ..utils import (
-    get_pauli_basis,
-    identify_measure_basis,
-    compute_exp_val,
-    unbroadcast_index,
-)
-from .registry import register_post_processor
+from .utils import compute_exp_val, identify_measure_basis
 
 
-@register_post_processor("v0.1")
 def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
     """Convert a quantum program result to a primitives result, for a V2 estimator.
 
