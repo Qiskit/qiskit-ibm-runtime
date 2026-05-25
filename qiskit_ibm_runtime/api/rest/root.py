@@ -27,8 +27,6 @@ class Api(RestAdapterBase):
     URL_MAP = {
         "login": "/users/loginWithToken",
         "user_info": "/users/me",
-        "version": "/version",
-        "bookings": "/Network/bookings/v2",
     }
 
     def job(self, job_id: str) -> ProgramJob:
