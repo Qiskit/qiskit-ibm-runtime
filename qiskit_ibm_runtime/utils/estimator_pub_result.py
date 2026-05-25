@@ -18,8 +18,8 @@ from qiskit_ibm_runtime.results import EstimatorPubResult  # noqa: F401
 
 warnings.warn(
     "The `EstimatorPubResult` class has been moved to the `qiskit_ibm_runtime.results` package as "
-    "of qiskit_ibm_runtime v0.48.0, and it will be its only location in a future release. Please "
-    "adjust your imports accordingly.",
+    "of qiskit_ibm_runtime v0.48.0, and it will be its only location in a future release, 3 months"
+    "or more after v0.48.0. Please adjust your imports accordingly.",
     DeprecationWarning,
     stacklevel=2,
 )
