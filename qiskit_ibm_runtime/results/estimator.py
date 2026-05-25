@@ -22,11 +22,12 @@ EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from collections.abc import Sequence
 
 from qiskit.primitives.containers import PubResult
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from plotly.graph_objects import Figure as PlotlyFigure
 
 

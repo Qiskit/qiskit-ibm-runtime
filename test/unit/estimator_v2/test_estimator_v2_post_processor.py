@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.results.quantum_program import QuantumProgramResult
 from qiskit_ibm_runtime.executor_estimator.post_processors.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
 )
-from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator import EstimatorPubResult
 
 
 class TestEstimatorV2PostProcessor(unittest.TestCase):

@@ -24,7 +24,7 @@ from qiskit.primitives import PrimitiveResult, DataBin
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
-from ...utils.estimator_pub_result import EstimatorPubResult
+from ...results.estimator import EstimatorPubResult
 from ..utils import (
     get_pauli_basis,
     identify_measure_basis,
