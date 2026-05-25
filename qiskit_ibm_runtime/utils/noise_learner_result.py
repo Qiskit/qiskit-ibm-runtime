@@ -1,0 +1,29 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2024-2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""NoiseLearner results."""
+
+import warnings
+
+from qiskit_ibm_runtime.results import (  # noqa: F401
+    NoiseLearnerResult,
+    LayerError,
+    PauliLindbladError,
+)
+
+warnings.warn(
+    "The `NoiseLearnerResult`, `LayerError` and `PauliLindbladError` classes has been moved to the "
+    "`qiskit_ibm_runtime.results` package as of qiskit_ibm_runtime v0.48.0, and it will be its "
+    "only location in a future release. Please adjust your imports accordingly.",
+    DeprecationWarning,
+    stacklevel=2,
+)
