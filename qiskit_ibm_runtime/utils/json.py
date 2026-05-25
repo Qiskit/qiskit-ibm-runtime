@@ -79,7 +79,7 @@ from qiskit_ibm_runtime.execution_span import (
 )
 from qiskit_ibm_runtime.results.estimator import EstimatorPubResult
 
-from .noise_learner_result import NoiseLearnerResult
+from ..results.noise_learner import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 17
 

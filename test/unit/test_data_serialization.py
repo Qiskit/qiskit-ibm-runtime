@@ -47,7 +47,7 @@ from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.results.estimator import EstimatorPubResult
-from qiskit_ibm_runtime.utils.noise_learner_result import (
+from qiskit_ibm_runtime.results.noise_learner import (
     PauliLindbladError,
     LayerError,
     NoiseLearnerResult,

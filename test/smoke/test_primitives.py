@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.results import (
     NoiseLearnerV3Results,
 )
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
-from qiskit_ibm_runtime.utils.noise_learner_result import NoiseLearnerResult
+from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
