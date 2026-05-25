@@ -95,10 +95,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             flatten_twirling_axes(item, pub_shape)
 
         pub_result = quantum_program_item_result_to_sampler_pub_result(
-            item,
-            num_randomizations,
-            meas_type,
-            circuit_metadata,
+            item, num_randomizations, meas_type, circuit_metadata
         )
         pub_results.append(pub_result)
 
