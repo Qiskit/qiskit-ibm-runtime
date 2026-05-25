@@ -42,7 +42,8 @@ class ExecutionOptions:
     Setting this value to ``True`` will cause corresponding metadata of every program item to be
     populated in the returned data.
 
-    Note: This feature is experimental and subject to change without notice.
+    .. note::
+        This feature is experimental and subject to change without notice.
     """
 
     stretch_values: bool = False
@@ -51,7 +52,8 @@ class ExecutionOptions:
     Setting this value to ``True`` will cause corresponding metadata of every program item to be
     populated in the returned data.
 
-    Note: This feature is experimental and subject to change without notice.
+    .. note::
+        This feature is experimental and subject to change without notice.
     """
 
 

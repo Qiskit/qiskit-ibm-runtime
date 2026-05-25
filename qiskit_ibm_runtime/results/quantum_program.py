@@ -131,13 +131,15 @@ class ItemMetadata:
             width=1000,
         )
 
-    Note: This feature is experimental and subject to change without notice.
+    .. note::
+        This feature is experimental and subject to change without notice.
     """
 
     stretch_values: list[StretchValues] | None = None
     """Stretch value resolution, if it is available.
 
-    Note: This feature is experimental and subject to change without notice.
+    .. note::
+        This feature is experimental and subject to change without notice.
     """
 
 
