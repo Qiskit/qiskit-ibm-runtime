@@ -20,6 +20,7 @@ import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    import numpy.typing as npt
     from collections.abc import Sequence
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from ..options_models.twirling_options import TwirlingOptions
@@ -35,7 +36,7 @@ from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from ..quantum_program.datatree import is_datatree_compatible
 from ..exceptions import IBMInputValueError
-from .utils import get_bases, pauli_to_ints, unbroadcast_index, get_pauli_basis
+from .utils import pauli_to_ints, unbroadcast_index, get_pauli_basis
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 logger = logging.getLogger(__name__)
@@ -78,13 +79,11 @@ def prepare(
     # Create items
     items: list[SamplexItem] = []
     observables_list = []
-    measure_bases_list = []
+    param_basis_pairs_list = []
+    param_shapes_list = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
-
-        # Determine measurement bases
-        measure_bases = get_bases(pub.observables)
 
         # Remove any existing final measurements
         prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
@@ -119,7 +118,7 @@ def prepare(
         basis_changes_name = basis_changes_specs[0].name
 
         # Prepare samplex_arguments
-        flat_parameter_values, change_basis, _param_basis_map = compute_samplex_arguments(pub)
+        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
         samplex_arguments = {basis_changes_name: change_basis}
         if samplex.inputs().get_specs("parameter_values"):
             samplex_arguments["parameter_values"] = flat_parameter_values
@@ -137,7 +136,8 @@ def prepare(
 
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
-        measure_bases_list.append(measure_bases.to_labels())
+        param_basis_pairs_list.append(param_basis_pairs)
+        param_shapes_list.append(pub.parameter_values.shape)
 
     # Collect circuit metadata from each pub
     circuits_metadata = [pub.circuit.metadata for pub in pubs]
@@ -156,7 +156,8 @@ def prepare(
             "version": "v0.1",
             "circuits_metadata": circuits_metadata,
             "observables": observables_list,
-            "measure_bases": measure_bases_list,
+            "param_basis_pairs": param_basis_pairs_list,
+            "param_shapes": param_shapes_list,
         },
     }
 
@@ -175,7 +176,7 @@ def prepare(
 
 def compute_samplex_arguments(
     pub: EstimatorPub,
-) -> tuple[np.array[float], np.array[int], list[tuple[tuple[int, ...], str]]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[int], list[tuple[tuple[int, ...], str]]]:
     """Compute parameter values and basis changes to be used as inputs by the samplex.
 
     To minimize the total number of circuits executions, this function takes the following
