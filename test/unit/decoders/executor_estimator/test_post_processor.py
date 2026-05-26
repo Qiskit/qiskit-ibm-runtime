@@ -141,7 +141,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         self.assertEqual(pub_result.metadata["circuit_metadata"], circuit_metadata)
 
     def test_post_processor_with_measure_mitigation(self):
-        """Test post-processor handles TREX calibration result when measure mitigation is enabled."""
+        """Test post-processor handles result when measure mitigation is enabled."""
         meas_data = np.array([[[[False, False]] * 10]])
         trex_cal_data = np.zeros((2, 10, 2), dtype=bool)
         trex_cal_flips = np.zeros((2, 10, 2), dtype=bool)
@@ -180,11 +180,11 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
     def test_measure_mitigation_changes_expectation_values(self):
         """Test that measure_mitigation changes expectation values compared to no mitigation.
-        
+
         This test creates two scenarios:
         1. Without measure_mitigation: raw expectation values from noisy measurements
         2. With measure_mitigation: corrected expectation values using TREX calibration
-        
+
         The test verifies that the expectation values differ between the two cases,
         demonstrating that the mitigation is being applied.
         """
@@ -199,7 +199,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         meas_data[0, 0, 64:80, 0] = True  # flip first bit
         meas_data[0, 0, 80:96, 1] = True  # flip second bit
         meas_data[0, 0, 96:100, :] = True  # flip both bits
-        
+
         # Test 1: Without measure_mitigation
         result_no_mitigation = self._create_result(
             meas_data,
@@ -208,13 +208,13 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             param_basis_pairs=[[([], "ZZ")]],
             param_shapes=[[]],
         )
-        
+
         primitive_result_no_mitigation = estimator_v2_post_processor_v0_1(result_no_mitigation)
         ev_no_mitigation = primitive_result_no_mitigation[0].data.evs[0]
-        
+
         # Expected: (64 + 4 - 16 - 16) / 100 = 0.36
         self.assertAlmostEqual(ev_no_mitigation, 0.36, places=5)
-        
+
         # Test 2: With measure_mitigation
         # Create TREX calibration data that simulates 10% flip rate per qubit
         # Calibration circuit measures |0> states with twirling
@@ -223,7 +223,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         num_cal_shots = 100
         trex_cal_data = np.zeros((num_cal_randomizations, num_cal_shots, 2), dtype=bool)
         trex_cal_flips = np.zeros((num_cal_randomizations, num_cal_shots, 2), dtype=bool)
-        
+
         # Simulate 10% flip rate on each qubit
         # First qubit: flip 10 shots per randomization
         trex_cal_data[0, :10, 0] = True
@@ -231,7 +231,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         # Second qubit: flip 10 shots per randomization
         trex_cal_data[0, :10, 1] = True
         trex_cal_data[1, :10, 1] = True
-        
+
         result_data_with_mitigation = [
             QuantumProgramItemResult({"_meas": meas_data}),
             QuantumProgramItemResult(
@@ -241,7 +241,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 }
             ),
         ]
-        
+
         # Passthrough data should only contain metadata for actual pubs, not calibration circuit
         passthrough_data_with_mitigation = {
             "post_processor": {
@@ -254,40 +254,53 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
                 "measure_mitigation": "True",
             },
         }
-        
+
         result_with_mitigation = QuantumProgramResult(
             data=result_data_with_mitigation,
             metadata=None,
             passthrough_data=passthrough_data_with_mitigation,
         )
         result_with_mitigation._semantic_role = "estimator_v2"
-        
+
         primitive_result_with_mitigation = estimator_v2_post_processor_v0_1(result_with_mitigation)
         ev_with_mitigation = primitive_result_with_mitigation[0].data.evs[0]
-        
+
         # Verify that mitigation changes the expectation value
-        self.assertNotAlmostEqual(ev_with_mitigation, ev_no_mitigation, places=2,
-                                   msg="Expectation values should differ with mitigation")
-        
+        self.assertNotAlmostEqual(
+            ev_with_mitigation,
+            ev_no_mitigation,
+            places=2,
+            msg="Expectation values should differ with mitigation",
+        )
+
         # Verify the mitigated value is larger (closer to ideal) than the raw value
         # Since we have readout errors that reduce the expectation value from ideal (1.0),
         # TREX mitigation should increase it back towards 1.0
-        self.assertGreater(ev_with_mitigation, ev_no_mitigation,
-                          msg=f"Mitigated value ({ev_with_mitigation}) should be greater than "
-                              f"raw value ({ev_no_mitigation})")
-        
+        self.assertGreater(
+            ev_with_mitigation,
+            ev_no_mitigation,
+            msg=f"Mitigated value ({ev_with_mitigation}) should be greater than "
+            f"raw value ({ev_no_mitigation})",
+        )
+
         # Verify the mitigated value is closer to the ideal value (1.0) than the raw value
         ideal_value = 1.0
         error_without_mitigation = abs(ideal_value - ev_no_mitigation)
         error_with_mitigation = abs(ideal_value - ev_with_mitigation)
-        self.assertLess(error_with_mitigation, error_without_mitigation,
-                       msg=f"Mitigated value should be closer to ideal. "
-                           f"Error without mitigation: {error_without_mitigation}, "
-                           f"Error with mitigation: {error_with_mitigation}")
-        
+        self.assertLess(
+            error_with_mitigation,
+            error_without_mitigation,
+            msg=f"Mitigated value should be closer to ideal. "
+            f"Error without mitigation: {error_without_mitigation}, "
+            f"Error with mitigation: {error_with_mitigation}",
+        )
+
         # Verify that only one pub result is returned (calibration circuit excluded)
-        self.assertEqual(len(primitive_result_with_mitigation), 1,
-                        msg="Should return only one pub result, excluding calibration")
+        self.assertEqual(
+            len(primitive_result_with_mitigation),
+            1,
+            msg="Should return only one pub result, excluding calibration",
+        )
 
 
 @ddt

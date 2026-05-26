@@ -225,12 +225,15 @@ def process_expectation_values(
             term_exp_val, term_variance = compute_exp_val(observable_term, datum)
 
             # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = calculate_trex_factor(measure_noise_model, observable_term) \
-                if measure_noise_model else 1
+            term_scale_factor = (
+                calculate_trex_factor(measure_noise_model, observable_term)
+                if measure_noise_model
+                else 1
+            )
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
-            variance += (coeff ** 2) * term_variance * (term_scale_factor ** 2)
+            variance += (coeff**2) * term_variance * (term_scale_factor**2)
 
         exp_vals[bcast_index] = exp_val
         stds[bcast_index] = np.sqrt(variance / shots)  # Standard error

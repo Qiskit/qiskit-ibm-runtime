@@ -114,8 +114,9 @@ def prepare(
             enable_gates=twirling_options.enable_gates,
             enable_measures=True,
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            measure_annotations="all" if twirling_options.enable_measure or
-                                         measure_mitigation else "change_basis",
+            measure_annotations="all"
+            if twirling_options.enable_measure or measure_mitigation
+            else "change_basis",
         )
         prepared_circuit = boxing_pm.run(prepared_circuit)
 

@@ -192,7 +192,9 @@ class TestPrepareFunction(unittest.TestCase):
         observables = ObservablesArray.coerce([{"ZI": 1}, {"IZ": 1}])
         pub = EstimatorPub.coerce((circuit, observables))
 
-        quantum_program = prepare([pub], twirling_options, 2000, False, MeasureNoiseLearningOptions())
+        quantum_program = prepare(
+            [pub], twirling_options, 2000, False, MeasureNoiseLearningOptions()
+        )
 
         self.assertIsInstance(quantum_program.items[0], SamplexItem)
         self.assertEqual(quantum_program.shots, 256)
@@ -280,9 +282,10 @@ class TestPrepareFunction(unittest.TestCase):
 
     def test_prepare_with_measure_mitigation_trex_circuit_has_only_measurements(self):
         """Test that TREX calibration circuit is based on measurement-only operations.
-        
+
         The TREX circuit template will have parameterized gates for measurement twirling,
-        but it should be derived from a circuit that only performs measurements (no state preparation).
+        but it should be derived from a circuit that only performs measurements (no
+        state preparation).
         """
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
@@ -316,7 +319,7 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Verify the circuit has measurements
         self.assertGreater(trex_circuit.num_clbits, 0, "TREX circuit should have classical bits")
-        
+
         # Verify the circuit has measurement operations
         has_measurements = any(
             instruction.operation.name == "measure" for instruction in trex_circuit.data
@@ -329,7 +332,7 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Verify the shape matches the number of randomizations
         self.assertEqual(trex_item.shape, (32,))
-        
+
         # Verify the circuit has parameters (for measurement twirling)
         self.assertGreater(
             trex_circuit.num_parameters,
@@ -359,9 +362,7 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = num_randomizations
 
-        quantum_program = prepare(
-            [pub], TwirlingOptions(), shots, True, measure_noise_learning
-        )
+        quantum_program = prepare([pub], TwirlingOptions(), shots, True, measure_noise_learning)
 
         # Get the TREX calibration item (last item)
         trex_item = quantum_program.items[-1]
@@ -371,7 +372,8 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(
             trex_item.shape,
             expected_shape,
-            f"Expected TREX item shape {expected_shape} for num_randomizations={num_randomizations}",
+            f"Expected TREX item shape {expected_shape} for "
+            f"num_randomizations={num_randomizations}",
         )
 
     def test_prepare_with_measure_mitigation_default_num_randomizations(self):
@@ -387,9 +389,7 @@ class TestPrepareFunction(unittest.TestCase):
         # Create MeasureNoiseLearningOptions without setting num_randomizations
         measure_noise_learning = MeasureNoiseLearningOptions()
 
-        quantum_program = prepare(
-            [pub], TwirlingOptions(), shots, True, measure_noise_learning
-        )
+        quantum_program = prepare([pub], TwirlingOptions(), shots, True, measure_noise_learning)
 
         # Get the TREX calibration item (last item)
         trex_item = quantum_program.items[-1]
