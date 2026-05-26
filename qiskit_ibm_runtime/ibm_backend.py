@@ -23,6 +23,7 @@ from qiskit.result import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
+from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 from qiskit_ibm_runtime.default_session import get_cm_session
 
 from .exceptions import (
