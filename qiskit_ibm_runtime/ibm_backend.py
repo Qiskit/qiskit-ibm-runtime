@@ -503,18 +503,7 @@ class IBMBackend(Backend):
         Returns:
             A job.
         """
-        if self._session:
-            _run = self._session._run
-        else:
-            _run = self._service._run
-
-            if get_cm_session():
-                logger.warning(
-                    "Even though a session/batch context manager is open this job will run in job "
-                    "mode.",
-                )
-
-        return _run(
+        return self._service._run(
             program_id="calibrations",
             inputs={},
             result_decoder=ResultDecoder,
