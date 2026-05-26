@@ -15,23 +15,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-import json
 
 from qiskit.result import Result, QuasiDistribution
 from qiskit.result.postprocess import _hex_to_bin
 from qiskit.exceptions import QiskitError
 
-from .result_decoder import ResultDecoder
-from .json import RuntimeDecoder
 
-
-class RunnerResult(Result, ResultDecoder):
+class RunnerResult(Result):
     """Result class for Qiskit Runtime program circuit-runner."""
-
-    @classmethod
-    def decode(cls, data: str) -> RunnerResult:
-        """Decoding for results from Qiskit runtime jobs."""
-        return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
     def get_quasiprobabilities(
         self, experiment: int | list | None = None

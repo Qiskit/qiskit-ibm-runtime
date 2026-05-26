@@ -24,7 +24,7 @@ from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..base_primitive import get_mode_service_backend
-from ..constants import DEFAULT_DECODERS
+from ..decoders.defaults import DEFAULT_DECODERS
 from ..runtime_job_v2 import RuntimeJobV2
 from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
