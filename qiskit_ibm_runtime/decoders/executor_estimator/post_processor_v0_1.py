@@ -28,7 +28,7 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
-from ...utils.estimator_pub_result import EstimatorPubResult
+from ...results.estimator_pub import EstimatorPubResult
 from .utils import compute_exp_val, identify_measure_basis
 
 
@@ -38,7 +38,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     This function transforms the raw quantum program execution results into the
     format expected by :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2`,
     computing expectation values from measurement data and creating
-    :class:`~qiskit_ibm_runtime.utils.estimator_pub_result.EstimatorPubResult` containers
+    :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` containers
     for each pub.
 
     Args:

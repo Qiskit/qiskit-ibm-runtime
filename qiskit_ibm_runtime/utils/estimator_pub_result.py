@@ -10,126 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-========================================================================================
-EstimatorPubResult result classes (:mod:`qiskit_ibm_runtime.utils.estimator_pub_result`)
-========================================================================================
+"""EstimatorPubResult result classes."""
 
-.. autosummary::
-   :toctree: ../stubs/
-"""  # noqa: D205, D212, D415
+import warnings
 
-from __future__ import annotations
+from qiskit_ibm_runtime.results import EstimatorPubResult  # noqa: F401
 
-from typing import TYPE_CHECKING
-from collections.abc import Sequence
-
-from qiskit.primitives.containers import PubResult
-
-if TYPE_CHECKING:
-    from plotly.graph_objects import Figure as PlotlyFigure
-
-
-class EstimatorPubResult(PubResult):
-    """Result of Estimator Pub."""
-
-    def draw_zne_evs(
-        self,
-        indices: Sequence[tuple[int, ...]] | None = None,
-        names: Sequence[str] | None = None,
-        num_stds: int = 1,
-        max_mag: float = 10,
-        max_std: float = 0.2,
-        height: int = 500,
-        width: int = 1000,
-        num_cols: int = 4,
-        colorscale: str = "Aggrnyl",
-    ) -> PlotlyFigure:
-        """Plot the zero noise extrapolation data contained in this estimator pub result.
-
-        This method generates a subfigure for each expectation value.
-
-        Args:
-            indices: The indices of the expectation values to include in the plot. If ``None``,
-                includes all values. See :class:`~.ZneOptions` for information on the indexing
-                scheme.
-            names: The names to assign to the expectation values. If ``None``, the names correspond
-                to the indices.
-            num_stds: The number of standard deviations to include around each fit.
-            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated``
-                has a greater magnitude than this value, the expectation value is omitted from the
-                plot.
-            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater
-                than this value for an expectation value and extrapolator, the fit is omitted from
-                the plot.
-            height: The height of the plot in pixels.
-            width: The width of the plot in pixels.
-            num_cols: The maximum number of columns in the figure.
-            colorscale: The colorscale to use.
-
-        Returns:
-            A plotly figure.
-        """
-        from ..visualization import draw_zne_evs
-
-        return draw_zne_evs(
-            self,
-            indices=indices,
-            names=names,
-            num_stds=num_stds,
-            max_mag=max_mag,
-            max_std=max_std,
-            height=height,
-            width=width,
-            num_cols=num_cols,
-            colorscale=colorscale,
-        )
-
-    def draw_zne_extrapolators(
-        self,
-        indices: Sequence[tuple[int, ...]] | None = None,
-        names: Sequence[str] | None = None,
-        num_stds: int = 1,
-        max_mag: float = 10,
-        max_std: float = 0.2,
-        height: int = 500,
-        width: int = 1000,
-        colorscale: str = "Aggrnyl",
-    ) -> PlotlyFigure:
-        """Plot the zero noise extrapolation data contained in this estimator pub result.
-
-        This method generates a subfigure for each extrapolator.
-
-        Args:
-            indices: The indices of the expectation values to include in the plot. If ``None``,
-                includes all values. See :class:`~.ZneOptions` for information on the indexing
-                scheme.
-            names: The names to assign to the expectation values. If ``None``, the names correspond
-                to the indices.
-            num_stds: The number of standard deviations to include around each fit.
-            max_mag: The maximum magnitude of expectation values to include. If ``evs_extrapolated``
-                has a greater magnitude than this value, the expectation value is omitted from the
-                plot.
-            max_std: The maximum standard deviation to include. If ``stds_extrapolated`` is greater
-                than this value for an expectation value and extrapolator, the fit is omitted from
-                the plot.
-            height: The height of the plot in pixels.
-            width: The width of the plot in pixels.
-            colorscale: The colorscale to use.
-
-        Returns:
-            A plotly figure.
-        """
-        from ..visualization import draw_zne_extrapolators
-
-        return draw_zne_extrapolators(
-            self,
-            indices=indices,
-            names=names,
-            num_stds=num_stds,
-            max_mag=max_mag,
-            max_std=max_std,
-            height=height,
-            width=width,
-            colorscale=colorscale,
-        )
+warnings.warn(
+    "The `EstimatorPubResult` class has been moved to the `qiskit_ibm_runtime.results` package as "
+    "of qiskit_ibm_runtime v0.48.0, and it will be its only location in a future release, 3 months"
+    "or more after v0.48.0. Please adjust your imports accordingly.",
+    DeprecationWarning,
+    stacklevel=2,
+)
