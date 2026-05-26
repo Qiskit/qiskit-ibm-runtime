@@ -506,6 +506,7 @@ class IBMBackend(Backend):
         return self._service._run(
             program_id="calibrations",
             inputs={},
+            options={"backend": self},
             result_decoder=ResultDecoder,
         )
 
