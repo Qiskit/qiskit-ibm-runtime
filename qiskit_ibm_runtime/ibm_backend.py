@@ -22,6 +22,8 @@ from copy import deepcopy
 from qiskit.result import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
+from qiskit_ibm_runtime.utils.result_decoder import ResultDecoder
+from qiskit_ibm_runtime.default_session import get_cm_session
 
 from .exceptions import (
     IBMBackendApiProtocolError,
@@ -492,6 +494,29 @@ class IBMBackend(Backend):
             "Support for backend.run() has been removed. Please see our migration guide "
             "https://quantum.cloud.ibm.com/docs/migration-guides/qiskit-runtime for instructions "
             "on how to migrate to the primitives interface."
+        )
+
+    def calibrate(self) -> RuntimeJobV2:
+        """Calibrates the backend.
+
+        Returns:
+            A job.
+        """
+        if self._session:
+            _run = self._session._run
+        else:
+            _run = self._service._run
+
+            if get_cm_session():
+                logger.warning(
+                    "Even though a session/batch context manager is open this job will run in job "
+                    "mode.",
+                )
+
+        return _run(
+            program_id="calibrations",
+            inputs={},
+            result_decoder=ResultDecoder,
         )
 
     def get_translation_stage_plugin(self) -> str:
