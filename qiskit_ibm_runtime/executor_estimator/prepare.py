@@ -14,30 +14,31 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 import logging
-
+from collections import defaultdict
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import numpy.typing as npt
     from collections.abc import Sequence
+
+    import numpy.typing as npt
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from samplomatic import build
-from samplomatic.transpiler import generate_boxing_pass_manager
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
-from qiskit.quantum_info import PauliList, Pauli
+from qiskit.quantum_info import Pauli, PauliList
+from samplomatic import build
+from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import SamplexItem
-from ..quantum_program.datatree import is_datatree_compatible
 from ..exceptions import IBMInputValueError
-from .utils import pauli_to_ints, unbroadcast_index, get_pauli_basis
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..quantum_program import QuantumProgram
+from ..quantum_program.datatree import is_datatree_compatible
+from ..quantum_program.quantum_program import SamplexItem
+from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
 
 logger = logging.getLogger(__name__)
 
