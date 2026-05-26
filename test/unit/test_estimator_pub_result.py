@@ -17,7 +17,7 @@ import numpy as np
 
 from qiskit.primitives import DataBin
 
-from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
 from ..ibm_test_case import IBMTestCase
 

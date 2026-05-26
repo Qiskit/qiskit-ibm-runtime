@@ -17,7 +17,7 @@ import numpy as np
 from qiskit.primitives.containers import DataBin
 
 from qiskit_ibm_runtime.visualization import draw_zne_evs, draw_zne_extrapolators
-from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
 from ...ibm_test_case import IBMTestCase
 

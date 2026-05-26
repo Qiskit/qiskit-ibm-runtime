@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from collections.abc import Sequence
 import numpy as np
 from .utils import plotly_module
-from ..utils.estimator_pub_result import EstimatorPubResult
+from ..results.estimator_pub import EstimatorPubResult
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure

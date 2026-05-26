@@ -77,9 +77,9 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )
-from qiskit_ibm_runtime.utils.estimator_pub_result import EstimatorPubResult
+from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
-from .noise_learner_result import NoiseLearnerResult
+from ..results.noise_learner import NoiseLearnerResult
 
 SERVICE_MAX_SUPPORTED_QPY_VERSION = 17
 
@@ -93,6 +93,10 @@ HAS_SCIPY = LazyImportTester(
     name="Scipy",
     install="pip install scipy",
 )
+
+# In qiskit-ibm-runtime 0.48, results classes were moved to a new `result` package.
+LEGACY_NOISE_LEARNER_MODULE = "qiskit_ibm_runtime.utils.noise_learner_result"
+CURRENT_NOISE_LEARNER_MODULE = "qiskit_ibm_runtime.results.noise_learner"
 
 
 def to_base64_string(data: str) -> str:
@@ -187,6 +191,10 @@ def _deserialize_from_json(mod_name: str, class_name: str, json_dict: dict) -> A
     Raises:
         ValueError: If unable to find the class.
     """
+    # For moved result classes, use the new location.
+    if mod_name == LEGACY_NOISE_LEARNER_MODULE:
+        mod_name = CURRENT_NOISE_LEARNER_MODULE
+
     mod = importlib.import_module(mod_name)
     if clz := getattr(mod, class_name, None):
         return clz(**json_dict)
@@ -405,9 +413,13 @@ class RuntimeEncoder(json.JSONEncoder):
                 "__value__": _set_int_keys_flag(copy.deepcopy(obj.settings)),
             }
         if hasattr(obj, "_json"):
+            # For moved result classes, use the legacy module, for compatibility.
+            module = obj.__class__.__module__
+            if obj.__class__.__module__ == CURRENT_NOISE_LEARNER_MODULE:
+                module = LEGACY_NOISE_LEARNER_MODULE
             return {
                 "__type__": "_json",
-                "__module__": obj.__class__.__module__,
+                "__module__": module,
                 "__class__": obj.__class__.__name__,
                 "__value__": _set_int_keys_flag(copy.deepcopy(obj._json())),
             }
@@ -520,7 +532,7 @@ class RuntimeDecoder(json.JSONDecoder):
                         settings=_cast_strings_keys_to_int(obj_val),
                     )
             if obj_type == "_json":
-                if obj["__module__"] == "qiskit_ibm_runtime.utils.noise_learner_result":
+                if obj["__module__"] in (LEGACY_NOISE_LEARNER_MODULE, CURRENT_NOISE_LEARNER_MODULE):
                     return _deserialize_from_json(
                         mod_name=obj["__module__"],
                         class_name=obj["__class__"],

@@ -33,7 +33,7 @@ from .utils import (
 )
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
-from .constants import DEFAULT_DECODERS
+from .decoders.defaults import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
 

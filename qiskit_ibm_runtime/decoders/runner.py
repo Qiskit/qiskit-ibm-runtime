@@ -10,19 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Estimator result decoder."""
+"""Circuit-runner decoder."""
 
-from qiskit.primitives.containers import PrimitiveResult
+from __future__ import annotations
 
+from ..results.runner import RunnerResult
 from .result_decoder import ResultDecoder
 
 
-class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results."""
+class RunnerResultDecoder(ResultDecoder):
+    """Result class for Qiskit Runtime program circuit-runner."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> PrimitiveResult:
-        """Convert the result to EstimatorResult."""
-        decoded: dict = super().decode(raw_result)
-
-        return decoded
+    def decode(cls, data: str) -> RunnerResult:
+        """Decoding for results from Qiskit runtime jobs."""
+        return RunnerResult.from_dict(super().decode(data))
