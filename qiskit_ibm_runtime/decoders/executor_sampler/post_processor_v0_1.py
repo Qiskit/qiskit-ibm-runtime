@@ -85,7 +85,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         )
 
     pub_results = []
-    for item, metadatum, pub_shape in zip(result, circuits_metadata, pub_shapes):
+    for item, circuit_metadata, pub_shape in zip(result, circuits_metadata, pub_shapes):
         if len(item) == 0:
             raise ValueError("Found an item without data.")
 
@@ -94,7 +94,9 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         if twirling:
             flatten_twirling_axes(item, pub_shape)
 
-        pub_result = quantum_program_item_result_to_sampler_pub_result(item, meas_type, metadatum)
+        pub_result = quantum_program_item_result_to_sampler_pub_result(
+            item, num_randomizations, meas_type, circuit_metadata
+        )
         pub_results.append(pub_result)
 
     metadata = executor_metadata_to_sampler_metadata(
