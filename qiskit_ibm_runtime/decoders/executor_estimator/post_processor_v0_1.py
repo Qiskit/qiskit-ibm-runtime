@@ -20,15 +20,16 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import numpy.typing as npt
 
-    from ...results.quantum_program import QuantumProgramItemResult, QuantumProgramResult
+from ...results.quantum_program import QuantumProgramItemResult, QuantumProgramResult
 
 import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
-from qiskit.quantum_info import Pauli
+from qiskit.quantum_info import Pauli, PauliLindbladMap
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...results.estimator_pub import EstimatorPubResult
+from ...executor_estimator.trex_utils import calculate_trex_noise_model, calculate_trex_factor
 from .utils import compute_exp_val, identify_measure_basis
 
 
@@ -72,6 +73,24 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
+    # Check if measure_mitigation was used
+    measure_mitigation = post_processor_data.get("measure_mitigation", None)
+    readout_noise = None
+    if measure_mitigation == "True":
+        # assume a calibration circuit was added to the quantum program as the last item
+        calibration_result = result[-1]
+        try:
+            readout_noise = calculate_trex_noise_model(calibration_result)
+        except ValueError as e:
+            raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
+
+        # create a result object without the calibration item
+        result = QuantumProgramResult(
+            data=list(result._data[:-1]),
+            metadata=result.metadata,
+            passthrough_data=result.passthrough_data,
+        )
+
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
     if {
@@ -98,7 +117,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and place them in a databin
         exp_vals, stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs
+            item_result, observables, param_shape, param_basis_pairs, readout_noise
         )
         data_bin = DataBin(evs=exp_vals, stds=stds)
 
@@ -118,6 +137,7 @@ def process_expectation_values(
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_model: PauliLindbladMap | None,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item result.
 
@@ -126,6 +146,7 @@ def process_expectation_values(
         observables: The observables to calculate expectation values for.
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_model: Measurement noise model for TREX mitigation.
 
     Returns:
         A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
@@ -203,9 +224,13 @@ def process_expectation_values(
             datum = data[:, config_idx, :, :]
             term_exp_val, term_variance = compute_exp_val(observable_term, datum)
 
+            # Calculate scale factor in case TREX mitigation is used
+            term_scale_factor = calculate_trex_factor(measure_noise_model, observable_term) \
+                if measure_noise_model else 1
+
             # Accumulate with coefficient
-            exp_val += coeff * term_exp_val
-            variance += (coeff**2) * term_variance
+            exp_val += coeff * term_exp_val * term_scale_factor
+            variance += (coeff ** 2) * term_variance * (term_scale_factor ** 2)
 
         exp_vals[bcast_index] = exp_val
         stds[bcast_index] = np.sqrt(variance / shots)  # Standard error

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pydantic import ConfigDict
 
-PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
+PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid", arbitrary_types_allowed=True)
 """Custom ``ConfigDict`` for pydantic dataclasses.
 
 These config settings ensure we get validation on attribute mutation, not just at construction
