@@ -30,7 +30,7 @@ class MeasureNoiseLearningOptions:
 
     """
 
-    num_randomizations: UnsetType | int = Unset
+    num_randomizations: int = 32
     """The number of random circuits to draw for the measurement learning experiment.
 
     Default: 32.

@@ -46,9 +46,7 @@ def create_trex_calibration_circuit(
         Samplex item containing calibration circuit for TREX factors calculation.
     """
     # create the combined noise learning layer of all given inputs
-    max_num_qubits = 0
-    for pub in pubs:
-        max_num_qubits = max(max_num_qubits, pub.circuit.num_qubits)
+    max_num_qubits = max(pub.circuit.num_qubits for pub in pubs)
 
     classical_cal_reg = ClassicalRegister(max_num_qubits, name="_trex_cal")
     trex_circuit = QuantumCircuit(max_num_qubits)
@@ -61,14 +59,10 @@ def create_trex_calibration_circuit(
     )
     annotated_trex_circuit = boxing_pm.run(trex_circuit)
     template_trex_circuit, trex_samplex = build(annotated_trex_circuit)
-    if isinstance(measure_noise_learning.num_randomizations, int):
-        cal_randomizations = measure_noise_learning.num_randomizations
-    else:
-        cal_randomizations = 32
     trex_calibration_item = SamplexItem(
         circuit=template_trex_circuit,
         samplex=trex_samplex,
-        shape=(cal_randomizations,),
+        shape=(measure_noise_learning.num_randomizations,),
     )
 
     return trex_calibration_item

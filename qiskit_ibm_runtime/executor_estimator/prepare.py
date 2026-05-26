@@ -60,7 +60,7 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        measure_mitigation: If true, Twirled Readout Error eXtinction (TREX) mitigation method
+        measure_mitigation: If``True``, Twirled Readout Error eXtinction (TREX) mitigation method
             will be used.
         measure_noise_learning: The measure noise learning options.
 
