@@ -188,5 +188,3 @@ class TestGateFolding(unittest.TestCase):
             self.assertEqual(d.metadata["zne_noise_factor"], expected_nf)
 
 
-if __name__ == "__main__":
-    unittest.main()
