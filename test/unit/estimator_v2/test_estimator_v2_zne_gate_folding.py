@@ -10,125 +10,91 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for the ZNE GateFolding pass used by the executor-based EstimatorV2."""
+"""Unit tests for the ZNE gate-folding helper used by the executor-based EstimatorV2."""
 
 import unittest
-from itertools import product
 
 import ddt
 from qiskit import QuantumCircuit
-from qiskit.circuit.library import CXGate, CYGate, CZGate, ECRGate, RZGate, SwapGate
+from qiskit.circuit.library import CXGate, CYGate, CZGate, ECRGate, SwapGate
 from qiskit.circuit.random import random_circuit
-from qiskit.converters import circuit_to_dag
 from qiskit.transpiler import generate_preset_pass_manager
-from qiskit.transpiler.exceptions import TranspilerError
 
 from qiskit_ibm_runtime.executor_estimator.zne.gate_folding import (
     DEFAULT_FOLDED_GATES,
-    GateFolding,
+    fold_gates,
 )
 
 
 @ddt.ddt
-class TestGateFolding(unittest.TestCase):
-    """Tests for GateFolding."""
-
-    def test_pass_empty_circuit(self):
-        """Test pass on an empty circuit."""
-        circuit = QuantumCircuit(5)
-        folder = GateFolding(CXGate, 3)
-        [folded] = folder.fold(circuit)
-        self.assertEqual(folded, circuit)
+class TestFoldGates(unittest.TestCase):
+    """Tests for ``fold_gates``."""
 
     def test_default_gate_set(self):
-        """Default gate set matches the legacy ``stretched_gates``."""
+        """Default gate set targets the standard 2-qubit ISA gates."""
         self.assertEqual(DEFAULT_FOLDED_GATES, (ECRGate, CXGate, CYGate, CZGate, SwapGate))
 
-    @ddt.idata(product((CXGate, RZGate), (1, 1.3, 3, 4.1, 5)))
-    @ddt.unpack
-    def test_static_gate(self, gate, noise_factor):
-        """Check that we end up with the correct number of gates within ±1."""
+    def test_noise_factor_one_returns_copy(self):
+        """``noise_factor=1`` returns a copy of the input, unchanged."""
+        circuit = QuantumCircuit(2)
+        circuit.cx(0, 1)
+        circuit.cx(0, 1)
+        folded = fold_gates(circuit, 1.0)
+        self.assertEqual(folded, circuit)
+        self.assertIsNot(folded, circuit)
+
+    def test_empty_circuit(self):
+        """Folding a circuit with no operations is a no-op."""
+        circuit = QuantumCircuit(5)
+        folded = fold_gates(circuit, 3.0)
+        self.assertEqual(folded.count_ops(), circuit.count_ops())
+
+    def test_no_foldable_gates(self):
+        """Gates not in :data:`DEFAULT_FOLDED_GATES` are left alone."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.rz(0.1, 0)
+        circuit.sx(1)
+        folded = fold_gates(circuit, 3.0)
+        self.assertEqual(folded.count_ops(), circuit.count_ops())
+
+    @ddt.data(1, 1.3, 3, 4.1, 5)
+    def test_count_within_one(self, noise_factor):
+        """Folded CX count is within ±1 of ``noise_factor * initial_count``; non-CX unchanged."""
         circuit = random_circuit(5, 5, seed=321)
         circuit.measure_all()
         pm = generate_preset_pass_manager(basis_gates=["cx", "rz", "sx", "id"])
         circuit = pm.run(circuit)
-        op_counts_initial = circuit_to_dag(circuit).count_ops(recurse=True)
+        initial = circuit.count_ops()
+        initial_cx = initial.get("cx", 0)
+        if initial_cx == 0:
+            self.skipTest("random circuit had no CX gates")
 
-        folder = GateFolding(gate, noise_factor)
-        [tcircuit] = folder.fold(circuit)
-        op_counts_final = circuit_to_dag(tcircuit).count_ops(recurse=False)
+        folded = fold_gates(circuit, noise_factor)
 
-        self.assertEqual(len(op_counts_initial), len(op_counts_final))
-        folded = "cx" if gate is CXGate else "rz"
-        for op, count in op_counts_final.items():
-            if op == folded:
-                target = op_counts_initial[op] * noise_factor
+        for op, count in folded.count_ops().items():
+            if op == "cx":
+                target = initial_cx * noise_factor
                 self.assertLessEqual(count, target + 1)
                 self.assertGreaterEqual(count, target - 1)
             else:
-                self.assertEqual(count, op_counts_initial[op])
+                self.assertEqual(count, initial[op])
 
-    @ddt.data(CXGate, RZGate)
-    def test_multi_noise_factor(self, gate):
-        """Multiple noise factors in a single pass each produce correct counts."""
-        noise_factors = [1, 1.5, 2]
-        circuit = random_circuit(5, 5, seed=321)
-        circuit.measure_all()
-        pm = generate_preset_pass_manager(basis_gates=["cx", "rz", "sx", "id"])
-        circuit = pm.run(circuit)
-        op_counts_initial = circuit_to_dag(circuit).count_ops(recurse=True)
-
-        folder = GateFolding(gate, noise_factors)
-        tcircuits = folder.fold(circuit)
-        self.assertEqual(len(tcircuits), len(noise_factors))
-
-        folded = "cx" if gate is CXGate else "rz"
-        for tcircuit, noise_factor in zip(tcircuits, noise_factors):
-            op_counts_final = circuit_to_dag(tcircuit).count_ops(recurse=False)
-            self.assertEqual(len(op_counts_initial), len(op_counts_final))
-            for op, count in op_counts_final.items():
-                if op == folded:
-                    target = op_counts_initial[op] * noise_factor
-                    self.assertLessEqual(count, target + 1)
-                    self.assertGreaterEqual(count, target - 1)
-                else:
-                    self.assertEqual(count, op_counts_initial[op])
-
-    @ddt.data(1, 3, 5)
-    def test_parametric_gate(self, noise_factor):
-        """Verify exact folded circuit for an RZ-only fold."""
+    @ddt.data(3, 5, 7)
+    def test_integer_fold_is_exact(self, noise_factor):
+        """Integer noise factors fold every CX deterministically."""
         circuit = QuantumCircuit(2)
-        circuit.sx(0)
-        circuit.x(1)
-        circuit.rz(0.1, 0)
-        circuit.rz(0.2, 1)
-        circuit.sx(0)
-        circuit.x(1)
-
-        folder = GateFolding(RZGate, noise_factor)
-        [folded] = folder.fold(circuit)
-
-        num_fold = int((noise_factor - 1) // 2)
-        expected = QuantumCircuit(2)
-        expected.sx(0)
-        expected.x(1)
-        expected.rz(0.1, 0)
-        expected.rz(0.2, 1)
-        for _ in range(num_fold):
-            expected.rz(-0.1, 0)
-            expected.rz(0.1, 0)
-            expected.rz(-0.2, 1)
-            expected.rz(0.2, 1)
-        expected.sx(0)
-        expected.x(1)
-        self.assertEqual(folded, expected)
+        for _ in range(3):
+            circuit.cx(0, 1)
+        folded = fold_gates(circuit, float(noise_factor))
+        self.assertEqual(folded.count_ops()["cx"], 3 * noise_factor)
 
     def test_noise_factor_less_than_one_raises(self):
-        """Noise factor < 1 raises TranspilerError at construction."""
-        with self.assertRaises(TranspilerError):
-            GateFolding(CXGate, noise_factors=0.5)
-        with self.assertRaises(TranspilerError):
-            GateFolding(CXGate, noise_factors=(1, 0.99))
+        """``noise_factor < 1`` raises ``ValueError``."""
+        circuit = QuantumCircuit(2)
+        circuit.cx(0, 1)
+        with self.assertRaises(ValueError):
+            fold_gates(circuit, 0.5)
 
     def test_method_front_picks_first_gates(self):
         """``method='front'`` selects probabilistic folds from the start of the DAG."""
@@ -136,55 +102,28 @@ class TestGateFolding(unittest.TestCase):
         for _ in range(4):
             circuit.cx(0, 1)
 
-        # noise_factor=1.5: sampled_folds = 0.25, num_sampled = round(0.25*4) = 1.
-        # 'front' picks the very first CX for the extra fold.
-        folder = GateFolding(CXGate, noise_factors=1.5, method="front")
-        [folded] = folder.fold(circuit)
-        ops = list(folded.data)
-        # First 3 instructions should be the folded first CX (CX, CX-inv, CX), rest are plain CX.
-        self.assertEqual(ops[0].operation.name, "cx")
-        self.assertEqual(ops[1].operation.name, "cx")
-        self.assertEqual(ops[2].operation.name, "cx")
-        self.assertEqual(ops[3].operation.name, "cx")
+        # noise_factor=1.5 -> fractional=0.25, num_extra = round(0.25*4) = 1.
+        # 'front' picks the very first CX for the extra fold (CX, CX-inv, CX), then 3 plain CX.
+        folded = fold_gates(circuit, 1.5, method="front")
         self.assertEqual(folded.count_ops()["cx"], 6)
+        for instr in list(folded.data)[:4]:
+            self.assertEqual(instr.operation.name, "cx")
 
     def test_method_back_picks_last_gates(self):
         """``method='back'`` selects probabilistic folds from the end of the DAG."""
         circuit = QuantumCircuit(2)
         for _ in range(4):
             circuit.cx(0, 1)
-
-        folder = GateFolding(CXGate, noise_factors=1.5, method="back")
-        [folded] = folder.fold(circuit)
+        folded = fold_gates(circuit, 1.5, method="back")
         self.assertEqual(folded.count_ops()["cx"], 6)
 
     def test_seed_reproducibility(self):
-        """Same seed produces same probabilistic folds."""
+        """Same seed produces the same probabilistic fold."""
         circuit = QuantumCircuit(2)
         for _ in range(6):
             circuit.cx(0, 1)
-        [a] = GateFolding(CXGate, noise_factors=1.5, seed=42).fold(circuit)
-        [b] = GateFolding(CXGate, noise_factors=1.5, seed=42).fold(circuit)
+        a = fold_gates(circuit, 1.5, seed=42)
+        b = fold_gates(circuit, 1.5, seed=42)
         self.assertEqual(a, b)
-
-    def test_run_single_dag_path(self):
-        """``run_single`` returns DAGs and accepts a DAG (legacy API surface)."""
-        circuit = QuantumCircuit(2)
-        circuit.cx(0, 1)
-        circuit.cx(0, 1)
-        dag = circuit_to_dag(circuit)
-        dags = GateFolding(CXGate, noise_factors=(1, 3)).run_single(dag)
-        self.assertEqual(len(dags), 2)
-        self.assertEqual(dags[0].count_ops().get("cx", 0), 2)
-        self.assertEqual(dags[1].count_ops().get("cx", 0), 6)
-
-    def test_zne_noise_factor_metadata_stamped(self):
-        """Folded DAGs carry ``metadata['zne_noise_factor']`` for legacy parity."""
-        circuit = QuantumCircuit(2)
-        circuit.cx(0, 1)
-        dag = circuit_to_dag(circuit)
-        dags = GateFolding(CXGate, noise_factors=(1, 3, 5)).run_single(dag)
-        for d, expected_nf in zip(dags, (1, 3, 5)):
-            self.assertEqual(d.metadata["zne_noise_factor"], expected_nf)
 
 
