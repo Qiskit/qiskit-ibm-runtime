@@ -30,7 +30,7 @@ class RestAdapterBase:
 
     _HEADER_JSON_ACCEPT = {"Accept": "application/json"}
 
-    _HEADER_API_VERSION = {"IBM-API-Version": "2026-03-15"}
+    _HEADER_API_VERSION = {"IBM-API-Version": "2026-02-15"}
 
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         self.session = session

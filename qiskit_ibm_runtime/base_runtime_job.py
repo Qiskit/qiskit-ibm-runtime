@@ -125,7 +125,7 @@ class BaseRuntimeJob(ABC):
         """Return job usage in seconds."""
         try:
             metrics = self._api_client.job_metadata(self.job_id())
-            return metrics.get("usage", {}).get("qpu_charge_time_seconds")
+            return metrics.get("usage", {}).get("quantum_seconds")
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
