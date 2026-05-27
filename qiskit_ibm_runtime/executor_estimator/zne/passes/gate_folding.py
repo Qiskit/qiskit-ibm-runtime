@@ -71,14 +71,18 @@ class GateFolding(TransformationPass):
         if np.isclose(self.noise_factor, 1):
             return dag
 
+        # Get number of folds for each gate and the fraction of gates which get an additional fold
         base_folds = int((self.noise_factor - 1) // 2)
         fractional = ((self.noise_factor - 1) % 2) / 2
+
+        # All nodes to fold
         fold_nodes = [
             n for n in dag.topological_op_nodes() if isinstance(n.op, SUPPORTED_FOLDED_GATES)
         ]
-        num_nodes = len(fold_nodes)
 
+        # Select the nodes which get an extra fold
         extra_indices: set[int] = set()
+        num_nodes = len(fold_nodes)
         num_extra_target = fractional * num_nodes
         if not np.isclose(num_extra_target, 0):
             num_extra = max(1, round(num_extra_target))
@@ -90,10 +94,12 @@ class GateFolding(TransformationPass):
                 rng = np.random.default_rng(self.seed)
                 extra_indices = set(rng.choice(num_nodes, num_extra, replace=False).tolist())
 
+        # Perform folding
         for i, node in enumerate(fold_nodes):
             folds = base_folds + (i in extra_indices)
             if folds:
                 dag.substitute_node_with_dag(node, _folded_gate(node.op, folds))
+
         return dag
 
 
