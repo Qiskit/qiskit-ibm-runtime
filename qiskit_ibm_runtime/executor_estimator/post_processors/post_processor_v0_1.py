@@ -93,7 +93,10 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     if any("_meas" not in item_result for item_result in result):
         raise ValueError("Dedicated creg `_meas` is missing from the results.")
 
-    shots = result[0]["_meas"].shape[0] * result[0]["_meas"].shape[-2]
+    # Get number of randomizations and shots per randomization from the first result
+    num_randomizations = result[0]["_meas"].shape[0]
+    shots_per_randomization = result[0]["_meas"].shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
 
     # Build EstimatorPubResult for each pub
     pub_results = []
@@ -124,6 +127,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         # Compute expectation values for all observables
         exp_vals_array = np.empty(output_shape, dtype=float)
         stds_array = np.empty(output_shape, dtype=float)
+        ensemble_stds_array = np.empty(output_shape, dtype=float)
 
         # Loop over the broadcast output shape
         for bcast_index in np.ndindex(output_shape):
@@ -143,7 +147,8 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 )
 
             exp_val = 0.0
-            variance = 0.0
+            ensemble_variance = 0.0
+            twirl_variance = 0.0
 
             for observable_term, coeff in observable.items():
                 # Find which basis can measure this term
@@ -153,18 +158,28 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
                 # Get measurement data for this configuration
-                # Shape: (num_randomizations, shots, num_qubits)
+                # Shape: (num_randomizations, shots_per_randomization, num_qubits)
                 datum = meas_data[:, config_idx, :, :]
-                term_exp_val, term_variance = compute_exp_val(observable_term, datum)
+                term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                    observable_term, datum
+                )
 
                 # Accumulate with coefficient
                 exp_val += coeff * term_exp_val
-                variance += (coeff**2) * term_variance
+                ensemble_variance += (coeff**2) * term_ensemble_variance
+                twirl_variance += (coeff**2) * term_twirl_variance
 
             exp_vals_array[bcast_index] = exp_val
-            stds_array[bcast_index] = np.sqrt(variance / shots)  # Standard error
+            ensemble_stds_array[bcast_index] = np.sqrt(ensemble_variance / total_shots)
+            # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+            if num_randomizations == 1:
+                stds_array[bcast_index] = ensemble_stds_array[bcast_index]
+            else:
+                stds_array[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
 
-        data_bin = DataBin(evs=exp_vals_array, stds=stds_array)
+        data_bin = DataBin(
+            evs=exp_vals_array, stds=stds_array, ensemble_standard_error=ensemble_stds_array
+        )
 
         # Get circuit metadata for this pub if available
         pub_metadata = {}

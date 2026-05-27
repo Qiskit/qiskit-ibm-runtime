@@ -222,3 +222,72 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         pub_result = primitive_result[0]
         self.assertIn("circuit_metadata", pub_result.metadata)
         self.assertEqual(pub_result.metadata["circuit_metadata"], circuit_metadata)
+
+    def test_post_processor_stds_without_twirling(self):
+        """Test that stds and ensemble_standard_error are equal without twirling."""
+        # Single randomization (no twirling)
+        meas_data = np.array([[[[False, False]] * 8 + [[False, True], [True, False]]]])
+
+        quantum_result = self._create_quantum_result(
+            meas_data,
+            observables=[[{"ZZ": 1.0}]],
+            measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([], "ZZ")]],
+            param_shapes=[[]],
+        )
+        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
+
+        # With no twirling (num_randomizations=1), stds and ensemble_standard_error should be equal
+        self.assertAlmostEqual(
+            primitive_result[0].data.stds[0],
+            primitive_result[0].data.ensemble_standard_error[0],
+        )
+
+    def test_post_processor_stds_with_twirling(self):
+        """Test that stds and ensemble_standard_error differ with twirling."""
+        # Multiple randomizations (twirling enabled)
+        # Shape: (num_randomizations=3, num_configs=1, shots_per_randomization=10, num_qubits=2)
+        meas_data = np.array(
+            [
+                [[[False, False]] * 8 + [[False, True], [True, False]]],  # Twirl 1: exp_val = 0.6
+                [[[False, False]] * 5 + [[False, True]] * 5],  # Twirl 2: exp_val = 0.0
+                [[[False, False]] * 7 + [[False, True]] * 3],  # Twirl 3: exp_val = 0.4
+            ]
+        )
+
+        quantum_result = self._create_quantum_result(
+            meas_data,
+            observables=[[{"ZZ": 1.0}]],
+            measure_bases=[["ZZ"]],
+            param_basis_pairs=[[([], "ZZ")]],
+            param_shapes=[[]],
+        )
+        primitive_result = estimator_v2_post_processor_v0_1(quantum_result)
+
+        # Overall expectation value: (6 + 0 + 4) / 30 = 1/3
+        self.assertAlmostEqual(primitive_result[0].data.evs[0], 1 / 3)
+
+        # ensemble_standard_error: sqrt(variance / total_shots)
+        # variance = 1 - (1/3)^2 = 8/9
+        # ensemble_standard_error = sqrt(8/9 / 30) = sqrt(8/270)
+        expected_ensemble_std = np.sqrt((1 - (1 / 3) ** 2) / 30)
+        self.assertAlmostEqual(
+            primitive_result[0].data.ensemble_standard_error[0],
+            expected_ensemble_std,
+        )
+
+        # stds: sqrt(twirl_variance / num_randomizations)
+        # Per-twirl exp vals: [0.6, 0.0, 0.4]
+        # Mean: 1/3, Variance: (0.36 + 0.0 + 0.16)/3 - (1/3)^2 = 0.52/3 - 1/9
+        twirl_variance = (0.36 + 0.0 + 0.16) / 3 - (1 / 3) ** 2
+        expected_stds = np.sqrt(twirl_variance / 3)
+        self.assertAlmostEqual(
+            primitive_result[0].data.stds[0],
+            expected_stds,
+        )
+
+        # Verify they are different
+        self.assertNotAlmostEqual(
+            primitive_result[0].data.stds[0],
+            primitive_result[0].data.ensemble_standard_error[0],
+        )
