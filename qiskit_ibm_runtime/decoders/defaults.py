@@ -10,21 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Constant values."""
+"""Mapping between program names and decoders."""
 
-from .decoders.quantum_program.decoder import QuantumProgramResultDecoder
-from .utils.result_decoder import ResultDecoder
-from .utils.noise_learner_result_decoder import NoiseLearnerResultDecoder
-from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.sampler_result_decoder import SamplerResultDecoder
-from .utils.runner_result import RunnerResult
-
+from .noise_learner import NoiseLearnerResultDecoder
+from .quantum_program.decoder import QuantumProgramResultDecoder
+from .result_decoder import ResultDecoder
+from .runner import RunnerResultDecoder
 
 DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
-    "sampler": [ResultDecoder, SamplerResultDecoder],
-    "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "sampler": ResultDecoder,
+    "estimator": ResultDecoder,
     "executor": QuantumProgramResultDecoder,
     "noise-learner": NoiseLearnerResultDecoder,
-    "circuit-runner": RunnerResult,
-    "qasm3-runner": RunnerResult,
+    "circuit-runner": RunnerResultDecoder,
+    "qasm3-runner": RunnerResultDecoder,
 }

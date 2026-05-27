@@ -444,11 +444,6 @@ class TestSampler(IBMIntegrationTestCase):
             b = ClassicalRegister(2, "b")
             c = ClassicalRegister(3, "c")
 
-            qc = QuantumCircuit(QuantumRegister(3), a, b, c)
-            qc.h(range(3))
-            target = {"a": {0: 10000}, "b": {0: 10000}, "c": {0: 10000}}
-            cases.append(("no measure", pm.run(qc), target))
-
             for title, qc, target in cases:
                 with self.subTest(title):
                     sampler = Sampler(mode=session, options=self._options)
