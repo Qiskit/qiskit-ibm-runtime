@@ -24,8 +24,8 @@ from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
 
-DEFAULT_FOLDED_GATES: tuple[type, ...] = (ECRGate, CXGate, CYGate, CZGate, SwapGate)
-"""Default 2-qubit gate types to fold."""
+SUPPORTED_FOLDED_GATES: tuple[type, ...] = (ECRGate, CXGate, CYGate, CZGate, SwapGate)
+"""2-qubit gate types supported for folding."""
 
 
 class GateFolding(TransformationPass):
@@ -36,7 +36,7 @@ class GateFolding(TransformationPass):
     is not such that every gate folds the same number of times, a subset of gates
     is folded one extra time; ``method`` controls which subset.
 
-    Only gates in :data:`~qiskit_ibm_runtime.executor_estimator.zne.DEFAULT_FOLDED_GATES`
+    Only gates in :data:`~qiskit_ibm_runtime.executor_estimator.zne.SUPPORTED_FOLDED_GATES`
     will be folded.
     """
 
@@ -74,7 +74,7 @@ class GateFolding(TransformationPass):
         base_folds = int((self.noise_factor - 1) // 2)
         fractional = ((self.noise_factor - 1) % 2) / 2
         fold_nodes = [
-            n for n in dag.topological_op_nodes() if isinstance(n.op, DEFAULT_FOLDED_GATES)
+            n for n in dag.topological_op_nodes() if isinstance(n.op, SUPPORTED_FOLDED_GATES)
         ]
         num_nodes = len(fold_nodes)
 

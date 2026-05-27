@@ -12,4 +12,4 @@
 
 """Zero-Noise Extrapolation helpers for the executor-based EstimatorV2."""
 
-from .passes import DEFAULT_FOLDED_GATES, GateFolding
+from .passes import SUPPORTED_FOLDED_GATES, GateFolding

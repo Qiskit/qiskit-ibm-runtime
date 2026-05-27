@@ -25,7 +25,7 @@ from qiskit.quantum_info import Operator
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Optimize1qGates
 
-from qiskit_ibm_runtime.executor_estimator.zne import DEFAULT_FOLDED_GATES, GateFolding
+from qiskit_ibm_runtime.executor_estimator.zne import SUPPORTED_FOLDED_GATES, GateFolding
 
 
 def fold(circuit: QuantumCircuit, noise_factor: float, **kwargs: Any) -> QuantumCircuit:
@@ -39,7 +39,7 @@ class TestGateFolding(unittest.TestCase):
 
     def test_default_gate_set(self):
         """Default gate set targets the standard 2-qubit ISA gates."""
-        self.assertEqual(DEFAULT_FOLDED_GATES, (ECRGate, CXGate, CYGate, CZGate, SwapGate))
+        self.assertEqual(SUPPORTED_FOLDED_GATES, (ECRGate, CXGate, CYGate, CZGate, SwapGate))
 
     def test_noise_factor_one_returns_equal_circuit(self):
         """``noise_factor=1`` leaves the circuit unchanged in content."""
@@ -56,7 +56,7 @@ class TestGateFolding(unittest.TestCase):
         self.assertEqual(folded.count_ops(), circuit.count_ops())
 
     def test_no_foldable_gates(self):
-        """Gates not in :data:`DEFAULT_FOLDED_GATES` are left alone."""
+        """Gates not in :data:`SUPPORTED_FOLDED_GATES` are left alone."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.rz(0.1, 0)
@@ -218,7 +218,7 @@ class TestGateFolding(unittest.TestCase):
 
     @ddt.data(CXGate, CYGate, CZGate, ECRGate, SwapGate)
     def test_folds_each_default_gate_type(self, gate_cls):
-        """Each gate type in :data:`DEFAULT_FOLDED_GATES` is folded by the pass."""
+        """Each gate type in :data:`SUPPORTED_FOLDED_GATES` is folded by the pass."""
         circuit = QuantumCircuit(2)
         circuit.append(gate_cls(), [0, 1])
         folded = fold(circuit, 3.0)

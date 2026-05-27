@@ -12,4 +12,4 @@
 
 """Transpiler passes for Zero-Noise Extrapolation."""
 
-from .gate_folding import DEFAULT_FOLDED_GATES, GateFolding
+from .gate_folding import SUPPORTED_FOLDED_GATES, GateFolding
