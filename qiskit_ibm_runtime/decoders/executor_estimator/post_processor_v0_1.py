@@ -29,7 +29,7 @@ from qiskit.quantum_info import Pauli, PauliLindbladMap
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...results.estimator_pub import EstimatorPubResult
-from ...executor_estimator.trex_utils import calculate_trex_noise_model, calculate_trex_factor
+from .trex_utils import calculate_trex_noise_model, calculate_trex_factor
 from .utils import compute_exp_val, identify_measure_basis
 
 
