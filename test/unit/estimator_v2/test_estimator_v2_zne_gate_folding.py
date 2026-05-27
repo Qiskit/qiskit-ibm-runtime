@@ -125,5 +125,3 @@ class TestFoldGates(unittest.TestCase):
         a = fold_gates(circuit, 1.5, seed=42)
         b = fold_gates(circuit, 1.5, seed=42)
         self.assertEqual(a, b)
-
-
