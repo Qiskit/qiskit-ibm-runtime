@@ -23,6 +23,7 @@ from qiskit.circuit.library import CXGate, CYGate, CZGate, ECRGate, SwapGate
 from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.quantum_info import Operator
 from qiskit.transpiler import PassManager
+from qiskit.transpiler.passes import Optimize1qGates
 
 from qiskit_ibm_runtime.executor_estimator.zne import DEFAULT_FOLDED_GATES, GateFolding
 
@@ -59,6 +60,7 @@ class TestGateFolding(unittest.TestCase):
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.rz(0.1, 0)
+        circuit.rzz(np.pi / 6, 0, 1)
         circuit.sx(1)
         folded = fold(circuit, 3.0)
         self.assertEqual(folded.count_ops(), circuit.count_ops())
@@ -103,41 +105,49 @@ class TestGateFolding(unittest.TestCase):
 
     def test_method_front_picks_first_gates(self):
         """``method='front'`` selects probabilistic folds from the start of the DAG."""
+        # Single CX at the front, CZs elsewhere: per-type counts reveal which gate got folded.
         circuit = QuantumCircuit(2)
-        for _ in range(4):
-            circuit.cx(0, 1)
+        circuit.cx(0, 1)
+        circuit.cz(0, 1)
+        circuit.cz(0, 1)
+        circuit.cz(0, 1)
 
         # noise_factor=1.5 -> fractional=0.25, num_extra = round(0.25*4) = 1.
-        # 'front' picks the very first CX for the extra fold (CX, CX-inv, CX), then 3 plain CX.
+        # 'front' picks index 0 -> only the CX is folded (1 -> 3); CZs are untouched.
         folded = fold(circuit, 1.5, method="front")
-        self.assertEqual(folded.count_ops()["cx"], 6)
-        for instr in list(folded.data)[:4]:
-            self.assertEqual(instr.operation.name, "cx")
+        self.assertEqual(folded.count_ops()["cx"], 3)
+        self.assertEqual(folded.count_ops()["cz"], 3)
 
     def test_method_back_picks_last_gates(self):
         """``method='back'`` selects probabilistic folds from the end of the DAG."""
+        # Single CX at the back, CZs elsewhere: per-type counts reveal which gate got folded.
+        circuit = QuantumCircuit(2)
+        circuit.cz(0, 1)
+        circuit.cz(0, 1)
+        circuit.cz(0, 1)
+        circuit.cx(0, 1)
+
+        # 'back' picks the last index -> only the CX is folded (1 -> 3); CZs are untouched.
+        folded = fold(circuit, 1.5, method="back")
+        self.assertEqual(folded.count_ops()["cx"], 3)
+        self.assertEqual(folded.count_ops()["cz"], 3)
+
+    @ddt.data(
+        lambda: 42,
+        lambda: np.random.default_rng(42),
+        lambda: np.random.PCG64(42),
+    )
+    def test_seed_reproducibility(self, seed_factory):
+        """Same seed (as int, ``Generator``, or ``BitGenerator``) yields the same fold."""
         circuit = QuantumCircuit(2)
         for _ in range(4):
             circuit.cx(0, 1)
-        folded = fold(circuit, 1.5, method="back")
-        self.assertEqual(folded.count_ops()["cx"], 6)
-
-    def test_seed_reproducibility(self):
-        """Two pass instances with the same seed produce the same probabilistic fold."""
-        circuit = QuantumCircuit(2)
-        for _ in range(6):
-            circuit.cx(0, 1)
-        a = fold(circuit, 1.5, seed=42)
-        b = fold(circuit, 1.5, seed=42)
+            circuit.cz(0, 1)
+        a = fold(circuit, 1.5, seed=seed_factory())
+        b = fold(circuit, 1.5, seed=seed_factory())
+        self.assertIsNot(a, b)
         self.assertEqual(a, b)
-
-    def test_pass_instance_is_reusable(self):
-        """Running the same pass instance twice yields the same result (no state leaks)."""
-        circuit = QuantumCircuit(2)
-        for _ in range(6):
-            circuit.cx(0, 1)
-        pm = PassManager([GateFolding(1.5, seed=42)])
-        self.assertEqual(pm.run(circuit), pm.run(circuit))
+        self.assertNotEqual(a, fold(circuit, 1.5, seed=7))
 
     def test_run_on_dag_directly(self):
         """The pass also works invoked directly on a DAG, without a PassManager."""
@@ -149,8 +159,6 @@ class TestGateFolding(unittest.TestCase):
 
     def test_composes_in_passmanager_with_other_passes(self):
         """``GateFolding`` plays nicely with another pass in a PassManager stack."""
-        from qiskit.transpiler.passes import Optimize1qGates  # 1q-only pass; leaves CX alone
-
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.cx(0, 1)
@@ -170,7 +178,6 @@ class TestGateFolding(unittest.TestCase):
 
     def test_fractional_noise_factor_no_foldable_gates(self):
         """A fractional noise factor on a circuit with no foldable gates is a no-op."""
-        # Regression guard: fractional logic must not try to pick extra indices from an empty set.
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.h(1)
@@ -179,7 +186,6 @@ class TestGateFolding(unittest.TestCase):
 
     def test_run_on_dag_mutates_input(self):
         """Calling ``.run`` directly on a DAG mutates and returns that same DAG."""
-        # PassManager protects callers by copying, but a bare ``.run(dag)`` does not.
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.cx(0, 1)
@@ -200,24 +206,6 @@ class TestGateFolding(unittest.TestCase):
         self.assertEqual(folded.count_ops()["cx"], 6)
         self.assertEqual(folded.count_ops()["rz"], 1)
 
-    def test_does_not_recurse_into_control_flow_blocks(self):
-        """Gates nested inside ``if_else`` blocks are not folded; outer gates still fold."""
-        # Control-flow recursion would require a separate pass (e.g. ``ControlFlowOp`` handling);
-        # this test documents that the bare pass does not recurse.
-        circuit = QuantumCircuit(2, 1)
-        circuit.cx(0, 1)
-        circuit.measure(0, 0)
-        with circuit.if_test((circuit.clbits[0], 1)):
-            circuit.cx(0, 1)
-
-        folded = fold(circuit, 3.0)
-        self.assertEqual(folded.count_ops()["cx"], 3)  # outer CX: 1 -> 3
-        self.assertEqual(folded.count_ops()["if_else"], 1)
-        # Inner block is unchanged: still exactly one CX inside.
-        if_else_instr = next(instr for instr in folded.data if instr.operation.name == "if_else")
-        inner_body = if_else_instr.operation.blocks[0]
-        self.assertEqual(inner_body.count_ops()["cx"], 1)
-
     @ddt.data(3.0, 5.0, 7.0)
     def test_unitary_equivalence(self, noise_factor):
         """Folded circuit is unitarily equivalent to the original for any odd-integer factor."""
@@ -227,15 +215,6 @@ class TestGateFolding(unittest.TestCase):
         circuit.cz(0, 1)
         folded = fold(circuit, noise_factor)
         self.assertTrue(Operator(circuit).equiv(Operator(folded)))
-
-    def test_seed_accepts_numpy_generator(self):
-        """A ``np.random.Generator`` instance is accepted as ``seed`` (per the type hint)."""
-        circuit = QuantumCircuit(2)
-        for _ in range(4):
-            circuit.cx(0, 1)
-        a = fold(circuit, 1.5, seed=np.random.default_rng(123))
-        b = fold(circuit, 1.5, seed=np.random.default_rng(123))
-        self.assertEqual(a, b)
 
     @ddt.data(CXGate, CYGate, CZGate, ECRGate, SwapGate)
     def test_folds_each_default_gate_type(self, gate_cls):

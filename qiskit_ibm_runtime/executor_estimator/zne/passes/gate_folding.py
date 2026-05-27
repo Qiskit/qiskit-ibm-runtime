@@ -35,22 +35,26 @@ class GateFolding(TransformationPass):
     :math:`n = (F - 1) / 2` for noise factor :math:`F \geq 1`. When ``noise_factor``
     is not such that every gate folds the same number of times, a subset of gates
     is folded one extra time; ``method`` controls which subset.
+
+    Only gates in :data:`~qiskit_ibm_runtime.executor_estimator.zne.DEFAULT_FOLDED_GATES`
+    will be folded.
     """
 
     def __init__(
         self,
         noise_factor: float,
         method: Literal["random", "front", "back"] = "random",
-        seed: int | np.random.BitGenerator | None = None,
+        seed: int | np.random.BitGenerator | np.random.Generator | None = None,
     ):
         """Initialize the pass.
 
         Args:
             noise_factor: Target noise factor (``>= 1``).
-            method: How to select the probabilistically-folded subset.
-                ``"random"`` picks uniformly; ``"front"``/``"back"`` take the
-                first/last gates in topological order.
-            seed: Seed or BitGenerator for the random subset selection.
+            method: How to choose a subset of gates to fold an additional time
+                to implement noise factors other than even integers. The gates
+                may be chosen from the ``front`` or ``back`` of the circuit, or
+                uniformly at ``random``.
+            seed: Seed or BitGenerator for selecting gates at random.
 
         Raises:
             ValueError: If ``noise_factor`` is less than 1.
