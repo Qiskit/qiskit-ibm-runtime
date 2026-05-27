@@ -10,6 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Zero-Noise Extrapolation helpers for the executor-based EstimatorV2."""
+"""Transpiler passes for Zero-Noise Extrapolation."""
 
-from .passes import DEFAULT_FOLDED_GATES, GateFolding
+from .gate_folding import DEFAULT_FOLDED_GATES, GateFolding
