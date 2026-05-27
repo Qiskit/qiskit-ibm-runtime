@@ -49,8 +49,7 @@ def prepare(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
-    measure_mitigation: bool,
-    measure_noise_learning: MeasureNoiseLearningOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -60,9 +59,8 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
-        measure_mitigation: If``True``, Twirled Readout Error eXtinction (TREX) mitigation method
-            will be used.
-        measure_noise_learning: The measure noise learning options.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -115,7 +113,7 @@ def prepare(
             enable_measures=True,
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
             measure_annotations="all"
-            if twirling_options.enable_measure or measure_mitigation
+            if twirling_options.enable_measure or measure_noise_learning is not None
             else "change_basis",
         )
         prepared_circuit = boxing_pm.run(prepared_circuit)
@@ -180,7 +178,7 @@ def prepare(
     )
 
     # Add TREX calibration circuit
-    if measure_mitigation:
+    if measure_noise_learning is not None:
         if (
             isinstance(measure_noise_learning.shots_per_randomization, int)
             and measure_noise_learning.shots_per_randomization != shots_per_randomization

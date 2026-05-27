@@ -59,7 +59,7 @@ class TestPrepareFunction(unittest.TestCase):
         obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
 
         pub = EstimatorPub.coerce((circuit, obs, params))
-        program = prepare([pub], TwirlingOptions(), 10, False, MeasureNoiseLearningOptions())
+        program = prepare([pub], TwirlingOptions(), 10, MeasureNoiseLearningOptions())
 
         self.assertEqual(program.items[0].shape, item_shape)
 
@@ -84,7 +84,7 @@ class TestPrepareFunction(unittest.TestCase):
         obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
 
         pub = EstimatorPub.coerce((circuit, obs, params))
-        program = prepare([pub], TwirlingOptions(), 10, False, MeasureNoiseLearningOptions())
+        program = prepare([pub], TwirlingOptions(), 10, MeasureNoiseLearningOptions())
 
         self.assertEqual(program.items[0].shape, item_shape)
 
@@ -109,9 +109,7 @@ class TestPrepareFunction(unittest.TestCase):
         pub2 = EstimatorPub.coerce((circuit2, observables2, parameter_values2))
 
         shots = 1024
-        quantum_program = prepare(
-            [pub1, pub2], TwirlingOptions(), shots, False, MeasureNoiseLearningOptions()
-        )
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
@@ -168,7 +166,7 @@ class TestPrepareFunction(unittest.TestCase):
             "qiskit_ibm_runtime.executor_estimator.prepare.build",
             return_value=(circuit, mock_samplex),
         ):
-            prepare([pub], twirling_options, 1024, False, MeasureNoiseLearningOptions())
+            prepare([pub], twirling_options, 1024)
 
         mock_generate_boxing_pm.assert_called_once_with(
             enable_gates=True,
@@ -192,9 +190,7 @@ class TestPrepareFunction(unittest.TestCase):
         observables = ObservablesArray.coerce([{"ZI": 1}, {"IZ": 1}])
         pub = EstimatorPub.coerce((circuit, observables))
 
-        quantum_program = prepare(
-            [pub], twirling_options, 2000, False, MeasureNoiseLearningOptions()
-        )
+        quantum_program = prepare([pub], twirling_options, 2000)
 
         self.assertIsInstance(quantum_program.items[0], SamplexItem)
         self.assertEqual(quantum_program.shots, 256)
@@ -220,7 +216,7 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Should raise an error - mid-circuit measurements are not supported
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], TwirlingOptions(), shots, False, MeasureNoiseLearningOptions())
+            prepare([pub], TwirlingOptions(), shots)
 
         self.assertIn("mid-circuit measurements", str(context.exception))
 
@@ -240,13 +236,13 @@ class TestPrepareFunction(unittest.TestCase):
 
         # Should raise an error - the classical register name is reserved
         with self.assertRaises(IBMInputValueError) as context:
-            prepare([pub], TwirlingOptions(), 1024, False, MeasureNoiseLearningOptions())
+            prepare([pub], TwirlingOptions(), 1024)
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
 
-    def test_prepare_with_measure_mitigation_adds_trex_item(self):
-        """Test that measure_mitigation=True adds a TREX calibration item to QuantumProgram."""
+    def test_prepare_with_measure_noise_learning_adds_trex_item(self):
+        """Test that measure_noise_learning adds a TREX calibration item to QuantumProgram."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -258,15 +254,11 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
 
-        # Test without measure mitigation
-        quantum_program_no_mitigation = prepare(
-            [pub], TwirlingOptions(), shots, False, measure_noise_learning
-        )
-        self.assertEqual(len(quantum_program_no_mitigation.items), 1)
+        quantum_program_without_measure_noise_learning = prepare([pub], TwirlingOptions(), shots)
+        self.assertEqual(len(quantum_program_without_measure_noise_learning.items), 1)
 
-        # Test with measure mitigation
         quantum_program_with_mitigation = prepare(
-            [pub], TwirlingOptions(), shots, True, measure_noise_learning
+            [pub], TwirlingOptions(), shots, measure_noise_learning
         )
 
         # Should have one additional item (the TREX calibration circuit)
@@ -276,11 +268,10 @@ class TestPrepareFunction(unittest.TestCase):
         trex_item = quantum_program_with_mitigation.items[-1]
         self.assertIsInstance(trex_item, SamplexItem)
 
-        # Verify passthrough data contains measure_mitigation flag
         passthrough = cast(dict[str, Any], quantum_program_with_mitigation.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
 
-    def test_prepare_with_measure_mitigation_trex_circuit_has_only_measurements(self):
+    def test_prepare_with_measure_noise_learning_trex_circuit_has_only_measurements(self):
         """Test that TREX calibration circuit is based on measurement-only operations.
 
         The TREX circuit template will have parameterized gates for measurement twirling,
@@ -306,9 +297,7 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 32
 
-        quantum_program = prepare(
-            [pub1, pub2], TwirlingOptions(), shots, True, measure_noise_learning
-        )
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots, measure_noise_learning)
 
         # Get the TREX calibration item (last item)
         trex_item = quantum_program.items[-1]
@@ -347,7 +336,7 @@ class TestPrepareFunction(unittest.TestCase):
         [128, (128,)],
     )
     @unpack
-    def test_prepare_with_measure_mitigation_num_randomizations(
+    def test_prepare_with_measure_noise_learning_num_randomizations(
         self, num_randomizations, expected_shape
     ):
         """Test that measure_noise_learning.num_randomizations affects TREX item shape."""
@@ -362,7 +351,7 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = num_randomizations
 
-        quantum_program = prepare([pub], TwirlingOptions(), shots, True, measure_noise_learning)
+        quantum_program = prepare([pub], TwirlingOptions(), shots, measure_noise_learning)
 
         # Get the TREX calibration item (last item)
         trex_item = quantum_program.items[-1]
@@ -376,7 +365,7 @@ class TestPrepareFunction(unittest.TestCase):
             f"num_randomizations={num_randomizations}",
         )
 
-    def test_prepare_with_measure_mitigation_default_num_randomizations(self):
+    def test_prepare_with_measure_noise_learning_default_num_randomizations(self):
         """Test that TREX item uses default num_randomizations=32 when not specified."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -389,7 +378,7 @@ class TestPrepareFunction(unittest.TestCase):
         # Create MeasureNoiseLearningOptions without setting num_randomizations
         measure_noise_learning = MeasureNoiseLearningOptions()
 
-        quantum_program = prepare([pub], TwirlingOptions(), shots, True, measure_noise_learning)
+        quantum_program = prepare([pub], TwirlingOptions(), shots, measure_noise_learning)
 
         # Get the TREX calibration item (last item)
         trex_item = quantum_program.items[-1]
@@ -402,7 +391,7 @@ class TestPrepareFunction(unittest.TestCase):
             "Expected TREX item shape (32,) when num_randomizations is not set",
         )
 
-    def test_prepare_with_measure_mitigation_multiple_pubs_num_randomizations(self):
+    def test_prepare_with_measure_noise_learning_multiple_pubs_num_randomizations(self):
         """Test that num_randomizations affects TREX item with multiple pubs."""
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
@@ -423,9 +412,7 @@ class TestPrepareFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 48
 
-        quantum_program = prepare(
-            [pub1, pub2], TwirlingOptions(), shots, True, measure_noise_learning
-        )
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots, measure_noise_learning)
 
         # Should have 3 items: 2 for pubs + 1 TREX calibration
         self.assertEqual(len(quantum_program.items), 3)

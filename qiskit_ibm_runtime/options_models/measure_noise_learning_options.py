@@ -33,14 +33,10 @@ class MeasureNoiseLearningOptions:
 
     num_randomizations: int = 32
     """The number of random circuits to draw for the measurement learning experiment.
-
-    Default: 32.
     """
 
     shots_per_randomization: int | Literal["auto"] = "auto"
     """The number of shots to use for the learning experiment per random circuit.
 
     If "auto", the value will be chosen automatically based on the input PUBs.
-
-    Default: "auto".
     """
