@@ -171,5 +171,3 @@ class TestCalculateTrexFactor(unittest.TestCase):
         result = calculate_trex_factor(noise_model, "I")
 
         self.assertEqual(result, 1.0)
-
-# Made with Bob

@@ -85,7 +85,11 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
 
         # create a result object without the calibration item
-        result = result[:-1]
+        result = QuantumProgramResult(
+            data=list(result[:-1]),
+            metadata=result.metadata,
+            passthrough_data=result.passthrough_data,
+        )
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)

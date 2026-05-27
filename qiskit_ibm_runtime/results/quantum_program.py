@@ -325,7 +325,15 @@ class QuantumProgramResult:
     def __iter__(self) -> Iterator[QuantumProgramItemResult]:
         yield from self._data
 
-    def __getitem__(self, idx: int) -> QuantumProgramItemResult:
+    @overload
+    def __getitem__(self, idx: int) -> QuantumProgramItemResult: ...
+
+    @overload
+    def __getitem__(self, idx: slice) -> list[QuantumProgramItemResult]: ...
+
+    def __getitem__(
+        self, idx: int | slice
+    ) -> QuantumProgramItemResult | list[QuantumProgramItemResult]:
         return self._data[idx]
 
     def __len__(self) -> int:

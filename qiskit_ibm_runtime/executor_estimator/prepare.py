@@ -168,6 +168,7 @@ def prepare(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
+            "measure_mitigation": "False",
         },
     }
 
@@ -180,6 +181,13 @@ def prepare(
 
     # Add TREX calibration circuit
     if measure_mitigation:
+        if (
+            isinstance(measure_noise_learning.shots_per_randomization, int)
+            and measure_noise_learning.shots_per_randomization != shots_per_randomization
+        ):
+            raise IBMInputValueError(
+                "shots_per_randomization must be the same for twirling and measure_noise_learning"
+            )
         trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
         quantum_program.items.append(trex_item)
         passthrough_data["post_processor"]["measure_mitigation"] = "True"

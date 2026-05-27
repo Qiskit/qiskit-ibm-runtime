@@ -14,9 +14,10 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic.dataclasses import dataclass
 
-from qiskit_ibm_runtime.options.utils import Unset, UnsetType
 from .utils import PRIMITIVES_CONFIG
 
 
@@ -34,4 +35,12 @@ class MeasureNoiseLearningOptions:
     """The number of random circuits to draw for the measurement learning experiment.
 
     Default: 32.
+    """
+
+    shots_per_randomization: int | Literal["auto"] = "auto"
+    """The number of shots to use for the learning experiment per random circuit.
+
+    If "auto", the value will be chosen automatically based on the input PUBs.
+
+    Default: "auto".
     """
