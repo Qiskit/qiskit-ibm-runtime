@@ -54,7 +54,7 @@ class GateFolding(TransformationPass):
                 to implement noise factors other than even integers. The gates
                 may be chosen from the ``front`` or ``back`` of the circuit, or
                 uniformly at ``random``.
-            seed: Seed or BitGenerator for selecting gates at random.
+            seed: Random seed/generator for selecting gates at random.
 
         Raises:
             ValueError: If ``noise_factor`` is less than 1.
