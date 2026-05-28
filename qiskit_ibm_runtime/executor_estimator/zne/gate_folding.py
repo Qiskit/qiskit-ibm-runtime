@@ -90,7 +90,7 @@ class GateFolding(TransformationPass):
                 extra_indices = set(range(num_nodes - num_extra, num_nodes))
             else:
                 rng = np.random.default_rng(self.seed)
-                extra_indices = set(rng.choice(num_nodes, num_extra, replace=False).tolist())
+                extra_indices = set(rng.choice(num_nodes, num_extra, replace=False))
 
         # Perform folding
         for i, node in enumerate(fold_nodes):
