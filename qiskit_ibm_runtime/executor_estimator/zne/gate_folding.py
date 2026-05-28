@@ -42,7 +42,7 @@ class GateFolding(TransformationPass):
     Args:
         noise_factor: Target noise factor (``>= 1``).
         method: How to choose a subset of gates to fold an additional time
-            to implement noise factors other than even integers. The gates
+            to implement noise factors other than odd integers. The gates
             may be chosen from the ``front`` or ``back`` of the circuit, or
             uniformly at ``random``.
         seed: Random seed/generator for selecting gates at random.
