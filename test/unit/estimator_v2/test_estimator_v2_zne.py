@@ -25,7 +25,7 @@ from qiskit.quantum_info import Operator
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Optimize1qGates
 
-from qiskit_ibm_runtime.executor_estimator.zne import SUPPORTED_FOLDED_GATES, GateFolding
+from qiskit_ibm_runtime.executor_estimator.zne.gate_folding import SUPPORTED_FOLDED_GATES, GateFolding
 
 
 def fold(circuit: QuantumCircuit, noise_factor: float, **kwargs: Any) -> QuantumCircuit:
@@ -53,7 +53,7 @@ class TestGateFolding(unittest.TestCase):
         """Folding a circuit with no operations is a no-op."""
         circuit = QuantumCircuit(5)
         folded = fold(circuit, 3.0)
-        self.assertEqual(folded.count_ops(), circuit.count_ops())
+        self.assertEqual(folded, circuit)
 
     def test_no_foldable_gates(self):
         """Gates not in :data:`SUPPORTED_FOLDED_GATES` are left alone."""
@@ -63,7 +63,7 @@ class TestGateFolding(unittest.TestCase):
         circuit.rzz(np.pi / 6, 0, 1)
         circuit.sx(1)
         folded = fold(circuit, 3.0)
-        self.assertEqual(folded.count_ops(), circuit.count_ops())
+        self.assertEqual(folded, circuit)
 
     @ddt.data(1, 1.3, 3, 4.1, 5)
     def test_count_within_one(self, noise_factor):
@@ -89,13 +89,13 @@ class TestGateFolding(unittest.TestCase):
             else:
                 self.assertEqual(count, initial[op])
 
-    @ddt.data(3, 5, 7)
+    @ddt.data(3.0, 5.0, 7.0)
     def test_integer_fold_is_exact(self, noise_factor):
         """Integer noise factors fold every CX deterministically."""
         circuit = QuantumCircuit(2)
         for _ in range(3):
             circuit.cx(0, 1)
-        folded = fold(circuit, float(noise_factor))
+        folded = fold(circuit, noise_factor)
         self.assertEqual(folded.count_ops()["cx"], 3 * noise_factor)
 
     def test_noise_factor_less_than_one_raises(self):
@@ -182,7 +182,7 @@ class TestGateFolding(unittest.TestCase):
         circuit.h(0)
         circuit.h(1)
         folded = fold(circuit, 1.5)
-        self.assertEqual(folded.count_ops(), circuit.count_ops())
+        self.assertEqual(folded, circuit)
 
     def test_run_on_dag_mutates_input(self):
         """Calling ``.run`` directly on a DAG mutates and returns that same DAG."""
@@ -206,9 +206,9 @@ class TestGateFolding(unittest.TestCase):
         self.assertEqual(folded.count_ops()["cx"], 6)
         self.assertEqual(folded.count_ops()["rz"], 1)
 
-    @ddt.data(3.0, 5.0, 7.0)
+    @ddt.data(3.0, 4.0, 5.0, 7.5)
     def test_unitary_equivalence(self, noise_factor):
-        """Folded circuit is unitarily equivalent to the original for any odd-integer factor."""
+        """Folded circuit is unitarily equivalent to the original for any factor."""
         circuit = QuantumCircuit(2)
         circuit.cx(0, 1)
         circuit.swap(0, 1)

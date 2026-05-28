@@ -38,6 +38,17 @@ class GateFolding(TransformationPass):
 
     Only gates in :data:`~qiskit_ibm_runtime.executor_estimator.zne.SUPPORTED_FOLDED_GATES`
     will be folded.
+    
+    Args:
+        noise_factor: Target noise factor (``>= 1``).
+        method: How to choose a subset of gates to fold an additional time
+            to implement noise factors other than even integers. The gates
+            may be chosen from the ``front`` or ``back`` of the circuit, or
+            uniformly at ``random``.
+        seed: Random seed/generator for selecting gates at random.
+
+    Raises:
+        ValueError: If ``noise_factor`` is less than 1.
     """
 
     def __init__(
@@ -46,19 +57,6 @@ class GateFolding(TransformationPass):
         method: Literal["random", "front", "back"] = "random",
         seed: int | np.random.BitGenerator | np.random.Generator | None = None,
     ):
-        """Initialize the pass.
-
-        Args:
-            noise_factor: Target noise factor (``>= 1``).
-            method: How to choose a subset of gates to fold an additional time
-                to implement noise factors other than even integers. The gates
-                may be chosen from the ``front`` or ``back`` of the circuit, or
-                uniformly at ``random``.
-            seed: Random seed/generator for selecting gates at random.
-
-        Raises:
-            ValueError: If ``noise_factor`` is less than 1.
-        """
         super().__init__()
         if noise_factor < 1:
             raise ValueError(f"noise_factor must be >= 1, got {noise_factor}.")

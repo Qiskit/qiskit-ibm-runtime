@@ -11,5 +11,3 @@
 # that they have been altered from the originals.
 
 """Zero-Noise Extrapolation helpers for the executor-based EstimatorV2."""
-
-from .passes import SUPPORTED_FOLDED_GATES, GateFolding
