@@ -25,7 +25,10 @@ from qiskit.quantum_info import Operator
 from qiskit.transpiler import PassManager
 from qiskit.transpiler.passes import Optimize1qGates
 
-from qiskit_ibm_runtime.executor_estimator.zne.gate_folding import SUPPORTED_FOLDED_GATES, GateFolding
+from qiskit_ibm_runtime.executor_estimator.zne.gate_folding import (
+    SUPPORTED_FOLDED_GATES,
+    GateFolding,
+)
 
 
 def fold(circuit: QuantumCircuit, noise_factor: float, **kwargs: Any) -> QuantumCircuit:

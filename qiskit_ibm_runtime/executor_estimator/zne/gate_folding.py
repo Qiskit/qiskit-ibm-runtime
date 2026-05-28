@@ -38,7 +38,7 @@ class GateFolding(TransformationPass):
 
     Only gates in :data:`~qiskit_ibm_runtime.executor_estimator.zne.SUPPORTED_FOLDED_GATES`
     will be folded.
-    
+
     Args:
         noise_factor: Target noise factor (``>= 1``).
         method: How to choose a subset of gates to fold an additional time
