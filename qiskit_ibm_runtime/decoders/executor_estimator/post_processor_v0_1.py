@@ -1,0 +1,225 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Post-processing functions for converting QuantumProgramResult to primitive-specific formats."""
+
+from __future__ import annotations
+
+from collections import defaultdict
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import numpy.typing as npt
+
+    from ...results.quantum_program import QuantumProgramItemResult, QuantumProgramResult
+
+import numpy as np
+from qiskit.primitives import DataBin, PrimitiveResult
+from qiskit.primitives.containers.estimator_pub import ObservablesArray
+from qiskit.quantum_info import Pauli
+
+from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
+from ...results.estimator_pub import EstimatorPubResult
+from .utils import compute_exp_val, identify_measure_basis
+
+
+def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveResult:
+    """Convert a quantum program result to a primitives result, for a V2 estimator.
+
+    This function transforms the raw quantum program execution results into the
+    format expected by :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2`,
+    computing expectation values from measurement data and creating
+    :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` containers
+    for each pub.
+
+    Args:
+        result: The raw quantum program result containing measurement data.
+
+    Returns:
+        Primitive result.
+    """
+    if len(result) == 0:
+        return PrimitiveResult([])
+
+    if not isinstance(passthrough := result.passthrough_data, dict):
+        raise ValueError(
+            "Wrong type for passthrough data: Expected a 'dict', found "
+            f"'{type(result.passthrough_data)}'."
+        )
+
+    if (post_processor_data := passthrough.get("post_processor", None)) is None:
+        raise ValueError("Missing 'post_processor' in passthrough data.")
+
+    # Extract data from post_processor
+    if (observables_lists := post_processor_data.get("observables", None)) is None:
+        raise ValueError("Missing 'observables' in post_processor data.")
+
+    if (param_basis_pairs_lists := post_processor_data.get("param_basis_pairs", None)) is None:
+        raise ValueError("Missing 'param_basis_pairs' in post_processor data.")
+
+    if (param_shapes_list := post_processor_data.get("param_shapes", None)) is None:
+        raise ValueError("Missing 'param_shapes' in post_processor data.")
+
+    # Extract circuit metadata if present
+    circuits_metadata = post_processor_data.get("circuits_metadata", None)
+
+    # Validate circuits_metadata length if provided
+    circuits_metadata = circuits_metadata or [None] * len(result)
+    if {
+        len(circuits_metadata),
+        len(observables_lists),
+        len(param_basis_pairs_lists),
+        len(param_shapes_list),
+    } != {len(result)}:
+        raise ValueError(
+            f"Number of circuit metadata items ({len(circuits_metadata)}), "
+            f"observables ({len(observables_lists)}), "
+            f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
+            f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
+        )
+
+    # Build EstimatorPubResult for each pub
+    pub_results = []
+    for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
+    ):
+        # Reconstruct observables and measure_bases
+        observables = ObservablesArray(observables_label)
+        param_shape = tuple(param_shape)
+
+        # Calculate exp vals and place them in a databin
+        exp_vals, stds, ensemble_stds = process_expectation_values(
+            item_result, observables, param_shape, param_basis_pairs
+        )
+        data_bin = DataBin(evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds)
+
+        # Get circuit metadata for this pub if available
+        pub_metadata = {}
+        if (circuit_meta := circuits_metadata[idx]) is not None:
+            pub_metadata["circuit_metadata"] = circuit_meta
+
+        pub_result = EstimatorPubResult(data=data_bin, metadata=pub_metadata)
+        pub_results.append(pub_result)
+
+    return PrimitiveResult(pub_results, metadata=result.metadata or {})
+
+
+def process_expectation_values(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+    """Process expectation values for a single item result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+
+    Raises:
+        ValueError: If ``item_result`` has no ``'_meas'`` key.
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    try:
+        data = item_result["_meas"]
+    except KeyError:
+        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
+
+    if data.ndim != 4:
+        # Shape: (num_randomizations, num_configs, shots, num_bits)
+        # where num_configs is the total number of (param_index, basis) pairs
+        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
+
+    # Get number of randomizations and shots per randomization
+    num_randomizations = data.shape[0]
+    shots_per_randomization = data.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
+
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
+    # This allows us to find all available measurement bases for a given parameter
+    config_lookup = defaultdict(list)
+    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
+        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
+
+    try:
+        output_shape = np.broadcast_shapes(param_shape, observables.shape)
+    except ValueError:
+        raise ValueError(
+            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
+            f"{observables.shape}"
+        )
+
+    # Compute expectation values for all observables
+    exp_vals = np.empty(output_shape, dtype=float)
+    stds = np.empty(output_shape, dtype=float)
+    ensemble_stds = np.empty(output_shape, dtype=float)
+
+    # Loop over the broadcast output shape
+    for bcast_index in np.ndindex(output_shape):
+        # Unbroadcast to get the actual parameter and observable indices
+        param_index = unbroadcast_index(bcast_index, param_shape)
+        obs_index = unbroadcast_index(bcast_index, observables.shape)
+
+        # Get the observable for this index
+        observable = observables[obs_index]
+
+        # Get the available (measurement_basis, config_idx) pairs for this parameter index
+        try:
+            param_basis_list = config_lookup[param_index]  # type: ignore[index]
+        except KeyError:
+            raise ValueError(
+                f"No measurement basis configurations found for parameter index {param_index}"
+            )
+
+        exp_val = 0.0
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
+        for observable_term, coeff in observable.items():
+            # Find which basis can measure this term
+            pauli_basis = Pauli(get_pauli_basis(observable_term))
+
+            # Use identify_measure_basis to find the configuration index directly
+            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
+
+            # Get measurement data for this configuration
+            # Shape: (num_randomizations, shots_per_randomization, num_qubits)
+            datum = data[:, config_idx, :, :]
+            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                observable_term, datum
+            )
+
+            # Accumulate with coefficient
+            exp_val += coeff * term_exp_val
+            ensemble_variance += (coeff**2) * term_ensemble_variance
+            twirl_variance += (coeff**2) * term_twirl_variance
+
+        exp_vals[bcast_index] = exp_val
+        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
+        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
+
+    return exp_vals, stds, ensemble_stds

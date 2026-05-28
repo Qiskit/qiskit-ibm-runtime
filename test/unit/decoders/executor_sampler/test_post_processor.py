@@ -17,7 +17,6 @@ from dataclasses import asdict
 
 import numpy as np
 from ddt import data, ddt
-
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.decoders.executor_sampler.converters import (
@@ -28,9 +27,9 @@ from qiskit_ibm_runtime.decoders.executor_sampler.post_processor_v0_1 import (
 )
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.results.quantum_program import (
-    QuantumProgramResult,
-    QuantumProgramItemResult,
     Metadata,
+    QuantumProgramItemResult,
+    QuantumProgramResult,
 )
 
 
@@ -50,7 +49,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         )
 
         item = QuantumProgramItemResult({"c1": meas_data_c1, "c2": meas_data_c2})
-        pub_result = quantum_program_item_result_to_sampler_pub_result(item)
+        pub_result = quantum_program_item_result_to_sampler_pub_result(item, 0)
 
         # Verify both registers are present
         self.assertIn("c1", pub_result.data)
@@ -65,7 +64,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         """Test that circuit metadata is attached correctly to the result."""
         item = QuantumProgramItemResult({"c": np.array([[5]], dtype=np.uint8)})
         result = quantum_program_item_result_to_sampler_pub_result(
-            item, "kerneled", circuit_metadata
+            item, 0, "kerneled", circuit_metadata
         )
 
         # Verify metadata is present
@@ -79,7 +78,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         item = QuantumProgramItemResult(
             {"meas": np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)}
         )
-        result = quantum_program_item_result_to_sampler_pub_result(item)
+        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
 
         bit_array = result.data.meas
 
@@ -108,7 +107,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         register_name_with_suffix = f"meas{suffix}"
 
         item = QuantumProgramItemResult({register_name_with_suffix: meas_data})
-        result = quantum_program_item_result_to_sampler_pub_result(item, meas_type=meas_type)
+        result = quantum_program_item_result_to_sampler_pub_result(item, 0, meas_type=meas_type)
 
         # Verify suffix was removed and data is accessible without suffix
         self.assertIn("meas", result.data)
