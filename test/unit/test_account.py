@@ -903,7 +903,9 @@ class TestEnableAccount(IBMTestCase):
 
     def test_instance_auto_flag_set(self):
         """instance='auto' sets _instance_auto and leaves account.instance as None."""
-        service = FakeRuntimeService(channel="ibm_quantum_platform", token="my_token", instance="auto")
+        service = FakeRuntimeService(
+            channel="ibm_quantum_platform", token="my_token", instance="auto"
+        )
         self.assertTrue(service._instance_auto)
         self.assertIsNone(service._account.instance)
 
