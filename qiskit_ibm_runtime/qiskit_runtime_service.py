@@ -31,7 +31,6 @@ from .utils import is_crn
 from .utils.backend_decoder import configuration_from_server_data
 
 from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
-from .api.clients import VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError
@@ -480,19 +479,6 @@ class QiskitRuntimeService:
             raise IBMInputValueError(
                 f"The instance specified ({instance}) is not a valid instance name."
             )
-
-    @staticmethod
-    def _check_api_version(params: ClientParameters) -> dict[str, bool | str]:
-        """Check the version of the remote server in a set of client parameters for all channels.
-
-        Args:
-            params: Parameters used for server connection.
-
-        Returns:
-            A dictionary with version information.
-        """
-        version_finder = VersionClient(url=params.url, **params.connection_parameters())
-        return version_finder.version()
 
     def _get_api_client(
         self,
