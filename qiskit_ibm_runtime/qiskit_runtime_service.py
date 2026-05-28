@@ -147,6 +147,10 @@ class QiskitRuntimeService:
             Name (CRN) or the service name. If set, it will define an instance for
             service instantiation, if not set, the service will fetch all instances accessible
             within the account following the specified filtering criteria.
+            Pass ``"auto"`` to explicitly request auto-selection without triggering the
+            "instance not set" warning. This value can also be saved to the account file
+            via :meth:`.save_account` so it takes effect automatically on every
+            instantiation.
         proxies: Proxy configuration. Supported optional keys are ``urls`` (a
             dictionary mapping protocol or protocol and host to the URL of the proxy, documented
             at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
@@ -208,6 +212,9 @@ class QiskitRuntimeService:
         super().__init__()
         self._all_instances: list[dict[str, Any]] = []
         self._saved_instances: list[str] = []
+        self._instance_auto = instance == "auto"
+        if self._instance_auto:
+            instance = None
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -218,6 +225,9 @@ class QiskitRuntimeService:
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
+        if self._account.instance == "auto":
+            self._account.instance = None
+            self._instance_auto = True
 
         if private_endpoint is not None:
             self._account.private_endpoint = private_endpoint
@@ -273,21 +283,24 @@ class QiskitRuntimeService:
 
             filters = f"(tags: {tags_str}, region: {region_str}{plans_preference_str}"
 
-            logger.warning(
-                "Instance was not set at service instantiation. %s"
-                "Based on the following filters: %s, "
-                "the available account instances are: %s. "
-                "If you need a specific instance set it explicitly either by "
-                "using a saved account with a saved default instance or passing it "
-                "in directly to QiskitRuntimeService().",
-                (
-                    ""
-                    if self._plans_preference
-                    else "Free and trial plan instances will be prioritized. "
-                ),
-                filters,
-                ", ".join(instance_names),
-            )
+            if not self._instance_auto:
+                logger.warning(
+                    "Instance was not set at service instantiation. %s"
+                    "Based on the following filters: %s, "
+                    "the available account instances are: %s. "
+                    "If you need a specific instance set it explicitly either by "
+                    "using a saved account with a saved default instance or passing it "
+                    "in directly to QiskitRuntimeService(). "
+                    "Alternatively, pass instance='auto' or save it to your account for "
+                    "auto-selection without warning.",
+                    (
+                        ""
+                        if self._plans_preference
+                        else "Free and trial plan instances will be prioritized. "
+                    ),
+                    filters,
+                    ", ".join(instance_names),
+                )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
@@ -453,6 +466,7 @@ class QiskitRuntimeService:
         if (
             account.channel in ["ibm_cloud", "ibm_quantum_platform"]
             and account.instance
+            and account.instance != "auto"
             and not is_crn(account.instance)
         ):
             account.instance = self._get_crn_from_instance_name(
@@ -589,7 +603,7 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
-            else:
+            elif not self._instance_auto:
                 for inst_details in self._backend_instance_groups:
                     if inst == inst_details["crn"]:
                         logger.warning(
@@ -600,7 +614,7 @@ class QiskitRuntimeService:
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
-                if name:
+                if name and not self._instance_auto:
                     for inst_details in self._backend_instance_groups:
                         if inst == inst_details["crn"]:
                             logger.warning(
@@ -819,6 +833,8 @@ class QiskitRuntimeService:
             instance: This is an optional parameter to specify the CRN  or service name.
                 If set, it will define a default instance for service instantiation,
                 if not set, the service will fetch all instances accessible within the account.
+                Set to ``"auto"`` to explicitly save auto-selection as the preference, which
+                suppresses the "instance not set" warning on subsequent instantiations.
             channel: Channel type. ``ibm_cloud`` or ``ibm_quantum_platform``.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.

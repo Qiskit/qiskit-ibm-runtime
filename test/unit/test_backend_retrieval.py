@@ -13,14 +13,22 @@
 """Backends Filtering Test."""
 
 import uuid
+from unittest import mock
+
 from ddt import ddt, named_data
 
+from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_cloud_fake
+
+
+def _make_auto_service():
+    """Return a FakeRuntimeService instantiated with instance='auto'."""
+    return FakeRuntimeService(channel="ibm_quantum_platform", token="my_token", instance="auto")
 
 
 class TestBackendFilters(IBMTestCase):
@@ -36,6 +44,32 @@ class TestBackendFilters(IBMTestCase):
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             service.backend("common_backend")
         self.assertIn("Using instance", logs.output[0])
+
+    def test_instance_auto_suppresses_backends_loading_warning(self):
+        """instance='auto' must suppress 'Loading instance' warnings in backends()."""
+        # Create service outside the log capture so init's "Loading account" doesn't interfere.
+        service = _make_auto_service()
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.backends()
+
+    def test_instance_auto_suppresses_backend_using_warning(self):
+        """instance='auto' must suppress 'Using instance' warning when looking up by name."""
+        service = _make_auto_service()
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
+
+    def test_saved_account_instance_auto_suppresses_warnings(self):
+        """A saved account with instance='auto' must suppress backend instance warnings."""
+        saved_account = Account.create_account(
+            channel="ibm_quantum_platform", token="my_token", instance="auto"
+        )
+        with mock.patch.object(FakeRuntimeService, "_discover_account", return_value=saved_account):
+            service = FakeRuntimeService(channel="ibm_quantum_platform", token="my_token")
+
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.backends()
+        with self.assertNoLogs("qiskit_ibm_runtime", level="WARNING"):
+            service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
 
     @run_cloud_fake
     def test_no_filter(self, service):
