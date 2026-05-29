@@ -919,16 +919,10 @@ class QiskitRuntimeService:
             name: Name of the backend.
             instance: Specify the IBM Cloud account CRN.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. Currently this feature cannot be used
-                simultaneously with dynamic circuits, PEC, PEA, or gate
-                twirling.  When this flag is set, control flow instructions are
-                automatically removed from the backend.
-                When you use a dynamic circuits feature (e.g. ``if_else``) in your
-                algorithm, you must disable this flag to create executable ISA circuits.
-                This flag might be modified or removed when our backend
-                supports dynamic circuits and fractional gates simultaneously.
-                If ``None``, then both fractional gates and control flow operations are
-                included in the backends.
+                fractional gates. See
+                `When not to use fractional gates
+                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                for limitations.
             calibration_id: The calibration id used for instantiating the backend.
 
         Returns:
@@ -1280,6 +1274,7 @@ class QiskitRuntimeService:
         min_num_qubits: int | None = None,
         instance: str | None = None,
         filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
+        use_fractional_gates: bool | None = False,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.
@@ -1292,10 +1287,16 @@ class QiskitRuntimeService:
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
 
+            use_fractional_gates: When ``True``, only backends that include
+                fractional gates are considered, and fractional gates are included
+                in the returned backend. See
+                `When not to use fractional gates
+                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                for limitations.
             kwargs: Additional arguments passed to the backend query.
 
         Returns:
-            The backend with the fewest number of pending jobs.
+            The least busy backend with the fewest number of pending jobs.
 
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
@@ -1340,7 +1341,10 @@ class QiskitRuntimeService:
         for back in sorted_backends:
             # We don't know whether or not the backend has a valid config
             try:
-                return self.backend(name=back["name"])
+                backend = self.backend(name=back["name"], use_fractional_gates=use_fractional_gates)
+                if use_fractional_gates and "rzz" not in backend.basis_gates:
+                    continue
+                return backend
             except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")

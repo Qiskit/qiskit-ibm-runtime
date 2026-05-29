@@ -98,13 +98,11 @@ class TestBackendFilters(IBMTestCase):
             self._get_fake_backend_specs(n_qubits=n_qubits, local=True),
         ]
 
-        services = self._get_services(fake_backends)
-        for service in services:
-            with self.subTest(service=service.channel):
-                filtered_backends = service.backends(n_qubits=n_qubits, local=False)
-                self.assertTrue(len(filtered_backends), 1)
-                self.assertEqual(n_qubits, filtered_backends[0].configuration().n_qubits)
-                self.assertFalse(filtered_backends[0].configuration().local)
+        service = self._get_services(fake_backends)
+        filtered_backends = service.backends(n_qubits=n_qubits, local=False)
+        self.assertTrue(len(filtered_backends), 1)
+        self.assertEqual(n_qubits, filtered_backends[0].configuration().n_qubits)
+        self.assertFalse(filtered_backends[0].configuration().local)
 
     def test_filter_status_dict(self):
         """Test filtering by dictionary of mixed status/configuration properties."""
@@ -115,17 +113,15 @@ class TestBackendFilters(IBMTestCase):
             self._get_fake_backend_specs(operational=False, simulator=False),
         ]
 
-        services = self._get_services(fake_backends)
-        for service in services:
-            with self.subTest(service=service.channel):
-                filtered_backends = service.backends(
-                    operational=True,  # from status
-                    simulator=True,  # from configuration
-                )
-                self.assertTrue(len(filtered_backends), 2)
-                for backend in filtered_backends:
-                    self.assertTrue(backend.status().operational)
-                    self.assertTrue(backend.configuration().simulator)
+        service = self._get_services(fake_backends)
+        filtered_backends = service.backends(
+            operational=True,  # from status
+            simulator=True,  # from configuration
+        )
+        self.assertTrue(len(filtered_backends), 2)
+        for backend in filtered_backends:
+            self.assertTrue(backend.status().operational)
+            self.assertTrue(backend.configuration().simulator)
 
     def test_filter_config_callable(self):
         """Test filtering by lambda function on configuration properties."""
@@ -136,15 +132,88 @@ class TestBackendFilters(IBMTestCase):
             self._get_fake_backend_specs(n_qubits=n_qubits - 1),
         ]
 
-        services = self._get_services(fake_backends)
-        for service in services:
-            with self.subTest(service=service.channel):
-                filtered_backends = service.backends(
-                    filters=lambda x: (x.configuration().n_qubits >= 5)
-                )
-                self.assertTrue(len(filtered_backends), 2)
-                for backend in filtered_backends:
-                    self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
+        service = self._get_services(fake_backends)
+        filtered_backends = service.backends(
+            filters=lambda x: (x.configuration().n_qubits >= 5)
+        )
+        self.assertTrue(len(filtered_backends), 2)
+        for backend in filtered_backends:
+            self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
+
+    def test_least_busy_use_fractional_gates_skips_backend_without_rzz(self):
+        """When use_fractional_gates=True, least_busy skips backends missing rzz."""
+        backends_list = [
+            {
+                "name": "fake_torino",
+                "status": {"name": "online"},
+                "queue_length": 5,
+            },
+            {
+                "name": "fake_fractional",
+                "status": {"name": "online"},
+                "queue_length": 10,
+            },
+        ]
+        fake_backends = [
+            FakeApiBackendSpecs(backend_name="FakeTorino"),
+            FakeApiBackendSpecs(backend_name="FakeFractionalBackend"),
+        ]
+
+        service = self._get_services(fake_backends)
+        service._backends_list = backends_list
+        backend = service.least_busy(use_fractional_gates=True)
+        self.assertEqual(backend.name, "fake_fractional")
+        self.assertIn("rzz", backend.basis_gates)
+
+    def test_least_busy_use_fractional_gates_no_qualifying_backend(self):
+        """When use_fractional_gates=True and no backend has rzz, raise QiskitBackendNotFoundError."""
+        from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
+        backends_list = [
+            {
+                "name": "fake_torino",
+                "status": {"name": "online"},
+                "queue_length": 5,
+            },
+            {
+                "name": "fake_lima",
+                "status": {"name": "online"},
+                "queue_length": 10,
+            },
+        ]
+        fake_backends = [
+            FakeApiBackendSpecs(backend_name="FakeTorino"),
+            FakeApiBackendSpecs(backend_name="FakeLimaV2"),
+        ]
+
+        service = self._get_services(fake_backends)
+        service._backends_list = backends_list
+        with self.assertRaises(QiskitBackendNotFoundError):
+            service.least_busy(use_fractional_gates=True)
+
+    def test_least_busy_use_fractional_gates_false_ignores_rzz(self):
+        """When use_fractional_gates=False (default), least_busy returns the least busy backend."""
+        backends_list = [
+            {
+                "name": "fake_torino",
+                "status": {"name": "online"},
+                "queue_length": 5,
+            },
+            {
+                "name": "fake_fractional",
+                "status": {"name": "online"},
+                "queue_length": 10,
+            },
+        ]
+        fake_backends = [
+            FakeApiBackendSpecs(backend_name="FakeTorino"),
+            FakeApiBackendSpecs(backend_name="FakeFractionalBackend"),
+        ]
+
+        service = self._get_services(fake_backends)
+        service._backends_list = backends_list
+        backend = service.least_busy(use_fractional_gates=False)
+        self.assertEqual(backend.name, "fake_torino")
 
     def test_filter_least_busy(self):
         """Test filtering by least busy function."""
@@ -178,12 +247,10 @@ class TestBackendFilters(IBMTestCase):
             self._get_fake_backend_specs(**{**default_stat, "backend_name": "test_backend4"}),
         ]
 
-        services = self._get_services(fake_backends)
-        for service in services:
-            with self.subTest(service=service.channel):
-                service._backends_list = backends_list
-                backend = service.least_busy()
-                self.assertEqual(backend.name, "test_backend1")
+        service = self._get_services(fake_backends)
+        service._backends_list = backends_list
+        backend = service.least_busy()
+        self.assertEqual(backend.name, "test_backend1")
 
     def test_filter_min_num_qubits(self):
         """Test filtering by minimum number of qubits."""
@@ -194,13 +261,11 @@ class TestBackendFilters(IBMTestCase):
             self._get_fake_backend_specs(n_qubits=n_qubits - 1),
         ]
 
-        services = self._get_services(fake_backends)
-        for service in services:
-            with self.subTest(service=service.channel):
-                filtered_backends = service.backends(min_num_qubits=n_qubits)
-                self.assertTrue(len(filtered_backends), 2)
-                for backend in filtered_backends:
-                    self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
+        service = self._get_services(fake_backends)
+        filtered_backends = service.backends(min_num_qubits=n_qubits)
+        self.assertTrue(len(filtered_backends), 2)
+        for backend in filtered_backends:
+            self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
     def _get_fake_backend_specs(self, crns=None, **kwargs):
         """Get the backend specs to pass to the fake client."""
@@ -220,14 +285,13 @@ class TestBackendFilters(IBMTestCase):
         )
 
     def _get_services(self, fake_backend_specs):
-        """Get ibm_cloud services initialized with fake backends."""
-        cloud_service = FakeRuntimeService(
+        """Get an ibm_cloud service initialized with fake backends."""
+        return FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
             backend_specs=fake_backend_specs,
         )
-        return [cloud_service]
 
 
 @ddt
