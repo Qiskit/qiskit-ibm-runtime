@@ -166,7 +166,7 @@ class TestBackendFilters(IBMTestCase):
         self.assertIn("rzz", backend.basis_gates)
 
     def test_least_busy_use_fractional_gates_no_qualifying_backend(self):
-        """When use_fractional_gates=True and no backend has rzz, raise QiskitBackendNotFoundError."""
+        """When use_fractional_gates=True and no backend has rzz, raise an error."""
         from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
         backends_list = [
