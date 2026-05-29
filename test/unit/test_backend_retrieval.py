@@ -133,9 +133,7 @@ class TestBackendFilters(IBMTestCase):
         ]
 
         service = self._get_service(fake_backends)
-        filtered_backends = service.backends(
-            filters=lambda x: (x.configuration().n_qubits >= 5)
-        )
+        filtered_backends = service.backends(filters=lambda x: (x.configuration().n_qubits >= 5))
         self.assertTrue(len(filtered_backends), 2)
         for backend in filtered_backends:
             self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
