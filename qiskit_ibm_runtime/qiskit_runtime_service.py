@@ -1296,7 +1296,7 @@ class QiskitRuntimeService:
             kwargs: Additional arguments passed to the backend query.
 
         Returns:
-            The least busy backend with the fewest number of pending jobs.
+            The backend with the fewest number of pending jobs.
 
         Raises:
             QiskitBackendNotFoundError: If no backend matches the criteria.
@@ -1341,10 +1341,7 @@ class QiskitRuntimeService:
         for back in sorted_backends:
             # We don't know whether or not the backend has a valid config
             try:
-                backend = self.backend(name=back["name"], use_fractional_gates=use_fractional_gates)
-                if use_fractional_gates and "rzz" not in backend.basis_gates:
-                    continue
-                return backend
+                return self.backend(name=back["name"], use_fractional_gates=use_fractional_gates)
             except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
