@@ -23,48 +23,47 @@ import numpy as np
 from qiskit.quantum_info import Pauli, PauliLindbladMap, QubitSparsePauli
 
 
-def calculate_trex_noise_model(calibration_result: QuantumProgramItemResult) -> PauliLindbladMap:
+def calculate_trex_noise_model(calibration_result: QuantumProgramItemResult) -> np.ndarray:
     """Calculate measurement noise model from TREX calibration circuit results.
 
     Args:
         calibration_result: QuantumProgramItemResult of the TREX calibration circuit.
 
     Returns:
-        PauliLindbladMap containing measurement noise model.
+        TREX flipped calibration data.
     """
     if "_trex_cal" not in calibration_result:
         raise ValueError("Dedicated TREX calibration circuit is missing from the results.")
 
     trex_noise_calibration_data = calibration_result["_trex_cal"]
     trex_calibration_measurement_flips = calibration_result["measurement_flips._trex_cal"]
-    trex_noise_calibration_data_flipped = np.logical_xor(
-        trex_noise_calibration_data, trex_calibration_measurement_flips
-    )
-    noise_list = []
-    num_qubits = trex_noise_calibration_data.shape[-1]
-    for qubit_index in range(num_qubits):
-        # the shape of the calibration data is (randomizations, shots, measured_qubit)
-        qubit_data = trex_noise_calibration_data_flipped[:, :, qubit_index]
-        excited_state_count = np.sum(qubit_data)
-        total_shots = len(qubit_data.flatten())
-        flip_rate = excited_state_count / total_shots
-        noise_list.append(("X", [qubit_index], flip_rate))
-    readout_noise = PauliLindbladMap.from_sparse_list(noise_list, num_qubits=num_qubits)
-    return readout_noise
+    return np.logical_xor(trex_noise_calibration_data, trex_calibration_measurement_flips)
 
 
-def calculate_trex_factor(noise_model: PauliLindbladMap, observable_term: Pauli | str) -> float:
+def calculate_trex_factor(
+    noise_data: PauliLindbladMap | np.ndarray, observable_term: Pauli | str
+) -> float:
     """Calculate TREX factor relevant for a given observable term based on noise model.
 
     Args:
-        noise_model: PauliLindbladMap containing measurement noise model.
+        noise_data: PauliLindbladMap containing measurement noise model or a result of TREX
+            calibration execution.
         observable_term: observable term to calculate TREX factor for.
 
     Returns:
         TREX factor for the observable term.
     """
     sparse_pauli = QubitSparsePauli(observable_term)
-    z_sparse_pauli = QubitSparsePauli(
-        ("Z" * len(sparse_pauli.indices), sparse_pauli.indices), num_qubits=sparse_pauli.num_qubits
-    )
-    return 1 / noise_model.pauli_fidelity(z_sparse_pauli)
+    if isinstance(noise_data, PauliLindbladMap):
+        z_sparse_pauli = QubitSparsePauli(
+            ("Z" * len(sparse_pauli.indices), sparse_pauli.indices),
+            num_qubits=sparse_pauli.num_qubits,
+        )
+        return 1 / noise_data.pauli_fidelity(z_sparse_pauli)
+    # The input is a result of TREX calibration execution
+    # treat every non identity Pauli as Z
+    evals = np.prod(1 - 2 * noise_data[..., sparse_pauli.indices], axis=-1)
+    shots = noise_data.shape[0] * noise_data.shape[-2]  # randomizations * shots_per_randomizations
+
+    # Compute trex factor
+    return 1 / (np.sum(evals) / shots)

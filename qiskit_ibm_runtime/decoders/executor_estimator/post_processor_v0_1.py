@@ -75,12 +75,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
-    readout_noise = None
+    readout_noise_data = None
     if measure_mitigation == "True":
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:
-            readout_noise = calculate_trex_noise_model(calibration_result)
+            readout_noise_data = calculate_trex_noise_model(calibration_result)
         except ValueError as e:
             raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
 
@@ -117,7 +117,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and place them in a databin
         exp_vals, stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise
+            item_result, observables, param_shape, param_basis_pairs, readout_noise_data
         )
         data_bin = DataBin(evs=exp_vals, stds=stds)
 
@@ -137,7 +137,7 @@ def process_expectation_values(
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_model: PauliLindbladMap | None,
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item result.
 
@@ -146,7 +146,8 @@ def process_expectation_values(
         observables: The observables to calculate expectation values for.
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_model: Measurement noise model for TREX mitigation.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
         A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
@@ -225,11 +226,13 @@ def process_expectation_values(
             term_exp_val, term_variance = compute_exp_val(observable_term, datum)
 
             # Calculate scale factor in case TREX mitigation is used
+            print(measure_noise_data)
             term_scale_factor = (
-                calculate_trex_factor(measure_noise_model, observable_term)
-                if measure_noise_model
+                calculate_trex_factor(measure_noise_data, observable_term)
+                if measure_noise_data is not None
                 else 1
             )
+            print(term_scale_factor)
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor

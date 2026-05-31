@@ -140,53 +140,14 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         self.assertIn("circuit_metadata", pub_result.metadata)
         self.assertEqual(pub_result.metadata["circuit_metadata"], circuit_metadata)
 
-    def test_post_processor_with_measure_mitigation(self):
-        """Test post-processor handles result when measure mitigation is enabled."""
-        meas_data = np.array([[[[False, False]] * 10]])
-        trex_cal_data = np.zeros((2, 10, 2), dtype=bool)
-        trex_cal_flips = np.zeros((2, 10, 2), dtype=bool)
-
-        result_data = [
-            QuantumProgramItemResult({"_meas": meas_data}),
-            QuantumProgramItemResult(
-                {
-                    "_trex_cal": trex_cal_data,
-                    "measurement_flips._trex_cal": trex_cal_flips,
-                }
-            ),
-        ]
-        # Passthrough data should only contain metadata for actual pubs, not calibration circuit
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-                "circuits_metadata": [None],
-                "observables": [[{"ZZ": 1.0}]],
-                "measure_bases": [["ZZ"]],
-                "param_basis_pairs": [[([], "ZZ")]],
-                "param_shapes": [[]],
-                "measure_mitigation": "True",
-            },
-        }
-        result = QuantumProgramResult(
-            data=result_data, metadata=None, passthrough_data=passthrough_data
-        )
-        result._semantic_role = "estimator_v2"
-
-        primitive_result = estimator_v2_post_processor_v0_1(result)
-
-        self.assertEqual(len(primitive_result), 1)
-        self.assertAlmostEqual(primitive_result[0].data.evs[0], 1.0)
-        self.assertAlmostEqual(primitive_result[0].data.stds[0], 0.0)
-
-    def test_measure_mitigation_changes_expectation_values(self):
-        """Test that measure_mitigation changes expectation values compared to no mitigation.
+    def test_measure_mitigation_fix_expectation_values(self):
+        """Test that measure_mitigation fix expectation values compared to no mitigation.
 
         This test creates two scenarios:
         1. Without measure_mitigation: raw expectation values from noisy measurements
         2. With measure_mitigation: corrected expectation values using TREX calibration
 
-        The test verifies that the expectation values differ between the two cases,
-        demonstrating that the mitigation is being applied.
+        The test verifies that the expectation values are fixed after mitigation is being applied.
         """
         # Create measurement data with simulated readout errors
         # For ZZ observable: 00 -> +1, 01 -> -1, 10 -> -1, 11 -> +1
@@ -222,15 +183,16 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         num_cal_randomizations = 2
         num_cal_shots = 100
         trex_cal_data = np.zeros((num_cal_randomizations, num_cal_shots, 2), dtype=bool)
-        trex_cal_flips = np.zeros((num_cal_randomizations, num_cal_shots, 2), dtype=bool)
+        trex_cal_flips = np.random.randint(0, 2, size=(num_cal_randomizations, 1, 2), dtype=bool)
 
-        # Simulate 10% flip rate on each qubit
-        # First qubit: flip 10 shots per randomization
-        trex_cal_data[0, :10, 0] = True
-        trex_cal_data[1, :10, 0] = True
-        # Second qubit: flip 10 shots per randomization
-        trex_cal_data[0, :10, 1] = True
-        trex_cal_data[1, :10, 1] = True
+        # Simulate 20% flip rate on each qubit
+        # First qubit: flip 20 shots per randomization
+        trex_cal_data[0, :20, 0] = True
+        trex_cal_data[1, 60:80, 0] = True
+        # Second qubit: flip 20 shots per randomization with uncorrelated overlap with qubit1
+        trex_cal_data[0, 16:36, 1] = True
+        trex_cal_data[1, 76:96, 1] = True
+        trex_cal_data = np.logical_xor(trex_cal_data, trex_cal_flips)
 
         result_data_with_mitigation = [
             QuantumProgramItemResult({"_meas": meas_data}),
@@ -264,36 +226,8 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
         primitive_result_with_mitigation = estimator_v2_post_processor_v0_1(result_with_mitigation)
         ev_with_mitigation = primitive_result_with_mitigation[0].data.evs[0]
-
-        # Verify that mitigation changes the expectation value
-        self.assertNotAlmostEqual(
-            ev_with_mitigation,
-            ev_no_mitigation,
-            places=2,
-            msg="Expectation values should differ with mitigation",
-        )
-
-        # Verify the mitigated value is larger (closer to ideal) than the raw value
-        # Since we have readout errors that reduce the expectation value from ideal (1.0),
-        # TREX mitigation should increase it back towards 1.0
-        self.assertGreater(
-            ev_with_mitigation,
-            ev_no_mitigation,
-            msg=f"Mitigated value ({ev_with_mitigation}) should be greater than "
-            f"raw value ({ev_no_mitigation})",
-        )
-
-        # Verify the mitigated value is closer to the ideal value (1.0) than the raw value
-        ideal_value = 1.0
-        error_without_mitigation = abs(ideal_value - ev_no_mitigation)
-        error_with_mitigation = abs(ideal_value - ev_with_mitigation)
-        self.assertLess(
-            error_with_mitigation,
-            error_without_mitigation,
-            msg=f"Mitigated value should be closer to ideal. "
-            f"Error without mitigation: {error_without_mitigation}, "
-            f"Error with mitigation: {error_with_mitigation}",
-        )
+        # Verify that after mitigation the expectation value is back to 1
+        self.assertAlmostEqual(ev_with_mitigation, 1.0, places=5)
 
         # Verify that only one pub result is returned (calibration circuit excluded)
         self.assertEqual(
@@ -332,7 +266,7 @@ class TestProcessExpectationValues(unittest.TestCase):
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
                 param_basis_pairs=[],
-                measure_noise_model=None,
+                measure_noise_data=None,
             )
 
     def test_ndim_raises(self):
@@ -345,7 +279,7 @@ class TestProcessExpectationValues(unittest.TestCase):
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
                 param_basis_pairs=[],
-                measure_noise_model=None,
+                measure_noise_data=None,
             )
 
     def test_non_broadcastable_shapes_raises(self):
@@ -358,7 +292,7 @@ class TestProcessExpectationValues(unittest.TestCase):
                 observables=ObservablesArray({"ZZ": 1, "XX": 19}).reshape(1, 2),
                 param_shape=(3, 10),
                 param_basis_pairs=[],
-                measure_noise_model=None,
+                measure_noise_data=None,
             )
 
     def test_evs_1d_obs_no_params(self):
@@ -374,7 +308,7 @@ class TestProcessExpectationValues(unittest.TestCase):
             observables=ObservablesArray({"ZZ": coeff}),
             param_shape=(),
             param_basis_pairs=[((), "ZZ")],
-            measure_noise_model=None,
+            measure_noise_data=None,
         )
 
         # Verify result: coeff * (8 * (+1) + 2 * (-1)) = coeff * 6, average =  coeff * 6 / 10
@@ -392,7 +326,7 @@ class TestProcessExpectationValues(unittest.TestCase):
             observables=observables,
             param_shape=(),
             param_basis_pairs=[([], "ZZ"), ([], "XX")],
-            measure_noise_model=None,
+            measure_noise_data=None,
         )
 
         self.assertTrue(all(evs == np.ones(observables.shape, dtype=bool)))
@@ -419,7 +353,7 @@ class TestProcessExpectationValues(unittest.TestCase):
             observables=observables,
             param_shape=param_shape,
             param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
-            measure_noise_model=None,
+            measure_noise_data=None,
         )
         self.assertTrue(np.all(evs == expected_evs), msg=evs)
 
@@ -449,7 +383,7 @@ class TestProcessExpectationValues(unittest.TestCase):
             observables=observables,
             param_shape=param_shape,
             param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
-            measure_noise_model=None,
+            measure_noise_data=None,
         )
         self.assertTrue(np.all(evs == expected_evs), msg=evs)
 
@@ -479,7 +413,7 @@ class TestProcessExpectationValues(unittest.TestCase):
             observables=observables,
             param_shape=param_shape,
             param_basis_pairs=param_basis_pairs,
-            measure_noise_model=None,
+            measure_noise_data=None,
         )
 
         expected_shape = np.broadcast_shapes(obs_shape, param_shape)

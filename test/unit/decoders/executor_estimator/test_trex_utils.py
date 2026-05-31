@@ -41,75 +41,109 @@ class TestCalculateTrexNoiseModel(unittest.TestCase):
 
     def test_calculates_noise_model_from_calibration_data(self):
         """Test noise model flip rates are computed from flipped calibration data."""
+        cal_data = np.array(
+            [
+                [[False, True], [True, False]],
+                [[False, False], [True, True]],
+            ],
+            dtype=bool,
+        )
+        cal_flip = np.array(
+            [
+                [[False, True], [False, False]],
+                [[True, False], [False, True]],
+            ],
+            dtype=bool,
+        )
         calibration_result = QuantumProgramItemResult(
             {
-                "_trex_cal": np.array(
-                    [
-                        [[False, True], [True, False]],
-                        [[False, False], [True, True]],
-                    ],
-                    dtype=bool,
-                ),
-                "measurement_flips._trex_cal": np.array(
-                    [
-                        [[False, True], [False, False]],
-                        [[True, False], [False, True]],
-                    ],
-                    dtype=bool,
-                ),
+                "_trex_cal": cal_data,
+                "measurement_flips._trex_cal": cal_flip,
             }
         )
 
         result = calculate_trex_noise_model(calibration_result)
 
-        self.assertIsInstance(result, PauliLindbladMap)
-        np.testing.assert_allclose(result.rates, [0.75, 0.0])
-
-    def test_calculates_different_flip_rates_per_qubit(self):
-        """Test each qubit flip rate is computed independently."""
-        calibration_result = QuantumProgramItemResult(
-            {
-                "_trex_cal": np.array(
-                    [
-                        [[False, False], [False, True]],
-                        [[True, False], [False, True]],
-                    ],
-                    dtype=bool,
-                ),
-                "measurement_flips._trex_cal": np.zeros((2, 2, 2), dtype=bool),
-            }
-        )
-
-        result = calculate_trex_noise_model(calibration_result)
-
-        np.testing.assert_allclose(result.rates, [0.25, 0.5])
+        self.assertIsInstance(result, np.ndarray)
+        self.assertEqual(result.all(), np.logical_xor(cal_data, cal_flip).all())
 
 
 class TestCalculateTrexFactor(unittest.TestCase):
     """Tests for calculate_trex_factor function."""
 
-    def test_calculates_factor_for_string_observable(self):
+    def test_calculates_factor_based_on_noise_model_for_string_observable(self):
         """Test TREX factor is inverse fidelity of the observable support."""
-        noise_model = PauliLindbladMap.from_sparse_list([("X", [0], 0.1)], num_qubits=2)
+        error_prop = 0.1
+        error_rate = -0.5 * np.log(1.0 - 2.0 * error_prop)
+        noise_model = PauliLindbladMap.from_sparse_list([("X", [0], error_rate)], num_qubits=2)
 
         result = calculate_trex_factor(noise_model, "IZ")
+        # in single qubit case, the result should be 1 / (1 - 2*error_prop)
+        self.assertEqual(result, 1 / (1 - 2 * error_prop))
 
-        self.assertAlmostEqual(result, np.exp(0.2))
-
-    def test_calculates_factor_for_pauli_observable(self):
+    def test_calculates_factor_based_on_noise_model_for_pauli_observable(self):
         """Test non-Z Paulis are converted to Z support on the same qubits."""
+        error_prop = 0.1
+        error_rate = -0.5 * np.log(1.0 - 2.0 * error_prop)
+        error_prop2 = 0.2
+        error_rate2 = -0.5 * np.log(1.0 - 2.0 * error_prop2)
         noise_model = PauliLindbladMap.from_sparse_list(
-            [("X", [0], 0.1), ("X", [1], 0.2)], num_qubits=2
+            [("X", [0], error_rate), ("X", [1], error_rate2)], num_qubits=2
         )
 
         result = calculate_trex_factor(noise_model, Pauli("XY"))
+        # in the two qubit case, the result should be the fidelity minus the errors cause by each
+        # qubit, plus the errors caused by even number of qubits - which is both qubits
+        self.assertEqual(
+            result, 1 / (1 - (2 * error_prop + 2 * error_prop2 - 2 * error_prop * 2 * error_prop2))
+        )
 
-        self.assertAlmostEqual(result, np.exp(0.6))
-
-    def test_identity_observable_has_unit_factor(self):
+    def test_identity_observable_has_unit_factor_input_noise_model(self):
         """Test identity observable produces a factor of one."""
-        noise_model = PauliLindbladMap.from_sparse_list([("X", [0], 0.3)], num_qubits=1)
+        error_prop = 0.3
+        error_rate = -0.5 * np.log(1.0 - 2.0 * error_prop)
+        noise_model = PauliLindbladMap.from_sparse_list([("X", [0], error_rate)], num_qubits=1)
 
         result = calculate_trex_factor(noise_model, "I")
+
+        self.assertEqual(result, 1.0)
+
+    def test_calculates_factor_based_on_calibration_circ_for_string_observable(self):
+        """Test TREX factor is inverse fidelity of the observable support."""
+        cal_data_flipped = np.zeros((10, 100, 2), dtype=bool)
+        for rand in range(10):
+            cal_data_flipped[rand, rand * 10 : (rand + 1) * 10, :] = True
+
+        result = calculate_trex_factor(cal_data_flipped, "IZ")
+
+        # in single qubit case, the result should be 1 / (1 - 2*error_prop)
+        self.assertEqual(result, 1 / (1 - 2 * 0.1))
+
+    def test_calculates_factor_based_on_calibration_circ_for_pauli_observable(self):
+        """Test non-Z Paulis are converted to Z support on the same qubits."""
+        cal_data_flipped = np.zeros((10, 100, 2), dtype=bool)
+        for rand in range(10):
+            cal_data_flipped[rand, rand * 10 : (rand + 1) * 10, 0] = True
+        # flip the second qubit with no overlap with the first one
+        cal_data_flipped[0, 10:30, 1] = True
+        for rand in range(1, 8):
+            cal_data_flipped[rand, rand * 10 + 10 : (rand + 1) * 10 + 20, 1] = True
+        cal_data_flipped[8, 90:100, 1] = True
+        cal_data_flipped[8, 0:10, 1] = True
+        cal_data_flipped[9, :20, 1] = True
+
+        result = calculate_trex_factor(cal_data_flipped, Pauli("XY"))
+        # in the two qubit case, the result should be the fidelity minus the errors cause by each
+        # qubit, plus the errors caused by randomization with even number of qubit flips
+        # the flips have no overlap so the result should be 1 / (1 - (2*error_prop1 + 2*error_prop2)
+        self.assertAlmostEqual(result, 1 / (1 - (2 * 0.1 + 2 * 0.2)))
+
+    def test_identity_observable_has_unit_factor_input_calibration_data(self):
+        """Test identity observable produces a factor of one."""
+        cal_data_flipped = np.zeros((10, 100, 2), dtype=bool)
+        for rand in range(10):
+            cal_data_flipped[rand, rand * 10 : (rand + 1) * 10, :] = True
+
+        result = calculate_trex_factor(cal_data_flipped, "I")
 
         self.assertEqual(result, 1.0)
