@@ -15,5 +15,3 @@
 Each adaptor handles a specific endpoint prefix followed by the base URL. The
 Job adaptor, for example, handles all /Jobs/{job id} endpoints.
 """
-
-from .root import Api
