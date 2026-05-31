@@ -20,8 +20,7 @@ from typing import TYPE_CHECKING
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
-
-from ..utils.default_session import get_cm_session
+from qiskit_ibm_runtime.utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
@@ -53,10 +52,9 @@ class Calibrator:
     _PROGRAM_ID = "calibrator"
     _DECODER = ResultDecoder
 
-
     def __init__(
         self,
-        backend: IBMBackendV2,
+        backend: BackendV2,
     ):
         self._session, self._service, self._backend = get_mode_service_backend(backend)
         if isinstance(self._service, QiskitRuntimeLocalService):
@@ -85,7 +83,7 @@ class Calibrator:
 
         return _run(
             program_id=self._PROGRAM_ID,
-            options={"backend": backend},
+            options={"backend": self._backend},
             inputs={},
             result_decoder=self._DECODER,
         )
