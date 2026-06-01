@@ -12,20 +12,17 @@
 
 """Base class for dummy backends."""
 
-from typing import Any
-import logging
-import warnings
+from __future__ import annotations
+
 import json
+import logging
 import os
+import warnings
+from typing import TYPE_CHECKING, Any
 
-from qiskit import QuantumCircuit
-
-from qiskit.providers import BackendV2, Job
-from qiskit.utils import optionals as _optionals
-from qiskit.transpiler import Target
-from qiskit.providers import Options
-
+from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
+from qiskit.utils import optionals as _optionals
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from qiskit_ibm_runtime.utils.backend_decoder import (
@@ -34,18 +31,25 @@ from qiskit_ibm_runtime.utils.backend_decoder import (
 )
 
 from .. import QiskitRuntimeService
-from ..utils.backend_encoder import BackendEncoder
-from ..utils.backend_decoder import configuration_from_server_data
-
 from ..models import (
-    BackendProperties,
     BackendConfiguration,
+    BackendProperties,
     BackendStatus,
-    QasmBackendConfiguration,
 )
 from ..models.exceptions import (
     BackendPropertyError,
 )
+from ..utils.backend_decoder import configuration_from_server_data
+from ..utils.backend_encoder import BackendEncoder
+
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+    from qiskit.providers import Job, Options
+    from qiskit.transpiler import Target
+
+    from ..models import (
+        QasmBackendConfiguration,
+    )
 
 logger = logging.getLogger(__name__)
 
