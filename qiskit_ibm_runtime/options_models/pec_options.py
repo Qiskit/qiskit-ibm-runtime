@@ -20,6 +20,7 @@ from pydantic.dataclasses import dataclass
 
 from .utils import PRIMITIVES_CONFIG
 
+
 @dataclass(config=PRIMITIVES_CONFIG)
 class PecOptions:
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""

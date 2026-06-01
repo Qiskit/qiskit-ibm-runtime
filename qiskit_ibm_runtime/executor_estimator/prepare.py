@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     from ..options_models.twirling_options import TwirlingOptions
@@ -69,9 +70,9 @@ def prepare(
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation. If provided, PEC mitigation method will be
             used.
-        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC or PEA
-            mitigation methods. The list must contain a map for each pub. Assumes that the unique
-            layers used for noise learning were extracted using the ``get_layers`` method.
+        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC or
+            PEA mitigation methods. The list must contain a map for each pub. Assumes that the
+            unique layers used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -94,8 +95,14 @@ def prepare(
         shots_per_randomization = shots
 
     # validate noise_model_mapping length
-    if pec_options is not None and noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
-        raise IBMInputValueError("If PEC mitigation is used, the input must contain noise_model_mapping for each pub")
+    if (
+        pec_options is not None
+        and noise_model_mapping is None
+        or len(noise_model_mapping) != len(pubs)
+    ):
+        raise IBMInputValueError(
+            "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
+        )
 
     # Create items
     items: list[SamplexItem] = []
@@ -144,8 +151,10 @@ def prepare(
             noise_factor = noise_gain - 1
             for ref in noise_model_mapping[i]:
                 samplex_arguments[f"noise_scales.{ref}"] = noise_factor
-            samplex_arguments["pauli_lindblad_maps"] =  noise_model_mapping[i]
-            pec_gamma_list.append(calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor))
+            samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
+            pec_gamma_list.append(
+                calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor)
+            )
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
@@ -368,7 +377,7 @@ def get_layers(
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     pec_options: PecOptions | None = None,
-):
+) -> list[list[CircuitInstruction]]:
     """Find unique layers of the circuit of each pub.
 
     Uses the input options to box the circuit, and find its unique layers.

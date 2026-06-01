@@ -18,9 +18,11 @@ from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
 
 
-def calculate_gamma(boxed_circuit: QuantumCircuit,
-                    noise_model_mapping: dict[str, PauliLindbladMap],
-                    noise_factor: float) -> float:
+def calculate_gamma(
+    boxed_circuit: QuantumCircuit,
+    noise_model_mapping: dict[str, PauliLindbladMap],
+    noise_factor: float,
+) -> float:
     """Calculate the PEC gamma factor of a circuit based on a noise model.
 
     Args:

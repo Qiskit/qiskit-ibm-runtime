@@ -73,6 +73,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
+    # extract gamma factors if present
+    pec_gammas = post_processor_data.get("pec_gammas", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise = None
@@ -93,23 +96,32 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
+    pec_gammas = pec_gammas or [None] * len(result)
     if {
         len(circuits_metadata),
         len(observables_lists),
         len(param_basis_pairs_lists),
         len(param_shapes_list),
+        len(pec_gammas),
     } != {len(result)}:
         raise ValueError(
             f"Number of circuit metadata items ({len(circuits_metadata)}), "
             f"observables ({len(observables_lists)}), "
             f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
-            f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
+            f"param_shapes ({len(param_shapes_list)}), "
+            f"pec_gammas ({len(pec_gammas)}), and results ({len(result)}) are not equal."
         )
 
     # Build EstimatorPubResult for each pub
     pub_results = []
-    for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
-        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
+    for idx, (
+        item_result,
+        observables_label,
+        param_basis_pairs,
+        param_shape,
+        pec_gamma,
+    ) in enumerate(
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list, pec_gammas)
     ):
         # Reconstruct observables and measure_bases
         observables = ObservablesArray(observables_label)
@@ -117,7 +129,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and place them in a databin
         exp_vals, stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise
+            item_result, observables, param_shape, param_basis_pairs, readout_noise, pec_gamma
         )
         data_bin = DataBin(evs=exp_vals, stds=stds)
 
@@ -138,6 +150,7 @@ def process_expectation_values(
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     measure_noise_model: PauliLindbladMap | None,
+    pec_gamma: float | None = None,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item result.
 
@@ -147,6 +160,7 @@ def process_expectation_values(
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
         measure_noise_model: Measurement noise model for TREX mitigation.
+        pec_gamma: gamma factor for PEC mitigation.
 
     Returns:
         A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
@@ -174,6 +188,9 @@ def process_expectation_values(
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
         data ^= item_result["measurement_flips._meas"]
+
+    # extract pec signs if present
+    pec_signs = item_result.get("pauli_signs", None)
 
     # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
     # This allows us to find all available measurement bases for a given parameter
@@ -219,10 +236,16 @@ def process_expectation_values(
             # Use identify_measure_basis to find the configuration index directly
             config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
+            # get the signs for this configuration
+            if pec_signs:
+                pec_signs_datum = pec_signs[:, config_idx, :]
+            else:
+                pec_signs_datum = None
+
             # Get measurement data for this configuration
             # Shape: (num_randomizations, shots, num_qubits)
             datum = data[:, config_idx, :, :]
-            term_exp_val, term_variance = compute_exp_val(observable_term, datum)
+            term_exp_val, term_variance = compute_exp_val(observable_term, datum, pec_signs_datum)
 
             # Calculate scale factor in case TREX mitigation is used
             term_scale_factor = (
@@ -234,6 +257,9 @@ def process_expectation_values(
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
             variance += (coeff**2) * term_variance * (term_scale_factor**2)
+            if pec_gamma is not None:
+                exp_val *= pec_gamma
+                variance *= pec_gamma**2
 
         exp_vals[bcast_index] = exp_val
         stds[bcast_index] = np.sqrt(variance / shots)  # Standard error
