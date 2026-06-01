@@ -187,6 +187,20 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertIn("quantum_seconds", job.usage_estimation)
 
     @run_integration_test
+    def test_job_usage(self, service):
+        """Test job usage."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertIsInstance(job.usage(), (float, int))
+
+    @run_integration_test
+    def test_job_logs(self, service):
+        """Test job logs."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertIsInstance(job.logs(), str)
+
+    @run_integration_test
     def test_updating_job_tags(self, service):
         """Test job metrics."""
         job = self._run_program(service, job_tags=["test_tag123"])
