@@ -22,21 +22,24 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import numpy.typing as npt
+    from qiskit import QuantumCircuit
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     from ..options_models.twirling_options import TwirlingOptions
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
+    from ..options_models.pec_options import PecOptions
 
 import numpy as np
 from samplomatic import build, ChangeBasis
 from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import get_annotation
+from samplomatic.utils import get_annotation, find_unique_box_instructions
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
-from qiskit.quantum_info import Pauli, PauliList
+from qiskit.quantum_info import Pauli, PauliList, PauliLindbladMap
 
 from ..exceptions import IBMInputValueError
 from .trex_utils import create_trex_calibration_circuit
+from .pec_utils import calculate_gamma
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
@@ -51,6 +54,8 @@ def prepare(
     twirling_options: TwirlingOptions,
     shots: int,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    pec_options: PecOptions | None = None,
+    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]] | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -62,6 +67,11 @@ def prepare(
             and twirling is on.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
+        pec_options: The options for PEC mitigation. If provided, PEC mitigation method will be
+            used.
+        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC or PEA
+            mitigation methods. The list must contain a map for each pub. Assumes that the unique
+            layers used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -83,37 +93,23 @@ def prepare(
         num_randomizations = 1
         shots_per_randomization = shots
 
+    # validate noise_model_mapping length
+    if pec_options is not None and noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
+        raise IBMInputValueError("If PEC mitigation is used, the input must contain noise_model_mapping for each pub")
+
     # Create items
     items: list[SamplexItem] = []
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
+    pec_gamma_list = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        # Remove any existing final measurements
-        prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
-
-        # Add final measurements
-        creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
-        try:
-            prepared_circuit.add_register(creg)
-        except CircuitError:
-            raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
-        prepared_circuit.barrier()
-        prepared_circuit.measure(prepared_circuit.qubits, creg)
-
-        # Add boxes
-        boxing_pm = generate_boxing_pass_manager(
-            enable_gates=twirling_options.enable_gates,
-            enable_measures=True,
-            twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            measure_annotations="all"
-            if twirling_options.enable_measure or measure_noise_learning is not None
-            else "change_basis",
+        boxed_circuit = box_circuit(
+            pub.circuit, twirling_options, measure_noise_learning, pec_options
         )
-        boxed_circuit = boxing_pm.run(prepared_circuit)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
@@ -139,6 +135,17 @@ def prepare(
         else:
             # This should not be reachable
             raise ValueError("Could not find a change basis annotation.")
+
+        # add samplex_arguments related to noise injection
+        if pec_options is not None:
+            # TODO: change the logic to calculate the auto noise_gain based on pubs
+            noise_gain = 0 if pec_options.noise_gain == "auto" else pec_options.noise_gain
+            # in samplomatic -1 is full removal of the noise and 0 is no rescaling of the noise
+            noise_factor = noise_gain - 1
+            for ref in noise_model_mapping[i]:
+                samplex_arguments[f"noise_scales.{ref}"] = noise_factor
+            samplex_arguments["pauli_lindblad_maps"] =  noise_model_mapping[i]
+            pec_gamma_list.append(calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor))
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
@@ -176,6 +183,7 @@ def prepare(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "pec_gammas": pec_gamma_list,
         },
     }
 
@@ -303,3 +311,83 @@ def compute_samplex_arguments(
     ]
 
     return flat_parameter_values, change_basis, param_basis_pairs
+
+
+def box_circuit(
+    circuit: QuantumCircuit,
+    twirling_options: TwirlingOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    pec_options: PecOptions | None = None,
+) -> QuantumCircuit:
+    """Box a circuit based on the given input options.
+
+    Removes the final measurement layer and adds a new measurement layer with dedicated
+    register name.
+
+    Args:
+        circuit: Quantum circuit to box.
+        twirling_options: Twirling options.
+        measure_noise_learning: Measure noise learning options.
+        pec_options: Pec options.
+
+    Returns:
+        boxed circuit.
+
+    """
+    # Remove any existing final measurements
+    prepared_circuit = circuit.remove_final_measurements(inplace=False)
+
+    # Add final measurements
+    creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
+    try:
+        prepared_circuit.add_register(creg)
+    except CircuitError:
+        raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
+    prepared_circuit.barrier()
+    prepared_circuit.measure(prepared_circuit.qubits, creg)
+
+    # Add boxes
+    boxing_pm = generate_boxing_pass_manager(
+        enable_gates=twirling_options.enable_gates or pec_options is not None,
+        enable_measures=True,
+        twirling_strategy=twirling_options.strategy.replace("-", "_"),
+        measure_annotations="all"
+        if twirling_options.enable_measure or measure_noise_learning is not None
+        else "change_basis",
+        inject_noise_targets="gates" if pec_options is not None else "none",
+        inject_noise_strategy="uniform_modification"
+        if pec_options is not None
+        else "no_modification",
+    )
+    boxed_circuit = boxing_pm.run(prepared_circuit)
+    return boxed_circuit
+
+
+def get_layers(
+    pubs: Sequence[EstimatorPub],
+    twirling_options: TwirlingOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    pec_options: PecOptions | None = None,
+):
+    """Find unique layers of the circuit of each pub.
+
+    Uses the input options to box the circuit, and find its unique layers.
+
+    Args:
+        pubs: list of estimators pubs.
+        twirling_options: Twirling options.
+        measure_noise_learning: Measure noise learning options.
+        pec_options: Pec options.
+
+    Returns:
+        Unique layers for each pub.
+
+    """
+    return [
+        find_unique_box_instructions(
+            box_circuit(pub.circuit, twirling_options, measure_noise_learning, pec_options).data,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+        for pub in pubs
+    ]
