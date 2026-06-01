@@ -85,8 +85,10 @@ select = [
     "E",      # pycodestyle
     "F",      # pyflakes
     "G",      # flake8-logging-format
+    "I",      # isort
     "RUF013", # implicit-optional
     "T10",    # flake8-debugger
+    "TC",     # flake8-type-checking
     "UP",     # pyupgrade
 ]
 
@@ -104,6 +106,19 @@ ignore = [
     "F401",   # unused-import
     "F403",   # undefined-local-with-import-star
 ]
+
+"qiskit_ibm_runtime/__init__.py" = [
+    "I",      # isort -- requires specific import order and tweaks
+]
+
+"qiskit_ibm_runtime/utils/__init__.py" = [
+    "I",      # isort -- requires specific import order and tweaks
+]
+
+"qiskit_ibm_runtime/options/*_options.py" = [
+    "TC",     # flake8-type-checking -- ruff moves Unset and Dict to TYPE_CHECKING block
+]
+
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
