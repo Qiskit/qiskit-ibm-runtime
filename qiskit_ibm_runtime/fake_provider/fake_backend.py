@@ -24,13 +24,6 @@ from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.utils import optionals as _optionals
 
-from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
-from qiskit_ibm_runtime.utils.backend_decoder import (
-    decode_backend_configuration,
-    properties_from_server_data,
-)
-
-from .. import QiskitRuntimeService
 from ..models import (
     BackendConfiguration,
     BackendProperties,
@@ -39,7 +32,12 @@ from ..models import (
 from ..models.exceptions import (
     BackendPropertyError,
 )
-from ..utils.backend_decoder import configuration_from_server_data
+from ..utils.backend_converter import convert_to_target
+from ..utils.backend_decoder import (
+    configuration_from_server_data,
+    decode_backend_configuration,
+    properties_from_server_data,
+)
 from ..utils.backend_encoder import BackendEncoder
 
 if TYPE_CHECKING:
@@ -47,6 +45,7 @@ if TYPE_CHECKING:
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
+    from .. import QiskitRuntimeService
     from ..models import (
         QasmBackendConfiguration,
     )
@@ -402,6 +401,9 @@ class FakeBackendV2(BackendV2):
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
             Exception: If the real target doesn't exist or can't be accessed
         """
+        # Use runtime imports, to prevent FakeBackendV2 to depend on QiskitRuntimeService.
+        from ..qiskit_runtime_service import QiskitRuntimeService
+
         if not isinstance(service, QiskitRuntimeService):
             raise ValueError(
                 "The provided service to update the fake backend is invalid. A "
