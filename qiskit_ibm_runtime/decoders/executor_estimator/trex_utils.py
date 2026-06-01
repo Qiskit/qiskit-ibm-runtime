@@ -23,8 +23,8 @@ import numpy as np
 from qiskit.quantum_info import Pauli, PauliLindbladMap, QubitSparsePauli
 
 
-def calculate_trex_noise_model(calibration_result: QuantumProgramItemResult) -> np.ndarray:
-    """Calculate measurement noise model from TREX calibration circuit results.
+def get_processed_calibration_data(calibration_result: QuantumProgramItemResult) -> np.ndarray:
+    """Process data from TREX calibration circuit results.
 
     Args:
         calibration_result: QuantumProgramItemResult of the TREX calibration circuit.

@@ -29,7 +29,7 @@ from qiskit.quantum_info import Pauli, PauliLindbladMap
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...results.estimator_pub import EstimatorPubResult
-from .trex_utils import calculate_trex_noise_model, calculate_trex_factor
+from .trex_utils import get_processed_calibration_data, calculate_trex_factor
 from .utils import compute_exp_val, identify_measure_basis
 
 
@@ -80,7 +80,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:
-            readout_noise_data = calculate_trex_noise_model(calibration_result)
+            readout_noise_data = get_processed_calibration_data(calibration_result)
         except ValueError as e:
             raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
 
@@ -226,13 +226,11 @@ def process_expectation_values(
             term_exp_val, term_variance = compute_exp_val(observable_term, datum)
 
             # Calculate scale factor in case TREX mitigation is used
-            print(measure_noise_data)
             term_scale_factor = (
                 calculate_trex_factor(measure_noise_data, observable_term)
                 if measure_noise_data is not None
                 else 1
             )
-            print(term_scale_factor)
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor

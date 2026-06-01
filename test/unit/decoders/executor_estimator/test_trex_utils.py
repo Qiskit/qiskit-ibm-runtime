@@ -19,14 +19,14 @@ from qiskit.quantum_info import Pauli, PauliLindbladMap
 
 from qiskit_ibm_runtime.decoders.executor_estimator.trex_utils import (
     calculate_trex_factor,
-    calculate_trex_noise_model,
+    get_processed_calibration_data,
 )
 
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramItemResult
 
 
-class TestCalculateTrexNoiseModel(unittest.TestCase):
-    """Tests for calculate_trex_noise_model function."""
+class TestGetProcessedCalibrationData(unittest.TestCase):
+    """Tests for get_processed_calibration_data function."""
 
     def test_raises_when_calibration_register_is_missing(self):
         """Test missing TREX calibration data raises ValueError."""
@@ -35,7 +35,7 @@ class TestCalculateTrexNoiseModel(unittest.TestCase):
         )
 
         with self.assertRaises(ValueError) as context:
-            calculate_trex_noise_model(calibration_result)
+            get_processed_calibration_data(calibration_result)
 
         self.assertIn("Dedicated TREX calibration circuit is missing", str(context.exception))
 
@@ -62,7 +62,7 @@ class TestCalculateTrexNoiseModel(unittest.TestCase):
             }
         )
 
-        result = calculate_trex_noise_model(calibration_result)
+        result = get_processed_calibration_data(calibration_result)
 
         self.assertIsInstance(result, np.ndarray)
         self.assertEqual(result.all(), np.logical_xor(cal_data, cal_flip).all())
