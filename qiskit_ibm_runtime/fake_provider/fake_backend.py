@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
-    from .. import QiskitRuntimeService
+    from ..qiskit_runtime_service import QiskitRuntimeService
     from ..models import (
         QasmBackendConfiguration,
     )

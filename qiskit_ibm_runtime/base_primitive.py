@@ -137,7 +137,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Returns:
             Submitted job.
         """
-        # Use runtime imports, to prevent `BasePrimitiveV2` to depend on `QiskitRuntimeService`.
+        # Use runtime imports, to prevent `BasePrimitiveV2` to depend on several core objects.
         from .ibm_backend import IBMBackend
         from .qiskit_runtime_service import QiskitRuntimeService
 
