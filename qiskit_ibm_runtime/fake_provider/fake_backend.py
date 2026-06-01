@@ -401,7 +401,7 @@ class FakeBackendV2(BackendV2):
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
             Exception: If the real target doesn't exist or can't be accessed
         """
-        # Use runtime imports, to prevent FakeBackendV2 to depend on QiskitRuntimeService.
+        # Use runtime imports, to prevent `FakeBackendV2` to depend on `QiskitRuntimeService``.
         from ..qiskit_runtime_service import QiskitRuntimeService
 
         if not isinstance(service, QiskitRuntimeService):
