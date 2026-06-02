@@ -29,7 +29,7 @@ from qiskit.quantum_info import Pauli, PauliLindbladMap
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...results.estimator_pub import EstimatorPubResult
-from ...executor_estimator.trex_utils import calculate_trex_noise_model, calculate_trex_factor
+from .trex_utils import get_processed_calibration_data, calculate_trex_factor
 from .utils import compute_exp_val, identify_measure_basis
 
 
@@ -75,15 +75,16 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # extract gamma factors if present
     pec_gammas = post_processor_data.get("pec_gammas", None)
-
+    
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
-    readout_noise = None
+    readout_noise_data = None
+    
     if measure_mitigation == "True":
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
         try:
-            readout_noise = calculate_trex_noise_model(calibration_result)
+            readout_noise_data = get_processed_calibration_data(calibration_result)
         except ValueError as e:
             raise ValueError(f"Failed calculating TREX noise model. Internal failure: {e}")
 
@@ -129,7 +130,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and place them in a databin
         exp_vals, stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise, pec_gamma
+            item_result, observables, param_shape, param_basis_pairs, readout_noise_data, pec_gamma
         )
         data_bin = DataBin(evs=exp_vals, stds=stds)
 
@@ -149,7 +150,7 @@ def process_expectation_values(
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_model: PauliLindbladMap | None,
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
     pec_gamma: float | None = None,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item result.
@@ -159,7 +160,8 @@ def process_expectation_values(
         observables: The observables to calculate expectation values for.
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
-        measure_noise_model: Measurement noise model for TREX mitigation.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
         pec_gamma: gamma factor for PEC mitigation.
 
     Returns:
@@ -254,9 +256,17 @@ def process_expectation_values(
                 else 1
             )
 
+            # Calculate scale factor in case TREX mitigation is used
+            term_scale_factor = (
+                calculate_trex_factor(measure_noise_data, observable_term)
+                if measure_noise_data is not None
+                else 1
+            )
+
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
             variance += (coeff**2) * term_variance * (term_scale_factor**2)
+            
             if pec_gamma is not None:
                 exp_val *= pec_gamma
                 variance *= pec_gamma**2
