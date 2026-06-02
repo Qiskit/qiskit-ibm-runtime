@@ -32,7 +32,11 @@ class EstimatorOptions:
 
     default_precision: float = 0.015625
     """The default precision for expectation value estimates if not specified in the PUBs
-    or in the run method."""
+    or in the run method.
+
+    The default value of ``0.015625``, equivalent to ``4096**-0.5``, represents the precision
+    expected from ``4096`` shots in the presence of i.i.d. noise.
+    """
 
     default_shots: int | None = None
     """The total number of shots to use per circuit per configuration.
