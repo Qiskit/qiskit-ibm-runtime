@@ -24,8 +24,8 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    from ..options_models.twirling_options import TwirlingOptions
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
+    from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
 from qiskit.circuit import ClassicalRegister
@@ -36,11 +36,11 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from .trex_utils import create_trex_calibration_circuit
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import SamplexItem
+from .trex_utils import create_trex_calibration_circuit
 from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
 
 logger = logging.getLogger(__name__)

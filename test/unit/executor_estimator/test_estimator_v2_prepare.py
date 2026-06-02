@@ -24,10 +24,10 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
-from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
+from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
@@ -255,7 +255,7 @@ class TestPrepareFunction(unittest.TestCase):
         trex_item = quantum_program_with_mitigation.items[-1]
         self.assertIsInstance(trex_item, SamplexItem)
 
-        passthrough = cast(dict[str, Any], quantum_program_with_mitigation.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program_with_mitigation.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
 
     def test_prepare_with_measure_noise_learning_trex_circuit_has_only_measurements(self):
