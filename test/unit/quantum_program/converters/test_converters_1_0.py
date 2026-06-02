@@ -36,9 +36,9 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_to_1_0,
-    quantum_program_result_from_1_0,
     quantum_program_from_1_0,
 )
+from qiskit_ibm_runtime.decoders.quantum_program.converters import quantum_program_result_from_1_0
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions, ExecutionOptions
 
 from ....ibm_test_case import IBMTestCase
@@ -93,7 +93,8 @@ class TestQuantumProgramConverters(IBMTestCase):
 
         experimental_opts = {"custom_option": "test_value", "another_key": 123}
         options = ExecutorOptions(
-            execution=ExecutionOptions(init_qubits=False), experimental=experimental_opts
+            execution=ExecutionOptions(init_qubits=False, scheduler_timing=True),
+            experimental=experimental_opts,
         )
 
         params_model = quantum_program_to_1_0(quantum_program, options)
@@ -101,6 +102,7 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(params_model.schema_version, "v1.0")
         self.assertEqual(params_model.options.init_qubits, False)
         self.assertEqual(params_model.options.rep_delay, None)
+        self.assertEqual(params_model.options.scheduler_timing, True)
         self.assertEqual(params_model.options.experimental, experimental_opts)
 
         quantum_program_model = params_model.quantum_program

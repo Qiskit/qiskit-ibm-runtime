@@ -21,23 +21,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from qiskit.primitives.containers.estimator_pub import ObservablesArray
     from qiskit.primitives import EstimatorPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-import numpy as np
-from qiskit.quantum_info import Pauli, PauliList
+from qiskit.quantum_info import Pauli
+from functools import lru_cache
+
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
-
-# Mapping for projecting observable terms to Z computational basis
-CHAR_TO_Z_CHARS = (
-    dict.fromkeys(["Z", "X", "Y"], "Z")
-    | dict.fromkeys(["0", "+", "r"], "0")
-    | dict.fromkeys(["1", "-", "l"], "1")
-    | {"I": "I"}
-)
 
 
 def get_pauli_basis(basis: str) -> Pauli:
@@ -85,52 +77,39 @@ def pauli_to_ints(pauli: Pauli) -> list[int]:
     return [LOOKUP_TABLE[p] for p in pauli.to_label()][::-1]
 
 
-def get_bases(observables: ObservablesArray) -> PauliList:
-    """Find minimal set of measurement bases for all observable terms.
+def unbroadcast_index(
+    bc_index: tuple[int | slice, ...], shape: tuple[int, ...]
+) -> tuple[int | slice, ...]:
+    """Index an array using an index from a compatible broadcasted shape.
 
-    Groups commuting Pauli terms and returns one basis per group.
-    Uses qubit-wise commutation checking.
+    An ND-array ``arr`` is broadcastable to any shape ``bc_shape = (*pad_shape, *arr.shape)``.
+    This function allows indexing ``arr`` using an ND-index or slice from ``bc_shape`` and
+    will return the index for ``arr`` that accesses the same value.
 
     Args:
-        observables: Array of observables to measure.
+        bc_index: An ND-index from a broadcasted shape.
+        shape: The shape of the broadcasting compatible array to index.
 
     Returns:
-        PauliList of measurement bases.
+        The equivalent un-broadcasted ND-index of the array with specified shape.
     """
-    all_bases = []
 
-    # Convert to numpy array of dicts using __array__() method
-    # This works for both scalar (shape=()) and array cases
-    obs_array = np.asarray(observables)
+    @lru_cache
+    def _pad_broadcast_shape(shape: tuple[int, ...], ndims: int) -> tuple[int | slice, ...]:
+        # Pad a shape with trivial dimensions.
+        shape_ndims = len(shape)
+        pad = ndims - shape_ndims
+        if pad > 0:
+            return pad * (1,) + shape
+        return shape
 
-    # Use np.ndenumerate to iterate over all elements
-    for _, obs_dict in np.ndenumerate(obs_array):
-        for term, coeff in obs_dict.items():
-            basis = get_pauli_basis(term)
-            all_bases.append(basis)
+    shape_ndims = len(shape)
+    if shape_ndims == 0:
+        return ()
 
-    # Handle empty case
-    if not all_bases:
-        raise ValueError(
-            "No measurement bases found. Observables array is empty or contains no terms."
-        )
-
-    groups = PauliList(all_bases).group_commuting(qubit_wise=True)
-    bases = PauliList(
-        [((np.logical_or.reduce(group.z), np.logical_or.reduce(group.x))) for group in groups]
-    )
-
-    # Filter out all-identity bases (where both z and x are all False)
-    non_identity_bases = []
-    for basis in bases:
-        if np.any(basis.z) or np.any(basis.x):
-            non_identity_bases.append(basis)
-
-    # Handle identity case
-    if not non_identity_bases:
-        raise ValueError("No measurement bases found. Only identity in the observables.")
-
-    return PauliList(non_identity_bases)
+    pad_shape = _pad_broadcast_shape(shape, len(bc_index))
+    bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
+    return bc_index[-shape_ndims:]
 
 
 def resolve_precision(

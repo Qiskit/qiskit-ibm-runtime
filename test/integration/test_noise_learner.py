@@ -20,7 +20,7 @@ from qiskit.transpiler import generate_preset_pass_manager
 from qiskit_ibm_runtime import RuntimeJobV2, Session, EstimatorV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.utils.noise_learner_result import PauliLindbladError, LayerError
+from qiskit_ibm_runtime.results.noise_learner import PauliLindbladError, LayerError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
 
 from ..decorators import run_integration_test

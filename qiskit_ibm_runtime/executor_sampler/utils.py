@@ -21,6 +21,8 @@ from qiskit.circuit import BoxOp
 from ..exceptions import IBMInputValueError
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from qiskit.circuit import QuantumCircuit
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
@@ -43,15 +45,15 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
             )
 
 
-def extract_shots_from_pubs(pubs: list[SamplerPub], default_shots: int | None = None) -> int:
-    """Extract and validate shots value from a list of ``SamplerPub``` objects.
+def extract_shots_from_pubs(pubs: Sequence[SamplerPub], default_shots: int | None = None) -> int:
+    """Extract and validate shots value from a sequence of ``SamplerPub`` objects.
 
     This function determines the shots value by examining all pubs and ensures
     that all pubs have the same number of shots. If a pub doesn't specify shots,
     the default_shots value is used.
 
     Args:
-        pubs: List of sampler pubs to extract shots from.
+        pubs: Sequence of sampler pubs to extract shots from.
         default_shots: Default number of shots if not specified in pubs.
 
     Returns:
