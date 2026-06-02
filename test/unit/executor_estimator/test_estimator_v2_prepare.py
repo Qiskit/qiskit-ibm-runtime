@@ -25,6 +25,9 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
+from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
+    MeasureNoiseLearningOptions,
+)
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
@@ -56,7 +59,7 @@ class TestPrepareFunction(unittest.TestCase):
         obs = ObservablesArray(["ZZZ", "XXX", "YYY", "IYI"]).reshape(obs_shape)
 
         pub = EstimatorPub.coerce((circuit, obs, params))
-        program = prepare([pub], TwirlingOptions(), 10)
+        program = prepare([pub], TwirlingOptions(), 10, MeasureNoiseLearningOptions())
 
         self.assertEqual(program.items[0].shape, item_shape)
 
@@ -81,7 +84,7 @@ class TestPrepareFunction(unittest.TestCase):
         obs = ObservablesArray(["ZZZ", "XXX", {"YYY": 1, "XZX": 1}, "I0I"]).reshape(obs_shape)
 
         pub = EstimatorPub.coerce((circuit, obs, params))
-        program = prepare([pub], TwirlingOptions(), 10)
+        program = prepare([pub], TwirlingOptions(), 10, MeasureNoiseLearningOptions())
 
         self.assertEqual(program.items[0].shape, item_shape)
 
@@ -224,6 +227,193 @@ class TestPrepareFunction(unittest.TestCase):
 
         self.assertIn("_meas", str(context.exception))
         self.assertIn("reserved", str(context.exception))
+
+    def test_prepare_with_measure_noise_learning_adds_trex_item(self):
+        """Test that measure_noise_learning adds a TREX calibration item to QuantumProgram."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        shots = 1024
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = 16
+
+        quantum_program_without_measure_noise_learning = prepare([pub], TwirlingOptions(), shots)
+        self.assertEqual(len(quantum_program_without_measure_noise_learning.items), 1)
+
+        quantum_program_with_mitigation = prepare(
+            [pub], TwirlingOptions(), shots, measure_noise_learning
+        )
+
+        # Should have one additional item (the TREX calibration circuit)
+        self.assertEqual(len(quantum_program_with_mitigation.items), 2)
+
+        # Verify the additional item is a SamplexItem
+        trex_item = quantum_program_with_mitigation.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem)
+
+        passthrough = cast(dict[str, Any], quantum_program_with_mitigation.passthrough_data)
+        self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
+
+    def test_prepare_with_measure_noise_learning_trex_circuit_has_only_measurements(self):
+        """Test that TREX calibration circuit is based on measurement-only operations.
+
+        The TREX circuit template will have parameterized gates for measurement twirling,
+        but it should be derived from a circuit that only performs measurements (no
+        state preparation).
+        """
+        circuit1 = QuantumCircuit(2)
+        circuit1.h(0)
+        circuit1.cx(0, 1)
+
+        circuit2 = QuantumCircuit(3)
+        circuit2.h(0)
+        circuit2.cx(0, 1)
+        circuit2.cx(1, 2)
+
+        observable1 = SparsePauliOp.from_list([("ZZ", 1)])
+        observable2 = SparsePauliOp.from_list([("ZZZ", 1)])
+
+        pub1 = EstimatorPub.coerce((circuit1, observable1))
+        pub2 = EstimatorPub.coerce((circuit2, observable2))
+
+        shots = 1024
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = 32
+
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots, measure_noise_learning)
+
+        # Get the TREX calibration item (last item)
+        trex_item = quantum_program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem)
+
+        # Get the circuit from the TREX item
+        trex_circuit = trex_item.circuit
+
+        # Verify the circuit has measurements
+        self.assertGreater(trex_circuit.num_clbits, 0, "TREX circuit should have classical bits")
+
+        # Verify the circuit has measurement operations
+        has_measurements = any(
+            instruction.operation.name == "measure" for instruction in trex_circuit.data
+        )
+        self.assertTrue(has_measurements, "TREX circuit should contain measurement operations")
+
+        # Verify it has the expected number of qubits (union of all pub qubits)
+        # circuit1 has 2 qubits, circuit2 has 3 qubits, so union should be 3
+        self.assertEqual(trex_circuit.num_qubits, 3)
+
+        # Verify the shape matches the number of randomizations
+        self.assertEqual(trex_item.shape, (32,))
+
+        # Verify the circuit has parameters (for measurement twirling)
+        self.assertGreater(
+            trex_circuit.num_parameters,
+            0,
+            "TREX circuit should have parameters for measurement twirling",
+        )
+
+    @data(
+        [16, (16,)],
+        [32, (32,)],
+        [64, (64,)],
+        [128, (128,)],
+    )
+    @unpack
+    def test_prepare_with_measure_noise_learning_num_randomizations(
+        self, num_randomizations, expected_shape
+    ):
+        """Test that measure_noise_learning.num_randomizations affects TREX item shape."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        shots = 1024
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = num_randomizations
+
+        quantum_program = prepare([pub], TwirlingOptions(), shots, measure_noise_learning)
+
+        # Get the TREX calibration item (last item)
+        trex_item = quantum_program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem)
+
+        # Verify the shape matches the number of randomizations
+        self.assertEqual(
+            trex_item.shape,
+            expected_shape,
+            f"Expected TREX item shape {expected_shape} for "
+            f"num_randomizations={num_randomizations}",
+        )
+
+    def test_prepare_with_measure_noise_learning_default_num_randomizations(self):
+        """Test that TREX item uses default num_randomizations=32 when not specified."""
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+        pub = EstimatorPub.coerce((circuit, observable))
+
+        shots = 1024
+        # Create MeasureNoiseLearningOptions without setting num_randomizations
+        measure_noise_learning = MeasureNoiseLearningOptions()
+
+        quantum_program = prepare([pub], TwirlingOptions(), shots, measure_noise_learning)
+
+        # Get the TREX calibration item (last item)
+        trex_item = quantum_program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem)
+
+        # Verify the shape uses default value of 32
+        self.assertEqual(
+            trex_item.shape,
+            (32,),
+            "Expected TREX item shape (32,) when num_randomizations is not set",
+        )
+
+    def test_prepare_with_measure_noise_learning_multiple_pubs_num_randomizations(self):
+        """Test that num_randomizations affects TREX item with multiple pubs."""
+        circuit1 = QuantumCircuit(2)
+        circuit1.h(0)
+        circuit1.cx(0, 1)
+
+        circuit2 = QuantumCircuit(3)
+        circuit2.h(0)
+        circuit2.cx(0, 1)
+        circuit2.cx(1, 2)
+
+        observable1 = SparsePauliOp.from_list([("ZZ", 1)])
+        observable2 = SparsePauliOp.from_list([("ZZZ", 1)])
+
+        pub1 = EstimatorPub.coerce((circuit1, observable1))
+        pub2 = EstimatorPub.coerce((circuit2, observable2))
+
+        shots = 1024
+        measure_noise_learning = MeasureNoiseLearningOptions()
+        measure_noise_learning.num_randomizations = 48
+
+        quantum_program = prepare([pub1, pub2], TwirlingOptions(), shots, measure_noise_learning)
+
+        # Should have 3 items: 2 for pubs + 1 TREX calibration
+        self.assertEqual(len(quantum_program.items), 3)
+
+        # Get the TREX calibration item (last item)
+        trex_item = quantum_program.items[-1]
+        self.assertIsInstance(trex_item, SamplexItem)
+
+        # Verify the shape matches the specified num_randomizations
+        self.assertEqual(
+            trex_item.shape,
+            (48,),
+            "Expected TREX item shape (48,) for num_randomizations=48",
+        )
 
 
 @ddt
