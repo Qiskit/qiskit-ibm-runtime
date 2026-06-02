@@ -35,7 +35,7 @@ from qiskit_ibm_runtime.fake_provider import (
 )
 from qiskit_ibm_runtime.visualization.embeddings import Embedding
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]]:
