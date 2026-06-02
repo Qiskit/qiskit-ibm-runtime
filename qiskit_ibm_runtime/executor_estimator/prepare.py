@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
     from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
 
 import numpy as np
 from samplomatic import build, ChangeBasis
@@ -35,6 +36,7 @@ from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
 
 from ..exceptions import IBMInputValueError
+from .trex_utils import create_trex_calibration_circuit
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
@@ -48,6 +50,7 @@ def prepare(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -57,6 +60,8 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -104,7 +109,9 @@ def prepare(
             enable_gates=twirling_options.enable_gates,
             enable_measures=True,
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            measure_annotations="all" if twirling_options.enable_measure else "change_basis",
+            measure_annotations="all"
+            if twirling_options.enable_measure or measure_noise_learning is not None
+            else "change_basis",
         )
         boxed_circuit = boxing_pm.run(prepared_circuit)
 
@@ -168,6 +175,7 @@ def prepare(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
+            "measure_mitigation": "False",
         },
     }
 
@@ -177,6 +185,19 @@ def prepare(
         items=items,
         passthrough_data=passthrough_data,
     )
+
+    # Add TREX calibration circuit
+    if measure_noise_learning is not None:
+        if (
+            isinstance(measure_noise_learning.shots_per_randomization, int)
+            and measure_noise_learning.shots_per_randomization != shots_per_randomization
+        ):
+            raise IBMInputValueError(
+                "shots_per_randomization must be the same for twirling and measure_noise_learning"
+            )
+        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        quantum_program.items.append(trex_item)
+        passthrough_data["post_processor"]["measure_mitigation"] = "True"
 
     # Set semantic role for post-processing dispatch
     quantum_program._semantic_role = "estimator_v2"
