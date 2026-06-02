@@ -133,11 +133,7 @@ def resolve_precision(
         IBMInputValueError: If pubs have different precision values.
     """
     # Extract precision from pubs, using fallback for pubs without explicit precision
-    pub_precisions = {pub.precision if pub.precision is not None else run_precision for pub in pubs}
-
-    # Remove None if it's still there (no precision specified anywhere)
-    pub_precisions = {p for p in pub_precisions if p is not None}
-
+    pub_precisions = {precision := (pub.precision or run_precision) if precision for pub in pubs}
     if not pub_precisions:
         return None
 
