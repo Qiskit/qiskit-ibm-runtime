@@ -21,14 +21,9 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 
 from qiskit.providers.backend import BackendV2
 
-from .batch import Batch
 from .decoders.defaults import DEFAULT_DECODERS
-from .fake_provider.local_service import QiskitRuntimeLocalService
-from .ibm_backend import IBMBackend
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
-from .qiskit_runtime_service import QiskitRuntimeService
-from .session import Session
 from .utils import (
     validate_isa_circuits,
     validate_no_dd_with_dynamic_circuits,
@@ -41,7 +36,11 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+    from .batch import Batch
+    from .fake_provider.local_service import QiskitRuntimeLocalService
+    from .qiskit_runtime_service import QiskitRuntimeService
     from .runtime_job_v2 import RuntimeJobV2
+    from .session import Session
 
 logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
@@ -63,6 +62,12 @@ def get_mode_service_backend(
             * A :class:`Session` if you are using session execution mode.
             * A :class:`Batch` if you are using batch execution mode.
     """
+    # Use runtime imports, to prevent `base_primitive.py` to depend on several core objects.
+    from .batch import Batch
+    from .fake_provider.local_service import QiskitRuntimeLocalService
+    from .ibm_backend import IBMBackend
+    from .session import Session
+
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):
@@ -132,6 +137,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Returns:
             Submitted job.
         """
+        # Use runtime imports, to prevent `BasePrimitiveV2` to depend on several core objects.
+        from .ibm_backend import IBMBackend
+        from .qiskit_runtime_service import QiskitRuntimeService
+
         primitive_inputs = {"pubs": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)

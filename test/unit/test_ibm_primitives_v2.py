@@ -138,7 +138,9 @@ class TestPrimitivesV2(IBMTestCase):
             def __new__(cls, *args, **kwargs):
                 return mock_service_inst
 
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+        with patch(
+            "qiskit_ibm_runtime.qiskit_runtime_service.QiskitRuntimeService", new=MockQRTService
+        ):
             inst = primitive(mode=mock_backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
@@ -257,7 +259,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
-        """Test parameters for a single cirucit."""
+        """Test parameters for a single circuit."""
         circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
