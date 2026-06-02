@@ -162,7 +162,7 @@ class ChunkTiming:
 
     .. code-block:: python
 
-        result = job.result()
+        chunk_timings = job.result().timing
         for chunk in chunk_timings:
             print(chunk)
 
