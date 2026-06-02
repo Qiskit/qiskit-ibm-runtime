@@ -240,7 +240,7 @@ def process_expectation_values(
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
-            ensemble_variance += (coeff**2) * term_ensemble_variance
+            ensemble_variance += (coeff**2) * term_ensemble_variance * (term_scale_factor**2)
             twirl_variance += (coeff**2) * term_twirl_variance * (term_scale_factor**2)
 
         exp_vals[bcast_index] = exp_val

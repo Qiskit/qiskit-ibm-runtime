@@ -290,8 +290,6 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         )
 
         # stds: sqrt(twirl_variance / num_randomizations)
-        # Per-twirl exp vals: [0.6, 0.0, 0.4]
-        # Mean: 1/3, Variance: (0.36 + 0.0 + 0.16)/3 - (1/3)^2 = 0.52/3 - 1/9
         twirl_variance = (0.36 + 0.0 + 0.16) / 3 - (1 / 3) ** 2
         expected_stds = np.sqrt(twirl_variance / 3)
         self.assertAlmostEqual(
