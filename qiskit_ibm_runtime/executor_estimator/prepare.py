@@ -95,10 +95,9 @@ def prepare(
         shots_per_randomization = shots
 
     # validate noise_model_mapping length
-    if (
-        pec_options is not None
-        and noise_model_mapping is None
-        or len(noise_model_mapping) != len(pubs)
+    if pec_options is not None and (
+        noise_model_mapping is None
+        or (noise_model_mapping is not None and len(noise_model_mapping) != len(pubs))
     ):
         raise IBMInputValueError(
             "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
