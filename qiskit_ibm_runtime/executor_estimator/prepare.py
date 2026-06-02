@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 from samplomatic import build, ChangeBasis
+from samplomatic.samplex import Samplex
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import get_annotation, find_unique_box_instructions
 from qiskit.circuit import ClassicalRegister
@@ -55,10 +56,132 @@ def prepare(
     twirling_options: TwirlingOptions,
     shots: int,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
-    pec_options: PecOptions | None = None,
-    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]] | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
+
+    Args:
+        pubs: List of estimator pubs to convert.
+        twirling_options: The twirling options.
+        shots: The number of shots to use. Will be overridden by
+            ``num_randomizations * shots_per_randomization`` when both are specified explicitly
+            and twirling is on.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
+
+    Returns:
+        :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
+        with ``passthrough data`` configured for
+        :class:`~qiskit_ibm_runtime.executor_estimator.estimator.EstimatorV2` post-processing.
+
+    Raises:
+        IBMInputValueError: If pubs have mismatched precision,
+            if a circuit contains mid-circuit measurements, or if a circuit already uses the
+            reserved classical register name ``_meas``.
+    """
+    if twirling_options.enable_gates or twirling_options.enable_measure:
+        num_randomizations, shots_per_randomization = calculate_twirling_shots(
+            shots,
+            twirling_options.num_randomizations,
+            twirling_options.shots_per_randomization,
+        )
+    else:
+        num_randomizations = 1
+        shots_per_randomization = shots
+
+    # Create items
+    items: list[SamplexItem] = []
+    observables_list = []
+    param_basis_pairs_list = []
+    param_shapes_list = []
+
+    for i, pub in enumerate(pubs):
+        logger.info("Processing pub %d/%d", i + 1, len(pubs))
+
+        boxed_circuit = box_circuit(pub.circuit, twirling_options, measure_noise_learning)
+
+        # Build the template and the samplex
+        template, samplex = build(boxed_circuit)
+
+        # Prepare samplex_arguments
+        flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
+        samplex_arguments = build_basic_samplex_args(
+            samplex, boxed_circuit, flat_parameter_values, change_basis
+        )
+
+        # Create SamplexItem
+        shape = (num_randomizations, change_basis.shape[0])
+        items.append(
+            SamplexItem(
+                circuit=template,
+                samplex=samplex,
+                samplex_arguments=samplex_arguments,
+                shape=shape,
+            )
+        )
+
+        # Store data for passthrough
+        observables_list.append(pub.observables.tolist())
+        param_basis_pairs_list.append(param_basis_pairs)
+        param_shapes_list.append(pub.parameter_values.shape)
+
+    # Collect circuit metadata from each pub
+    circuits_metadata = [pub.circuit.metadata for pub in pubs]
+
+    # Validate that circuit metadata is compatible with DataTree format
+    for idx, metadata in enumerate(circuits_metadata):
+        if metadata is not None and not is_datatree_compatible(metadata):
+            raise IBMInputValueError(
+                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
+                f"Metadata must be a nested structure of lists, dicts (with string keys), "
+                f"numpy arrays, or primitive types (str, int, float, bool, None)."
+            )
+
+    passthrough_data = {
+        "post_processor": {
+            "version": "v0.1",
+            "circuits_metadata": circuits_metadata,
+            "observables": observables_list,
+            "param_basis_pairs": param_basis_pairs_list,
+            "param_shapes": param_shapes_list,
+            "measure_mitigation": "False",
+        },
+    }
+
+    # Create QuantumProgram
+    quantum_program = QuantumProgram(
+        shots=shots_per_randomization,
+        items=items,
+        passthrough_data=passthrough_data,
+    )
+
+    # Add TREX calibration circuit
+    if measure_noise_learning is not None:
+        if (
+            isinstance(measure_noise_learning.shots_per_randomization, int)
+            and measure_noise_learning.shots_per_randomization != shots_per_randomization
+        ):
+            raise IBMInputValueError(
+                "shots_per_randomization must be the same for twirling and measure_noise_learning"
+            )
+        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        quantum_program.items.append(trex_item)
+        passthrough_data["post_processor"]["measure_mitigation"] = "True"
+
+    # Set semantic role for post-processing dispatch
+    quantum_program._semantic_role = "estimator_v2"
+
+    return quantum_program
+
+
+def prepare_pec(
+    pubs: Sequence[EstimatorPub],
+    twirling_options: TwirlingOptions,
+    shots: int,
+    pec_options: PecOptions,
+    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]],
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+) -> QuantumProgram:
+    """Convert estimator PUBs to a quantum program with PEC mitigation.
 
     Args:
         pubs: List of estimator pubs to convert.
@@ -122,25 +245,9 @@ def prepare(
 
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = {}
-        if samplex.inputs().get_specs("parameter_values"):
-            samplex_arguments["parameter_values"] = flat_parameter_values
-
-        # Set changing basis gates
-        for spec in samplex.inputs().get_specs("basis_changes"):
-            # Default to np.zeros, to ensure that every mid-circuit measurement
-            # that may be present is performed without basis changing gates
-            samplex_arguments[spec.name] = np.zeros(spec.shape)
-
-        # Finalize basis changing gates for the final measurements
-        for instr in boxed_circuit.reverse_ops():
-            op = instr.operation
-            if op.name == "box" and (change_basis_annot := get_annotation(op, ChangeBasis)):
-                samplex_arguments[f"basis_changes.{change_basis_annot.ref}"] = change_basis
-                break
-        else:
-            # This should not be reachable
-            raise ValueError("Could not find a change basis annotation.")
+        samplex_arguments = build_basic_samplex_args(
+            samplex, boxed_circuit, flat_parameter_values, change_basis
+        )
 
         # add samplex_arguments related to noise injection
         if pec_options is not None:
@@ -319,6 +426,47 @@ def compute_samplex_arguments(
     ]
 
     return flat_parameter_values, change_basis, param_basis_pairs
+
+
+def build_basic_samplex_args(
+    samplex: Samplex,
+    boxed_circuit: QuantumCircuit,
+    flat_parameter_values: npt.NDArray[float],
+    change_basis: npt.NDArray[int],
+) -> dict[str, np.ndarray]:
+    """Build a samplex args dictionary consisting change_basis and parameters data.
+
+    Args:
+        samplex: a samplex object to create args to.
+        boxed_circuit: a boxed circuit related to the samplex.
+        flat_parameter_values: a flattened array of parameter values.
+        change_basis: an array of bases to change.
+
+    Returns:
+        a samplex args dictionary.
+    """
+    # Prepare samplex_arguments
+    samplex_arguments = {}
+    if samplex.inputs().get_specs("parameter_values"):
+        samplex_arguments["parameter_values"] = flat_parameter_values
+
+    # Set changing basis gates
+    for spec in samplex.inputs().get_specs("basis_changes"):
+        # Default to np.zeros, to ensure that every mid-circuit measurement
+        # that may be present is performed without basis changing gates
+        samplex_arguments[spec.name] = np.zeros(spec.shape)
+
+    # Finalize basis changing gates for the final measurements
+    for instr in boxed_circuit.reverse_ops():
+        op = instr.operation
+        if op.name == "box" and (change_basis_annot := get_annotation(op, ChangeBasis)):
+            samplex_arguments[f"basis_changes.{change_basis_annot.ref}"] = change_basis
+            break
+    else:
+        # This should not be reachable
+        raise ValueError("Could not find a change basis annotation.")
+
+    return samplex_arguments
 
 
 def box_circuit(
