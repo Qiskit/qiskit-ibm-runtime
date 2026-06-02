@@ -12,10 +12,17 @@
 
 """Tests for the AccountClient class."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
+from ..decorators import integration_test_setup
 from ..ibm_test_case import IBMTestCase
-from ..decorators import integration_test_setup, IntegrationTestDependencies
+
+if TYPE_CHECKING:
+    from ..decorators import IntegrationTestDependencies
 
 
 class TestAuthClient(IBMTestCase):

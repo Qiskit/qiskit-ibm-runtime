@@ -16,10 +16,12 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 from .utils import plotly_module
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
+
     from ..utils.circuit_schedule import CircuitSchedule
 
 

@@ -15,6 +15,7 @@
 import numpy as np
 
 from qiskit_ibm_runtime.quantum_program.datatree import is_datatree_compatible
+
 from ...ibm_test_case import IBMTestCase
 
 

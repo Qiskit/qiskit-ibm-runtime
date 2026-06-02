@@ -14,8 +14,8 @@
 
 from __future__ import annotations
 
-from typing import Literal
 from collections.abc import Sequence
+from typing import Literal
 
 from pydantic import field_validator, model_validator
 

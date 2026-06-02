@@ -16,32 +16,40 @@ from __future__ import annotations
 
 import logging
 import warnings
-from datetime import datetime
-from typing import Any
-from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
-from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
-from .proxies import ProxyConfiguration
-from .utils import is_crn
-from .utils.backend_decoder import configuration_from_server_data
 
-from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
+from .accounts import Account, AccountManager
+from .api.client_parameters import ClientParameters
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .exceptions import IBMInputValueError
-from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
-from .decoders.result_decoder import ResultDecoder
+from .exceptions import (
+    IBMInputValueError,
+    IBMRuntimeError,
+    RuntimeJobNotFound,
+    RuntimeProgramNotFound,
+)
+from .proxies import ProxyConfiguration
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import validate_job_tags
-from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .ibm_backend import IBMBackend
-from .models import QasmBackendConfiguration
+from .utils import is_crn, validate_job_tags
+from .utils.backend_decoder import configuration_from_server_data
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+    from datetime import datetime
+
+    from qiskit.providers.backend import BackendV2 as Backend
+
+    from .accounts import ChannelType, PlanType, RegionType
+    from .decoders.result_decoder import ResultDecoder
+    from .ibm_backend import IBMBackend
+    from .models import QasmBackendConfiguration
 
 logger = logging.getLogger(__name__)
 

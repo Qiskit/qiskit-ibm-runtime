@@ -33,11 +33,8 @@ transpilation and passes.
 See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """
 
-from .basis import ConvertIdToDelay, FoldRzzAngle, ConvertToMidCircuitMeasure
+from .basis import ConvertIdToDelay, ConvertToMidCircuitMeasure, FoldRzzAngle
+from .cliffordization import ConvertISAToClifford
 
 # circuit scheduling
-from .scheduling import ASAPScheduleAnalysis
-from .scheduling import PadDynamicalDecoupling
-from .scheduling import PadDelay
-
-from .cliffordization import ConvertISAToClifford
+from .scheduling import ASAPScheduleAnalysis, PadDelay, PadDynamicalDecoupling

@@ -13,7 +13,6 @@
 """Test the cliffordization pass."""
 
 import numpy as np
-
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler.passmanager import PassManager
 

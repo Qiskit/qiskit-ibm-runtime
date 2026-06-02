@@ -12,20 +12,23 @@
 
 """Base class for Qiskit Runtime primitives."""
 
-from abc import ABC, abstractmethod
-from typing import TypeVar, Generic
-import logging
-from dataclasses import asdict, replace
+from __future__ import annotations
 
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.primitives.containers.sampler_pub import SamplerPub
+import logging
+from abc import ABC, abstractmethod
+from dataclasses import asdict, replace
+from typing import TYPE_CHECKING, Generic, TypeVar
+
 from qiskit.providers.backend import BackendV2
 
+from .batch import Batch
+from .decoders.defaults import DEFAULT_DECODERS
+from .fake_provider.local_service import QiskitRuntimeLocalService
+from .ibm_backend import IBMBackend
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
-from .runtime_job_v2 import RuntimeJobV2
-from .ibm_backend import IBMBackend
-
+from .qiskit_runtime_service import QiskitRuntimeService
+from .session import Session
 from .utils import (
     validate_isa_circuits,
     validate_no_dd_with_dynamic_circuits,
@@ -33,12 +36,12 @@ from .utils import (
 )
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
-from .decoders.defaults import DEFAULT_DECODERS
-from .qiskit_runtime_service import QiskitRuntimeService
-from .fake_provider.local_service import QiskitRuntimeLocalService
 
-from .session import Session
-from .batch import Batch
+if TYPE_CHECKING:
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from qiskit.primitives.containers.sampler_pub import SamplerPub
+
+    from .runtime_job_v2 import RuntimeJobV2
 
 logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)

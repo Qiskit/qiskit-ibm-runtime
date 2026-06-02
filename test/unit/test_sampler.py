@@ -14,19 +14,19 @@
 
 from unittest.mock import MagicMock
 
-from ddt import data, ddt, named_data, unpack
 import numpy as np
-
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.primitives.containers.sampler_pub import SamplerPub
+from ddt import data, ddt, named_data, unpack
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import real_amplitudes
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers import BackendV2, Options
 from qiskit.result import Result
 from qiskit.result.models import ExperimentResult, ExperimentResultData
 from qiskit.transpiler import Target
-from qiskit_ibm_runtime import Session, SamplerV2, SamplerOptions, IBMInputValueError
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke, FakeCusco
+
+from qiskit_ibm_runtime import IBMInputValueError, SamplerOptions, SamplerV2, Session
+from qiskit_ibm_runtime.fake_provider import FakeCusco, FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs

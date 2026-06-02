@@ -14,8 +14,10 @@
 
 import ddt
 import numpy as np
-from qiskit_ibm_runtime.visualization.utils import plotly_module
+
 from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
+from qiskit_ibm_runtime.visualization.utils import plotly_module
+
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 

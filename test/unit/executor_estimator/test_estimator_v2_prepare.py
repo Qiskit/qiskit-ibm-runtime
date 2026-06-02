@@ -13,22 +13,20 @@
 """Unit tests for EstimatorV2 prepare function."""
 
 import unittest
-from ddt import ddt
 from typing import Any, cast
-import numpy as np
-from ddt import data, unpack
 
+import numpy as np
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
+from qiskit.circuit import ClassicalRegister, Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.circuit import ClassicalRegister
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ...utils import combine
 
@@ -116,8 +114,8 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 2)
 
-        item1 = cast(SamplexItem, quantum_program.items[0])
-        item2 = cast(SamplexItem, quantum_program.items[1])
+        item1 = cast("SamplexItem", quantum_program.items[0])
+        item2 = cast("SamplexItem", quantum_program.items[1])
         self.assertIsInstance(item1, SamplexItem)
         self.assertIsInstance(item2, SamplexItem)
 
@@ -127,7 +125,7 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertNotIn("parameter_values", item1.samplex_arguments)
         np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
 
-        passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
         self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)

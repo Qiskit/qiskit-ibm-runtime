@@ -12,23 +12,28 @@
 
 """Pass to convert the gates of an ISA circuit to Clifford gates."""
 
-from random import choices
-import numpy as np
+from __future__ import annotations
 
+from random import choices
+from typing import TYPE_CHECKING
+
+import numpy as np
 from qiskit.circuit import Barrier, Measure
 from qiskit.circuit.library import (
     CXGate,
     CZGate,
     ECRGate,
     IGate,
+    RXGate,
     RZGate,
+    RZZGate,
     SXGate,
     XGate,
-    RXGate,
-    RZZGate,
 )
-from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
+
+if TYPE_CHECKING:
+    from qiskit.dagcircuit import DAGCircuit
 
 SUPPORTED_INSTRUCTIONS = (
     CXGate,

@@ -12,25 +12,26 @@
 
 """Test folding Rzz angle into calibrated range."""
 
-from math import pi
-from itertools import chain
 import unittest
-import numpy as np
-from ddt import ddt, named_data, data, unpack
+from itertools import chain
+from math import pi
 
+import numpy as np
+from ddt import data, ddt, named_data, unpack
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
+from qiskit.quantum_info import Operator, SparsePauliOp
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.quantum_info import Operator, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
     FoldRzzAngle,
     convert_to_rzz_valid_pub,
 )
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
+
 from .....ibm_test_case import IBMTestCase
 
 

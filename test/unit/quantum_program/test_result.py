@@ -16,7 +16,6 @@ import datetime
 
 import numpy as np
 from ddt import ddt
-from ...utils import combine
 
 from qiskit_ibm_runtime.results.quantum_program import (
     ChunkPart,
@@ -24,13 +23,14 @@ from qiskit_ibm_runtime.results.quantum_program import (
     ChunkTiming,
     ItemMetadata,
     Metadata,
-    QuantumProgramResult,
     QuantumProgramItemResult,
-    StretchValues,
+    QuantumProgramResult,
     SchedulerTiming,
+    StretchValues,
 )
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import combine
 
 
 def _make_span(start_s: float, stop_s: float, size: int = 1) -> ChunkSpan:

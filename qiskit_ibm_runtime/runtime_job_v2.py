@@ -14,29 +14,34 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
-from collections.abc import Sequence
-from concurrent import futures
 import logging
 import time
 import warnings
+from concurrent import futures
+from typing import TYPE_CHECKING, Any, Literal
 
-from qiskit.providers.backend import Backend
-from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
+from qiskit.primitives.containers import PrimitiveResult
 
-from qiskit_ibm_runtime import qiskit_runtime_service
+from .api.exceptions import RequestsApiError
+from .base_runtime_job import BaseRuntimeJob
 from .exceptions import (
-    RuntimeJobFailureError,
-    RuntimeInvalidStateError,
     IBMRuntimeError,
+    RuntimeInvalidStateError,
+    RuntimeJobFailureError,
     RuntimeJobMaxTimeoutError,
     RuntimeJobTimeoutError,
 )
-from .decoders.result_decoder import ResultDecoder
-from .api.clients import RuntimeClient
-from .api.exceptions import RequestsApiError
-from .base_runtime_job import BaseRuntimeJob
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from qiskit.providers.backend import Backend
+
+    from qiskit_ibm_runtime import qiskit_runtime_service
+
+    from .api.clients import RuntimeClient
+    from .decoders.result_decoder import ResultDecoder
 
 logger = logging.getLogger(__name__)
 

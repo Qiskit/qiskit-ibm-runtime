@@ -17,26 +17,24 @@ from __future__ import annotations
 from dataclasses import asdict
 
 import numpy as np
-from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
-
-from ibm_quantum_schemas.executor.version_0_2 import (
-    ParamsModel,
-    CircuitItemModel,
-    SamplexItemModel,
-    QuantumProgramModel,
-)
 from ibm_quantum_schemas.common import (
-    PauliLindbladMapModel,
-    SamplexModelSSV1ToSSV2,
     F64TensorModel,
-    TensorModel,
+    PauliLindbladMapModel,
     QpyModelV13ToV17,
+    SamplexModelSSV1ToSSV2,
+    TensorModel,
 )
-from ...utils.utils import get_qpy_version, get_ssv_version
+from ibm_quantum_schemas.executor.version_0_2 import (
+    CircuitItemModel,
+    ParamsModel,
+    QuantumProgramModel,
+    SamplexItemModel,
+)
+from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
-
-from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ...options_models.executor_options import ExecutorOptions
+from ...utils.utils import get_qpy_version, get_ssv_version
+from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
 
 def quantum_program_from_0_2(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:

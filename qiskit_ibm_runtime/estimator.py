@@ -12,22 +12,27 @@
 
 """Estimator primitive."""
 
-from collections.abc import Iterable
-import logging
+from __future__ import annotations
 
-from qiskit.providers import BackendV2
+import logging
+from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseEstimatorV2
-from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from .runtime_job_v2 import RuntimeJobV2
-from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV2
+from .options.estimator_options import EstimatorOptions
 from .utils import validate_estimator_pubs
 
-from .session import Session
-from .batch import Batch
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives.containers import EstimatorPubLike
+    from qiskit.providers import BackendV2
+
+    from .batch import Batch
+    from .runtime_job_v2 import RuntimeJobV2
+    from .session import Session
 
 logger = logging.getLogger(__name__)
 

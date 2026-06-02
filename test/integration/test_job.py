@@ -23,8 +23,8 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
+from ..decorators import production_only, run_integration_test
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
 from ..serialization import SerializableClass
 from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 

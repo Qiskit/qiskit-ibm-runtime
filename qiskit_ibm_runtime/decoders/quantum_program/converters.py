@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING
 from ...results.quantum_program import (
     ChunkPart,
     ChunkSpan,
+    ItemMetadata,
     Metadata,
     QuantumProgramItemResult,
     QuantumProgramResult,
-    ItemMetadata,
     SchedulerTiming,
     StretchValues,
 )

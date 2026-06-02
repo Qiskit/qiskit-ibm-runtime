@@ -12,28 +12,34 @@
 
 """Qiskit runtime service."""
 
-import math
+from __future__ import annotations
+
 import copy
 import logging
+import math
 import warnings
 from dataclasses import asdict
-from typing import Literal
-from collections.abc import Callable
+from typing import TYPE_CHECKING, Literal
 
 from qiskit.primitives import (
     BackendEstimatorV2,
     BackendSamplerV2,
 )
-from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit.providers.backend import BackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from .fake_backend import FakeBackendV2
+from ..ibm_backend import IBMBackend
 from .fake_provider import FakeProviderForBackendV2
 from .local_runtime_job import LocalRuntimeJob
-from ..ibm_backend import IBMBackend
-from ..runtime_options import RuntimeOptions
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from qiskit.primitives.primitive_job import PrimitiveJob
+    from qiskit.providers.backend import BackendV2
+
+    from ..runtime_options import RuntimeOptions
+    from .fake_backend import FakeBackendV2
 
 logger = logging.getLogger(__name__)
 

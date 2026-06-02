@@ -13,14 +13,15 @@
 """Tests SliceSpan and ExecutionSpans classes."""
 
 from datetime import datetime, timedelta
-import ddt
 
+import ddt
 import numpy as np
 import numpy.testing as npt
+
 from qiskit_ibm_runtime.execution_span import (
-    SliceSpan,
     DoubleSliceSpan,
     ExecutionSpans,
+    SliceSpan,
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )

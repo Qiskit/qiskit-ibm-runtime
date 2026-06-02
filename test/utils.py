@@ -12,37 +12,42 @@
 
 """General utility functions for testing."""
 
-import os
-import logging
-import time
-import itertools
-import unittest
-from unittest import mock
-from typing import Any
-from datetime import datetime
-from ddt import data, unpack
+from __future__ import annotations
 
-from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
+import itertools
+import logging
+import os
+import time
+import unittest
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
+from unittest import mock
+
+from ddt import data, unpack
+from qiskit.circuit import ClassicalRegister, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.backend import Backend
-from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit.quantum_info import Pauli, SparsePauliOp
+
 from qiskit_ibm_runtime import (
-    QiskitRuntimeService,
-    Session,
-    EstimatorV2,
-    SamplerV2,
     Batch,
+    EstimatorV2,
+    QiskitRuntimeService,
+    SamplerV2,
+    Session,
 )
+from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (
-    BackendStatus,
-    BackendProperties,
     BackendConfiguration,
+    BackendProperties,
+    BackendStatus,
 )
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
-from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+
+if TYPE_CHECKING:
+    from qiskit.providers.backend import Backend
 
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
