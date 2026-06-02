@@ -20,8 +20,6 @@ from collections.abc import Iterable
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
-from ...utils.circuit_schedule import CircuitSchedule
-
 if TYPE_CHECKING:
     from ...results import QuantumProgramItemResult
 
@@ -82,7 +80,7 @@ def quantum_program_item_result_to_sampler_pub_result(
     if item.metadata.scheduler_timing:
         pub_metadata.setdefault("compilation", {})
         pub_metadata["compilation"]["scheduler_timing"] = {
-            "timing": CircuitSchedule(item.metadata.scheduler_timing.timing),
+            "timing": item.metadata.scheduler_timing.timing,
             "circuit_duration": item.metadata.scheduler_timing.circuit_duration,
         }
     if item.metadata.stretch_values:
