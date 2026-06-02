@@ -34,10 +34,8 @@ class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
     URL_MAP = {
-        "programs": "/programs",
         "jobs": "/jobs",
         "backends": "/backends",
-        "cloud_instance": "/instance",
         "cloud_usage": "/instances/usage",
     }
 

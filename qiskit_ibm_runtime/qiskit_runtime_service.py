@@ -31,7 +31,6 @@ from .utils import is_crn
 from .utils.backend_decoder import configuration_from_server_data
 
 from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
-from .api.clients import VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError
@@ -148,6 +147,10 @@ class QiskitRuntimeService:
             Name (CRN) or the service name. If set, it will define an instance for
             service instantiation, if not set, the service will fetch all instances accessible
             within the account following the specified filtering criteria.
+            Pass ``"auto"`` to explicitly request auto-selection without triggering the
+            "instance not set" warning. This value can also be saved to the account file
+            via :meth:`.save_account` so it takes effect automatically on every
+            instantiation.
         proxies: Proxy configuration. Supported optional keys are ``urls`` (a
             dictionary mapping protocol or protocol and host to the URL of the proxy, documented
             at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
@@ -209,6 +212,9 @@ class QiskitRuntimeService:
         super().__init__()
         self._all_instances: list[dict[str, Any]] = []
         self._saved_instances: list[str] = []
+        self._instance_auto = instance == "auto"
+        if self._instance_auto:
+            instance = None
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -219,6 +225,9 @@ class QiskitRuntimeService:
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
+        if self._account.instance == "auto":
+            self._account.instance = None
+            self._instance_auto = True
 
         if private_endpoint is not None:
             self._account.private_endpoint = private_endpoint
@@ -274,21 +283,24 @@ class QiskitRuntimeService:
 
             filters = f"(tags: {tags_str}, region: {region_str}{plans_preference_str}"
 
-            logger.warning(
-                "Instance was not set at service instantiation. %s"
-                "Based on the following filters: %s, "
-                "the available account instances are: %s. "
-                "If you need a specific instance set it explicitly either by "
-                "using a saved account with a saved default instance or passing it "
-                "in directly to QiskitRuntimeService().",
-                (
-                    ""
-                    if self._plans_preference
-                    else "Free and trial plan instances will be prioritized. "
-                ),
-                filters,
-                ", ".join(instance_names),
-            )
+            if not self._instance_auto:
+                logger.warning(
+                    "Instance was not set at service instantiation. %s"
+                    "Based on the following filters: %s, "
+                    "the available account instances are: %s. "
+                    "If you need a specific instance set it explicitly either by "
+                    "using a saved account with a saved default instance or passing it "
+                    "in directly to QiskitRuntimeService(). "
+                    "Alternatively, pass instance='auto' or save it to your account for "
+                    "auto-selection without warning.",
+                    (
+                        ""
+                        if self._plans_preference
+                        else "Free and trial plan instances will be prioritized. "
+                    ),
+                    filters,
+                    ", ".join(instance_names),
+                )
             for inst, _ in instance_backends:
                 self._get_or_create_cloud_client(inst)
 
@@ -454,6 +466,7 @@ class QiskitRuntimeService:
         if (
             account.channel in ["ibm_cloud", "ibm_quantum_platform"]
             and account.instance
+            and account.instance != "auto"
             and not is_crn(account.instance)
         ):
             account.instance = self._get_crn_from_instance_name(
@@ -480,19 +493,6 @@ class QiskitRuntimeService:
             raise IBMInputValueError(
                 f"The instance specified ({instance}) is not a valid instance name."
             )
-
-    @staticmethod
-    def _check_api_version(params: ClientParameters) -> dict[str, bool | str]:
-        """Check the version of the remote server in a set of client parameters for all channels.
-
-        Args:
-            params: Parameters used for server connection.
-
-        Returns:
-            A dictionary with version information.
-        """
-        version_finder = VersionClient(url=params.url, **params.connection_parameters())
-        return version_finder.version()
 
     def _get_api_client(
         self,
@@ -603,7 +603,7 @@ class QiskitRuntimeService:
                 if name not in backends_available:
                     continue
                 backends_available = [name]
-            else:
+            elif not self._instance_auto:
                 for inst_details in self._backend_instance_groups:
                     if inst == inst_details["crn"]:
                         logger.warning(
@@ -614,7 +614,7 @@ class QiskitRuntimeService:
             for backend_name in backends_available:
                 if backend_name in unique_backends:
                     continue
-                if name:
+                if name and not self._instance_auto:
                     for inst_details in self._backend_instance_groups:
                         if inst == inst_details["crn"]:
                             logger.warning(
@@ -833,6 +833,8 @@ class QiskitRuntimeService:
             instance: This is an optional parameter to specify the CRN  or service name.
                 If set, it will define a default instance for service instantiation,
                 if not set, the service will fetch all instances accessible within the account.
+                Set to ``"auto"`` to explicitly save auto-selection as the preference, which
+                suppresses the "instance not set" warning on subsequent instantiations.
             channel: Channel type. ``ibm_cloud`` or ``ibm_quantum_platform``.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
@@ -917,16 +919,10 @@ class QiskitRuntimeService:
             name: Name of the backend.
             instance: Specify the IBM Cloud account CRN.
             use_fractional_gates: Set True to allow for the backends to include
-                fractional gates. Currently this feature cannot be used
-                simultaneously with dynamic circuits, PEC, PEA, or gate
-                twirling.  When this flag is set, control flow instructions are
-                automatically removed from the backend.
-                When you use a dynamic circuits feature (e.g. ``if_else``) in your
-                algorithm, you must disable this flag to create executable ISA circuits.
-                This flag might be modified or removed when our backend
-                supports dynamic circuits and fractional gates simultaneously.
-                If ``None``, then both fractional gates and control flow operations are
-                included in the backends.
+                fractional gates. See
+                `When not to use fractional gates
+                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                for limitations.
             calibration_id: The calibration id used for instantiating the backend.
 
         Returns:
@@ -1278,6 +1274,7 @@ class QiskitRuntimeService:
         min_num_qubits: int | None = None,
         instance: str | None = None,
         filters: Callable[[ibm_backend.IBMBackend], bool] | None = None,
+        use_fractional_gates: bool | None = False,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.
@@ -1290,6 +1287,12 @@ class QiskitRuntimeService:
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
 
+            use_fractional_gates: When ``True``, only backends that include
+                fractional gates are considered, and fractional gates are included
+                in the returned backend. See
+                `When not to use fractional gates
+                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                for limitations.
             kwargs: Additional arguments passed to the backend query.
 
         Returns:
@@ -1338,7 +1341,7 @@ class QiskitRuntimeService:
         for back in sorted_backends:
             # We don't know whether or not the backend has a valid config
             try:
-                return self.backend(name=back["name"])
+                return self.backend(name=back["name"], use_fractional_gates=use_fractional_gates)
             except Exception:
                 pass
         raise QiskitBackendNotFoundError("No backend matches the criteria.")
