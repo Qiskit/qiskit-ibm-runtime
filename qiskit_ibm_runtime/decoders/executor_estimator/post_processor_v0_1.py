@@ -75,11 +75,11 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # extract gamma factors if present
     pec_gammas = post_processor_data.get("pec_gammas", None)
-    
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
-    
+
     if measure_mitigation == "True":
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
@@ -251,13 +251,6 @@ def process_expectation_values(
 
             # Calculate scale factor in case TREX mitigation is used
             term_scale_factor = (
-                calculate_trex_factor(measure_noise_model, observable_term)
-                if measure_noise_model
-                else 1
-            )
-
-            # Calculate scale factor in case TREX mitigation is used
-            term_scale_factor = (
                 calculate_trex_factor(measure_noise_data, observable_term)
                 if measure_noise_data is not None
                 else 1
@@ -266,7 +259,7 @@ def process_expectation_values(
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
             variance += (coeff**2) * term_variance * (term_scale_factor**2)
-            
+
             if pec_gamma is not None:
                 exp_val *= pec_gamma
                 variance *= pec_gamma**2

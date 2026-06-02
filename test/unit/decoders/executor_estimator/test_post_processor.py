@@ -226,7 +226,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
         primitive_result_with_mitigation = estimator_v2_post_processor_v0_1(result_with_mitigation)
         ev_with_mitigation = primitive_result_with_mitigation[0].data.evs[0]
-        
+
         # Verify that after mitigation the expectation value is back to 1
         self.assertAlmostEqual(ev_with_mitigation, 1.0, places=5)
 

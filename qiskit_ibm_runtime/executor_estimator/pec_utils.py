@@ -25,6 +25,9 @@ def calculate_gamma(
 ) -> float:
     """Calculate the PEC gamma factor of a circuit based on a noise model.
 
+    The returned gamma is that associated with the inverse noise maps needed
+    to cancel the noise in the circuit.
+
     Args:
         boxed_circuit: The annotated circuit to calculate the PEC gamma for.
         noise_model_mapping: Mapping between layer ref to a noise model
@@ -38,8 +41,6 @@ def calculate_gamma(
         if annot := get_annotation(instr.operation, InjectNoise):
             plm = noise_model_mapping[annot.ref]
             # scale the noise by noise_factor
-            plm = PauliLindbladMap.from_components(
-                plm.rates * noise_factor, plm.get_qubit_sparse_pauli_list_copy()
-            )
-            gamma *= plm.gamma()
+            plm = plm.scale_rates(noise_factor)
+            gamma *= plm.inverse().gamma()
     return gamma
