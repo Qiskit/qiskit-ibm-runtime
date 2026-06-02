@@ -111,11 +111,7 @@ ignore = [
     "I",      # isort -- requires specific import order and tweaks
 ]
 
-"qiskit_ibm_runtime/utils/__init__.py" = [
-    "I",      # isort -- requires specific import order and tweaks
-]
-
-"qiskit_ibm_runtime/options/*_options.py" = [
+"qiskit_ibm_runtime/options/*options.py" = [
     "TC",     # flake8-type-checking -- ruff moves Unset and Dict to TYPE_CHECKING block
 ]
 
