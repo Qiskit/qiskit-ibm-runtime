@@ -24,6 +24,7 @@ from qiskit.providers import BackendV2
 
 from ..runtime_job_v2 import RuntimeJobV2
 from ..executor import Executor
+from ..executor.dynamical_decoupling import generate_dd_pass_manager
 from ..session import Session
 from ..batch import Batch
 from ..options_models.estimator_options import EstimatorOptions
@@ -142,7 +143,31 @@ class EstimatorV2(BaseEstimatorV2):
         else:
             shots = int(np.ceil(1.0 / (self.options.default_precision**2)))
 
+        if self.options.dynamical_decoupling.enable:
+            for pub in coerced_pubs:
+                if pub.circuit.has_control_flow_op():
+                    raise ValueError(
+                        "Dynamical decoupling is not compatible with dynamic circuits "
+                        "(circuits with control flow operations)."
+                    )
+
         quantum_program = prepare(coerced_pubs, self.options.twirling, shots)
+
+        if self.options.dynamical_decoupling.enable:
+            backend = self._executor._backend
+            if backend is None:
+                raise ValueError(
+                    "Backend is required to apply dynamical decoupling. "
+                    "Please provide a backend when initializing the estimator."
+                )
+
+            dd_pass_manager = generate_dd_pass_manager(
+                backend=backend,
+                options=self.options.dynamical_decoupling,
+            )
+            for item in quantum_program.items:
+                item.circuit = dd_pass_manager.run(item.circuit)
+
         executor_options = self.options.to_executor_options()
 
         # Set executor options

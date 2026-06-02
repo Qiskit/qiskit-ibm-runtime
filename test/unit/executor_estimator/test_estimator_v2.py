@@ -15,6 +15,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
+from ddt import ddt, data
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
@@ -30,6 +31,7 @@ from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
+@ddt
 class TestEstimatorV2Run(unittest.TestCase):
     """Tests for the EstimatorV2.run() method."""
 
@@ -255,6 +257,68 @@ class TestEstimatorV2Run(unittest.TestCase):
 
         self.mock_executor_instance.run.assert_called_once()
         self.assertEqual(job, self.mock_job)
+
+    @data(True, False)
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.generate_dd_pass_manager")
+    def test_run_applies_dynamical_decoupling_after_prepare(
+        self, twirling_enabled, mock_generate_dd_pass_manager
+    ):
+        """Test DD pass manager is run on prepared quantum program item circuits.
+
+        Tests with twirling enabled and disabled (samplex item vs circuit item),
+        using two pubs to verify DD is applied to both circuits.
+        """
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.dynamical_decoupling.enable = True
+        estimator.options.twirling.enable_gates = twirling_enabled
+        estimator.options.twirling.enable_measure = twirling_enabled
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        dd_pass_manager = MagicMock()
+        dd_circuit = QuantumCircuit(2)
+        dd_pass_manager.run.return_value = dd_circuit
+        mock_generate_dd_pass_manager.return_value = dd_pass_manager
+
+        estimator.run([(circuit, observable), (circuit, observable)], precision=0.03125)
+
+        mock_generate_dd_pass_manager.assert_called_once_with(
+            backend=self.backend,
+            options=estimator.options.dynamical_decoupling,
+        )
+        # DD pass manager should be called twice (once for each pub)
+        self.assertEqual(dd_pass_manager.run.call_count, 2)
+
+        quantum_program = self.mock_executor_instance.run.call_args[0][0]
+        # Verify DD was applied to both circuits
+        self.assertIs(quantum_program.items[0].circuit, dd_circuit)
+        self.assertIs(quantum_program.items[1].circuit, dd_circuit)
+
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.generate_dd_pass_manager")
+    def test_run_rejects_dynamic_circuits_when_dynamical_decoupling_enabled(
+        self, mock_generate_dd_pass_manager
+    ):
+        """Test DD rejects prepared quantum program items with control flow."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.dynamical_decoupling.enable = True
+
+        circuit = QuantumCircuit(2, 1)
+        circuit.h(0)
+        circuit.measure(0, 0)
+        circuit.if_else((0, True), QuantumCircuit(2, 1), QuantumCircuit(2, 1), [0, 1], [0])
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Dynamical decoupling is not compatible with dynamic circuits",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
+
+        mock_generate_dd_pass_manager.assert_not_called()
+        self.mock_executor_instance.run.assert_not_called()
 
     def test_run_incompatible_broadcast_shapes(self):
         """Test that incompatible parameter and observable shapes raise an error."""
