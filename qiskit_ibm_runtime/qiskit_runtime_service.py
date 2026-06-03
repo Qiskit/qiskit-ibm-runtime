@@ -929,7 +929,7 @@ class QiskitRuntimeService:
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             calibration_id: The calibration id used for instantiating the backend.
 
@@ -951,7 +951,7 @@ class QiskitRuntimeService:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information#view-your-resources"
+                    "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
@@ -1299,7 +1299,7 @@ class QiskitRuntimeService:
                 fractional gates are considered, and fractional gates are included
                 in the returned backend. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             kwargs: Additional arguments passed to the backend query.
 
