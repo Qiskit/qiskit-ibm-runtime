@@ -56,6 +56,15 @@ class TestFoldRzzAngle(IBMTestCase):
         ("quad2_12pi_wrap", 23 * pi / 2 + 0.1),
         ("quad3_12pi_wrap", 11 * pi + 0.1),
         ("quad4_12pi_wrap", -12 * pi - 0.1),
+        # Odd-winding multiples of pi that wrap exactly onto the +-pi boundary. These drop
+        # an odd number of 2*pi windings, so the folded circuit must re-add a global phase
+        # of pi to remain unitary-equivalent (not merely equivalent up to global phase).
+        ("3pi_pos", 3 * pi),
+        ("3pi_neg", -3 * pi),
+        ("7pi_pos", 7 * pi),
+        ("7pi_neg", -7 * pi),
+        ("5pi_pos", 5 * pi),
+        ("5pi_neg", -5 * pi),
     )
     def test_folding_rzz_angles(self, angle):
         """Test folding gate angle into calibrated range."""
