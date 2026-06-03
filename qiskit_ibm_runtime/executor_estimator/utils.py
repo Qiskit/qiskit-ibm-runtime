@@ -18,9 +18,15 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qiskit.primitives import EstimatorPub
+
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit.quantum_info import Pauli
 from functools import lru_cache
 
-from qiskit.quantum_info import Pauli
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
@@ -104,3 +110,35 @@ def unbroadcast_index(
     pad_shape = _pad_broadcast_shape(shape, len(bc_index))
     bc_index = tuple(0 if dim == 1 else i for i, dim in zip(bc_index, pad_shape))
     return bc_index[-shape_ndims:]
+
+
+def resolve_precision(
+    pubs: list[EstimatorPub],
+    run_precision: float | None = None,
+) -> float | None:
+    """Resolve precision from multiple sources with clear precedence.
+
+    Precedence order (highest to lowest):
+    1. Individual pub precision (must be consistent across all pubs)
+    2. run() method precision parameter (run_precision)
+
+    Args:
+        pubs: List of estimator pubs (may contain precision values).
+        run_precision: Precision specified in run() method.
+
+    Returns:
+        The resolved precision value, or None if no precision is specified anywhere.
+
+    Raises:
+        IBMInputValueError: If pubs have different precision values.
+    """
+    # Extract precision from pubs
+    pub_precisions = {pub.precision or run_precision for pub in pubs}
+
+    if len(pub_precisions) != 1:
+        raise IBMInputValueError(
+            f"All pubs must have the same precision. Found: {pub_precisions}"
+            "(possibly via the run provided precision parameter)"
+        )
+
+    return next(iter(pub_precisions))
