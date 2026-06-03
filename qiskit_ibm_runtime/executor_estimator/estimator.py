@@ -110,7 +110,7 @@ class EstimatorV2(BaseEstimatorV2):
         and the ``job`` being submitted. In order to check the progress of the call, it is
         recommended to setup logging (with an ``INFO`` level) - see
         `Qiskit Runtime documentation
-        <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
         Args:
