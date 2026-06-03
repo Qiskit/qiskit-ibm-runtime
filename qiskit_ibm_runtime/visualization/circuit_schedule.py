@@ -17,7 +17,7 @@ from __future__ import annotations
 from itertools import cycle
 from typing import TYPE_CHECKING
 import numpy as np
-from ..visualization.utils import plotly_module
+from .utils import plotly_module
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure, Scatter
