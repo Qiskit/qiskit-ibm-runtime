@@ -113,7 +113,14 @@ class FoldRzzAngle(TransformationPass):
                 replace = self._quad4(wrap_angle, node.qargs)
             else:
                 raise RuntimeError("Unreacheable.")
-            if pi < angle % (4 * pi) < 3 * pi:
+            # Wrapping the angle into (-pi, pi] dropped a number of 2*pi windings; each
+            # dropped winding flips the sign of the operator (Rzz(theta + 2*pi) = -Rzz(theta)).
+            # Re-add that sign as a global phase of pi when an odd number of windings was
+            # dropped. The parity is computed directly from the wrap that was performed so
+            # that it stays consistent with `wrap_angle` (deriving it from `angle % (4*pi)`
+            # is fragile at the pi/3*pi window boundaries due to floating-point rounding).
+            windings = round((angle - wrap_angle) / (2 * pi))
+            if windings % 2:
                 replace.apply_operation_back(GlobalPhaseGate(pi))
             dag.substitute_node_with_dag(node, replace)
         return modified
