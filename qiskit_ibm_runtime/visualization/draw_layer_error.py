@@ -19,7 +19,7 @@ import numpy as np
 from qiskit.providers.backend import BackendV2
 from qiskit.quantum_info import Pauli
 
-from ..utils.embeddings import Embedding
+from .embeddings import Embedding
 from ..results.noise_learner import LayerError
 from .utils import get_rgb_color, pie_slice, plotly_module
 

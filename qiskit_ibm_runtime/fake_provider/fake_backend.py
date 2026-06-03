@@ -12,40 +12,43 @@
 
 """Base class for dummy backends."""
 
-from typing import Any
-import logging
-import warnings
+from __future__ import annotations
+
 import json
+import logging
 import os
+import warnings
+from typing import TYPE_CHECKING, Any
 
-from qiskit import QuantumCircuit
-
-from qiskit.providers import BackendV2, Job
-from qiskit.utils import optionals as _optionals
-from qiskit.transpiler import Target
-from qiskit.providers import Options
-
+from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
-
-from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
-from qiskit_ibm_runtime.utils.backend_decoder import (
-    decode_backend_configuration,
-    properties_from_server_data,
-)
-
-from .. import QiskitRuntimeService
-from ..utils.backend_encoder import BackendEncoder
-from ..utils.backend_decoder import configuration_from_server_data
+from qiskit.utils import optionals as _optionals
 
 from ..models import (
-    BackendProperties,
     BackendConfiguration,
+    BackendProperties,
     BackendStatus,
-    QasmBackendConfiguration,
 )
 from ..models.exceptions import (
     BackendPropertyError,
 )
+from ..utils.backend_converter import convert_to_target
+from ..utils.backend_decoder import (
+    configuration_from_server_data,
+    decode_backend_configuration,
+    properties_from_server_data,
+)
+from ..utils.backend_encoder import BackendEncoder
+
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+    from qiskit.providers import Job, Options
+    from qiskit.transpiler import Target
+
+    from ..qiskit_runtime_service import QiskitRuntimeService
+    from ..models import (
+        QasmBackendConfiguration,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -398,6 +401,9 @@ class FakeBackendV2(BackendV2):
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
             Exception: If the real target doesn't exist or can't be accessed
         """
+        # Use runtime imports, to prevent `FakeBackendV2` to depend on `QiskitRuntimeService``.
+        from ..qiskit_runtime_service import QiskitRuntimeService
+
         if not isinstance(service, QiskitRuntimeService):
             raise ValueError(
                 "The provided service to update the fake backend is invalid. A "
