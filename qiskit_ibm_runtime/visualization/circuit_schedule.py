@@ -18,6 +18,7 @@ from itertools import cycle
 from typing import TYPE_CHECKING
 
 import numpy as np
+
 from .utils import plotly_module
 
 if TYPE_CHECKING:

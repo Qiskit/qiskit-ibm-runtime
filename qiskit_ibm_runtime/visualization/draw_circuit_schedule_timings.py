@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 from .circuit_schedule import CircuitSchedule
 from .utils import plotly_module
 

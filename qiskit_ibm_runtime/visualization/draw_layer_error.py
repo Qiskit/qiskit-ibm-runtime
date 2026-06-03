@@ -19,8 +19,8 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 from qiskit.providers.backend import BackendV2
 
-from .embeddings import Embedding
 from ..results.noise_learner import LayerError
+from .embeddings import Embedding
 from .utils import get_rgb_color, pie_slice, plotly_module
 
 if TYPE_CHECKING:
