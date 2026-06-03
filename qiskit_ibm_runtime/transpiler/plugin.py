@@ -27,7 +27,6 @@ from qiskit_ibm_runtime.transpiler.passes.basis import (
     FoldRzzAngle,
 )
 
-from ..utils.deprecation import issue_deprecation_msg
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -108,59 +107,6 @@ class IBMDynamicTranslationPlugin(PassManagerStagePlugin):
             plugin_passes += [convert_pass()]
 
         return PassManager(plugin_passes) + translator_pm
-
-
-class IBMFractionalTranslationPlugin(PassManagerStagePlugin):
-    """(DEPRECATED) Plugin for targeting Qiskit circuits with fractional gate support.
-
-    A translation stage plugin for targeting Qiskit circuits to IBM Quantum systems with fractional
-    gate support.
-
-    Currently coexistence of fractional gate operations and dynamic circuits is not assumed.
-    """
-
-    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
-        """Construct a ``IBMFractionalTranslationPlugin`` instance."""
-        issue_deprecation_msg(
-            msg="Since backends now support running jobs that contain both "
-            "fractional gates and dynamic circuit, IBMFractionalTranslationPlugin is deprecated",
-            version="0.42.0",
-            remedy="Use IBMDynamicFractionalTranslationPlugin instead.",
-        )
-        return super().__new__(cls, *args, **kwargs)
-
-    def pass_manager(
-        self,
-        pass_manager_config: PassManagerConfig,
-        optimization_level: int | None = None,
-    ) -> PassManager:
-        """Build IBMTranslationPlugin PassManager."""
-        if _TERRA_VERSION[0] == 1:
-            legacy_options = {"backend_props": pass_manager_config.backend_properties}
-        else:
-            legacy_options = {}
-
-        translator_pm = common.generate_translation_passmanager(
-            target=pass_manager_config.target,
-            basis_gates=pass_manager_config.basis_gates,
-            approximation_degree=pass_manager_config.approximation_degree,
-            coupling_map=pass_manager_config.coupling_map,
-            unitary_synthesis_method=pass_manager_config.unitary_synthesis_method,
-            unitary_synthesis_plugin_config=pass_manager_config.unitary_synthesis_plugin_config,
-            hls_config=pass_manager_config.hls_config,
-            **legacy_options,
-        )
-
-        instruction_durations = pass_manager_config.instruction_durations
-        pre_passes = []
-        post_passes = []
-        target = pass_manager_config.target or pass_manager_config.basis_gates
-        if instruction_durations and "id" not in target:
-            pre_passes.append(ConvertIdToDelay(instruction_durations))
-        if "rzz" in target:
-            # Apply this pass after SU4 is translated.
-            post_passes.append(FoldRzzAngle())
-        return PassManager(pre_passes) + translator_pm + PassManager(post_passes)
 
 
 class IBMDynamicFractionalTranslationPlugin(PassManagerStagePlugin):
