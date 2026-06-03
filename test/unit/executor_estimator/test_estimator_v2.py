@@ -14,20 +14,20 @@
 
 import unittest
 from unittest.mock import MagicMock, patch
-import numpy as np
 
+import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
-from qiskit_ibm_runtime.executor import Executor
-from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
-from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.executor import Executor
+from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
+from qiskit_ibm_runtime.quantum_program import QuantumProgram
+from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 
 class TestEstimatorV2Run(unittest.TestCase):
