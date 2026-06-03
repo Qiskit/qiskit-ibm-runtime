@@ -23,8 +23,6 @@ from .utils import plotly_module
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
 
-    from ..utils.circuit_schedule import CircuitSchedule
-
 
 def draw_circuit_schedule_timing(
     circuit_schedule: str | CircuitSchedule,
@@ -50,9 +48,6 @@ def draw_circuit_schedule_timing(
     Returns:
         A plotly figure.
     """
-    # Use runtime imports, to prevent circular imports.
-    from ..utils.circuit_schedule import CircuitSchedule
-
     go = plotly_module(".graph_objects")
     fig = go.Figure(layout=go.Layout(width=width))
 

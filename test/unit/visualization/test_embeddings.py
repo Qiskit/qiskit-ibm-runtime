@@ -32,6 +32,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeRochesterV2,
     FakeTorino,
 )
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.visualization.embeddings import Embedding
 
 from ...ibm_test_case import IBMTestCase
