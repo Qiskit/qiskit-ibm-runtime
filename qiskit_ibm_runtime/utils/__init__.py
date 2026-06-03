@@ -18,7 +18,6 @@ from .converters import (
     seconds_to_duration,
     duration_difference,
 )
-from .embeddings import Embedding
 from .utils import (
     to_python_identifier,
     is_crn,

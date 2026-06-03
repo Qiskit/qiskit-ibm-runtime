@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from qiskit.providers.backend import BackendV2
     from qiskit.quantum_info import Pauli, PauliList
 
-    from ..utils.embeddings import Embedding
+    from ..visualization.embeddings import Embedding
 
 
 class PauliLindbladError:
