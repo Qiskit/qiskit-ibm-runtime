@@ -20,8 +20,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler.utils import (
-    validate_no_boxes,
     extract_shots_from_pubs,
+    validate_no_boxes,
 )
 
 

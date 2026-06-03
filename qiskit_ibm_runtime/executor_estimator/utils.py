@@ -23,10 +23,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from qiskit.primitives import EstimatorPub
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit.quantum_info import Pauli
 from functools import lru_cache
 
+from qiskit.quantum_info import Pauli
+
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}

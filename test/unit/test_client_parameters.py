@@ -16,9 +16,9 @@ import uuid
 
 from requests_ntlm import HttpNtlmAuth
 
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
-from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
 from ..ibm_test_case import IBMTestCase
 

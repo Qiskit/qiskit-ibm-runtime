@@ -12,10 +12,8 @@
 
 """Tests for Executor-based SamplerV2."""
 
-from ddt import data, ddt, unpack
-
 import numpy as np
-
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives import PrimitiveResult, PubResult
@@ -25,6 +23,7 @@ from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models import SamplerOptions
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 

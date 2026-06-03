@@ -12,9 +12,9 @@
 
 """Benchmarks for `qiskit-ibm-runtime`."""
 
-from functools import partial
 import subprocess
 import sys
+from functools import partial
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService

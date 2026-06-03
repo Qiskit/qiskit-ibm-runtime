@@ -12,16 +12,23 @@
 
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
-import warnings
+from __future__ import annotations
 
-from qiskit.circuit import Qubit
+import warnings
+from typing import TYPE_CHECKING
+
 from qiskit.circuit.delay import Delay
-from qiskit.dagcircuit import DAGNode, DAGOutNode
-from qiskit.transpiler import Target
-from qiskit.transpiler.instruction_durations import InstructionDurations
+from qiskit.dagcircuit import DAGOutNode
 
 from .block_base_padder import BlockBasePadder
-from .utils import BlockOrderingCallableType
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Qubit
+    from qiskit.dagcircuit import DAGNode
+    from qiskit.transpiler import Target
+    from qiskit.transpiler.instruction_durations import InstructionDurations
+
+    from .utils import BlockOrderingCallableType
 
 
 class PadDelay(BlockBasePadder):

@@ -12,12 +12,18 @@
 
 """Program Job REST adapter."""
 
-import json
-from requests import Response
+from __future__ import annotations
 
-from .base import RestAdapterBase
-from ..session import RetrySession
+import json
+from typing import TYPE_CHECKING
+
 from ...utils.json import RuntimeDecoder
+from .base import RestAdapterBase
+
+if TYPE_CHECKING:
+    from requests import Response
+
+    from ..session import RetrySession
 
 
 class ProgramJob(RestAdapterBase):

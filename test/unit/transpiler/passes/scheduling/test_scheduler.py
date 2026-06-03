@@ -12,15 +12,14 @@
 
 """Test the dynamic circuits scheduling analysis."""
 
-from ddt import ddt, data
-
+from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Delay, Parameter
-from qiskit.circuit.library import XGate, Measure, Reset, CXGate, RZGate
+from qiskit.circuit.library import CXGate, Measure, Reset, RZGate, XGate
 from qiskit.converters import circuit_to_dag
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.passmanager import PassManager
-from qiskit.transpiler.target import Target, InstructionProperties
+from qiskit.transpiler.target import InstructionProperties, Target
 
 from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
 from qiskit_ibm_runtime.transpiler.passes.scheduling.pad_delay import PadDelay

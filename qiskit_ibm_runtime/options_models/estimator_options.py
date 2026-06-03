@@ -13,15 +13,17 @@
 """Options for the executor-based EstimatorV2."""
 
 from __future__ import annotations
+
 from dataclasses import asdict
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
+
 from .environment_options import EnvironmentOptions
 from .twirling_options import TwirlingOptions
-from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from .utils import PRIMITIVES_CONFIG
 
 

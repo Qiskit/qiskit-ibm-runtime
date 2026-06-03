@@ -12,24 +12,34 @@
 
 """Test IBMJob attributes."""
 
-import uuid
+from __future__ import annotations
+
 import time
+import uuid
 from datetime import datetime, timedelta
-from pydantic import ValidationError
+from typing import TYPE_CHECKING
 
 from dateutil import tz
+from pydantic import ValidationError
 from qiskit.compiler import transpile
-from qiskit import QuantumCircuit
 
-
-from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2, SamplerV2 as Sampler
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
 from ..decorators import (
-    IntegrationTestDependencies,
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell
+
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+
+    from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
+
+    from ..decorators import (
+        IntegrationTestDependencies,
+    )
 
 
 class TestIBMJobAttributes(IBMTestCase):

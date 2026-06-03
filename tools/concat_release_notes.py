@@ -12,8 +12,9 @@
 
 """Script for concatenating release notes."""
 
-from packaging import version
 from pathlib import Path
+
+from packaging import version
 
 
 def get_root_path() -> Path:
