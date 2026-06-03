@@ -16,7 +16,9 @@ import os
 from dataclasses import dataclass
 from functools import wraps
 from collections.abc import Callable
-from unittest import SkipTest
+from typing import Any
+from unittest import SkipTest, TestCase
+from unittest.mock import patch
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import ChannelType
@@ -77,6 +79,39 @@ def run_integration_test(func):
             if self.dependencies.service:
                 kwargs["service"] = self.dependencies.service
             func(self, *args, **kwargs)
+
+    return _wrapper
+
+
+def run_legacy_and_executor_sampler(test_func: Callable[..., Any]) -> Callable[..., None]:
+    """Run sampler integration tests against both sampler implementations."""
+
+    @wraps(test_func)
+    def _wrapper(self: TestCase, *args: Any, **kwargs: Any) -> None:
+        has_sampler_v2 = "SamplerV2" in test_func.__globals__
+        has_sampler = "Sampler" in test_func.__globals__
+
+        if not has_sampler_v2 and not has_sampler:
+            raise ValueError(
+                f"Test function '{test_func.__name__}' doesn't import 'SamplerV2' or 'Sampler'."
+            )
+
+        from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
+        from qiskit_ibm_runtime.executor_sampler import SamplerV2 as ExecutorSamplerV2
+
+        for label, sampler_cls in (
+            ("legacy", LegacySamplerV2),
+            ("executor", ExecutorSamplerV2),
+        ):
+            overrides = {}
+            if has_sampler_v2:
+                overrides["SamplerV2"] = sampler_cls
+            if has_sampler:
+                overrides["Sampler"] = sampler_cls
+
+            with self.subTest(sampler=label):
+                with patch.dict(test_func.__globals__, overrides, clear=False):
+                    test_func(self, *args, **kwargs)
 
     return _wrapper
 

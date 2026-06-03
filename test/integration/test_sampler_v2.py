@@ -29,6 +29,7 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from ..decorators import run_legacy_and_executor_sampler
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -74,6 +75,7 @@ class TestSampler(IBMIntegrationTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
+    @run_legacy_and_executor_sampler
     def test_sampler_run(self):
         """Test Sampler.run()."""
         with Session(self._backend) as session:
@@ -153,6 +155,7 @@ class TestSampler(IBMIntegrationTestCase):
         result = sampler.run([qc0, qc1, qc2, qc3]).result()
         self._verify_result_type(result, num_pubs=4)
 
+    @run_legacy_and_executor_sampler
     def test_run_single_circuit(self):
         """Test for single circuit case."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
@@ -243,6 +246,7 @@ class TestSampler(IBMIntegrationTestCase):
                 result = sampler.run([qc, qc]).result()
                 self._verify_result_type(result, num_pubs=2)
 
+    @run_legacy_and_executor_sampler
     def test_run_numpy_params(self):
         """Test for numpy array as parameter values."""
         with Session(self._backend) as session:
@@ -265,6 +269,7 @@ class TestSampler(IBMIntegrationTestCase):
                     result, num_pubs=len(params_list), targets=[np.array(target)]
                 )
 
+    @run_legacy_and_executor_sampler
     def test_run_with_shots_option(self):
         """Test with shots option."""
         with Session(self._backend) as session:
@@ -385,6 +390,7 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
         self._verify_result_type(result, num_pubs=1)
 
+    @run_legacy_and_executor_sampler
     def test_circuit_with_multiple_cregs(self):
         """Test for circuit with multiple classical registers."""
         with Session(self._backend) as session:
@@ -452,6 +458,7 @@ class TestSampler(IBMIntegrationTestCase):
                     self.assertEqual(len(data), 3)
                     self._verify_result_type(result, num_pubs=1)
 
+    @run_legacy_and_executor_sampler
     def test_sampler_v2_options(self):
         """Test SamplerV2 options."""
         sampler = Sampler(mode=self._backend)
@@ -464,6 +471,7 @@ class TestSampler(IBMIntegrationTestCase):
         result = job.result()
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
+    @run_legacy_and_executor_sampler
     def test_sampler_v2_dd(self):
         """Test SamplerV2 DD options."""
         sampler = Sampler(mode=self._backend)
