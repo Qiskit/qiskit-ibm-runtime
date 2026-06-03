@@ -153,7 +153,7 @@ class QiskitRuntimeService:
             instantiation.
         proxies: Proxy configuration. Supported optional keys are ``urls`` (a
             dictionary mapping protocol or protocol and host to the URL of the proxy, documented
-            at https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+            at https://requests.readthedocs.io/latest/api/#requests.Session.proxies),
             ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
             authentication)
         verify: Whether to verify the server's TLS certificate.
@@ -841,7 +841,7 @@ class QiskitRuntimeService:
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the
                 proxy, documented at
-                https://requests.readthedocs.io/en/latest/api/#requests.Session.proxies),
+                https://requests.readthedocs.io/latest/api/#requests.Session.proxies),
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.
@@ -943,7 +943,7 @@ class QiskitRuntimeService:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information#view-your-resources"
+                    "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
