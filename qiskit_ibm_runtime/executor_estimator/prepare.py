@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -218,9 +218,8 @@ def prepare_pec(
         shots_per_randomization = shots
 
     # validate noise_model_mapping length
-    if pec_options is not None and (
-        noise_model_mapping is None
-        or (noise_model_mapping is not None and len(noise_model_mapping) != len(pubs))
+    if noise_model_mapping is None or (
+        noise_model_mapping is not None and len(noise_model_mapping) != len(pubs)
     ):
         raise IBMInputValueError(
             "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
@@ -250,17 +249,14 @@ def prepare_pec(
         )
 
         # add samplex_arguments related to noise injection
-        if pec_options is not None:
-            # TODO: change the logic to calculate the auto noise_gain based on pubs
-            noise_gain = 0 if pec_options.noise_gain == "auto" else pec_options.noise_gain
-            # in samplomatic -1 is full removal of the noise and 0 is no rescaling of the noise
-            noise_factor = noise_gain - 1
-            for ref in noise_model_mapping[i]:
-                samplex_arguments[f"noise_scales.{ref}"] = noise_factor
-            samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
-            pec_gamma_list.append(
-                calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor)
-            )
+        # TODO: change the logic to calculate the auto noise_gain based on pubs
+        noise_gain = 0 if pec_options.noise_gain == "auto" else pec_options.noise_gain
+        # in samplomatic -1 is full removal of the noise and 0 is no rescaling of the noise
+        noise_factor = noise_gain - 1
+        for ref in noise_model_mapping[i]:
+            samplex_arguments[f"noise_scales.{ref}"] = noise_factor
+        samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
+        pec_gamma_list.append(calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor))
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
@@ -433,7 +429,7 @@ def build_basic_samplex_args(
     boxed_circuit: QuantumCircuit,
     flat_parameter_values: npt.NDArray[float],
     change_basis: npt.NDArray[int],
-) -> dict[str, np.ndarray]:
+) -> dict[str, Any]:
     """Build a samplex args dictionary consisting change_basis and parameters data.
 
     Args:
