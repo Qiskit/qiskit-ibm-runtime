@@ -14,11 +14,16 @@
 
 """Fake provider class that provides access to fake backends."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from .backends import *  # noqa: F403 undefined-local-with-import-star
-from .fake_backend import FakeBackendV2
+
+if TYPE_CHECKING:
+    from .fake_backend import FakeBackendV2
 
 
 class FakeProviderForBackendV2:

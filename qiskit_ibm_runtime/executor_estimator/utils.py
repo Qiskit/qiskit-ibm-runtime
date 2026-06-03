@@ -132,14 +132,13 @@ def resolve_precision(
     Raises:
         IBMInputValueError: If pubs have different precision values.
     """
-    # Extract precision from pubs, filtering out None values
-    pub_precisions = {pub.precision for pub in pubs if pub.precision is not None}
-
-    if not pub_precisions:
-        # No pub has explicit precision, use run_precision
-        return run_precision
+    # Extract precision from pubs
+    pub_precisions = {pub.precision or run_precision for pub in pubs}
 
     if len(pub_precisions) != 1:
-        raise IBMInputValueError(f"All pubs must have the same precision. Found: {pub_precisions}")
+        raise IBMInputValueError(
+            f"All pubs must have the same precision. Found: {pub_precisions}"
+            "(possibly via the run provided precision parameter)"
+        )
 
     return next(iter(pub_precisions))

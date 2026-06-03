@@ -11,7 +11,12 @@
 
 ### Summary
 
-
-
 ### Details and comments
+
 Fixes #
+
+### AI/LLM disclosure
+
+- [ ] I didn't use LLM tooling, or only used it privately.
+- [ ] I used the following tool to help write this PR description:
+- [ ] I used the following tool to generate or modify code:

@@ -27,9 +27,12 @@ from qiskit_ibm_runtime.decoders.executor_sampler.post_processor_v0_1 import (
 )
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.results.quantum_program import (
+    ItemMetadata,
     Metadata,
     QuantumProgramItemResult,
     QuantumProgramResult,
+    StretchValues,
+    SchedulerTiming,
 )
 
 
@@ -115,6 +118,38 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
 
         # Verify the result array contains the same data
         np.testing.assert_array_equal(result.data.meas, meas_data)
+
+    def test_populating_compilation_key(self):
+        """The `compilation` key of metadata must be populated if related fields are present."""
+        meas = np.array([[False], [True], [True]])
+        meas_flips = np.array([[False, False]])
+
+        stretch_values = [StretchValues("name", 2, 3, [(0, 1)])]
+        scheduler_timing = SchedulerTiming("main,rz_0,Qubit 0,1365,0,shift_phase", 10)
+
+        metadata = ItemMetadata(stretch_values=stretch_values, scheduler_timing=scheduler_timing)
+        item = QuantumProgramItemResult(
+            {"meas": meas, "measurement_flips.meas": meas_flips}, metadata
+        )
+
+        # Prepare the output.
+        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        # Strech values should contain lists instead of tuples in `expanded_values`.
+        expected_stretch_values = [asdict(stretch_values[0])]
+        expected_stretch_values[0]["expanded_values"] = [
+            list(i) for i in expected_stretch_values[0]["expanded_values"]
+        ]
+
+        # `scheduler_timing` and `stretch_values` should be present and converted in `metadata`.
+        self.assertIn("compilation", result.metadata)
+        self.assertEqual(
+            result.metadata["compilation"]["scheduler_timing"],
+            {
+                "timing": scheduler_timing.timing,
+                "circuit_duration": scheduler_timing.circuit_duration,
+            },
+        )
+        self.assertEqual(result.metadata["compilation"]["stretch_values"], expected_stretch_values)
 
 
 class TestSamplerV2PostProcessor(unittest.TestCase):
