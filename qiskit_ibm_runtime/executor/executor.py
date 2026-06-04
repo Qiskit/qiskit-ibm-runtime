@@ -93,6 +93,11 @@ class Executor:
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
 
+        # TODO: remove
+        self.options.environment.image = (
+            "qiskit-ibm-primitives:6604a774031bfad075afb8b66bb36744a1dd0881"
+        )
+
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The executor is currently not supported in local mode.")
