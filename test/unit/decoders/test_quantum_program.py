@@ -131,7 +131,7 @@ class TestDecoderPostProcessing(unittest.TestCase):
         mock_post_processor = MagicMock(return_value=mock_result)
 
         with patch.dict(
-            "qiskit_ibm_runtime.decoders.quantum_program.decoder.WRAPPER_PRIMITIVES_POST_PROCESSORS",
+            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
             {"sampler_v2": {"v0.1": mock_post_processor}},
             clear=False,
         ):
@@ -148,7 +148,7 @@ class TestDecoderPostProcessing(unittest.TestCase):
         mock_post_processor = MagicMock(return_value=mock_result)
 
         with patch.dict(
-            "qiskit_ibm_runtime.decoders.quantum_program.decoder.WRAPPER_PRIMITIVES_POST_PROCESSORS",
+            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
             {"estimator_v2": {"v0.1": mock_post_processor}},
             clear=False,
         ):

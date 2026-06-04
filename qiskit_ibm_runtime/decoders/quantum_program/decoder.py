@@ -109,7 +109,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
         if not (semantic_role := result._semantic_role):
             return result
 
-        if semantic_role in WRAPPER_PRIMITIVES_POST_PROCESSORS:
+        if semantic_role in SUPPORTED_POST_PROCESSORS:
             if not isinstance(result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")
 
@@ -119,7 +119,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
                 raise ValueError("Could not determine a post-processor version.")
 
             try:
-                post_processor_fn = WRAPPER_PRIMITIVES_POST_PROCESSORS[semantic_role][version]
+                post_processor_fn = SUPPORTED_POST_PROCESSORS[semantic_role][version]
             except KeyError:
                 raise ValueError(f"No post-processor found for {semantic_role} version {version}.")
 
