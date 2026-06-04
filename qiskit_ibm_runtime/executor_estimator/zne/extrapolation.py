@@ -49,7 +49,7 @@ def process_extrapolated_expectation_values(
     extrapolator: str | Sequence[str],
     extrapolated_noise_factors: float | ArrayLike = 0,
 ) -> EstimatorResult:
-    """Apply zero-noise extrapolation (ZNE) to an estimator result.
+    r"""Apply zero-noise extrapolation (ZNE) to an estimator result.
 
       For each result, the requested model(s) are fit to the expectation values measured at
       the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
