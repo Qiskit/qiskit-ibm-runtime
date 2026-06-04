@@ -34,12 +34,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e '.[style]'
-          echo "${{ github.ref }}"
       - name: Run pre-comming
         run: pre-commit run
       - uses: pre-commit/action@v3.0.1
   documentation:
-    if: ${{github.repository_owner == 'Qiskit' && !startsWith(github.ref_name, 'diego-plan9:chore') }}
+    if: github.repository_owner == 'Qiskit'
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
@@ -110,7 +109,7 @@ jobs:
           file: coverage.lcov
           fail-on-error: false
   integration-tests:
-    if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
+    if: ${{github.event_name == 'push' && github.repository_owner == 'Qiskit' && !contains(github.ref, 'gh-readonly-queue') }}
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
     needs: [ "unit-tests"  ]
     name: Run integration tests - ${{ matrix.environment }}
