@@ -12,13 +12,20 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest import mock
 
-from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService, RuntimeClient
-from .fake_runtime_client import BaseFakeRuntimeClient
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
+
 from .fake_api_backend import FakeApiBackendSpecs
+from .fake_runtime_client import BaseFakeRuntimeClient
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.accounts import Account
+    from qiskit_ibm_runtime.qiskit_runtime_service import RuntimeClient
 
 
 class FakeRuntimeService(QiskitRuntimeService):

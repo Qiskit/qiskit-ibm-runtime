@@ -15,21 +15,20 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from ddt import ddt, data
 import numpy as np
+from ddt import data, ddt
 from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter, BoxOp
+from qiskit.circuit import BoxOp, Parameter
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.options_models import SamplerOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
-from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.quantum_program.quantum_program import CircuitItem, SamplexItem
 
 
 def create_mock_backend():

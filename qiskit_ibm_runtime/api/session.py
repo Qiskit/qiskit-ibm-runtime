@@ -12,25 +12,30 @@
 
 """Session customized for IBM Quantum access."""
 
+from __future__ import annotations
+
+import importlib.metadata
 import inspect
+import logging
 import os
 import re
-import logging
 import sys
-from typing import Any
 from pathlib import PurePath
-import importlib.metadata
+from typing import TYPE_CHECKING, Any
 
-from requests import Session, RequestException, Response
+from requests import RequestException, Session
 from requests.adapters import HTTPAdapter
-from requests.auth import AuthBase
 from urllib3.util.retry import Retry
 
 from qiskit_ibm_runtime.utils.utils import filter_data
 
-from .exceptions import RequestsApiError
 from ..exceptions import IBMNotAuthorizedError
 from ..version import __version__ as ibm_runtime_version
+from .exceptions import RequestsApiError
+
+if TYPE_CHECKING:
+    from requests import Response
+    from requests.auth import AuthBase
 
 STATUS_FORCELIST = (
     500,  # General server error

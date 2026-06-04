@@ -17,7 +17,8 @@ from datetime import datetime, timedelta, timezone
 from math import ceil
 from typing import Any
 
-from dateutil import tz, parser
+from dateutil import parser, tz
+
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 

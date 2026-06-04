@@ -13,14 +13,19 @@
 
 """Utility script to verify copyright file headers."""
 
+from __future__ import annotations
+
 import argparse
 import re
 import subprocess
 import sys
-from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # regex for character encoding from PEP 263
 pep263 = re.compile(r"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")

@@ -12,13 +12,14 @@
 
 """Tests the decoder for the quantum program result model."""
 
+from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
+
 from qiskit_ibm_runtime import QuantumProgram
 from qiskit_ibm_runtime.options_models import ExecutorOptions
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from ...ibm_test_case import IBMTestCase
 
-from ddt import data, ddt
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt

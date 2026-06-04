@@ -13,11 +13,9 @@
 """Tests the classes `NoiseLearnerV3Result` and `NoiseLearnerV3Results`."""
 
 import numpy as np
-
-from samplomatic import InjectNoise, Twirl
-
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import QubitSparsePauliList, PauliLindbladMap
+from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
+from samplomatic import InjectNoise, Twirl
 
 from qiskit_ibm_runtime.results.noise_learner_v3 import (
     NoiseLearnerV3Result,

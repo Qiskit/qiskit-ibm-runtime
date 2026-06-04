@@ -12,10 +12,16 @@
 
 """Qiskit Runtime batch mode."""
 
-from qiskit.providers.backend import BackendV2
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+
 from .session import Session
+
+if TYPE_CHECKING:
+    from qiskit.providers.backend import BackendV2
 
 
 class Batch(Session):
