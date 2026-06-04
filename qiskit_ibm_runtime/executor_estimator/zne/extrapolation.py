@@ -22,14 +22,17 @@ from __future__ import annotations
 
 import re
 import warnings
-from collections.abc import Callable, Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from numpy.polynomial.polynomial import polyval as _polyval
-from numpy.typing import ArrayLike
-from scipy.optimize import curve_fit
 from qiskit.primitives import EstimatorResult
+from scipy.optimize import curve_fit
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from numpy.typing import ArrayLike
 
 
 _VALID_NAMES = [
@@ -46,38 +49,38 @@ def process_extrapolated_expectation_values(
     extrapolator: str | Sequence[str],
     extrapolated_noise_factors: float | ArrayLike = 0,
 ) -> EstimatorResult:
-      """Apply zero-noise extrapolation (ZNE) to an estimator result.
+    """Apply zero-noise extrapolation (ZNE) to an estimator result.
 
-      For each result, the requested model(s) are fit to the expectation values measured at
-      the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
-      noise). Models are tried in priority order: each point takes the result of the
-      first model whose extrapolation is valid. A valid extrapolation results in a finite
-      value and standard error, with the value plausible with respect to the measurement basis.
-      If no models produce a valid value, the measured input value with the smallest standard
-      error will be returned. Standard errors are first-order estimates propagated from the fit
-      covariance.
+    For each result, the requested model(s) are fit to the expectation values measured at
+    the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
+    noise). Models are tried in priority order: each point takes the result of the
+    first model whose extrapolation is valid. A valid extrapolation results in a finite
+    value and standard error, with the value plausible with respect to the measurement basis.
+    If no models produce a valid value, the measured input value with the smallest standard
+    error will be returned. Standard errors are first-order estimates propagated from the fit
+    covariance.
 
-      Args:
-          result: Estimator result whose per-entry metadata provides ``standard_error`` and a
-              ``resilience["zne_noise_factors"]`` array, with values measured at those factors.
-          extrapolator: A builtin model name, or a sequence of names tried in priority order.
-              Supported: ``linear``, ``exponential``, ``double_exponential``,
-              ``polynomial_degree_k`` (1 <= k <= 7), and ``fallback`` (no fit; returns the
-              input measurement with the smallest standard error).
-          extrapolated_noise_factors: Scalar or 1D array of noise factors to evaluate the fits
-              at; defaults to ``0`` (zero-noise extrapolation).
+    Args:
+        result: Estimator result whose per-entry metadata provides ``standard_error`` and a
+            ``resilience["zne_noise_factors"]`` array, with values measured at those factors.
+        extrapolator: A builtin model name, or a sequence of names tried in priority order.
+            Supported: ``linear``, ``exponential``, ``double_exponential``,
+            ``polynomial_degree_k`` (1 <= k <= 7), and ``fallback`` (no fit; returns the
+            input measurement with the smallest standard error).
+        extrapolated_noise_factors: Scalar or 1D array of noise factors to evaluate the fits
+            at; defaults to ``0`` (zero-noise extrapolation).
 
-      Raises:
-          ValueError: If an entry is missing ``standard_error`` or ``zne_noise_factors``
-              metadata, or if an extrapolator name is not recognized.
+    Raises:
+        ValueError: If an entry is missing ``standard_error`` or ``zne_noise_factors``
+            metadata, or if an extrapolator name is not recognized.
 
-      Returns:
-          A new estimator result. Per entry, ``values`` is a 2D array stacking the selected
-          extrapolation (row 0) above each model's extrapolation (rows 1+), with the raw
-          measured noise-factor values appended along the last axis; ``standard_error`` and the
-          ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to
-          match. A size-1 result collapses to a scalar.
-      """
+    Returns:
+        A new estimator result. Per entry, ``values`` is a 2D array stacking the selected
+        extrapolation (row 0) above each model's extrapolation (rows 1+), with the raw
+        measured noise-factor values appended along the last axis; ``standard_error`` and the
+        ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to
+        match. A size-1 result collapses to a scalar.
+    """
     if isinstance(extrapolator, str):
         extrapolator = [extrapolator]
 
@@ -207,7 +210,7 @@ def _select_zne_extrapolated_result(
     The best value is the valid value produced by the highest-priority model. Valid values are
     those that are finite, have a standard error within the measurement-basis threshold, and lie
     within the basis's range to within that standard error.
-    
+
     Modifies metadata in place.
     """
     # Patterns for matching ev bases for range of ideal outcomes.
@@ -301,7 +304,7 @@ def _extrapolate(
         # get the covariances.
         weights = None if fit_stds is None else 1.0 / fit_stds
         func, p0, bounds = _model(name, x, y, weights)
-        
+
         # Get the optimized params and covariances from curve_fit
         # _eval_model will calculate the target EVs and variance estimates
         with warnings.catch_warnings():
@@ -369,9 +372,9 @@ def _poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
 
 
 def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
-    """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``
-    
-    The parameter ordering should be [amp1, rate1, ...ampN, rateN]
+    """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``.
+
+    The parameter ordering should be [amp1, rate1, ...ampN, rateN].
     """
     x = np.asarray(x, dtype=float)
     out = np.zeros_like(x)
@@ -387,22 +390,22 @@ def _exp_guess(
     # The amplitude can be negative; since a*exp(b*0) = a, infer its sign from the point
     # nearest zero noise (`or 1.0` guards the sign == 0 case).
     sgn = np.sign(y[np.argmin(x)]) or 1.0
-    
+
     # The fit is in log space, so clip |y| away from zero: noise can push points to or
     # below zero, where log would blow up.
     abs_y = np.clip(np.abs(y), 1e-15, None)
-    
+
     # Fit weights are ~ 1/std(y), but we fit log(y). To first order std(log y) ~
     # std(y)/|y|, so the log-space weight is |y| * weight.
     log_w = abs_y * weights if weights is not None else None
-    
+
     # Recover the single-exponential seed from the line fit: slope is the rate,
     # exp(intercept) the amplitude; force a decaying rate for double exponential.
     rate, log_amp = np.polyfit(x, np.log(abs_y), 1, w=log_w)
     amp = sgn * np.exp(log_amp)
     if decay_only:
         rate = -abs(rate)
-    
+
     # Equal amplitude per term so they sum to `amp`, the seed's value at x=0 (rates do
     # not affect x=0); distinct rates (multiples of the estimate) break the inter-term
     # symmetry for curve_fit.
