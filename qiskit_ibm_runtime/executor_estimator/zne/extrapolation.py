@@ -52,10 +52,12 @@ def process_extrapolated_expectation_values(
       the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
       noise). Models are tried in priority order: each point takes the result of the
       first model whose extrapolation is valid. A valid extrapolation results in a finite
-      value and standard error, with the value plausible with respect to the measurement basis.
-      If no models produce a valid value, the measured input value with the smallest standard
-      error will be returned. Standard errors are first-order estimates propagated from the fit
-      covariance.
+      value and standard error, with the :math:`value \pm stderr` plausible with respect to
+      the measurement basis. If no models produce a valid value, the measured input value with
+      the smallest standard error will be returned.
+      
+      The standard errors reported for the extrapolated values are first-order estimates
+      propagated from the fit covariance. See `equation 97 <https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals>` for details.
 
       Args:
           result: Estimator result whose per-entry metadata provides ``standard_error`` and a
