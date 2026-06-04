@@ -143,7 +143,7 @@ def _fit_extrapolation_models(
 
     # Clamp negative/0.0 stds to min(y_std). Clamp inf/NaN stds to max(y_std).
     # If no valid stds, function returns None
-    fit_stds = _fit_stds(y_std)
+    fit_stds = _clamp_degenerate_stds(y_std)
 
     # Ensure the extrapolators are valid
     names = list(models)
@@ -186,7 +186,7 @@ def _fit_extrapolation_models(
     return fit_values, fit_metadata
 
 
-def _fit_stds(y_std: np.ndarray) -> np.ndarray | None:
+def _clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
     """Per-point standard errors for fitting, with degenerate errors clamped.
 
     Standard errors of ``0`` or negative are clamped up to the smallest finite error
