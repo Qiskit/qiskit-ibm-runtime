@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   code-quality:
-    if: github.repository_owner == 'Qiskit' && ${{ !startsWith(github.ref_name, 'chore') }}
+    if: ${{github.repository_owner == 'Qiskit' && !startsWith(github.ref_name, 'chore') }}
     name: Run code quality checks
     runs-on: ubuntu-latest
     steps:
