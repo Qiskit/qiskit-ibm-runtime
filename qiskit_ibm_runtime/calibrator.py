@@ -24,13 +24,12 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 from qiskit_ibm_runtime.options.calibrator_options import CalibratorOptions
 from qiskit_ibm_runtime.utils.default_session import get_cm_session
 
-from .batch import Batch
-from .session import Session
-
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..runtime_job_v2 import RuntimeJobV2
+    from .batch import Batch
+    from .session import Session
 
 
 logger = logging.getLogger(__name__)
@@ -98,7 +97,7 @@ class Calibrator:
                     self._PROGRAM_ID,
                 )
 
-        runtime_options = asdict(self.options)
+        runtime_options = asdict(self.options)  # type: ignore[call-overload]
         runtime_options["backend"] = self._backend
 
         return _run(
