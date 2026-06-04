@@ -216,7 +216,6 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .calibrator import Calibrator
 from .estimator import (
     EstimatorV2,
     EstimatorV2 as Estimator,
