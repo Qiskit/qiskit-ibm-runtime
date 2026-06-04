@@ -38,7 +38,7 @@ jobs:
         run: pre-commit run
       - uses: pre-commit/action@v3.0.1
   documentation:
-    if: ${{github.repository_owner == 'Qiskit' && !startsWith(github.ref_name, 'chore') }}
+    if: ${{github.repository_owner == 'Qiskit' && !startsWith(github.ref_name, 'diego-plan9:chore') }}
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
