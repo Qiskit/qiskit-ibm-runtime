@@ -32,7 +32,7 @@ class ResilienceOptions:
     by using :attr:`~measure_noise_learning`. See :class:`.~MeasureNoiseLearningOptions`
     for all measurement mitigation noise learning options.
     """
-    
+
     measure_noise_learning: MeasureNoiseLearningOptions = Field(
         default_factory=MeasureNoiseLearningOptions
     )
