@@ -28,7 +28,6 @@ from qiskit_ibm_runtime.transpiler.passes.basis import (
     FoldRzzAngle,
 )
 
-
 if TYPE_CHECKING:
     from qiskit.transpiler.passmanager_config import PassManagerConfig
 
