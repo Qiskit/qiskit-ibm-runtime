@@ -227,7 +227,7 @@ def process_expectation_values(
             config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
             # Get measurement data for this configuration
-            # Shape: (num_randomizations, shots_per_randomization, num_qubits)
+            # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
             datum = data[:, config_idx, :, :]
             term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
                 observable_term, datum
