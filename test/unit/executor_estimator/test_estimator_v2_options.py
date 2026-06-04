@@ -14,15 +14,15 @@
 
 import unittest
 
-from qiskit_ibm_runtime.options_models.estimator_options import (
-    EstimatorOptions,
-)
 from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
 )
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
+from qiskit_ibm_runtime.options_models.estimator_options import (
+    EstimatorOptions,
+)
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
 
 class TestEstimatorOptions(unittest.TestCase):

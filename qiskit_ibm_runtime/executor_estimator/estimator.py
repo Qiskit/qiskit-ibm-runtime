@@ -14,22 +14,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import logging
+from collections.abc import Iterable
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
 from qiskit.providers import BackendV2
 
-from ..runtime_job_v2 import RuntimeJobV2
+from ..batch import Batch
 from ..executor import Executor
 from ..executor.dynamical_decoupling import generate_dd_pass_manager
-from ..session import Session
-from ..batch import Batch
 from ..options_models.estimator_options import EstimatorOptions
-from .utils import resolve_precision
+from ..runtime_job_v2 import RuntimeJobV2
+from ..session import Session
 from .prepare import prepare
+from .utils import resolve_precision
 
 logger = logging.getLogger(__name__)
 

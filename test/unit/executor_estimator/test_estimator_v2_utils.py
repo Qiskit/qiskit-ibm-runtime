@@ -18,12 +18,12 @@ from qiskit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
     get_pauli_basis,
     pauli_to_ints,
     resolve_precision,
 )
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 class TestGetPauliBasis(unittest.TestCase):
