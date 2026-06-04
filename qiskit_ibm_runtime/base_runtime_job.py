@@ -146,8 +146,8 @@ class BaseRuntimeJob(ABC):
             if partial:
                 return usage.get("qpu_charge_time_seconds")
             if usage.get("status", "pending") == "pending":
-                    return 0
-             return usage.get("qpu_charge_time_seconds")
+                return 0
+            return usage.get("qpu_charge_time_seconds")
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 

@@ -82,7 +82,7 @@ class LocalRuntimeJob(PrimitiveJob):
 
     def usage(self, partial: bool = False) -> float:
         """Return job usage in seconds.
-        
+
         Args:
             partial: if ``True``, return the accumulated intermediate usage instead of the final
                 usage.
