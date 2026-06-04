@@ -12,14 +12,15 @@
 
 """Plugin for IBM provider backend transpiler stages."""
 
+from __future__ import annotations
+
 import re
+from typing import TYPE_CHECKING
 
-from qiskit.transpiler.passmanager import PassManager
-from qiskit.transpiler.passmanager_config import PassManagerConfig
-from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
-from qiskit.transpiler.preset_passmanagers import common
 from qiskit.transpiler import passes
-
+from qiskit.transpiler.passmanager import PassManager
+from qiskit.transpiler.preset_passmanagers import common
+from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.version import __version__ as _terra_version_string
 
 from qiskit_ibm_runtime.transpiler.passes.basis import (
@@ -27,6 +28,9 @@ from qiskit_ibm_runtime.transpiler.passes.basis import (
     FoldRzzAngle,
 )
 
+
+if TYPE_CHECKING:
+    from qiskit.transpiler.passmanager_config import PassManagerConfig
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]

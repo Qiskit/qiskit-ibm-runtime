@@ -15,10 +15,12 @@
 import base64
 import json
 import uuid
-from datetime import timezone, datetime as python_datetime
+from datetime import datetime as python_datetime
+from datetime import timezone
 from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 

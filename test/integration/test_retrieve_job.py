@@ -12,11 +12,12 @@
 
 """Tests for job functions using real runtime service."""
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+
 from qiskit.providers.jobstatus import JobStatus
 
-from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
+from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..utils import wait_for_status
 
 

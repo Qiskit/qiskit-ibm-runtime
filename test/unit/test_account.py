@@ -20,14 +20,14 @@ import uuid
 from typing import Any
 from unittest import skipIf
 from unittest.mock import patch
-from ddt import ddt, data
+
+from ddt import data, ddt
 
 from qiskit_ibm_runtime import IBMInputValueError
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
-    AccountManager,
     Account,
     AccountAlreadyExistsError,
+    AccountManager,
     AccountNotFoundError,
     InvalidAccountError,
 )
@@ -36,14 +36,16 @@ from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
 )
-from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+
 from ..account import (
-    get_account_config_contents,
-    temporary_account_config_file,
-    no_envs,
     custom_envs,
+    get_account_config_contents,
+    no_envs,
+    temporary_account_config_file,
 )
+from ..ibm_test_case import IBMTestCase
+from .mock.fake_runtime_service import FakeRuntimeService
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",

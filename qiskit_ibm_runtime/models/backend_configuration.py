@@ -13,11 +13,15 @@
 
 """Backend Configuration Classes."""
 
-import datetime
+from __future__ import annotations
+
 import copy
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from qiskit.exceptions import QiskitError
+
+if TYPE_CHECKING:
+    import datetime
 
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
 UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")

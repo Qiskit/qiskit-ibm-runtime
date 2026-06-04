@@ -12,22 +12,38 @@
 
 """Pass to wrap Rzz gate angle in calibrated range of 0-pi/2."""
 
+from __future__ import annotations
+
+from itertools import chain
 from math import pi
 from operator import mod
-from itertools import chain
-import numpy as np
+from typing import TYPE_CHECKING
 
-from qiskit.converters import dag_to_circuit, circuit_to_dag
-from qiskit.circuit import CircuitInstruction, Parameter, ParameterExpression, CONTROL_FLOW_OP_NAMES
-from qiskit.circuit.library.standard_gates import RZZGate, RZGate, XGate, GlobalPhaseGate, RXGate
-from qiskit.circuit import Qubit, ControlFlowOp
+import numpy as np
+from qiskit.circuit import (
+    CONTROL_FLOW_OP_NAMES,
+    CircuitInstruction,
+    ControlFlowOp,
+    Parameter,
+    ParameterExpression,
+)
+from qiskit.circuit.library.standard_gates import GlobalPhaseGate, RXGate, RZGate, RZZGate, XGate
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.dagcircuit import DAGCircuit
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.basepasses import TransformationPass
-from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
-from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
-from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
+
+if TYPE_CHECKING:
+    from qiskit.circuit import (
+        Qubit,
+    )
+    from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
+    from qiskit.primitives.containers.sampler_pub import SamplerPubLike
+
+    from qiskit_ibm_runtime.base_primitive import BasePrimitiveV2
 
 
 class FoldRzzAngle(TransformationPass):

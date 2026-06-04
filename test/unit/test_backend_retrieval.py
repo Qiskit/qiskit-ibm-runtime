@@ -20,10 +20,10 @@ from ddt import ddt, named_data
 from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.fake_provider import FakeLimaV2
 
-from .mock.fake_runtime_service import FakeRuntimeService
-from .mock.fake_api_backend import FakeApiBackendSpecs
-from ..ibm_test_case import IBMTestCase
 from ..decorators import run_cloud_fake
+from ..ibm_test_case import IBMTestCase
+from .mock.fake_api_backend import FakeApiBackendSpecs
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 def _make_auto_service():

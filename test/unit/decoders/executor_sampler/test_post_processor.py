@@ -31,8 +31,8 @@ from qiskit_ibm_runtime.results.quantum_program import (
     Metadata,
     QuantumProgramItemResult,
     QuantumProgramResult,
-    StretchValues,
     SchedulerTiming,
+    StretchValues,
 )
 
 

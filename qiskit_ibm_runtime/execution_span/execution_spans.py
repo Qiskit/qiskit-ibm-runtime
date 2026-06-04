@@ -14,14 +14,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import overload, TYPE_CHECKING
-from collections.abc import Iterable, Iterator
-
-from .execution_span import ExecutionSpan
+from typing import TYPE_CHECKING, overload
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+    from datetime import datetime
+
     from plotly.graph_objects import Figure as PlotlyFigure
+
+    from .execution_span import ExecutionSpan
 
 
 class ExecutionSpans:

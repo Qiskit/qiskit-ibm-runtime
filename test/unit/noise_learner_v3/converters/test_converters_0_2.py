@@ -17,17 +17,17 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
+from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_2
 from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_2 import (
     noise_learner_v3_inputs_from_0_2,
     noise_learner_v3_inputs_to_0_2,
     noise_learner_v3_result_to_0_2,
 )
-from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_2
+from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 from qiskit_ibm_runtime.results.noise_learner_v3 import (
     NoiseLearnerV3Result,
     NoiseLearnerV3Results,
 )
-from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 
 from ....ibm_test_case import IBMTestCase
 
