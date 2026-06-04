@@ -13,18 +13,19 @@
 """Tests for Session classession."""
 
 from unittest.mock import MagicMock
-from ddt import ddt, data
 
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
-from qiskit_ibm_runtime import Session, SamplerV2
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from ddt import data, ddt
+
+from qiskit_ibm_runtime import SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
-from .mock.fake_runtime_service import FakeRuntimeService
-from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
+from .mock.fake_api_backend import FakeApiBackendSpecs
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 @ddt

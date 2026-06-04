@@ -12,25 +12,26 @@
 
 """Test folding Rzz angle into calibrated range."""
 
-from math import pi
-from itertools import chain
 import unittest
-import numpy as np
-from ddt import ddt, named_data, data, unpack
+from itertools import chain
+from math import pi
 
+import numpy as np
+from ddt import data, ddt, named_data, unpack
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.parameter import Parameter
+from qiskit.quantum_info import Operator, SparsePauliOp
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.quantum_info import Operator, SparsePauliOp
 
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import (
     FoldRzzAngle,
     convert_to_rzz_valid_pub,
 )
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 from qiskit_ibm_runtime.utils.utils import is_valid_rzz_pub
+
 from .....ibm_test_case import IBMTestCase
 
 
@@ -55,6 +56,15 @@ class TestFoldRzzAngle(IBMTestCase):
         ("quad2_12pi_wrap", 23 * pi / 2 + 0.1),
         ("quad3_12pi_wrap", 11 * pi + 0.1),
         ("quad4_12pi_wrap", -12 * pi - 0.1),
+        # Odd-winding multiples of pi that wrap exactly onto the +-pi boundary. These drop
+        # an odd number of 2*pi windings, so the folded circuit must re-add a global phase
+        # of pi to remain unitary-equivalent (not merely equivalent up to global phase).
+        ("3pi_pos", 3 * pi),
+        ("3pi_neg", -3 * pi),
+        ("7pi_pos", 7 * pi),
+        ("7pi_neg", -7 * pi),
+        ("5pi_pos", 5 * pi),
+        ("5pi_neg", -5 * pi),
     )
     def test_folding_rzz_angles(self, angle):
         """Test folding gate angle into calibrated range."""

@@ -13,8 +13,8 @@
 """Tests for dynamical decoupling utilities."""
 
 import unittest
-import numpy as np
 
+import numpy as np
 from qiskit.circuit import Delay, Parameter, QuantumCircuit
 from qiskit.circuit.library import Measure, RZGate, XGate
 from qiskit.transpiler import PassManager
@@ -25,14 +25,14 @@ from qiskit.transpiler.passes import (
     PadDynamicalDecoupling,
     TimeUnitConversion,
 )
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
+from qiskit_ibm_runtime.executor.dynamical_decoupling import (
+    generate_dd_pass_manager,
+    make_dd_sequence,
+)
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
-)
-from qiskit_ibm_runtime.executor.dynamical_decoupling import (
-    make_dd_sequence,
-    generate_dd_pass_manager,
 )
 
 

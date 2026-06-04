@@ -12,15 +12,19 @@
 
 """Backend Properties classes."""
 
+from __future__ import annotations
+
 import copy
 import datetime
-from typing import Any, TypeVar
-from collections.abc import Iterable
-import dateutil.parser
+from typing import TYPE_CHECKING, Any, TypeVar
 
+import dateutil.parser
 from qiskit.utils.units import apply_prefix
 
 from .exceptions import BackendPropertyError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 PropertyT = tuple[Any, datetime.datetime]
 NduvT = TypeVar("NduvT", bound="Nduv")

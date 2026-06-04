@@ -24,13 +24,13 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 
 from ..exceptions import IBMInputValueError
 from ..executor import Executor
+from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import generate_dd_pass_manager
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from .utils import extract_shots_from_pubs, validate_no_boxes
-from ..executor.calculate_twirling_shots import calculate_twirling_shots
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -137,7 +137,7 @@ class SamplerV2(BaseSamplerV2):
         between invoking the function and the ``job`` being submitted. In order to check the
         progress of the call, it is recommended to setup logging (with an ``INFO`` level) - see
         `Qiskit Runtime documentation
-        <https://quantum.cloud.ibm.com/docs/en/api/qiskit-ibm-runtime/runtime-service#logging>`_
+        <https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-service#logging>`_
         for more information.
 
         Args:

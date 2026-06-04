@@ -14,16 +14,18 @@
 
 from __future__ import annotations
 
-from itertools import cycle
 from datetime import datetime, timedelta, timezone
+from itertools import cycle
 from typing import TYPE_CHECKING
-from collections.abc import Iterable
 
-from ..results.quantum_program import ChunkTiming, ChunkSpan
 from .utils import plotly_module
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from plotly.graph_objects import Figure as PlotlyFigure
+
+    from ..results.quantum_program import ChunkSpan, ChunkTiming
 
 
 _HOVER_HEADER = "<br>".join(

@@ -14,7 +14,7 @@
 
 from typing import Literal
 
-from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
+from .utils import Unset, UnsetType, make_constraint_validator, primitive_dataclass
 
 
 @primitive_dataclass

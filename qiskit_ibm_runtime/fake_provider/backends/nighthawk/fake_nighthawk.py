@@ -12,10 +12,16 @@
 
 """Fake Nighthawk device (120 qubit)."""
 
+from __future__ import annotations
+
 import os
 import warnings
+from typing import TYPE_CHECKING
+
 from qiskit_ibm_runtime.fake_provider import fake_backend
-from qiskit_ibm_runtime import QiskitRuntimeService
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
 DISPLAY_WARNING = True
 

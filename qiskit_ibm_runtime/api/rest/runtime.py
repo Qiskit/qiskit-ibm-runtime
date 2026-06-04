@@ -14,18 +14,20 @@
 
 from __future__ import annotations
 
-import logging
-from datetime import datetime
-from typing import Any
 import json
+import logging
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
 from qiskit_ibm_runtime.api.rest.program_job import ProgramJob
 from qiskit_ibm_runtime.utils import local_to_utc
-from .runtime_session import RuntimeSession
 
 from ...utils import RuntimeEncoder
 from .cloud_backend import CloudBackend
+from .runtime_session import RuntimeSession
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +36,8 @@ class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
     URL_MAP = {
-        "programs": "/programs",
         "jobs": "/jobs",
         "backends": "/backends",
-        "cloud_instance": "/instance",
         "cloud_usage": "/instances/usage",
     }
 

@@ -12,11 +12,16 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Any
-from .base import RestAdapterBase
-from ..session import RetrySession
-from ..exceptions import RequestsApiError
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from ...exceptions import IBMRuntimeError
+from ..exceptions import RequestsApiError
+from .base import RestAdapterBase
+
+if TYPE_CHECKING:
+    from ..session import RetrySession
 
 
 class RuntimeSession(RestAdapterBase):

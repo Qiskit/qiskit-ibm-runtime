@@ -12,13 +12,19 @@
 
 """Account management related classes and functions."""
 
-import os
-import logging
+from __future__ import annotations
 
-from ..proxies import ProxyConfiguration
+import logging
+import os
+from typing import TYPE_CHECKING
+
+from .account import Account
 from .exceptions import AccountNotFoundError
-from .account import Account, ChannelType
-from .storage import save_config, read_config, delete_config
+from .storage import delete_config, read_config, save_config
+
+if TYPE_CHECKING:
+    from ..proxies import ProxyConfiguration
+    from .account import ChannelType
 
 _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
