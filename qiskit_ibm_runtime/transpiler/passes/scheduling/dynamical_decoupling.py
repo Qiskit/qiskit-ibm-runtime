@@ -12,29 +12,36 @@
 
 """Dynamical decoupling insertion pass for IBM (dynamic circuit) backends."""
 
+from __future__ import annotations
+
 import warnings
 
 import numpy as np
 import rustworkx as rx
-from qiskit.circuit import Qubit, Gate
 from qiskit.circuit.delay import Delay
-from qiskit.circuit.library.standard_gates import IGate, UGate, U3Gate
+from qiskit.circuit.library.standard_gates import IGate, U3Gate, UGate
 from qiskit.circuit.reset import Reset
-from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGInNode, DAGOpNode
+from qiskit.dagcircuit import DAGInNode, DAGOpNode
 from qiskit.quantum_info.operators.predicates import matrix_equal
-from qiskit.transpiler import Target
 from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.transpiler.instruction_durations import InstructionDurations
 from qiskit.transpiler.passes.optimization import Optimize1qGates
-from qiskit.transpiler import CouplingMap
 
 try:
     from qiskit.quantum_info.synthesis import OneQubitEulerDecomposer
 except ImportError:
     from qiskit.synthesis import OneQubitEulerDecomposer
 
+from typing import TYPE_CHECKING
+
 from .block_base_padder import BlockBasePadder
-from .utils import BlockOrderingCallableType
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate, Qubit
+    from qiskit.dagcircuit import DAGCircuit, DAGNode
+    from qiskit.transpiler import CouplingMap, Target
+    from qiskit.transpiler.instruction_durations import InstructionDurations
+
+    from .utils import BlockOrderingCallableType
 
 
 class PadDynamicalDecoupling(BlockBasePadder):

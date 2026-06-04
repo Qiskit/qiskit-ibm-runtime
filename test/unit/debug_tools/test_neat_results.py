@@ -13,8 +13,7 @@
 """Tests for result classes for Neat objects."""
 
 import ddt
-
-from qiskit.primitives.containers import PubResult, DataBin
+from qiskit.primitives.containers import DataBin, PubResult
 
 from qiskit_ibm_runtime.debug_tools import NeatPubResult, NeatResult
 

@@ -16,14 +16,18 @@ from __future__ import annotations
 
 from itertools import product
 from typing import TYPE_CHECKING
-from collections.abc import Sequence
+
 import numpy as np
+
 from .utils import plotly_module
-from ..results.estimator_pub import EstimatorPubResult
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from plotly.graph_objects import Figure as PlotlyFigure
     from plotly.graph_objects import Scatter as PlotlyScatter
+
+    from ..results.estimator_pub import EstimatorPubResult
 
 
 def draw_zne_evs(

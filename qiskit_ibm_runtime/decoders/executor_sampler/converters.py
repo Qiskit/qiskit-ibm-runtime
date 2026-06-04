@@ -15,12 +15,13 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from typing import Any, TYPE_CHECKING, Literal
-from collections.abc import Iterable
+from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from ...results import QuantumProgramItemResult
 
 

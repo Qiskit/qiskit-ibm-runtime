@@ -13,13 +13,12 @@
 """Tests the noise learner v3 validation."""
 
 from qiskit import QuantumCircuit
-
 from samplomatic import Twirl
 
-from qiskit_ibm_runtime.noise_learner_v3.validation import validate_options, validate_instruction
-from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
-from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers, FakeFractionalBackend
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.fake_provider.backends import FakeAlgiers, FakeFractionalBackend
+from qiskit_ibm_runtime.noise_learner_v3.validation import validate_instruction, validate_options
+from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 
 from ...ibm_test_case import IBMTestCase
 

@@ -15,12 +15,14 @@
 from __future__ import annotations
 
 import abc
-from datetime import datetime
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-import numpy as np
-import numpy.typing as npt
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
 
+    import numpy as np
+    import numpy.typing as npt
 
 # Python 3.8 does not recognize tuple[<something],
 # in spite of `from __future__ import annotations`

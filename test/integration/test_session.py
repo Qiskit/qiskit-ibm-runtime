@@ -14,20 +14,19 @@
 
 from unittest import SkipTest, mock
 
-from qiskit.circuit.library import real_amplitudes
-from qiskit.quantum_info import SparsePauliOp
-
 from qiskit.circuit import IfElseOp
+from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives import PrimitiveResult
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Session, Batch, SamplerV2, EstimatorV2, QiskitRuntimeService
+from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMRuntimeError
 
-from .test_account import _get_service_instance_name_for_crn
-from ..utils import bell
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import bell
+from .test_account import _get_service_instance_name_for_crn
 
 
 class TestIntegrationSession(IBMIntegrationTestCase):

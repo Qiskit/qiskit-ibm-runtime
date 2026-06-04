@@ -12,14 +12,18 @@
 
 """(DEPRECATED) Runtime options that control the execution environment."""
 
-import re
-import logging
-from dataclasses import dataclass
+from __future__ import annotations
 
-from qiskit.providers.backend import Backend
+import logging
+import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from .exceptions import IBMInputValueError
 from .utils import validate_job_tags
+
+if TYPE_CHECKING:
+    from qiskit.providers.backend import Backend
 
 
 @dataclass(init=False)

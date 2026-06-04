@@ -13,12 +13,12 @@
 """Test of generated fake backends."""
 
 from ddt import data, ddt
-
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
+from qiskit_ibm_runtime.fake_provider import FakeAlgiers, FakeProviderForBackendV2, FakeTorino
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
-from qiskit_ibm_runtime.fake_provider import FakeAlgiers, FakeTorino, FakeProviderForBackendV2
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+
 from ...ibm_test_case import IBMTestCase
 
 
