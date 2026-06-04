@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class Calibrator:
-    r"""Class for rcalibrating a backend.
+    r"""Class for calibrating a backend.
 
     The :meth:`run` method can be used to submit a calibration request for a backend.
 
