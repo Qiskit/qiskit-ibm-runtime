@@ -14,14 +14,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from collections.abc import Iterable, Mapping
-
 import math
-import numpy as np
-import numpy.typing as npt
+from typing import TYPE_CHECKING
 
-from .execution_span import ExecutionSpan, ShapeType
+import numpy as np
+
+from .execution_span import ExecutionSpan
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+    from datetime import datetime
+
+    import numpy.typing as npt
+
+    from .execution_span import ShapeType
 
 
 class TwirledSliceSpan(ExecutionSpan):

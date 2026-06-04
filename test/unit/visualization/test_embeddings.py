@@ -16,7 +16,6 @@ import textwrap
 
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.fake_provider import (
     FakeAlgiers,
     FakeAlmadenV2,
@@ -26,16 +25,17 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeGuadalupeV2,
     FakeKyiv,
     FakeManilaV2,
+    FakeMarrakesh,
     FakeMelbourneV2,
     FakeNighthawk,
     FakePerth,
     FakeRochesterV2,
-    FakeMarrakesh,
     FakeTorino,
 )
-from qiskit_ibm_runtime.utils.embeddings import Embedding
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from qiskit_ibm_runtime.visualization.embeddings import Embedding
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 def ascii_to_coords(image: str, col_major: bool = False) -> list[tuple[int, int]]:

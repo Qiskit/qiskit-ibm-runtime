@@ -12,8 +12,8 @@
 
 """Unit tests for the visualization folder."""
 
-from datetime import datetime, timedelta
 import random
+from datetime import datetime, timedelta
 
 import ddt
 

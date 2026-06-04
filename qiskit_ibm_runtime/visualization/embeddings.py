@@ -14,11 +14,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
 from itertools import product
+from typing import TYPE_CHECKING
 
-from qiskit.providers.backend import BackendV2
 from qiskit.transpiler import CouplingMap
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from qiskit.providers.backend import BackendV2
 
 
 class Embedding:

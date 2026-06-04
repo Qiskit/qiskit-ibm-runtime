@@ -12,19 +12,17 @@
 
 """Test dynamical decoupling insertion pass."""
 
-from ddt import ddt, data, unpack
 import numpy as np
+from ddt import data, ddt, unpack
 from numpy import pi
-
-from qiskit.circuit import QuantumCircuit, Delay, Parameter
-from qiskit.circuit.library import XGate, YGate, RXGate, UGate
-from qiskit.circuit.library import Measure, Reset, CXGate, HGate
-from qiskit.quantum_info import Operator
-from qiskit.transpiler import Target, InstructionProperties
-from qiskit.transpiler.passmanager import PassManager
-from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.transpiler.coupling import CouplingMap
+from qiskit.circuit import Delay, Parameter, QuantumCircuit
+from qiskit.circuit.library import CXGate, HGate, Measure, Reset, RXGate, UGate, XGate, YGate
 from qiskit.converters import circuit_to_dag
+from qiskit.quantum_info import Operator
+from qiskit.transpiler import InstructionProperties, Target
+from qiskit.transpiler.coupling import CouplingMap
+from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes.scheduling.dynamical_decoupling import (
     PadDynamicalDecoupling,

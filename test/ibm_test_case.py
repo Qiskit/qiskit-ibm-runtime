@@ -14,25 +14,29 @@
 
 from __future__ import annotations
 
-import os
-import logging
 import inspect
+import logging
+import os
 import warnings
+from collections import defaultdict
+from contextlib import suppress
+from typing import TYPE_CHECKING
 from unittest import TestCase
 from unittest.util import safe_repr
-from contextlib import suppress
-from collections import defaultdict
-from typing import TYPE_CHECKING
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
 
-from .utils import setup_test_logging, bell
-from .decorators import IntegrationTestDependencies, integration_test_setup
+from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME, SamplerV2
+
+from .decorators import integration_test_setup
+from .utils import bell, setup_test_logging
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
+
+    from qiskit_ibm_runtime import QiskitRuntimeService
+
+    from .decorators import IntegrationTestDependencies
 
 
 class IBMTestCase(TestCase):

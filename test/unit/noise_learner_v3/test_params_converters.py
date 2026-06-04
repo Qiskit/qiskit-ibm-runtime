@@ -12,18 +12,17 @@
 
 """Tests the decoder for the quantum program result model."""
 
-from qiskit.circuit import QuantumCircuit, Parameter
+from ddt import data, ddt
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
-from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
-from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.fake_provider import FakeFez
-from ...ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
+from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 
-from ddt import data, ddt
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt

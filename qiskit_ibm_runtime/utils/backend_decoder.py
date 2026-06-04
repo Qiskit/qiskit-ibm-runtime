@@ -22,7 +22,6 @@ from ..models import (
     BackendProperties,
     QasmBackendConfiguration,
 )
-
 from .converters import utc_to_local_all
 from .utils import is_fractional_gate
 

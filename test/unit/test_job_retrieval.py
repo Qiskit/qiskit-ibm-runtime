@@ -13,11 +13,12 @@
 """Tests for runtime job retrieval."""
 
 from datetime import datetime, timedelta, timezone
-from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
+
 from ..decorators import run_cloud_fake
+from ..ibm_test_case import IBMTestCase
 from ..program import run_program
 from ..utils import mock_wait_for_final_state
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRetrieveJobs(IBMTestCase):

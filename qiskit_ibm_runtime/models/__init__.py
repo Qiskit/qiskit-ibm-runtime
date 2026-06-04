@@ -38,9 +38,9 @@ Classes
 
 from .backend_configuration import (
     BackendConfiguration,
+    GateConfig,
     QasmBackendConfiguration,
     UchannelLO,
-    GateConfig,
 )
 from .backend_properties import BackendProperties, GateProperties, Nduv
 from .backend_status import BackendStatus

@@ -16,13 +16,13 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 
+from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.options.utils import (
     Unset,
+    merge_options_v2,
     remove_dict_unset_values,
     remove_empty_dict,
-    merge_options_v2,
 )
-from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal

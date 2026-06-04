@@ -12,18 +12,24 @@
 
 """Utilities for data validation."""
 
-from typing import Any
-from collections.abc import Sequence
-import warnings
+from __future__ import annotations
+
 import keyword
+import warnings
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
-from qiskit import QuantumCircuit
-from qiskit.transpiler import Target
-from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic, is_valid_rzz_pub
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.utils.utils import are_circuits_dynamic, is_isa_circuit, is_valid_rzz_pub
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from qiskit import QuantumCircuit
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from qiskit.primitives.containers.sampler_pub import SamplerPub
+    from qiskit.transpiler import Target
 
 
 def validate_classical_registers(pubs: list[SamplerPub]) -> None:
