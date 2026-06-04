@@ -22,7 +22,7 @@ from .utils import PRIMITIVES_CONFIG
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
-class ResilienceOptionsV2:
+class ResilienceOptions:
     """Resilience options for V2 Estimator."""
 
     measure_mitigation: bool = True
