@@ -40,12 +40,14 @@ from .converters import (
     quantum_program_result_from_1_0,
 )
 
-SAMPLER_POST_PROCESSORS = {
-    "v0.1": sampler_v2_post_processor_v0_1,
-}
-
-ESTIMATOR_POST_PROCESSORS = {
-    "v0.1": estimator_v2_post_processor_v0_1,
+# {semantic_role: {version: func}}
+WRAPPER_PRIMITIVES_POST_PROCESSORS = {
+    "sampler_v2": {
+        "v0.1": sampler_v2_post_processor_v0_1,
+    },
+    "estimator_v2": {
+        "v0.1": estimator_v2_post_processor_v0_1,
+    },
 }
 
 
@@ -102,7 +104,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
         if not (semantic_role := result._semantic_role):
             return result
 
-        if semantic_role in ["sampler_v2", "estimator_v2"]:
+        if semantic_role in WRAPPER_PRIMITIVES_POST_PROCESSORS:
             if not isinstance(result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")
 
@@ -111,20 +113,11 @@ class QuantumProgramResultDecoder(ResultDecoder):
             except KeyError:
                 raise ValueError("Could not determine a post-processor version.")
 
-            if semantic_role == "sampler_v2":
-                try:
-                    post_processor_fn = SAMPLER_POST_PROCESSORS[version]
-                except KeyError:
-                    raise ValueError(f"No post-processor found for version {version}.")
+            try:
+                post_processor_fn = WRAPPER_PRIMITIVES_POST_PROCESSORS[semantic_role][version]
+            except KeyError:
+                raise ValueError(f"No post-processor found for {semantic_role} version {version}.")
 
-                return post_processor_fn(result)
-
-            elif semantic_role == "estimator_v2":
-                try:
-                    post_processor_fn = ESTIMATOR_POST_PROCESSORS[version]
-                except KeyError:
-                    raise ValueError(f"No post-processor found for version {version}.")
-
-                return post_processor_fn(result)
+            return post_processor_fn(result)
 
         return result
