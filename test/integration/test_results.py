@@ -14,8 +14,8 @@
 
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 
-from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
+from ..ibm_test_case import IBMIntegrationJobTestCase
 
 
 class TestIntegrationResults(IBMIntegrationJobTestCase):

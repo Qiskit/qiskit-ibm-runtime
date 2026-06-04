@@ -12,14 +12,18 @@
 
 """Pass to convert Id gate operations to a delay instruction."""
 
-from qiskit.converters import dag_to_circuit, circuit_to_dag
+from __future__ import annotations
 
-from qiskit.circuit import ControlFlowOp
-from qiskit.circuit import Delay
+from typing import TYPE_CHECKING
+
+from qiskit.circuit import ControlFlowOp, Delay
 from qiskit.circuit.library import IGate
-from qiskit.dagcircuit import DAGCircuit
+from qiskit.converters import circuit_to_dag, dag_to_circuit
 from qiskit.transpiler.basepasses import TransformationPass
-from qiskit.transpiler.instruction_durations import InstructionDurations
+
+if TYPE_CHECKING:
+    from qiskit.dagcircuit import DAGCircuit
+    from qiskit.transpiler.instruction_durations import InstructionDurations
 
 
 class ConvertIdToDelay(TransformationPass):

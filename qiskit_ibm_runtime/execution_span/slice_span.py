@@ -14,14 +14,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import math
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing as npt
 
-from .execution_span import ExecutionSpan, ShapeType
+from .execution_span import ExecutionSpan
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
+
+    import numpy.typing as npt
+
+    from .execution_span import ShapeType
 
 
 class SliceSpan(ExecutionSpan):

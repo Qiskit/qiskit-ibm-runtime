@@ -14,15 +14,17 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-from qiskit.circuit import Gate, QuantumCircuit
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import CXGate, CYGate, CZGate, ECRGate, SwapGate
 from qiskit.converters import circuit_to_dag
-from qiskit.dagcircuit import DAGCircuit
 from qiskit.transpiler.basepasses import TransformationPass
 
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate
+    from qiskit.dagcircuit import DAGCircuit
 
 SUPPORTED_FOLDED_GATES: tuple[type, ...] = (ECRGate, CXGate, CYGate, CZGate, SwapGate)
 """2-qubit gate types supported for folding."""

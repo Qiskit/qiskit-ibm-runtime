@@ -12,20 +12,25 @@
 
 """Tests for the proxy support."""
 
+from __future__ import annotations
+
+import socket
 import subprocess
 import urllib
 from time import sleep
-import socket
-
+from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts.exceptions import InvalidAccountError
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
+from ..decorators import integration_test_setup
 from ..ibm_test_case import IBMTestCase
-from ..decorators import IntegrationTestDependencies, integration_test_setup
+
+if TYPE_CHECKING:
+    from ..decorators import IntegrationTestDependencies
 
 ADDRESS = "127.0.0.1"
 PORT = 8085

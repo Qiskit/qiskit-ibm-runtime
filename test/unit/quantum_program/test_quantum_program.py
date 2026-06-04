@@ -13,11 +13,9 @@
 """Tests the class `QuantumProgram`."""
 
 import numpy as np
-
-from samplomatic import Twirl, InjectNoise, build
-
-from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap
+from samplomatic import InjectNoise, Twirl, build
 
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 

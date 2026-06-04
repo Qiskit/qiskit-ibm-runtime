@@ -13,6 +13,7 @@
 """Fake Brooklyn device (65 qubit)."""
 
 import os
+
 from qiskit_ibm_runtime.fake_provider import fake_backend
 
 

@@ -14,27 +14,28 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import NamedTuple, TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
-from ibm_quantum_schemas.common import BaseParamsModel
 from ibm_quantum_schemas.executor.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.executor.version_0_2 import ParamsModel as ParamsModel_0_2
 from ibm_quantum_schemas.executor.version_1_0 import ParamsModel as ParamsModel_1_0
 
-
 from .converters import (
     quantum_program_from_0_1,
-    quantum_program_to_0_1,
     quantum_program_from_0_2,
-    quantum_program_to_0_2,
     quantum_program_from_1_0,
+    quantum_program_to_0_1,
+    quantum_program_to_0_2,
     quantum_program_to_1_0,
 )
 
 if TYPE_CHECKING:
-    from .quantum_program import QuantumProgram
+    from collections.abc import Callable
+
+    from ibm_quantum_schemas.common import BaseParamsModel
+
     from ..options_models import ExecutorOptions
+    from .quantum_program import QuantumProgram
 
 
 class ParamsConverter(NamedTuple):

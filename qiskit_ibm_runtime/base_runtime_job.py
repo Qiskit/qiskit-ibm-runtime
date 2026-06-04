@@ -14,31 +14,33 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Any
-from collections.abc import Sequence
 import logging
-from concurrent import futures
 import queue
-from datetime import datetime
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
+from concurrent import futures
+from typing import TYPE_CHECKING, Any
 
-from qiskit.providers.backend import Backend
-from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
-
-
-from qiskit_ibm_runtime import qiskit_runtime_service
-
-from .utils import utc_to_local, validate_job_tags
+from .api.exceptions import RequestsApiError
 from .decoders.defaults import DEFAULT_DECODERS
+from .decoders.result_decoder import ResultDecoder
 from .exceptions import (
-    IBMError,
     IBMApiError,
+    IBMError,
     IBMRuntimeError,
 )
-from .decoders.result_decoder import ResultDecoder
-from .models import BackendProperties
-from .api.clients import RuntimeClient
-from .api.exceptions import RequestsApiError
+from .utils import utc_to_local, validate_job_tags
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from qiskit.providers.backend import Backend
+    from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
+
+    from qiskit_ibm_runtime import qiskit_runtime_service
+
+    from .api.clients import RuntimeClient
+    from .models import BackendProperties
 
 logger = logging.getLogger(__name__)
 

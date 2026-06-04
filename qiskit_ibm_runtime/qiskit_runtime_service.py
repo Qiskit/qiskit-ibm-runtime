@@ -16,32 +16,40 @@ from __future__ import annotations
 
 import logging
 import warnings
-from datetime import datetime
-from typing import Any
-from collections.abc import Callable, Sequence
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
 
-from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
-from .proxies import ProxyConfiguration
-from .utils import is_crn
-from .utils.backend_decoder import configuration_from_server_data
 
-from .accounts import AccountManager, Account, ChannelType, RegionType, PlanType
+from .accounts import Account, AccountManager
+from .api.client_parameters import ClientParameters
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .exceptions import IBMInputValueError
-from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound
-from .decoders.result_decoder import ResultDecoder
+from .exceptions import (
+    IBMInputValueError,
+    IBMRuntimeError,
+    RuntimeJobNotFound,
+    RuntimeProgramNotFound,
+)
+from .proxies import ProxyConfiguration
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import validate_job_tags
-from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .ibm_backend import IBMBackend
-from .models import QasmBackendConfiguration
+from .utils import is_crn, validate_job_tags
+from .utils.backend_decoder import configuration_from_server_data
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+    from datetime import datetime
+
+    from qiskit.providers.backend import BackendV2 as Backend
+
+    from .accounts import ChannelType, PlanType, RegionType
+    from .decoders.result_decoder import ResultDecoder
+    from .ibm_backend import IBMBackend
+    from .models import QasmBackendConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -921,7 +929,7 @@ class QiskitRuntimeService:
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             calibration_id: The calibration id used for instantiating the backend.
 
@@ -943,7 +951,7 @@ class QiskitRuntimeService:
             if self._channel in ["ibm_cloud", "ibm_quantum_platform"]:
                 cloud_msg_url = (
                     " Learn more about available backends here "
-                    "https://quantum.cloud.ibm.com/docs/en/guides/qpu-information#view-your-resources"
+                    "https://quantum.cloud.ibm.com/docs/guides/qpu-information#view-your-resources"
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
 
@@ -1291,7 +1299,7 @@ class QiskitRuntimeService:
                 fractional gates are considered, and fractional gates are included
                 in the returned backend. See
                 `When not to use fractional gates
-                <https://quantum.cloud.ibm.com/docs/en/guides/fractional-gates#when-not-to-use-fractional-gates>`_
+                <https://quantum.cloud.ibm.com/docs/guides/fractional-gates#when-not-to-use-fractional-gates>`_
                 for limitations.
             kwargs: Additional arguments passed to the backend query.
 

@@ -12,30 +12,40 @@
 
 """Padding pass to fill timeslots for IBM (dynamic circuit) backends."""
 
-from collections.abc import Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from qiskit.circuit import (
-    Qubit,
     Clbit,
     ControlFlowOp,
     Gate,
     IfElseOp,
-    Instruction,
     Measure,
+    Qubit,
 )
-
-from qiskit.circuit import Bit
-from qiskit.circuit.library import Barrier
+from qiskit.circuit.controlflow import condition_resources
 from qiskit.circuit.delay import Delay
+from qiskit.circuit.library import Barrier
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import dag_to_circuit
-from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
-from qiskit.transpiler import Target
+from qiskit.dagcircuit import DAGCircuit, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.circuit.controlflow import condition_resources
 
-from .utils import block_order_op_nodes, BlockOrderingCallableType
+from .utils import block_order_op_nodes
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.circuit import (
+        Bit,
+        Instruction,
+    )
+    from qiskit.dagcircuit import DAGNode
+    from qiskit.transpiler import Target
+
+    from .utils import BlockOrderingCallableType
 
 
 class BlockBasePadder(TransformationPass):

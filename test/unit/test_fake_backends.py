@@ -12,23 +12,22 @@
 
 """Tests for fake backends."""
 
-from ddt import ddt, data
-
+from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
-from qiskit.compiler import transpile
 from qiskit.circuit.library import (
     CZGate,
     ECRGate,
 )
+from qiskit.compiler import transpile
 
 from qiskit_ibm_runtime.fake_provider import (
-    FakeProviderForBackendV2,
     FakeMumbaiV2,
-    FakeSherbrooke,
     FakePrague,
+    FakeProviderForBackendV2,
+    FakeSherbrooke,
 )
-from ..ibm_test_case import IBMTestCase
 
+from ..ibm_test_case import IBMTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 

@@ -13,16 +13,15 @@
 """Tests for Executor."""
 
 import numpy as np
-
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime import Executor, QuantumProgram
-from qiskit_ibm_runtime.results import QuantumProgramResult, QuantumProgramItemResult
+from qiskit_ibm_runtime.results import QuantumProgramItemResult, QuantumProgramResult
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
