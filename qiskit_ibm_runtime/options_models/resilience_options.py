@@ -38,5 +38,5 @@ class ResilienceOptions:
     )
     """Additional measurement noise learning options.
 
-    See :class:`MeasureNoiseLearningOptions` for all options.
+    See :class:`~.MeasureNoiseLearningOptions` for all options.
     """
