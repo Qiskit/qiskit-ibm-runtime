@@ -12,11 +12,16 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Any
-from datetime import datetime as python_datetime
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
-from ..session import RetrySession
+
+if TYPE_CHECKING:
+    from datetime import datetime as python_datetime
+
+    from ..session import RetrySession
 
 
 class CloudBackend(RestAdapterBase):

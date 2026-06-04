@@ -14,19 +14,18 @@
 
 from __future__ import annotations
 
-from typing import Literal
 from collections.abc import Sequence
 from dataclasses import asdict
+from typing import Literal
 
-from pydantic import model_validator, Field
+from pydantic import Field, model_validator
 
 from ..results.noise_learner import LayerError, NoiseLearnerResult
-from .utils import Unset, UnsetType, Dict, primitive_dataclass
-from .measure_noise_learning_options import MeasureNoiseLearningOptions
-from .zne_options import ZneOptions
-from .pec_options import PecOptions
 from .layer_noise_learning_options import LayerNoiseLearningOptions
-
+from .measure_noise_learning_options import MeasureNoiseLearningOptions
+from .pec_options import PecOptions
+from .utils import Dict, Unset, UnsetType, primitive_dataclass
+from .zne_options import ZneOptions
 
 NoiseAmplifierType = Literal["LocalFoldingAmplifier",]
 ExtrapolatorType = Literal[

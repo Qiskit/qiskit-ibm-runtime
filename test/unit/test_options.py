@@ -16,13 +16,12 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 from pydantic import ValidationError
-
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
-from qiskit_ibm_runtime.runtime_options import RuntimeOptions
-from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2, FakeNairobiV2
+from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
+from qiskit_ibm_runtime.runtime_options import RuntimeOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine

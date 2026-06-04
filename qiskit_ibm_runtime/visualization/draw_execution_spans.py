@@ -14,16 +14,18 @@
 
 from __future__ import annotations
 
-from itertools import cycle
 from datetime import datetime, timedelta
+from itertools import cycle
 from typing import TYPE_CHECKING
-from collections.abc import Iterable
 
-from ..execution_span import ExecutionSpan, ExecutionSpans
 from .utils import plotly_module
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from plotly.graph_objects import Figure as PlotlyFigure
+
+    from ..execution_span import ExecutionSpan, ExecutionSpans
 
 
 HOVER_TEMPLATE = "<br>".join(

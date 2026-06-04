@@ -12,16 +12,22 @@
 
 """A class to help understand the expected performance of estimator jobs."""
 
-from collections.abc import Sequence
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from qiskit.exceptions import QiskitError
-from qiskit.transpiler.passmanager import PassManager
-from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.providers import BackendV2 as Backend
+from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.debug_tools.neat_results import NeatPubResult, NeatResult
 from qiskit_ibm_runtime.transpiler.passes.cliffordization import ConvertISAToClifford
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from qiskit.primitives.containers import EstimatorPubLike
+    from qiskit.providers import BackendV2 as Backend
 
 
 try:

@@ -83,3 +83,13 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         # Check that experimental dict is carried over
         self.assertEqual(executor_options.experimental["custom_key"], "custom_value")
         self.assertEqual(executor_options.experimental["another_key"], 123)
+
+    def test_experimental_dict_execution_mapping(self):
+        """Execution-related entries in `experimental.execution` must map to executor options."""
+        options = SamplerOptions()
+        options.experimental = {"execution": {"stretch_values": True, "scheduler_timing": True}}
+        executor_options = options.to_executor_options()
+
+        # Check that experimental dict is carried over
+        self.assertEqual(executor_options.execution.stretch_values, True)
+        self.assertEqual(executor_options.execution.scheduler_timing, True)

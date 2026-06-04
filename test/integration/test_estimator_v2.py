@@ -14,14 +14,14 @@
 
 from unittest import skip
 
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.circuit.library import real_amplitudes, IQP
+from qiskit.circuit.library import IQP, real_amplitudes
+from qiskit.primitives.containers import DataBin, PrimitiveResult, PubResult
 from qiskit.quantum_info import SparsePauliOp
-
-from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeAuckland
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 

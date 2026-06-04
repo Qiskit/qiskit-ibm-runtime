@@ -12,22 +12,27 @@
 
 """Sampler primitive."""
 
-from collections.abc import Iterable
-import logging
+from __future__ import annotations
 
+import logging
+from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseSamplerV2
-from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
-from qiskit.providers import BackendV2
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-
-from .runtime_job_v2 import RuntimeJobV2
 from .base_primitive import BasePrimitiveV2
-
-from .session import Session
-from .batch import Batch
-from .utils import validate_classical_registers
 from .options import SamplerOptions
+from .utils import validate_classical_registers
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives.containers.sampler_pub import SamplerPubLike
+    from qiskit.providers import BackendV2
+
+    from .batch import Batch
+    from .runtime_job_v2 import RuntimeJobV2
+    from .session import Session
 
 logger = logging.getLogger(__name__)
 

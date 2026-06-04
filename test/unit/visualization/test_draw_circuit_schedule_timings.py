@@ -13,8 +13,10 @@
 """Unit tests for the circuit schedule timing visualization."""
 
 import ddt
+
 from qiskit_ibm_runtime.visualization import draw_circuit_schedule_timing
-from qiskit_ibm_runtime.utils.circuit_schedule import CircuitSchedule
+from qiskit_ibm_runtime.visualization.circuit_schedule import CircuitSchedule
+
 from ...ibm_test_case import IBMTestCase
 from ..mock.fake_circuit_schedule_timing import FakeCircuitScheduleInputData
 
