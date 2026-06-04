@@ -22,6 +22,9 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 from qiskit_ibm_runtime.utils.default_session import get_cm_session
 
+from .session import Session
+from .batch import Batch
+
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
     from ..runtime_job_v2 import RuntimeJobV2
@@ -54,9 +57,9 @@ class Calibrator:
 
     def __init__(
         self,
-        backend: BackendV2,
+        mode: BackendV2 | Session | Batch | str | None = None,
     ):
-        self._session, self._service, self._backend = get_mode_service_backend(backend)
+        self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The calibrator is currently not supported in local mode.")
 
