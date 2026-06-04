@@ -14,16 +14,18 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 import logging
 from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+from qiskit_ibm_runtime.options.calibrator_options import CalibratorOptions
 from qiskit_ibm_runtime.utils.default_session import get_cm_session
 
-from .session import Session
 from .batch import Batch
+from .session import Session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
@@ -55,10 +57,17 @@ class Calibrator:
     _PROGRAM_ID = "calibrate"
     _DECODER = ResultDecoder
 
+    options: CalibratorOptions
+    """The options of this calibrator."""
+
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | str | None = None,
+        options: CalibratorOptions | dict | None = None,
     ):
+        # Coerced to `CalibratorOptions` via `__setattr__()`.
+        self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
+
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The calibrator is currently not supported in local mode.")
@@ -84,9 +93,12 @@ class Calibrator:
                     self._PROGRAM_ID,
                 )
 
+        runtime_options = asdict(self.options)
+        runtime_options["backend"] = self._backend
+
         return _run(
             program_id=self._PROGRAM_ID,
-            options={"backend": self._backend},
+            options=runtime_options,
             inputs={},
             result_decoder=self._DECODER,
         )
