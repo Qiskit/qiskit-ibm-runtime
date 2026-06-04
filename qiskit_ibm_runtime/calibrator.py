@@ -65,8 +65,12 @@ class Calibrator:
         mode: BackendV2 | Session | Batch | str | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
-        # Coerced to `CalibratorOptions` via `__setattr__()`.
-        self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
+        if options is None:
+            self.options = CalibratorOptions()
+        elif isinstance(options, dict):
+            self.options = CalibratorOptions(**options)
+        else:
+            self.options = options
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
