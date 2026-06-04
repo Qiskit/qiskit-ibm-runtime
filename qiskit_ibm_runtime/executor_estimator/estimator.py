@@ -15,21 +15,27 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
-from qiskit.primitives.containers.estimator_pub import EstimatorPub, EstimatorPubLike
-from qiskit.providers import BackendV2
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from ..batch import Batch
 from ..executor import Executor
 from ..executor.dynamical_decoupling import generate_dd_pass_manager
 from ..options_models.estimator_options import EstimatorOptions
-from ..runtime_job_v2 import RuntimeJobV2
-from ..session import Session
 from .prepare import prepare
 from .utils import resolve_precision
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
+    from qiskit.providers import BackendV2
+
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 logger = logging.getLogger(__name__)
 
