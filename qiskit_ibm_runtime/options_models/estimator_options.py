@@ -85,7 +85,7 @@ class EstimatorOptions:
     resilience: ResilienceOptions = Field(default_factory=ResilienceOptions)
     """Advanced resilience options to fine-tune the resilience strategy.
 
-    See :class:`ResilienceOptions` for all available options.
+    See :class:`.~ResilienceOptions` for all available options.
     """
 
     def to_executor_options(self) -> ExecutorOptions:
