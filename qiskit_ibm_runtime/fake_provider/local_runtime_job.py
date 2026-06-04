@@ -80,7 +80,7 @@ class LocalRuntimeJob(PrimitiveJob):
         """Return the backend where this job was executed."""
         return self._backend
 
-    def usage(self) -> float:
+    def usage(self, usage: bool = False) -> float:
         """Return job usage in seconds."""
         return 0
 

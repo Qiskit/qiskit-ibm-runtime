@@ -123,11 +123,33 @@ class BaseRuntimeJob(ABC):
         """Return a unique id identifying the job."""
         return self._job_id
 
-    def usage(self) -> float:
-        """Return job usage in seconds."""
+    def usage(self, partial: bool = False) -> float:
+        """Return job usage in seconds.
+
+        By default, the job usage returned is ``0`` until the job _and_ the usage calculation are
+        completed. Accumulated intermediate usage can be returned by the method by using the
+        ``partial`` flag.
+
+        .. note::
+            When using ``partial``, note that is not guaranteed that the final usage is returned as
+            soon as the job is completed. It is recommended to invoke the method with
+            ``partial=False`` for guarantees that the usage returned is final, or to use the
+            :meth:`.metrics` method for details on the completion status.
+
+        Args:
+            partial: if ``True``, return the accumulated intermediate usage instead of the final
+                usage.
+        """
         try:
             metrics = self._api_client.job_metadata(self.job_id())
-            return metrics.get("usage", {}).get("quantum_seconds")
+            usage = metrics.get("usage", {})
+            if partial:
+                return usage.get("qpu_charge_time_seconds")
+            else:
+                if usage.get("status", "pending") == "pending":
+                    return 0
+                else:
+                    return usage.get("qpu_charge_time_seconds")
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
