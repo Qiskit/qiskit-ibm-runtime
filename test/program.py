@@ -32,7 +32,6 @@ def run_program(
 ):
     """Run a program."""
     backend_name = backend_name if backend_name is not None else "common_backend"
-    print("image", image)
     options = {
         "backend": backend_name,
         "image": image,

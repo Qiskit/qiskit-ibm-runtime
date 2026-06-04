@@ -14,8 +14,8 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 import logging
+from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
@@ -29,6 +29,7 @@ from .session import Session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2
+
     from ..runtime_job_v2 import RuntimeJobV2
 
 
