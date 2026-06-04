@@ -23,6 +23,7 @@ from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
 from .environment_options import EnvironmentOptions
+from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
@@ -80,6 +81,12 @@ class EstimatorOptions:
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
+
+    resilience: ResilienceOptionsV2 = Field(default_factory=ResilienceOptionsV2)
+    """Advanced resilience options to fine-tune the resilience strategy.
+
+    See :class:`ResilienceOptionsV2` for all available options.
+    """
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.
