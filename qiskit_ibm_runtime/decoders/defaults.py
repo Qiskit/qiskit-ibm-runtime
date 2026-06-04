@@ -24,5 +24,5 @@ DEFAULT_DECODERS: dict[str, type[ResultDecoder] | list[type[ResultDecoder]]] = {
     "noise-learner": NoiseLearnerResultDecoder,
     "circuit-runner": RunnerResultDecoder,
     "qasm3-runner": RunnerResultDecoder,
-    "calibrations": ResultDecoder,
+    "calibrate": ResultDecoder,
 }

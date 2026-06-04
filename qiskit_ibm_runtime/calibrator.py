@@ -49,7 +49,7 @@ class Calibrator:
         backend: The backend to calibrate.
     """
 
-    _PROGRAM_ID = "calibrator"
+    _PROGRAM_ID = "calibrate"
     _DECODER = ResultDecoder
 
     def __init__(
