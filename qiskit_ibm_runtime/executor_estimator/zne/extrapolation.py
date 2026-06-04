@@ -46,26 +46,38 @@ def process_extrapolated_expectation_values(
     extrapolator: str | Sequence[str],
     extrapolated_noise_factors: float | ArrayLike = 0,
 ) -> EstimatorResult:
-    """Fit extrapolation models to an estimator result and evaluate at the target noise factors.
+      """Apply zero-noise extrapolation (ZNE) to an estimator result.
 
-    For every result the selected ("best") extrapolation is stacked on top of every
-    model's extrapolation, and the raw un-extrapolated noise-factor data is concatenated
-    onto the result. Callers decide whether extrapolation runs; this function always
-    extrapolates.
+      For each result, the requested model(s) are fit to the expectation values measured at
+      the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
+      noise). Models are tried in priority order: each point takes the result of the
+      first model whose extrapolation is valid. A valid extrapolation results in a finite
+      value and standard error, with the value plausible with respect to the measurement basis.
+      If no models produce a valid value, the measured input value with the smallest standard
+      error will be returned. Standard errors are first-order estimates propagated from the fit
+      covariance.
 
-    Args:
-        result: An estimator result optionally containing multiple ZNE noise factors
-            for each indexed result.
-        extrapolator: A builtin model name or sequence of names to use for extrapolation.
-        extrapolated_noise_factors: A single or 1D array of noise factors to extrapolate
-            to. The default is ``0`` for zero-noise extrapolation.
+      Args:
+          result: Estimator result whose per-entry metadata provides ``standard_error`` and a
+              ``resilience["zne_noise_factors"]`` array, with values measured at those factors.
+          extrapolator: A builtin model name, or a sequence of names tried in priority order.
+              Supported: ``linear``, ``exponential``, ``double_exponential``,
+              ``polynomial_degree_k`` (1 <= k <= 7), and ``fallback`` (no fit; returns the
+              input measurement with the smallest standard error).
+          extrapolated_noise_factors: Scalar or 1D array of noise factors to evaluate the fits
+              at; defaults to ``0`` (zero-noise extrapolation).
 
-    Raises:
-        ValueError: If a result is missing its ``zne_noise_factors`` metadata.
+      Raises:
+          ValueError: If an entry is missing ``standard_error`` or ``zne_noise_factors``
+              metadata, or if an extrapolator name is not recognized.
 
-    Returns:
-        The estimator result with noise factors of the same result collected.
-    """
+      Returns:
+          A new estimator result. Per entry, ``values`` is a 2D array stacking the selected
+          extrapolation (row 0) above each model's extrapolation (rows 1+), with the raw
+          measured noise-factor values appended along the last axis; ``standard_error`` and the
+          ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to
+          match. A size-1 result collapses to a scalar.
+      """
     if isinstance(extrapolator, str):
         extrapolator = [extrapolator]
 
@@ -122,7 +134,8 @@ def _fit_extrapolation_models(
     # Make noise factor(s) arrays
     x_eval = _as_noise_factors(extrapolated_noise_factor)
 
-    # Assign more weight to tighter distributions
+    # Clamp negative/0.0 stds to min(y_std). Clamp inf/NaN stds to max(y_std).
+    # If no valid stds, function returns None
     fit_stds = _fit_stds(y_std)
 
     # Ensure the extrapolators are valid
@@ -144,7 +157,7 @@ def _fit_extrapolation_models(
     # Extrapolate to the lowest noise scale's values when the extrapolator is "fallback"
     fallback_idx = int(np.argmin(x_data))
 
-    # Get 2D array of extrapolated EVs and and 2D array with associated standard errors.
+    # Get arrays of extrapolated EVs and associated standard errors.
     # Arrays are shaped (# extrapolators, # extrapolated noise factors).
     fit_values = np.empty((len(names), x_eval.size))
     fit_stderrs = np.empty_like(fit_values)
@@ -166,14 +179,35 @@ def _fit_extrapolation_models(
     return fit_values, fit_metadata
 
 
+def _fit_stds(y_std: np.ndarray) -> np.ndarray | None:
+    """Per-point standard errors for fitting, with degenerate errors clamped.
+
+    Standard errors of ``0`` or negative are clamped up to the smallest finite error
+    and ``inf``/``nan`` down to the largest, keeping every value finite and positive.
+    If no standard error is positive and finite, returns ``None`` so the caller
+    performs an unweighted fit.
+    """
+    finite = y_std[(y_std > 0) & (y_std < np.inf)]
+    if not np.any(finite):
+        warnings.warn(
+            "No positive, finite standard errors were found; falling back to an "
+            "unweighted fit for extrapolation.",
+            stacklevel=2,
+        )
+        return None
+    # Map nan to inf so it clamps to the largest error rather than propagating nan.
+    return np.clip(np.nan_to_num(y_std, nan=np.inf), finite.min(), finite.max())
+
+
 def _select_zne_extrapolated_result(
     zne_values: np.ndarray, zne_metadata: dict[str, Any]
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Choose the best extrapolated values and stack them in the top row of the values/metadata.
 
     The best value is the valid value produced by the highest-priority model. Valid values are
-    finite and have reasonable standard errors, depending on the measurement basis.
-
+    those that are finite, have a standard error within the measurement-basis threshold, and lie
+    within the basis's range to within that standard error.
+    
     Modifies metadata in place.
     """
     # Patterns for matching ev bases for range of ideal outcomes.
@@ -195,7 +229,8 @@ def _select_zne_extrapolated_result(
     else:
         val_min, val_max = (-np.inf, np.inf)
 
-    # Filter candidate values that are non-finite or have erroneous std errors
+    # Filter candidate values that have non-finite values/std errors and values
+    # with standard errors outside the basis threshold.
     stderr_threshold = max(abs(val_min), abs(val_max))
     reject_conditions = np.stack(
         [
@@ -277,6 +312,32 @@ def _extrapolate(
         return np.full(x_eval.shape, np.nan), np.full(x_eval.shape, np.nan)
 
 
+def _eval_model(
+    func: Callable[..., np.ndarray], popt: np.ndarray, pcov: np.ndarray, x_eval: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluate ``func`` and its delta-method uncertainty ``sqrt(J^T pcov J)`` at ``x_eval``.
+
+    See https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals
+    for details on estimating variance in extrapolated values.
+    """
+    y = np.asarray(func(x_eval, *popt), dtype=float)
+
+    # Create the Jacobian
+    jac = np.empty((y.size, len(popt)))
+    for j in range(len(popt)):
+        # Step size ~√ε, where ε is machine precision. This value is large enough to
+        # avoid roundoff from subtracting near-equal values but small enough to faithfully
+        # capture the gradient at the minima
+        step = 1e-8 * max(abs(popt[j]), 1.0)
+        shifted = np.array(popt, dtype=float)
+        shifted[j] += step
+        jac[:, j] = (np.asarray(func(x_eval, *shifted), dtype=float) - y) / step
+
+    # Estimate the variance(s) for each extrapolated point
+    var = np.einsum("ij,jk,ik->i", jac, pcov, jac)
+    return y, np.sqrt(np.clip(var, 0.0, None))
+
+
 def _model(
     name: str, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None
 ) -> tuple[
@@ -286,7 +347,7 @@ def _model(
     # Polynomial: Linear in its parameters, so polyfit already gives the
     # exact weighted least-squares solution. We still hand it to curve_fit (as p0)
     # so the covariance is computed the same way as the exponential models.
-    # Coefficients are reversed to lowest-order-first for _poly's polyval convention.
+    # Coefficients are reversed to lowest-order-first for Numpy polyval convention.
     degree = _poly_degree(name)
     if degree is not None:
         p0 = list(np.polyfit(x, y, degree, w=weights)[::-1])
@@ -300,6 +361,23 @@ def _model(
         bounds = ([-np.inf, -np.inf] * n, [np.inf, 0.0] * n) if decay_only else (-np.inf, np.inf)
         return _multi_exp, p0, bounds
     raise ValueError(f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}")
+
+
+def _poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
+    """Polynomial model, coeffs should be ordered lowest-order-first."""
+    return _polyval(np.asarray(x, dtype=float), coeffs)
+
+
+def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
+    """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``
+    
+    The parameter ordering should be [amp1, rate1, ...ampN, rateN]
+    """
+    x = np.asarray(x, dtype=float)
+    out = np.zeros_like(x)
+    for amp, rate in zip(params[::2], params[1::2]):
+        out = out + amp * np.exp(rate * x)
+    return out
 
 
 def _exp_guess(
@@ -386,69 +464,6 @@ def _poly_degree(name: str) -> int | None:
         return 1
     match = re.fullmatch(r"polynomial_degree_([1-7])", name)
     return int(match.group(1)) if match else None
-
-
-def _poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
-    """Polynomial model, coeffs should be in ascending order."""
-    return _polyval(np.asarray(x, dtype=float), coeffs)
-
-
-def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
-    """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``
-    
-    # The parameter ordering should be [amp1, rate1, ...ampN, rateN]
-    """
-    x = np.asarray(x, dtype=float)
-    out = np.zeros_like(x)
-    for amp, rate in zip(params[::2], params[1::2]):
-        out = out + amp * np.exp(rate * x)
-    return out
-
-
-def _fit_stds(y_std: np.ndarray) -> np.ndarray | None:
-    """Per-point standard errors for fitting, with degenerate errors clamped.
-
-    Standard errors of ``0`` or negative are clamped up to the smallest finite error
-    and ``inf``/``nan`` down to the largest, keeping every value finite and positive.
-    If no standard error is positive and finite, returns ``None`` so the caller
-    performs an unweighted fit.
-    """
-    finite = y_std[(y_std > 0) & (y_std < np.inf)]
-    if not np.any(finite):
-        warnings.warn(
-            "No positive, finite standard errors were found; falling back to an "
-            "unweighted fit for extrapolation.",
-            stacklevel=2,
-        )
-        return None
-    # Map nan to inf so it clamps to the largest error rather than propagating nan.
-    return np.clip(np.nan_to_num(y_std, nan=np.inf), finite.min(), finite.max())
-
-
-def _eval_model(
-    func: Callable[..., np.ndarray], popt: np.ndarray, pcov: np.ndarray, x_eval: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-    """Evaluate ``func`` and its delta-method uncertainty ``sqrt(J^T pcov J)`` at ``x_eval``.
-
-    See https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals
-    for details on estimating variance in extrapolated values.
-    """
-    y = np.asarray(func(x_eval, *popt), dtype=float)
-
-    # Create the Jacobian
-    jac = np.empty((y.size, len(popt)))
-    for j in range(len(popt)):
-        # Step size ~√ε, where ε is machine precision. This value is large enough to
-        # avoid roundoff from subtracting small values but small enough to faithfully
-        # capture the gradient at the minima
-        step = 1e-8 * max(abs(popt[j]), 1.0)
-        shifted = np.array(popt, dtype=float)
-        shifted[j] += step
-        jac[:, j] = (np.asarray(func(x_eval, *shifted), dtype=float) - y) / step
-
-    # Estimate the variance(s) for each extrapolated point
-    var = np.einsum("ij,jk,ik->i", jac, pcov, jac)
-    return y, np.sqrt(np.clip(var, 0.0, None))
 
 
 def _format_extrapolated(
