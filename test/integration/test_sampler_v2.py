@@ -14,6 +14,7 @@
 
 import unittest
 
+from ddt import ddt
 import numpy as np
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
@@ -33,6 +34,7 @@ from ..decorators import run_configured_sampler_implementations
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
+@ddt
 class TestSampler(IBMIntegrationTestCase):
     """Test Sampler."""
 
@@ -76,7 +78,7 @@ class TestSampler(IBMIntegrationTestCase):
         )  # case 6
 
     @run_configured_sampler_implementations
-    def test_sampler_run(self, sampler_cls=Sampler):
+    def test_sampler_run(self, sampler_cls):
         """Test Sampler.run()."""
         with Session(self._backend) as session:
             _, _, target = self._cases[1]
@@ -156,7 +158,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=4)
 
     @run_configured_sampler_implementations
-    def test_run_single_circuit(self, sampler_cls=Sampler):
+    def test_run_single_circuit(self, sampler_cls):
         """Test for single circuit case."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
         with Session(self._backend) as session:
@@ -247,7 +249,7 @@ class TestSampler(IBMIntegrationTestCase):
                 self._verify_result_type(result, num_pubs=2)
 
     @run_configured_sampler_implementations
-    def test_run_numpy_params(self, sampler_cls=Sampler):
+    def test_run_numpy_params(self, sampler_cls):
         """Test for numpy array as parameter values."""
         with Session(self._backend) as session:
             qc = real_amplitudes(num_qubits=2, reps=2)
@@ -270,7 +272,7 @@ class TestSampler(IBMIntegrationTestCase):
                 )
 
     @run_configured_sampler_implementations
-    def test_run_with_shots_option(self, sampler_cls=Sampler):
+    def test_run_with_shots_option(self, sampler_cls):
         """Test with shots option."""
         with Session(self._backend) as session:
             _, _, _ = self._cases[1]
@@ -391,7 +393,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
-    def test_circuit_with_multiple_cregs(self, sampler_cls=Sampler):
+    def test_circuit_with_multiple_cregs(self, sampler_cls):
         """Test for circuit with multiple classical registers."""
         with Session(self._backend) as session:
             cases = []
@@ -459,7 +461,7 @@ class TestSampler(IBMIntegrationTestCase):
                     self._verify_result_type(result, num_pubs=1)
 
     @run_configured_sampler_implementations
-    def test_sampler_v2_options(self, sampler_cls=Sampler):
+    def test_sampler_v2_options(self, sampler_cls):
         """Test SamplerV2 options."""
         sampler = sampler_cls(mode=self._backend)
         sampler.options.default_shots = 4096
@@ -472,7 +474,7 @@ class TestSampler(IBMIntegrationTestCase):
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     @run_configured_sampler_implementations
-    def test_sampler_v2_dd(self, sampler_cls=Sampler):
+    def test_sampler_v2_dd(self, sampler_cls):
         """Test SamplerV2 DD options."""
         sampler = sampler_cls(mode=self._backend)
         sampler.options.dynamical_decoupling.enable = True

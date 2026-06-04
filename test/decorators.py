@@ -17,7 +17,9 @@ from dataclasses import dataclass
 from functools import wraps
 from collections.abc import Callable
 from typing import Any
-from unittest import SkipTest, TestCase
+from unittest import SkipTest
+
+from ddt import named_data
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import ChannelType
@@ -82,26 +84,19 @@ def run_integration_test(func):
     return _wrapper
 
 
-def run_configured_sampler_implementations(test_func: Callable[..., Any]) -> Callable[..., None]:
-    """Run sampler integration tests against configured sampler implementations."""
+def run_configured_sampler_implementations(
+    test_func: Callable[..., Any],
+) -> Callable[..., Any]:
+    """Parameterize sampler tests based on the configured implementations."""
+    from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
+    from qiskit_ibm_runtime.executor_sampler import SamplerV2 as ExecutorSamplerV2
 
-    @wraps(test_func)
-    def _wrapper(self: TestCase, *args: Any, **kwargs: Any) -> None:
-        if os.getenv("QISKIT_IBM_TEST_BOTH_SAMPLER_IMPLEMENTATIONS") != "1":
-            test_func(self, *args, **kwargs)
-            return
-
-        from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
-        from qiskit_ibm_runtime.executor_sampler import SamplerV2 as ExecutorSamplerV2
-
-        for label, sampler_cls in (
-            ("legacy", LegacySamplerV2),
-            ("executor", ExecutorSamplerV2),
-        ):
-            with self.subTest(sampler=label):
-                test_func(self, *args, sampler_cls=sampler_cls, **kwargs)
-
-    return _wrapper
+    implementations = (
+        [("legacy", LegacySamplerV2), ("executor", ExecutorSamplerV2)]
+        if os.getenv("QISKIT_IBM_TEST_SAMPLER_V2_IMPLEMENTATIONS") == "1"
+        else [("legacy", LegacySamplerV2)]
+    )
+    return named_data(*implementations)(test_func)
 
 
 def integration_test_setup(
