@@ -40,8 +40,13 @@ from .converters import (
     quantum_program_result_from_1_0,
 )
 
-# {semantic_role: {version: func}}
-WRAPPER_PRIMITIVES_POST_PROCESSORS = {
+"""
+The available post processors.
+
+This is a dictionary mapping semantic roles to maps between
+versions and functions.
+"""
+SUPPORTED_POST_PROCESSORS = {
     "sampler_v2": {
         "v0.1": sampler_v2_post_processor_v0_1,
     },
