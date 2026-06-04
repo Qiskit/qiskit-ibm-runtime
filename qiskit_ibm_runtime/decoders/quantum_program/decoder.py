@@ -30,6 +30,9 @@ from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_1,
 )
 
+from ..executor_estimator.post_processor_v0_1 import (
+    estimator_v2_post_processor_v0_1,
+)
 from ..executor_sampler.post_processor_v0_1 import (
     sampler_v2_post_processor_v0_1,
 )
@@ -41,9 +44,21 @@ from .converters import (
     quantum_program_result_from_1_1,
 )
 
-SAMPLER_POST_PROCESSORS = {
-    "v0.1": sampler_v2_post_processor_v0_1,
+"""
+The available post processors.
+
+This is a dictionary mapping semantic roles to maps between
+versions and functions.
+"""
+SUPPORTED_POST_PROCESSORS = {
+    "sampler_v2": {
+        "v0.1": sampler_v2_post_processor_v0_1,
+    },
+    "estimator_v2": {
+        "v0.1": estimator_v2_post_processor_v0_1,
+    },
 }
+
 
 if TYPE_CHECKING:
     from qiskit.primitives.containers import PrimitiveResult
@@ -99,7 +114,7 @@ class QuantumProgramResultDecoder(ResultDecoder):
         if not (semantic_role := result._semantic_role):
             return result
 
-        if semantic_role == "sampler_v2":
+        if semantic_role in SUPPORTED_POST_PROCESSORS:
             if not isinstance(result.passthrough_data, dict):
                 raise ValueError("Expected passthrough data to be of dict-like format.")
 
@@ -109,9 +124,9 @@ class QuantumProgramResultDecoder(ResultDecoder):
                 raise ValueError("Could not determine a post-processor version.")
 
             try:
-                post_processor_fn = SAMPLER_POST_PROCESSORS[version]
+                post_processor_fn = SUPPORTED_POST_PROCESSORS[semantic_role][version]
             except KeyError:
-                raise ValueError(f"No post-processor found for version {version}.")
+                raise ValueError(f"No post-processor found for {semantic_role} version {version}.")
 
             return post_processor_fn(result)
 
