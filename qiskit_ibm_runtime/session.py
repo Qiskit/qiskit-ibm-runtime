@@ -14,21 +14,25 @@
 
 from __future__ import annotations
 
-from typing import Any
-from types import TracebackType
 from functools import wraps
+from typing import TYPE_CHECKING, Any
 
 from qiskit.providers.backend import BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+
 from .api.exceptions import RequestsApiError
 from .exceptions import IBMInputValueError, IBMRuntimeError
-from .runtime_job_v2 import RuntimeJobV2
-from .decoders.result_decoder import ResultDecoder
-from .ibm_backend import IBMBackend
-from .utils.default_session import set_cm_session
-from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
+from .ibm_backend import IBMBackend
+from .utils.converters import hms_to_seconds
+from .utils.default_session import set_cm_session
+
+if TYPE_CHECKING:
+    from types import TracebackType
+
+    from .decoders.result_decoder import ResultDecoder
+    from .runtime_job_v2 import RuntimeJobV2
 
 
 def _active_session(func):  # type: ignore

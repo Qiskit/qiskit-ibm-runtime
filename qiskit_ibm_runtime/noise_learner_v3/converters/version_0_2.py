@@ -25,15 +25,15 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
 )
 from qiskit.circuit import QuantumCircuit
 
-
 from ...options_models import NoiseLearnerV3Options
 from ...utils.utils import get_qpy_version
-from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from qiskit.circuit import CircuitInstruction
+
+    from ...results.noise_learner_v3 import NoiseLearnerV3Results
 
 EXECUTION_FIELDS = {"init_qubits", "rep_delay"}
 """Fields that belong to ``options.execution`` in user-land, but in ``options`` in schemas."""

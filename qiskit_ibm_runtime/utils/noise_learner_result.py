@@ -15,8 +15,8 @@
 import warnings
 
 from qiskit_ibm_runtime.results import (  # noqa: F401
-    NoiseLearnerResult,
     LayerError,
+    NoiseLearnerResult,
     PauliLindbladError,
 )
 

@@ -13,11 +13,11 @@
 
 """Utility script to verify that all images have alt text."""
 
-from argparse import ArgumentParser
-from pathlib import Path
+import glob
 import multiprocessing
 import sys
-import glob
+from argparse import ArgumentParser
+from pathlib import Path
 
 # List of allowlist files that the checker will not verify
 ALLOWLIST_MISSING_ALT_TEXT = [

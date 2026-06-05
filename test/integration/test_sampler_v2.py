@@ -14,22 +14,22 @@
 
 import unittest
 
-from ddt import ddt
 import numpy as np
-
+from ddt import ddt
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
-from qiskit.circuit.library import real_amplitudes, UnitaryGate
+from qiskit.circuit.library import UnitaryGate, real_amplitudes
 from qiskit.primitives import PrimitiveResult, PubResult
 from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+
 from ..decorators import run_configured_sampler_implementations
 from ..ibm_test_case import IBMIntegrationTestCase
 

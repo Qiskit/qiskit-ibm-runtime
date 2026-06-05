@@ -12,38 +12,42 @@
 
 """General utility functions."""
 
+from __future__ import annotations
+
 import copy
 import keyword
 import logging
 import os
 import re
+from itertools import chain
 from queue import Queue
 from threading import Condition
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
-from itertools import chain
-import numpy as np
 
+import numpy as np
 import requests
 from ibm_cloud_sdk_core.authenticators import (
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2
-from qiskit.circuit import QuantumCircuit, ControlFlowOp, ParameterExpression, Parameter
+from qiskit.circuit import ControlFlowOp, ParameterExpression
 from qiskit.circuit.delay import Delay
-from qiskit.circuit.gate import Instruction
 from qiskit.circuit.library.standard_gates import (
+    PhaseGate,
     RZGate,
     U1Gate,
-    PhaseGate,
 )
 from qiskit.qpy import QPY_VERSION
-from qiskit.transpiler import Target
-from qiskit.providers.backend import BackendV2
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.primitives.containers.sampler_pub import SamplerPub
-
 from samplomatic.ssv import SSV
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Parameter, QuantumCircuit
+    from qiskit.circuit.gate import Instruction
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from qiskit.primitives.containers.sampler_pub import SamplerPub
+    from qiskit.providers.backend import BackendV2
+    from qiskit.transpiler import Target
 
 
 def get_ssv_version(highest_value: int | None = None) -> int:

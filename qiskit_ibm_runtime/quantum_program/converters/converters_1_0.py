@@ -15,29 +15,30 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+from typing import TYPE_CHECKING
 
 import numpy as np
-from samplomatic.tensor_interface import TensorSpecification, PauliLindbladMapSpecification
-
-from qiskit.circuit import QuantumCircuit
-from ibm_quantum_schemas.executor.version_1_0 import (
-    ParamsModel,
-    CircuitItemModel,
-    SamplexItemModel,
-    QuantumProgramModel,
-)
 from ibm_quantum_schemas.common import (
-    PauliLindbladMapModel,
-    SamplexModelSSV1ToSSV3,
     F64TensorModel,
-    TensorModel,
+    PauliLindbladMapModel,
     QpyDataV13ToV17Model,
+    SamplexModelSSV1ToSSV3,
+    TensorModel,
 )
-from ...utils.utils import get_qpy_version, get_ssv_version
+from ibm_quantum_schemas.executor.version_1_0 import (
+    CircuitItemModel,
+    ParamsModel,
+    QuantumProgramModel,
+    SamplexItemModel,
+)
+from samplomatic.tensor_interface import PauliLindbladMapSpecification, TensorSpecification
 
-
-from ..quantum_program import QuantumProgram, CircuitItem, SamplexItem
 from ...options_models.executor_options import ExecutorOptions
+from ...utils.utils import get_qpy_version, get_ssv_version
+from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
+
+if TYPE_CHECKING:
+    from qiskit.circuit import QuantumCircuit
 
 
 def quantum_program_from_1_0(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:

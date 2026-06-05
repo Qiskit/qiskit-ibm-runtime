@@ -12,21 +12,29 @@
 
 """Scheduler for dynamic circuit backends."""
 
-from abc import abstractmethod
+from __future__ import annotations
+
 import itertools
 import warnings
+from abc import abstractmethod
+from typing import TYPE_CHECKING
 
-import qiskit
-from qiskit.circuit import Bit, Barrier, Clbit, ControlFlowOp, Measure, Qubit, Reset
+from qiskit.circuit import Barrier, ControlFlowOp, Measure, Qubit, Reset
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import circuit_to_dag
-from qiskit.dagcircuit import DAGCircuit, DAGNode
-from qiskit.transpiler import Target
-from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.basepasses import TransformationPass
+from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.passes.scheduling.time_unit_conversion import TimeUnitConversion
 
-from .utils import BlockOrderingCallableType, block_order_op_nodes
+from .utils import block_order_op_nodes
+
+if TYPE_CHECKING:
+    import qiskit
+    from qiskit.circuit import Bit, Clbit
+    from qiskit.dagcircuit import DAGCircuit, DAGNode
+    from qiskit.transpiler import Target
+
+    from .utils import BlockOrderingCallableType
 
 
 class BaseDynamicCircuitAnalysis(TransformationPass):

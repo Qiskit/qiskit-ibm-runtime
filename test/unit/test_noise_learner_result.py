@@ -13,14 +13,14 @@
 """Tests for the classes used to instantiate noise learner results."""
 
 from unittest import skipIf
-from ddt import ddt
 
+from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliList
 from qiskit_aer import AerSimulator
 
 from qiskit_ibm_runtime.fake_provider import FakeKyiv
-from qiskit_ibm_runtime.results.noise_learner import PauliLindbladError, LayerError
+from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
 from ..ibm_test_case import IBMTestCase
 

@@ -15,7 +15,7 @@
 import copy
 from unittest import mock
 
-from ddt import named_data, ddt
+from ddt import ddt, named_data
 from qiskit import QuantumCircuit, qasm3, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit.transpiler import generate_preset_pass_manager
@@ -23,9 +23,9 @@ from qiskit.transpiler import generate_preset_pass_manager
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
 from qiskit_ibm_runtime.fake_provider import (
+    FakeFractionalBackend,
     FakeManilaV2,
     FakeSherbrooke,
-    FakeFractionalBackend,
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.models import (

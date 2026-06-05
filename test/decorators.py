@@ -12,19 +12,24 @@
 
 """Decorators used by unit tests."""
 
+from __future__ import annotations
+
 import os
 from dataclasses import dataclass
 from functools import wraps
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
 
 from ddt import named_data
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.accounts import ChannelType
 
 from .unit.mock.fake_runtime_service import FakeRuntimeService
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from qiskit_ibm_runtime.accounts import ChannelType
 
 
 def production_only(func):

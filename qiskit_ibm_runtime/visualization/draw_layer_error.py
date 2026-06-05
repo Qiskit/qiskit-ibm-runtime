@@ -13,18 +13,21 @@
 """Functions to visualize :class:`~.NoiseLearnerResult` objects."""
 
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from qiskit.providers.backend import BackendV2
-from qiskit.quantum_info import Pauli
 
-from .embeddings import Embedding
 from ..results.noise_learner import LayerError
+from .embeddings import Embedding
 from .utils import get_rgb_color, pie_slice, plotly_module
 
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure as PlotlyFigure
+    from qiskit.quantum_info import Pauli
+
+    from ..results.noise_learner import LayerError
 
 
 def draw_layer_error_map(

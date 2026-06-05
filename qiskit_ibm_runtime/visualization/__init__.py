@@ -35,8 +35,8 @@ Functions
     draw_circuit_schedule_timing
 """
 
-from .draw_layer_error import draw_layer_error_map, draw_layer_errors_swarm
 from .draw_chunk_timings import draw_chunk_timings
-from .draw_execution_spans import draw_execution_spans
-from .draw_zne import draw_zne_evs, draw_zne_extrapolators
 from .draw_circuit_schedule_timings import draw_circuit_schedule_timing
+from .draw_execution_spans import draw_execution_spans
+from .draw_layer_error import draw_layer_error_map, draw_layer_errors_swarm
+from .draw_zne import draw_zne_evs, draw_zne_extrapolators

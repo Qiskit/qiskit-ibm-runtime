@@ -18,7 +18,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
 
 from qiskit.circuit import ClassicalRegister, QuantumCircuit

@@ -45,10 +45,10 @@ if TYPE_CHECKING:
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
-    from ..qiskit_runtime_service import QiskitRuntimeService
     from ..models import (
         QasmBackendConfiguration,
     )
+    from ..qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
 

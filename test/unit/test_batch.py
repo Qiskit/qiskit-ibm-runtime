@@ -13,8 +13,8 @@
 """Tests for Batch class."""
 
 from qiskit_ibm_runtime import Batch
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
+from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
