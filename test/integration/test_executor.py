@@ -66,8 +66,7 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        # TODO: revert to equality (executor.options has custom image)
-        assert params["options"] != executor.options
+        assert params["options"] == executor.options
         assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
@@ -114,8 +113,7 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        # TODO: revert to equality (executor.options has custom image)
-        assert params["options"] != executor.options
+        assert params["options"] == executor.options
         assert isinstance(params["quantum_program"], QuantumProgram)
 
         results = job.result()
