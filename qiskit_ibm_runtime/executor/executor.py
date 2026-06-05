@@ -80,7 +80,7 @@ class Executor:
 
     _PROGRAM_ID = "executor"
     _DECODER = QuantumProgramResultDecoder
-    _SCHEMA_VERSION = "v1.1"
+    _SCHEMA_VERSION = "v1.0"
 
     options: ExecutorOptions
     """The options of this executor."""
