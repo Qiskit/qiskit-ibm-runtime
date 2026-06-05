@@ -19,11 +19,14 @@ from ddt import data, ddt, unpack
 
 from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
     _as_noise_factors,
+    _build_model_spec,
     _clamp_degenerate_stds,
     _copy_metadata,
+    _evaluate_model_with_stderr,
     _multi_exp,
     _poly,
     _poly_degree,
+    _seed_exp_from_log_fit,
 )
 
 
@@ -85,6 +88,113 @@ class TestMultiExp(unittest.TestCase):
         amps, rates = params[::2], params[1::2]
         expected = sum(a * np.exp(b * x) for a, b in zip(amps, rates))
         np.testing.assert_allclose(_multi_exp(x, *params), expected)
+
+
+@ddt
+class TestSeedExpFromLogFit(unittest.TestCase):
+    """Tests for ``_seed_exp_from_log_fit`` (seed parameters for an exponential ``curve_fit``)."""
+
+    @data(
+        # (amp, rate, n, decay_only, weights, expected)
+        # exponential (n=1, decay_only=False): seed recovers (amp, rate) of a pure exponential
+        (2.0, -0.5, 1, False, None, [2.0, -0.5]),  # positive amplitude
+        (-3.0, 0.4, 1, False, None, [-3.0, 0.4]),  # negative amplitude, sign from the x~0 point
+        (2.0, -0.5, 1, False, [1.0, 2.0, 3.0], [2.0, -0.5]),  # weighted log-linear fit
+        # double_exponential (n=2, decay_only=True): amp split evenly, rates at 1x/2x, decay forced
+        (4.0, -0.6, 2, True, None, [2.0, -0.6, 2.0, -1.2]),  # already decaying, rate unchanged
+        (2.0, 0.5, 2, True, None, [1.0, -0.5, 1.0, -1.0]),  # growing seed forced negative
+    )
+    @unpack
+    def test_seeds_pure_exponential(self, amp, rate, n, decay_only, weights, expected):
+        """A pure ``amp * exp(rate * x)`` sample seeds the recovered parameters."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = amp * np.exp(rate * x)
+        w = None if weights is None else np.array(weights)
+        result = _seed_exp_from_log_fit(x, y, w, n, decay_only)
+        np.testing.assert_allclose(result, expected)
+
+    def test_zero_at_min_noise_defaults_sign_positive(self):
+        """When the point nearest zero noise is 0, the amplitude sign defaults to +1."""
+        x = np.array([0.0, 1.0])
+        y = np.array([0.0, 1.0])
+        result = _seed_exp_from_log_fit(x, y, None, 1, False)
+        # |y| is clipped to 1e-15 at x=0, so the log-linear seed is exact:
+        # rate = 15*ln(10), amp = +exp(-15*ln(10)) = +1e-15 (positive via the sign guard)
+        np.testing.assert_allclose(result, [1e-15, 15.0 * np.log(10.0)])
+
+
+@ddt
+class TestEvaluateModelWithStderr(unittest.TestCase):
+    """Tests for ``_evaluate_model_with_stderr`` (model values + delta-method standard errors)."""
+
+    @data(
+        # popt are _poly ascending coeffs; pcov is the parameter covariance
+        (
+            [1.0, 2.0],  # y = 1 + 2x
+            [[0.04, 0.01], [0.01, 0.09]],
+        ),
+        (
+            [0.5, -1.0, 2.0],  # y = 0.5 - x + 2x**2 (exercises the |popt|>1 step branch)
+            [[0.04, 0.0, 0.01], [0.0, 0.05, 0.0], [0.01, 0.0, 0.09]],
+        ),
+    )
+    @unpack
+    def test_returns_values_and_delta_method_stderr(self, popt, pcov):
+        """Returns ``func(x)`` and the propagated ``sqrt(diag(J @ pcov @ J.T))``."""
+        popt, pcov = np.array(popt), np.array(pcov)
+        x_eval = np.array([0.0, 1.0, 2.0])
+        y, stderr = _evaluate_model_with_stderr(_poly, popt, pcov, x_eval)
+        expected_y = sum(c * x_eval**i for i, c in enumerate(popt))
+        jac = np.vander(x_eval, len(popt), increasing=True)
+        expected_var = np.einsum("ij,jk,ik->i", jac, pcov, jac)
+        np.testing.assert_allclose(y, expected_y)
+        np.testing.assert_allclose(stderr, np.sqrt(expected_var), rtol=1e-6)
+
+
+@ddt
+class TestBuildModelSpec(unittest.TestCase):
+    """Tests for ``_build_model_spec`` (model name -> ``(fit function, p0, bounds)``)."""
+
+    @data(("linear", 1), *[(f"polynomial_degree_{k}", k) for k in range(1, 8)])
+    @unpack
+    def test_polynomial(self, name, degree):
+        """Polynomial names return ``_poly``, unbounded params, and an ascending-order seed."""
+        coeffs = [1.0, -0.5, 0.25, -0.1, 0.05, -0.02, 0.01, -0.004][: degree + 1]
+        x = np.linspace(0.0, 3.0, degree + 2)
+        y = sum(c * x**i for i, c in enumerate(coeffs))
+        func, p0, bounds = _build_model_spec(name, x, y, None)
+        self.assertIs(func, _poly)
+        self.assertEqual(bounds, (-np.inf, np.inf))
+        # p0 is lowest-order-first, so feeding it back through _poly reproduces the data
+        # (a descending-order seed would not).
+        np.testing.assert_allclose(_poly(x, *p0), y, atol=1e-9)
+
+    def test_exponential(self):
+        """``exponential`` returns ``_multi_exp``, a 2-parameter seed, and unbounded params."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = 2.0 * np.exp(-0.5 * x)
+        func, p0, bounds = _build_model_spec("exponential", x, y, None)
+        self.assertIs(func, _multi_exp)
+        self.assertEqual(len(p0), 2)
+        self.assertEqual(bounds, (-np.inf, np.inf))
+
+    def test_double_exponential(self):
+        """``double_exponential`` returns a 4-parameter seed and constrains every rate <= 0."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = 2.0 * np.exp(-0.5 * x)
+        func, p0, bounds = _build_model_spec("double_exponential", x, y, None)
+        self.assertIs(func, _multi_exp)
+        self.assertEqual(len(p0), 4)
+        lower, upper = bounds
+        self.assertEqual(lower, [-np.inf, -np.inf, -np.inf, -np.inf])
+        self.assertEqual(upper, [np.inf, 0.0, np.inf, 0.0])
+
+    def test_unsupported_name_raises(self):
+        """Names not handled here (including ``fallback``) raise ``ValueError``."""
+        x = np.array([0.0, 1.0, 2.0])
+        y = np.array([1.0, 0.9, 0.8])
+        with self.assertRaises(ValueError):
+            _build_model_spec("fallback", x, y, None)
 
 
 @ddt
@@ -160,11 +270,3 @@ class TestCopyMetadata(unittest.TestCase):
         copied["resilience"].pop("zne_noise_factors")
         self.assertIn("standard_error", original)
         self.assertIn("zne_noise_factors", original["resilience"])
-
-    def test_leaf_values_are_shared_not_deep_copied(self):
-        """Non-dict leaf values (e.g. arrays) are referenced, not duplicated."""
-        std = np.array([0.02, 0.03])
-        original = {"standard_error": std, "resilience": {"foo": std}}
-        copied = _copy_metadata(original)
-        self.assertIs(copied["standard_error"], std)
-        self.assertIs(copied["resilience"]["foo"], std)

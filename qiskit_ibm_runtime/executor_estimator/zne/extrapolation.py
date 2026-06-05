@@ -307,19 +307,19 @@ def _extrapolate(
         # LSE solution for polynomial models, but we still pass to curve_fit to
         # get the covariances.
         weights = None if fit_stds is None else 1.0 / fit_stds
-        func, p0, bounds = _model(name, x, y, weights)
+        func, p0, bounds = _build_model_spec(name, x, y, weights)
 
         # Get the optimized params and covariances from curve_fit
         # _eval_model will calculate the target EVs and variance estimates
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             popt, pcov = curve_fit(func, x, y, p0=p0, sigma=fit_stds, bounds=bounds)
-            return _eval_model(func, popt, pcov, x_eval)
+            return _evaluate_model_with_stderr(func, popt, pcov, x_eval)
     except Exception:  # pylint: disable=broad-except
         return np.full(x_eval.shape, np.nan), np.full(x_eval.shape, np.nan)
 
 
-def _eval_model(
+def _evaluate_model_with_stderr(
     func: Callable[..., np.ndarray], popt: np.ndarray, pcov: np.ndarray, x_eval: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """Evaluate ``func`` and its delta-method uncertainty ``sqrt(J^T pcov J)`` at ``x_eval``.
@@ -345,7 +345,7 @@ def _eval_model(
     return y, np.sqrt(np.clip(var, 0.0, None))
 
 
-def _model(
+def _build_model_spec(
     name: str, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None
 ) -> tuple[
     Callable[..., np.ndarray], list[float], tuple[float, float] | tuple[list[float], list[float]]
@@ -364,7 +364,7 @@ def _model(
     if name in ("exponential", "double_exponential"):
         n = 1 if name == "exponential" else 2
         decay_only = name == "double_exponential"
-        p0 = _exp_guess(x, y, weights, n, decay_only)
+        p0 = _seed_exp_from_log_fit(x, y, weights, n, decay_only)
         bounds = ([-np.inf, -np.inf] * n, [np.inf, 0.0] * n) if decay_only else (-np.inf, np.inf)
         return _multi_exp, p0, bounds
     raise ValueError(f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}")
@@ -387,7 +387,7 @@ def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
     return out
 
 
-def _exp_guess(
+def _seed_exp_from_log_fit(
     x: np.ndarray, y: np.ndarray, weights: np.ndarray | None, n: int, decay_only: bool
 ) -> list[float]:
     """Seed ``n`` exponentials from a weight-aware log-linear fit (handles sign)."""
