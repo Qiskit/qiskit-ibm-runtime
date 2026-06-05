@@ -329,7 +329,7 @@ class TestSampler(IBMIntegrationTestCase):
         """Test with per-pub shots option."""
         shots1 = 100
         shots2 = 200
-        sampler = Sampler()
+        sampler = Sampler(mode=self._backend)
         result = sampler.run(
             [
                 SamplerPub(self._isa_bell, shots=shots1),
