@@ -84,8 +84,8 @@ class LocalRuntimeJob(PrimitiveJob):
         """Return job usage in seconds.
 
         Args:
-            partial: if ``True``, return the accumulated intermediate usage instead of the final
-                usage.
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
         """
         return 0
 
