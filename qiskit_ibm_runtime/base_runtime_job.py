@@ -137,7 +137,8 @@ class BaseRuntimeJob(ABC):
             :meth:`.metrics` method for details on the completion status.
 
         Args:
-            partial: if ``True``, return the accumulated intermediate usage thus far until final usage is reached.
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
         """
         try:
             metrics = self._api_client.job_metadata(self.job_id())
