@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Sampler V2."""
+"""Tests for Sampler V2 (non-wrapper and optionally also wrapper)."""
 
 import unittest
 
