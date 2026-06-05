@@ -126,7 +126,7 @@ class BaseRuntimeJob(ABC):
     def usage(self, partial: bool = False) -> float:
         """Return job usage in seconds.
 
-        By default, the job usage returned is ``0`` until the job _and_ the usage calculation are
+        By default, the job usage returned is ``0`` until the usage calculation is
         completed. Accumulated intermediate usage can be returned by the method by using the
         ``partial`` flag.
 
