@@ -10,13 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Zero-noise extrapolation (ZNE) post-processing of estimator results.
-
-Fits extrapolation models to expectation values measured at several noise
-factors and evaluates them at zero (or other) noise factors using
-``scipy.optimize.curve_fit``. :func:`process_extrapolated_expectation_values`
-is the module entry point.
-"""
+"""Extrapolation functions used for zero noise extrapolation (ZNE)."""
 
 from __future__ import annotations
 
