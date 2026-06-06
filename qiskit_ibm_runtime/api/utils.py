@@ -15,33 +15,11 @@
 from __future__ import annotations
 
 import copy
-import logging
-import os
 import re
-from itertools import chain
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from urllib.parse import urlparse
 
-import numpy as np
-from qiskit.circuit import ControlFlowOp, ParameterExpression
-from qiskit.circuit.delay import Delay
-from qiskit.circuit.library.standard_gates import (
-    PhaseGate,
-    RZGate,
-    U1Gate,
-)
-from qiskit.qpy import QPY_VERSION
-from samplomatic.ssv import SSV
-
 from ..utils.utils import is_crn
-
-if TYPE_CHECKING:
-    from qiskit.circuit import Parameter, QuantumCircuit
-    from qiskit.circuit.gate import Instruction
-    from qiskit.primitives.containers.estimator_pub import EstimatorPub
-    from qiskit.primitives.containers.sampler_pub import SamplerPub
-    from qiskit.providers.backend import BackendV2
-    from qiskit.transpiler import Target
 
 
 def filter_data(data: dict[str, Any]) -> dict[str, Any]:

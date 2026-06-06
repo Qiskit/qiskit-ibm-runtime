@@ -26,7 +26,8 @@ from unittest.util import safe_repr
 
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME, SamplerV2
+from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime.utils.logging import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
 from .decorators import integration_test_setup
 from .utils import bell, setup_test_logging
