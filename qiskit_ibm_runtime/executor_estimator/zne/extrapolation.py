@@ -445,11 +445,10 @@ def _stack_unextrapolated_result(
         raw_metadata["resilience"]["zne_noise_factors"],
     )
     # The extrapolator field has no value for the raw (un-extrapolated) rows, so pad with None.
-    if "zne_extrapolator" in zne_metadata["resilience"]:
-        none_vals = np.array(len(raw_values) * [None], dtype=object)
-        stacked_metadata["resilience"]["zne_extrapolator"] = _concatenate_rows(
-            zne_metadata["resilience"]["zne_extrapolator"], none_vals
-        )
+    none_vals = np.array(len(raw_values) * [None], dtype=object)
+    stacked_metadata["resilience"]["zne_extrapolator"] = _concatenate_rows(
+        zne_metadata["resilience"]["zne_extrapolator"], none_vals
+    )
     return stacked_values, stacked_metadata
 
 
