@@ -27,11 +27,10 @@ from requests import RequestException, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from qiskit_ibm_runtime.utils.utils import filter_data
-
 from ..exceptions import IBMNotAuthorizedError
 from ..version import __version__ as ibm_runtime_version
 from .exceptions import RequestsApiError
+from .utils import filter_data
 
 if TYPE_CHECKING:
     from requests import Response

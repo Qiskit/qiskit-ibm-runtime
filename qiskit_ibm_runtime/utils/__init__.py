@@ -18,9 +18,7 @@ from .converters import (
 )
 from .utils import (
     is_crn,
-    default_runtime_url_resolver,
     are_circuits_dynamic,
-    cname_from_crn,
 )
 from .validations import (
     validate_estimator_pubs,
