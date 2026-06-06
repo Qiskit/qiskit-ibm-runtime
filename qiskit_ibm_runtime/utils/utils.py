@@ -15,13 +15,10 @@
 from __future__ import annotations
 
 import copy
-import keyword
 import logging
 import os
 import re
 from itertools import chain
-from queue import Queue
-from threading import Condition
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -429,30 +426,6 @@ def cname_from_crn(crn: str) -> str:
     return None
 
 
-def to_python_identifier(name: str) -> str:
-    """Convert a name to a valid Python identifier.
-
-    Args:
-        name: Name to be converted.
-
-    Returns:
-        Name that is a valid Python identifier.
-    """
-    # Python identifiers can only contain alphanumeric characters
-    # and underscores and cannot start with a digit.
-    pattern = re.compile(r"\W|^(?=\d)", re.ASCII)
-    if not name.isidentifier():
-        name = re.sub(pattern, "_", name)
-
-    # Convert to snake case
-    name = re.sub("((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name).lower()
-
-    while keyword.iskeyword(name):
-        name += "_"
-
-    return name
-
-
 def setup_logger(logger: logging.Logger) -> None:
     """Setup the logger for the runtime modules with the appropriate level.
 
@@ -543,68 +516,3 @@ def _filter_value(data: dict[str, Any], filter_keys: list[str | tuple[str, str]]
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
-
-
-class RefreshQueue(Queue):
-    """A queue that replaces the oldest item with the new item being added when full.
-
-    A FIFO queue with a bounded size. Once the queue is full, when a new item
-    is being added, the oldest item on the queue is discarded to make space for
-    the new item.
-
-    Args:
-        maxsize: Maximum size of the queue.
-    """
-
-    def __init__(self, maxsize: int):
-        self.condition = Condition()
-        super().__init__(maxsize=maxsize)
-
-    def put(self, item: Any) -> None:  # type: ignore[override]
-        """Put `item` into the queue.
-
-        If the queue is full, the oldest item is replaced by `item`.
-
-        Args:
-            item: Item to put into the queue.
-        """
-        with self.condition:
-            if self.full():
-                super().get(block=False)
-            super().put(item, block=False)
-            self.condition.notify()
-
-    def get(self, block: bool = True, timeout: float | None = None) -> Any:
-        """Remove and return an item from the queue.
-
-        Args:
-            block: If ``True``, block if necessary until an item is available.
-            timeout: Block at most `timeout` seconds before raising the
-                ``queue.Empty`` exception if no item was available. If
-                ``None``, block indefinitely until an item is available.
-
-        Returns:
-            An item from the queue.
-
-        Raises:
-            queue.Empty: If `block` is ``False`` and no item is available, or
-                if `block` is ``True`` and no item is available before `timeout`
-                is reached.
-        """
-        with self.condition:
-            if block and self.empty():
-                self.condition.wait(timeout)
-            return super().get(block=False)
-
-    def notify_all(self) -> None:
-        """Wake up all threads waiting for items on the queued."""
-        with self.condition:
-            self.condition.notify_all()
-
-
-class CallableStr(str):
-    """A callable string."""
-
-    def __call__(self) -> str:
-        """Return the string when called as a function."""
-        return self

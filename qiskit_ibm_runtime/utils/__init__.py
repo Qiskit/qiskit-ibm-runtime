@@ -17,7 +17,6 @@ from .converters import (
     local_to_utc,
 )
 from .utils import (
-    to_python_identifier,
     is_crn,
     default_runtime_url_resolver,
     resolve_crn,
