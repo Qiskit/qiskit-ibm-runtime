@@ -43,6 +43,8 @@ _VALID_NAMES = [
     "fallback",
 ]
 
+_NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponential"})
+
 
 def process_extrapolated_expectation_values(
     result: EstimatorResult,
@@ -51,13 +53,18 @@ def process_extrapolated_expectation_values(
 ) -> EstimatorResult:
     r"""Apply zero-noise extrapolation (ZNE) to an estimator result.
 
-    For each result, the requested model(s) are fit to the expectation values measured at
-    the result's noise factors and evaluated at the target noise factor(s) (``0`` for zero
-    noise). Models are tried in priority order: each point takes the result of the
-    first model whose extrapolation is valid. A valid extrapolation results in a finite
-    value and standard error, with the :math:`value \pm stderr` plausible with respect to
-    the measurement basis. If no models produce a valid value, the measured input value with
-    the smallest standard error will be returned.
+    For each entry, the requested model(s) are fit to the expectation values measured at
+    the entry's noise factors and evaluated at the target noise factor(s) (``0`` for zero
+    noise). Models are tried in priority order: each point takes the result of the first model
+    with a valid extrapolation. An extrapolation is valid when its value and standard
+    error are finite, the standard error is within the basis threshold, and
+    :math:`value \pm stderr` lies within the basis's ideal range widened by that threshold. The
+    range comes from the entry's ``ev_basis`` metadata: ``[0, 1]`` for projector-only bases,
+    ``[-1, 1]`` for bases containing Paulis, and unbounded when ``ev_basis`` is absent or
+    unrecognized. If no model produces a valid extrapolation for a point, the candidate with the
+    smallest standard error is used (non-finite errors are treated as infinite). Include
+    ``fallback`` in ``extrapolator`` to add the lowest-noise measured value as a candidate, so it
+    is selected when the fitted models fail.
 
     The standard errors reported for the extrapolated values are first-order estimates
     propagated from the fit covariance. For details see the confidence and prediction intervals
@@ -65,12 +72,19 @@ def process_extrapolated_expectation_values(
     <https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals>`_.
 
     Args:
-        result: Estimator result whose per-entry metadata provides ``standard_error`` and a
-            ``resilience["zne_noise_factors"]`` array, with values measured at those factors.
+        result: Estimator result. Each entry's ``values`` is a 1D array of expectation values,
+            one per noise factor, aligned with the ``standard_error`` and
+            ``resilience["zne_noise_factors"]`` arrays in its metadata. An optional ``ev_basis``
+            string sets the ideal-value range used to judge extrapolation validity; an optional
+            ``ensemble_standard_error`` array is carried through to the output.
         extrapolator: A builtin model name, or a sequence of names tried in priority order.
-            Supported: ``linear``, ``exponential``, ``double_exponential``,
-            ``polynomial_degree_k`` (1 <= k <= 7), and ``fallback`` (no fit; returns the
-            input measurement with the smallest standard error).
+            Supported (each fits the named function of the noise factor ``x``):
+
+            - ``linear``: ``a + b*x``
+            - ``polynomial_degree_k`` (1 <= k <= 7): a degree-k polynomial
+            - ``exponential``: ``a*exp(b*x)``
+            - ``double_exponential``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``fallback``: no fit; the measured value at the lowest noise factor
         extrapolated_noise_factors: Scalar or 1D array of noise factors to evaluate the fits
             at; defaults to ``0`` (zero-noise extrapolation).
 
@@ -82,8 +96,9 @@ def process_extrapolated_expectation_values(
         A new estimator result. Per entry, ``values`` is a 2D array stacking the selected
         extrapolation (row 0) above each model's extrapolation (rows 1+), with the raw
         measured noise-factor values appended along the last axis; ``standard_error`` and the
-        ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to
-        match. A size-1 result collapses to a scalar.
+        ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to match,
+        and ``ensemble_standard_error`` (when present in the input) is appended with NaN in the
+        extrapolated columns.
     """
     if isinstance(extrapolator, str):
         extrapolator = [extrapolator]
@@ -148,15 +163,7 @@ def _fit_extrapolation_models(
     # Ensure the extrapolators are valid
     names = list(models)
     for name in names:
-        if (
-            name != "fallback"
-            and _poly_degree(name) is None
-            and name
-            not in (
-                "exponential",
-                "double_exponential",
-            )
-        ):
+        if name not in _NON_POLYNOMIAL_MODELS and _poly_degree(name) is None:
             raise ValueError(
                 f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}"
             )
@@ -310,7 +317,7 @@ def _extrapolate(
         func, p0, bounds = _build_model_spec(name, x, y, weights)
 
         # Get the optimized params and covariances from curve_fit
-        # _eval_model will calculate the target EVs and variance estimates
+        # _evaluate_model_with_stderr will calculate the target EVs and variance estimates
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             popt, pcov = curve_fit(func, x, y, p0=p0, sigma=fit_stds, bounds=bounds)
