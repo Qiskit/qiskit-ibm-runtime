@@ -25,13 +25,13 @@ from ibm_platform_services import GlobalCatalogV1, GlobalSearchV2
 
 from ..api.auth import CloudAuth
 from ..proxies import ProxyConfiguration
-from ..utils import (
+from .exceptions import CloudResourceNameResolutionError, InvalidAccountError
+from .utils import (
     get_global_catalog_api_url,
     get_global_search_api_url,
     get_iam_api_url,
     resolve_crn,
 )
-from .exceptions import CloudResourceNameResolutionError, InvalidAccountError
 
 if TYPE_CHECKING:
     from requests.auth import AuthBase
