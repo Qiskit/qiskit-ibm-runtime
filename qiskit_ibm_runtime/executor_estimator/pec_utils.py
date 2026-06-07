@@ -12,10 +12,16 @@
 
 """Helper functions for the PEC error mitigation method."""
 
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import PauliLindbladMap
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from samplomatic import InjectNoise
 from samplomatic.utils import get_annotation
+
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+    from qiskit.quantum_info import PauliLindbladMap
 
 
 def calculate_gamma(

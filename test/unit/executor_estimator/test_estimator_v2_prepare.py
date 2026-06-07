@@ -13,31 +13,28 @@
 """Unit tests for EstimatorV2 prepare function."""
 
 import unittest
-from ddt import ddt
 from typing import Any, cast
+
 import numpy as np
-from ddt import data, unpack
-
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
-from qiskit.circuit import Parameter
+from qiskit.circuit import ClassicalRegister, Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub, ObservablesArray
-from qiskit.quantum_info import SparsePauliOp
-from qiskit.circuit import ClassicalRegister
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare import (
     compute_samplex_arguments,
     prepare,
     prepare_pec,
 )
-from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
+from qiskit_ibm_runtime.options.pec_options import PecOptions
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
-from qiskit_ibm_runtime.options.pec_options import PecOptions
+from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit.quantum_info import PauliLindbladMap
 
 from ...utils import combine
 
@@ -125,8 +122,8 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 2)
 
-        item1 = cast(SamplexItem, quantum_program.items[0])
-        item2 = cast(SamplexItem, quantum_program.items[1])
+        item1 = cast("SamplexItem", quantum_program.items[0])
+        item2 = cast("SamplexItem", quantum_program.items[1])
         self.assertIsInstance(item1, SamplexItem)
         self.assertIsInstance(item2, SamplexItem)
 
@@ -136,7 +133,7 @@ class TestPrepareFunction(unittest.TestCase):
         self.assertNotIn("parameter_values", item1.samplex_arguments)
         np.testing.assert_allclose(item2.samplex_arguments["parameter_values"], parameter_values2)
 
-        passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["version"], "v0.1")
         self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
@@ -263,7 +260,7 @@ class TestPrepareFunction(unittest.TestCase):
         trex_item = quantum_program_with_mitigation.items[-1]
         self.assertIsInstance(trex_item, SamplexItem)
 
-        passthrough = cast(dict[str, Any], quantum_program_with_mitigation.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program_with_mitigation.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
 
     def test_prepare_with_measure_noise_learning_trex_circuit_has_only_measurements(self):
@@ -547,7 +544,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 1)
 
-        item = cast(SamplexItem, quantum_program.items[0])
+        item = cast("SamplexItem", quantum_program.items[0])
         self.assertIsInstance(item, SamplexItem)
 
         # Check that samplex_arguments contains pauli_lindblad_maps
@@ -563,7 +560,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertEqual(item.samplex_arguments["noise_scales.r2feB"], expected_noise_factor)
 
         # Check passthrough_data contains pec_gammas
-        passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("pec_gammas", passthrough["post_processor"])
         self.assertEqual(len(passthrough["post_processor"]["pec_gammas"]), 1)
         self.assertIsInstance(passthrough["post_processor"]["pec_gammas"][0], float)
@@ -605,7 +602,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertEqual(len(quantum_program.items), 2)
 
         # Check first item
-        item1 = cast(SamplexItem, quantum_program.items[0])
+        item1 = cast("SamplexItem", quantum_program.items[0])
         self.assertIn("pauli_lindblad_maps.r2feB", item1.samplex_arguments)
         self.assertEqual(
             item1.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
@@ -613,7 +610,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertIn("noise_scales.r2feB", item1.samplex_arguments)
 
         # Check second item
-        item2 = cast(SamplexItem, quantum_program.items[1])
+        item2 = cast("SamplexItem", quantum_program.items[1])
         self.assertIn("pauli_lindblad_maps.rf55B", item2.samplex_arguments)
         self.assertIn("pauli_lindblad_maps.rd2dB", item2.samplex_arguments)
         self.assertEqual(
@@ -626,7 +623,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertIn("noise_scales.rd2dB", item2.samplex_arguments)
 
         # Check passthrough_data contains pec_gammas for both pubs
-        passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("pec_gammas", passthrough["post_processor"])
         self.assertEqual(len(passthrough["post_processor"]["pec_gammas"]), 2)
 
@@ -650,7 +647,7 @@ class TestPreparePecFunction(unittest.TestCase):
             [pub], TwirlingOptions(), shots, pec_options, noise_model_mapping
         )
 
-        item = cast(SamplexItem, quantum_program.items[0])
+        item = cast("SamplexItem", quantum_program.items[0])
 
         # With auto (defaulting to 0), noise_factor should be 0 - 1 = -1
         self.assertIn("noise_scales.r2feB", item.samplex_arguments)
@@ -726,7 +723,7 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertEqual(len(quantum_program.items), 2)
 
         # Check first item has PEC arguments
-        item = cast(SamplexItem, quantum_program.items[0])
+        item = cast("SamplexItem", quantum_program.items[0])
         self.assertIn("pauli_lindblad_maps.r2feB", item.samplex_arguments)
         self.assertEqual(
             item.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
@@ -736,6 +733,6 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertEqual(item.samplex_arguments["noise_scales.r2feB"], expected_noise_factor)
 
         # Check passthrough data
-        passthrough = cast(dict[str, Any], quantum_program.passthrough_data)
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
         self.assertIn("pec_gammas", passthrough["post_processor"])

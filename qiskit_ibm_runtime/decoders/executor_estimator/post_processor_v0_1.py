@@ -19,17 +19,19 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import numpy.typing as npt
+    from qiskit.quantum_info import PauliLindbladMap
 
-from ...results.quantum_program import QuantumProgramItemResult, QuantumProgramResult
+    from ...results.quantum_program import QuantumProgramItemResult
 
 import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import ObservablesArray
-from qiskit.quantum_info import Pauli, PauliLindbladMap
+from qiskit.quantum_info import Pauli
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from ...results.estimator_pub import EstimatorPubResult
-from .trex_utils import get_processed_calibration_data, calculate_trex_factor
+from ...results.quantum_program import QuantumProgramResult
+from .trex_utils import calculate_trex_factor, get_processed_calibration_data
 from .utils import compute_exp_val, identify_measure_basis
 
 
