@@ -92,6 +92,7 @@ class Executor:
     ):
         # Coerced to `ExecutorOptions` via `__setattr__()`.
         self.options = options if options is not None else ExecutorOptions()  # type: ignore[assignment]
+
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The executor is currently not supported in local mode.")
