@@ -547,7 +547,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0
 
-        evs, _ = process_expectation_values_pec(
+        evs, _, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
             param_shape=(),
@@ -573,7 +573,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0  # Example gamma value
 
-        evs, _ = process_expectation_values_pec(
+        evs, _, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
             param_shape=(),
@@ -607,7 +607,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 1.5  # Example gamma value
 
-        evs, _ = process_expectation_values_pec(
+        evs, _, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -645,7 +645,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 2.5  # Example gamma value
 
-        evs, _ = process_expectation_values_pec(
+        evs, _, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -683,7 +683,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 1.8  # Example gamma value
 
-        evs, stds = process_expectation_values_pec(
+        evs, stds, ensemble_stds = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -695,3 +695,4 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         expected_shape = np.broadcast_shapes(obs_shape, param_shape)
         self.assertTupleEqual(evs.shape, expected_shape)
         self.assertTupleEqual(stds.shape, expected_shape)
+        self.assertTupleEqual(ensemble_stds.shape, expected_shape)

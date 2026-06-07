@@ -299,12 +299,13 @@ def process_expectation_values_pec(
         pec_gamma: gamma factor for PEC mitigation.
 
     Returns:
-        A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
-        are standard deviations.
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
 
     Raises:
         ValueError: If ``item_result`` has no ``'_meas'`` key.
         ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``item_result`` has no ``'pauli_signs'`` key.
         ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
             each other.
     """
