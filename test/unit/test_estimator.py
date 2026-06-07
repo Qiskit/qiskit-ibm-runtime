@@ -14,23 +14,22 @@
 
 import numpy as np
 from ddt import data, ddt
-
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import real_amplitudes
-from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import Session, EstimatorV2, EstimatorOptions, IBMInputValueError
+from qiskit_ibm_runtime import EstimatorOptions, EstimatorV2, IBMInputValueError, Session
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
-    get_mocked_backend,
     dict_paritally_equal,
-    transpile_pubs,
+    get_mocked_backend,
     get_primitive_inputs,
-    remap_observables,
     get_transpiled_circuit,
+    remap_observables,
+    transpile_pubs,
 )
 
 

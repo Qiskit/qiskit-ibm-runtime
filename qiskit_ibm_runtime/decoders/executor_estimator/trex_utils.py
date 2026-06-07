@@ -17,10 +17,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qiskit.quantum_info import Pauli
+
     from ..results.quantum_program import QuantumProgramItemResult
 
 import numpy as np
-from qiskit.quantum_info import Pauli, PauliLindbladMap, QubitSparsePauli
+from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauli
 
 
 def get_processed_calibration_data(calibration_result: QuantumProgramItemResult) -> np.ndarray:

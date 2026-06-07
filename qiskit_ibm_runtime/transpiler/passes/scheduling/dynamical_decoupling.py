@@ -12,29 +12,36 @@
 
 """Dynamical decoupling insertion pass for IBM (dynamic circuit) backends."""
 
+from __future__ import annotations
+
 import warnings
 
 import numpy as np
 import rustworkx as rx
-from qiskit.circuit import Qubit, Gate
 from qiskit.circuit.delay import Delay
-from qiskit.circuit.library.standard_gates import IGate, UGate, U3Gate
+from qiskit.circuit.library.standard_gates import IGate, U3Gate, UGate
 from qiskit.circuit.reset import Reset
-from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGInNode, DAGOpNode
+from qiskit.dagcircuit import DAGInNode, DAGOpNode
 from qiskit.quantum_info.operators.predicates import matrix_equal
-from qiskit.transpiler import Target
 from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.transpiler.instruction_durations import InstructionDurations
 from qiskit.transpiler.passes.optimization import Optimize1qGates
-from qiskit.transpiler import CouplingMap
 
 try:
     from qiskit.quantum_info.synthesis import OneQubitEulerDecomposer
 except ImportError:
     from qiskit.synthesis import OneQubitEulerDecomposer
 
+from typing import TYPE_CHECKING
+
 from .block_base_padder import BlockBasePadder
-from .utils import BlockOrderingCallableType
+
+if TYPE_CHECKING:
+    from qiskit.circuit import Gate, Qubit
+    from qiskit.dagcircuit import DAGCircuit, DAGNode
+    from qiskit.transpiler import CouplingMap, Target
+    from qiskit.transpiler.instruction_durations import InstructionDurations
+
+    from .utils import BlockOrderingCallableType
 
 
 class PadDynamicalDecoupling(BlockBasePadder):
@@ -506,16 +513,14 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     op = next_node.op
                     theta_r, phi_r, lam_r = op.params
                     op.params = Optimize1qGates.compose_u3(theta_r, phi_r, lam_r, theta, phi, lam)
-                    self._block_dag.substitute_node(next_node, op, propagate_condition=False)
+                    self._block_dag.substitute_node(next_node, op)
                     sequence_gphase += phase
                 elif isinstance(prev_node, DAGOpNode) and isinstance(prev_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the predecessor (from right in circuit)
                     op = prev_node.op
                     theta_l, phi_l, lam_l = op.params
                     op.params = Optimize1qGates.compose_u3(theta, phi, lam, theta_l, phi_l, lam_l)
-                    new_prev_node = self._block_dag.substitute_node(
-                        prev_node, op, propagate_condition=False
-                    )
+                    new_prev_node = self._block_dag.substitute_node(prev_node, op)
                     start_time = self.property_set["node_start_time"].pop(prev_node)
                     if start_time is not None:
                         self.property_set["node_start_time"][new_prev_node] = start_time

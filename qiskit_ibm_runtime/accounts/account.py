@@ -14,26 +14,27 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import logging
-from typing import Literal, Any, TypeAlias
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from urllib.parse import urlparse
 
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_platform_services import GlobalCatalogV1, GlobalSearchV2
 
-from ibm_platform_services import GlobalSearchV2, GlobalCatalogV1
-from requests.auth import AuthBase
-from ..proxies import ProxyConfiguration
-
-from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import CloudAuth
+from ..proxies import ProxyConfiguration
 from ..utils import (
-    resolve_crn,
-    get_iam_api_url,
-    get_global_search_api_url,
     get_global_catalog_api_url,
+    get_global_search_api_url,
+    get_iam_api_url,
+    resolve_crn,
 )
+from .exceptions import CloudResourceNameResolutionError, InvalidAccountError
+
+if TYPE_CHECKING:
+    from requests.auth import AuthBase
 
 AccountType: TypeAlias = Literal["cloud", "legacy"] | None
 RegionType: TypeAlias = Literal["us-east", "eu-de"] | None

@@ -76,20 +76,23 @@ def project_to_z(term: str) -> np.ndarray[int]:
 
 def compute_exp_val(
     observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute expectation value and variance of an observable term from measurement data.
 
     Args:
         observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
         datum: Boolean array of measurement outcomes, shape
-            (num_randomizations, ..., shots_per_randomization, num_qubits)
+            (num_randomizations, shots_per_randomization, num_qubits)
         signs: Optional boolean array used with probabilistic error cancellation (PEC). Indicates
             which errors were inserted in each circuit randomization. The final axis index all error
             generators in circuit, remaining shape must be `signs.shape[:-1] == datum.shape[:-2]`,
             as signs array does not have a shots or qubits axes.
 
     Returns:
-        Tuple of (expectation_values, variance), each with shape (...,)
+        Tuple of (expectation_value, ensemble_variance, twirl_variance):
+            - expectation_value: Mean expectation value across all shots
+            - ensemble_variance: Variance treating all shots as a single ensemble
+            - twirl_variance: Variance of expectation values across twirls
     """
     net_signs_bc = np.zeros(datum.shape[:-1], dtype=bool)
     if signs is not None:
@@ -130,16 +133,34 @@ def compute_exp_val(
             keep &= np.all(datum[..., is_1], axis=-1)
         evals = np.where(keep, evals, 0)
 
-    shots = datum.shape[0] * datum.shape[-2]  # randomizations * shots_per_randomizations
+    # evals shape: (num_randomizations, shots_per_randomization)
+    # evals contains expectation values for each shot (may be 0 for filtered shots)
+    num_randomizations = datum.shape[0]
+    shots_per_randomization = datum.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
 
-    # Compute expectation value
-    exp_val = np.sum(evals, axis=(0, -1)) / shots
+    # Compute overall expectation value (mean across all shots)
+    exp_val = np.sum(evals) / total_shots
 
-    # Compute standard deviation (standard error of the mean)
+    # Compute ensemble variance: treating all shots as a single ensemble
     # variance = E[X²] - E[X]²
     evals_squared = evals**2
-    mean_squared = np.sum(evals_squared, axis=(0, -1)) / shots
-    variance = mean_squared - exp_val**2
+    mean_squared = np.sum(evals_squared) / total_shots
+    ensemble_variance = mean_squared - exp_val**2
+
+    # Compute twirl variance: variance of expectation values across twirls
+    # When num_randomizations=1 (no twirling), twirl_variance should equal ensemble_variance
+    # so that stds and ensemble_standard_error are equal
+    if num_randomizations == 1:
+        twirl_variance = ensemble_variance
+    else:
+        # For each twirl (randomization), compute the expectation value
+        # Must normalize by shots_per_randomization (not actual count) to handle filtered shots
+        # Compute variance of these per-twirl expectation values
+        twirl_exp_vals = (
+            np.sum(evals, axis=-1) / shots_per_randomization
+        )  # Shape: (num_randomizations,)
+        twirl_variance = np.var(twirl_exp_vals, ddof=0)
 
     # Ensure we always return numpy arrays (even for scalar results)
-    return np.asarray(exp_val), np.asarray(variance)
+    return np.asarray(exp_val), np.asarray(ensemble_variance), np.asarray(twirl_variance)

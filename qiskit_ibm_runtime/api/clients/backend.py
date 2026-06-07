@@ -12,10 +12,14 @@
 
 """Client for accessing backend information."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
-from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from datetime import datetime as python_datetime
 
 logger = logging.getLogger(__name__)
 

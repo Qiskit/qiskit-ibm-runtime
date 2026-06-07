@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.decoders.executor_estimator.trex_utils import (
     calculate_trex_factor,
     get_processed_calibration_data,
 )
-
 from qiskit_ibm_runtime.results.quantum_program import QuantumProgramItemResult
 
 

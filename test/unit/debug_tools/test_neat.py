@@ -13,13 +13,11 @@
 """Tests for Neat class."""
 
 import numpy as np
-
-from qiskit_aer import AerSimulator
-from qiskit_aer.noise import NoiseModel, depolarizing_error
-
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.debug_tools import Neat, NeatResult
 

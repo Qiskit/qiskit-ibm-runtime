@@ -12,19 +12,25 @@
 
 """Integration tests for NoiseLearner."""
 
+from __future__ import annotations
+
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import RuntimeJobV2, Session, EstimatorV2
+from qiskit_ibm_runtime import EstimatorV2, Session
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.results.noise_learner import PauliLindbladError, LayerError
-from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
+from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
+from qiskit_ibm_runtime.results.noise_learner import LayerError, PauliLindbladError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime import RuntimeJobV2
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):

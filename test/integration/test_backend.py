@@ -12,20 +12,21 @@
 
 """Tests for backend functions using real runtime service."""
 
-from unittest import mock
-from datetime import datetime, timedelta
 import copy
+from datetime import datetime, timedelta
+from unittest import mock
 
-from qiskit.transpiler.target import Target
 from qiskit import QuantumCircuit, transpile
-from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import QubitProperties
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.transpiler.target import Target
+
+from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
-
+from ..decorators import production_only, run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test, production_only
 from ..utils import bell
 
 

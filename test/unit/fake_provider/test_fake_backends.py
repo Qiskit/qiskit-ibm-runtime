@@ -15,17 +15,18 @@
 import math
 import unittest
 
-from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
+    FakeNighthawk,
     FakePerth,
     FakeProviderForBackendV2,
-    FakeNighthawk,
 )
+
 from ...ibm_test_case import IBMTestCase
 
 

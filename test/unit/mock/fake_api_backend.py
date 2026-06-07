@@ -12,10 +12,10 @@
 
 """Classes for FakeApiBackends."""
 
-from datetime import datetime as python_datetime
 from dataclasses import dataclass
+from datetime import datetime as python_datetime
 
-from qiskit_ibm_runtime.fake_provider import backends, FakeLimaV2
+from qiskit_ibm_runtime.fake_provider import FakeLimaV2, backends
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
 

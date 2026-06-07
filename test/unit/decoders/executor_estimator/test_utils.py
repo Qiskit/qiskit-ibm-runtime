@@ -96,7 +96,7 @@ class TestComputeExpVal(unittest.TestCase):
         Measurement arrays are [qubit0, qubit1, ...].
         """
         test_cases = [
-            # (observable, measurements, expected_exp_val, expected_variance, description)
+            # (observable, measurements, expected_exp_val, expected_ensemble_variance, description)
             # Single qubit observables (using 80/20 split to show non-trivial behavior)
             ("X", [[False]] * 8 + [[True]] * 2, 0.6, 0.64, "X"),
             ("Y", [[False]] * 8 + [[True]] * 2, 0.6, 0.64, "Y"),
@@ -112,11 +112,13 @@ class TestComputeExpVal(unittest.TestCase):
             ("XY+", [[False, False, False]] * 5 + [[False, True, True]] * 5, 1.0, 0.0, "XY+"),
         ]
 
-        for observable, measurements, exp_val, variance, desc in test_cases:
+        for observable, measurements, exp_val, ensemble_variance, desc in test_cases:
             with self.subTest(desc=desc):
                 # Shape: (num_randomizations=1, shots_per_randomization=N, num_qubits)
                 datum = np.array([[measurements]])
-                result_exp_val, result_variance = compute_exp_val(observable, datum)
+                result_exp_val, result_ensemble_variance, result_twirl_variance = compute_exp_val(
+                    observable, datum
+                )
 
                 np.testing.assert_almost_equal(
                     result_exp_val,
@@ -124,34 +126,51 @@ class TestComputeExpVal(unittest.TestCase):
                     decimal=10,
                 )
                 np.testing.assert_almost_equal(
-                    result_variance,
-                    variance,
+                    result_ensemble_variance,
+                    ensemble_variance,
+                    decimal=10,
+                )
+                # With single randomization, twirl_variance equals ensemble_variance
+                # so that stds and ensemble_standard_error are equal in the post_processor
+                np.testing.assert_almost_equal(
+                    result_twirl_variance,
+                    ensemble_variance,
                     decimal=10,
                 )
 
     def test_multiple_randomizations(self):
         """Test variance calculation with multiple randomizations.
 
-        With multiple randomizations, the variance should be computed across
-        all randomizations and shots combined.
+        With multiple randomizations:
+        - ensemble_variance treats all shots as a single ensemble
+        - twirl_variance is the variance of per-twirl expectation values
         """
         # Shape: (num_randomizations=3, shots_per_randomization=10, num_qubits=1)
         # Create 3 randomizations with different distributions
         datum = np.array(
             [
-                [[[False]] * 8 + [[True]] * 2],  # Randomization 1: 80% zeros
-                [[[False]] * 5 + [[True]] * 5],  # Randomization 2: 50% zeros
-                [[[False]] * 7 + [[True]] * 3],  # Randomization 3: 70% zeros
+                [[[False]] * 8 + [[True]] * 2],  # Randomization 1: 80% zeros, exp_val = 0.6
+                [[[False]] * 5 + [[True]] * 5],  # Randomization 2: 50% zeros, exp_val = 0.0
+                [[[False]] * 7 + [[True]] * 3],  # Randomization 3: 70% zeros, exp_val = 0.4
             ]
         )
-        exp_val, variance = compute_exp_val("Z", datum)
+        exp_val, ensemble_variance, twirl_variance = compute_exp_val("Z", datum)
 
         # Total shots = 3 randomizations × 10 shots = 30 shots
+        # Overall expectation value: (6 + 0 + 4) / 30 = 10/30
         expected_exp_val = 10 / 30
         np.testing.assert_almost_equal(exp_val, expected_exp_val, decimal=10)
 
-        expected_variance = 1.0 - (10 / 30) ** 2
-        np.testing.assert_almost_equal(variance, expected_variance, decimal=10)
+        # Ensemble variance: treating all 30 shots as one ensemble
+        expected_ensemble_variance = 1.0 - (10 / 30) ** 2
+        np.testing.assert_almost_equal(ensemble_variance, expected_ensemble_variance, decimal=10)
+
+        # Twirl variance: variance of per-twirl expectation values [0.6, 0.0, 0.4]
+        # Mean of twirl exp vals = (0.6 + 0.0 + 0.4) / 3 = 1/3
+        # Variance = E[X²] - E[X]² = (0.36 + 0.0 + 0.16) / 3 - (1/3)²
+        #          = 0.52/3 - 1/9 = 0.173333... - 0.111111... = 0.062222...
+        expected_twirl_variance = (0.36 + 0.0 + 0.16) / 3 - (1 / 3) ** 2
+        np.testing.assert_almost_equal(twirl_variance, expected_twirl_variance, decimal=10)
 
     def test_data_with_signs(self):
         """Test compute_exp_val for data including signs.

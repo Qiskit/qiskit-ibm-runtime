@@ -18,7 +18,6 @@ from qiskit.transpiler.passmanager import PassManager
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import (
     ConvertIdToDelay,
 )
-
 from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
     DynamicCircuitInstructionDurations,
 )

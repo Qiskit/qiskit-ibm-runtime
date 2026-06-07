@@ -132,7 +132,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
         # Calculate exp vals and place them in a databin
         if pec_gamma is not None:
-            exp_vals, stds = process_expectation_values_pec(
+            exp_vals, stds, ensemble_stds = process_expectation_values_pec(
                 item_result,
                 observables,
                 param_shape,
@@ -141,10 +141,10 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 pec_gamma,
             )
         else:
-            exp_vals, stds = process_expectation_values(
+            exp_vals, stds, ensemble_stds = process_expectation_values(
                 item_result, observables, param_shape, param_basis_pairs, readout_noise_data
             )
-        data_bin = DataBin(evs=exp_vals, stds=stds)
+        data_bin = DataBin(evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds)
 
         # Get circuit metadata for this pub if available
         pub_metadata = {}
@@ -163,7 +163,7 @@ def process_expectation_values(
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item result.
 
     Args:
@@ -175,8 +175,8 @@ def process_expectation_values(
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
-        A tuple ``(exp_vals, stds)``, where ``exp_vals`` are expectation values and ``stds``
-        are standard deviations.
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
 
     Raises:
         ValueError: If ``item_result`` has no ``'_meas'`` key.
@@ -194,8 +194,10 @@ def process_expectation_values(
         # where num_configs is the total number of (param_index, basis) pairs
         raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
 
-    # Get num_shots
-    shots = data.shape[0] * data.shape[-2]
+    # Get number of randomizations and shots per randomization
+    num_randomizations = data.shape[0]
+    shots_per_randomization = data.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
@@ -218,6 +220,7 @@ def process_expectation_values(
     # Compute expectation values for all observables
     exp_vals = np.empty(output_shape, dtype=float)
     stds = np.empty(output_shape, dtype=float)
+    ensemble_stds = np.empty(output_shape, dtype=float)
 
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
@@ -237,7 +240,8 @@ def process_expectation_values(
             )
 
         exp_val = 0.0
-        variance = 0.0
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
         for observable_term, coeff in observable.items():
             # Find which basis can measure this term
             pauli_basis = Pauli(get_pauli_basis(observable_term))
@@ -246,9 +250,11 @@ def process_expectation_values(
             config_idx = identify_measure_basis(pauli_basis, param_basis_list)
 
             # Get measurement data for this configuration
-            # Shape: (num_randomizations, shots, num_qubits)
+            # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
             datum = data[:, config_idx, :, :]
-            term_exp_val, term_variance = compute_exp_val(observable_term, datum)
+            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                observable_term, datum
+            )
 
             # Calculate scale factor in case TREX mitigation is used
             term_scale_factor = (
@@ -259,12 +265,18 @@ def process_expectation_values(
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor
-            variance += (coeff**2) * term_variance * (term_scale_factor**2)
+            ensemble_variance += (coeff**2) * term_ensemble_variance * (term_scale_factor**2)
+            twirl_variance += (coeff**2) * term_twirl_variance * (term_scale_factor**2)
 
         exp_vals[bcast_index] = exp_val
-        stds[bcast_index] = np.sqrt(variance / shots)  # Standard error
+        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
+        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
 
-    return exp_vals, stds
+    return exp_vals, stds, ensemble_stds
 
 
 def process_expectation_values_pec(
@@ -274,7 +286,7 @@ def process_expectation_values_pec(
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
     pec_gamma: float,
-) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
     """Process expectation values for a single item pec mitigated result.
 
     Args:
@@ -306,8 +318,10 @@ def process_expectation_values_pec(
         # where num_configs is the total number of (param_index, basis) pairs
         raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
 
-    # Get num_shots
-    shots = data.shape[0] * data.shape[-2]
+    # Get number of randomizations and shots per randomization
+    num_randomizations = data.shape[0]
+    shots_per_randomization = data.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
 
     # Apply measurement flips if present
     if "measurement_flips._meas" in item_result:
@@ -335,6 +349,7 @@ def process_expectation_values_pec(
     # Compute expectation values for all observables
     exp_vals = np.empty(output_shape, dtype=float)
     stds = np.empty(output_shape, dtype=float)
+    ensemble_stds = np.empty(output_shape, dtype=float)
 
     # Loop over the broadcast output shape
     for bcast_index in np.ndindex(output_shape):
@@ -354,7 +369,8 @@ def process_expectation_values_pec(
             )
 
         exp_val = 0.0
-        variance = 0.0
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
         for observable_term, coeff in observable.items():
             # Find which basis can measure this term
             pauli_basis = Pauli(get_pauli_basis(observable_term))
@@ -368,7 +384,9 @@ def process_expectation_values_pec(
             # Get measurement data for this configuration
             # Shape: (num_randomizations, shots, num_qubits)
             datum = data[:, config_idx, :, :]
-            term_exp_val, term_variance = compute_exp_val(observable_term, datum, pec_signs_datum)
+            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                observable_term, datum, pec_signs_datum
+            )
 
             # Calculate scale factor in case TREX mitigation is used
             term_scale_factor = (
@@ -379,9 +397,19 @@ def process_expectation_values_pec(
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor * pec_gamma
-            variance += (coeff**2) * term_variance * (pec_gamma * term_scale_factor) ** 2
+            ensemble_variance += (
+                (coeff**2) * term_ensemble_variance * (pec_gamma * term_scale_factor) ** 2
+            )
+            twirl_variance += (
+                (coeff**2) * term_twirl_variance * (pec_gamma * term_scale_factor) ** 2
+            )
 
         exp_vals[bcast_index] = exp_val
-        stds[bcast_index] = np.sqrt(variance / shots)  # Standard error
+        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
+        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
 
-    return exp_vals, stds
+    return exp_vals, stds, ensemble_stds

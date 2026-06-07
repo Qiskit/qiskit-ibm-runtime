@@ -82,4 +82,10 @@ class SamplerOptions:
             executor_options.environment.image = self.experimental.get("image", None)
             executor_options.experimental.update(self.experimental)
 
+            if execution_key := self.experimental.get("execution", {}):
+                if execution_key.get("scheduler_timing", False):
+                    executor_options.execution.scheduler_timing = True
+                if execution_key.get("stretch_values", False):
+                    executor_options.execution.stretch_values = True
+
         return executor_options

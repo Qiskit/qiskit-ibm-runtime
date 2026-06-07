@@ -14,21 +14,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-from collections.abc import Callable
-import functools
 import copy
-from dataclasses import is_dataclass, asdict
+import functools
+from dataclasses import asdict, is_dataclass
 from numbers import Real
+from typing import TYPE_CHECKING, Any
 
-from pydantic import ConfigDict, ValidationInfo, field_validator
+from pydantic import ConfigDict, field_validator
 from pydantic.dataclasses import dataclass
-
-from qiskit.providers.backend import Backend
 
 from ..utils.utils import is_simulator
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from pydantic import ValidationInfo
+    from qiskit.providers.backend import Backend
+
     from ..options.options import BaseOptions
 
 

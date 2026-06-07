@@ -14,12 +14,15 @@
 
 from __future__ import annotations
 
-from typing import Union, TypeAlias
-from collections.abc import Iterable
-from numpy.typing import ArrayLike
-import numpy as np
+from typing import TYPE_CHECKING, TypeAlias, Union
 
-from qiskit.primitives.containers import PubResult, DataBin
+import numpy as np
+from qiskit.primitives.containers import DataBin, PubResult
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from numpy.typing import ArrayLike
 
 # Type aliases
 NeatPubResultLike: TypeAlias = Union["NeatPubResult", PubResult, DataBin]

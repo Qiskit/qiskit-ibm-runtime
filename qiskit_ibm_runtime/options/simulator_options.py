@@ -12,14 +12,13 @@
 
 """Simulator options."""
 
+from pydantic import field_validator
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
-from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap
+from qiskit.utils import optionals
 
-from pydantic import field_validator
-
-from .utils import Unset, UnsetType, skip_unset_validation, primitive_dataclass
+from .utils import Unset, UnsetType, primitive_dataclass, skip_unset_validation
 
 
 class NoiseModel:
