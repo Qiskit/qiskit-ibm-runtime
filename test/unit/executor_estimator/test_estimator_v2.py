@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -30,6 +31,7 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 
+@ddt
 class TestEstimatorV2Run(unittest.TestCase):
     """Tests for the EstimatorV2.run() method."""
 
@@ -156,10 +158,11 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.mock_executor_instance.run.assert_called_once()
         self.assertEqual(job, self.mock_job)
 
-    def test_run_multiple_pubs(self):
+    @data(True, False)
+    def test_run_multiple_pubs(self, measure_mitigation):
         """Test run with multiple pubs."""
         estimator = EstimatorV2(mode=self.backend)
-
+        estimator.options.resilience.measure_mitigation = measure_mitigation
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
 
@@ -178,7 +181,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         # Verify multiple items in quantum program
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
-        self.assertEqual(len(quantum_program.items), 2)
+        self.assertEqual(len(quantum_program.items), 2 + measure_mitigation)
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
