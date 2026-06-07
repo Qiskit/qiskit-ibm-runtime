@@ -159,25 +159,27 @@ class TestComputeExpVal(unittest.TestCase):
         Note: The shape of the signs data must be `signs.shape[:-1] == datum.shape[:-2]`
         and an additional final axis that index all error generators in circuit.
         """
-        datum = np.array([
-            [[False]] * 8 + [[True]] * 2,
-            [[False]] * 8 + [[True]] * 2,
-        ])
-        np.array([[False] * 2,[False] * 2,])
+        datum = np.array(
+            [
+                [[False]] * 8 + [[True]] * 2,
+                [[False]] * 8 + [[True]] * 2,
+            ]
+        )
         test_cases = [
             # (observable, measurements, signs, expected_exp_val, expected_variance, description)
             # Single qubit observables (using 80/20 split to show non-trivial behavior)
-            ("X", datum, np.array([[False]*2,[False]*2,]), 0.6, 0.64, "X"),
-            ("Y", datum, np.array([[False]*2,[False]*2,]), 0.6, 0.64, "Y"),
-            ("Z", datum, np.array([[False]*2,[False]*2,]), 0.6, 0.64, "Z"),
-            ("I", datum, np.array([[False]*2,[False]*2,]), 1.0, 0.0, "I"),
-            ("X", datum, np.array([[False,True],[False,True]]), -0.6, 0.64, "X"),
-            ("Y", datum, np.array([[True]*2,[True]*2,]), 0.6, 0.64, "Y"),
-            ("Z", datum, np.array([[False,True],[False]*2,]), 0, 1.0, "Z"),
-            ("I", datum, np.array([[False,True],[True,False]]), -1.0, 0.0, "I"),
+            ("X", datum, [[True, True], [True, True]], 0.6, 0.64, "X"),
+            ("Y", datum, [[False] * 2, [False] * 2], 0.6, 0.64, "Y"),
+            ("Z", datum, [[False] * 2, [False] * 2], 0.6, 0.64, "Z"),
+            ("I", datum, [[False] * 2, [False] * 2], 1.0, 0.0, "I"),
+            ("X", datum, [[False, True], [False, True]], -0.6, 0.64, "X"),
+            ("Y", datum, [[True] * 2, [True] * 2], 0.6, 0.64, "Y"),
+            ("Z", datum, [[False, True], [False] * 2], 0, 1.0, "Z"),
+            ("I", datum, [[False, True], [True, False]], -1.0, 0.0, "I"),
         ]
 
         for observable, datum, signs, exp_val, variance, desc in test_cases:
+            signs = np.array(signs)
             with self.subTest(desc=desc):
                 result_exp_val, result_variance = compute_exp_val(observable, datum, signs)
 

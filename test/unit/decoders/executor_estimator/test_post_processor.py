@@ -423,7 +423,6 @@ class TestProcessExpectationValues(unittest.TestCase):
         self.assertTupleEqual(stds.shape, expected_shape)
 
 
-
 @ddt
 class TestProcessExpectationValuesPEC(unittest.TestCase):
     """Tests for the ``process_expectation_values_pec`` method."""
@@ -467,20 +466,20 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         # Two configs: one for ZZ, one for XX
         # All measurements are 00, which normally gives +1 for both ZZ and XX
         data = np.zeros((1, 2, 10, 2), dtype=bool)
-        
+
         # Create pauli_signs where:
         # - First config (ZZ): all +1 signs (sum of signs is even, represented as [[0, 0]])
-        # - Second config (XX): all -1 signs (sum of signs is odd, represented as [[1, 0]] or any odd sum)
+        # - Second config (XX): all -1 signs (sum of signs is odd, represented as [[1, 0]])
         # The signs array has shape (num_randomizations, num_configs, num_error_generators)
         # For simplicity, we use 1 error generator per config
         pauli_signs = np.zeros((1, 2, 1), dtype=np.int8)
         pauli_signs[0, 1, 0] = 1  # Set sign for second config to have odd sum (net -1)
-        
+
         item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
 
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0
-        
+
         evs, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
@@ -492,10 +491,9 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         # Expected:
         # - ZZ: all measurements are 00 with net +1 signs (even sum) -> ev = +1 * gamma = +2.0
-        # - XX: all measurements are 00 (which is ++) with net -1 signs (odd sum) -> ev = -1 * gamma = -2.0
+        # - XX: all measurements are 00 with net -1 signs (odd sum) -> ev = -1 * gamma = -2.0
         expected = np.array([2.0, -2.0])
         self.assertTrue(np.allclose(evs, expected), msg=f"Expected {expected}, got {evs}")
-
 
     def test_evs_2d_obs_no_params_pec(self):
         """Test post-processor with 2D observables and no params for PEC."""
@@ -507,7 +505,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0  # Example gamma value
-        
+
         evs, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
@@ -541,7 +539,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
 
         pec_gamma = 1.5  # Example gamma value
-        
+
         evs, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
@@ -550,7 +548,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
-        
+
         # Expected values should be scaled by gamma
         expected_evs = expected_evs_base * pec_gamma
         self.assertTrue(np.allclose(evs, expected_evs), msg=f"Expected {expected_evs}, got {evs}")
@@ -579,7 +577,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         )
 
         pec_gamma = 2.5  # Example gamma value
-        
+
         evs, _ = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,
@@ -588,7 +586,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
-        
+
         # Expected values should be scaled by gamma
         expected_evs = expected_evs_base * pec_gamma
         self.assertTrue(np.allclose(evs, expected_evs), msg=f"Expected {expected_evs}, got {evs}")
@@ -617,7 +615,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
 
         pec_gamma = 1.8  # Example gamma value
-        
+
         evs, stds = process_expectation_values_pec(
             item_result=item_result,
             observables=observables,

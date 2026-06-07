@@ -131,7 +131,12 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         # Calculate exp vals and place them in a databin
         if pec_gamma is not None:
             exp_vals, stds = process_expectation_values_pec(
-                item_result, observables, param_shape, param_basis_pairs, readout_noise_data, pec_gamma
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                pec_gamma,
             )
         else:
             exp_vals, stds = process_expectation_values(
@@ -259,6 +264,7 @@ def process_expectation_values(
 
     return exp_vals, stds
 
+
 def process_expectation_values_pec(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
@@ -371,7 +377,7 @@ def process_expectation_values_pec(
 
             # Accumulate with coefficient
             exp_val += coeff * term_exp_val * term_scale_factor * pec_gamma
-            variance += (coeff**2) * term_variance * (pec_gamma * term_scale_factor)**2
+            variance += (coeff**2) * term_variance * (pec_gamma * term_scale_factor) ** 2
 
         exp_vals[bcast_index] = exp_val
         stds[bcast_index] = np.sqrt(variance / shots)  # Standard error
