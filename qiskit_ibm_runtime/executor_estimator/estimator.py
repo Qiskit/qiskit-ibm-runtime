@@ -157,7 +157,14 @@ class EstimatorV2(BaseEstimatorV2):
                         "(circuits with control flow operations)."
                     )
 
-        quantum_program = prepare(coerced_pubs, self.options.twirling, shots)
+        quantum_program = prepare(
+            pubs=coerced_pubs,
+            twirling_options=self.options.twirling,
+            shots=shots,
+            measure_noise_learning=self.options.resilience.measure_noise_learning
+            if self.options.resilience.measure_mitigation
+            else None,
+        )
 
         if self.options.dynamical_decoupling.enable:
             backend = self._executor._backend

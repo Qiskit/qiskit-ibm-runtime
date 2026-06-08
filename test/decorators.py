@@ -17,8 +17,10 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest import SkipTest
+
+from ddt import named_data
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -85,6 +87,28 @@ def run_integration_test(func):
             func(self, *args, **kwargs)
 
     return _wrapper
+
+
+def run_configured_sampler_implementations(
+    test_func: Callable[..., Any],
+) -> Callable[..., Any]:
+    """Parameterize sampler tests based on the configured implementations.
+
+    Set ``QISKIT_IBM_TEST_BOTH_SAMPLER_IMPLEMENTATIONS=1`` to expand the wrapped
+    test over both the legacy sampler and the executor-based sampler.
+    Otherwise by default, the wrapped test is expanded only for the legacy sampler.
+
+    The decorated tests receive a new argument that contains the sampler class.
+    """
+    from qiskit_ibm_runtime import SamplerV2 as LegacySamplerV2
+    from qiskit_ibm_runtime.executor_sampler import SamplerV2 as ExecutorSamplerV2
+
+    implementations = (
+        [("legacy", LegacySamplerV2), ("executor", ExecutorSamplerV2)]
+        if os.getenv("QISKIT_IBM_TEST_SAMPLER_V2_IMPLEMENTATIONS") == "1"
+        else [("legacy", LegacySamplerV2)]
+    )
+    return named_data(*implementations)(test_func)
 
 
 def integration_test_setup(
