@@ -75,9 +75,13 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
+    # extract gamma factors if present
+    pec_gammas = post_processor_data.get("pec_gammas", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
+
     if measure_mitigation == "True":
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
@@ -95,32 +99,51 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
+    pec_gammas = pec_gammas or [None] * len(result)
     if {
         len(circuits_metadata),
         len(observables_lists),
         len(param_basis_pairs_lists),
         len(param_shapes_list),
+        len(pec_gammas),
     } != {len(result)}:
         raise ValueError(
             f"Number of circuit metadata items ({len(circuits_metadata)}), "
             f"observables ({len(observables_lists)}), "
             f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
-            f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
+            f"param_shapes ({len(param_shapes_list)}), "
+            f"pec_gammas ({len(pec_gammas)}), and results ({len(result)}) are not equal."
         )
 
     # Build EstimatorPubResult for each pub
     pub_results = []
-    for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
-        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
+    for idx, (
+        item_result,
+        observables_label,
+        param_basis_pairs,
+        param_shape,
+        pec_gamma,
+    ) in enumerate(
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list, pec_gammas)
     ):
         # Reconstruct observables and measure_bases
         observables = ObservablesArray(observables_label)
         param_shape = tuple(param_shape)
 
         # Calculate exp vals and place them in a databin
-        exp_vals, stds, ensemble_stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise_data
-        )
+        if pec_gamma is not None:
+            exp_vals, stds, ensemble_stds = process_expectation_values_pec(
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                pec_gamma,
+            )
+        else:
+            exp_vals, stds, ensemble_stds = process_expectation_values(
+                item_result, observables, param_shape, param_basis_pairs, readout_noise_data
+            )
         data_bin = DataBin(evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds)
 
         # Get circuit metadata for this pub if available
@@ -244,6 +267,143 @@ def process_expectation_values(
             exp_val += coeff * term_exp_val * term_scale_factor
             ensemble_variance += (coeff**2) * term_ensemble_variance * (term_scale_factor**2)
             twirl_variance += (coeff**2) * term_twirl_variance * (term_scale_factor**2)
+
+        exp_vals[bcast_index] = exp_val
+        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
+        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+        if num_randomizations == 1:
+            stds[bcast_index] = ensemble_stds[bcast_index]
+        else:
+            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
+
+    return exp_vals, stds, ensemble_stds
+
+
+def process_expectation_values_pec(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+    pec_gamma: float,
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+    """Process expectation values for a single item pec mitigated result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+        pec_gamma: gamma factor for PEC mitigation.
+
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+
+    Raises:
+        ValueError: If ``item_result`` has no ``'_meas'`` key.
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``item_result`` has no ``'pauli_signs'`` key.
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    try:
+        data = item_result["_meas"]
+    except KeyError:
+        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
+
+    if data.ndim != 4:
+        # Shape: (num_randomizations, num_configs, shots, num_bits)
+        # where num_configs is the total number of (param_index, basis) pairs
+        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
+
+    # Get number of randomizations and shots per randomization
+    num_randomizations = data.shape[0]
+    shots_per_randomization = data.shape[-2]
+    total_shots = num_randomizations * shots_per_randomization
+
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    # extract pec signs if present
+    pec_signs = item_result.get("pauli_signs", None)
+    if pec_signs is None:
+        raise ValueError("Results must contain ``'pauli_signs'`` in the data if PEC is used.")
+
+    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
+    # This allows us to find all available measurement bases for a given parameter
+    config_lookup = defaultdict(list)
+    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
+        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
+
+    try:
+        output_shape = np.broadcast_shapes(param_shape, observables.shape)
+    except ValueError:
+        raise ValueError(
+            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
+            f"{observables.shape}"
+        )
+
+    # Compute expectation values for all observables
+    exp_vals = np.empty(output_shape, dtype=float)
+    stds = np.empty(output_shape, dtype=float)
+    ensemble_stds = np.empty(output_shape, dtype=float)
+
+    # Loop over the broadcast output shape
+    for bcast_index in np.ndindex(output_shape):
+        # Unbroadcast to get the actual parameter and observable indices
+        param_index = unbroadcast_index(bcast_index, param_shape)
+        obs_index = unbroadcast_index(bcast_index, observables.shape)
+
+        # Get the observable for this index
+        observable = observables[obs_index]
+
+        # Get the available (measurement_basis, config_idx) pairs for this parameter index
+        try:
+            param_basis_list = config_lookup[param_index]  # type: ignore[index]
+        except KeyError:
+            raise ValueError(
+                f"No measurement basis configurations found for parameter index {param_index}"
+            )
+
+        exp_val = 0.0
+        ensemble_variance = 0.0
+        twirl_variance = 0.0
+        for observable_term, coeff in observable.items():
+            # Find which basis can measure this term
+            pauli_basis = Pauli(get_pauli_basis(observable_term))
+
+            # Use identify_measure_basis to find the configuration index directly
+            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
+
+            # get the signs for this configuration
+            pec_signs_datum = pec_signs[:, config_idx, :]
+
+            # Get measurement data for this configuration
+            # Shape: (num_randomizations, shots, num_qubits)
+            datum = data[:, config_idx, :, :]
+            term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                observable_term, datum, pec_signs_datum
+            )
+
+            # Calculate scale factor in case TREX mitigation is used
+            term_scale_factor = (
+                calculate_trex_factor(measure_noise_data, observable_term)
+                if measure_noise_data is not None
+                else 1
+            )
+
+            # Accumulate with coefficient
+            exp_val += coeff * term_exp_val * term_scale_factor * pec_gamma
+            ensemble_variance += (
+                (coeff**2) * term_ensemble_variance * (pec_gamma * term_scale_factor) ** 2
+            )
+            twirl_variance += (
+                (coeff**2) * term_twirl_variance * (pec_gamma * term_scale_factor) ** 2
+            )
 
         exp_vals[bcast_index] = exp_val
         ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
