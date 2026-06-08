@@ -228,3 +228,25 @@ class TestRuntimeJob(IBMTestCase):
                         self.assertEqual(len(warn_cm), 0)
 
                     patched_sleep.assert_called_with(expected_interval)
+
+    @run_cloud_fake
+    @data("pending", "completed")
+    def test_usage_no_partial(self, status, service):
+        """usage() should return 0 if the status is not `completed`."""
+        job = run_program(service)
+        api_response = {"usage": {"qpu_charge_time_seconds": 123, "status": status}}
+
+        with patch.object(BaseFakeRuntimeClient, "job_metadata", return_value=api_response):
+            usage = job.usage()
+            self.assertEqual(usage, 0 if status != "completed" else 123)
+
+    @run_cloud_fake
+    @data("pending", "completed")
+    def test_usage_partial(self, status, service):
+        """usage() should always return `qpu_charge_time_seconds` regardless of status."""
+        job = run_program(service)
+        api_response = {"usage": {"qpu_charge_time_seconds": 123, "status": status}}
+
+        with patch.object(BaseFakeRuntimeClient, "job_metadata", return_value=api_response):
+            usage = job.usage(partial=True)
+            self.assertEqual(usage, 123)

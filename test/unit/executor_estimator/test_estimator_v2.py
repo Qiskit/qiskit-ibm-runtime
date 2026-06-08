@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import numpy as np
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -30,6 +31,7 @@ from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 
+@ddt
 class TestEstimatorV2Run(unittest.TestCase):
     """Tests for the EstimatorV2.run() method."""
 
@@ -156,10 +158,11 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.mock_executor_instance.run.assert_called_once()
         self.assertEqual(job, self.mock_job)
 
-    def test_run_multiple_pubs(self):
+    @data(True, False)
+    def test_run_multiple_pubs(self, measure_mitigation):
         """Test run with multiple pubs."""
         estimator = EstimatorV2(mode=self.backend)
-
+        estimator.options.resilience.measure_mitigation = measure_mitigation
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
 
@@ -178,7 +181,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         # Verify multiple items in quantum program
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
-        self.assertEqual(len(quantum_program.items), 2)
+        self.assertEqual(len(quantum_program.items), 2 + measure_mitigation)
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
@@ -255,6 +258,52 @@ class TestEstimatorV2Run(unittest.TestCase):
 
         self.mock_executor_instance.run.assert_called_once()
         self.assertEqual(job, self.mock_job)
+
+    @data((True, True), (True, False), (False, True), (False, False))
+    @unpack
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.apply_dynamical_decoupling")
+    def test_run_applies_dynamical_decoupling_after_prepare(
+        self, twirling_enabled, measure_mitigration, mock_apply_dd
+    ):
+        """Test apply_dynamical_decoupling is called when DD is enabled.
+
+        Tests with twirling enabled and disabled (samplex item vs circuit item).
+        """
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.dynamical_decoupling.enable = True
+        estimator.options.twirling.enable_gates = twirling_enabled
+        estimator.options.twirling.enable_measure = twirling_enabled
+        estimator.options.resilience.measure_mitigation = measure_mitigration
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        # Mock to return the quantum program unchanged
+        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
+
+        estimator.run([(circuit, observable), (circuit, observable)], precision=0.03125)
+
+        # Verify apply_dynamical_decoupling was called once
+        mock_apply_dd.assert_called_once()
+
+    def test_run_rejects_dynamic_circuits_when_dynamical_decoupling_enabled(self):
+        """Test DD rejects circuits with control flow."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.dynamical_decoupling.enable = True
+
+        circuit = QuantumCircuit(2, 1)
+        circuit.h(0)
+        circuit.measure(0, 0)
+        circuit.if_else((0, True), QuantumCircuit(2, 1), QuantumCircuit(2, 1), [0, 1], [0])
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "Dynamical decoupling is not compatible with dynamic circuits",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
 
     def test_run_incompatible_broadcast_shapes(self):
         """Test that incompatible parameter and observable shapes raise an error."""

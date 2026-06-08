@@ -20,7 +20,6 @@ from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.transpiler import PassManager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -927,14 +926,12 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         """Set up test fixtures."""
         self.backend = create_mock_backend()
 
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_generate_dd_pm):
-        """Test that DD pass manager is generated and used when DD is enabled."""
-        # Setup mock pass manager
-        mock_pm = MagicMock(spec=PassManager)
-        mock_pm.run.return_value = QuantumCircuit(2, 2)  # Return a circuit
-        mock_generate_dd_pm.return_value = mock_pm
+    def test_dd_pass_manager_called_when_enabled(self, mock_run, mock_apply_dd):
+        """Test that apply_dynamical_decoupling is called when DD is enabled."""
+        # Mock to return the quantum program unchanged
+        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
         mock_run.return_value = MagicMock()
 
         # Create a simple circuit
@@ -951,25 +948,13 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Run the sampler
         sampler.run([circuit], shots=1024)
 
-        # Verify generate_dd_pass_manager was called
-        mock_generate_dd_pm.assert_called_once()
-        call_args = mock_generate_dd_pm.call_args
+        # Verify apply_dynamical_decoupling was called once
+        mock_apply_dd.assert_called_once()
 
-        # Check that backend was passed
-        self.assertEqual(call_args[1]["backend"], self.backend)
-
-        # Check that DD options were passed
-        dd_options = call_args[1]["options"]
-        self.assertTrue(dd_options.enable)
-        self.assertEqual(dd_options.sequence_type, "XX")
-
-        # Verify the pass manager's run method was called on the circuit
-        mock_pm.run.assert_called()
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_generate_dd_pm):
-        """Test that DD pass manager is not generated when DD is disabled."""
+    def test_dd_pass_manager_not_called_when_disabled(self, mock_run, mock_apply_dd):
+        """Test that apply_dynamical_decoupling is not called when DD is disabled."""
         mock_run.return_value = MagicMock()
 
         # Create a simple circuit
@@ -985,50 +970,15 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Run the sampler
         sampler.run([circuit], shots=1024)
 
-        # Verify generate_dd_pass_manager was NOT called
-        mock_generate_dd_pm.assert_not_called()
+        # Verify apply_dynamical_decoupling was NOT called
+        mock_apply_dd.assert_not_called()
 
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
+    @patch("qiskit_ibm_runtime.executor_sampler.sampler.apply_dynamical_decoupling")
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_applied_to_multiple_circuits(self, mock_run, mock_generate_dd_pm):
-        """Test that DD is applied to all circuits when multiple pubs are provided."""
-        # Setup mock pass manager
-        mock_pm = MagicMock(spec=PassManager)
-        mock_pm.run.return_value = QuantumCircuit(2, 2)
-        mock_generate_dd_pm.return_value = mock_pm
-        mock_run.return_value = MagicMock()
-
-        # Create multiple circuits
-        circuit1 = QuantumCircuit(2, 2)
-        circuit1.h(0)
-        circuit1.measure_all()
-
-        circuit2 = QuantumCircuit(3, 3)
-        circuit2.h([0, 1, 2])
-        circuit2.measure_all()
-
-        # Create sampler with DD enabled
-        sampler = SamplerV2(mode=self.backend)
-        sampler.options.dynamical_decoupling.enable = True
-        sampler.options.dynamical_decoupling.sequence_type = "XY4"
-
-        # Run the sampler with multiple circuits
-        sampler.run([circuit1, circuit2], shots=2048)
-
-        # Verify generate_dd_pass_manager was called once
-        mock_generate_dd_pm.assert_called_once()
-
-        # Verify the pass manager's run method was called for each circuit
-        self.assertEqual(mock_pm.run.call_count, 2)
-
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_dd_pass_manager")
-    @patch("qiskit_ibm_runtime.executor_sampler.sampler.Executor.run")
-    def test_dd_with_twirling_enabled(self, mock_run, mock_generate_dd_pm):
-        """Test that DD pass manager is called when both DD and twirling are enabled."""
-        # Setup mock pass manager
-        mock_pm = MagicMock(spec=PassManager)
-        mock_pm.run.return_value = QuantumCircuit(2, 2)
-        mock_generate_dd_pm.return_value = mock_pm
+    def test_dd_with_twirling_enabled(self, mock_run, mock_apply_dd):
+        """Test that apply_dynamical_decoupling is called when both DD and twirling are enabled."""
+        # Mock to return the quantum program unchanged
+        mock_apply_dd.side_effect = lambda backend, dd_options, quantum_program: quantum_program
         mock_run.return_value = MagicMock()
 
         # Create a simple circuit
@@ -1046,12 +996,8 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         # Run the sampler
         sampler.run([circuit], shots=1024)
 
-        # Verify generate_dd_pass_manager was called
-        mock_generate_dd_pm.assert_called_once()
-
-        # Verify the pass manager's run method was called
-        # (DD is applied to the template circuit in twirling path)
-        mock_pm.run.assert_called()
+        # Verify apply_dynamical_decoupling was called once
+        mock_apply_dd.assert_called_once()
 
     def test_dd_raises_error_with_multiple_circuits_one_has_control_flow(self):
         """Test that DD raises ValueError when one of multiple circuits has control flow."""

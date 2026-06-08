@@ -24,3 +24,7 @@ from .converters_1_0 import (
     quantum_program_from_1_0,
     quantum_program_to_1_0,
 )
+from .converters_1_1 import (
+    quantum_program_from_1_1,
+    quantum_program_to_1_1,
+)

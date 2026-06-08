@@ -22,6 +22,7 @@ from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..executor import Executor
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .prepare import prepare
 from .utils import resolve_precision
@@ -148,7 +149,30 @@ class EstimatorV2(BaseEstimatorV2):
         else:
             shots = int(np.ceil(1.0 / (self.options.default_precision**2)))
 
-        quantum_program = prepare(coerced_pubs, self.options.twirling, shots)
+        if self.options.dynamical_decoupling.enable:
+            for pub in coerced_pubs:
+                if pub.circuit.has_control_flow_op():
+                    raise ValueError(
+                        "Dynamical decoupling is not compatible with dynamic circuits "
+                        "(circuits with control flow operations)."
+                    )
+
+        quantum_program = prepare(
+            pubs=coerced_pubs,
+            twirling_options=self.options.twirling,
+            shots=shots,
+            measure_noise_learning=self.options.resilience.measure_noise_learning
+            if self.options.resilience.measure_mitigation
+            else None,
+        )
+
+        if self.options.dynamical_decoupling.enable:
+            quantum_program = apply_dynamical_decoupling(
+                backend=self._executor._backend,
+                dd_options=self.options.dynamical_decoupling,
+                quantum_program=quantum_program,
+            )
+
         executor_options = self.options.to_executor_options()
 
         # Set executor options

@@ -123,3 +123,40 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
     )
     result._semantic_role = model.semantic_role
     return result
+
+
+def quantum_program_result_from_1_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
+    """Convert a V1.0 model to a :class:`QuantumProgramResult`."""
+    metadata = Metadata(
+        chunk_timing=[
+            ChunkSpan(
+                span.start.replace(tzinfo=timezone.utc),
+                span.stop.replace(tzinfo=timezone.utc),
+                [ChunkPart(part.idx_item, part.size) for part in span.parts],
+            )
+            for span in model.metadata.chunk_timing
+        ]
+    )
+
+    data = []
+    for item in model.data:
+        timings = item.metadata.scheduler_timing
+        scheduler_timing = SchedulerTiming(**dict(timings)) if timings else None
+
+        stretches = item.metadata.stretch_values
+        stretch_values = [StretchValues(**dict(s)) for s in stretches] if stretches else None
+
+        data.append(
+            QuantumProgramItemResult(
+                result={name: val.to_numpy() for name, val in item.results.items()},
+                metadata=ItemMetadata(
+                    scheduler_timing=scheduler_timing, stretch_values=stretch_values
+                ),
+            )
+        )
+
+    result = QuantumProgramResult(
+        data=data, metadata=metadata, passthrough_data=model.passthrough_data
+    )
+    result._semantic_role = model.semantic_role
+    return result
