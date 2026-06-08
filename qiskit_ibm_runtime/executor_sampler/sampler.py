@@ -208,14 +208,6 @@ class SamplerV2(BaseSamplerV2):
             IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
                 (when twirling is disabled) or if shots are not properly specified.
         """
-        # Get backend from executor
-        backend = self._executor._backend
-        if backend is None:
-            raise ValueError(
-                "Backend is required for prepare(). "
-                "Please provide a backend when initializing the sampler."
-            )
-
         # Use instance options
         options = self.options
 
@@ -332,7 +324,7 @@ class SamplerV2(BaseSamplerV2):
         # Apply dynamical decoupling if enabled
         if options.dynamical_decoupling.enable:
             quantum_program = apply_dynamical_decoupling(
-                backend=backend,
+                backend=self._executor._backend,
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
