@@ -193,8 +193,7 @@ def prepare_pec(
             and twirling is on.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
-        pec_options: The options for PEC mitigation. If provided, PEC mitigation method will be
-            used.
+        pec_options: The options for PEC mitigation.
         noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC or
             PEA mitigation methods. The list must contain a map for each pub. Assumes that the
             unique layers used for noise learning were extracted using the ``get_layers`` method.
@@ -208,6 +207,7 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
+        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs mismatched.
     """
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
