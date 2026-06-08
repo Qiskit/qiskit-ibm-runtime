@@ -14,6 +14,9 @@
 
 import unittest
 
+from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
+    DynamicalDecouplingOptions,
+)
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
 from qiskit_ibm_runtime.options_models.estimator_options import (
     EstimatorOptions,
@@ -29,6 +32,7 @@ class TestEstimatorOptions(unittest.TestCase):
         """Test default values."""
         options = EstimatorOptions()
         self.assertEqual(options.default_precision, 0.015625)
+        self.assertIsInstance(options.dynamical_decoupling, DynamicalDecouplingOptions)
         self.assertIsInstance(options.execution, ExecutionOptions)
         self.assertIsNone(options.experimental)
         self.assertIsNone(options.max_execution_time)

@@ -22,6 +22,7 @@ from pydantic.dataclasses import dataclass
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
+from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .resilience_options import ResilienceOptions
 from .twirling_options import TwirlingOptions
@@ -30,11 +31,7 @@ from .utils import PRIMITIVES_CONFIG
 
 @dataclass(config=PRIMITIVES_CONFIG)
 class EstimatorOptions:
-    """Options for the executor-based EstimatorV2.
-
-    This is a minimal implementation without twirling, dynamical decoupling,
-    or error mitigation features.
-    """
+    """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625
     """The default precision for expectation value estimates if not specified in the PUBs
@@ -72,6 +69,14 @@ class EstimatorOptions:
     Currently only enable_measure=False is supported.
 
     See :class:`.TwirlingOptions` for all available options."""
+
+    dynamical_decoupling: DynamicalDecouplingOptions = Field(
+        default_factory=DynamicalDecouplingOptions
+    )
+    """Dynamical decoupling options.
+
+    See :class:`~.DynamicalDecouplingOptions` for all available options.
+    """
 
     experimental: dict | None = None
     """Experimental options."""
