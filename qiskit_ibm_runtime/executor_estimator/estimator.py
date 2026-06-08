@@ -22,7 +22,7 @@ from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..executor import Executor
-from ..executor.dynamical_decoupling import generate_dd_pass_manager
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .prepare import prepare
 from .utils import resolve_precision
@@ -167,19 +167,11 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
         if self.options.dynamical_decoupling.enable:
-            backend = self._executor._backend
-            if backend is None:
-                raise ValueError(
-                    "Backend is required to apply dynamical decoupling. "
-                    "Please provide a backend when initializing the estimator."
-                )
-
-            dd_pass_manager = generate_dd_pass_manager(
-                backend=backend,
-                options=self.options.dynamical_decoupling,
+            quantum_program = apply_dynamical_decoupling(
+                backend=self._executor._backend,
+                dd_options=self.options.dynamical_decoupling,
+                quantum_program=quantum_program,
             )
-            for item in quantum_program.items:
-                item.circuit = dd_pass_manager.run(item.circuit)
 
         executor_options = self.options.to_executor_options()
 
