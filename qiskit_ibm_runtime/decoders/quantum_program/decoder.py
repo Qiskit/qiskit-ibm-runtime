@@ -26,6 +26,9 @@ from ibm_quantum_schemas.executor.version_0_2 import (
 from ibm_quantum_schemas.executor.version_1_0 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_0,
 )
+from ibm_quantum_schemas.executor.version_1_1 import (
+    QuantumProgramResultModel as QuantumProgramResultModel_1_1,
+)
 
 from ..executor_estimator.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
@@ -38,6 +41,7 @@ from .converters import (
     quantum_program_result_from_0_1,
     quantum_program_result_from_0_2,
     quantum_program_result_from_1_0,
+    quantum_program_result_from_1_1,
 )
 
 """
@@ -67,6 +71,7 @@ AVAILABLE_DECODERS = {
     "v0.1": (quantum_program_result_from_0_1, QuantumProgramResultModel_0_1),
     "v0.2": (quantum_program_result_from_0_2, QuantumProgramResultModel_0_2),
     "v1.0": (quantum_program_result_from_1_0, QuantumProgramResultModel_1_0),
+    "v1.1": (quantum_program_result_from_1_1, QuantumProgramResultModel_1_1),
 }
 
 

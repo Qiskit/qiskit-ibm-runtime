@@ -148,7 +148,14 @@ class EstimatorV2(BaseEstimatorV2):
         else:
             shots = int(np.ceil(1.0 / (self.options.default_precision**2)))
 
-        quantum_program = prepare(coerced_pubs, self.options.twirling, shots)
+        quantum_program = prepare(
+            pubs=coerced_pubs,
+            twirling_options=self.options.twirling,
+            shots=shots,
+            measure_noise_learning=self.options.resilience.measure_noise_learning
+            if self.options.resilience.measure_mitigation
+            else None,
+        )
         executor_options = self.options.to_executor_options()
 
         # Set executor options
