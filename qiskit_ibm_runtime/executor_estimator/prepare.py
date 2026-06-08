@@ -37,8 +37,8 @@ from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
-from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit
 from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
@@ -156,17 +156,8 @@ def prepare(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect circuit metadata from each pub
-    circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-    # Validate that circuit metadata is compatible with DataTree format
-    for idx, metadata in enumerate(circuits_metadata):
-        if metadata is not None and not is_datatree_compatible(metadata):
-            raise IBMInputValueError(
-                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                f"numpy arrays, or primitive types (str, int, float, bool, None)."
-            )
+    # Collect and validate circuit metadata from each pub
+    circuits_metadata = validate_and_extract_metadata(pubs)
 
     passthrough_data = {
         "post_processor": {

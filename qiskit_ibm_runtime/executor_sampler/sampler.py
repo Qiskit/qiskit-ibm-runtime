@@ -22,13 +22,12 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
-from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from .utils import extract_shots_from_pubs, validate_no_boxes
 
@@ -291,17 +290,8 @@ class SamplerV2(BaseSamplerV2):
                     )
                 )
 
-        # Collect circuit metadata from each pub
-        circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-        # Validate that circuit metadata is compatible with DataTree format
-        for idx, metadata in enumerate(circuits_metadata):
-            if metadata is not None and not is_datatree_compatible(metadata):
-                raise IBMInputValueError(
-                    f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                    f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                    f"numpy arrays, or primitive types (str, int, float, bool, None)."
-                )
+        # Collect and validate circuit metadata from each pub
+        circuits_metadata = validate_and_extract_metadata(pubs)
 
         passthrough_data = {
             "post_processor": {
