@@ -26,6 +26,7 @@ from qiskit.transpiler.passes import (
     PadDynamicalDecoupling,
     TimeUnitConversion,
 )
+from samplomatic import Twirl, build
 
 from qiskit_ibm_runtime.executor.dynamical_decoupling import (
     apply_dynamical_decoupling,
@@ -345,8 +346,6 @@ class TestApplyDynamicalDecoupling(unittest.TestCase):
     @patch("qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager")
     def test_pass_manager_called_once_per_item(self, mock_generate_pm):
         """Test that pass manager is called once per item with mixed CircuitItem and SamplexItem."""
-        from samplomatic import Twirl, build
-
         # Create a mock pass manager
         mock_pm = MagicMock(spec=PassManager)
         mock_pm.run = MagicMock(side_effect=lambda circ: circ)
