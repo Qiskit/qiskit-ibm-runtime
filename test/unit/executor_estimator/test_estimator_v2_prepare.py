@@ -28,10 +28,10 @@ from qiskit_ibm_runtime.executor_estimator.prepare import (
     prepare,
     prepare_pec,
 )
-from qiskit_ibm_runtime.options.pec_options import PecOptions
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
+from qiskit_ibm_runtime.options_models.pec_options import PecOptions
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
@@ -636,11 +636,14 @@ class TestPreparePecFunction(unittest.TestCase):
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         pub = EstimatorPub.coerce((circuit, observable))
 
-        noise_model = PauliLindbladMap.from_sparse_list([("IX", [0, 1], 0.1)], num_qubits=2)
+        err_rate = 0.7
+        max_overhead = 10
+        noise_model = PauliLindbladMap.from_sparse_list([("IX", [0, 1], err_rate)], num_qubits=2)
         noise_model_mapping = [{"r2feB": noise_model}]
 
         pec_options = PecOptions()
         pec_options.noise_gain = "auto"  # Should default to 0
+        pec_options.max_overhead = max_overhead
 
         shots = 1024
         quantum_program = prepare_pec(
@@ -651,8 +654,9 @@ class TestPreparePecFunction(unittest.TestCase):
 
         # With auto (defaulting to 0), noise_factor should be 0 - 1 = -1
         self.assertIn("noise_scales.r2feB", item.samplex_arguments)
-        # TODO: change it after changing the calculation of the "auto" noise_scale
-        self.assertEqual(item.samplex_arguments["noise_scales.r2feB"], -1)
+        scaleless_gamma = float(np.exp(2 * err_rate))
+        expected_noise_gain = -np.log(max_overhead) / np.log(scaleless_gamma**2)
+        self.assertEqual(item.samplex_arguments["noise_scales.r2feB"], expected_noise_gain)
 
     def test_prepare_pec_raises_error_without_noise_model_mapping(self):
         """Test that prepare_pec raises error when noise_model_mapping is None."""

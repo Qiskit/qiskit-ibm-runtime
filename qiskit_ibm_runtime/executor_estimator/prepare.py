@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
@@ -226,6 +227,13 @@ def prepare_pec(
             "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
         )
 
+    # set max_overhead
+    max_overhead = pec_options.max_overhead
+    if max_overhead is None:
+        # This is a backup max number of shots, intended to stop python
+        # crashing with an overflow error if the noise is really strong
+        max_overhead = sys.float_info.max / (num_randomizations * shots_per_randomization)
+
     # Create items
     items: list[SamplexItem] = []
     observables_list = []
@@ -250,14 +258,28 @@ def prepare_pec(
         )
 
         # add samplex_arguments related to noise injection
-        # TODO: change the logic to calculate the auto noise_gain based on pubs
-        noise_gain = 0 if pec_options.noise_gain == "auto" else pec_options.noise_gain
+        if pec_options.noise_gain == "auto":
+            scaleless_gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], 1)
+            noise_gain = 1 - np.log(max_overhead) / np.log(scaleless_gamma**2)
+            # Truncate noise_gain to [0, 1]
+            noise_gain = min(1, max(0, noise_gain))
+        else:
+            noise_gain = pec_options.noise_gain
         # in samplomatic -1 is full removal of the noise and 0 is no rescaling of the noise
-        noise_factor = noise_gain - 1
+        noise_scale = noise_gain - 1
+        # The sampling scaling is proportional to 1 - noise_gain, as 0 is full PEC and 1 is no PEC
+        noise_factor = 1 - noise_gain
         for ref in noise_model_mapping[i]:
-            samplex_arguments[f"noise_scales.{ref}"] = noise_factor
+            samplex_arguments[f"noise_scales.{ref}"] = noise_scale
         samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
-        pec_gamma_list.append(calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor))
+        scaled_gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor)
+        pec_gamma_list.append(scaled_gamma)
+        # Scale the amount of randomizations by gamma**2
+        sampling_overhead = scaled_gamma**2
+        num_randomizations = 1 if num_randomizations == 0 else num_randomizations
+        num_randomizations = int(
+            np.ceil(min(num_randomizations * max_overhead, num_randomizations * sampling_overhead))
+        )
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
