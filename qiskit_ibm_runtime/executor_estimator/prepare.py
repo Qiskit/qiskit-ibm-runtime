@@ -207,7 +207,8 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs mismatched.
+        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
+            mismatched.
     """
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
