@@ -29,7 +29,7 @@ class PecOptions:
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
     In order to remove the full learned noise, the number of randomizations should be
-    multiplied by the sampling overhead, which is gamma**2.
+    multiplied by the sampling overhead, which is gamma^2.
     The maximum overhead limits the sampling overhead allowed.
     """
 
@@ -42,7 +42,7 @@ class PecOptions:
     * A value greater than one corresponds to amplifying the learned noise.
 
     If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically
-    for each input PUB by the formula `1 - np.log(max_overhead) / np.log(gamma**2)`.
+    for each input PUB by the formula `1 - log(max_overhead) / log(gamma^2)`.
     """
 
     _gt0 = make_constraint_validator("max_overhead", gt=0)  # type: ignore[arg-type]
