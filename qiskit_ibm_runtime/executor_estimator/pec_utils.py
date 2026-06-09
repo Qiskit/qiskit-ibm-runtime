@@ -35,8 +35,8 @@ from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
-from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import SamplexItem
 from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
 from .trex_utils import create_trex_calibration_circuit
@@ -85,14 +85,14 @@ def prepare_pec(
     Args:
         pubs: List of estimator pubs to convert.
         twirling_options: The twirling options.
-        shots: The number of shots to use. Will be overridden by
-            ``num_randomizations * shots_per_randomization`` when both are specified explicitly
-            and twirling is on.
+        shots: The number of pre-overhead shots to use. Will be overridden by
+            ``num_randomizations * shots_per_randomization`` when both are specified explicitly.
+            The number of shots of each pub will be multiplied by the sampling overhead of gamma^2.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC or
-            PEA mitigation methods. The list must contain a map for each pub. Assumes that the
+        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC
+            mitigation method. The list must contain a map for each pub. Assumes that the
             unique layers used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
@@ -181,7 +181,6 @@ def prepare_pec(
         pec_gamma_list.append(scaled_gamma)
         # Scale the amount of randomizations by gamma**2
         sampling_overhead = scaled_gamma**2
-        num_randomizations = 1 if num_randomizations == 0 else num_randomizations
         num_randomizations = int(
             np.ceil(min(num_randomizations * max_overhead, num_randomizations * sampling_overhead))
         )
@@ -202,17 +201,8 @@ def prepare_pec(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect circuit metadata from each pub
-    circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-    # Validate that circuit metadata is compatible with DataTree format
-    for idx, metadata in enumerate(circuits_metadata):
-        if metadata is not None and not is_datatree_compatible(metadata):
-            raise IBMInputValueError(
-                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                f"numpy arrays, or primitive types (str, int, float, bool, None)."
-            )
+    # Collect and validate circuit metadata from each pub
+    circuits_metadata = validate_and_extract_metadata(pubs)
 
     passthrough_data = {
         "post_processor": {

@@ -14,18 +14,21 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Annotated, Literal
 
+from pydantic import BaseModel, Field
 from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG, make_constraint_validator
+from .utils import PRIMITIVES_CONFIG
+
+NonNegativeFloat = Annotated[float, Field(ge=0)]
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
-class PecOptions:
+class PecOptions(BaseModel):
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
-    max_overhead: float | None = 100
+    max_overhead: NonNegativeFloat | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
     In order to remove the full learned noise, the number of randomizations should be
@@ -33,7 +36,7 @@ class PecOptions:
     The maximum overhead limits the sampling overhead allowed.
     """
 
-    noise_gain: float | Literal["auto"] = "auto"
+    noise_gain: NonNegativeFloat | Literal["auto"] = "auto"
     """The amount by which to scale the noise, where:
 
     * A value of ``0`` corresponds to removing the full learned noise.
@@ -44,6 +47,3 @@ class PecOptions:
     If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically
     for each input PUB by the formula `1 - log(max_overhead) / log(gamma^2)`.
     """
-
-    _gt0 = make_constraint_validator("max_overhead", gt=0)  # type: ignore[arg-type]
-    _ge0 = make_constraint_validator("noise_gain", ge=0)  # type: ignore[arg-type]
