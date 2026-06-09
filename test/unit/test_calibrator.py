@@ -15,7 +15,8 @@
 from unittest.mock import patch
 
 from qiskit_ibm_runtime.calibrator import Calibrator
-from qiskit_ibm_runtime.options.calibrator_options import CalibratorOptions
+from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
+from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
 
 from test.utils import get_mocked_backend, get_mocked_session
 
@@ -33,20 +34,22 @@ class TestCalibratorOptions(IBMTestCase):
 
     def test_options_from_instance(self):
         """Test constructing with a CalibratorOptions instance."""
-        opts = CalibratorOptions(image="hi:bye")
+        env_opts = EnvironmentOptions(image="hi:bye")
+        opts = CalibratorOptions(environment=env_opts)
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts)
         self.assertIs(calibrator.options, opts)
 
     def test_options_from_dict(self):
         """Test constructing with a dict."""
-        opts_dict = {"image": "hi:bye"}
+        opts_dict = {"environment": {"image": "hi:bye"}}
         calibrator = Calibrator(mode=get_mocked_backend(), options=opts_dict)
-        self.assertEqual(calibrator.options.image, "hi:bye")
+        self.assertEqual(calibrator.options.environment.image, "hi:bye")
 
     def test_setter_with_instance(self):
         """Test setting options via the setter with an CalibratorOptions instance."""
         calibrator = Calibrator(mode=get_mocked_backend())
-        new_opts = CalibratorOptions(image="hi:bye")
+        env_opts = EnvironmentOptions(image="hi:bye")
+        new_opts = CalibratorOptions(environment=env_opts)
         calibrator.options = new_opts
         self.assertIs(calibrator.options, new_opts)
 

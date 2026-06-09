@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.options.calibrator_options import CalibratorOptions
+from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
 from qiskit_ibm_runtime.utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
