@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from .utils import PRIMITIVES_CONFIG
@@ -25,7 +25,7 @@ NonNegativeFloat = Annotated[float, Field(ge=0)]
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
-class PecOptions(BaseModel):
+class PecOptions:
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
     max_overhead: NonNegativeFloat | None = 100
