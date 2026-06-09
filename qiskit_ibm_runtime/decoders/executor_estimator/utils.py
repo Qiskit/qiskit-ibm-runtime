@@ -75,14 +75,18 @@ def project_to_z(term: str) -> np.ndarray[int]:
 
 
 def compute_exp_val(
-    observable_term: str, datum: np.ndarray
+    observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute expectation value and variances of an observable term from measurement data.
+    """Compute expectation value and variance of an observable term from measurement data.
 
     Args:
         observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
         datum: Boolean array of measurement outcomes, shape
             (num_randomizations, shots_per_randomization, num_qubits)
+        signs: Optional boolean array used with probabilistic error cancellation (PEC). Indicates
+            which errors were inserted in each circuit randomization. The final axis index all error
+            generators in circuit, remaining shape must be `signs.shape[:-1] == datum.shape[:-2]`,
+            as signs array does not have a shots or qubits axes.
 
     Returns:
         Tuple of (expectation_value, ensemble_variance, twirl_variance):
@@ -90,6 +94,16 @@ def compute_exp_val(
             - ensemble_variance: Variance treating all shots as a single ensemble
             - twirl_variance: Variance of expectation values across twirls
     """
+    net_signs_bc = np.zeros(datum.shape[:-1], dtype=bool)
+    if signs is not None:
+        net_signs = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
+        net_signs_bc = np.asarray(
+            [-1 if net_sign else 1 for net_sign in net_signs.ravel()]
+        ).reshape(net_signs.shape)
+        # signs do not have a `shots` axis, so need to broadcast to the shape of the
+        # data (without the qubits axis)
+        net_signs_bc = np.broadcast_to(net_signs_bc[..., np.newaxis], shape=datum.shape[:-1])
+
     z_term = project_to_z(observable_term)
 
     # Compute masks
@@ -106,6 +120,9 @@ def compute_exp_val(
         evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1)
     else:
         evals = np.ones(datum.shape[:-1])
+
+    if signs is not None:
+        evals *= net_signs_bc
 
     # Apply projector filters for "0" and "1"
     if any_0s | any_1s:
