@@ -38,7 +38,7 @@ from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import SamplexItem
-from .prepare import box_circuit, build_basic_samplex_args, compute_samplex_arguments
+from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
 from .trex_utils import create_trex_calibration_circuit
 
 logger = logging.getLogger(__name__)
@@ -118,9 +118,7 @@ def prepare_pec(
         shots_per_randomization = shots
 
     # validate noise_model_mapping length
-    if noise_model_mapping is None or (
-        noise_model_mapping is not None and len(noise_model_mapping) != len(pubs)
-    ):
+    if noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
         raise IBMInputValueError(
             "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
         )
@@ -143,7 +141,7 @@ def prepare_pec(
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
         boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning, pec_options
+            pub.circuit, twirling_options, measure_noise_learning is not None, True
         )
 
         # Build the template and the samplex
@@ -151,19 +149,28 @@ def prepare_pec(
 
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = build_basic_samplex_args(
+        samplex_arguments = make_samplex_arguments(
             samplex, boxed_circuit, flat_parameter_values, change_basis
         )
 
         # add samplex_arguments related to noise injection
         if pec_options.noise_gain == "auto":
-            scaleless_gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], 1)
-            noise_gain = 1 - np.log(max_overhead) / np.log(scaleless_gamma**2)
+            # calculate the gamma factor without scaling it by noise_factor
+            gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], 1)
+            # calculate the noise factor based on gamma and max_overhead
+            noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
             noise_gain = min(1, max(0, noise_gain))
         else:
             noise_gain = pec_options.noise_gain
-        # in samplomatic -1 is full removal of the noise and 0 is no rescaling of the noise
+        # noise_gain - the user facing parameter reflecting "how much noise remains after removal".
+        # noise_scale - samplomatic parameter reflecting "how much noise is injected". The noise
+        # is injected as quasi-probability and should be negative for removing noise (-1 is full
+        # removal of the noise and 0 is no rescaling of the noise).
+        # noise_factor - factor for scaled gamma calculation, reflecting the factor by which the
+        # noise should be multiplied.
+
+        # Adjusting noise_scale to [-1, 0] range from the [0, 1] range of noise_gain
         noise_scale = noise_gain - 1
         # The sampling scaling is proportional to 1 - noise_gain, as 0 is full PEC and 1 is no PEC
         noise_factor = 1 - noise_gain

@@ -23,10 +23,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub, Observables
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_estimator.prepare import (
-    compute_samplex_arguments,
-    prepare,
-)
+from qiskit_ibm_runtime.executor_estimator.prepare import compute_samplex_arguments, prepare
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )

@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from samplomatic.samplex import Samplex
 
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.pec_options import PecOptions
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
@@ -96,14 +95,16 @@ def prepare(
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(pub.circuit, twirling_options, measure_noise_learning)
+        boxed_circuit = box_circuit(
+            pub.circuit, twirling_options, measure_noise_learning is not None
+        )
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
 
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = build_basic_samplex_args(
+        samplex_arguments = make_samplex_arguments(
             samplex, boxed_circuit, flat_parameter_values, change_basis
         )
 
@@ -272,22 +273,22 @@ def compute_samplex_arguments(
     return flat_parameter_values, change_basis, param_basis_pairs
 
 
-def build_basic_samplex_args(
+def make_samplex_arguments(
     samplex: Samplex,
     boxed_circuit: QuantumCircuit,
     flat_parameter_values: npt.NDArray[float],
     change_basis: npt.NDArray[int],
 ) -> dict[str, Any]:
-    """Build a samplex args dictionary consisting change_basis and parameters data.
+    """Build a samplex args dictionary consisting of ``change_basis`` and parameters data.
 
     Args:
-        samplex: a samplex object to create args to.
-        boxed_circuit: a boxed circuit related to the samplex.
-        flat_parameter_values: a flattened array of parameter values.
-        change_basis: an array of bases to change.
+        samplex: A samplex object to create args to.
+        boxed_circuit: A boxed circuit related to the samplex.
+        flat_parameter_values: A flattened array of parameter values.
+        change_basis: An array of bases to change.
 
     Returns:
-        a samplex args dictionary.
+        A samplex args dictionary.
     """
     # Prepare samplex_arguments
     samplex_arguments = {}
@@ -316,8 +317,8 @@ def build_basic_samplex_args(
 def box_circuit(
     circuit: QuantumCircuit,
     twirling_options: TwirlingOptions,
-    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
-    pec_options: PecOptions | None = None,
+    twirl_measurements: bool = False,
+    inject_noise: bool = False,
 ) -> QuantumCircuit:
     """Box a circuit based on the given input options.
 
@@ -327,8 +328,8 @@ def box_circuit(
     Args:
         circuit: Quantum circuit to box.
         twirling_options: Twirling options.
-        measure_noise_learning: Measure noise learning options.
-        pec_options: Pec options.
+        twirl_measurements: Whether to twirl measurements.
+        inject_noise: Whether to inject noise.
 
     Returns:
         boxed circuit.
@@ -348,16 +349,14 @@ def box_circuit(
 
     # Add boxes
     boxing_pm = generate_boxing_pass_manager(
-        enable_gates=twirling_options.enable_gates or pec_options is not None,
+        enable_gates=twirling_options.enable_gates or inject_noise,
         enable_measures=True,
         twirling_strategy=twirling_options.strategy.replace("-", "_"),
         measure_annotations="all"
-        if twirling_options.enable_measure or measure_noise_learning is not None
+        if twirling_options.enable_measure or twirl_measurements
         else "change_basis",
-        inject_noise_targets="gates" if pec_options is not None else "none",
-        inject_noise_strategy="uniform_modification"
-        if pec_options is not None
-        else "no_modification",
+        inject_noise_targets="gates" if inject_noise else "none",
+        inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
     )
     boxed_circuit = boxing_pm.run(prepared_circuit)
     return boxed_circuit
@@ -366,8 +365,8 @@ def box_circuit(
 def get_layers(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
-    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
-    pec_options: PecOptions | None = None,
+    twirl_measurements: bool = False,
+    inject_noise: bool = False,
 ) -> list[list[CircuitInstruction]]:
     """Find unique layers of the circuit of each pub.
 
@@ -376,8 +375,8 @@ def get_layers(
     Args:
         pubs: list of estimators pubs.
         twirling_options: Twirling options.
-        measure_noise_learning: Measure noise learning options.
-        pec_options: Pec options.
+        twirl_measurements: Whether to twirl measurements.
+        inject_noise: Whether to inject noise.
 
     Returns:
         Unique layers for each pub.
@@ -385,7 +384,7 @@ def get_layers(
     """
     return [
         find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, measure_noise_learning, pec_options).data,
+            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
             normalize_annotations=None,
             undress_boxes=True,
         )

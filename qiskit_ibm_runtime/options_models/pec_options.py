@@ -18,7 +18,7 @@ from typing import Literal
 
 from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG
+from .utils import PRIMITIVES_CONFIG, make_constraint_validator
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
@@ -27,17 +27,23 @@ class PecOptions:
 
     max_overhead: float | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
+
+    In order to remove the full learned noise, the number of randomizations should be
+    multiplied by the sampling overhead, which is gamma**2.
+    The maximum overhead limits the sampling overhead allowed.
     """
 
     noise_gain: float | Literal["auto"] = "auto"
     """The amount by which to scale the noise, where:
 
-    * A value of 0 corresponds to removing the full learned noise.
-    * A value of 1 corresponds to no removal of the learned noise.
-    * A value between 0 and 1 corresponds to partially removing the learned noise.
+    * A value of ``0`` corresponds to removing the full learned noise.
+    * A value of ``1`` corresponds to no removal of the learned noise.
+    * A value between ``0`` and ``1`` corresponds to partially removing the learned noise.
     * A value greater than one corresponds to amplifying the learned noise.
 
-    If "auto", the value in the range ``[0, 1]`` will be chosen automatically
-    for each input PUB based on the learned noise strength, ``max_overhead``,
-    and the depth of the PUB.
+    If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically
+    for each input PUB by the formula `1 - np.log(max_overhead) / np.log(gamma**2)`.
     """
+
+    _gt0 = make_constraint_validator("max_overhead", gt=0)  # type: ignore[arg-type]
+    _ge0 = make_constraint_validator("noise_gain", ge=0)  # type: ignore[arg-type]
