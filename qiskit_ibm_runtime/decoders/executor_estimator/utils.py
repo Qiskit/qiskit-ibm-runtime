@@ -77,7 +77,7 @@ def project_to_z(term: str) -> np.ndarray[int]:
 def compute_exp_val(
     observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute expectation value and variance of an observable term from measurement data.
+    """Compute expectation value and variances of an observable term from measurement data.
 
     Args:
         observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
@@ -94,16 +94,6 @@ def compute_exp_val(
             - ensemble_variance: Variance treating all shots as a single ensemble
             - twirl_variance: Variance of expectation values across twirls
     """
-    net_signs_bc = np.zeros(datum.shape[:-1], dtype=bool)
-    if signs is not None:
-        net_signs = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
-        net_signs_bc = np.asarray(
-            [-1 if net_sign else 1 for net_sign in net_signs.ravel()]
-        ).reshape(net_signs.shape)
-        # signs do not have a `shots` axis, so need to broadcast to the shape of the
-        # data (without the qubits axis)
-        net_signs_bc = np.broadcast_to(net_signs_bc[..., np.newaxis], shape=datum.shape[:-1])
-
     z_term = project_to_z(observable_term)
 
     # Compute masks
@@ -121,8 +111,17 @@ def compute_exp_val(
     else:
         evals = np.ones(datum.shape[:-1])
 
+    # in case signs is provided - multiply the evals by -1 if the parity of the signs is odd
     if signs is not None:
-        evals *= net_signs_bc
+        # sum all the indicators of the error generators for each randomization
+        signs_per_rand = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
+        # transform the bool array into an array consisting -1 (for True values)
+        # and 1 (for False values)
+        signs_per_rand = np.where(signs_per_rand, -1, 1)
+        # signs do not have a `shots` axis, so need to broadcast to the shape of the
+        # data (without the qubits axis)
+        signs_per_rand_bc = np.broadcast_to(signs_per_rand[..., np.newaxis], shape=datum.shape[:-1])
+        evals *= signs_per_rand_bc
 
     # Apply projector filters for "0" and "1"
     if any_0s | any_1s:

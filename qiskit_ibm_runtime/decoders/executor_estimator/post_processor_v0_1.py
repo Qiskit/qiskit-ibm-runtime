@@ -75,13 +75,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract circuit metadata if present
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
-    # extract gamma factors if present
-    pec_gammas = post_processor_data.get("pec_gammas", None)
-
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
-
     if measure_mitigation == "True":
         # assume a calibration circuit was added to the quantum program as the last item
         calibration_result = result[-1]
@@ -99,51 +95,33 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
 
     # Validate circuits_metadata length if provided
     circuits_metadata = circuits_metadata or [None] * len(result)
-    pec_gammas = pec_gammas or [None] * len(result)
     if {
         len(circuits_metadata),
         len(observables_lists),
         len(param_basis_pairs_lists),
         len(param_shapes_list),
-        len(pec_gammas),
     } != {len(result)}:
         raise ValueError(
             f"Number of circuit metadata items ({len(circuits_metadata)}), "
             f"observables ({len(observables_lists)}), "
             f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
             f"param_shapes ({len(param_shapes_list)}), "
-            f"pec_gammas ({len(pec_gammas)}), and results ({len(result)}) are not equal."
+            f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
         )
 
     # Build EstimatorPubResult for each pub
     pub_results = []
-    for idx, (
-        item_result,
-        observables_label,
-        param_basis_pairs,
-        param_shape,
-        pec_gamma,
-    ) in enumerate(
-        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list, pec_gammas)
+    for idx, (item_result, observables_label, param_basis_pairs, param_shape) in enumerate(
+        zip(result, observables_lists, param_basis_pairs_lists, param_shapes_list)
     ):
         # Reconstruct observables and measure_bases
         observables = ObservablesArray(observables_label)
         param_shape = tuple(param_shape)
 
         # Calculate exp vals and place them in a databin
-        if pec_gamma is not None:
-            exp_vals, stds, ensemble_stds = process_expectation_values_pec(
-                item_result,
-                observables,
-                param_shape,
-                param_basis_pairs,
-                readout_noise_data,
-                pec_gamma,
-            )
-        else:
-            exp_vals, stds, ensemble_stds = process_expectation_values(
-                item_result, observables, param_shape, param_basis_pairs, readout_noise_data
-            )
+        exp_vals, stds, ensemble_stds = process_expectation_values(
+            item_result, observables, param_shape, param_basis_pairs, readout_noise_data
+        )
         data_bin = DataBin(evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds)
 
         # Get circuit metadata for this pub if available
