@@ -22,6 +22,7 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import RuntimeJobV2
 from qiskit_ibm_runtime.base_runtime_job import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 from qiskit_ibm_runtime.exceptions import (
     RuntimeInvalidStateError,
     RuntimeJobFailureError,
@@ -39,6 +40,24 @@ from .mock.fake_runtime_client import (
     FailedRanTooLongRuntimeJob,
     FailedRuntimeJob,
 )
+
+
+class ToIntDecoder(ResultDecoder):
+    """Decoder that decodes to `2`."""
+
+    @classmethod
+    def decode(cls, data):
+        """Decode the result data."""
+        return 2
+
+
+class MultiplierDecoder(ResultDecoder):
+    """Decoder that multiplies by `3`."""
+
+    @classmethod
+    def decode(cls, data):
+        """Decode the result data."""
+        return data * 3
 
 
 @ddt
@@ -228,3 +247,28 @@ class TestRuntimeJob(IBMTestCase):
                         self.assertEqual(len(warn_cm), 0)
 
                     patched_sleep.assert_called_with(expected_interval)
+
+    @run_cloud_fake
+    @data(None, ToIntDecoder, [ToIntDecoder, MultiplierDecoder])
+    def test_result_decoders_is_always_sequence(self, decoders, service):
+        """`job._result_decoders` should always be a list after instantiating."""
+        job = RuntimeJobV2(
+            backend=None,
+            api_client=service._fake_runtime_client,
+            job_id="123",
+            program_id="blah",
+            service=service,
+            result_decoder=decoders,
+        )
+
+        self.assertIsInstance(job._result_decoders, list)
+
+    @run_cloud_fake
+    def test_result_chains_decoders(self, service):
+        """When passing a list of decoders to `result()`, they are chained."""
+        job = run_program(service)
+        job._status = "DONE"
+
+        with patch.object(BaseFakeRuntimeClient, "job_results", return_value={"some": "response"}):
+            self.assertEqual(job.result(decoder=ToIntDecoder), 2)
+            self.assertEqual(job.result(decoder=[ToIntDecoder, MultiplierDecoder]), 2 * 3)
