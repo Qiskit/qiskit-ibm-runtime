@@ -14,23 +14,16 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from pydantic import ConfigDict, Field
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
+from .environment_options import EnvironmentOptions
+from .utils import PRIMITIVES_CONFIG
 
-@dataclass(config=ConfigDict(validate_assignment=True, extra="forbid"))
+
+@dataclass(config=PRIMITIVES_CONFIG)
 class CalibratorOptions:
     """Options for the calibrator."""
 
-    image: (
-        Annotated[
-            str,
-            Field(
-                pattern="[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            ),
-        ]
-        | None
-    ) = None
-    """Runtime image used for this job."""
+    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    """Options related to the execution environment."""
