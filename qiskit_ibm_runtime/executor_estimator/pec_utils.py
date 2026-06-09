@@ -107,15 +107,11 @@ def prepare_pec(
         IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
             mismatched.
     """
-    if twirling_options.enable_gates or twirling_options.enable_measure:
-        num_randomizations, shots_per_randomization = calculate_twirling_shots(
-            shots,
-            twirling_options.num_randomizations,
-            twirling_options.shots_per_randomization,
-        )
-    else:
-        num_randomizations = 1
-        shots_per_randomization = shots
+    num_randomizations, shots_per_randomization = calculate_twirling_shots(
+        shots,
+        twirling_options.num_randomizations,
+        twirling_options.shots_per_randomization,
+    )
 
     # validate noise_model_mapping length
     if noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
