@@ -198,9 +198,7 @@ Classes
    RuntimeDecoder
 """
 
-import sys
 import logging
-import warnings
 
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
@@ -213,7 +211,7 @@ from .batch import Batch
 from .quantum_program import QuantumProgram
 
 from .exceptions import *
-from .utils.utils import setup_logger
+from .utils.logging import setup_logger
 from .version import __version__
 
 from .estimator import (
@@ -242,13 +240,3 @@ from .options_models import (
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
 setup_logger(logger)
-
-# Constants used by the IBM Quantum logger.
-QISKIT_IBM_RUNTIME_LOGGER_NAME = "qiskit_ibm_runtime"
-"""The name of the IBM Quantum logger."""
-
-QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
-"""The environment variable name that is used to set the level for the IBM Quantum logger."""
-
-QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
-"""The environment variable name that is used to set the file for the IBM Quantum logger."""

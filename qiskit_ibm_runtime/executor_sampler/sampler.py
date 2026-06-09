@@ -22,13 +22,12 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
-from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..executor.dynamical_decoupling import generate_dd_pass_manager
+from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
-from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
 from .utils import extract_shots_from_pubs, validate_no_boxes
 
@@ -208,14 +207,6 @@ class SamplerV2(BaseSamplerV2):
             IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
                 (when twirling is disabled) or if shots are not properly specified.
         """
-        # Get backend from executor
-        backend = self._executor._backend
-        if backend is None:
-            raise ValueError(
-                "Backend is required for prepare(). "
-                "Please provide a backend when initializing the sampler."
-            )
-
         # Use instance options
         options = self.options
 
@@ -224,8 +215,7 @@ class SamplerV2(BaseSamplerV2):
 
         twirling_enabled = options.twirling.enable_gates or options.twirling.enable_measure
 
-        # Create DD pass manager if enabled
-        dd_pass_manager = None
+        # Validate DD compatibility if enabled
         if options.dynamical_decoupling.enable:
             # Validate that circuits don't have control flow (dynamic circuits)
             for pub in pubs:
@@ -234,10 +224,6 @@ class SamplerV2(BaseSamplerV2):
                         "Dynamical decoupling is not compatible with dynamic circuits "
                         "(circuits with control flow operations)."
                     )
-            dd_pass_manager = generate_dd_pass_manager(
-                backend=backend,
-                options=options.dynamical_decoupling,
-            )
 
         # Create items based on whether twirling is enabled
         items: list[QuantumProgramItem] = []
@@ -249,11 +235,6 @@ class SamplerV2(BaseSamplerV2):
                 logger.info("Processing pub %d/%d", i + 1, len(pubs))
                 validate_no_boxes(pub.circuit)
 
-                # Apply DD if enabled
-                circuit = pub.circuit
-                if dd_pass_manager is not None:
-                    circuit = dd_pass_manager.run(circuit)
-
                 # Convert parameter values to numpy array
                 if pub.parameter_values.num_parameters > 0:
                     param_values = pub.parameter_values.as_array()
@@ -262,7 +243,7 @@ class SamplerV2(BaseSamplerV2):
 
                 items.append(
                     CircuitItem(
-                        circuit=circuit,
+                        circuit=pub.circuit,
                         circuit_arguments=param_values,
                     )
                 )
@@ -287,10 +268,6 @@ class SamplerV2(BaseSamplerV2):
                 boxed_circuit = boxing_pm.run(pub.circuit)
                 template_circuit, samplex = build(boxed_circuit)
 
-                # Apply DD to template circuit if enabled
-                if dd_pass_manager is not None:
-                    template_circuit = dd_pass_manager.run(template_circuit)
-
                 # Prepare samplex_arguments
                 if pub.parameter_values.num_parameters > 0:
                     param_array = pub.parameter_values.as_array()
@@ -313,17 +290,8 @@ class SamplerV2(BaseSamplerV2):
                     )
                 )
 
-        # Collect circuit metadata from each pub
-        circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-        # Validate that circuit metadata is compatible with DataTree format
-        for idx, metadata in enumerate(circuits_metadata):
-            if metadata is not None and not is_datatree_compatible(metadata):
-                raise IBMInputValueError(
-                    f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                    f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                    f"numpy arrays, or primitive types (str, int, float, bool, None)."
-                )
+        # Collect and validate circuit metadata from each pub
+        circuits_metadata = validate_and_extract_metadata(pubs)
 
         passthrough_data = {
             "post_processor": {
@@ -342,6 +310,14 @@ class SamplerV2(BaseSamplerV2):
             meas_level=options.execution.meas_type,
         )
         quantum_program._semantic_role = "sampler_v2"
+
+        # Apply dynamical decoupling if enabled
+        if options.dynamical_decoupling.enable:
+            quantum_program = apply_dynamical_decoupling(
+                backend=self._executor._backend,
+                dd_options=options.dynamical_decoupling,
+                quantum_program=quantum_program,
+            )
 
         # Map options to executor options
         executor_options = options.to_executor_options()

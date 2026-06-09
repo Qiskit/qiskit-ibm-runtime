@@ -38,7 +38,7 @@ from ..utils.backend_decoder import (
     decode_backend_configuration,
     properties_from_server_data,
 )
-from ..utils.backend_encoder import BackendEncoder
+from .backend_encoder import BackendEncoder
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
