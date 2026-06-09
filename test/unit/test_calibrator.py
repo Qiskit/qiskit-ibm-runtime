@@ -17,7 +17,6 @@ from unittest.mock import patch
 from qiskit_ibm_runtime.calibrator import Calibrator
 from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-
 from test.utils import get_mocked_backend, get_mocked_session
 
 from ..ibm_test_case import IBMTestCase
@@ -74,7 +73,10 @@ class TestCalibrator(IBMTestCase):
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
-        """Test ``Calibrator.run`` selects the service ``run`` method, if session is not specified."""
+        """Test ``Calibrator.run`` selects the service ``run`` method.
+        
+        This is tested when session is not specified.
+        """
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             calibrator = Calibrator(mode=backend)
