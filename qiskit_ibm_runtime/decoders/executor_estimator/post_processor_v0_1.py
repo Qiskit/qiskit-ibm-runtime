@@ -105,7 +105,6 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
             f"Number of circuit metadata items ({len(circuits_metadata)}), "
             f"observables ({len(observables_lists)}), "
             f"param_basis_pairs ({len(param_basis_pairs_lists)}), "
-            f"param_shapes ({len(param_shapes_list)}), "
             f"param_shapes ({len(param_shapes_list)}), and results ({len(result)}) are not equal."
         )
 
