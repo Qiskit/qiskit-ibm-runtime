@@ -12,6 +12,7 @@
 
 """Unit tests for EstimatorV2 PEC helper functions."""
 
+import math
 import unittest
 from typing import Any, cast
 
@@ -221,7 +222,7 @@ class TestPreparePecFunction(unittest.TestCase):
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
-        self.assertEqual(quantum_program.shots, shots)
+        self.assertEqual(quantum_program.shots, 64)
         self.assertEqual(quantum_program._semantic_role, "estimator_v2")
         self.assertEqual(len(quantum_program.items), 1)
 
@@ -245,6 +246,12 @@ class TestPreparePecFunction(unittest.TestCase):
         self.assertIn("pec_gammas", passthrough["post_processor"])
         self.assertEqual(len(passthrough["post_processor"]["pec_gammas"]), 1)
         self.assertIsInstance(passthrough["post_processor"]["pec_gammas"][0], float)
+        expected_gamma = float(np.exp(2 * pec_options.noise_gain * (0.1 + 0.05)))
+        self.assertAlmostEqual(passthrough["post_processor"]["pec_gammas"][0], expected_gamma)
+        # check number of randomizations
+        overhead = expected_gamma**2
+        expected_num_rands = math.ceil(overhead * (shots / 64))
+        self.assertEqual(item.shape[0], expected_num_rands)
 
     def test_prepare_pec_multiple_pubs(self):
         """Test prepare_pec with multiple pubs and different noise models."""

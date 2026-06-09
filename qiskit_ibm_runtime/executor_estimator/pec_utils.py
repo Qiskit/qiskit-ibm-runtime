@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import sys
 from typing import TYPE_CHECKING
 
@@ -34,7 +35,6 @@ from samplomatic import InjectNoise, build
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
@@ -72,6 +72,49 @@ def calculate_gamma(
     return gamma
 
 
+def calculate_pec_twirling_shots(
+    pub_shots: int,
+    num_randomizations: int | str,
+    shots_per_randomization: int | str,
+) -> tuple[int, int]:
+    """Calculate num_randomizations and shots_per_randomization for twirling.
+
+    Implements the logic from TwirlingOptions documentation:
+
+    - If both "auto": shots_per_randomization = 64
+                     num_randomizations = ceil(shots/shots_per_randomization)
+    - If only num_randomizations "auto": num_randomizations = ceil(shots/shots_per_randomization)
+    - If only ``shots_per_randomization`` "auto":
+      shots_per_randomization = ceil(shots/num_randomizations)
+
+    Args:
+        pub_shots: Total shots requested for the pub.
+        num_randomizations: Number of randomizations (or "auto").
+        shots_per_randomization: Shots per randomization (or "auto").
+
+    Returns:
+        Tuple of (num_randomizations, shots_per_randomization).
+    """
+    if num_randomizations == "auto" and shots_per_randomization == "auto":
+        # Both auto: shots_per_rand = max(64, ceil(shots/32))
+        shots_per_rand = 64
+        num_rand = math.ceil(pub_shots / shots_per_rand)
+    elif num_randomizations == "auto":
+        # Only num_rand auto
+        shots_per_rand = int(shots_per_randomization)
+        num_rand = math.ceil(pub_shots / shots_per_rand)
+    elif shots_per_randomization == "auto":
+        # Only shots_per_rand auto
+        num_rand = int(num_randomizations)
+        shots_per_rand = math.ceil(pub_shots / num_rand)
+    else:
+        # Both specified
+        num_rand = int(num_randomizations)
+        shots_per_rand = int(shots_per_randomization)
+
+    return num_rand, shots_per_rand
+
+
 def prepare_pec(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
@@ -107,7 +150,7 @@ def prepare_pec(
         IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
             mismatched.
     """
-    num_randomizations, shots_per_randomization = calculate_twirling_shots(
+    num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
