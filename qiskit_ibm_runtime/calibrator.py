@@ -104,7 +104,8 @@ class Calibrator:
         return _run(
             program_id=self._PROGRAM_ID,
             options=runtime_options,
-            inputs={},
+            #inputs={},
+            inputs={"options": {"experimental": {"skip_jps_validation": True}}},
             result_decoder=self._DECODER,
         )
 

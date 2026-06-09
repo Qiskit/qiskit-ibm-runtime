@@ -122,6 +122,7 @@ class Runtime(RestAdapterBase):
         if calibration_id is not None:
             payload["calibration_id"] = calibration_id
         data = json.dumps(payload, cls=RuntimeEncoder)
+        print(payload)
 
         logger.info("Posting the API request.")
         request = self.session.post(
