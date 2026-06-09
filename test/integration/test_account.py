@@ -26,12 +26,12 @@ from ibm_platform_services import (
 )
 
 from qiskit_ibm_runtime import IBMInputValueError, QiskitRuntimeService
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.utils.utils import (
+from qiskit_ibm_runtime.accounts.utils import (
     get_global_search_api_url,
     get_iam_api_url,
     get_resource_controller_api_url,
 )
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
