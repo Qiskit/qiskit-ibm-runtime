@@ -74,7 +74,7 @@ class TestCalibrator(IBMTestCase):
 
     def test_run_of_service_is_selected(self):
         """Test ``Calibrator.run`` selects the service ``run`` method.
-        
+
         This is tested when session is not specified.
         """
         backend = get_mocked_backend()
