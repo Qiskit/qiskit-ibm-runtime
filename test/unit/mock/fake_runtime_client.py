@@ -441,6 +441,17 @@ class BaseFakeRuntimeClient:
             "usage_limit_reached": False,
         }
 
+    def job_metadata(self, job_id: str) -> dict[str, Any]:
+        """Get job metadata.
+
+        Args:
+            job_id: Program job ID.
+
+        Returns:
+            Job metadata.
+        """
+        return {}
+
     def _find_backend(self, backend_name):
         for back in self._backends:
             if back.name == backend_name:

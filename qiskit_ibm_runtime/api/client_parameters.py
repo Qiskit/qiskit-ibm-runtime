@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ..api.auth import CloudAuth
-from ..utils import default_runtime_url_resolver
+from .auth import CloudAuth
+from .utils import default_runtime_url_resolver
 
 if TYPE_CHECKING:
     from collections.abc import Callable

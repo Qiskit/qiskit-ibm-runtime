@@ -14,7 +14,6 @@
 
 import re
 from datetime import datetime, timedelta, timezone
-from math import ceil
 from typing import Any
 
 from dateutil import parser, tz
@@ -67,40 +66,6 @@ def local_to_utc(local_dt: datetime | str) -> datetime:
     return local_dt  # Already in UTC.
 
 
-def local_to_utc_str(local_dt: datetime | str, suffix: str = "Z") -> str:
-    """Convert a local ``datetime`` object or string to a UTC string.
-
-    Args:
-        local_dt: Input local ``datetime`` or string.
-        suffix: ``Z`` or ``+``, indicating whether the suffix should be ``Z`` or
-            ``+00:00``.
-
-    Returns:
-        UTC datetime in ISO format.
-    """
-    utc_dt_str = local_to_utc(local_dt).isoformat()
-    if suffix == "Z":
-        utc_dt_str = utc_dt_str.replace("+00:00", "Z")
-    return utc_dt_str
-
-
-def convert_tz(input_dt: datetime | None, to_utc: bool) -> datetime | None:
-    """Convert input timestamp timezone.
-
-    Args:
-        input_dt: Timestamp to be converted.
-        to_utc: True if to convert to UTC, otherwise to local timezone.
-
-    Returns:
-        Converted timestamp, or ``None`` if input is ``None``.
-    """
-    if input_dt is None:
-        return None
-    if to_utc:
-        return local_to_utc(input_dt)
-    return utc_to_local(input_dt)
-
-
 def utc_to_local_all(data: Any) -> Any:
     """Recursively convert all ``datetime`` in the input data from local time to UTC.
 
@@ -120,72 +85,6 @@ def utc_to_local_all(data: Any) -> Any:
     elif isinstance(data, dict):
         return {key: utc_to_local_all(elem) for key, elem in data.items()}
     return data
-
-
-def str_to_utc(utc_dt: str | None) -> datetime | None:
-    """Convert a UTC string to a ``datetime`` object with UTC timezone.
-
-    Args:
-        utc_dt: Input UTC string in ISO format.
-
-    Returns:
-        A ``datetime`` with the UTC timezone, or ``None`` if the input is ``None``.
-    """
-    if not utc_dt:
-        return None
-    parsed_dt = parser.isoparse(utc_dt)
-    return parsed_dt.replace(tzinfo=timezone.utc)
-
-
-def seconds_to_duration(seconds: float) -> tuple[int, int, int, int, int]:
-    """Converts seconds in a datetime delta to a duration.
-
-    Args:
-        seconds: Number of seconds in time delta.
-
-    Returns:
-        A tuple containing the duration in terms of days,
-        hours, minutes, seconds, and milliseconds.
-    """
-    days = int(seconds // (3600 * 24))
-    hours = int((seconds // 3600) % 24)
-    minutes = int((seconds // 60) % 60)
-    seconds = seconds % 60
-    millisec = 0
-    if seconds < 1:
-        millisec = int(ceil(seconds * 1000))
-        seconds = 0
-    else:
-        seconds = int(seconds)
-    return days, hours, minutes, seconds, millisec
-
-
-def duration_difference(date_time: datetime) -> str:
-    """Compute the estimated duration until the given datetime.
-
-    Args:
-        date_time: The input local datetime.
-
-    Returns:
-        String giving the estimated duration.
-    """
-    time_delta = date_time.replace(tzinfo=None) - datetime.now()
-    time_tuple = seconds_to_duration(time_delta.total_seconds())
-    # The returned tuple contains the duration in terms of
-    # days, hours, minutes, seconds, and milliseconds.
-    time_str = ""
-    if time_tuple[0]:
-        time_str += f"{time_tuple[0]} days"
-        time_str += f" {time_tuple[1]} hrs"
-    elif time_tuple[1]:
-        time_str += f"{time_tuple[1]} hrs"
-        time_str += f" {time_tuple[2]} min"
-    elif time_tuple[2]:
-        time_str += f"{time_tuple[2]} min"
-        time_str += f" {time_tuple[3]} sec"
-    elif time_tuple[3]:
-        time_str += f"{time_tuple[3]} sec"
-    return time_str
 
 
 def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
