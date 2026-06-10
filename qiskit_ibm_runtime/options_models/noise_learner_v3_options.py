@@ -57,8 +57,7 @@ class NoiseLearnerV3Options:
     """
 
     post_selection: PostSelectionOptions = Field(default_factory=PostSelectionOptions)
-    """Options for post selecting the results of noise learning circuits.
-    """
+    """Options for post selecting the results of noise learning circuits."""
 
     experimental: dict = Field(default_factory=dict)
     """Experimental options.

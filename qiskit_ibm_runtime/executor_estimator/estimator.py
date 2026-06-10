@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
@@ -91,6 +91,9 @@ class EstimatorV2(BaseEstimatorV2):
             for all available options.
     """
 
+    options: EstimatorOptions
+    """The options of this Estimator."""
+
     def __init__(
         self,
         mode: BackendV2 | Session | Batch | None = None,
@@ -100,13 +103,23 @@ class EstimatorV2(BaseEstimatorV2):
 
         self._executor = Executor(mode=mode)
 
-        # Initialize options
-        if options is None:
-            self._options = EstimatorOptions()
-        elif isinstance(options, dict):
-            self._options = EstimatorOptions(**options)
-        else:
-            self._options = options
+        # Coerced to `SampEstimatorOptionslerOptions` via `__setattr__()`.
+        self.options = options if options is not None else EstimatorOptions()  # type: ignore[assignment]
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to an ``EstimatorOptions``
+        instance. This is an alternative to using ``@setter``, as the setter causes issues in
+        ``ipython`` autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = EstimatorOptions(**value)
+            elif not isinstance(value, EstimatorOptions):
+                raise TypeError(f"Expected EstimatorOptions or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
@@ -195,12 +208,3 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
         return self._executor.run(quantum_program)
-
-    @property
-    def options(self) -> EstimatorOptions:
-        """Return the options.
-
-        Returns:
-            The estimator options.
-        """
-        return self._options
