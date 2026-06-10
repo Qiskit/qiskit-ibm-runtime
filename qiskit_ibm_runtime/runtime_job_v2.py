@@ -17,7 +17,9 @@ from __future__ import annotations
 import logging
 import time
 import warnings
+from collections.abc import Sequence
 from concurrent import futures
+from functools import reduce
 from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
@@ -34,8 +36,6 @@ from .exceptions import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from qiskit.providers.backend import Backend
 
     from qiskit_ibm_runtime import qiskit_runtime_service
@@ -64,7 +64,10 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         job_id: Job ID.
         program_id: ID of the program this job is for.
         creation_date: Job creation date, in UTC.
-        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+            of such subclasses. If more than one decoder is specified, they will be called in
+            chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+            decoder. If not specified, the default ``ResultDecoder`` is used.
         image: Runtime image used for this job: image_name:tag.
         service: Runtime service.
         session_id: Job ID of the first job in a runtime session.
@@ -112,14 +115,17 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     def result(
         self,
         timeout: float | None = None,
-        decoder: type[ResultDecoder] | None = None,
+        decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         poll_interval: float | None = None,
     ) -> Any:
         """Return the results of the job.
 
         Args:
             timeout: Number of seconds to wait for job.
-            decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+                of such subclasses. If more than one decoder is specified, they will be called in
+                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+                decoder.
             poll_interval: Number of seconds to wait between successive queries of the job's status.
                 of the job.
 
@@ -134,7 +140,10 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
             RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
-        _decoder = decoder or self._final_result_decoder
+        if decoder and not isinstance(decoder, Sequence):
+            decoder = [decoder]
+        decoders: Sequence[type[ResultDecoder]] = decoder or self._result_decoders  # type: ignore[assignment]
+
         self.wait_for_final_state(timeout=timeout, poll_interval=poll_interval)
         if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
@@ -147,7 +156,8 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             )
 
         result_raw = self._api_client.job_results(job_id=self.job_id())
-        return _decoder.decode(result_raw) if result_raw else None
+        # Invoke all decoders, chaining them (one decoders output becomes the next's input).
+        return reduce(lambda x, d: d.decode(x), decoders, result_raw) if result_raw else None
 
     def cancel(self) -> None:
         """Cancel the job.
