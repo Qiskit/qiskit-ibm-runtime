@@ -61,14 +61,16 @@ class EstimatorOptions:
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
     """Execution options.
 
-    See :class:`.ExecutionOptions` for all available options."""
+    See :class:`.ExecutionOptions` for all available options.
+    """
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Twirling options.
 
     Currently only enable_measure=False is supported.
 
-    See :class:`.TwirlingOptions` for all available options."""
+    See :class:`.TwirlingOptions` for all available options.
+    """
 
     dynamical_decoupling: DynamicalDecouplingOptions = Field(
         default_factory=DynamicalDecouplingOptions
