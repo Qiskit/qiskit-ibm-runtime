@@ -77,7 +77,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
         """Run the pass on a dag."""
         final_measure_nodes = calc_final_ops(dag, {"measure", "reset"})
         for node in dag.op_nodes():
-            if isinstance(node, (Measure, Reset)) and node not in final_measure_nodes:
+            if isinstance(node.op, (Measure, Reset)) and node not in final_measure_nodes:
                 node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
                 # only replace Measure with MidCircuitMeasure if MidCircuitMeasure
                 # is supported in the corresponding qargs

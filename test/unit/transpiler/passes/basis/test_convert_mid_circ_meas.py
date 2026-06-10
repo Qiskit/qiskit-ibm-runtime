@@ -13,7 +13,7 @@
 """Test the conversion of terminal Measure to MidCircuitMeasure."""
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import Measure
+from qiskit.circuit.library import Measure, Reset
 from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.transpiler import PassManager
 
@@ -100,8 +100,8 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         self.assertIsInstance(transpiled.data[3].operation, MidCircuitReset)
         self.assertIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
         self.assertEqual(transpiled.data[1].operation.name, "measure_2")
-        self.assertEqual(transpiled.data[2].operation.name, "reset_3")
-        self.assertEqual(transpiled.data[3].operation.name, "reset_2")
+        self.assertEqual(transpiled.data[2].operation.name, "reset_2")
+        self.assertEqual(transpiled.data[3].operation.name, "reset_3")
         self.assertEqual(transpiled.data[4].operation.name, "measure_3")
         # [5] is the barrier
         self.assertNotIsInstance(transpiled.data[6].operation, MidCircuitMeasure)
@@ -123,10 +123,11 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         target.add_instruction(mcm, {(0,): None})
         target.add_instruction(mcr, {(0,): None})
 
-        qc = QuantumCircuit(2, 2)
+        qc = QuantumCircuit(3, 2)
         # place measure in qubit 1
         qc.measure([1], [1])
         qc.reset(1)
+        qc.barrier()
         qc.x(0)
         qc.measure_all()
 
@@ -139,6 +140,6 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         self.assertIsInstance(transpiled.data[0].operation, Measure)
         self.assertNotIsInstance(transpiled.data[1].operation, MidCircuitReset)
         self.assertIsInstance(transpiled.data[1].operation, Reset)
-        # [3] is the barrier
-        self.assertNotIsInstance(transpiled.data[4].operation, MidCircuitMeasure)
-        self.assertIsInstance(transpiled.data[4].operation, Measure)
+        # [4] is a barrier
+        self.assertNotIsInstance(transpiled.data[5].operation, MidCircuitMeasure)
+        self.assertIsInstance(transpiled.data[5].operation, Measure)
