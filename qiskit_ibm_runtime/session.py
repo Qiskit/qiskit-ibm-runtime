@@ -29,6 +29,7 @@ from .utils.converters import hms_to_seconds
 from .utils.default_session import set_cm_session
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from types import TracebackType
 
     from .decoders.result_decoder import ResultDecoder
@@ -148,7 +149,7 @@ class Session:
         program_id: str,
         inputs: dict,
         options: dict | None = None,
-        result_decoder: type[ResultDecoder] | None = None,
+        result_decoder: type[ResultDecoder] | Sequence[type[ResultDecoder]] | None = None,
         calibration_id: str | None = None,
     ) -> RuntimeJobV2:
         """Run a program in the session.
@@ -158,7 +159,11 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+                of such subclasses. If more than one decoder is specified, they will be called in
+                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+                decoder. If not specified, a program-specific decoder or the default
+                ``ResultDecoder`` is used.
             calibration_id: The calibration id to use with the program execution
 
         Returns:
