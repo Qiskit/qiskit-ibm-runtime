@@ -38,7 +38,7 @@ class TestEstimatorOptions(unittest.TestCase):
         self.assertEqual(options.default_precision, 0.015625)
         self.assertIsInstance(options.dynamical_decoupling, DynamicalDecouplingOptions)
         self.assertIsInstance(options.execution, ExecutionOptions)
-        self.assertIsNone(options.experimental)
+        self.assertEqual(options.experimental, {})
         self.assertIsNone(options.max_execution_time)
         self.assertIsInstance(options.environment, EnvironmentOptions)
         self.assertTrue(options.resilience.measure_mitigation)

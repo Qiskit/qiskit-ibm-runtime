@@ -53,7 +53,7 @@ class SamplerOptions:
     See :class:`~.TwirlingOptions` for all available options.
     """
 
-    experimental: dict | None = None
+    experimental: dict = Field(default_factory=dict)
     """Experimental options."""
 
     max_execution_time: int | None = None

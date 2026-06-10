@@ -45,9 +45,9 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         self.assertIsNone(executor_options.environment.image)
 
     def test_experimental_image_not_set(self):
-        """Test that image is None when experimental is None."""
+        """Test that image is None when experimental is empty."""
         options = SamplerOptions()
-        options.experimental = None
+        options.experimental = {}
         executor_options = options.to_executor_options()
 
         self.assertIsNone(executor_options.environment.image)
