@@ -374,20 +374,12 @@ def process_expectation_values_pec(
             )
 
             # Accumulate with coefficient
-            exp_val += coeff * term_exp_val * term_scale_factor * pec_gamma
-            ensemble_variance += (
-                (coeff**2) * term_ensemble_variance * (pec_gamma * term_scale_factor) ** 2
-            )
-            twirl_variance += (
-                (coeff**2) * term_twirl_variance * (pec_gamma * term_scale_factor) ** 2
-            )
+            exp_val += coeff * term_exp_val * term_scale_factor
+            ensemble_variance += (coeff**2) * term_ensemble_variance * term_scale_factor**2
+            twirl_variance += (coeff**2) * term_twirl_variance * term_scale_factor**2
 
-        exp_vals[bcast_index] = exp_val
-        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance / total_shots)
-        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
-        if num_randomizations == 1:
-            stds[bcast_index] = ensemble_stds[bcast_index]
-        else:
-            stds[bcast_index] = np.sqrt(twirl_variance / num_randomizations)
+        exp_vals[bcast_index] = exp_val * pec_gamma
+        ensemble_stds[bcast_index] = np.sqrt(ensemble_variance * pec_gamma**2 / total_shots)
+        stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
 
     return exp_vals, stds, ensemble_stds

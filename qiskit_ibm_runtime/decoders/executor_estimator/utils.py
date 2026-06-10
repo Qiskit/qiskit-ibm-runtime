@@ -84,9 +84,8 @@ def compute_exp_val(
         datum: Boolean array of measurement outcomes, shape
             (num_randomizations, shots_per_randomization, num_qubits)
         signs: Optional boolean array used with probabilistic error cancellation (PEC). Indicates
-            which errors were inserted in each circuit randomization. The final axis index all error
-            generators in circuit, remaining shape must be `signs.shape[:-1] == datum.shape[:-2]`,
-            as signs array does not have a shots or qubits axes.
+            which errors were inserted in each circuit randomization, shape
+             (num_randomizations, error_generators_indicators)
 
     Returns:
         Tuple of (expectation_value, ensemble_variance, twirl_variance):
@@ -117,11 +116,9 @@ def compute_exp_val(
         signs_per_rand = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
         # transform the bool array into an array consisting -1 (for True values)
         # and 1 (for False values)
-        signs_per_rand = np.where(signs_per_rand, -1, 1)
-        # signs do not have a `shots` axis, so need to broadcast to the shape of the
-        # data (without the qubits axis)
-        signs_per_rand_bc = np.broadcast_to(signs_per_rand[..., np.newaxis], shape=datum.shape[:-1])
-        evals *= signs_per_rand_bc
+        signs_per_rand = 1 - 2 * signs_per_rand
+        # expand signs to the shape of evals
+        evals *= signs_per_rand[..., np.newaxis]
 
     # Apply projector filters for "0" and "1"
     if any_0s | any_1s:
