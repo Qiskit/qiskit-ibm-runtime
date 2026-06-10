@@ -502,7 +502,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             self._make_result([{"meas": meas_data}], twirling_enabled=True)
         )
         expected_flat = meas_data.reshape(num_rand * shots_per_rand, num_bits)
-        reconstructed = result[0].data.meas.to_bool_array()
+        reconstructed = result[0].data.meas.to_bool_array(order="little")
         np.testing.assert_array_equal(reconstructed, expected_flat.astype(bool))
 
     def test_non_twirled_no_reshape_when_pub_shapes_absent(self):
