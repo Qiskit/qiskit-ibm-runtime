@@ -92,7 +92,6 @@ class TestMidCircuitMeasure(IBMTestCase):
         transpiled = pm.run(qc)
         self.assertEqual(transpiled.data[0].operation.name, "measure_2")
 
-
     class TestMidCircuitReset(IBMTestCase):
         """Test MidCircuitReset instruction."""
 

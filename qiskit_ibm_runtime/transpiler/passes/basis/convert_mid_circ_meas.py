@@ -47,7 +47,9 @@ class ConvertToMidCircuitMeasure(TransformationPass):
             or is not contained in the provided target.
     """
 
-    def __init__(self, target: Target, mcm_name: str = "measure_2", mcr_name: str = "reset_2") -> None:
+    def __init__(
+        self, target: Target, mcm_name: str = "measure_2", mcr_name: str = "reset_2"
+    ) -> None:
         super().__init__()
         self.target = target
         if not mcm_name.startswith("measure"):
@@ -57,8 +59,7 @@ class ConvertToMidCircuitMeasure(TransformationPass):
             )
         if not mcr_name.startswith("reset"):
             raise ValueError(
-                "Invalid name for a reset instruction."
-                "The provided name must start with `reset`."
+                "Invalid name for a reset instruction.The provided name must start with `reset`."
             )
         if mcm_name not in target.operation_names:
             raise ValueError(
@@ -81,10 +82,14 @@ class ConvertToMidCircuitMeasure(TransformationPass):
                 node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
                 # only replace Measure with MidCircuitMeasure if MidCircuitMeasure
                 # is supported in the corresponding qargs
-                if isinstance(node.op, Measure) and self.target.instruction_supported(self.mcm_name, node_indices):
+                if isinstance(node.op, Measure) and self.target.instruction_supported(
+                    self.mcm_name, node_indices
+                ):
                     mid_circ_measure = self.target.operation_from_name(self.mcm_name)
                     dag.substitute_node(node, mid_circ_measure, inplace=True)
-                if isinstance(node.op, Reset) and self.target.instruction_supported(self.mcr_name, node_indices):
+                if isinstance(node.op, Reset) and self.target.instruction_supported(
+                    self.mcr_name, node_indices
+                ):
                     mid_circ_reset = self.target.operation_from_name(self.mcr_name)
                     dag.substitute_node(node, mid_circ_reset, inplace=True)
 

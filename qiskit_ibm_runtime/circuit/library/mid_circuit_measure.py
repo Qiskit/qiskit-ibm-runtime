@@ -32,6 +32,7 @@ class MidCircuitMeasure(Instruction):
 
         super().__init__(name, 1, 1, [], label=label)
 
+
 class MidCircuitReset(Instruction):
     """Alternative 'named' reset definition.
 
