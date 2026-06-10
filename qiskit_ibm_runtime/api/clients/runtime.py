@@ -12,16 +12,22 @@
 
 """Client for accessing IBM Quantum runtime service."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
-from datetime import datetime as python_datetime
-from requests import Response
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.api.session import RetrySession
 
-from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
-from ..client_parameters import ClientParameters
+from .backend import BaseBackendClient
+
+if TYPE_CHECKING:
+    from datetime import datetime as python_datetime
+
+    from requests import Response
+
+    from ..client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 

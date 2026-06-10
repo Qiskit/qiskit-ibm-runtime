@@ -12,33 +12,35 @@
 
 """Noise learner program."""
 
+from __future__ import annotations
+
+import logging
 from copy import deepcopy
 from dataclasses import asdict, fields, replace
-from typing import Any
-from collections.abc import Iterable
-import logging
+from typing import TYPE_CHECKING, Any
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers import BackendV2
-from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..base_primitive import get_mode_service_backend
-from ..decoders.defaults import DEFAULT_DECODERS
-from ..runtime_job_v2 import RuntimeJobV2
+from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
 from ..options.noise_learner_options import NoiseLearnerOptions
 from ..options.utils import remove_dict_unset_values, remove_empty_dict
+from ..qiskit_runtime_service import QiskitRuntimeService
 from ..utils import validate_isa_circuits
 from ..utils.utils import is_simulator
 
-from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..qiskit_runtime_service import QiskitRuntimeService
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
+    from qiskit.primitives.containers import EstimatorPubLike
+    from qiskit.providers import BackendV2
 
-from ..session import Session
-from ..batch import Batch
+    from ..batch import Batch
+    from ..runtime_job_v2 import RuntimeJobV2
+    from ..session import Session
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +194,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 inputs=inputs,
                 options=runtime_options,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 
@@ -206,7 +207,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 

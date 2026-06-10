@@ -12,10 +12,13 @@
 
 """Converters from BackendConfiguration and BackendProperties model to Target model."""
 
+from __future__ import annotations
+
 import logging
 import warnings
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from qiskit.circuit import Instruction
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
     ForLoopOp,
@@ -24,15 +27,16 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
-from qiskit.circuit import Instruction
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
 from qiskit_ibm_runtime.utils.utils import is_fractional_gate
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 
 
 logger = logging.getLogger(__name__)
@@ -313,31 +317,3 @@ def convert_to_target(
                 name=inst_name,
             )
     return target
-
-
-def qubit_props_list_from_props(
-    properties: BackendProperties,
-) -> list[QubitProperties]:
-    """Uses BackendProperties to construct and return a list of QubitProperties."""
-    qubit_props: list[QubitProperties] = []
-    for qubit, _ in enumerate(properties.qubits):
-        try:
-            t_1 = properties.t1(qubit)
-        except BackendPropertyError:
-            t_1 = None
-        try:
-            t_2 = properties.t2(qubit)
-        except BackendPropertyError:
-            t_2 = None
-        try:
-            frequency = properties.frequency(qubit)
-        except BackendPropertyError:
-            frequency = None
-        qubit_props.append(
-            QubitProperties(  # type: ignore[no-untyped-call]
-                t1=t_1,
-                t2=t_2,
-                frequency=frequency,
-            )
-        )
-    return qubit_props

@@ -15,10 +15,14 @@
 import logging
 import os
 from tempfile import NamedTemporaryFile
-from unittest import skipIf, mock
+from unittest import mock, skipIf
 
-from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOG_LEVEL, QISKIT_IBM_RUNTIME_LOG_FILE
-from qiskit_ibm_runtime.utils.utils import setup_logger
+from qiskit_ibm_runtime.utils.logging import (
+    QISKIT_IBM_RUNTIME_LOG_FILE,
+    QISKIT_IBM_RUNTIME_LOG_LEVEL,
+    setup_logger,
+)
+
 from ..ibm_test_case import IBMTestCase
 
 

@@ -20,14 +20,14 @@ import uuid
 from typing import Any
 from unittest import skipIf
 from unittest.mock import patch
-from ddt import ddt, data
+
+from ddt import data, ddt
 
 from qiskit_ibm_runtime import IBMInputValueError
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
-    AccountManager,
     Account,
     AccountAlreadyExistsError,
+    AccountManager,
     AccountNotFoundError,
     InvalidAccountError,
 )
@@ -36,14 +36,16 @@ from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM_PLATFORM,
 )
-from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+
 from ..account import (
-    get_account_config_contents,
-    temporary_account_config_file,
-    no_envs,
     custom_envs,
+    get_account_config_contents,
+    no_envs,
+    temporary_account_config_file,
 )
+from ..ibm_test_case import IBMTestCase
+from .mock.fake_runtime_service import FakeRuntimeService
 
 _TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
@@ -900,6 +902,36 @@ class TestEnableAccount(IBMTestCase):
         with temporary_account_config_file(channel="ibm_quantum_platform"):
             with self.assertRaises(IBMInputValueError):
                 _ = FakeRuntimeService(channel="ibm_quantum_platform", instance=instance)
+
+    def test_instance_auto_flag_set(self):
+        """instance='auto' sets _instance_auto and leaves account.instance as None."""
+        service = FakeRuntimeService(
+            channel="ibm_quantum_platform", token="my_token", instance="auto"
+        )
+        self.assertTrue(service._instance_auto)
+        self.assertIsNone(service._account.instance)
+
+    def test_instance_auto_suppresses_init_warning(self):
+        """instance='auto' must not trigger the 'instance was not set' warning during init."""
+        # "Loading account with the given token" warning fires regardless; check only for
+        # the absence of the specific instance warning. Contrast with no-instance service.
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            FakeRuntimeService(channel="ibm_quantum_platform", token="my_token")
+        self.assertTrue(any("Instance was not set" in msg for msg in logs.output))
+
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            FakeRuntimeService(channel="ibm_quantum_platform", token="my_token", instance="auto")
+        self.assertFalse(any("Instance was not set" in msg for msg in logs.output))
+
+    def test_saved_account_instance_auto_sets_flag(self):
+        """A saved account with instance='auto' sets _instance_auto and clears the instance."""
+        saved_account = Account.create_account(
+            channel="ibm_quantum_platform", token="my_token", instance="auto"
+        )
+        with patch.object(FakeRuntimeService, "_discover_account", return_value=saved_account):
+            service = FakeRuntimeService(channel="ibm_quantum_platform", token="my_token")
+        self.assertTrue(service._instance_auto)
+        self.assertIsNone(service._account.instance)
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:

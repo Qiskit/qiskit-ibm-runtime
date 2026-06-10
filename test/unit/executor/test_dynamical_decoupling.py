@@ -13,8 +13,9 @@
 """Tests for dynamical decoupling utilities."""
 
 import unittest
-import numpy as np
+from unittest.mock import MagicMock, patch
 
+import numpy as np
 from qiskit.circuit import Delay, Parameter, QuantumCircuit
 from qiskit.circuit.library import Measure, RZGate, XGate
 from qiskit.transpiler import PassManager
@@ -25,14 +26,21 @@ from qiskit.transpiler.passes import (
     PadDynamicalDecoupling,
     TimeUnitConversion,
 )
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from samplomatic import Twirl, build
 
+from qiskit_ibm_runtime.executor.dynamical_decoupling import (
+    apply_dynamical_decoupling,
+    generate_dd_pass_manager,
+    make_dd_sequence,
+)
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
 )
-from qiskit_ibm_runtime.executor.dynamical_decoupling import (
-    make_dd_sequence,
-    generate_dd_pass_manager,
+from qiskit_ibm_runtime.quantum_program.quantum_program import (
+    CircuitItem,
+    QuantumProgram,
+    SamplexItem,
 )
 
 
@@ -326,3 +334,64 @@ class TestGenerateDDPassManager(unittest.TestCase):
         self.assertAlmostEqual(
             delays_q2[2], np.floor(total_delay * 0.25 / granualrity) * granualrity
         )
+
+
+class TestApplyDynamicalDecoupling(unittest.TestCase):
+    """Tests for apply_dynamical_decoupling function."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.backend = FakeManilaV2()
+
+    @patch("qiskit_ibm_runtime.executor.dynamical_decoupling.generate_dd_pass_manager")
+    def test_pass_manager_called_once_per_item(self, mock_generate_pm):
+        """Test that pass manager is called once per item with mixed CircuitItem and SamplexItem."""
+        # Create a mock pass manager
+        mock_pm = MagicMock(spec=PassManager)
+        mock_pm.run = MagicMock(side_effect=lambda circ: circ)
+        mock_generate_pm.return_value = mock_pm
+
+        # Create a CircuitItem
+        circuit1 = QuantumCircuit(2)
+        circuit1.h(0)
+        item1 = CircuitItem(circuit1)
+
+        # Create a SamplexItem
+        circuit2 = QuantumCircuit(2)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.rx(Parameter("theta"), 0)
+            circuit2.cx(0, 1)
+        with circuit2.box(annotations=[Twirl()]):
+            circuit2.measure_all()
+
+        template_circuit, samplex = build(circuit2)
+        parameter_values = np.array([[0.1], [0.2]])
+
+        item2 = SamplexItem(
+            template_circuit,
+            samplex,
+            samplex_arguments={"parameter_values": parameter_values},
+        )
+
+        # Create another CircuitItem
+        circuit3 = QuantumCircuit(2)
+        circuit3.cx(0, 1)
+        item3 = CircuitItem(circuit3)
+
+        quantum_program = QuantumProgram(shots=1024, items=[item1, item2, item3])
+
+        dd_options = DynamicalDecouplingOptions(enable=True, sequence_type="XX")
+
+        # Apply DD
+        result_program = apply_dynamical_decoupling(
+            backend=self.backend,
+            dd_options=dd_options,
+            quantum_program=quantum_program,
+        )
+
+        mock_generate_pm.assert_called_once_with(
+            backend=self.backend,
+            options=dd_options,
+        )
+        self.assertEqual(mock_pm.run.call_count, 3)
+        self.assertIs(result_program, quantum_program)

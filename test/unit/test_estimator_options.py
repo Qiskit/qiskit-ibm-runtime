@@ -16,11 +16,11 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 from pydantic import ValidationError
-
 from qiskit_aer.noise import NoiseModel
+
 from qiskit_ibm_runtime import EstimatorV2 as Estimator
-from qiskit_ibm_runtime.options import EstimatorOptions
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.options import EstimatorOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (

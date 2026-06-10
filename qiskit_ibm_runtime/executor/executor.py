@@ -23,7 +23,6 @@ from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalSer
 
 from ..options_models.executor_options import ExecutorOptions
 from ..quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
-from ..decoders.quantum_program.decoder import QuantumProgramResultDecoder
 from ..utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
@@ -79,7 +78,6 @@ class Executor:
     """
 
     _PROGRAM_ID = "executor"
-    _DECODER = QuantumProgramResultDecoder
     _SCHEMA_VERSION = "v1.0"
 
     options: ExecutorOptions
@@ -152,7 +150,6 @@ class Executor:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs=inputs,
-            result_decoder=self._DECODER,
             calibration_id=getattr(self._backend, "calibration_id", None),
         )
 

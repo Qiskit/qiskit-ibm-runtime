@@ -12,12 +12,17 @@
 
 """Represent IBM Quantum account client parameters."""
 
-from typing import Any
-from collections.abc import Callable
-from ..proxies import ProxyConfiguration
+from __future__ import annotations
 
-from ..utils import default_runtime_url_resolver
-from ..api.auth import CloudAuth
+from typing import TYPE_CHECKING, Any
+
+from .auth import CloudAuth
+from .utils import default_runtime_url_resolver
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ..proxies import ProxyConfiguration
 
 
 class ClientParameters:

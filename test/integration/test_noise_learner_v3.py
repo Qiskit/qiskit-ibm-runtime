@@ -14,12 +14,12 @@
 
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-
 from samplomatic.transpiler import generate_boxing_pass_manager
 from samplomatic.utils import find_unique_box_instructions
 
 from qiskit_ibm_runtime import NoiseLearnerV3
-from qiskit_ibm_runtime.results import NoiseLearnerV3Results, NoiseLearnerV3Result
+from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 

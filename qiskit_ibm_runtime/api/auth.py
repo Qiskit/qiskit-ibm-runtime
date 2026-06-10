@@ -14,15 +14,18 @@
 
 from __future__ import annotations
 
-
 import warnings
-from requests import PreparedRequest
-from requests.auth import AuthBase
+from typing import TYPE_CHECKING
 
 from ibm_cloud_sdk_core import IAMTokenManager
+from requests.auth import AuthBase
 
-from ..proxies import ProxyConfiguration
-from ..utils.utils import cname_from_crn
+from .utils import cname_from_crn
+
+if TYPE_CHECKING:
+    from requests import PreparedRequest
+
+    from ..proxies import ProxyConfiguration
 
 CLOUD_IAM_URL = "iam.cloud.ibm.com"
 STAGING_CLOUD_IAM_URL = "iam.test.cloud.ibm.com"

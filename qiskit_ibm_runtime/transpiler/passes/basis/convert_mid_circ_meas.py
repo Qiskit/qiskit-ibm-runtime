@@ -12,10 +12,17 @@
 
 """Pass to replace `measure` and `reset` instructions in non-terminal locations with their mid-circuit versions."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from qiskit.circuit import Measure, Reset
-from qiskit.dagcircuit import DAGCircuit
-from qiskit.transpiler import TransformationPass, Target
+from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
+
+if TYPE_CHECKING:
+    from qiskit.dagcircuit import DAGCircuit
+    from qiskit.transpiler import Target
 
 
 class ConvertToMidCircuitMeasure(TransformationPass):

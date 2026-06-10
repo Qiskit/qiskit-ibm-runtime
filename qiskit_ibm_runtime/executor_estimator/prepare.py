@@ -16,29 +16,34 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import numpy.typing as npt
+    from qiskit import QuantumCircuit
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from samplomatic.samplex import Samplex
 
+    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from samplomatic import build, ChangeBasis
-from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import get_annotation
 from qiskit.circuit import ClassicalRegister
 from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
+from samplomatic import ChangeBasis, build
+from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import find_unique_box_instructions, get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
+from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
-from ..quantum_program.datatree import is_datatree_compatible
 from ..quantum_program.quantum_program import SamplexItem
+from .trex_utils import create_trex_calibration_circuit
 from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
 
 logger = logging.getLogger(__name__)
@@ -48,6 +53,7 @@ def prepare(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -57,6 +63,8 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -87,51 +95,18 @@ def prepare(
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        # Remove any existing final measurements
-        prepared_circuit = pub.circuit.remove_final_measurements(inplace=False)
-
-        # Add final measurements
-        creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
-        try:
-            prepared_circuit.add_register(creg)
-        except CircuitError:
-            raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
-        prepared_circuit.barrier()
-        prepared_circuit.measure(prepared_circuit.qubits, creg)
-
-        # Add boxes
-        boxing_pm = generate_boxing_pass_manager(
-            enable_gates=twirling_options.enable_gates,
-            enable_measures=True,
-            twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            measure_annotations="all" if twirling_options.enable_measure else "change_basis",
+        boxed_circuit = box_circuit(
+            pub.circuit, twirling_options, measure_noise_learning is not None
         )
-        boxed_circuit = boxing_pm.run(prepared_circuit)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
 
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = {}
-        if samplex.inputs().get_specs("parameter_values"):
-            samplex_arguments["parameter_values"] = flat_parameter_values
-
-        # Set changing basis gates
-        for spec in samplex.inputs().get_specs("basis_changes"):
-            # Default to np.zeros, to ensure that every mid-circuit measurement
-            # that may be present is performed without basis changing gates
-            samplex_arguments[spec.name] = np.zeros(spec.shape)
-
-        # Finalize basis changing gates for the final measurements
-        for instr in boxed_circuit.reverse_ops():
-            op = instr.operation
-            if op.name == "box" and (change_basis_annot := get_annotation(op, ChangeBasis)):
-                samplex_arguments[f"basis_changes.{change_basis_annot.ref}"] = change_basis
-                break
-        else:
-            # This should not be reachable
-            raise ValueError("Could not find a change basis annotation.")
+        samplex_arguments = make_samplex_arguments(
+            samplex, boxed_circuit, flat_parameter_values, change_basis
+        )
 
         # Create SamplexItem
         shape = (num_randomizations, change_basis.shape[0])
@@ -149,17 +124,8 @@ def prepare(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect circuit metadata from each pub
-    circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-    # Validate that circuit metadata is compatible with DataTree format
-    for idx, metadata in enumerate(circuits_metadata):
-        if metadata is not None and not is_datatree_compatible(metadata):
-            raise IBMInputValueError(
-                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                f"numpy arrays, or primitive types (str, int, float, bool, None)."
-            )
+    # Collect and validate circuit metadata from each pub
+    circuits_metadata = validate_and_extract_metadata(pubs)
 
     passthrough_data = {
         "post_processor": {
@@ -168,6 +134,7 @@ def prepare(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
+            "measure_mitigation": "False",
         },
     }
 
@@ -177,6 +144,19 @@ def prepare(
         items=items,
         passthrough_data=passthrough_data,
     )
+
+    # Add TREX calibration circuit
+    if measure_noise_learning is not None:
+        if (
+            isinstance(measure_noise_learning.shots_per_randomization, int)
+            and measure_noise_learning.shots_per_randomization != shots_per_randomization
+        ):
+            raise IBMInputValueError(
+                "shots_per_randomization must be the same for twirling and measure_noise_learning"
+            )
+        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        quantum_program.items.append(trex_item)
+        passthrough_data["post_processor"]["measure_mitigation"] = "True"
 
     # Set semantic role for post-processing dispatch
     quantum_program._semantic_role = "estimator_v2"
@@ -282,3 +262,122 @@ def compute_samplex_arguments(
     ]
 
     return flat_parameter_values, change_basis, param_basis_pairs
+
+
+def make_samplex_arguments(
+    samplex: Samplex,
+    boxed_circuit: QuantumCircuit,
+    flat_parameter_values: npt.NDArray[float],
+    change_basis: npt.NDArray[int],
+) -> dict[str, Any]:
+    """Build a samplex args dictionary consisting of ``change_basis`` and parameters data.
+
+    Args:
+        samplex: A samplex object to create args to.
+        boxed_circuit: A boxed circuit related to the samplex.
+        flat_parameter_values: A flattened array of parameter values.
+        change_basis: An array of bases to change.
+
+    Returns:
+        A samplex args dictionary.
+    """
+    # Prepare samplex_arguments
+    samplex_arguments = {}
+    if samplex.inputs().get_specs("parameter_values"):
+        samplex_arguments["parameter_values"] = flat_parameter_values
+
+    # Set changing basis gates
+    for spec in samplex.inputs().get_specs("basis_changes"):
+        # Default to np.zeros, to ensure that every mid-circuit measurement
+        # that may be present is performed without basis changing gates
+        samplex_arguments[spec.name] = np.zeros(spec.shape)
+
+    # Finalize basis changing gates for the final measurements
+    for instr in boxed_circuit.reverse_ops():
+        op = instr.operation
+        if op.name == "box" and (change_basis_annot := get_annotation(op, ChangeBasis)):
+            samplex_arguments[f"basis_changes.{change_basis_annot.ref}"] = change_basis
+            break
+    else:
+        # This should not be reachable
+        raise ValueError("Could not find a change basis annotation.")
+
+    return samplex_arguments
+
+
+def box_circuit(
+    circuit: QuantumCircuit,
+    twirling_options: TwirlingOptions,
+    twirl_measurements: bool = False,
+    inject_noise: bool = False,
+) -> QuantumCircuit:
+    """Box a circuit based on the given input options.
+
+    Removes the final measurement layer and adds a new measurement layer with dedicated
+    register name.
+
+    Args:
+        circuit: Quantum circuit to box.
+        twirling_options: Twirling options.
+        twirl_measurements: Whether to twirl measurements.
+        inject_noise: Whether to inject noise.
+
+    Returns:
+        boxed circuit.
+
+    """
+    # Remove any existing final measurements
+    prepared_circuit = circuit.remove_final_measurements(inplace=False)
+
+    # Add final measurements
+    creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
+    try:
+        prepared_circuit.add_register(creg)
+    except CircuitError:
+        raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
+    prepared_circuit.barrier()
+    prepared_circuit.measure(prepared_circuit.qubits, creg)
+
+    # Add boxes
+    boxing_pm = generate_boxing_pass_manager(
+        enable_gates=twirling_options.enable_gates or inject_noise,
+        enable_measures=True,
+        twirling_strategy=twirling_options.strategy.replace("-", "_"),
+        measure_annotations="all"
+        if twirling_options.enable_measure or twirl_measurements
+        else "change_basis",
+        inject_noise_targets="gates" if inject_noise else "none",
+        inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+    )
+    boxed_circuit = boxing_pm.run(prepared_circuit)
+    return boxed_circuit
+
+
+def get_layers(
+    pubs: Sequence[EstimatorPub],
+    twirling_options: TwirlingOptions,
+    twirl_measurements: bool = False,
+    inject_noise: bool = False,
+) -> list[list[CircuitInstruction]]:
+    """Find unique layers of the circuit of each pub.
+
+    Uses the input options to box the circuit, and find its unique layers.
+
+    Args:
+        pubs: list of estimators pubs.
+        twirling_options: Twirling options.
+        twirl_measurements: Whether to twirl measurements.
+        inject_noise: Whether to inject noise.
+
+    Returns:
+        Unique layers for each pub.
+
+    """
+    return [
+        find_unique_box_instructions(
+            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
+            normalize_annotations=None,
+            undress_boxes=True,
+        )
+        for pub in pubs
+    ]

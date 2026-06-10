@@ -12,27 +12,27 @@
 
 """Primitive options."""
 
-from abc import abstractmethod
-from typing import Any
-from collections.abc import Iterable
-from dataclasses import dataclass, fields, asdict, is_dataclass
 import copy
+from abc import abstractmethod
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass, fields, is_dataclass
+from typing import Any
 
-from qiskit.transpiler import CouplingMap
 from pydantic import Field
+from qiskit.transpiler import CouplingMap
 
-from .utils import (
-    Dict,
-    UnsetType,
-    Unset,
-    remove_dict_unset_values,
-    merge_options_v2,
-    primitive_dataclass,
-    remove_empty_dict,
-)
+from ..runtime_options import RuntimeOptions
 from .environment_options import EnvironmentOptions
 from .simulator_options import SimulatorOptions
-from ..runtime_options import RuntimeOptions
+from .utils import (
+    Dict,
+    Unset,
+    UnsetType,
+    merge_options_v2,
+    primitive_dataclass,
+    remove_dict_unset_values,
+    remove_empty_dict,
+)
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:

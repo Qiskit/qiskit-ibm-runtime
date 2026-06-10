@@ -15,10 +15,12 @@
 import base64
 import json
 import uuid
-from datetime import timezone, datetime as python_datetime
+from datetime import datetime as python_datetime
+from datetime import timezone
 from typing import Any
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -438,6 +440,17 @@ class BaseFakeRuntimeClient:
             "usage_remaining_seconds": 84000,
             "usage_limit_reached": False,
         }
+
+    def job_metadata(self, job_id: str) -> dict[str, Any]:
+        """Get job metadata.
+
+        Args:
+            job_id: Program job ID.
+
+        Returns:
+            Job metadata.
+        """
+        return {}
 
     def _find_backend(self, backend_name):
         for back in self._backends:

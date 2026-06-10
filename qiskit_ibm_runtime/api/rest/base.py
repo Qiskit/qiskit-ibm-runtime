@@ -12,7 +12,12 @@
 
 """Base REST adapter."""
 
-from ..session import RetrySession
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..session import RetrySession
 
 
 class RestAdapterBase:
@@ -30,7 +35,7 @@ class RestAdapterBase:
 
     _HEADER_JSON_ACCEPT = {"Accept": "application/json"}
 
-    _HEADER_API_VERSION = {"IBM-API-Version": "2025-05-01"}
+    _HEADER_API_VERSION = {"IBM-API-Version": "2026-04-15"}
 
     def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         self.session = session

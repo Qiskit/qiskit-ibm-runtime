@@ -14,20 +14,18 @@
 
 import operator
 
-from ddt import ddt, data
-
+from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
-from qiskit.utils import optionals
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.utils import optionals
 
-from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.fake_provider import FakeVigoV2, FakeSherbrooke, FakeProviderForBackendV2
+from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime.fake_provider import FakeProviderForBackendV2, FakeSherbrooke, FakeVigoV2
 
-from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
 from ..decorators import production_only
-
+from ..ibm_test_case import IBMIntegrationTestCase, IBMTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 

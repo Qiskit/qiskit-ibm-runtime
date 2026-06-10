@@ -12,25 +12,31 @@
 
 """Integration tests for account management."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_cloud_sdk_core import ApiException
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import (
-    ResourceControllerV2,
     GlobalSearchV2,
+    ResourceControllerV2,
 )
 
-from qiskit_ibm_runtime import QiskitRuntimeService, IBMInputValueError
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.utils.utils import (
-    get_resource_controller_api_url,
-    get_iam_api_url,
+from qiskit_ibm_runtime import IBMInputValueError, QiskitRuntimeService
+from qiskit_ibm_runtime.accounts.utils import (
     get_global_search_api_url,
+    get_iam_api_url,
+    get_resource_controller_api_url,
 )
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import IntegrationTestDependencies
+
+if TYPE_CHECKING:
+    from ..decorators import IntegrationTestDependencies
 
 
 def _get_service_instance_name_for_crn(

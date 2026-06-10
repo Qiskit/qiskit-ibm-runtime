@@ -23,8 +23,8 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobNotFound,
 )
 
+from ..decorators import production_only, run_integration_test
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
 from ..serialization import SerializableClass
 from ..utils import bell, cancel_job_safe, get_real_device, wait_for_status
 
@@ -185,6 +185,20 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         self.assertTrue(job.usage_estimation)
         self.assertIn("quantum_seconds", job.usage_estimation)
+
+    @run_integration_test
+    def test_job_usage(self, service):
+        """Test job usage."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertIsInstance(job.usage(), (float, int))
+
+    @run_integration_test
+    def test_job_logs(self, service):
+        """Test job logs."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertIsInstance(job.logs(), str)
 
     @run_integration_test
     def test_updating_job_tags(self, service):

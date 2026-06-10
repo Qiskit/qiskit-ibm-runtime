@@ -13,12 +13,11 @@
 """Tests for the noise learner."""
 
 from ddt import ddt
-
 from qiskit import QuantumCircuit, transpile
 
-from qiskit_ibm_runtime.noise_learner import NoiseLearner
-from qiskit_ibm_runtime.options import NoiseLearnerOptions, EstimatorOptions
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
+from qiskit_ibm_runtime.noise_learner import NoiseLearner
+from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import combine, get_mocked_backend

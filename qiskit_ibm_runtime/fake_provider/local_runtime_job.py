@@ -12,12 +12,17 @@
 
 """Qiskit runtime local mode job class."""
 
-from typing import Any, Literal
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING, Any, Literal
 
 from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit_ibm_runtime.models import BackendProperties
-from .fake_backend import FakeBackendV2
+
+if TYPE_CHECKING:
+    from qiskit_ibm_runtime.models import BackendProperties
+
+    from .fake_backend import FakeBackendV2
 
 
 class LocalRuntimeJob(PrimitiveJob):
@@ -75,8 +80,13 @@ class LocalRuntimeJob(PrimitiveJob):
         """Return the backend where this job was executed."""
         return self._backend
 
-    def usage(self) -> float:
-        """Return job usage in seconds."""
+    def usage(self, partial: bool = False) -> float:
+        """Return job usage in seconds.
+
+        Args:
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
+        """
         return 0
 
     def properties(self) -> BackendProperties:

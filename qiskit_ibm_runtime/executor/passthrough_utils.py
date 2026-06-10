@@ -1,0 +1,57 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2026.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Utility functions for passthrough data validation shared between sampler and estimator."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from qiskit.primitives.containers.estimator_pub import EstimatorPub
+    from qiskit.primitives.containers.sampler_pub import SamplerPub
+
+from ..exceptions import IBMInputValueError
+from ..quantum_program.datatree import is_datatree_compatible
+
+
+def validate_and_extract_metadata(
+    pubs: Sequence[EstimatorPub] | Sequence[SamplerPub],
+) -> list[dict[str, Any] | None]:
+    """Validate and extract circuit metadata from a sequence of pubs.
+
+    This function collects circuit metadata from each pub and validates that
+    all metadata is compatible with the DataTree format.
+
+    Args:
+        pubs: Sequence of estimator or sampler pubs to extract metadata from.
+
+    Returns:
+        List of circuit metadata dictionaries (or None for pubs without metadata).
+
+    Raises:
+        IBMInputValueError: If any circuit metadata is not compatible with DataTree format.
+    """
+    circuits_metadata = [pub.circuit.metadata for pub in pubs]
+
+    # Validate that circuit metadata is compatible with DataTree format
+    for idx, metadata in enumerate(circuits_metadata):
+        if metadata is not None and not is_datatree_compatible(metadata):
+            raise IBMInputValueError(
+                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
+                f"Metadata must be a nested structure of lists, dicts (with string keys), "
+                f"numpy arrays, or primitive types (str, int, float, bool, None)."
+            )
+
+    return circuits_metadata

@@ -12,10 +12,15 @@
 
 """Utility functions for visualizing qiskit-ibm-runtime's objects."""
 
+from __future__ import annotations
+
 import importlib
-from types import ModuleType
+from typing import TYPE_CHECKING
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from types import ModuleType
 
 
 def plotly_module(submodule: str = ".") -> ModuleType:

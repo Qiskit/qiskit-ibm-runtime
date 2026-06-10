@@ -18,8 +18,8 @@ import dateutil.parser
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
+from ..decorators import production_only, run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test, production_only
 
 
 class TestSerialization(IBMIntegrationTestCase):

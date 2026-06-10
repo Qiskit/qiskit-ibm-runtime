@@ -13,6 +13,7 @@
 """Fake Johannesburg device (20 qubit)."""
 
 import os
+
 from qiskit_ibm_runtime.fake_provider import fake_backend
 
 

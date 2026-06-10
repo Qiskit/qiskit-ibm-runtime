@@ -15,34 +15,32 @@
 from dataclasses import asdict
 from unittest.mock import MagicMock, patch
 
-from ddt import data, ddt
 import numpy as np
-
+from ddt import data, ddt
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import real_amplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Session, Batch
-from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
-from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime import Batch, EstimatorV2, SamplerV2, Session
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
+    bell,
+    combine,
+    create_faulty_backend,
+    dict_keys_equal,
     dict_paritally_equal,
     flat_dict_partially_equal,
-    dict_keys_equal,
-    create_faulty_backend,
-    combine,
-    get_primitive_inputs,
     get_mocked_backend,
-    bell,
-    get_mocked_session,
     get_mocked_batch,
+    get_mocked_session,
+    get_primitive_inputs,
 )
 
 
@@ -140,7 +138,9 @@ class TestPrimitivesV2(IBMTestCase):
             def __new__(cls, *args, **kwargs):
                 return mock_service_inst
 
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+        with patch(
+            "qiskit_ibm_runtime.qiskit_runtime_service.QiskitRuntimeService", new=MockQRTService
+        ):
             inst = primitive(mode=mock_backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
@@ -259,7 +259,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
-        """Test parameters for a single cirucit."""
+        """Test parameters for a single circuit."""
         circ = real_amplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
