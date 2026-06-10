@@ -303,6 +303,54 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             primitive_result[0].data.ensemble_standard_error[0],
         )
 
+    def test_post_processor_with_options_metadata(self):
+        """Test that options metadata is properly transferred to primitive result."""
+        meas_data = np.array([[[[False, False]] * 10]])
+
+        # Create options metadata
+        options_metadata = {
+            "twirling": {
+                "enable_gates": True,
+                "enable_measure": False,
+                "num_randomizations": "auto",
+                "shots_per_randomization": "auto",
+                "strategy": "active-accum",
+            },
+            "dynamical_decoupling": {
+                "enable": True,
+                "sequence_type": "XY4",
+                "extra_slack_distribution": "middle",
+                "scheduling_method": "alap",
+            },
+            "resilience": {
+                "measure_mitigation": True,
+                "zne_mitigation": False,
+                "pec_mitigation": False,
+            },
+        }
+
+        result_data = [QuantumProgramItemResult({"_meas": meas_data})]
+        passthrough_data = {
+            "post_processor": {
+                "version": "v0.1",
+                "circuits_metadata": [None],
+                "observables": [[{"ZZ": 1.0}]],
+                "measure_bases": [["ZZ"]],
+                "param_basis_pairs": [[([], "ZZ")]],
+                "param_shapes": [[]],
+                "options": options_metadata,
+            },
+        }
+        result = QuantumProgramResult(
+            data=result_data, metadata=None, passthrough_data=passthrough_data
+        )
+        result._semantic_role = "estimator_v2"
+
+        primitive_result = estimator_v2_post_processor_v0_1(result)
+
+        # Verify primitive-level metadata contains options
+        self.assertEqual(primitive_result.metadata, options_metadata)
+
 
 @ddt
 class TestProcessExpectationValues(unittest.TestCase):

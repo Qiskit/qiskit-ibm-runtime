@@ -225,6 +225,39 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.assertTrue(self.mock_executor_instance.options.execution.init_qubits)
         self.assertEqual(self.mock_executor_instance.options.execution.rep_delay, 0.001)
 
+    def test_run_adds_options_to_passthrough_data(self):
+        """Test that run adds options metadata to quantum program passthrough data."""
+        options = EstimatorOptions()
+        options.twirling.enable_gates = True
+        options.dynamical_decoupling.enable = True
+        options.resilience.measure_mitigation = True
+
+        estimator = EstimatorV2(mode=self.backend, options=options)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        # Verify executor.run was called
+        self.mock_executor_instance.run.assert_called_once()
+
+        # Get the quantum program passed to executor
+        call_args = self.mock_executor_instance.run.call_args
+        quantum_program = call_args[0][0]
+
+        # Verify passthrough data contains options
+        self.assertIsNotNone(quantum_program.passthrough_data)
+        self.assertIn("post_processor", quantum_program.passthrough_data)
+        self.assertIn("options", quantum_program.passthrough_data["post_processor"])
+
+        # Verify options content
+        options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
+        self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
+        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], True)
+        self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
+
     def test_run_with_multiple_observables(self):
         """Test run with multiple observables in a single pub."""
         estimator = EstimatorV2(mode=self.backend)
