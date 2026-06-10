@@ -77,7 +77,7 @@ class SamplerExecutionOptions(ExecutionOptions):
 
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified"
     """How to process and return measurement results.
-    
+
     This option sets the return type of all classical registers in all sampler pub results.
 
     * ``"classified"``: Returns a BitArray with classified measurement outcomes.
