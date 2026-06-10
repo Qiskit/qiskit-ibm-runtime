@@ -76,7 +76,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     circuits_metadata = post_processor_data.get("circuits_metadata", None)
 
     # Extract options if present
-    options_metadata = post_processor_data.get("options", None)
+    options_metadata = post_processor_data.get("options", {})
 
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
@@ -134,7 +134,7 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         pub_result = EstimatorPubResult(data=data_bin, metadata=pub_metadata)
         pub_results.append(pub_result)
 
-    return PrimitiveResult(pub_results, metadata=options_metadata or {})
+    return PrimitiveResult(pub_results, metadata=options_metadata)
 
 
 def process_expectation_values(
