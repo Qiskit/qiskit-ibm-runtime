@@ -118,6 +118,7 @@ class Calibrator:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs={"options": options_dict},
+            calibration_id=getattr(self._backend, "calibration_id", None),
         )
 
     def backend(self) -> BackendV2:
