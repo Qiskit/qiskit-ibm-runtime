@@ -19,7 +19,6 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.decoders.result_decoder import ResultDecoder
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
 from qiskit_ibm_runtime.utils.default_session import get_cm_session
@@ -55,7 +54,6 @@ class Calibrator:
     """
 
     _PROGRAM_ID = "calibrate"
-    _DECODER = ResultDecoder
 
     options: CalibratorOptions
     """The options of this calibrator."""
@@ -105,7 +103,6 @@ class Calibrator:
             program_id=self._PROGRAM_ID,
             options=runtime_options,
             inputs={},
-            result_decoder=self._DECODER,
         )
 
     def backend(self) -> BackendV2:
