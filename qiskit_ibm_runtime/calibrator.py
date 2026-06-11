@@ -95,6 +95,10 @@ class Calibrator:
         runtime_options["backend"] = self._backend.name
         runtime_options["instance"] = self._backend._instance
 
+        options_dict = {}
+        if self.options.experimental:
+            options_dict["experimental"] = self.options.experimental
+
         if self._session:
             _run = self._session._run
         else:
@@ -113,7 +117,7 @@ class Calibrator:
         return _run(
             program_id=self._PROGRAM_ID,
             options=runtime_options,
-            inputs={},
+            inputs={"options": options_dict},
         )
 
     def backend(self) -> BackendV2:
