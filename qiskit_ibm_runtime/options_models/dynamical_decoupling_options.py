@@ -52,6 +52,7 @@ class DynamicalDecouplingOptions:
 
     skip_reset_qubits: bool = False
     """Whether to insert DD on idle periods that immediately follow initialized/reset qubits.
+
     Since qubits in the ground state are less susceptible to decoherence, it can be beneficial
     to let them be while they are known to be in this state.
     """
