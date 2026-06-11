@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..options_models.dynamical_decoupling_options import DynamicalDecouplingOptions
+    from ..quantum_program.quantum_program import QuantumProgram
 
 
 def make_dd_sequence(
@@ -147,3 +148,32 @@ def generate_dd_pass_manager(
     pm.append(PadDelay(target=target))
 
     return pm
+
+
+def apply_dynamical_decoupling(
+    backend: BackendV2,
+    dd_options: DynamicalDecouplingOptions,
+    quantum_program: QuantumProgram,
+) -> QuantumProgram:
+    """Apply dynamical decoupling to all items in a quantum program.
+
+    This function applies dynamical decoupling sequences to all circuit items
+    in the provided quantum program based on the given options.
+
+    Args:
+        backend: Backend to extract timing information from.
+        dd_options: DD options containing sequence type and other parameters.
+        quantum_program: The quantum program whose circuit items will be modified with DD.
+
+    Returns:
+        The modified quantum program with DD applied to all items.
+    """
+    dd_pass_manager = generate_dd_pass_manager(
+        backend=backend,
+        options=dd_options,
+    )
+
+    for item in quantum_program.items:
+        item.circuit = dd_pass_manager.run(item.circuit)
+
+    return quantum_program

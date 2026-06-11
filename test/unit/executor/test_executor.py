@@ -19,10 +19,8 @@ from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.executor_options import (
-    ExecutionOptions,
-    ExecutorOptions,
-)
+from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
+from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from test.utils import get_mocked_backend, get_mocked_session
 

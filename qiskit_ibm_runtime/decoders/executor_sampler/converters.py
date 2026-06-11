@@ -64,7 +64,7 @@ def quantum_program_item_result_to_sampler_pub_result(
     arrays = {}
     for creg_name, meas_data in item.items():
         if meas_type == "classified":
-            arrays[creg_name] = BitArray.from_bool_array(meas_data)
+            arrays[creg_name] = BitArray.from_bool_array(meas_data, order="little")
         elif meas_type == "kerneled":
             arrays[creg_name.removesuffix("_iq")] = meas_data
         elif meas_type == "avg_kerneled":

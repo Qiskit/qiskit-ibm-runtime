@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 from ibm_cloud_sdk_core import IAMTokenManager
 from requests.auth import AuthBase
 
-from ..utils.utils import cname_from_crn
+from .utils import cname_from_crn
 
 if TYPE_CHECKING:
     from requests import PreparedRequest
