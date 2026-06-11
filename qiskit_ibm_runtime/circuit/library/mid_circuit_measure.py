@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""MidCircuitMeasure gate."""
+"""Mid-circuit measurement and reset gates."""
 
 from qiskit.circuit import Instruction
 
@@ -31,3 +31,21 @@ class MidCircuitMeasure(Instruction):
             )
 
         super().__init__(name, 1, 1, [], label=label)
+
+
+class MidCircuitReset(Instruction):
+    """Alternative 'named' reset definition.
+
+    This instruction implements an alternative 'named' reset definition
+    (1 quantum bit), whose name can be used to map to a corresponding
+    mid-circuit reset instruction implementation on hardware.
+    """
+
+    def __init__(self, name: str = "reset_2", label: str | None = None) -> None:
+        if not name.startswith("reset_"):
+            raise ValueError(
+                "Invalid name for mid-circuit reset instruction."
+                "The provided name must start with `reset_`"
+            )
+
+        super().__init__(name, 1, 0, [], label=label)
