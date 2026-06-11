@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
 from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
@@ -63,16 +63,27 @@ class Calibrator:
         mode: BackendV2 | Session | Batch | str | None = None,
         options: CalibratorOptions | dict | None = None,
     ):
-        if options is None:
-            self.options = CalibratorOptions()
-        elif isinstance(options, dict):
-            self.options = CalibratorOptions(**options)
-        else:
-            self.options = options
+        # Coerced to `CalibratorOptions` via `__setattr__()`.Expand comment
+        self.options = options if options is not None else CalibratorOptions()  # type: ignore[assignment]
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("The calibrator is currently not supported in local mode.")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Set attribute ``name`` to ``value``.
+
+        Handle ``options`` as a special case, ensuring it is set to a ``CalibratorOptions``
+        instance. This is an alternative to using ``@setter``, as the setter causes issues in
+        ``ipython`` autocomplete features.
+        """
+        if name == "options":
+            if isinstance(value, dict):
+                value = CalibratorOptions(**value)
+            elif not isinstance(value, CalibratorOptions):
+                raise TypeError(f"Expected CalibratorOptions or dict, got {type(value)}")
+
+        super().__setattr__(name, value)
 
     def run(self) -> RuntimeJobV2:
         """Calibrate the backend.

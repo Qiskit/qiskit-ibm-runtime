@@ -27,3 +27,6 @@ class CalibratorOptions:
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
+
+    experimental: dict = Field(default_factory=dict)
+    """Experimental options that are passed to the executor."""
