@@ -14,10 +14,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
+
+logger = logging.getLogger(__name__)
+
 
 DataTree: TypeAlias = (
     list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
@@ -41,14 +45,18 @@ def is_datatree_compatible(data: Any) -> bool:
         return True
 
     if isinstance(data, list):
-        # Recursively check list elements
+        return all(is_datatree_compatible(item) for item in data)
+
+    if isinstance(data, tuple):
+        logger.warning(
+            "Tuples are turned into list when the payload is serialized, and attached to the "
+            "returned result list format."
+        )
         return all(is_datatree_compatible(item) for item in data)
 
     if isinstance(data, dict):
-        # Check dict keys are strings and recursively check values
         if not all(isinstance(key, str) for key in data.keys()):
             return False
         return all(is_datatree_compatible(value) for value in data.values())
 
-    # Any other type is not compatible
     return False
