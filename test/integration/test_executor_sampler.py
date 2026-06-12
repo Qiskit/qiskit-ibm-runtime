@@ -48,7 +48,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         pubs = [isa_circuit.copy() for _ in range(3)]
         pubs[1].metadata = {"list": [1, 2, 3]}
-        pubs[2].metadata = {"tuple": (1, 2, 3)}
+        pubs[2].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
 
         options = SamplerOptions()
         options.default_shots = 1000
@@ -71,10 +71,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         self.assertEqual(results[0].metadata, {"circuit_metadata": {}})
         self.assertEqual(results[1].metadata, {"circuit_metadata": {"list": [1, 2, 3]}})
-        self.assertEqual(
-            results[2].metadata,
-            {"circuit_metadata": {"tuple": [1, 2, 3]}},  # tuple converted to a list
-        )
+        self.assertEqual(results[2].metadata, {"circuit_metadata": {"tuple": [1, 2, 3]}})
 
     @data(True, False)
     def test_sampler_with_parametric_circuits(self, twirling):
