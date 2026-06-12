@@ -29,9 +29,7 @@ if TYPE_CHECKING:
     )
 
 
-def noise_learner_v3_result_from_0_1(
-    model: NoiseLearnerV3ResultsModel,
-) -> NoiseLearnerV3Results:
+def noise_learner_v3_result_from_0_1(model: NoiseLearnerV3ResultsModel) -> NoiseLearnerV3Results:
     """Convert a V0.1 model to noise learner v3 results."""
     return NoiseLearnerV3Results(
         data=[
@@ -51,10 +49,28 @@ def noise_learner_v3_result_from_0_1(
     )
 
 
-def noise_learner_v3_result_from_0_2(
-    model: NoiseLearnerV3ResultsModel,
-) -> NoiseLearnerV3Results:
+def noise_learner_v3_result_from_0_2(model: NoiseLearnerV3ResultsModel) -> NoiseLearnerV3Results:
     """Convert a V0.2 model to noise learner v3 results."""
+    return NoiseLearnerV3Results(
+        data=[
+            NoiseLearnerV3Result.from_generators(
+                generators=[
+                    QubitSparsePauliList.from_sparse_list(
+                        [tuple(term) for term in sparse_list], datum.num_qubits
+                    )
+                    for sparse_list in datum.generators_sparse
+                ],
+                rates=datum.rates.to_numpy(),
+                rates_std=datum.rates_std.to_numpy(),
+                metadata=datum.metadata.model_dump(),
+            )
+            for datum in model.data
+        ]
+    )
+
+
+def noise_learner_v3_result_from_0_3(model: NoiseLearnerV3ResultsModel) -> NoiseLearnerV3Results:
+    """Convert a V0.3 model to noise learner v3 results."""
     return NoiseLearnerV3Results(
         data=[
             NoiseLearnerV3Result.from_generators(
