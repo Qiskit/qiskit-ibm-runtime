@@ -145,7 +145,7 @@ class TestExecutor(IBMTestCase):
         self.program.append_circuit_item(circuit=QuantumCircuit(1))
 
     def test_run_of_session_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session is specified."""
         backend_name = "ibm_hello"
         session = get_mocked_session(get_mocked_backend(backend_name))
         with (
@@ -157,7 +157,7 @@ class TestExecutor(IBMTestCase):
             self.assertEqual(selected_run, "session")
 
     def test_run_of_service_is_selected(self):
-        """Test ``Executor.run`` selects the service ``run`` method, if session not specified."""
+        """Test ``Executor.run`` selects the service ``run`` method, if session is not specified."""
         backend = get_mocked_backend()
         with patch.object(backend.service, "_run", return_value="service"):
             executor = Executor(mode=backend)
