@@ -20,17 +20,14 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit import QuantumCircuit
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.zne_options import ZneOptions
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from samplomatic import InjectNoise, build
-from samplomatic.utils import get_annotation
+from samplomatic import build
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
@@ -42,11 +39,12 @@ from .trex_utils import create_trex_calibration_circuit
 
 logger = logging.getLogger(__name__)
 
+
 def prepare_pea(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
-    zne_options: ZneOptions,
+    noise_factors: Sequence[float],
     noise_model_mapping: Sequence[dict[str, PauliLindbladMap]],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
@@ -60,7 +58,7 @@ def prepare_pea(
             and twirling is on.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
-        zne_options: The options for PEA mitigation.
+        noise_factors: The noise amplification factors to the PEA mitigation.
         noise_model_mapping: List of mapping between layer ref to a noise model to use for noise
             amplification. The list must contain a map for each pub. Assumes that the
             unique layers used for noise learning were extracted using the ``get_layers`` method.
@@ -86,7 +84,7 @@ def prepare_pea(
 
     # validate noise_model_mapping length
     if noise_model_mapping is None or (
-            noise_model_mapping is not None and len(noise_model_mapping) != len(pubs)
+        noise_model_mapping is not None and len(noise_model_mapping) != len(pubs)
     ):
         raise IBMInputValueError(
             "If PEA mitigation is used, the input must contain noise_model_mapping for each pub"
@@ -110,22 +108,23 @@ def prepare_pea(
 
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
+        # make parameters array broadcastable with the noise scales
+        flat_parameter_values = np.expand_dims(flat_parameter_values, -2)
         samplex_arguments = make_samplex_arguments(
             samplex, boxed_circuit, flat_parameter_values, change_basis
         )
 
         # add samplex_arguments related to noise injection
-        if not isinstance(zne_options.noise_factors, Sequence) and not isinstance(zne_options.noise_factors[0], (float, int)):
-            raise IBMInputValueError("ZNE noise factors option must be a sequence of floats or ints")
-        noise_factors = np.array(zne_options.noise_factors)
-        # Removing from the noise_factors 1 which is represented by the noise of the data gates layer
-        noise_scales = noise_factors - 1
+
+        # Removing from the noise_factors 1 which is represented by the noise of the data
+        # gates layer
+        noise_scales = np.array(noise_factors) - 1
         for ref in noise_model_mapping[i]:
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
         samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
 
         # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
+        shape = (num_randomizations, change_basis.shape[0], len(noise_scales))
         items.append(
             SamplexItem(
                 circuit=template,
@@ -151,6 +150,7 @@ def prepare_pea(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "pea_noise_factors": noise_factors,
         },
     }
 

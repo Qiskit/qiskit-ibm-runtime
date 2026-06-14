@@ -14,7 +14,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 from typing import Annotated, Literal
 
 from pydantic import Field
@@ -38,6 +42,7 @@ ExtrapolatorType = Literal[
 
 FloatLargerThanOne = Annotated[float, Field(ge=1)]
 NonNegativeFloat = Annotated[float, Field(ge=0)]
+
 
 @dataclass(config=PRIMITIVES_CONFIG)
 class ZneOptions:
@@ -84,9 +89,9 @@ class ZneOptions:
            `npj Quantum Inf 7, 80 (2021) <https://www.nature.com/articles/s41534-021-00404-3>`_
     """
 
-    amplifier: (
-        Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"]
-    ) = "gate_folding"
+    amplifier: Literal["gate_folding", "gate_folding_front", "gate_folding_back", "pea"] = (
+        "gate_folding"
+    )
     """Which technique to use for amplifying noise.
 
     One of:
@@ -113,7 +118,7 @@ class ZneOptions:
 
     noise_factors: Sequence[FloatLargerThanOne] | Literal["auto"] = "auto"
     """ noise_factors: Noise factors to use for noise amplification.
-    
+
     The default depends on the amplifier method - the default for pea is (1, 1.5, 2, 2.5, 3)
     and the default for the other methods is (1, 3, 5).
     """
