@@ -171,3 +171,55 @@ class TestComputeExpVal(unittest.TestCase):
         #          = 0.52/3 - 1/9 = 0.173333... - 0.111111... = 0.062222...
         expected_twirl_variance = (0.36 + 0.0 + 0.16) / 3 - (1 / 3) ** 2
         np.testing.assert_almost_equal(twirl_variance, expected_twirl_variance, decimal=10)
+
+    def test_data_with_signs(self):
+        """Test compute_exp_val for data including signs.
+
+        Note: The shape of the signs data must be `signs.shape[:-1] == datum.shape[:-2]`
+        and an additional final axis that index all error generators in circuit.
+        """
+        datum = np.array(
+            [
+                [[False]] * 8 + [[True]] * 2,
+                [[False]] * 8 + [[True]] * 2,
+            ]
+        )
+        test_cases = [
+            # (observable, measurements, signs, expected_exp_val, expected_variance, description)
+            # Single qubit observables (using 80/20 split to show non-trivial behavior)
+            ("X", datum, [[True, True], [True, True]], 0.6, 0.64, 0, "X"),
+            ("Y", datum, [[False] * 2, [False] * 2], 0.6, 0.64, 0, "Y"),
+            ("Z", datum, [[False] * 2, [False] * 2], 0.6, 0.64, 0, "Z"),
+            ("I", datum, [[False] * 2, [False] * 2], 1.0, 0.0, 0, "I"),
+            ("X", datum, [[False, True], [False, True]], -0.6, 0.64, 0, "X"),
+            ("Y", datum, [[True] * 2, [True] * 2], 0.6, 0.64, 0, "Y"),
+            ("Z", datum, [[False, True], [False] * 2], 0, 1.0, 0.36, "Z"),
+            ("I", datum, [[False, True], [True, False]], -1.0, 0.0, 0, "I"),
+        ]
+
+        for observable, datum, signs, exp_val, ensemble_variance, twirl_var, desc in test_cases:
+            signs = np.array(signs)
+            with self.subTest(desc=desc):
+                result_exp_val, result_ensemble_variance, result_twirl_variance = compute_exp_val(
+                    observable, datum, signs
+                )
+
+                np.testing.assert_almost_equal(
+                    result_exp_val,
+                    exp_val,
+                    decimal=10,
+                )
+                np.testing.assert_almost_equal(
+                    result_ensemble_variance,
+                    ensemble_variance,
+                    decimal=10,
+                )
+                # For cases with the same results in every randomization, twirl_variance equals 0
+                # for the case the signs are odd in the first randomization and even in the second:
+                # per-twirl expectation values [0.6, -0.6]
+                # Variance = E[X²] - E[X]² = 0.6 **2 - 0 = 0.36
+                np.testing.assert_almost_equal(
+                    result_twirl_variance,
+                    twirl_var,
+                    decimal=10,
+                )

@@ -23,6 +23,7 @@ from qiskit.quantum_info import random_pauli_list
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
     process_expectation_values,
+    process_expectation_values_pec,
 )
 from qiskit_ibm_runtime.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from qiskit_ibm_runtime.results.quantum_program import (
@@ -226,6 +227,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
         primitive_result_with_mitigation = estimator_v2_post_processor_v0_1(result_with_mitigation)
         ev_with_mitigation = primitive_result_with_mitigation[0].data.evs[0]
+
         # Verify that after mitigation the expectation value is back to 1
         self.assertAlmostEqual(ev_with_mitigation, 1.0, places=5)
 
@@ -302,6 +304,54 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             primitive_result[0].data.stds[0],
             primitive_result[0].data.ensemble_standard_error[0],
         )
+
+    def test_post_processor_with_options_metadata(self):
+        """Test that options metadata is properly transferred to primitive result."""
+        meas_data = np.array([[[[False, False]] * 10]])
+
+        # Create options metadata
+        options_metadata = {
+            "twirling": {
+                "enable_gates": True,
+                "enable_measure": False,
+                "num_randomizations": "auto",
+                "shots_per_randomization": "auto",
+                "strategy": "active-accum",
+            },
+            "dynamical_decoupling": {
+                "enable": True,
+                "sequence_type": "XY4",
+                "extra_slack_distribution": "middle",
+                "scheduling_method": "alap",
+            },
+            "resilience": {
+                "measure_mitigation": True,
+                "zne_mitigation": False,
+                "pec_mitigation": False,
+            },
+        }
+
+        result_data = [QuantumProgramItemResult({"_meas": meas_data})]
+        passthrough_data = {
+            "post_processor": {
+                "version": "v0.1",
+                "circuits_metadata": [None],
+                "observables": [[{"ZZ": 1.0}]],
+                "measure_bases": [["ZZ"]],
+                "param_basis_pairs": [[([], "ZZ")]],
+                "param_shapes": [[]],
+                "options": options_metadata,
+            },
+        }
+        result = QuantumProgramResult(
+            data=result_data, metadata=None, passthrough_data=passthrough_data
+        )
+        result._semantic_role = "estimator_v2"
+
+        primitive_result = estimator_v2_post_processor_v0_1(result)
+
+        # Verify primitive-level metadata contains options
+        self.assertEqual(primitive_result.metadata, options_metadata)
 
 
 @ddt
@@ -486,3 +536,211 @@ class TestProcessExpectationValues(unittest.TestCase):
         expected_shape = np.broadcast_shapes(obs_shape, param_shape)
         self.assertTupleEqual(evs.shape, expected_shape)
         self.assertTupleEqual(stds.shape, expected_shape)
+
+
+@ddt
+class TestProcessExpectationValuesPEC(unittest.TestCase):
+    """Tests for the ``process_expectation_values_pec`` method."""
+
+    def get_param_basis_pairs(self, observables, param_shape):
+        """Helper to compute values for ``param_basis_pairs``.
+
+        Assumes that all the elements of ``observables`` anti-commute, and does not attempt
+        to do any grouping.
+        """
+        param_basis_pairs = []
+        for bcast_index in np.ndindex(np.broadcast_shapes(observables.shape, param_shape)):
+            param_index = unbroadcast_index(bcast_index, param_shape)
+            obs_index = unbroadcast_index(bcast_index, observables.shape)
+            observable = observables[obs_index]
+            basis = next(iter(observable.keys()))  # observable is a dict from label to coeff
+            param_basis_pairs.append([param_index, get_pauli_basis(basis)])
+        return param_basis_pairs
+
+    def test_missing_pauli_signs_raises_pec(self):
+        """Test that missing pauli_signs raises ValueError for PEC."""
+        data = np.zeros((1, 2, 10, 2), dtype=bool)
+        # Create item result WITHOUT pauli_signs
+        item_result = QuantumProgramItemResult({"_meas": data})
+
+        observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
+        pec_gamma = 2.0
+
+        with self.assertRaisesRegex(ValueError, "pauli_signs"):
+            process_expectation_values_pec(
+                item_result=item_result,
+                observables=observables,
+                param_shape=(),
+                param_basis_pairs=[((), "ZZ"), ((), "XX")],
+                measure_noise_data=None,
+                pec_gamma=pec_gamma,
+            )
+
+    def test_evs_with_non_zero_pauli_signs_pec(self):
+        """Test that non-zero pauli_signs (representing -1) affect expectation values correctly."""
+        # Two configs: one for ZZ, one for XX
+        # All measurements are 00, which normally gives +1 for both ZZ and XX
+        data = np.zeros((1, 2, 10, 2), dtype=bool)
+
+        # Create pauli_signs where:
+        # - First config (ZZ): all +1 signs (sum of signs is even, represented as [[0, 0]])
+        # - Second config (XX): all -1 signs (sum of signs is odd, represented as [[1, 0]])
+        # The signs array has shape (num_randomizations, num_configs, num_error_generators)
+        # For simplicity, we use 1 error generator per config
+        pauli_signs = np.zeros((1, 2, 1), dtype=np.int8)
+        pauli_signs[0, 1, 0] = 1  # Set sign for second config to have odd sum (net -1)
+
+        item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
+
+        observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
+        pec_gamma = 2.0
+
+        evs, _, _ = process_expectation_values_pec(
+            item_result=item_result,
+            observables=observables,
+            param_shape=(),
+            param_basis_pairs=[((), "ZZ"), ((), "XX")],
+            measure_noise_data=None,
+            pec_gamma=pec_gamma,
+        )
+
+        # Expected:
+        # - ZZ: all measurements are 00 with net +1 signs (even sum) -> ev = +1 * gamma = +2.0
+        # - XX: all measurements are 00 with net -1 signs (odd sum) -> ev = -1 * gamma = -2.0
+        expected = np.array([2.0, -2.0])
+        self.assertTrue(np.allclose(evs, expected), msg=f"Expected {expected}, got {evs}")
+
+    def test_evs_2d_obs_no_params_pec(self):
+        """Test post-processor with 2D observables and no params for PEC."""
+        # Two configs: one for ZZ, one for XX (all 00 measurements)
+        data = np.zeros((1, 2, 10, 2), dtype=bool)
+        # Create pauli_signs array with all +1 signs (represented as 0)
+        pauli_signs = np.zeros((1, 2, 10), dtype=np.int8)
+        item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
+
+        observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
+        pec_gamma = 2.0  # Example gamma value
+
+        evs, _, _ = process_expectation_values_pec(
+            item_result=item_result,
+            observables=observables,
+            param_shape=(),
+            param_basis_pairs=[((), "ZZ"), ((), "XX")],
+            measure_noise_data=None,
+            pec_gamma=pec_gamma,
+        )
+
+        # Expected: all measurements are 00, so expectation value is +1, scaled by gamma
+        expected = np.ones(observables.shape) * pec_gamma
+        self.assertTrue(np.allclose(evs, expected))
+
+    @data(
+        [(4,), (4,), np.array([0.5, 1, 1, 1])],
+        [(2, 2), (2, 2), np.array([[0.5, 1], [1, 1]])],
+    )
+    @unpack
+    def test_evs_values_without_twirling_pec(self, obs_shape, param_shape, expected_evs_base):
+        """Test the correctness of evs when twirling is OFF with PEC.
+
+        Expects shapes that broadcast into ``(4,)``.
+        """
+        # 4 non-commuting observables -> always 4 basis
+        obs_like = [{"000": 1 / 2, "111": 1 / 2}, {"+++": 1}, {"rrr": 1}, {"+r0": 1}]
+        observables = ObservablesArray(obs_like).reshape(obs_shape)
+
+        data = np.zeros((1, 4, 10, observables.num_qubits), dtype=bool)
+        # Create pauli_signs array with all +1 signs
+        pauli_signs = np.zeros((1, 4, 10), dtype=np.int8)
+        item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
+
+        pec_gamma = 1.5  # Example gamma value
+
+        evs, _, _ = process_expectation_values_pec(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
+            measure_noise_data=None,
+            pec_gamma=pec_gamma,
+        )
+
+        # Expected values should be scaled by gamma
+        expected_evs = expected_evs_base * pec_gamma
+        self.assertTrue(np.allclose(evs, expected_evs), msg=f"Expected {expected_evs}, got {evs}")
+
+    @data(
+        [(4,), (4,), np.array([0.5, 1, 1, 1])],
+        [(2, 2), (2, 2), np.array([[0.5, 1], [1, 1]])],
+    )
+    @unpack
+    def test_evs_values_with_twirling_pec(self, obs_shape, param_shape, expected_evs_base):
+        """Test the correctness of evs when twirling is ON with PEC.
+
+        Expects shapes that broadcast into ``(4,)``.
+        """
+        # 4 non-commuting observables -> always 4 basis
+        obs_like = [{"000": 1 / 2, "111": 1 / 2}, {"+++": 1}, {"rrr": 1}, {"+r0": 1}]
+        observables = ObservablesArray(obs_like).reshape(obs_shape)
+
+        data_shape = (18, 4, 10, observables.num_qubits)
+        flips = np.random.randint(0, 2, size=data_shape).astype(bool)
+        twirled_data = flips
+        # Create pauli_signs array with all +1 signs
+        pauli_signs = np.zeros((18, 4, 10), dtype=np.int8)
+        item_result = QuantumProgramItemResult(
+            {"_meas": twirled_data, "measurement_flips._meas": flips, "pauli_signs": pauli_signs}
+        )
+
+        pec_gamma = 2.5  # Example gamma value
+
+        evs, _, _ = process_expectation_values_pec(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
+            measure_noise_data=None,
+            pec_gamma=pec_gamma,
+        )
+
+        # Expected values should be scaled by gamma
+        expected_evs = expected_evs_base * pec_gamma
+        self.assertTrue(np.allclose(evs, expected_evs), msg=f"Expected {expected_evs}, got {evs}")
+
+    @data(
+        [(2, 2), (2, 2)],
+        [(3, 4, 1, 1), (4, 3)],
+        [(4, 3), (3, 4, 1, 1)],
+        [(4, 3), ()],
+        [(), (4, 3)],
+    )
+    @unpack
+    def test_evs_shape_with_non_trivial_broadcasting_pec(self, obs_shape, param_shape):
+        """Test shape of evs for params and observables of different shapes with PEC."""
+        num_qubits = 33
+        num_paulis = int(np.prod(obs_shape))
+        random_paulis = random_pauli_list(num_qubits, num_paulis, phase=False)
+        observables = ObservablesArray(random_paulis).reshape(obs_shape)
+
+        param_basis_pairs = self.get_param_basis_pairs(observables, param_shape)
+
+        num_basis = sum(len(basis) for _param_idx, basis in param_basis_pairs)
+        data = np.zeros((1, num_basis, 10, num_qubits), dtype=bool)
+        # Create pauli_signs array with all +1 signs
+        pauli_signs = np.zeros((1, num_basis, 10), dtype=np.int8)
+        item_result = QuantumProgramItemResult({"_meas": data, "pauli_signs": pauli_signs})
+
+        pec_gamma = 1.8  # Example gamma value
+
+        evs, stds, ensemble_stds = process_expectation_values_pec(
+            item_result=item_result,
+            observables=observables,
+            param_shape=param_shape,
+            param_basis_pairs=param_basis_pairs,
+            measure_noise_data=None,
+            pec_gamma=pec_gamma,
+        )
+
+        expected_shape = np.broadcast_shapes(obs_shape, param_shape)
+        self.assertTupleEqual(evs.shape, expected_shape)
+        self.assertTupleEqual(stds.shape, expected_shape)
+        self.assertTupleEqual(ensemble_stds.shape, expected_shape)

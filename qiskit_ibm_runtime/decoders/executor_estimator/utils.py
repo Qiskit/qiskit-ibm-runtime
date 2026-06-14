@@ -75,7 +75,7 @@ def project_to_z(term: str) -> np.ndarray[int]:
 
 
 def compute_exp_val(
-    observable_term: str, datum: np.ndarray
+    observable_term: str, datum: np.ndarray, signs: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute expectation value and variances of an observable term from measurement data.
 
@@ -83,6 +83,9 @@ def compute_exp_val(
         observable_term: Observable term string (e.g., "ZZZ", "0X1", "IXI")
         datum: Boolean array of measurement outcomes, shape
             (num_randomizations, shots_per_randomization, num_qubits)
+        signs: Optional boolean array used with probabilistic error cancellation (PEC). Indicates
+            which errors were inserted in each circuit randomization, shape
+             (num_randomizations, error_generators_indicators)
 
     Returns:
         Tuple of (expectation_value, ensemble_variance, twirl_variance):
@@ -106,6 +109,16 @@ def compute_exp_val(
         evals = np.prod(1 - 2 * datum[..., is_Z], axis=-1)
     else:
         evals = np.ones(datum.shape[:-1])
+
+    # in case signs is provided - multiply the evals by -1 if the parity of the signs is odd
+    if signs is not None:
+        # sum all the indicators of the error generators for each randomization
+        signs_per_rand = np.asarray(np.sum(signs, axis=-1) % 2, dtype=bool)
+        # transform the bool array into an array consisting -1 (for True values)
+        # and 1 (for False values)
+        signs_per_rand = 1 - 2 * signs_per_rand
+        # expand signs to the shape of evals
+        evals *= signs_per_rand[..., np.newaxis]
 
     # Apply projector filters for "0" and "1"
     if any_0s | any_1s:
