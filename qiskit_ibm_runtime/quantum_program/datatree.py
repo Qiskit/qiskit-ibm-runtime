@@ -14,14 +14,10 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
-
-logger = logging.getLogger(__name__)
-
 
 DataTree: TypeAlias = (
     list["DataTree"] | dict[str, "DataTree"] | NDArray[float] | str | float | int | bool | None
