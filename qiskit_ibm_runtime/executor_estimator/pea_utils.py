@@ -109,7 +109,7 @@ def prepare_pea(
         # Prepare samplex_arguments
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
         # make parameters array broadcastable with the noise scales
-        flat_parameter_values = np.expand_dims(flat_parameter_values, -2)
+        flat_parameter_values = np.expand_dims(flat_parameter_values, 0)
         samplex_arguments = make_samplex_arguments(
             samplex, boxed_circuit, flat_parameter_values, change_basis
         )
@@ -117,14 +117,14 @@ def prepare_pea(
         # add samplex_arguments related to noise injection
 
         # Removing from the noise_factors 1 which is represented by the noise of the data
-        # gates layer
-        noise_scales = np.array(noise_factors) - 1
+        # gates layer. Also, make noise_scales broadcastable with the parameters
+        noise_scales = np.expand_dims(np.array(noise_factors) - 1, -1)
         for ref in noise_model_mapping[i]:
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
         samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
 
         # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0], len(noise_scales))
+        shape = (num_randomizations, len(noise_scales), change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,

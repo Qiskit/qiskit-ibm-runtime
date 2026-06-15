@@ -67,7 +67,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertIsInstance(item, SamplexItem)
         # Check samplex shape
         auto_num_rand = math.ceil(shots / (max(64, math.ceil(shots / 32))))
-        expected_shape = (auto_num_rand, 1, len(noise_factors))
+        # The expected shape is (num_randomizations, num_noise_factors, bases * num_param_sets)
+        expected_shape = (auto_num_rand, len(noise_factors), 1)
         self.assertEqual(item.shape, expected_shape)
 
         # Check that samplex_arguments contains pauli_lindblad_maps
@@ -79,7 +80,7 @@ class TestPreparePeaFunction(unittest.TestCase):
         # Check that samplex_arguments contains noise_scales for the layer
         self.assertIn("noise_scales.r2feB", item.samplex_arguments)
         # noise_scales = noise_factors - 1
-        expected_noise_scales = np.array(noise_factors) - 1
+        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
             np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
         )
@@ -131,7 +132,7 @@ class TestPreparePeaFunction(unittest.TestCase):
             item1.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
         )
         self.assertIn("noise_scales.r2feB", item1.samplex_arguments)
-        expected_noise_scales = np.array(noise_factors) - 1
+        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
             np.all(item1.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
         )
@@ -237,7 +238,7 @@ class TestPreparePeaFunction(unittest.TestCase):
             item.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
         )
         self.assertIn("noise_scales.r2feB", item.samplex_arguments)
-        expected_noise_scales = np.array(noise_factors) - 1
+        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
             np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
         )
@@ -247,3 +248,89 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
         self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+
+    def test_prepare_pea_with_parameters(self):
+        """Test prepare_pea with a pub containing parameters and validate final shape."""
+        from qiskit.circuit import Parameter
+
+        # Create a parameterized circuit with rz gates (supported by samplomatic)
+        circuit = QuantumCircuit(2)
+        theta = Parameter("theta")
+        phi = Parameter("phi")
+        circuit.h(0)
+        circuit.rz(theta, 0)
+        circuit.rz(phi, 1)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        # Create parameter values with shape (3, 2) - 3 sets of 2 parameters
+        parameter_values = np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]])
+
+        pub = EstimatorPub.coerce((circuit, observable, parameter_values))
+
+        # Create a simple noise model
+        noise_model = PauliLindbladMap.from_sparse_list(
+            [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
+        )
+        noise_model_mapping = [{"r2feB": noise_model}]
+
+        noise_factors = [1, 1.5, 2, 2.5, 3]
+
+        shots = 1024
+        quantum_program = prepare_pea(
+            [pub], TwirlingOptions(), shots, noise_factors, noise_model_mapping
+        )
+
+        self.assertIsInstance(quantum_program, QuantumProgram)
+        self.assertEqual(len(quantum_program.items), 1)
+
+        item = cast("SamplexItem", quantum_program.items[0])
+        self.assertIsInstance(item, SamplexItem)
+
+        # Check the shape of the program item
+        # The expected shape is (num_randomizations, num_noise_factors, bases * num_param_sets)
+        # num_randomizations is calculated automatically based on shots
+        auto_num_rand = math.ceil(shots / (max(64, math.ceil(shots / 32))))
+        num_param_sets = parameter_values.shape[0]  # 3
+        num_observables = 1  # Single observable
+        num_noise_factors = len(noise_factors)  # 5
+
+        expected_shape = (auto_num_rand, num_noise_factors, num_param_sets * num_observables)
+        self.assertEqual(
+            item.shape,
+            expected_shape,
+            f"Expected shape {expected_shape}, but got {item.shape}",
+        )
+
+        # Verify samplex_arguments contains the parameter values with correct shape
+        # Parameters should be expanded to be broadcastable with noise scales
+        self.assertIn("parameter_values", item.samplex_arguments)
+        param_values_in_samplex = item.samplex_arguments["parameter_values"]
+        # Shape should be (num_param_sets, 1, num_parameters) after expansion
+        expected_param_shape = (1, num_param_sets, circuit.num_parameters)
+        self.assertEqual(
+            param_values_in_samplex.shape,
+            expected_param_shape,
+            f"Expected parameter shape {expected_param_shape}, but got "
+            f"{param_values_in_samplex.shape}",
+        )
+
+        # Check that samplex_arguments contains noise-related data
+        self.assertIn("pauli_lindblad_maps.r2feB", item.samplex_arguments)
+        self.assertIn("noise_scales.r2feB", item.samplex_arguments)
+
+        # Verify noise_scales are correct (noise_factors - 1)
+        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
+        self.assertTrue(
+            np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
+        )
+
+        # Check passthrough_data contains correct information
+        passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
+        self.assertIn("pea_noise_factors", passthrough["post_processor"])
+        self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+        self.assertIn("param_shapes", passthrough["post_processor"])
+        self.assertEqual(
+            passthrough["post_processor"]["param_shapes"][0], pub.parameter_values.shape
+        )
