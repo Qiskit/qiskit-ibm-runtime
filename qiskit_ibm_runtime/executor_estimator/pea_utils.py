@@ -149,7 +149,7 @@ def prepare_pea(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": "False",
+            "measure_mitigation": measure_noise_learning is not None,
             "pea_noise_factors": noise_factors,
         },
     }
