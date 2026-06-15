@@ -18,15 +18,10 @@ from typing import TYPE_CHECKING
 
 from qiskit.quantum_info import QubitSparsePauliList
 
-from ...results.noise_learner_v3 import (
-    NoiseLearnerV3Result,
-    NoiseLearnerV3Results,
-)
+from ...results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 if TYPE_CHECKING:
-    from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
-        NoiseLearnerV3ResultsModel,
-    )
+    from ibm_quantum_schemas.noise_learner_v3.version_0_2 import NoiseLearnerV3ResultsModel
 
 
 def noise_learner_v3_result_from_0_1(

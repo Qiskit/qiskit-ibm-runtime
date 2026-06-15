@@ -19,10 +19,7 @@ from qiskit.circuit import BoxOp
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.executor_sampler.utils import (
-    extract_shots_from_pubs,
-    validate_no_boxes,
-)
+from qiskit_ibm_runtime.executor_sampler.utils import extract_shots_from_pubs, validate_no_boxes
 
 
 class TestValidateNoBoxes(unittest.TestCase):

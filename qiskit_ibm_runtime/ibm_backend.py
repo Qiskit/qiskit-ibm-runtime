@@ -23,21 +23,11 @@ from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.result import MeasLevel, MeasReturnType
 
-from .exceptions import (
-    IBMBackendApiProtocolError,
-    IBMBackendError,
-)
-from .models import (
-    BackendStatus,
-    GateConfig,
-    QasmBackendConfiguration,
-)
+from .exceptions import IBMBackendApiProtocolError, IBMBackendError
+from .models import BackendStatus, GateConfig, QasmBackendConfiguration
 from .utils import local_to_utc
 from .utils.backend_converter import convert_to_target
-from .utils.backend_decoder import (
-    configuration_from_server_data,
-    properties_from_server_data,
-)
+from .utils.backend_decoder import configuration_from_server_data, properties_from_server_data
 
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
