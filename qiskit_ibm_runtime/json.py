@@ -80,7 +80,7 @@ from qiskit_ibm_runtime.options.zne_options import (
 )
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
-from ..results.noise_learner import NoiseLearnerResult
+from .results.noise_learner import NoiseLearnerResult
 
 if TYPE_CHECKING:
     from collections.abc import Callable

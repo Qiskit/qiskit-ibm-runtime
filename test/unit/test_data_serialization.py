@@ -61,7 +61,7 @@ from qiskit_ibm_runtime.results.noise_learner import (
     NoiseLearnerResult,
     PauliLindbladError,
 )
-from qiskit_ibm_runtime.utils import RuntimeDecoder, RuntimeEncoder
+from qiskit_ibm_runtime.json import RuntimeDecoder, RuntimeEncoder
 
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
