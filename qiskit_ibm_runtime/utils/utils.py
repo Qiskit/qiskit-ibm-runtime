@@ -20,11 +20,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from qiskit.circuit import ControlFlowOp, ParameterExpression
 from qiskit.circuit.delay import Delay
-from qiskit.circuit.library.standard_gates import (
-    PhaseGate,
-    RZGate,
-    U1Gate,
-)
+from qiskit.circuit.library.standard_gates import PhaseGate, RZGate, U1Gate
 from qiskit.qpy import QPY_VERSION
 from samplomatic.ssv import SSV
 
