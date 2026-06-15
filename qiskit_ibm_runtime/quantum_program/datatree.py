@@ -44,14 +44,7 @@ def is_datatree_compatible(data: Any) -> bool:
     if data is None or isinstance(data, (str, bool, int, float, np.ndarray)):
         return True
 
-    if isinstance(data, list):
-        return all(is_datatree_compatible(item) for item in data)
-
-    if isinstance(data, tuple):
-        logger.warning(
-            "Tuples are turned into list when the payload is serialized, and attached to the "
-            "returned result list format."
-        )
+    if isinstance(data, (list, tuple)):
         return all(is_datatree_compatible(item) for item in data)
 
     if isinstance(data, dict):
