@@ -12,14 +12,8 @@
 
 """Internal utilities."""
 
-from .converters import (
-    utc_to_local,
-    local_to_utc,
-)
-from .utils import (
-    is_crn,
-    are_circuits_dynamic,
-)
+from .converters import utc_to_local, local_to_utc
+from .utils import is_crn, are_circuits_dynamic
 from .validations import (
     validate_estimator_pubs,
     validate_classical_registers,

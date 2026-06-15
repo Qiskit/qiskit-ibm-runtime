@@ -24,14 +24,8 @@ from qiskit.providers import BackendV2
 from qiskit.providers.basic_provider import BasicSimulator
 from qiskit.utils import optionals as _optionals
 
-from ..models import (
-    BackendConfiguration,
-    BackendProperties,
-    BackendStatus,
-)
-from ..models.exceptions import (
-    BackendPropertyError,
-)
+from ..models import BackendConfiguration, BackendProperties, BackendStatus
+from ..models.exceptions import BackendPropertyError
 from ..utils.backend_converter import convert_to_target
 from ..utils.backend_decoder import (
     configuration_from_server_data,
@@ -45,9 +39,7 @@ if TYPE_CHECKING:
     from qiskit.providers import Job, Options
     from qiskit.transpiler import Target
 
-    from ..models import (
-        QasmBackendConfiguration,
-    )
+    from ..models import QasmBackendConfiguration
     from ..qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
@@ -318,9 +310,7 @@ class FakeBackendV2(BackendV2):
             basic_device_gate_errors,
             basic_device_readout_errors,
         )
-        from qiskit_aer.noise.passes import (
-            RelaxationNoisePass,
-        )
+        from qiskit_aer.noise.passes import RelaxationNoisePass
 
         if self._props_dict is None:
             self._set_props_dict_from_json()

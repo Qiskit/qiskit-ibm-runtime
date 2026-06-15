@@ -24,11 +24,7 @@ from typing import TYPE_CHECKING, Any
 from .api.exceptions import RequestsApiError
 from .decoders.defaults import DEFAULT_DECODERS
 from .decoders.result_decoder import ResultDecoder
-from .exceptions import (
-    IBMApiError,
-    IBMError,
-    IBMRuntimeError,
-)
+from .exceptions import IBMApiError, IBMError, IBMRuntimeError
 from .utils import utc_to_local, validate_job_tags
 
 if TYPE_CHECKING:

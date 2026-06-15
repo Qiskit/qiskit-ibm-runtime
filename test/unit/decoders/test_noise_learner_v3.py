@@ -21,10 +21,7 @@ from qiskit_ibm_runtime.decoders.noise_learner_v3.decoder import NoiseLearnerV3R
 from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
     noise_learner_v3_result_to_0_1,
 )
-from qiskit_ibm_runtime.results.noise_learner_v3 import (
-    NoiseLearnerV3Result,
-    NoiseLearnerV3Results,
-)
+from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 from ...ibm_test_case import IBMTestCase
 
