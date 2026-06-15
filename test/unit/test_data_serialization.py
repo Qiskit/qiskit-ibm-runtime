@@ -65,11 +65,7 @@ from qiskit_ibm_runtime.utils import RuntimeDecoder, RuntimeEncoder
 
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
-from ..serialization import (
-    SerializableClass,
-    SerializableClassDecoder,
-    get_complex_types,
-)
+from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
 from ..utils import bell, mock_wait_for_final_state
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService

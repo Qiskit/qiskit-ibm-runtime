@@ -26,9 +26,7 @@ from qiskit.compiler import transpile
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
-from ..decorators import (
-    integration_test_setup,
-)
+from ..decorators import integration_test_setup
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell
 
@@ -37,9 +35,7 @@ if TYPE_CHECKING:
 
     from qiskit_ibm_runtime import IBMBackend, RuntimeJobV2
 
-    from ..decorators import (
-        IntegrationTestDependencies,
-    )
+    from ..decorators import IntegrationTestDependencies
 
 
 class TestIBMJobAttributes(IBMTestCase):

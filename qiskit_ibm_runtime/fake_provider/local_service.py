@@ -21,10 +21,7 @@ import warnings
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Literal
 
-from qiskit.primitives import (
-    BackendEstimatorV2,
-    BackendSamplerV2,
-)
+from qiskit.primitives import BackendEstimatorV2, BackendSamplerV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 

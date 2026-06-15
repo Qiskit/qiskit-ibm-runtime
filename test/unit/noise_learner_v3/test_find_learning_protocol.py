@@ -15,9 +15,7 @@
 from qiskit.circuit import QuantumCircuit
 from samplomatic import Twirl
 
-from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import (
-    find_learning_protocol,
-)
+from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import find_learning_protocol
 
 from ...ibm_test_case import IBMTestCase
 

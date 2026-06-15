@@ -29,9 +29,7 @@ from typing import TYPE_CHECKING, Any, get_args
 import dateutil.parser
 import numpy as np
 
-from qiskit_ibm_runtime.quantum_program.params_converters import (
-    QUANTUM_PROGRAM_PARAMS_CONVERTERS,
-)
+from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
 try:
     from qiskit.quantum_info import PauliLindbladMap
@@ -40,12 +38,7 @@ try:
 except ImportError:
     HAS_PAULI_LINDBLAD_MAP = False
 
-from qiskit.circuit import (
-    Instruction,
-    Parameter,
-    QuantumCircuit,
-    QuantumRegister,
-)
+from qiskit.circuit import Instruction, Parameter, QuantumCircuit, QuantumRegister
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.primitives.containers import (
     BitArray,
@@ -59,10 +52,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy import QPY_VERSION as QISKIT_QPY_VERSION
-from qiskit.qpy import (
-    dump,
-    load,
-)
+from qiskit.qpy import dump, load
 from qiskit.qpy.binary_io.value import _read_parameter, _write_parameter
 from qiskit.result import Result
 from qiskit.transpiler import CouplingMap
@@ -75,9 +65,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpan,
     TwirledSliceSpanV2,
 )
-from qiskit_ibm_runtime.options.zne_options import (
-    ExtrapolatorType,
-)
+from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
 from qiskit_ibm_runtime.results.estimator_pub import EstimatorPubResult
 
 from ..results.noise_learner import NoiseLearnerResult
