@@ -29,21 +29,11 @@ from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import (
-    Batch,
-    EstimatorV2,
-    QiskitRuntimeService,
-    SamplerV2,
-    Session,
-)
+from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import (
-    BackendConfiguration,
-    BackendProperties,
-    BackendStatus,
-)
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 if TYPE_CHECKING:

@@ -19,7 +19,12 @@ from typing import TYPE_CHECKING, cast
 from qiskit.primitives import PrimitiveResult
 
 from .converters import quantum_program_item_result_to_sampler_pub_result
-from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
+from .utils import (
+    TWIRLING_PREFIX,
+    executor_metadata_to_sampler_metadata,
+    flatten_twirling_axes,
+    undo_twirling,
+)
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
@@ -67,9 +72,15 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     else:
         num_randomizations = 0
 
+    # Filter out measurement-twirling bookkeeping arrays; they may use a
+    # singleton shot axis for broadcasting and are not user-facing result data.
+    meas_arrays = [array for key, array in result[0].items() if not key.startswith(TWIRLING_PREFIX)]
+    if not meas_arrays:
+        raise ValueError("Unable to identify measurement data for shots per PUB.")
+
     # Compute the shots from the second-to-last axis of the result arrays; this corresponds to
     # PUB shots if twirling is OFF, and to ``shots_per_randomization`` if twirling is ON.
-    if len(set_shots := {array.shape[-2] for array in result[0].values()}) != 1:
+    if len(set_shots := {array.shape[-2] for array in meas_arrays}) != 1:
         raise ValueError("Unable to uniquely identify the shots per PUB.")
     shots = next(iter(set_shots))
 
