@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
     from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.zne_options import ZneOptions
 
 import numpy as np
 from samplomatic import build
@@ -44,8 +45,8 @@ def prepare_pea(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
-    noise_factors: Sequence[float],
-    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]],
+    zne_options: ZneOptions,
+    noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
@@ -58,10 +59,10 @@ def prepare_pea(
             and twirling is on.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
-        noise_factors: The noise amplification factors to the PEA mitigation.
-        noise_model_mapping: List of mapping between layer ref to a noise model to use for noise
-            amplification. The list must contain a map for each pub. Assumes that the
-            unique layers used for noise learning were extracted using the ``get_layers`` method.
+        zne_options: The options for PEA mitigation (which have the same options as ZNE).
+        noise_model_mapping: Mapping between layer ref to a noise model to use for noise
+            amplification. The dict contains layers from all pubs. Assumes that the unique
+            layers used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -72,8 +73,8 @@ def prepare_pea(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
-            mismatched.
+        IBMInputValueError: If noise_model_mapping is missing a noise map for at least one of
+            the pubs layers.
 
     """
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
@@ -81,14 +82,6 @@ def prepare_pea(
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
-
-    # validate noise_model_mapping length
-    if noise_model_mapping is None or (
-        noise_model_mapping is not None and len(noise_model_mapping) != len(pubs)
-    ):
-        raise IBMInputValueError(
-            "If PEA mitigation is used, the input must contain noise_model_mapping for each pub"
-        )
 
     # Create items
     items: list[SamplexItem] = []
@@ -116,12 +109,25 @@ def prepare_pea(
 
         # add samplex_arguments related to noise injection
 
-        # Removing from the noise_factors 1 which is represented by the noise of the data
-        # gates layer. Also, make noise_scales broadcastable with the parameters
-        noise_scales = np.expand_dims(np.array(noise_factors) - 1, -1)
-        for ref in noise_model_mapping[i]:
+        # Subtract 1 from noise_factors, since a value of 1 represents the noise
+        # that is present in the circuit in the absence of amplification.
+        # Also, make noise_scales broadcastable with the parameters.
+        noise_scales = np.expand_dims(np.array(zne_options.noise_factors) - 1, -1)
+
+        # Create a noise model map containing only the layers relevant for the current pub
+        specs = samplex.inputs().get_specs("pauli_lindblad_maps")
+        pub_noise_model = {}
+        for spec in specs:
+            ref = spec.name.split(".")[-1]
+            if ref not in noise_model_mapping.keys():
+                raise IBMInputValueError(
+                    f"noise_model_mapping is missing noise map for layer reference {ref}"
+                )
+            pub_noise_model[ref] = noise_model_mapping[ref]
+
+        for ref in pub_noise_model:
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
-        samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
+        samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
 
         # Create SamplexItem
         shape = (num_randomizations, len(noise_scales), change_basis.shape[0])
@@ -150,7 +156,7 @@ def prepare_pea(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
-            "pea_noise_factors": noise_factors,
+            "pea_noise_factors": zne_options.noise_factors,
         },
     }
 

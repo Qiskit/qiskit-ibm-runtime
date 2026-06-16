@@ -21,13 +21,17 @@ from ddt import ddt
 from qiskit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from samplomatic import InjectNoise
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.pea_utils import prepare_pea
+from qiskit_ibm_runtime.executor_estimator.prepare import get_layers
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
+from qiskit_ibm_runtime.options_models.zne_options import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
@@ -49,13 +53,22 @@ class TestPreparePeaFunction(unittest.TestCase):
         noise_model = PauliLindbladMap.from_sparse_list(
             [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
         )
-        noise_model_mapping = [{"r2feB": noise_model}]
+        # find layers first to extract the layers ref
+        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers[0]:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+
+        noise_model_mapping = {noise_layer_ref: noise_model}
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, noise_factors, noise_model_mapping
+            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
@@ -72,17 +85,20 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertEqual(item.shape, expected_shape)
 
         # Check that samplex_arguments contains pauli_lindblad_maps
-        self.assertIn("pauli_lindblad_maps.r2feB", item.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
         self.assertEqual(
-            item.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
+            noise_model_mapping[noise_layer_ref],
         )
 
         # Check that samplex_arguments contains noise_scales for the layer
-        self.assertIn("noise_scales.r2feB", item.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
         # noise_scales = noise_factors - 1
         expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
-            np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
+            np.all(
+                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
+            )
         )
 
         # Check passthrough_data contains pea_noise_factors
@@ -111,49 +127,73 @@ class TestPreparePeaFunction(unittest.TestCase):
         noise_model_1 = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
         noise_model_2a = PauliLindbladMap.from_sparse_list([("XY", [0, 1], 0.15)], num_qubits=2)
         noise_model_2b = PauliLindbladMap.from_sparse_list([("ZX", [1, 2], 0.2)], num_qubits=3)
-        noise_model_mapping = [
-            {"r2feB": noise_model_1},
-            {"rf55B": noise_model_2a, "rd2dB": noise_model_2b},
-        ]
+
+        # find layers first to extract the layers ref
+        layers = get_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
+        noise_layer_refs = []
+        for pub_layers in layers:
+            for layer in pub_layers:
+                if annot := get_annotation(layer.operation, InjectNoise):
+                    noise_layer_refs.append(annot.ref)
+
+        noise_model_mapping = {
+            noise_layer_refs[0]: noise_model_1,
+            noise_layer_refs[1]: noise_model_2a,
+            noise_layer_refs[2]: noise_model_2b,
+        }
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         shots = 2048
         quantum_program = prepare_pea(
-            [pub1, pub2], TwirlingOptions(), shots, noise_factors, noise_model_mapping
+            [pub1, pub2], TwirlingOptions(), shots, zne_options, noise_model_mapping
         )
 
         self.assertEqual(len(quantum_program.items), 2)
 
         # Check first item
         item1 = cast("SamplexItem", quantum_program.items[0])
-        self.assertIn("pauli_lindblad_maps.r2feB", item1.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_refs[0]}", item1.samplex_arguments)
         self.assertEqual(
-            item1.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
+            item1.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[0]}"],
+            noise_model_mapping[noise_layer_refs[0]],
         )
-        self.assertIn("noise_scales.r2feB", item1.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_refs[0]}", item1.samplex_arguments)
         expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
-            np.all(item1.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
+            np.all(
+                item1.samplex_arguments[f"noise_scales.{noise_layer_refs[0]}"]
+                == expected_noise_scales
+            )
         )
 
         # Check second item
         item2 = cast("SamplexItem", quantum_program.items[1])
-        self.assertIn("pauli_lindblad_maps.rf55B", item2.samplex_arguments)
-        self.assertIn("pauli_lindblad_maps.rd2dB", item2.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_refs[1]}", item2.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_refs[2]}", item2.samplex_arguments)
         self.assertEqual(
-            item2.samplex_arguments["pauli_lindblad_maps.rf55B"], noise_model_mapping[1]["rf55B"]
+            item2.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[1]}"],
+            noise_model_mapping[noise_layer_refs[1]],
         )
         self.assertEqual(
-            item2.samplex_arguments["pauli_lindblad_maps.rd2dB"], noise_model_mapping[1]["rd2dB"]
+            item2.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_refs[2]}"],
+            noise_model_mapping[noise_layer_refs[2]],
         )
-        self.assertIn("noise_scales.rf55B", item2.samplex_arguments)
-        self.assertIn("noise_scales.rd2dB", item2.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_refs[1]}", item2.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_refs[2]}", item2.samplex_arguments)
         self.assertTrue(
-            np.all(item2.samplex_arguments["noise_scales.rf55B"] == expected_noise_scales)
+            np.all(
+                item2.samplex_arguments[f"noise_scales.{noise_layer_refs[1]}"]
+                == expected_noise_scales
+            )
         )
         self.assertTrue(
-            np.all(item2.samplex_arguments["noise_scales.rd2dB"] == expected_noise_scales)
+            np.all(
+                item2.samplex_arguments[f"noise_scales.{noise_layer_refs[2]}"]
+                == expected_noise_scales
+            )
         )
 
         # Check passthrough_data contains pec_gammas for both pubs
@@ -161,8 +201,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
         self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
 
-    def test_prepare_pea_raises_error_without_noise_model_mapping(self):
-        """Test that prepare_pea raises error when noise_model_mapping is None."""
+    def test_prepare_pea_raises_error_with_empty_noise_model_mapping(self):
+        """Test that prepare_pea raises error when noise_model_mapping is empty."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -171,21 +211,23 @@ class TestPreparePeaFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub], TwirlingOptions(), 1024, noise_factors, None)
+            prepare_pea([pub], TwirlingOptions(), 1024, zne_options, {})
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
-    def test_prepare_pea_raises_error_with_mismatched_noise_model_mapping_length(self):
-        """Test that prepare_pea raises error when noise_model_mapping length doesn't match pubs."""
+    def test_prepare_pea_raises_error_with_missing_noise_model_key(self):
+        """Test that prepare_pea raises error when noise_model_mapping is missing a noise model."""
         circuit1 = QuantumCircuit(2)
         circuit1.h(0)
         circuit1.cx(0, 1)
 
         circuit2 = QuantumCircuit(2)
         circuit2.h(0)
-        circuit2.cx(0, 1)
+        circuit2.cz(0, 1)
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         pub1 = EstimatorPub.coerce((circuit1, observable))
@@ -193,12 +235,21 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         # Only provide noise model for one pub, but we have two pubs
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        noise_model_mapping = [{"r2feB": noise_model}]
+        # find layers first to extract the layers ref
+        layers = get_layers([pub1], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref_pub1 = ""
+        for layer in layers[0]:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref_pub1 = annot.ref
+
+        noise_model_mapping = {noise_layer_ref_pub1: noise_model}
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub1, pub2], TwirlingOptions(), 1024, noise_factors, noise_model_mapping)
+            prepare_pea([pub1, pub2], TwirlingOptions(), 1024, zne_options, noise_model_mapping)
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -212,9 +263,19 @@ class TestPreparePeaFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        noise_model_mapping = [{"r2feB": noise_model}]
+
+        # find layers first to extract the layers ref
+        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers[0]:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+
+        noise_model_mapping = {noise_layer_ref: noise_model}
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
@@ -223,7 +284,7 @@ class TestPreparePeaFunction(unittest.TestCase):
             [pub],
             TwirlingOptions(),
             1024,
-            noise_factors,
+            zne_options,
             noise_model_mapping,
             measure_noise_learning,
         )
@@ -233,14 +294,17 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         # Check first item has PEA arguments
         item = cast("SamplexItem", quantum_program.items[0])
-        self.assertIn("pauli_lindblad_maps.r2feB", item.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
         self.assertEqual(
-            item.samplex_arguments["pauli_lindblad_maps.r2feB"], noise_model_mapping[0]["r2feB"]
+            item.samplex_arguments[f"pauli_lindblad_maps.{noise_layer_ref}"],
+            noise_model_mapping[noise_layer_ref],
         )
-        self.assertIn("noise_scales.r2feB", item.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
         expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
-            np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
+            np.all(
+                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
+            )
         )
 
         # Check passthrough data
@@ -273,13 +337,22 @@ class TestPreparePeaFunction(unittest.TestCase):
         noise_model = PauliLindbladMap.from_sparse_list(
             [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
         )
-        noise_model_mapping = [{"r2feB": noise_model}]
+        # find layers first to extract the layers ref
+        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        noise_layer_ref = ""
+        for layer in layers[0]:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_ref = annot.ref
+
+        noise_model_mapping = {noise_layer_ref: noise_model}
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
+        zne_options = ZneOptions()
+        zne_options.noise_factors = noise_factors
 
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, noise_factors, noise_model_mapping
+            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
@@ -317,13 +390,15 @@ class TestPreparePeaFunction(unittest.TestCase):
         )
 
         # Check that samplex_arguments contains noise-related data
-        self.assertIn("pauli_lindblad_maps.r2feB", item.samplex_arguments)
-        self.assertIn("noise_scales.r2feB", item.samplex_arguments)
+        self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
+        self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
 
         # Verify noise_scales are correct (noise_factors - 1)
         expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
         self.assertTrue(
-            np.all(item.samplex_arguments["noise_scales.r2feB"] == expected_noise_scales)
+            np.all(
+                item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
+            )
         )
 
         # Check passthrough_data contains correct information
