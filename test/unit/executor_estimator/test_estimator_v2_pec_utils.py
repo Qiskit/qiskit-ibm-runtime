@@ -380,8 +380,8 @@ class TestPreparePecFunction(unittest.TestCase):
             item.samplex_arguments[f"noise_scales.{noise_layer_ref}"], expected_noise_gain
         )
 
-    def test_prepare_pec_raises_error_without_noise_model_mapping(self):
-        """Test that prepare_pec raises error when noise_model_mapping is None."""
+    def test_prepare_pec_raises_error_with_empty_noise_model_mapping(self):
+        """Test that prepare_pec raises error when noise_model_mapping is empty."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
