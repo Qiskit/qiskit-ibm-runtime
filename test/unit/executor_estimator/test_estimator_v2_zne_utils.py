@@ -22,57 +22,14 @@ from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime.executor_estimator.zne.zne_utils import fold_gates, prepare_zne
+from qiskit_ibm_runtime.executor_estimator.zne.zne_utils import prepare_zne
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
 from qiskit_ibm_runtime.options_models.twirling_options import TwirlingOptions
+from qiskit_ibm_runtime.options_models.zne_options import ZneOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
-
-
-@ddt
-class TestFoldGates(unittest.TestCase):
-    """Tests for fold_gates helper function."""
-
-    def test_fold_gates_with_noise_factor_one(self):
-        """Test that noise_factor=1 returns circuit unchanged."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.x(1)
-
-        folded = fold_gates(circuit, noise_factor=1.0)
-
-        # With noise_factor=1, circuit should be unchanged
-        self.assertEqual(folded.num_qubits, circuit.num_qubits)
-        self.assertEqual(folded.depth(), circuit.depth())
-
-    def test_fold_gates_with_noise_factor_greater_than_one(self):
-        """Test that noise_factor>1 increases circuit depth."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-
-        original_depth = circuit.depth()
-        folded = fold_gates(circuit, noise_factor=3.0)
-
-        # With noise_factor=3, circuit depth should increase
-        self.assertGreater(folded.depth(), original_depth)
-
-    @data("random", "front", "back")
-    def test_fold_gates_with_different_methods(self, method):
-        """Test fold_gates with different folding methods."""
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.x(1)
-
-        folded = fold_gates(circuit, noise_factor=2.0, method=method)
-
-        # Should return a valid circuit
-        self.assertIsInstance(folded, QuantumCircuit)
-        self.assertEqual(folded.num_qubits, circuit.num_qubits)
 
 
 @ddt
@@ -89,10 +46,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = [1.0, 2.0, 3.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], TwirlingOptions(), shots, noise_factors, folding_method="random"
-        )
+        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(quantum_program.shots, shots)
@@ -107,6 +65,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("zne_noise_factors", passthrough["post_processor"])
         self.assertEqual(passthrough["post_processor"]["zne_noise_factors"], noise_factors)
+        self.assertIn("item_to_pub_and_noise_factor_map", passthrough["post_processor"])
+        expected_map = [(0, 1.0), (0, 2.0), (0, 3.0)]
+        self.assertEqual(
+            passthrough["post_processor"]["item_to_pub_and_noise_factor_map"], expected_map
+        )
 
     def test_prepare_zne_multiple_pubs(self):
         """Test prepare_zne with multiple pubs."""
@@ -126,10 +89,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub2 = EstimatorPub.coerce((circuit2, observable2))
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding_front"
+        zne_options.noise_factors = noise_factors
         shots = 2048
-        quantum_program = prepare_zne(
-            [pub1, pub2], TwirlingOptions(), shots, noise_factors, folding_method="front"
-        )
+        quantum_program = prepare_zne([pub1, pub2], TwirlingOptions(), shots, zne_options)
 
         # Should have len(pubs) * len(noise_factors) items
         expected_items = 2 * len(noise_factors)
@@ -151,6 +115,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
         self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 1)
         self.assertEqual(passthrough["post_processor"]["zne_noise_factors"], noise_factors)
+        self.assertIn("item_to_pub_and_noise_factor_map", passthrough["post_processor"])
+        expected_map = [(0, 1.0), (0, 2.0), (1, 1.0), (1, 2.0)]
+        self.assertEqual(
+            passthrough["post_processor"]["item_to_pub_and_noise_factor_map"], expected_map
+        )
 
     def test_prepare_zne_with_single_noise_factor(self):
         """Test prepare_zne with a single noise factor."""
@@ -162,10 +131,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = [1.5]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding_back"
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], TwirlingOptions(), shots, noise_factors, folding_method="back"
-        )
+        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
         # Should have 1 item for single pub and single noise factor
         self.assertEqual(len(quantum_program.items), 1)
@@ -183,15 +153,16 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = []
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], TwirlingOptions(), shots, noise_factors, folding_method="random"
-        )
+        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
         # Should have 0 items for empty noise_factors
         self.assertEqual(len(quantum_program.items), 0)
 
-    @data("random", "front", "back")
+    @data("gate_folding", "gate_folding_front", "gate_folding_back")
     def test_prepare_zne_with_different_folding_methods(self, folding_method):
         """Test prepare_zne with different folding methods."""
         circuit = QuantumCircuit(2)
@@ -202,10 +173,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = folding_method
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], TwirlingOptions(), shots, noise_factors, folding_method=folding_method
-        )
+        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
         self.assertIsInstance(quantum_program, QuantumProgram)
         self.assertEqual(len(quantum_program.items), len(noise_factors))
@@ -224,10 +196,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable, parameter_values))
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], TwirlingOptions(), shots, noise_factors, folding_method="random"
-        )
+        quantum_program = prepare_zne([pub], TwirlingOptions(), shots, zne_options)
 
         # Should have len(noise_factors) items
         self.assertEqual(len(quantum_program.items), len(noise_factors))
@@ -256,10 +229,11 @@ class TestPrepareZneFunction(unittest.TestCase):
         twirling_options.num_randomizations = 8
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         shots = 1024
-        quantum_program = prepare_zne(
-            [pub], twirling_options, shots, noise_factors, folding_method="random"
-        )
+        quantum_program = prepare_zne([pub], twirling_options, shots, zne_options)
 
         # Should have len(noise_factors) items
         self.assertEqual(len(quantum_program.items), len(noise_factors))
@@ -279,6 +253,9 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
 
@@ -286,8 +263,7 @@ class TestPrepareZneFunction(unittest.TestCase):
             [pub],
             TwirlingOptions(),
             1024,
-            noise_factors,
-            folding_method="random",
+            zne_options,
             measure_noise_learning=measure_noise_learning,
         )
 
@@ -316,6 +292,9 @@ class TestPrepareZneFunction(unittest.TestCase):
         pub2 = EstimatorPub.coerce((circuit2, observable2))
 
         noise_factors = [1.0, 2.0]
+        zne_options = ZneOptions()
+        zne_options.amplifier = "gate_folding"
+        zne_options.noise_factors = noise_factors
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 32
 
@@ -323,8 +302,7 @@ class TestPrepareZneFunction(unittest.TestCase):
             [pub1, pub2],
             TwirlingOptions(),
             1024,
-            noise_factors,
-            folding_method="random",
+            zne_options,
             measure_noise_learning=measure_noise_learning,
         )
 
