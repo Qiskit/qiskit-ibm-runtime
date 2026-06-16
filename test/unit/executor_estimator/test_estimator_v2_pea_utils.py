@@ -64,6 +64,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         shots = 1024
@@ -104,7 +105,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         # Check passthrough_data contains pea_noise_factors
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
-        self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["pea_noise_factors"]),
+                np.array(noise_factors),
+            )
+        )
 
     def test_prepare_pea_multiple_pubs(self):
         """Test prepare_pea with multiple pubs and different noise models."""
@@ -144,6 +150,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         shots = 2048
@@ -199,7 +206,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         # Check passthrough_data contains pec_gammas for both pubs
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
-        self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["pea_noise_factors"]),
+                np.array(noise_factors),
+            )
+        )
 
     def test_prepare_pea_raises_error_with_empty_noise_model_mapping(self):
         """Test that prepare_pea raises error when noise_model_mapping is empty."""
@@ -212,6 +224,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         with self.assertRaises(IBMInputValueError) as context:
@@ -246,6 +259,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         with self.assertRaises(IBMInputValueError) as context:
@@ -275,6 +289,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         measure_noise_learning = MeasureNoiseLearningOptions()
@@ -311,7 +326,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertEqual(passthrough["post_processor"]["measure_mitigation"], "True")
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
-        self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["pea_noise_factors"]),
+                np.array(noise_factors),
+            )
+        )
 
     def test_prepare_pea_with_parameters(self):
         """Test prepare_pea with a pub containing parameters and validate final shape."""
@@ -348,6 +368,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_factors = [1, 1.5, 2, 2.5, 3]
         zne_options = ZneOptions()
+        zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
         shots = 1024
@@ -404,7 +425,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         # Check passthrough_data contains correct information
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("pea_noise_factors", passthrough["post_processor"])
-        self.assertEqual(passthrough["post_processor"]["pea_noise_factors"], noise_factors)
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["pea_noise_factors"]),
+                np.array(noise_factors),
+            )
+        )
         self.assertIn("param_shapes", passthrough["post_processor"])
         self.assertEqual(
             passthrough["post_processor"]["param_shapes"][0], pub.parameter_values.shape

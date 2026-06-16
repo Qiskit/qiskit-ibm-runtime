@@ -77,6 +77,14 @@ def prepare_pea(
             the pubs layers.
 
     """
+    if zne_options.amplifier != "pea":
+        raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
+
+    if zne_options.noise_factors == "auto":
+        noise_factors = (1.0, 1.5, 2.0, 2.5, 3.0)
+    else:
+        noise_factors = np.array(zne_options.noise_factors)
+
     num_randomizations, shots_per_randomization = calculate_twirling_shots(
         shots,
         twirling_options.num_randomizations,
@@ -112,7 +120,7 @@ def prepare_pea(
         # Subtract 1 from noise_factors, since a value of 1 represents the noise
         # that is present in the circuit in the absence of amplification.
         # Also, make noise_scales broadcastable with the parameters.
-        noise_scales = np.expand_dims(np.array(zne_options.noise_factors) - 1, -1)
+        noise_scales = np.expand_dims(np.array(noise_factors) - 1, -1)
 
         # Create a noise model map containing only the layers relevant for the current pub
         specs = samplex.inputs().get_specs("pauli_lindblad_maps")
@@ -156,7 +164,7 @@ def prepare_pea(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
-            "pea_noise_factors": zne_options.noise_factors,
+            "pea_noise_factors": noise_factors,
         },
     }
 
