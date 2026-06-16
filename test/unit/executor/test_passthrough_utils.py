@@ -70,7 +70,7 @@ class TestValidateAndExtractMetadata(unittest.TestCase):
         self.assertEqual(metadata_list[1], {})
 
     @data(
-        {"invalid": (1, 2, 3)},  # tuple is not DataTree compatible
+        {"invalid": range(3)},  # generators is not DataTree compatible
         {"invalid": {1, 2, 3}},  # set is not DataTree compatible
         {"invalid": object()},  # custom object is not DataTree compatible
     )
@@ -99,7 +99,7 @@ class TestValidateAndExtractMetadata(unittest.TestCase):
 
         circuit2 = QuantumCircuit(2)
         circuit2.h(1)
-        circuit2.metadata = {"invalid": (1, 2, 3)}  # Invalid tuple
+        circuit2.metadata = {"invalid": range(3)}  # Invalid tuple
 
         observable = SparsePauliOp.from_list([("ZZ", 1)])
         pubs = [
