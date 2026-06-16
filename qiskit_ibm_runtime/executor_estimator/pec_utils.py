@@ -147,7 +147,7 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If noise_model_mapping is missing a noise map for at least one of
+        IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
             the pubs layers.
     """
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
@@ -213,14 +213,15 @@ def prepare_pec(
         pub_noise_model = {}
         for spec in specs:
             ref = spec.name.split(".")[-1]
-            if ref not in noise_model_mapping.keys():
+            try:
+                pub_noise_model[ref] = noise_model_mapping[ref]
+            except KeyError:
                 raise IBMInputValueError(
                     f"noise_model_mapping is missing noise map for layer reference {ref}"
                 )
-            pub_noise_model[ref] = noise_model_mapping[ref]
-
-        for ref in pub_noise_model:
+            # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
+
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
         scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
         pec_gamma_list.append(scaled_gamma)
