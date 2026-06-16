@@ -33,6 +33,7 @@ class TestIsDatatreeCompatible(IBMTestCase):
             "none": None,
             "array": np.array([1.0, 2.0, 3.0]),
             "list": [1, 2, 3],
+            "tuple": (1, 2, 3),
             "nested_dict": {
                 "inner": "value",
                 "inner_list": [4, 5, 6],
@@ -58,11 +59,10 @@ class TestIsDatatreeCompatible(IBMTestCase):
         self.assertFalse(is_datatree_compatible(object()))
         self.assertFalse(is_datatree_compatible(lambda x: x))
         self.assertFalse(is_datatree_compatible({1, 2, 3}))
-        self.assertFalse(is_datatree_compatible((1, 2, 3)))  # tuples not allowed
 
     def test_invalid_nested_types(self):
         """Test that incompatible types in nested structures return False."""
         self.assertFalse(is_datatree_compatible([1, 2, object()]))
         self.assertFalse(is_datatree_compatible({"key": object()}))
         self.assertFalse(is_datatree_compatible({"key": [1, 2, {3, 4}]}))
-        self.assertFalse(is_datatree_compatible({"outer": {"inner": (1, 2, 3)}}))
+        self.assertFalse(is_datatree_compatible({"outer": {"inner": (1, 2, {3, 4})}}))

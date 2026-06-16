@@ -46,11 +46,15 @@ class TestSampler(IBMIntegrationTestCase):
         circuit.measure_all()
         isa_circuit = self.pm.run(circuit)
 
+        pubs = [isa_circuit.copy() for _ in range(3)]
+        pubs[1].metadata = {"list": [1, 2, 3]}
+        pubs[2].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
+
         options = SamplerOptions()
         options.default_shots = 1000
 
         sampler = SamplerV2(self.backend, options)
-        job = sampler.run([isa_circuit] * 3)
+        job = sampler.run(pubs)
 
         results = job.result()
 
@@ -64,6 +68,10 @@ class TestSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result.metadata, dict)
             self.assertIsInstance(result.data.meas, BitArray)
             self.assertEqual(result.data.meas.num_shots, options.default_shots)
+
+        self.assertEqual(results[0].metadata, {"circuit_metadata": {}})
+        self.assertEqual(results[1].metadata, {"circuit_metadata": {"list": [1, 2, 3]}})
+        self.assertEqual(results[2].metadata, {"circuit_metadata": {"tuple": [1, 2, 3]}})
 
     @data(True, False)
     def test_sampler_with_parametric_circuits(self, twirling):

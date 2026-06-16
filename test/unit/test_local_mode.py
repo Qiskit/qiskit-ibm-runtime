@@ -15,28 +15,16 @@
 import warnings
 
 from ddt import data, ddt
-from qiskit.primitives import (
-    PrimitiveResult,
-    PubResult,
-    SamplerPubResult,
-)
+from qiskit.primitives import PrimitiveResult, PubResult, SamplerPubResult
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit_aer import AerSimulator
 
-from qiskit_ibm_runtime import (
-    Batch,
-    EstimatorV2,
-    SamplerV2,
-    Session,
-)
+from qiskit_ibm_runtime import Batch, EstimatorV2, SamplerV2, Session
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.fake_provider.local_runtime_job import LocalRuntimeJob
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import (
-    combine,
-    get_primitive_inputs,
-)
+from ..utils import combine, get_primitive_inputs
 
 
 @ddt

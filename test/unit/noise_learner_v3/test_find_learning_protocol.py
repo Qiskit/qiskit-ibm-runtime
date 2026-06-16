@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2025.
+# (C) Copyright IBM 2025-2026.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -15,9 +15,7 @@
 from qiskit.circuit import QuantumCircuit
 from samplomatic import Twirl
 
-from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import (
-    find_learning_protocol,
-)
+from qiskit_ibm_runtime.noise_learner_v3.find_learning_protocol import find_learning_protocol
 
 from ...ibm_test_case import IBMTestCase
 
