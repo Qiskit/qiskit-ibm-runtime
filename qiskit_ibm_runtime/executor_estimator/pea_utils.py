@@ -33,6 +33,7 @@ from samplomatic import build
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.passthrough_utils import validate_and_extract_metadata
+from ..options_models.zne_options import PEA_DEFAULT_NOISE_FACTORS
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
@@ -81,7 +82,7 @@ def prepare_pea(
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")
 
     if zne_options.noise_factors == "auto":
-        noise_factors = (1.0, 1.5, 2.0, 2.5, 3.0)
+        noise_factors = np.array(PEA_DEFAULT_NOISE_FACTORS)
     else:
         noise_factors = np.array(zne_options.noise_factors)
 
@@ -132,9 +133,8 @@ def prepare_pea(
                     f"noise_model_mapping is missing noise map for layer reference {ref}"
                 )
             pub_noise_model[ref] = noise_model_mapping[ref]
-
-        for ref in pub_noise_model:
             samplex_arguments[f"noise_scales.{ref}"] = noise_scales
+
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
 
         # Create SamplexItem
