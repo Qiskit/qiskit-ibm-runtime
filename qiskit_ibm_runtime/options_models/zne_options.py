@@ -36,8 +36,11 @@ ExtrapolatorType = Literal[
     "fallback",
 ]
 
-FloatLargerThanOne = Annotated[float, Field(ge=1)]
-NonNegativeFloat = Annotated[float, Field(ge=0)]
+PEA_DEFAULT_NOISE_FACTORS = (1, 1.5, 2, 2.5, 3)
+"""The values of ``noise_factors`` used by default when PEA is selected."""
+
+ZNE_DEFAULT_NOISE_FACTORS = (1, 3, 5)
+"""The values of ``noise_factors`` used by default when gate folding is selected."""
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
@@ -55,7 +58,7 @@ class ZneOptions:
         ``shape=np.broadcast_shapes(obs_shape, par_shape)``. Then the corresponding pub result will
         additionally contain:
 
-        1. `pub_result.data.evs_extrapolated` and `pub_result.data.stds_extrapolated`,
+        1. ``pub_result.data.evs_extrapolated`` and ``pub_result.data.stds_extrapolated``,
             both with shape ``(*shape, num_extrapolators, num_evaluation_points)``, where
             ``num_extrapolators`` is the length of the list of
             ``options.resilience.zne.extrapolators``, and ``num_evaluation_points`` is the length of
@@ -112,11 +115,12 @@ class ZneOptions:
             proportional to the corresponding learned noise model.
     """
 
-    noise_factors: Sequence[FloatLargerThanOne] | Literal["auto"] = "auto"
+    noise_factors: Sequence[Annotated[float, Field(ge=1)]] | Literal["auto"] = "auto"
     """ noise_factors: Noise factors to use for noise amplification.
 
-    The default depends on the amplifier method - the default for pea is (1, 1.5, 2, 2.5, 3)
-    and the default for the other methods is (1, 3, 5).
+    The default depends on the amplifier method - the default for pea is
+    :class:.~PEA_DEFAULT_NOISE_FACTORS` and the default for the other methods
+    is :class:.~ZNE_DEFAULT_NOISE_FACTORS`.
     """
 
     extrapolator: ExtrapolatorType | Sequence[ExtrapolatorType] = ("exponential", "linear")
@@ -140,7 +144,7 @@ class ZneOptions:
     successful extrapolator, where an extrapolator success is determined heuristically.
     """
 
-    extrapolated_noise_factors: Sequence[NonNegativeFloat] | Literal["auto"] = "auto"
+    extrapolated_noise_factors: Sequence[Annotated[float, Field(ge=0)]] | Literal["auto"] = "auto"
     r"""Noise factors to evaluate the fit extrapolation models at.
 
     If auto, the expectation values will be evaluated at ``[0, *noise_factors]``. This

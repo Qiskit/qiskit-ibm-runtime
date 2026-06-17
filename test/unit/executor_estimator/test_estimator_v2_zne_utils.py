@@ -64,12 +64,15 @@ class TestPrepareZneFunction(unittest.TestCase):
         # Check passthrough_data contains zne_noise_factors
         passthrough = cast("dict[str, Any]", quantum_program.passthrough_data)
         self.assertIn("zne_noise_factors", passthrough["post_processor"])
-        self.assertEqual(passthrough["post_processor"]["zne_noise_factors"], noise_factors)
-        self.assertIn("item_to_pub_and_noise_factor_map", passthrough["post_processor"])
-        expected_map = [(0, 1.0), (0, 2.0), (0, 3.0)]
-        self.assertEqual(
-            passthrough["post_processor"]["item_to_pub_and_noise_factor_map"], expected_map
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["zne_noise_factors"]),
+                np.array(noise_factors),
+            )
         )
+        self.assertIn("item_id", passthrough["post_processor"])
+        expected_map = [(0, 1.0), (0, 2.0), (0, 3.0)]
+        self.assertEqual(passthrough["post_processor"]["item_id"], expected_map)
 
     def test_prepare_zne_multiple_pubs(self):
         """Test prepare_zne with multiple pubs."""
@@ -114,12 +117,15 @@ class TestPrepareZneFunction(unittest.TestCase):
         self.assertEqual(len(passthrough["post_processor"]["observables"]), 2)
         self.assertEqual(len(passthrough["post_processor"]["observables"][0]), 3)
         self.assertEqual(len(passthrough["post_processor"]["observables"][1]), 1)
-        self.assertEqual(passthrough["post_processor"]["zne_noise_factors"], noise_factors)
-        self.assertIn("item_to_pub_and_noise_factor_map", passthrough["post_processor"])
-        expected_map = [(0, 1.0), (0, 2.0), (1, 1.0), (1, 2.0)]
-        self.assertEqual(
-            passthrough["post_processor"]["item_to_pub_and_noise_factor_map"], expected_map
+        self.assertTrue(
+            np.array_equal(
+                np.array(passthrough["post_processor"]["zne_noise_factors"]),
+                np.array(noise_factors),
+            )
         )
+        self.assertIn("item_id", passthrough["post_processor"])
+        expected_map = [(0, 1.0), (0, 2.0), (1, 1.0), (1, 2.0)]
+        self.assertEqual(passthrough["post_processor"]["item_id"], expected_map)
 
     def test_prepare_zne_with_single_noise_factor(self):
         """Test prepare_zne with a single noise factor."""

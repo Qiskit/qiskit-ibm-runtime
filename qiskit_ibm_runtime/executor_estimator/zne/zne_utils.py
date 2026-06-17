@@ -26,12 +26,14 @@ if TYPE_CHECKING:
     from ...options_models.twirling_options import TwirlingOptions
     from ...options_models.zne_options import ZneOptions
 
+import numpy as np
 from qiskit.transpiler import PassManager
 from samplomatic import build
 
 from ...exceptions import IBMInputValueError
 from ...executor.calculate_twirling_shots import calculate_twirling_shots
 from ...executor.passthrough_utils import validate_and_extract_metadata
+from ...options_models.zne_options import ZNE_DEFAULT_NOISE_FACTORS
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
 from ..prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
@@ -78,9 +80,9 @@ def prepare_zne(
         )
 
     if zne_options.noise_factors == "auto":
-        noise_factors = [1.0, 3.0, 5.0]
+        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS)
     else:
-        noise_factors = list(zne_options.noise_factors)
+        noise_factors = np.array(zne_options.noise_factors)
 
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
@@ -97,7 +99,7 @@ def prepare_zne(
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
-    item_to_pub_and_noise_factor_map = []
+    item_id = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
@@ -148,7 +150,7 @@ def prepare_zne(
             )
 
             # each index is the item index, and it maps to (pub_number, noise_factor)
-            item_to_pub_and_noise_factor_map.append((i, noise_factor))
+            item_id.append((i, noise_factor))
 
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
@@ -167,7 +169,7 @@ def prepare_zne(
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
             "zne_noise_factors": noise_factors,
-            "item_to_pub_and_noise_factor_map": item_to_pub_and_noise_factor_map,
+            "item_id": item_id,
         },
     }
 
