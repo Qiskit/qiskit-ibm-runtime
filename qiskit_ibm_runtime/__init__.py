@@ -204,7 +204,7 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
-from .utils.json import RuntimeEncoder, RuntimeDecoder
+from .json import RuntimeEncoder, RuntimeDecoder
 from .session import Session
 from .batch import Batch
 

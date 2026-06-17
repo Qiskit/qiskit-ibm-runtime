@@ -38,7 +38,7 @@ An object is *publicly documented* if and only if it appears in [the hosted API 
 The presence of a docstring in the Python source (or a `__doc__` attribute) is not sufficient to make an object publicly documented; this documentation must also be rendered in the public API documentation.
 
 As well as the objects themselves needing to be publicly documented, the only public-API *import locations* for a given object is the location it is documented at in [the public API documentation](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime), and parent modules or packages that re-export the object (if any).
-For example, while it is possible to import `RuntimeEncoder` from `qiskit_ibm_runtime.utils.json`, this is not a supported part of the public API because the[`RuntimeEncoder` object is documented as being in `qiskit_ibm_runtime`](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-encoder).
+For example, while it is possible to import `RuntimeEncoder` from `qiskit_ibm_runtime.json`, this is not a supported part of the public API because the[`RuntimeEncoder` object is documented as being in `qiskit_ibm_runtime`](https://quantum.cloud.ibm.com/docs/api/qiskit-ibm-runtime/runtime-encoder).
 
 As a rule of thumb, if you are using `qiskit-ibm-runtime`, you should import objects from the highest-level package that exports that object.
 
