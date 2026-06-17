@@ -22,9 +22,6 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from ..exceptions import IBMInputValueError
-from ..quantum_program.datatree import is_datatree_compatible
-
 
 def validate_and_extract_metadata(
     pubs: Sequence[EstimatorPub] | Sequence[SamplerPub],
@@ -44,14 +41,4 @@ def validate_and_extract_metadata(
         IBMInputValueError: If any circuit metadata is not compatible with DataTree format.
     """
     circuits_metadata = [pub.circuit.metadata for pub in pubs]
-
-    # Validate that circuit metadata is compatible with DataTree format
-    for idx, metadata in enumerate(circuits_metadata):
-        if metadata is not None and not is_datatree_compatible(metadata):
-            raise IBMInputValueError(
-                f"Circuit metadata at index {idx} is not compatible with DataTree format. "
-                f"Metadata must be a nested structure of lists, dicts (with string keys), "
-                f"numpy arrays, or primitive types (str, int, float, bool, None)."
-            )
-
     return circuits_metadata
