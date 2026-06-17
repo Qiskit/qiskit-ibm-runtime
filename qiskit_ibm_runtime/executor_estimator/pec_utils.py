@@ -35,7 +35,6 @@ from samplomatic import InjectNoise, build
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
@@ -247,13 +246,10 @@ def prepare_pec(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect and validate circuit metadata from each pub
-    circuits_metadata = validate_and_extract_metadata(pubs)
-
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
-            "circuits_metadata": circuits_metadata,
+            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
