@@ -22,7 +22,7 @@ from typing import Any
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.utils import RuntimeEncoder
+from qiskit_ibm_runtime.json import RuntimeEncoder
 
 from .fake_api_backend import FakeApiBackend, FakeApiBackendSpecs
 
