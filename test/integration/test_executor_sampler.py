@@ -53,8 +53,8 @@ class TestSampler(IBMIntegrationTestCase):
             (isa_circuit.copy(), np.random.random(shape + (num_parameters,))) for shape in shapes
         ]
 
-        pubs[0].metadata = {"list": [1, 2, 3]}
-        pubs[1].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
+        pubs[0][0].metadata = {"list": [1, 2, 3]}
+        pubs[1][0].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
 
         options = SamplerOptions()
         options.twirling.enable_gates = twirling
@@ -72,8 +72,8 @@ class TestSampler(IBMIntegrationTestCase):
         for result, shape in zip(results, shapes):
             self.assertEqual(result.data.meas.shape, shape)
 
-        self.assertEqual(results[0].metadata, {"circuit_metadata": {"list": [1, 2, 3]}})
-        self.assertEqual(results[1].metadata, {"circuit_metadata": {"tuple": [1, 2, 3]}})
+        self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
+        self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
 
     @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
     @unpack
