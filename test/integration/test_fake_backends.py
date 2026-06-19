@@ -13,16 +13,22 @@
 """Tests for fake backends."""
 
 import operator
+import unittest
 
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
-from qiskit_ibm_runtime.fake_provider import FakeProviderForBackendV2, FakeSherbrooke, FakeVigoV2
+from qiskit_ibm_runtime.fake_provider import (
+    FakeNighthawk,
+    FakeProviderForBackendV2,
+    FakeSherbrooke,
+    FakeVigoV2,
+)
 
 from ..decorators import production_only
 from ..ibm_test_case import IBMIntegrationTestCase, IBMTestCase
@@ -79,6 +85,37 @@ class TestFakeBackends(IBMTestCase):
         counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         self.assertEqual(max_count, "11")
+
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
+    def test_fake_nighthawk(self):
+        """Test that submitting a simple circuit with FakeNighthawk works."""
+        # Initialize fake_nighthawk
+        backend = FakeNighthawk()
+        self.assertEqual(backend.num_qubits, 120)
+
+        # Assert backend property shapes are correct
+        self.assertEqual(len(backend.properties().qubits), backend.num_qubits)
+
+        # Initialize quantum circuit
+        qc = QuantumCircuit(2, 2)
+        qc.h(0)
+        qc.cx(0, 1)
+        qc.measure(0, 0)
+        qc.measure(1, 1)
+
+        # Transpile circuit against fake_nighthawk
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(qc)
+
+        self.assertEqual(isa_circuit.num_qubits, backend.num_qubits)
+
+        # Run using local simulator
+        sampler = Sampler(backend)
+        job = sampler.run([isa_circuit])
+        result = job.result()
+
+        self.assertTrue(job.done())
+        self.assertIsNotNone(result)
 
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
