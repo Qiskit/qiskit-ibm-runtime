@@ -22,7 +22,7 @@ from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime.executor_estimator.zne.zne_utils import prepare_zne
+from qiskit_ibm_runtime.executor_estimator.zne.prepare_zne import prepare_zne
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
