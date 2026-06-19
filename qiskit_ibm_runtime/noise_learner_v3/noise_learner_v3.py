@@ -68,7 +68,7 @@ class NoiseLearnerV3:
     """
 
     _PROGRAM_ID = "noise-learner"
-    _SCHEMA_VERSION = "v0.3"
+    _SCHEMA_VERSION = "v0.2"
 
     options: NoiseLearnerV3Options
     """The options in this noise learner."""
