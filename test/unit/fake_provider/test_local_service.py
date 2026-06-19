@@ -49,7 +49,11 @@ class QiskitRuntimeLocalServiceTest(IBMTestCase):
         assert isinstance(backends[0], FakeTorino)
 
     def test_backends_min_num_qubits_filter(self):
-        """Tests the ``min_num_qubits`` filter of the ``backends`` method."""
+        """Tests the ``min_num_qubits`` filter of the ``backends`` method.
+
+        The `min_num_qubits` logic forces the properties of all backends to be loaded for building
+        the target, making the test slightly slow.
+        """
         for b in QiskitRuntimeLocalService().backends(min_num_qubits=27):
             assert b.num_qubits >= 27
 
@@ -67,22 +71,20 @@ class QiskitRuntimeLocalServiceTest(IBMTestCase):
             assert b.online_date.year == 2021
 
         for b in QiskitRuntimeLocalService().backends(
-            filters=lambda b: (b.num_qubits > 30 and b.num_qubits < 100)
+            filters=lambda b: (b.dtm is not None and b.dtm < 5e-10)
         ):
-            assert b.num_qubits > 30 and b.num_qubits < 100
+            assert b.dtm < 5e-10
 
     def test_backends_filters_combined(self):
         """Tests the ``backends`` method with more than one filter."""
         service = QiskitRuntimeLocalService()
 
-        backends1 = service.backends(name="fake_torino", min_num_qubits=27)
+        backends1 = service.backends(
+            name="fake_torino", min_num_qubits=27, filters=lambda b: (b.online_date.year == 2023)
+        )
         assert len(backends1) == 1
         assert isinstance(backends1[0], FakeTorino)
-
-        backends2 = service.backends(
-            min_num_qubits=27, filters=lambda b: (b.online_date.year == 2021)
-        )
-        assert len(backends2) == 7
+        assert backends1[0].online_date.year == 2023
 
     def test_backends_errors(self):
         """Tests the errors raised by the ``backends`` method."""

@@ -25,7 +25,6 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
-from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
@@ -290,16 +289,12 @@ class SamplerV2(BaseSamplerV2):
                     )
                 )
 
-        # Collect and validate circuit metadata from each pub
-        circuits_metadata = validate_and_extract_metadata(pubs)
-
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
                 "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
                 "meas_type": options.execution.meas_type,
-                "shots": program_shots,
-                "circuits_metadata": circuits_metadata,
+                "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             }
         }
 

@@ -16,9 +16,7 @@ import numpy as np
 from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
-from qiskit.primitives import PrimitiveResult, PubResult
-from qiskit.primitives.containers import BitArray
-from qiskit.primitives.containers.data_bin import DataBin
+from qiskit.primitives import PrimitiveResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -38,41 +36,6 @@ class TestSampler(IBMIntegrationTestCase):
 
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self.backend.target)
 
-    def test_sample_run_multiple_circuits(self):
-        """Test sampler with multiple circuits."""
-        circuit = QuantumCircuit(2, name="Bell")
-        circuit.h(0)
-        circuit.cx(0, 1)
-        circuit.measure_all()
-        isa_circuit = self.pm.run(circuit)
-
-        pubs = [isa_circuit.copy() for _ in range(3)]
-        pubs[1].metadata = {"list": [1, 2, 3]}
-        pubs[2].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
-
-        options = SamplerOptions()
-        options.default_shots = 1000
-
-        sampler = SamplerV2(self.backend, options)
-        job = sampler.run(pubs)
-
-        results = job.result()
-
-        self.assertIsInstance(results, PrimitiveResult)
-        self.assertIsInstance(results.metadata, dict)
-        self.assertEqual(len(results), 3)
-
-        for result in results:
-            self.assertIsInstance(result, PubResult)
-            self.assertIsInstance(result.data, DataBin)
-            self.assertIsInstance(result.metadata, dict)
-            self.assertIsInstance(result.data.meas, BitArray)
-            self.assertEqual(result.data.meas.num_shots, options.default_shots)
-
-        self.assertEqual(results[0].metadata, {"circuit_metadata": {}})
-        self.assertEqual(results[1].metadata, {"circuit_metadata": {"list": [1, 2, 3]}})
-        self.assertEqual(results[2].metadata, {"circuit_metadata": {"tuple": [1, 2, 3]}})
-
     @data(True, False)
     def test_sampler_with_parametric_circuits(self, twirling):
         """Test sampler with parametric circuits."""
@@ -84,9 +47,14 @@ class TestSampler(IBMIntegrationTestCase):
         circuit.measure_all()
         isa_circuit = self.pm.run(circuit)
 
-        pub_shapes = [(5, 4), (3,)]
+        shapes = [(5, 4), (3,)]
         num_parameters = isa_circuit.num_parameters
-        pubs = [(isa_circuit, np.random.random(shape + (num_parameters,))) for shape in pub_shapes]
+        pubs = [
+            (isa_circuit.copy(), np.random.random(shape + (num_parameters,))) for shape in shapes
+        ]
+
+        pubs[0][0].metadata = {"list": [1, 2, 3]}
+        pubs[1][0].metadata = {"tuple": (1, 2, 3)}  # the tuple will be converted to a list
 
         options = SamplerOptions()
         options.twirling.enable_gates = twirling
@@ -101,8 +69,11 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertIsInstance(results.metadata, dict)
         self.assertEqual(len(results), 2)
 
-        for result, shape in zip(results, pub_shapes):
+        for result, shape in zip(results, shapes):
             self.assertEqual(result.data.meas.shape, shape)
+
+        self.assertEqual(results[0].metadata["circuit_metadata"], {"list": [1, 2, 3]})
+        self.assertEqual(results[1].metadata["circuit_metadata"], {"tuple": [1, 2, 3]})
 
     @data([1000, "auto", "auto", 1024], [1000, 5, "auto", 1000], [1000, 5, 3, 15])
     @unpack

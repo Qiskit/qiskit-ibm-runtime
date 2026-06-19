@@ -49,14 +49,12 @@ def run_cloud_fake(func):
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        cloud_service = FakeRuntimeService(
+        kwargs["service"] = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
-        with self.subTest(service=cloud_service.channel):
-            kwargs["service"] = cloud_service
-            func(self, *args, **kwargs)
+        func(self, *args, **kwargs)
 
     return _wrapper
 
@@ -81,10 +79,9 @@ def run_integration_test(func):
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        with self.subTest(service=self.dependencies.service):
-            if self.dependencies.service:
-                kwargs["service"] = self.dependencies.service
-            func(self, *args, **kwargs)
+        if self.dependencies.service:
+            kwargs["service"] = self.dependencies.service
+        func(self, *args, **kwargs)
 
     return _wrapper
 
