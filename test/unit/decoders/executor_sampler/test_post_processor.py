@@ -51,12 +51,17 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
             0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
         )
 
+        # Treat the leading axis as a (num_rands,)-long PUB sweep; (num_shots, num_bits) trail it.
+        pub_shape = (num_rands,)
         item = QuantumProgramItemResult({"c1": meas_data_c1, "c2": meas_data_c2})
-        pub_result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        pub_result = quantum_program_item_result_to_sampler_pub_result(item, pub_shape, 0)
 
         # Verify both registers are present
         self.assertIn("c1", pub_result.data)
         self.assertIn("c2", pub_result.data)
+
+        # The DataBin must carry the supplied PUB shape (guards against the shape being dropped).
+        self.assertEqual(pub_result.data.shape, pub_shape)
 
         # Verify BitArrays
         self.assertEqual(pub_result.data.c1.num_bits, 2)
@@ -67,11 +72,12 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         """Test that circuit metadata is attached correctly to the result."""
         item = QuantumProgramItemResult({"c": np.array([[5]], dtype=np.uint8)})
         result = quantum_program_item_result_to_sampler_pub_result(
-            item, 0, "kerneled", circuit_metadata
+            item, (), 0, "kerneled", circuit_metadata
         )
 
         # Verify metadata is present
         self.assertEqual(result.metadata["circuit_metadata"], circuit_metadata)
+        self.assertEqual(result.data.shape, ())
 
     def test_bit_array_data_integrity(self):
         """Test that BitArray data matches input measurement data."""
@@ -81,9 +87,12 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         item = QuantumProgramItemResult(
             {"meas": np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)}
         )
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
 
         bit_array = result.data.meas
+
+        # Scalar PUB: (num_shots, num_bits) only, so the DataBin shape is empty.
+        self.assertEqual(result.data.shape, ())
 
         # Verify the BitArray contains the same data
         self.assertEqual(bit_array.num_shots, num_shots)
@@ -110,11 +119,14 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         register_name_with_suffix = f"meas{suffix}"
 
         item = QuantumProgramItemResult({register_name_with_suffix: meas_data})
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0, meas_type=meas_type)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0, meas_type=meas_type)
 
         # Verify suffix was removed and data is accessible without suffix
         self.assertIn("meas", result.data)
         self.assertNotIn(register_name_with_suffix, result.data)
+
+        # Scalar PUB -> empty DataBin shape (the IQ array itself stays the intrinsic data).
+        self.assertEqual(result.data.shape, ())
 
         # Verify the result array contains the same data
         np.testing.assert_array_equal(result.data.meas, meas_data)
@@ -133,7 +145,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         )
 
         # Prepare the output.
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
         # Strech values should contain lists instead of tuples in `expanded_values`.
         expected_stretch_values = [asdict(stretch_values[0])]
         expected_stretch_values[0]["expanded_values"] = [
@@ -152,6 +164,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         self.assertEqual(result.metadata["compilation"]["stretch_values"], expected_stretch_values)
 
 
+@ddt
 class TestSamplerV2PostProcessor(unittest.TestCase):
     """Test SamplerV2 post-processor function.
 
@@ -159,33 +172,44 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
     works correctly and delegates to the static method appropriately.
     """
 
-    def test_post_processor_with_multiple_pubs(self):
-        """Test that post-processor handles multiple pubs correctly."""
-        num_rands = 10
-        num_shots_per_rand = 5
-        meas_data_1 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
-        )
-        meas_data_2 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
-        )
+    @data("classified", "kerneled", "avg_kerneled")
+    def test_post_processor_with_multiple_pubs(self, meas_type):
+        """Post-processor handles multiple pubs for every meas_type, recovering each PUB shape.
 
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
-        passthrough_data = {
-            "post_processor": {
-                "version": "v0.1",
-                "options": asdict(options),
-                "twirling": True,
-                "meas_type": "classified",
-            }
-        }
+        Parameterizing over avg_kerneled guards the shotless-axis regression: those arrays have
+        no (num_shots, *) axis, so the shot count must come from the passthrough and only one
+        trailing axis is stripped to recover the PUB shape. Pub 0 is scalar (the original
+        IndexError repro) and pub 1 is a 1-D sweep (the over-strip case).
+        """
+        # Twirling only applies to classified; kerneled/avg_kerneled are never twirled.
+        twirling = meas_type == "classified"
+        num_rands = 10
+        shots = 5
+        suffix = {"classified": "", "kerneled": "_iq", "avg_kerneled": "_avg_iq"}[meas_type]
+
+        def make_data(pub_shape, num_bits):
+            # The array layout the executor returns for this mode.
+            if meas_type == "classified":  # twirled: (num_rands, *pub_shape, shots, num_bits)
+                return np.random.randint(
+                    0, 2, size=(num_rands, *pub_shape, shots, num_bits), dtype=np.uint8
+                )
+            if meas_type == "kerneled":  # (*pub_shape, num_shots, num_bits)
+                shape = (*pub_shape, shots, num_bits)
+                return np.arange(np.prod(shape), dtype=np.complex128).reshape(shape)
+            # avg_kerneled: averaged over shots -> (*pub_shape, num_bits), no shots axis
+            shape = (*pub_shape, num_bits)
+            return np.arange(np.prod(shape), dtype=np.complex128).reshape(shape)
+
+        data_0 = make_data((), 2)  # scalar PUB
+        data_1 = make_data((4,), 3)  # 1-D parameter sweep
+
+        post_processor = {"version": "v0.1", "twirling": twirling, "meas_type": meas_type}
+        if meas_type == "avg_kerneled":
+            post_processor["shots"] = shots
+        passthrough_data = {"post_processor": post_processor}
 
         qp_result = QuantumProgramResult(
-            data=[
-                {"meas": meas_data_1},
-                {"meas": meas_data_2},
-            ],
+            data=[{f"meas{suffix}": data_0}, {f"meas{suffix}": data_1}],
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
@@ -193,10 +217,18 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
         result = sampler_v2_post_processor_v0_1(qp_result)
 
-        # Verify multiple pubs are handled
+        # Both pubs handled, with PUB shapes recovered per item (scalar and 1-D sweep).
         self.assertEqual(len(result), 2)
-        self.assertEqual(result[0].data.meas.num_bits, 2)
-        self.assertEqual(result[1].data.meas.num_bits, 3)
+        self.assertEqual(result[0].data.shape, ())
+        self.assertEqual(result[1].data.shape, (4,))
+
+        if meas_type == "classified":
+            self.assertEqual(result[0].data.meas.num_bits, 2)
+            self.assertEqual(result[1].data.meas.num_bits, 3)
+        else:
+            # kerneled / avg_kerneled IQ arrays pass through unchanged (suffix stripped).
+            np.testing.assert_array_equal(result[0].data.meas, data_0)
+            np.testing.assert_array_equal(result[1].data.meas, data_1)
 
     def test_post_processor_with_multiple_circuit_metadata(self):
         """Test that post-processor handles circuit metadata for multiple pubs."""
