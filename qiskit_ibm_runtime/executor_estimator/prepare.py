@@ -42,6 +42,7 @@ def prepare(
     twirling_options: TwirlingOptions,
     shots: int,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -84,7 +85,11 @@ def prepare(
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
         boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
+            circuit=pub.circuit,
+            twirling_options=twirling_options,
+            twirl_measurements=measure_noise_learning is not None,
+            inject_noise=False,
+            add_tags=add_tags,
         )
 
         # Build the template and the samplex

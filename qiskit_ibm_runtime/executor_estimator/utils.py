@@ -165,6 +165,7 @@ def box_circuit(
     twirling_options: TwirlingOptions,
     twirl_measurements: bool = False,
     inject_noise: bool = False,
+    add_tags: bool = False,
 ) -> QuantumCircuit:
     """Box a circuit based on the given input options.
 
@@ -203,6 +204,7 @@ def box_circuit(
         else "change_basis",
         inject_noise_targets="gates" if inject_noise else "none",
         inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+        add_tags="unique_box" if add_tags else "none",
     )
     boxed_circuit = boxing_pm.run(prepared_circuit)
     return boxed_circuit
@@ -213,7 +215,8 @@ def get_layers(
     twirling_options: TwirlingOptions,
     twirl_measurements: bool = False,
     inject_noise: bool = False,
-) -> list[list[CircuitInstruction]]:
+    add_tags: bool = False,
+) -> list[CircuitInstruction]:
     """Find unique layers of the circuit of each pub.
 
     Uses the input options to box the circuit, and find its unique layers.
@@ -225,17 +228,18 @@ def get_layers(
         inject_noise: Whether to inject noise.
 
     Returns:
-        Unique layers for each pub.
+        The unique layers.
 
     """
-    return [
-        find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
-            normalize_annotations=None,
-            undress_boxes=True,
-        )
+    boxed_circuits = (
+        box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise, add_tags)
         for pub in pubs
-    ]
+    )
+    return find_unique_box_instructions(
+        (instruction for boxed_circuit in boxed_circuits for instruction in boxed_circuit),
+        normalize_annotations=None,
+        undress_boxes=True,
+    )
 
 
 def compute_samplex_arguments(
