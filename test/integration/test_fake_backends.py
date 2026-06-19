@@ -14,24 +14,30 @@
 
 import operator
 import unittest
+from dataclasses import asdict
 
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.transpiler import generate_preset_pass_manager
 from qiskit.utils import optionals
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import (
+    FakeManilaV2,
+    FakeNairobiV2,
     FakeNighthawk,
     FakeProviderForBackendV2,
     FakeSherbrooke,
     FakeVigoV2,
 )
+from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
 from ..decorators import production_only
 from ..ibm_test_case import IBMIntegrationTestCase, IBMTestCase
+from ..utils import combine
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 
@@ -116,6 +122,32 @@ class TestFakeBackends(IBMTestCase):
 
         self.assertTrue(job.done())
         self.assertIsNotNone(result)
+
+    @combine(
+        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManilaV2(), FakeNairobiV2()]
+    )
+    def test_simulator_set_backend(self, opt_cls, fake_backend):
+        """Test Options.simulator.set_backend method."""
+        options = opt_cls()
+        options.simulator.seed_simulator = 42
+        options.simulator.set_backend(fake_backend)
+
+        noise_model = NoiseModel.from_backend(fake_backend)
+        basis_gates = fake_backend.operation_names
+        coupling_map = fake_backend.coupling_map
+
+        self.assertEqual(options.simulator.coupling_map, coupling_map)
+        self.assertEqual(options.simulator.noise_model, noise_model)
+
+        expected_options = opt_cls()
+        expected_options.simulator = {
+            "noise_model": noise_model,
+            "basis_gates": basis_gates,
+            "coupling_map": coupling_map,
+            "seed_simulator": 42,
+        }
+
+        self.assertDictEqual(asdict(options), asdict(expected_options))
 
 
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
