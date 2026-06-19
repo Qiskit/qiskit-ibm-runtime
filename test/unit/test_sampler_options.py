@@ -19,7 +19,6 @@ from pydantic import ValidationError
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options import SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
