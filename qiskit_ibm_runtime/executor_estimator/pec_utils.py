@@ -37,9 +37,8 @@ from samplomatic.utils import get_annotation
 from ..exceptions import IBMInputValueError
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
-from .prepare import compute_samplex_arguments, make_samplex_arguments
 from .trex_utils import create_trex_calibration_circuit
-from .utils import box_circuit
+from .utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
 
 logger = logging.getLogger(__name__)
 
