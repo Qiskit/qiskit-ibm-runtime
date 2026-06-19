@@ -35,7 +35,6 @@ from samplomatic import InjectNoise, build
 from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
-from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
@@ -120,7 +119,7 @@ def prepare_pec(
     twirling_options: TwirlingOptions,
     shots: int,
     pec_options: PecOptions,
-    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]],
+    noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program with PEC mitigation.
@@ -134,9 +133,9 @@ def prepare_pec(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC
-            mitigation method. The list must contain a map for each pub. Assumes that the
-            unique layers used for noise learning were extracted using the ``get_layers`` method.
+        noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
+            method. The dict contains layers from all pubs. Assumes that the unique layers
+            used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -147,20 +146,14 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
-            mismatched.
+        IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
+            the pubs layers.
     """
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
-
-    # validate noise_model_mapping length
-    if noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
-        raise IBMInputValueError(
-            "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
-        )
 
     # set max_overhead
     max_overhead = pec_options.max_overhead
@@ -195,7 +188,7 @@ def prepare_pec(
         # add samplex_arguments related to noise injection
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
-            gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], 1)
+            gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
             # calculate the noise factor based on gamma and max_overhead
             noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
@@ -213,10 +206,23 @@ def prepare_pec(
         noise_scale = noise_gain - 1
         # The sampling scaling is proportional to 1 - noise_gain, as 0 is full PEC and 1 is no PEC
         noise_factor = 1 - noise_gain
-        for ref in noise_model_mapping[i]:
+
+        # Create a noise model map containing only the layers relevant for the current pub
+        specs = samplex.inputs().get_specs("pauli_lindblad_maps")
+        pub_noise_model = {}
+        for spec in specs:
+            ref = spec.name.split(".")[-1]
+            try:
+                pub_noise_model[ref] = noise_model_mapping[ref]
+            except KeyError:
+                raise IBMInputValueError(
+                    f"noise_model_mapping is missing noise map for layer reference {ref}"
+                )
+            # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
-        samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
-        scaled_gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor)
+
+        samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
+        scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
         pec_gamma_list.append(scaled_gamma)
         # Scale the amount of randomizations by gamma**2
         sampling_overhead = scaled_gamma**2
@@ -240,13 +246,10 @@ def prepare_pec(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect and validate circuit metadata from each pub
-    circuits_metadata = validate_and_extract_metadata(pubs)
-
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
-            "circuits_metadata": circuits_metadata,
+            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,

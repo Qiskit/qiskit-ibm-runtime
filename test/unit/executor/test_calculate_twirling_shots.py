@@ -16,9 +16,7 @@ import unittest
 
 from ddt import data, ddt, unpack
 
-from qiskit_ibm_runtime.executor.calculate_twirling_shots import (
-    calculate_twirling_shots,
-)
+from qiskit_ibm_runtime.executor.calculate_twirling_shots import calculate_twirling_shots
 
 
 @ddt

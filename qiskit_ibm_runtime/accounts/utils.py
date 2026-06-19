@@ -15,9 +15,7 @@
 from urllib.parse import urlparse
 
 import requests
-from ibm_cloud_sdk_core.authenticators import (
-    IAMAuthenticator,
-)
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
 from ..utils.utils import is_crn

@@ -14,10 +14,7 @@
 
 from ddt import data, ddt
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import (
-    CZGate,
-    ECRGate,
-)
+from qiskit.circuit.library import CZGate, ECRGate
 from qiskit.compiler import transpile
 
 from qiskit_ibm_runtime.fake_provider import (

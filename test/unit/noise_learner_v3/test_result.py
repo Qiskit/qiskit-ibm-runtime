@@ -17,10 +17,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import PauliLindbladMap, QubitSparsePauliList
 from samplomatic import InjectNoise, Twirl
 
-from qiskit_ibm_runtime.results.noise_learner_v3 import (
-    NoiseLearnerV3Result,
-    NoiseLearnerV3Results,
-)
+from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
 
 from ...ibm_test_case import IBMTestCase
 

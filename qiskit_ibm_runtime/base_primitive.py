@@ -23,11 +23,7 @@ from qiskit.providers.backend import BackendV2
 
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
-from .utils import (
-    validate_isa_circuits,
-    validate_no_dd_with_dynamic_circuits,
-    validate_rzz_pubs,
-)
+from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits, validate_rzz_pubs
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
 

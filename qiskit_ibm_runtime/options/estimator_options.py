@@ -19,13 +19,7 @@ from .execution_options import ExecutionOptionsV2
 from .options import OptionsV2
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
-from .utils import (
-    Dict,
-    Unset,
-    UnsetType,
-    make_constraint_validator,
-    primitive_dataclass,
-)
+from .utils import Dict, Unset, UnsetType, make_constraint_validator, primitive_dataclass
 
 MAX_RESILIENCE_LEVEL: int = 2
 
