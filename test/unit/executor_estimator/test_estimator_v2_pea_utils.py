@@ -26,7 +26,7 @@ from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.pea_utils import prepare_pea
-from qiskit_ibm_runtime.executor_estimator.prepare import get_layers
+from qiskit_ibm_runtime.executor_estimator.utils import get_layers
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )

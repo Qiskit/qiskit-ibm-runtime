@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
-    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from samplomatic.samplex import Samplex
 
@@ -31,19 +30,16 @@ if TYPE_CHECKING:
     from ..options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from qiskit.circuit import ClassicalRegister
-from qiskit.circuit.exceptions import CircuitError
 from qiskit.quantum_info import Pauli, PauliList
 from samplomatic import ChangeBasis, build
-from samplomatic.transpiler import generate_boxing_pass_manager
-from samplomatic.utils import find_unique_box_instructions, get_annotation
+from samplomatic.utils import get_annotation
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit
-from .utils import get_pauli_basis, pauli_to_ints, unbroadcast_index
+from .utils import box_circuit, get_pauli_basis, pauli_to_ints, unbroadcast_index
 
 logger = logging.getLogger(__name__)
 
@@ -299,81 +295,3 @@ def make_samplex_arguments(
         raise ValueError("Could not find a change basis annotation.")
 
     return samplex_arguments
-
-
-def box_circuit(
-    circuit: QuantumCircuit,
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
-    inject_noise: bool = False,
-) -> QuantumCircuit:
-    """Box a circuit based on the given input options.
-
-    Removes the final measurement layer and adds a new measurement layer with dedicated
-    register name.
-
-    Args:
-        circuit: Quantum circuit to box.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
-        inject_noise: Whether to inject noise.
-
-    Returns:
-        boxed circuit.
-
-    """
-    # Remove any existing final measurements
-    prepared_circuit = circuit.remove_final_measurements(inplace=False)
-
-    # Add final measurements
-    creg = ClassicalRegister(prepared_circuit.num_qubits, "_meas")
-    try:
-        prepared_circuit.add_register(creg)
-    except CircuitError:
-        raise IBMInputValueError("Name `_meas` is reserved for a dedicated classical register.")
-    prepared_circuit.barrier()
-    prepared_circuit.measure(prepared_circuit.qubits, creg)
-
-    # Add boxes
-    boxing_pm = generate_boxing_pass_manager(
-        enable_gates=twirling_options.enable_gates or inject_noise,
-        enable_measures=True,
-        twirling_strategy=twirling_options.strategy.replace("-", "_"),
-        measure_annotations="all"
-        if twirling_options.enable_measure or twirl_measurements
-        else "change_basis",
-        inject_noise_targets="gates" if inject_noise else "none",
-        inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
-    )
-    boxed_circuit = boxing_pm.run(prepared_circuit)
-    return boxed_circuit
-
-
-def get_layers(
-    pubs: Sequence[EstimatorPub],
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
-    inject_noise: bool = False,
-) -> list[list[CircuitInstruction]]:
-    """Find unique layers of the circuit of each pub.
-
-    Uses the input options to box the circuit, and find its unique layers.
-
-    Args:
-        pubs: list of estimators pubs.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
-        inject_noise: Whether to inject noise.
-
-    Returns:
-        Unique layers for each pub.
-
-    """
-    return [
-        find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
-            normalize_annotations=None,
-            undress_boxes=True,
-        )
-        for pub in pubs
-    ]
