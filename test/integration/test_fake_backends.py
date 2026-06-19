@@ -106,8 +106,7 @@ class TestFakeBackends(IBMTestCase):
         qc = QuantumCircuit(2, 2)
         qc.h(0)
         qc.cx(0, 1)
-        qc.measure(0, 0)
-        qc.measure(1, 1)
+        qc.measure_all()
 
         # Transpile circuit against fake_nighthawk
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
