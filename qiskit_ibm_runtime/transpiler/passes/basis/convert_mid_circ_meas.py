@@ -10,7 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to replace `measure` and `reset` instructions in non-terminal locations with their mid-circuit versions."""
+"""Pass to replace `measure` and `reset` instructions in non-terminal locations.
+
+This pass replaces them with their mid-circuit versions.
+"""
 
 from __future__ import annotations
 
@@ -37,9 +40,10 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     Similarly, the pass will replace terminal reset instructions in non-terminal locations
     with ``MidCircuitReset`` instructions, defaulting to ``reset_2``.
 
-    Note that the pass will only act on non-terminal ``measure`` and ``reset`` instances, and won't replace
-    existing mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or
-    convert any ``MidCircuitMeasure`` instance into a ``Measure``.
+    Note that the pass will only act on non-terminal ``measure`` and ``reset`` instances,
+    and won't replace existing mid-circuit measurement instructions
+    (e.g., ``"measure_2" -> "measure_3"``) or convert any ``MidCircuitMeasure`` instance
+    into a ``Measure``.
 
     Args:
         target: Backend's target instance that contains one or more ``measure_`` instructions.
@@ -94,7 +98,8 @@ class ConvertToMidCircuitMeasure(TransformationPass):
                         dag.substitute_node(node, mid_circ_measure, inplace=True)
                     else:
                         warnings.warn(
-                            f"{self.mcm_name} with qubits {node_indices} is not supported by the given target."
+                            f"{self.mcm_name} with qubits {node_indices} is not supported "
+                            f"by the given target."
                         )
 
         if self.mcr_name != "reset":
@@ -107,7 +112,8 @@ class ConvertToMidCircuitMeasure(TransformationPass):
                         dag.substitute_node(node, mid_circ_reset, inplace=True)
                     else:
                         warnings.warn(
-                            f"{self.mcr_name} with qubits {node_indices} is not supported by the given target."
+                            f"{self.mcr_name} with qubits {node_indices} is not supported "
+                            f"by the given target."
                         )
 
         return dag

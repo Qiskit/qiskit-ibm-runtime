@@ -139,7 +139,10 @@ class TestMidCircuitMeasure(IBMTestCase):
                 _ = pm.run(qc)
 
         def test_transpiler_compat_with(self):
-            """Test default PM passes if reset_2 is in Target and does not modify the instruction."""
+            """Test default PM passes if reset_2 is in Target.
+
+            Verifies it does not modify the instruction.
+            """
             mcr = MidCircuitReset()
             backend = GenericBackendV2(num_qubits=5, seed=0)
             backend.target.add_instruction(mcr, {(i,): None for i in range(5)})
