@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from qiskit.transpiler import Target
 
 
-class ConvertToMidCircuitMeasure(TransformationPass):
+class ConvertToMidCircuitInstructions(TransformationPass):
     """Transpiler pass replacing mid-circuit terminal measure instructions.
 
     Transpiler pass that replaces terminal measure instructions in non-terminal locations
