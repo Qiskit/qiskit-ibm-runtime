@@ -20,6 +20,7 @@ from qiskit.transpiler import PassManager
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure, MidCircuitReset
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_mid_circ_meas import (
     ConvertToMidCircuitInstructions,
+    ConvertToMidCircuitMeasure,
 )
 
 from .....ibm_test_case import IBMTestCase
@@ -75,7 +76,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
             r"Supported operations are: dict_keys\(\['cx', 'id', 'rz', "
             r"'sx', 'x', 'reset', 'delay', 'measure'\]\)",
         ):
-            ConvertToMidCircuitInstructions(self.target_without)
+            ConvertToMidCircuitMeasure(self.target_without)
 
     def test_convert_measure_3(self):
         """Test conversion with non-default alternative measure and reset.
@@ -131,7 +132,7 @@ class TestConvertToMidCircuitMeasure(IBMTestCase):
         qc.x(0)
         qc.measure_all()
 
-        custom_pass = ConvertToMidCircuitInstructions(target)
+        custom_pass = ConvertToMidCircuitMeasure(target)
         pm = PassManager([custom_pass])
         transpiled = pm.run(qc)
 

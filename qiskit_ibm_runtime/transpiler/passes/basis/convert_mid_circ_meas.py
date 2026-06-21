@@ -117,3 +117,42 @@ class ConvertToMidCircuitInstructions(TransformationPass):
                         )
 
         return dag
+
+
+class ConvertToMidCircuitMeasure(TransformationPass):
+    """Transpiler pass replacing mid-circuit terminal measure instructions.
+
+    Transpiler pass that replaces terminal measure instructions in non-terminal locations
+    with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
+    pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
+    it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
+
+    This pass is similar to ``ConvertToMidCircuitInstructions`` but only handles measurements,
+    not resets. It internally calls ``ConvertToMidCircuitInstructions`` with a no-op reset name.
+
+    Note that the pass will only act on non-terminal ``measure`` instances,
+    and won't replace existing mid-circuit measurement instructions
+    (e.g., ``"measure_2" -> "measure_3"``) or convert any ``MidCircuitMeasure`` instance
+    into a ``Measure``.
+
+    Args:
+        target: Backend's target instance that contains one or more ``measure_`` instructions.
+        mcm_name: Name of the ``measure`` instruction that terminal measure instructions in
+            non-terminal locations will be replaced with. This instruction must be contained in
+            the target. Defaults to ``measure_2``.
+
+    Raises:
+        ValueError: If the specified ``mcm_name`` does not conform to the ``measure_`` pattern
+            or is not contained in the provided target.
+    """
+
+    def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
+        super().__init__()
+        # Use "reset" as the mcr_name to ensure no reset conversion happens
+        self._inner_pass = ConvertToMidCircuitInstructions(
+            target=target, mcm_name=mcm_name, mcr_name="reset"
+        )
+
+    def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on a dag."""
+        return self._inner_pass.run(dag)
