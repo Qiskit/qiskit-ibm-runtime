@@ -95,56 +95,56 @@ class TestMidCircuitMeasure(IBMTestCase):
     class TestMidCircuitReset(IBMTestCase):
         """Test MidCircuitReset instruction."""
 
-    def test_instantiation(self):
-        """Test default instantiation."""
-        mcr = MidCircuitReset()
-        self.assertIs(mcr.base_class, MidCircuitReset)
-        self.assertIsInstance(mcr, Instruction)
-        self.assertEqual(mcr.name, "reset_2")
-        self.assertEqual(mcr.num_qubits, 1)
-        self.assertEqual(mcr.num_clbits, 0)
-
-    def test_instantiation_name(self):
-        """Test instantiation with custom name."""
-        with self.subTest("reset_3"):
-            mcr = MidCircuitReset("reset_3")
+        def test_instantiation(self):
+            """Test default instantiation."""
+            mcr = MidCircuitReset()
             self.assertIs(mcr.base_class, MidCircuitReset)
             self.assertIsInstance(mcr, Instruction)
-            self.assertEqual(mcr.name, "reset_3")
+            self.assertEqual(mcr.name, "reset_2")
             self.assertEqual(mcr.num_qubits, 1)
             self.assertEqual(mcr.num_clbits, 0)
 
-        with self.subTest("invalid_name"):
-            with self.assertRaises(ValueError):
-                MidCircuitReset("invalid_name")
+        def test_instantiation_name(self):
+            """Test instantiation with custom name."""
+            with self.subTest("reset_3"):
+                mcr = MidCircuitReset("reset_3")
+                self.assertIs(mcr.base_class, MidCircuitReset)
+                self.assertIsInstance(mcr, Instruction)
+                self.assertEqual(mcr.name, "reset_3")
+                self.assertEqual(mcr.num_qubits, 1)
+                self.assertEqual(mcr.num_clbits, 0)
 
-    def test_circuit_integration(self):
-        """Test appending to circuit."""
-        mcr = MidCircuitReset()
-        qc = QuantumCircuit(1, 2)
-        qc.append(mcr, [0])
-        qc.append(mcr, [0])
-        qc.reset(0)
-        self.assertIs(qc.data[0].operation, mcr)
-        self.assertIs(qc.data[1].operation, mcr)
+            with self.subTest("invalid_name"):
+                with self.assertRaises(ValueError):
+                    MidCircuitReset("invalid_name")
 
-    def test_transpiler_compat_without(self):
-        """Test that default pass manager FAILS if reset_2 is not in Target."""
-        mcr = MidCircuitReset()
-        backend = FakeVigoV2()
-        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
-        qc = QuantumCircuit(1, 2)
-        qc.append(mcr, [0])
-        with self.assertRaises(TranspilerError):
-            _ = pm.run(qc)
+        def test_circuit_integration(self):
+            """Test appending to circuit."""
+            mcr = MidCircuitReset()
+            qc = QuantumCircuit(1, 2)
+            qc.append(mcr, [0])
+            qc.append(mcr, [0])
+            qc.reset(0)
+            self.assertIs(qc.data[0].operation, mcr)
+            self.assertIs(qc.data[1].operation, mcr)
 
-    def test_transpiler_compat_with(self):
-        """Test default PM passes if reset_2 is in Target and does not modify the instruction."""
-        mcr = MidCircuitReset()
-        backend = GenericBackendV2(num_qubits=5, seed=0)
-        backend.target.add_instruction(mcr, {(i,): None for i in range(5)})
-        pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
-        qc = QuantumCircuit(1, 2)
-        qc.append(mcr, [0])
-        transpiled = pm.run(qc)
-        self.assertEqual(transpiled.data[0].operation.name, "reset_2")
+        def test_transpiler_compat_without(self):
+            """Test that default pass manager FAILS if reset_2 is not in Target."""
+            mcr = MidCircuitReset()
+            backend = FakeVigoV2()
+            pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+            qc = QuantumCircuit(1, 2)
+            qc.append(mcr, [0])
+            with self.assertRaises(TranspilerError):
+                _ = pm.run(qc)
+
+        def test_transpiler_compat_with(self):
+            """Test default PM passes if reset_2 is in Target and does not modify the instruction."""
+            mcr = MidCircuitReset()
+            backend = GenericBackendV2(num_qubits=5, seed=0)
+            backend.target.add_instruction(mcr, {(i,): None for i in range(5)})
+            pm = generate_preset_pass_manager(backend=backend, seed_transpiler=0)
+            qc = QuantumCircuit(1, 2)
+            qc.append(mcr, [0])
+            transpiled = pm.run(qc)
+            self.assertEqual(transpiled.data[0].operation.name, "reset_2")
