@@ -76,6 +76,9 @@ source = ["qiskit_ibm_runtime"]
 line-length = 100
 target-version = "py310"
 
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
+
 [tool.ruff.lint]
 future-annotations = true
 select = [
@@ -108,10 +111,6 @@ ignore = [
 ]
 
 "qiskit_ibm_runtime/__init__.py" = [
-    "I",      # isort -- requires specific import order and tweaks
-]
-
-"qiskit_ibm_runtime/utils/__init__.py" = [
     "I",      # isort -- requires specific import order and tweaks
 ]
 
@@ -159,11 +158,11 @@ dependencies = [
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
-    "ibm-quantum-schemas>=0.8.20260605,<1",
+    "ibm-quantum-schemas>=0.9.20260612,<1",
     "pydantic>=2.11.0",
-    "qiskit>=2.2.0",
+    "qiskit>=2.3.0",
     "pybase64>=1.4.0",
-    "samplomatic>=0.13.0"
+    "samplomatic>=0.17.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]

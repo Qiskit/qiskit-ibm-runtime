@@ -15,7 +15,7 @@
 import json
 from typing import Any
 
-from qiskit_ibm_runtime.utils import RuntimeDecoder
+from qiskit_ibm_runtime.json import RuntimeDecoder
 
 
 class ResultDecoder:

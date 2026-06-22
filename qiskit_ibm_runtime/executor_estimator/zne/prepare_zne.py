@@ -15,32 +15,38 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ...options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
+    from ...options_models.twirling_options import TwirlingOptions
+    from ...options_models.zne_options import ZneOptions
 
+import numpy as np
+from qiskit.transpiler import PassManager
 from samplomatic import build
 
-from ..exceptions import IBMInputValueError
-from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import SamplexItem
-from .trex_utils import create_trex_calibration_circuit
-from .utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from ...exceptions import IBMInputValueError
+from ...executor.calculate_twirling_shots import calculate_twirling_shots
+from ...options_models.zne_options import ZNE_DEFAULT_NOISE_FACTORS
+from ...quantum_program import QuantumProgram
+from ...quantum_program.quantum_program import SamplexItem
+from ..trex_utils import create_trex_calibration_circuit
+from ..utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from .gate_folding import GateFolding
 
 logger = logging.getLogger(__name__)
 
 
-def prepare(
+def prepare_zne(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     shots: int,
+    zne_options: ZneOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
@@ -51,6 +57,7 @@ def prepare(
         shots: The number of shots to use. Will be overridden by
             ``num_randomizations * shots_per_randomization`` when both are specified explicitly
             and twirling is on.
+        zne_options: The options for ZNE mitigation.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
 
@@ -63,7 +70,19 @@ def prepare(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
+        IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
+        ``gate_folding_front`` or ``gate_folding_back``.
     """
+    if zne_options.amplifier not in ["gate_folding", "gate_folding_front", "gate_folding_back"]:
+        raise IBMInputValueError(
+            "ZNE mitigation must be used with a gate folding noise amplification."
+        )
+
+    if zne_options.noise_factors == "auto":
+        noise_factors = np.array(ZNE_DEFAULT_NOISE_FACTORS)
+    else:
+        noise_factors = np.array(zne_options.noise_factors)
+
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
             shots,
@@ -79,33 +98,58 @@ def prepare(
     observables_list = []
     param_basis_pairs_list = []
     param_shapes_list = []
+    item_id = []
 
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
-        )
-
-        # Build the template and the samplex
-        template, samplex = build(boxed_circuit)
-
-        # Prepare samplex_arguments
+        # Prepare samplex_arguments that are common to all noise factors
         flat_parameter_values, change_basis, param_basis_pairs = compute_samplex_arguments(pub)
-        samplex_arguments = make_samplex_arguments(
-            samplex, boxed_circuit, flat_parameter_values, change_basis
-        )
 
-        # Create SamplexItem
-        shape = (num_randomizations, change_basis.shape[0])
-        items.append(
-            SamplexItem(
-                circuit=template,
-                samplex=samplex,
-                samplex_arguments=samplex_arguments,
-                shape=shape,
+        for j, noise_factor in enumerate(noise_factors):
+            logger.info("Processing noise factor %d/%d", j + 1, len(noise_factors))
+
+            folding_method: Literal["random", "front", "back"]
+            match zne_options.amplifier:
+                case "gate_folding":
+                    folding_method = "random"
+                case "gate_folding_front":
+                    folding_method = "front"
+                case "gate_folding_back":
+                    folding_method = "back"
+                case _:
+                    # This should never happen due to prior validation
+                    folding_method = "random"
+            folded_circuit = PassManager([GateFolding(noise_factor, folding_method)]).run(
+                pub.circuit
             )
-        )
+
+            boxed_circuit = box_circuit(
+                folded_circuit, twirling_options, measure_noise_learning is not None
+            )
+
+            # Build the template and the samplex
+            template, samplex = build(boxed_circuit)
+
+            # Prepare samplex_arguments for the current noise factor
+            samplex_arguments = make_samplex_arguments(
+                samplex, boxed_circuit, flat_parameter_values, change_basis
+            )
+
+            # Create SamplexItem
+            # Each pub will have len(noise_factors) associated items
+            shape = (num_randomizations, change_basis.shape[0])
+            items.append(
+                SamplexItem(
+                    circuit=template,
+                    samplex=samplex,
+                    samplex_arguments=samplex_arguments,
+                    shape=shape,
+                )
+            )
+
+            # each index is the item index, and it maps to (pub_number, noise_factor)
+            item_id.append((i, noise_factor))
 
         # Store data for passthrough
         observables_list.append(pub.observables.tolist())
@@ -119,7 +163,9 @@ def prepare(
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
-            "measure_mitigation": "False",
+            "measure_mitigation": measure_noise_learning is not None,
+            "zne_noise_factors": noise_factors,
+            "item_id": item_id,
         },
     }
 

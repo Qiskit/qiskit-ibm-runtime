@@ -51,6 +51,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpanV2,
 )
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
+from qiskit_ibm_runtime.json import RuntimeDecoder, RuntimeEncoder
 from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.options_models import ExecutorOptions, NoiseLearnerV3Options
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
@@ -61,15 +62,10 @@ from qiskit_ibm_runtime.results.noise_learner import (
     NoiseLearnerResult,
     PauliLindbladError,
 )
-from qiskit_ibm_runtime.utils import RuntimeDecoder, RuntimeEncoder
 
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
-from ..serialization import (
-    SerializableClass,
-    SerializableClassDecoder,
-    get_complex_types,
-)
+from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
 from ..utils import bell, mock_wait_for_final_state
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService

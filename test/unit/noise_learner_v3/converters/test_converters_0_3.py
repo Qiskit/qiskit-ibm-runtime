@@ -17,11 +17,11 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
-from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_2
-from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_2 import (
-    noise_learner_v3_inputs_from_0_2,
-    noise_learner_v3_inputs_to_0_2,
-    noise_learner_v3_result_to_0_2,
+from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_3
+from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_3 import (
+    noise_learner_v3_inputs_from_0_3,
+    noise_learner_v3_inputs_to_0_3,
+    noise_learner_v3_result_to_0_3,
 )
 from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
@@ -52,8 +52,8 @@ class TestConverters(IBMTestCase):
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
 
-        encoded = noise_learner_v3_inputs_to_0_2(instructions, options)
-        decoded = noise_learner_v3_inputs_from_0_2(encoded)
+        encoded = noise_learner_v3_inputs_to_0_3(instructions, options)
+        decoded = noise_learner_v3_inputs_from_0_3(encoded)
 
         assert decoded == (instructions, options)
 
@@ -63,7 +63,7 @@ class TestConverters(IBMTestCase):
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),
         ]
-        rates = [0.1, 0.2]
+        rates = [0.1, 0.3]
         rates_std = [0.01, 0.02]
 
         metadatum0 = {
@@ -82,8 +82,8 @@ class TestConverters(IBMTestCase):
         result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
 
-        encoded = noise_learner_v3_result_to_0_2(results)
-        decoded = noise_learner_v3_result_from_0_2(encoded)
+        encoded = noise_learner_v3_result_to_0_3(results)
+        decoded = noise_learner_v3_result_from_0_3(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
             assert datum_in._generators == datum_out._generators
             assert np.allclose(datum_in._rates, datum_out._rates)
@@ -96,7 +96,7 @@ class TestConverters(IBMTestCase):
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),
         ]
-        rates = [0.1, 0.2]
+        rates = [0.1, 0.3]
 
         for metadatum in [
             {
@@ -114,7 +114,7 @@ class TestConverters(IBMTestCase):
                 ValidationError,
                 "1 validation error for NoiseLearnerV3ResultModel",
             ):
-                noise_learner_v3_result_to_0_2(results).model_dump()
+                noise_learner_v3_result_to_0_3(results).model_dump()
 
         for metadatum in [
             {
@@ -134,4 +134,4 @@ class TestConverters(IBMTestCase):
             with self.assertRaisesRegex(
                 ValidationError, "1 validation error for NoiseLearnerV3ResultModel"
             ):
-                noise_learner_v3_result_to_0_2(results).model_dump()
+                noise_learner_v3_result_to_0_3(results).model_dump()

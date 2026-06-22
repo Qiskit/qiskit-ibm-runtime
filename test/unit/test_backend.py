@@ -22,17 +22,9 @@ from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
-from qiskit_ibm_runtime.fake_provider import (
-    FakeFractionalBackend,
-    FakeManilaV2,
-    FakeSherbrooke,
-)
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import (
-    BackendConfiguration,
-    BackendProperties,
-    BackendStatus,
-)
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
