@@ -63,8 +63,8 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         raise ValueError("Missing 'twirling' in passthrough data.")
     if (meas_type := post_processor_data.get("meas_type", None)) is None:
         raise ValueError("Missing 'meas_type' in passthrough data.")
-    if (shots := post_processor_data.get("shots", None)) is None and meas_type == "avg_kerneled":
-        raise ValueError("Missing 'shots' in passthrough data, required for 'avg_kerneled'.")
+    if (shots := post_processor_data.get("shots", None)) is None:
+        raise ValueError("Missing 'shots' in passthrough data.")
 
     # Filter out measurement-twirling bookkeeping arrays (measurement_flips.*); they may use a
     # singleton shot axis for broadcasting and are not user-facing result data.
