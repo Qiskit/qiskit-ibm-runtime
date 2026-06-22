@@ -90,7 +90,7 @@ select = [
     "G",      # flake8-logging-format
     "I",      # isort
     "RUF013", # implicit-optional
-    "S101",   # flake8-bandit assert (enforcef in test/ only)
+    "S101",   # flake8-bandit assert (enforced in test/ only)
     "T10",    # flake8-debugger
     "TC",     # flake8-type-checking
     "UP",     # pyupgrade
