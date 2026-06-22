@@ -333,14 +333,12 @@ class SamplerV2(BaseSamplerV2):
 
         return quantum_program, executor_options
 
-    def _run_simulator(
-        self, pubs: Sequence[SamplerPub], default_shots: int | None
-    ) -> LocalRuntimeJob:
+    def _run_simulator(self, pubs: Sequence[SamplerPub], shots: int) -> LocalRuntimeJob:
         """Run sampler in local simulator mode using BackendSamplerV2.
 
         Args:
             pubs: List of sampler PUBs to run.
-            default_shots: Default number of shots if not specified in PUBs.
+            shots: The number of shots to run.
 
         Returns:
             A LocalRuntimeJob wrapping the BackendSamplerV2 job.
@@ -350,10 +348,7 @@ class SamplerV2(BaseSamplerV2):
         """
         # Prepare options dict - this goes in the inputs["options"] field
         options_dict = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
-
-        # Add default_shots to options if provided
-        if default_shots is not None:
-            options_dict["default_shots"] = default_shots
+        options_dict["default_shots"] = shots
 
         # Prepare inputs dict with pubs and options
         inputs = {
