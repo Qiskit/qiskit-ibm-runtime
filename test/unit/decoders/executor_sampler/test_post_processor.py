@@ -42,17 +42,14 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
 
     def test_single_pub_multiple_registers(self):
         """Test conversion with single pub and multiple classical registers."""
-        num_rands = 10
-        num_shots_per_rand = 10
-        meas_data_c1 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
-        )
-        meas_data_c2 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
-        )
+        pub_dim = 4
+        num_shots = 10
+        meas_data_c1 = np.random.randint(0, 2, size=(pub_dim, num_shots, 2), dtype=np.uint8)
+        meas_data_c2 = np.random.randint(0, 2, size=(pub_dim, num_shots, 3), dtype=np.uint8)
 
-        # Treat the leading axis as a (num_rands,)-long PUB sweep; (num_shots, num_bits) trail it.
-        pub_shape = (num_rands,)
+        # The converter applies the supplied pub_shape directly; pass a non-empty sweep shape
+        # (matching the arrays' leading axis) and assert it lands on the DataBin.
+        pub_shape = (pub_dim,)
         item = QuantumProgramItemResult({"c1": meas_data_c1, "c2": meas_data_c2})
         pub_result = quantum_program_item_result_to_sampler_pub_result(item, pub_shape, 0)
 
