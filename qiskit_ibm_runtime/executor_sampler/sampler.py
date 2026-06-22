@@ -14,17 +14,24 @@
 
 from __future__ import annotations
 
+import copy
 import logging
+from dataclasses import asdict
 from typing import TYPE_CHECKING
 
+from qiskit.primitives import BackendSamplerV2
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
 from samplomatic.transpiler import generate_boxing_pass_manager
 
+from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..fake_provider.local_runtime_job import LocalRuntimeJob
+from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..ibm_backend import IBMBackend
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
@@ -107,7 +114,14 @@ class SamplerV2(BaseSamplerV2):
     ):
         super().__init__()
 
-        self._executor = Executor(mode=mode)
+        # Store mode, service, and backend for simulator detection
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
+
+        # Only create executor for non-local backends
+        # For local simulators (QiskitRuntimeLocalService), we'll use BackendSamplerV2 directly
+        self._executor = None
+        if not isinstance(self._service, QiskitRuntimeLocalService):
+            self._executor = Executor(mode=mode)
 
         # Coerced to `SamplerOptions` via `__setattr__()`.
         self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
@@ -147,12 +161,6 @@ class SamplerV2(BaseSamplerV2):
 
         Returns:
             The submitted job.
-
-        Raises:
-            ValueError: If backend is not provided.
-            IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions or
-                if shots are not properly specified.
-            NotImplementedError: If unsupported options are enabled.
         """
         # Coerce pubs to SamplerPub objects
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
@@ -160,6 +168,12 @@ class SamplerV2(BaseSamplerV2):
         # Determine default shots: run parameter takes precedence over options.default_shots
         default_shots = shots if shots is not None else self.options.default_shots
 
+        # Check if we're in local simulator mode
+        if self._executor is None:
+            logger.info("Running in local simulator mode")
+            return self._run_simulator(coerced_pubs, default_shots)
+
+        # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
         quantum_program, executor_options = self.prepare(coerced_pubs, default_shots)
@@ -310,7 +324,7 @@ class SamplerV2(BaseSamplerV2):
         # Apply dynamical decoupling if enabled
         if options.dynamical_decoupling.enable:
             quantum_program = apply_dynamical_decoupling(
-                backend=self._executor._backend,
+                backend=self._backend,
                 dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
@@ -319,3 +333,78 @@ class SamplerV2(BaseSamplerV2):
         executor_options = options.to_executor_options()
 
         return quantum_program, executor_options
+
+    def _run_simulator(
+        self, pubs: Sequence[SamplerPub], default_shots: int | None
+    ) -> LocalRuntimeJob:
+        """Run sampler in local simulator mode using BackendSamplerV2.
+
+        Args:
+            pubs: List of sampler PUBs to run.
+            default_shots: Default number of shots if not specified in PUBs.
+
+        Returns:
+            A LocalRuntimeJob wrapping the BackendSamplerV2 job.
+
+        Raises:
+            ValueError: If using IBMBackend in local mode.
+        """
+        if isinstance(self._backend, IBMBackend):
+            raise ValueError(
+                "Local testing mode is not supported when a cloud-based backend is used."
+            )
+
+        # Prepare options for BackendSamplerV2
+        options_copy = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
+
+        prim_options = {}
+        sim_options = options_copy.get("simulator", {})
+
+        # Extract seed_simulator if present
+        if seed_simulator := sim_options.pop("seed_simulator", None):
+            prim_options["seed_simulator"] = seed_simulator
+
+        # Check if BackendSamplerV2 supports run_options
+        dummy_prim = BackendSamplerV2(backend=self._backend)
+        use_run_options = hasattr(dummy_prim.options, "run_options")
+
+        run_options = {}
+        if use_run_options:
+            # Add noise model if present
+            if "noise_model" in sim_options:
+                run_options["noise_model"] = sim_options.pop("noise_model")
+
+            # Map meas_type to meas_level
+            if meas_type := options_copy.get("execution", {}).pop("meas_type", None):
+                if meas_type == "classified":
+                    run_options["meas_level"] = 2
+                elif meas_type == "kerneled":
+                    run_options["meas_level"] = 1
+                    run_options["meas_return"] = "single"
+                elif meas_type == "avg_kerneled":
+                    run_options["meas_level"] = 1
+                    run_options["meas_return"] = "avg"
+
+        # Set default_shots
+        if default_shots is not None:
+            prim_options["default_shots"] = default_shots
+
+        if run_options:
+            prim_options["run_options"] = run_options
+
+        # Create BackendSamplerV2 instance
+        primitive_inst = BackendSamplerV2(backend=self._backend, options=prim_options)
+
+        # Run the primitive
+        primitive_job = primitive_inst.run(pubs)
+
+        # Wrap in LocalRuntimeJob
+        local_runtime_job = LocalRuntimeJob(
+            function=primitive_job._function,
+            future=primitive_job._future,
+            backend=self._backend,
+            primitive="sampler",
+            inputs={"pubs": pubs},
+        )
+
+        return local_runtime_job
