@@ -431,3 +431,61 @@ class Session:
     ) -> None:
         set_cm_session(None)
         self.close()
+
+
+class AdvancedSession(Session):
+    """A class representing an advanced session.
+
+    This class extends :pyclass:`~.Session` by allowing additional request fields to be included
+    in the session creation payload.
+
+    This class is intended for internal use. Its behaviour is subject to change without notice.
+    Third party clients should not use or depend on this class.
+    """
+
+    def __init__(
+        self,
+        backend: BackendV2,
+        max_time: int | str | None = None,
+        *,
+        create_new: bool | None = True,
+        **kwargs: Any,
+    ):
+        self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
+        self._backend: BackendV2 | None = None
+        self._instance = None
+        self._active = True
+        self._session_id = None
+
+        if isinstance(backend, IBMBackend):
+            self._service = backend.service
+            self._backend = backend
+        elif isinstance(backend, (BackendV2)):
+            self._service = QiskitRuntimeLocalService()
+            self._backend = backend
+        else:
+            raise ValueError(f"Invalid backend type {type(backend)}")
+
+        self._max_time = (
+            max_time
+            if max_time is None or isinstance(max_time, int)
+            else hms_to_seconds(max_time, "Invalid max_time value: ")
+        )
+
+        if isinstance(self._backend, IBMBackend):
+            self._instance = self._backend._instance
+            if not self._backend.configuration().simulator:
+                self._session_id = self._create_session(create_new=create_new, **kwargs)
+
+    def _create_session(self, *, create_new: bool | None = True, **kwargs: Any) -> str | None:
+        """Create a session."""
+        if isinstance(self._service, QiskitRuntimeService) and create_new:
+            session = self._service._get_api_client(self._instance).create_session(
+                self.backend(),
+                self._instance,
+                self._max_time,
+                "dedicated",
+                **kwargs,
+            )
+            return session.get("id")
+        return None
