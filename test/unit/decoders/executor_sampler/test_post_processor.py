@@ -200,9 +200,12 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         data_0 = make_data((), 2)  # scalar PUB
         data_1 = make_data((4,), 3)  # 1-D parameter sweep
 
-        post_processor = {"version": "v0.1", "twirling": twirling, "meas_type": meas_type}
-        if meas_type == "avg_kerneled":
-            post_processor["shots"] = shots
+        post_processor = {
+            "version": "v0.1",
+            "twirling": twirling,
+            "meas_type": meas_type,
+            "shots": shots,
+        }
         passthrough_data = {"post_processor": post_processor}
 
         qp_result = QuantumProgramResult(
@@ -251,6 +254,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
                 "circuits_metadata": circuits_metadata,
             }
         }
@@ -291,6 +295,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": False,
                 "meas_type": "classified",
+                "shots": num_shots,
                 "circuits_metadata": circuits_metadata,
             }
         }
@@ -332,6 +337,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -379,6 +385,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -421,6 +428,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -462,13 +470,15 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, twirling_enabled=False, meas_type="classified"):
+    def _make_result(self, data, twirling_enabled=False, meas_type="classified", shots=128):
         """Helper to build a QuantumProgramResult with twirling flag.
 
         Args:
             data: Measurement data for the result
             twirling_enabled: Whether twirling is enabled
             meas_type: Measurement type
+            shots: Requested shots (required in passthrough; for classified/kerneled it is
+                overwritten by the array's shots axis, so the value is only used for avg_kerneled)
         """
         options = SamplerOptions()
         options.twirling.enable_gates = twirling_enabled
@@ -478,6 +488,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": twirling_enabled,
                 "meas_type": meas_type,
+                "shots": shots,
             }
         }
 
