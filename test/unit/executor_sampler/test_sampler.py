@@ -21,6 +21,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -1139,21 +1140,16 @@ class TestSamplerV2SimulatorMode(unittest.TestCase):
         sampler = SamplerV2(mode=backend)
 
         # Set noise model (simple depolarizing noise)
-        try:
-            from qiskit_aer.noise import NoiseModel, depolarizing_error
 
-            noise_model = NoiseModel()
-            # Add depolarizing error to single-qubit gates
-            error_1q = depolarizing_error(0.001, 1)
-            noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
-            # Add depolarizing error to two-qubit gates
-            error_2q = depolarizing_error(0.01, 2)
-            noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
+        noise_model = NoiseModel()
+        # Add depolarizing error to single-qubit gates
+        error_1q = depolarizing_error(0.001, 1)
+        noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
+        # Add depolarizing error to two-qubit gates
+        error_2q = depolarizing_error(0.01, 2)
+        noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
 
-            sampler.options.simulator.noise_model = noise_model
-        except ImportError:
-            # If qiskit-aer is not available, skip noise model
-            pass
+        sampler.options.simulator.noise_model = noise_model
 
         # Set coupling map (linear topology for 3 qubits)
         sampler.options.simulator.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
