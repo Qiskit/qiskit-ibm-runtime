@@ -567,7 +567,7 @@ class QiskitRuntimeService:
                         )
                     )
 
-                will only return backends that are operational and are active.
+                will only return backends that are operational and active.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Note that our backends now
                 support dynamic circuits and fractional gates simultaneously.
