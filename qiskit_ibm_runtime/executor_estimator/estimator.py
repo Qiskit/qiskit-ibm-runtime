@@ -26,7 +26,7 @@ from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
-from .pec_utils import prepare_pec
+from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
 from .utils import resolve_precision
 
@@ -179,12 +179,6 @@ class EstimatorV2(BaseEstimatorV2):
                 raise IBMInputValueError(
                     "When PEC mitigation is enabled, you must provide a noise model "
                     "via options.resilience.noise_model_mapping"
-                )
-            if len(self.options.resilience.noise_model_mapping) != len(coerced_pubs):
-                raise IBMInputValueError(
-                    f"The length of noise_model_mapping "
-                    f"({len(self.options.resilience.noise_model_mapping)}) "
-                    f"must match the number of PUBs ({len(coerced_pubs)})"
                 )
 
         # Route to appropriate prepare function

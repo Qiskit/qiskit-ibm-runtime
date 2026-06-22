@@ -393,7 +393,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         mock_noise_map = {
             "layer1": PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
         }
-        estimator.options.resilience.noise_model_mapping = [mock_noise_map]
+        estimator.options.resilience.noise_model_mapping = mock_noise_map
 
         # Mock prepare_pec to return a quantum program with passthrough_data
         mock_quantum_program = MagicMock(spec=QuantumProgram)
@@ -418,7 +418,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         self.assertIsInstance(call_args[1]["pec_options"], PecOptions)
         self.assertEqual(call_args[1]["pec_options"].max_overhead, 100)
         self.assertEqual(call_args[1]["pec_options"].noise_gain, 0.5)
-        self.assertEqual(call_args[1]["noise_model_mapping"], [mock_noise_map])
+        self.assertEqual(call_args[1]["noise_model_mapping"], mock_noise_map)
 
         # Verify job was returned
         self.assertEqual(job, self.mock_job)
@@ -468,25 +468,3 @@ class TestEstimatorV2Run(unittest.TestCase):
             "When PEC mitigation is enabled, you must provide a noise model",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
-
-    def test_run_raises_error_when_noise_model_length_mismatches_pubs(self):
-        """Test run raises error when noise_model_mapping length doesn't match number of PUBs."""
-        estimator = EstimatorV2(mode=self.backend)
-
-        # Enable PEC with mismatched noise model mapping
-        estimator.options.resilience.pec_mitigation = True
-        mock_noise_map = {
-            "layer1": PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        }
-        estimator.options.resilience.noise_model_mapping = [mock_noise_map]  # Only 1 mapping
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        # Try to run with 2 PUBs but only 1 noise model mapping
-        with self.assertRaisesRegex(
-            IBMInputValueError,
-            "The length of noise_model_mapping .* must match the number of PUBs",
-        ):
-            estimator.run([(circuit, observable), (circuit, observable)], precision=0.03125)

@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence  # noqa: TC003
-
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
 from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
@@ -67,12 +65,12 @@ class ResilienceOptions:
     See :class:`PecOptions` for all options.
     """
 
-    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]] | None = None
-    """A sequence of noise model mappings for PEC mitigation.
+    noise_model_mapping: dict[str, PauliLindbladMap] | None = None
+    """A noise model mapping for PEC mitigation.
 
-    Each element in the sequence corresponds to a PUB and maps layer references (strings)
-    to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that describe the noise
-    characteristics of that layer. This is required when using PEC mitigation.
+    Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap`
+    objects that describe the noise characteristics of that layer. The dict contains
+    layers from all PUBs. This is required when using PEC mitigation.
 
     Default: ``None``.
     """
