@@ -561,11 +561,13 @@ class QiskitRuntimeService:
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.max_shots > 50000
+                        filters=lambda backend: (
+                            (status := backend.status()).operational
+                            and status.status_msg == "active"
+                        )
                     )
-                    QiskitRuntimeService.backends(
-                        filters=lambda x: ("rz" in x.basis_gates )
-                    )
+
+                will only return backends that are operational and are active.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Note that our backends now
                 support dynamic circuits and fractional gates simultaneously.
