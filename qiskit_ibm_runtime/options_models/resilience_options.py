@@ -14,14 +14,26 @@
 
 from __future__ import annotations
 
-from pydantic import Field
+from typing import TYPE_CHECKING
+
+from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
+from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
-from .utils import PRIMITIVES_CONFIG
+from .pec_options import PecOptions
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
+@dataclass(
+    config=ConfigDict(
+        validate_assignment=True,
+        extra="forbid",
+        arbitrary_types_allowed=True,
+    )
+)
 class ResilienceOptions:
     """Resilience options for V2 Estimator."""
 
@@ -39,4 +51,31 @@ class ResilienceOptions:
     """Additional measurement noise learning options.
 
     See :class:`~.MeasureNoiseLearningOptions` for all options.
+    """
+
+    pec_mitigation: bool = False
+    """Whether to turn on Probabilistic Error Cancellation error mitigation method.
+
+    If you enable PEC, you can fine-tune its options by using :attr:`~pec`.
+    See :class:`PecOptions` for additional PEC-related options.
+
+    You must also provide a noise model via :attr:`~noise_model_mapping` when enabling PEC.
+
+    Default: False.
+    """
+
+    pec: PecOptions = Field(default_factory=PecOptions)
+    """Additional probabalistic error cancellation mitigation options.
+
+    See :class:`PecOptions` for all options.
+    """
+
+    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]] | None = None
+    """A sequence of noise model mappings for PEC mitigation.
+
+    Each element in the sequence corresponds to a PUB and maps layer references (strings)
+    to :class:`~qiskit.quantum_info.PauliLindbladMap` objects that describe the noise
+    characteristics of that layer. This is required when using PEC mitigation.
+
+    Default: ``None``.
     """
