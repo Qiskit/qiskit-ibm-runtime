@@ -73,7 +73,8 @@ class SamplerOptions:
     def to_executor_options(self) -> ExecutorOptions:
         """Map sampler options to executor options, ignoring all irrelevant fields.
 
-        Note: Simulator options are ignored as executor does not support local mode.
+        .. note::
+            Simulator options are ignored as executor does not support local mode.
 
         Returns:
             Mapped executor options.
