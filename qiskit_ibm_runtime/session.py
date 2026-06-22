@@ -436,7 +436,7 @@ class Session:
 class AdvancedSession(Session):
     """A class representing an advanced session.
 
-    This class extends :pyclass:`~.Session` by allowing additional request fields to be included
+    This class extends :class:`~.Session` by allowing additional request fields to be included
     in the session creation payload.
 
     This class is intended for internal use. Its behaviour is subject to change without notice.
