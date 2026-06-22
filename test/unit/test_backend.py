@@ -259,9 +259,9 @@ class TestBackend(IBMTestCase):
         """Test handling of non-unitary ISA operations."""
         target = convert_to_target(FakeSherbrooke().configuration())
 
-        assert isinstance(target.get("reset"), dict)
-        assert isinstance(target.get("measure"), dict)
-        assert target.get("measure_2") is None
+        self.assertIsInstance(target.get("reset"), dict)
+        self.assertIsInstance(target.get("measure"), dict)
+        self.assertIsNone(target.get("measure_2"))
 
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.

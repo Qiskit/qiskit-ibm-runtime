@@ -117,9 +117,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
     try:
         job.cancel()
         status = job.status()
-        assert status == "CANCELLED", (
-            f"cancel() was successful for job {job.job_id()} but its status is {status}."
-        )
+        if status != "CANCELLED":
+            raise AssertionError(
+                f"cancel() was successful for job {job.job_id()} but its status is {status}."
+            )
         return True
     except RuntimeInvalidStateError:
         if job.status() in ["DONE", "CANCELLED", "ERROR"]:
