@@ -90,7 +90,7 @@ select = [
     "G",      # flake8-logging-format
     "I",      # isort
     "RUF013", # implicit-optional
-    "S101",   # flake8-bandit assert (enforced in test/ only)
+    "S101",   # flake8-bandit assert
     "T10",    # flake8-debugger
     "TC",     # flake8-type-checking
     "UP",     # pyupgrade
@@ -117,10 +117,6 @@ ignore = [
 
 "qiskit_ibm_runtime/options/*options.py" = [
     "TC",     # flake8-type-checking -- ruff moves Unset and Dict to TYPE_CHECKING block
-]
-
-"!test/**.py" = [
-    "S101",   # flake8-bandit assert -- enforce using unittest-style assertion in tests
 ]
 
 [tool.ruff.lint.pydocstyle]
