@@ -19,7 +19,6 @@ import logging
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
-from qiskit.primitives import BackendSamplerV2
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from samplomatic import build
@@ -29,9 +28,7 @@ from ..base_primitive import get_mode_service_backend
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
-from ..fake_provider.local_runtime_job import LocalRuntimeJob
 from ..fake_provider.local_service import QiskitRuntimeLocalService
-from ..ibm_backend import IBMBackend
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
@@ -45,10 +42,12 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..options_models.executor_options import ExecutorOptions
     from ..quantum_program import QuantumProgramItem
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
+
 
 logger = logging.getLogger(__name__)
 
@@ -349,62 +348,26 @@ class SamplerV2(BaseSamplerV2):
         Raises:
             ValueError: If using IBMBackend in local mode.
         """
-        if isinstance(self._backend, IBMBackend):
-            raise ValueError(
-                "Local testing mode is not supported when a cloud-based backend is used."
-            )
+        # Prepare options dict - this goes in the inputs["options"] field
+        options_dict = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
 
-        # Prepare options for BackendSamplerV2
-        options_copy = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
-
-        prim_options = {}
-        sim_options = options_copy.get("simulator", {})
-
-        # Extract seed_simulator if present
-        if seed_simulator := sim_options.pop("seed_simulator", None):
-            prim_options["seed_simulator"] = seed_simulator
-
-        # Check if BackendSamplerV2 supports run_options
-        dummy_prim = BackendSamplerV2(backend=self._backend)
-        use_run_options = hasattr(dummy_prim.options, "run_options")
-
-        run_options = {}
-        if use_run_options:
-            # Add noise model if present
-            if "noise_model" in sim_options:
-                run_options["noise_model"] = sim_options.pop("noise_model")
-
-            # Map meas_type to meas_level
-            if meas_type := options_copy.get("execution", {}).pop("meas_type", None):
-                if meas_type == "classified":
-                    run_options["meas_level"] = 2
-                elif meas_type == "kerneled":
-                    run_options["meas_level"] = 1
-                    run_options["meas_return"] = "single"
-                elif meas_type == "avg_kerneled":
-                    run_options["meas_level"] = 1
-                    run_options["meas_return"] = "avg"
-
-        # Set default_shots
+        # Add default_shots to options if provided
         if default_shots is not None:
-            prim_options["default_shots"] = default_shots
+            options_dict["default_shots"] = default_shots
 
-        if run_options:
-            prim_options["run_options"] = run_options
+        # Prepare inputs dict with pubs and options
+        inputs = {
+            "pubs": pubs,
+            "options": options_dict,
+        }
 
-        # Create BackendSamplerV2 instance
-        primitive_inst = BackendSamplerV2(backend=self._backend, options=prim_options)
+        # Prepare runtime options with backend
+        runtime_options = {"backend": self._backend}
 
-        # Run the primitive
-        primitive_job = primitive_inst.run(pubs)
-
-        # Wrap in LocalRuntimeJob
-        local_runtime_job = LocalRuntimeJob(
-            function=primitive_job._function,
-            future=primitive_job._future,
-            backend=self._backend,
-            primitive="sampler",
-            inputs={"pubs": pubs},
+        # Call the centralized _run method from local_service
+        return self._service._run(
+            program_id="sampler",
+            inputs=inputs,
+            options=runtime_options,
+            calibration_id=None,
         )
-
-        return local_runtime_job
