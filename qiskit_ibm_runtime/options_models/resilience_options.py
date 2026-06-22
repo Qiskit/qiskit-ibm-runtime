@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Sequence  # noqa: TC003
 
 from pydantic import ConfigDict, Field
 from pydantic.dataclasses import dataclass
@@ -22,9 +22,6 @@ from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .pec_options import PecOptions
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 @dataclass(
