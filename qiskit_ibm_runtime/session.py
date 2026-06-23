@@ -455,7 +455,11 @@ class AdvancedSession(Session):
         super().__init__(backend=backend, max_time=max_time, create_new=create_new)
 
     def _create_session(self, *, create_new: bool | None = True) -> str | None:
-        """Create a session."""
+        """Create a session.
+
+        Differs from ``Session._create_session`` in that it includes ``self._kwargs`` in
+        the session creation payload.
+        """
         if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._get_api_client(self._instance).create_session(
                 self.backend(), self._instance, self._max_time, "dedicated", **self._kwargs
