@@ -17,11 +17,11 @@ from pydantic import ValidationError
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import QubitSparsePauliList
 
-from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_1
-from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_1 import (
-    noise_learner_v3_inputs_from_0_1,
-    noise_learner_v3_inputs_to_0_1,
-    noise_learner_v3_result_to_0_1,
+from qiskit_ibm_runtime.decoders.noise_learner_v3.converters import noise_learner_v3_result_from_0_3
+from qiskit_ibm_runtime.noise_learner_v3.converters.version_0_3 import (
+    noise_learner_v3_inputs_from_0_3,
+    noise_learner_v3_inputs_to_0_3,
+    noise_learner_v3_result_to_0_3,
 )
 from qiskit_ibm_runtime.options_models import NoiseLearnerV3Options
 from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Result, NoiseLearnerV3Results
@@ -52,13 +52,8 @@ class TestConverters(IBMTestCase):
         options.post_selection.strategy = "edge"
         options.post_selection.x_pulse_type = "xslow"
 
-        encoded = noise_learner_v3_inputs_to_0_1(instructions, options)
-        decoded = noise_learner_v3_inputs_from_0_1(encoded)
-
-        # `init_qubits` and `rep_delay` are not part of the V0.1 model. Hence,
-        # the encoder ignores them, and the decoder resets them to the default value.
-        options.execution.init_qubits = True
-        options.execution.rep_delay = None
+        encoded = noise_learner_v3_inputs_to_0_3(instructions, options)
+        decoded = noise_learner_v3_inputs_from_0_3(encoded)
 
         self.assertEqual(decoded, (instructions, options))
 
@@ -68,24 +63,27 @@ class TestConverters(IBMTestCase):
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),
         ]
-        rates = [0.1, 0.2]
+        rates = [0.1, 0.3]
         rates_std = [0.01, 0.02]
 
         metadatum0 = {
             "learning_protocol": "trex",
-            "post_selection": {"fraction_kept": 1},
+            "post_selection": {"fraction_kept": 1, "success_rates": {0: 0.1, 1: 0.9}},
         }
         result0 = NoiseLearnerV3Result.from_generators(generators, rates, rates_std, metadatum0)
 
         metadatum1 = {
             "learning_protocol": "lindblad",
-            "post_selection": {"fraction_kept": {0: 1, 4: 1}},
+            "post_selection": {
+                "fraction_kept": {0: 1, 4: 1},
+                "success_rates": {0: {0: 0.1, 1: 0.9}, 4: {0: 0.1, 1: 0.9}},
+            },
         }
         result1 = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum1)
         results = NoiseLearnerV3Results([result0, result1])
 
-        encoded = noise_learner_v3_result_to_0_1(results)
-        decoded = noise_learner_v3_result_from_0_1(encoded)
+        encoded = noise_learner_v3_result_to_0_3(results)
+        decoded = noise_learner_v3_result_from_0_3(encoded)
         for datum_in, datum_out in zip(results.data, decoded.data):
             self.assertEqual(datum_in._generators, datum_out._generators)
             self.assertTrue(np.allclose(datum_in._rates, datum_out._rates))
@@ -98,44 +96,42 @@ class TestConverters(IBMTestCase):
             QubitSparsePauliList.from_list(["IX", "XX"]),
             QubitSparsePauliList.from_list(["XI"]),
         ]
-        rates = [0.1, 0.2]
-
-        metadata = {
-            "input_options": {
-                "shots_per_randomization": 3,
-                "num_randomizations": 8,
-                "layer_pair_depths": [0, 2, 6],
-                "post_selection": {
-                    "enable": True,
-                    "strategy": "edge",
-                    "x_pulse_type": "xslow",
-                },
-            }
-        }
-
-        for metadatum in [
-            {"learning_protocol": "trex", "post_selection": {"strategy": "edge"}},
-            {"learning_protocol": "trex", "post_selection": {"fraction_kept": 1.2}},
-            {"learning_protocol": "trex", "post_selection": {"fraction_kept": -0.3}},
-        ]:
-            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
-            results = NoiseLearnerV3Results([result], metadata)
-            with self.assertRaisesRegex(
-                ValidationError,
-                "1 validation error for NoiseLearnerV3ResultModel",
-            ):
-                noise_learner_v3_result_to_0_1(results).model_dump()
+        rates = [0.1, 0.3]
 
         for metadatum in [
             {
                 "learning_protocol": "trex",
-                "post_selection": {"fraction_kept": {0: 0.1, 2: 0.3}},
+                "post_selection": {"fraction_kept": 1.2, "success_rates": {0: 1.0, 1: 0.9}},
             },
-            {"learning_protocol": "lindblad", "post_selection": {"fraction_kept": 0.3}},
+            {
+                "learning_protocol": "trex",
+                "post_selection": {"fraction_kept": -0.3, "success_rates": {0: 0.1, 1: 0.9}},
+            },
         ]:
             result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
-            results = NoiseLearnerV3Results([result], metadata)
+            results = NoiseLearnerV3Results([result], metadata={"key": "value"})
+            with self.assertRaisesRegex(
+                ValidationError,
+                "1 validation error for NoiseLearnerV3ResultModel",
+            ):
+                noise_learner_v3_result_to_0_3(results).model_dump()
+
+        for metadatum in [
+            {
+                "learning_protocol": "trex",
+                "post_selection": {
+                    "fraction_kept": {0: 0.1, 2: 0.3},
+                    "success_rates": {0: 0.1, 1: 0.9},
+                },
+            },
+            {
+                "learning_protocol": "lindblad",
+                "post_selection": {"fraction_kept": 0.3, "success_rates": {0: {0: 0.1, 1: 0.9}}},
+            },
+        ]:
+            result = NoiseLearnerV3Result.from_generators(generators, rates, metadata=metadatum)
+            results = NoiseLearnerV3Results([result], metadata={"key": "value"})
             with self.assertRaisesRegex(
                 ValidationError, "1 validation error for NoiseLearnerV3ResultModel"
             ):
-                noise_learner_v3_result_to_0_1(results).model_dump()
+                noise_learner_v3_result_to_0_3(results).model_dump()
