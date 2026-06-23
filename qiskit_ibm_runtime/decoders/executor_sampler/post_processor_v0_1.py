@@ -19,12 +19,7 @@ from typing import TYPE_CHECKING, cast
 from qiskit.primitives import PrimitiveResult
 
 from .converters import quantum_program_item_result_to_sampler_pub_result
-from .utils import (
-    TWIRLING_PREFIX,
-    executor_metadata_to_sampler_metadata,
-    flatten_twirling_axes,
-    undo_twirling,
-)
+from .utils import executor_metadata_to_sampler_metadata, flatten_twirling_axes, undo_twirling
 
 if TYPE_CHECKING:
     from ...results.quantum_program import QuantumProgramResult
@@ -66,35 +61,17 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
     if (shots := post_processor_data.get("shots", None)) is None:
         raise ValueError("Missing 'shots' in passthrough data.")
 
-    # Filter out measurement-twirling bookkeeping arrays (measurement_flips.*); they may use a
-    # singleton shot axis for broadcasting and are not user-facing result data.
-    meas_arrays = [array for key, array in result[0].items() if not key.startswith(TWIRLING_PREFIX)]
-    if not meas_arrays:
-        raise ValueError("Unable to identify measurement data for shots per PUB.")
-
-    # Twirling prepends a randomization axis, so the PUB shape starts at axis 1 (and
-    # num_randomizations is read from it); otherwise at axis 0.
+    # Compute the ``num_randomizations`` from the left-most axis of the result arrays
     if twirling:
-        if len(set_num_randomizations := {array.shape[0] for array in meas_arrays}) != 1:
+        if len(set_num_randomizations := {array.shape[0] for array in result[0].values()}) != 1:
             raise ValueError("Unable to uniquely identify the number of randomizations.")
         num_randomizations = next(iter(set_num_randomizations))
-        shape_start = 1
     else:
         num_randomizations = 0
-        shape_start = 0
-
-    # Classified/kerneled arrays end in (num_shots, num_bits): strip 2 and read shots from the
-    # second-to-last axis (PUB shots untwirled, shots_per_randomization twirled). avg_kerneled is
-    # averaged over shots, ending in (num_bits,): strip 1; its shots came from the request above.
-    if meas_type != "avg_kerneled":
-        if len(set_shots := {array.shape[-2] for array in meas_arrays}) != 1:
-            raise ValueError("Unable to uniquely identify the shots per PUB.")
-        shots = next(iter(set_shots))
-        shape_end = -2
-    else:
-        shape_end = -1
 
     # PUB shape = array shape minus the leading randomization axis and the trailing intrinsic axes.
+    shape_start = 1 if twirling else 0
+    shape_end = -1 if meas_type == "avg_kerneled" else -2
     pub_shapes: list[tuple[int, ...]] = [
         next(iter(item.values())).shape[shape_start:shape_end] for item in result
     ]
@@ -112,9 +89,9 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         if len(item) == 0:
             raise ValueError("Found an item without data.")
 
+        undo_twirling(item)
+
         if twirling:
-            # Twirling must be undone before flattening
-            undo_twirling(item)
             flatten_twirling_axes(item, pub_shape)
 
         pub_result = quantum_program_item_result_to_sampler_pub_result(

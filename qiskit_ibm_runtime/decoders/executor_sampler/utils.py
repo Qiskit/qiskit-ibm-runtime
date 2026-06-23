@@ -171,7 +171,7 @@ def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) ->
 
 
 def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, ...]) -> None:
-    """Collapse the leading ``num_randomizations`` axis in-place.
+    """Flatten the leading ``num_randomizations`` axis into the shots axis in-place.
 
     The function should only be called when twirling was on, so every array carries a
     leading randomization axis. The collapse depends on whether the data has a shots axis:
@@ -192,6 +192,7 @@ def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, 
             ``(3,)`` for a 1-D parameter sweep.
     """
     for creg_name, data in list(item.items()):
+        # (ndim == len(pub_shape) + 2) is true only for avg_kerneled measurements
         if data.ndim == len(pub_shape) + 2:
             item[creg_name] = data.mean(axis=0)
             continue
