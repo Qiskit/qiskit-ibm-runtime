@@ -260,6 +260,7 @@ class SamplerV2(BaseSamplerV2):
                 enable_gates=bool(options.twirling.enable_gates),
                 enable_measures=bool(options.twirling.enable_measure),
                 twirling_strategy=options.twirling.strategy.replace("-", "_"),
+                inject_noise_site="after",
             )
 
             for i, pub in enumerate(pubs):

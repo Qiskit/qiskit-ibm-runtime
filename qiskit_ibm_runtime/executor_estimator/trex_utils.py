@@ -55,6 +55,7 @@ def create_trex_calibration_circuit(
         enable_gates=False,
         enable_measures=True,
         measure_annotations="twirl",
+        inject_noise_site="after",
     )
     annotated_trex_circuit = boxing_pm.run(trex_circuit)
     template_trex_circuit, trex_samplex = build(annotated_trex_circuit)
