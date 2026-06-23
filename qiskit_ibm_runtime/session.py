@@ -451,41 +451,14 @@ class AdvancedSession(Session):
         create_new: bool | None = True,
         **kwargs: Any,
     ):
-        self._service: QiskitRuntimeService | QiskitRuntimeLocalService | None = None
-        self._backend: BackendV2 | None = None
-        self._instance = None
-        self._active = True
-        self._session_id = None
+        self._kwargs = kwargs
+        super().__init__(backend=backend, max_time=max_time, create_new=create_new)
 
-        if isinstance(backend, IBMBackend):
-            self._service = backend.service
-            self._backend = backend
-        elif isinstance(backend, (BackendV2)):
-            self._service = QiskitRuntimeLocalService()
-            self._backend = backend
-        else:
-            raise ValueError(f"Invalid backend type {type(backend)}")
-
-        self._max_time = (
-            max_time
-            if max_time is None or isinstance(max_time, int)
-            else hms_to_seconds(max_time, "Invalid max_time value: ")
-        )
-
-        if isinstance(self._backend, IBMBackend):
-            self._instance = self._backend._instance
-            if not self._backend.configuration().simulator:
-                self._session_id = self._create_session(create_new=create_new, **kwargs)
-
-    def _create_session(self, *, create_new: bool | None = True, **kwargs: Any) -> str | None:
+    def _create_session(self, *, create_new: bool | None = True) -> str | None:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService) and create_new:
             session = self._service._get_api_client(self._instance).create_session(
-                self.backend(),
-                self._instance,
-                self._max_time,
-                "dedicated",
-                **kwargs,
+                self.backend(), self._instance, self._max_time, "dedicated", **self._kwargs
             )
             return session.get("id")
         return None
