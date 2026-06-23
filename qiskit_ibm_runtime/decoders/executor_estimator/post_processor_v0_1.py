@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from qiskit.quantum_info import PauliLindbladMap
 
     from ...results.quantum_program import QuantumProgramItemResult
+    from ...options_models.zne_options import ExtrapolatorType
 
 import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
@@ -174,14 +175,46 @@ def process_expectation_values(
         # where num_configs is the total number of (param_index, basis) pairs
         raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``4``.")
 
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    return calculate_expectation_values(
+        data,
+        observables,
+        param_shape,
+        param_basis_pairs,
+        measure_noise_data,
+    )
+
+def calculate_expectation_values(
+    data: np.ndarray,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,):
+    """Calculate expectation values for given data, observables and params.
+
+        Args:
+            data: The measured data result.
+            observables: The observables to calculate expectation values for.
+            param_shape: The shape of the parameter values in the original PUB.
+            param_basis_pairs: The map between params ndindexes to basis.
+            measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+                PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+
+        Returns:
+            A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+            ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+
+        Raises:
+            ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+                each other.
+        """
     # Get number of randomizations and shots per randomization
     num_randomizations = data.shape[0]
     shots_per_randomization = data.shape[-2]
     total_shots = num_randomizations * shots_per_randomization
-
-    # Apply measurement flips if present
-    if "measurement_flips._meas" in item_result:
-        data ^= item_result["measurement_flips._meas"]
 
     # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
     # This allows us to find all available measurement bases for a given parameter
@@ -386,3 +419,84 @@ def process_expectation_values_pec(
         stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
 
     return exp_vals, stds, ensemble_stds
+
+
+def process_expectation_values_pea(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    noise_factors: list[float],
+    extrapolated_noise_factors: list[float],
+    extrapolator: list[ExtrapolatorType],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+    """Process expectation values for a single item result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        noise_factors: The noise factors used to amplify the noise.
+        extrapolated_noise_factors: Noise factors to evaluate the fits at.
+        extrapolator: The extrapolator model or models to use. Models will be tried in priority order.
+            Supported models (each fits the named function of the noise factor ``x``):
+            - ``linear``: ``a + b*x``
+            - ``polynomial_degree_k`` (1 <= k <= 7): a degree-k polynomial
+            - ``exponential``: ``a*exp(b*x)``
+            - ``double_exponential``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``fallback``: no fit; the measured value at the lowest noise factor
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+
+    Raises:
+        ValueError: If ``item_result`` has no ``'_meas'`` key.
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    try:
+        data = item_result["_meas"]
+    except KeyError:
+        raise ValueError("Dedicated creg ``'_meas'`` is missing from the results.")
+
+    if data.ndim != 5:
+        # Shape: (num_randomizations, num_noise_scales, num_configs, shots, num_bits)
+        # where num_configs is the total number of (param_index, basis) pairs
+        raise ValueError(f"``item_result['_meas']`` has ``{data.ndim}`` axes, expected ``5``.")
+
+    # Apply measurement flips if present
+    if "measurement_flips._meas" in item_result:
+        data ^= item_result["measurement_flips._meas"]
+
+    # calculate exp_val and std for each noise factor
+    factors_exp_vals = []
+    factors_stds = []
+    factors_ensemble_stds = []
+    for factor_idx, noise_factor in enumerate(noise_factors):
+        factor_data = data[:, factor_idx, :, :, :]
+        factor_exp_vals, factor_stds, factor_ensemble_stds = calculate_expectation_values(
+            factor_data,
+            observables,
+            param_shape,
+            param_basis_pairs,
+            measure_noise_data,
+        )
+        factors_exp_vals.append(factor_exp_vals)
+        factors_stds.append(factor_stds)
+        factors_ensemble_stds.append(factor_ensemble_stds)
+
+    # Each of factors_exp_vals, factors_stds and factors_ensemble_stds is a list of ndarray -
+    # each item in the list is the results for each observable for each parameter,
+    # for a different noise factor
+    return fit_extrapolation_models(
+        factors_exp_vals,
+        factors_stds,
+        factors_ensemble_stds,
+        extrapolator,
+        extrapolated_noise_factors,)
