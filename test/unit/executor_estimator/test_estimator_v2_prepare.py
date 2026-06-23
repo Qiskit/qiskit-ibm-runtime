@@ -169,6 +169,11 @@ class TestPrepareFunction(unittest.TestCase):
                 "Mid-circuit measurements are not yet fully supported by samplomatic, see"
                 "Samplomatic issue #361."
             )
+        if not (enable_gates or enable_measure):
+            self.skipTest(
+                "Mid-circuit measurements are not yet fully supported by samplomatic, see"
+                "Samplomatic issue #361."
+            )
 
         circuit = QuantumCircuit(3, 3)
         circuit.h(0)
