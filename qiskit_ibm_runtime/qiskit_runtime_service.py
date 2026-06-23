@@ -925,8 +925,8 @@ class QiskitRuntimeService:
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
-        Note that backend availability is only verified upon circuit submission. 
-        To check the backend status ahead of time, use the 
+        Note that backend availability is only verified upon circuit submission.
+        To check the backend status ahead of time, use the
         :meth:`~.IBMBackend.status` method on the backend object:
 
         .. code-block:: python
