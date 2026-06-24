@@ -45,6 +45,27 @@ def validate_no_boxes(circuit: QuantumCircuit) -> None:
             )
 
 
+def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | None) -> None:
+    """Validate measurement twirling is compatible with the requested ``meas_type``.
+
+    Measurement twirling flips bits before measurement and XOR-corrects them in
+    post-processing, which requires classified bit results. Kerneled returns are complex
+    IQ data, so the correction cannot be applied.
+
+    Args:
+        meas_type: The requested measurement return type.
+        enable_measure: Whether measurement twirling is enabled.
+
+    Raises:
+        IBMInputValueError: If ``enable_measure`` is set with a non-classified ``meas_type``.
+    """
+    if meas_type in ("kerneled", "avg_kerneled") and enable_measure:
+        raise IBMInputValueError(
+            "Kerneled measurement return and measurement twirling are not compatible. "
+            "Set `.twirling.enable_measure=False` or `.execution.meas_type='classified'`"
+        )
+
+
 def extract_shots_from_pubs(pubs: Sequence[SamplerPub], default_shots: int | None = None) -> int:
     """Extract and validate shots value from a sequence of ``SamplerPub`` objects.
 
