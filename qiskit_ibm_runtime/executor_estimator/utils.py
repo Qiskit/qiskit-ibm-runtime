@@ -201,6 +201,7 @@ def box_circuit(
         measure_annotations="all"
         if twirling_options.enable_measure or twirl_measurements
         else "change_basis",
+        inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
         inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
     )
