@@ -173,12 +173,16 @@ def _validate_chunk_span(span: ChunkSpan, pubs_shapes: list[tuple[int, ...]]) ->
 def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, ...]) -> None:
     """Flatten the leading ``num_randomizations`` axis into the shots axis in-place.
 
-    When twirling is enabled, the executor returns measurement data with shape
-    ``(num_rand, *pub_shape, shots_per_rand, num_bits)``. This function reshapes
-    each array to ``(*pub_shape, total_shots, num_bits)`` where
-    ``total_shots = num_rand * shots_per_rand``.
+    The function should only be called when twirling was on, so every array carries a
+    leading randomization axis. The collapse depends on whether the data has a shots axis:
 
-    The function should only be called when twirling was on.
+    * Shots-bearing (classified / kerneled): shape ``(num_rand, *pub_shape, shots_per_rand,
+      num_bits)`` (``ndim == len(pub_shape) + 3``). The randomization axis is folded into the
+      shots axis, giving ``(*pub_shape, total_shots, num_bits)`` with
+      ``total_shots = num_rand * shots_per_rand``.
+    * ``avg_kerneled``: averaged over shots in acquisition, so there is no shots axis and the
+      shape is ``(num_rand, *pub_shape, num_bits)`` (``ndim == len(pub_shape) + 2``). The
+      randomization axis is collapsed by averaging, giving ``(*pub_shape, num_bits)``
 
     Args:
         item: Dictionary mapping classical register names to measurement arrays.
@@ -188,6 +192,10 @@ def flatten_twirling_axes(item: QuantumProgramItemResult, pub_shape: tuple[int, 
             ``(3,)`` for a 1-D parameter sweep.
     """
     for creg_name, data in list(item.items()):
+        # True when missing shot axis, like in the case for avg_kerneled
+        if data.ndim == len(pub_shape) + 2:
+            item[creg_name] = data.mean(axis=0)
+            continue
         num_rand = data.shape[0]
         shots_per_rand = data.shape[len(pub_shape) + 1]
         total_shots = num_rand * shots_per_rand
