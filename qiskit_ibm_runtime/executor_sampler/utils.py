@@ -59,10 +59,10 @@ def validate_meas_type_twirling(meas_type: str | None, enable_measure: bool | No
     Raises:
         IBMInputValueError: If ``enable_measure`` is set with a non-classified ``meas_type``.
     """
-    if meas_type in ("kerneled", "avg_kerneled") and enable_measure:
+    if meas_type in {"kerneled", "avg_kerneled"} and enable_measure:
         raise IBMInputValueError(
-            "Kerneled measurement return and measurement twirling are not compatible. "
-            "Set `.twirling.enable_measure=False` or `.execution.meas_type='classified'`"
+            f"'meas_type={meas_type}' and measurement twirling are not compatible. "
+            "Set `twirling.enable_measure=False` or `execution.meas_type='classified'`"
         )
 
 
