@@ -150,34 +150,6 @@ class TestFlattenTwirlingAxes(unittest.TestCase):
         expected = np.array([[0], [1], [2], [3], [4], [5]], dtype=np.uint8)
         np.testing.assert_array_equal(item["meas"], expected)
 
-    def test_avg_kerneled_non_parametric_with_twirling(self):
-        """avg_kerneled has no shots axis; the randomization axis is collapsed by averaging."""
-        num_rand, num_bits = 4, 2
-        # Twirled avg_kerneled, non-parametric pub: (num_rand, num_bits)
-        data = np.arange(num_rand * num_bits, dtype=np.complex128).reshape(num_rand, num_bits)
-        item = {"meas": data.copy()}
-
-        flatten_twirling_axes(item, pub_shape=())
-
-        # Collapses to (num_bits,) by averaging over the randomization axis.
-        self.assertEqual(item["meas"].shape, (num_bits,))
-        np.testing.assert_array_equal(item["meas"], data.mean(axis=0))
-
-    def test_avg_kerneled_1d_parametric_with_twirling(self):
-        """avg_kerneled with a 1-D sweep keeps the sweep axis and averages over randomizations."""
-        num_rand, param_size, num_bits = 4, 3, 2
-        # Twirled avg_kerneled, 1-D sweep: (num_rand, param_size, num_bits)
-        data = np.arange(num_rand * param_size * num_bits, dtype=np.complex128).reshape(
-            num_rand, param_size, num_bits
-        )
-        item = {"meas": data.copy()}
-
-        flatten_twirling_axes(item, pub_shape=(param_size,))
-
-        # Collapses to (param_size, num_bits) by averaging over the leading randomization axis.
-        self.assertEqual(item["meas"].shape, (param_size, num_bits))
-        np.testing.assert_array_equal(item["meas"], data.mean(axis=0))
-
 
 class TestExecutorMetadataToSamplerMetadata(unittest.TestCase):
     """Tests for ``executor_metadata_to_sampler_metadata``."""

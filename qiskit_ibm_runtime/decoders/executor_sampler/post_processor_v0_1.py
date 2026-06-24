@@ -103,7 +103,12 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         undo_twirling(item)
 
         if twirling:
-            flatten_twirling_axes(item, pub_shape)
+            # `avg_kerneled` does not have a shot axis and cannot be flattened normally
+            if meas_type == "avg_kerneled":
+                for creg_name, data in list(item.items()):
+                    item[creg_name] = data.mean(axis=0)
+            else:
+                flatten_twirling_axes(item, pub_shape)
 
         pub_result = quantum_program_item_result_to_sampler_pub_result(
             item, num_randomizations, meas_type, circuit_metadata
