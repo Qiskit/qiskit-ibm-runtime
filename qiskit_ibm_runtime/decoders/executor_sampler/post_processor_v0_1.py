@@ -70,7 +70,9 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
         num_randomizations = 0
 
     # Compute the shape of the input PUBs
-    pub_shapes = [next(iter(item.values())).shape[1 if twirling else 0 : -2] for item in result]
+    shape_start = 1 if twirling else 0
+    shape_end = -2 if meas_type != "avg_kerneled" else -1
+    pub_shapes = [next(iter(item.values())).shape[shape_start:shape_end] for item in result]
 
     # Extract circuit metadata if present and validate length
     circuits_metadata = post_processor_data.get("circuits_metadata", None) or [None] * len(result)
@@ -91,7 +93,7 @@ def sampler_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveRes
             flatten_twirling_axes(item, pub_shape)
 
         pub_result = quantum_program_item_result_to_sampler_pub_result(
-            item, num_randomizations, meas_type, circuit_metadata
+            item, pub_shape, num_randomizations, meas_type, circuit_metadata
         )
         pub_results.append(pub_result)
 
