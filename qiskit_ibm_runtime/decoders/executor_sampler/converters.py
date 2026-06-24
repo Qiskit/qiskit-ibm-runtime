@@ -41,7 +41,7 @@ def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict
 
 def quantum_program_item_result_to_sampler_pub_result(
     item: QuantumProgramItemResult,
-    pub_shape: tuple[int, ...],
+    pub_shape: Iterable[int, ...],
     num_randomizations: int,
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
     circuit_metadata: dict | None = None,
