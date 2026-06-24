@@ -66,9 +66,9 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        assert params["options"] == executor.options
-        assert isinstance(params["quantum_program"], QuantumProgram)
-        assert params["schema_version"] == Executor._SCHEMA_VERSION
+        self.assertEqual(params["options"], executor.options)
+        self.assertIsInstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)
@@ -114,9 +114,9 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        assert params["options"] == executor.options
-        assert isinstance(params["quantum_program"], QuantumProgram)
-        assert params["schema_version"] == Executor._SCHEMA_VERSION
+        self.assertEqual(params["options"], executor.options)
+        self.assertIsInstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)
