@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import warnings
 from typing import TYPE_CHECKING, Any
 
@@ -315,5 +316,6 @@ def convert_to_target(
                 instruction=inst_name_map[inst_name],
                 properties=prop_name_map.get(inst_name, None),
                 name=inst_name,
+                angle_bounds=[(0, math.pi / 2)] if inst_name == "rzz" else None,
             )
     return target
