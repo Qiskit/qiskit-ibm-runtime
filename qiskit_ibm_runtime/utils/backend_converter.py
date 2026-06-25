@@ -70,7 +70,7 @@ def convert_to_target(
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
         include_control_flow: Set True to include control flow instructions.
-        include_fractional_gates: Set True to include fractioanl gates.
+        include_fractional_gates: Set True to include fractional gates.
         custom_name_mapping: A name mapping must be supplied for the operation
             not included in Qiskit Standard Gate name mapping, otherwise the operation
             will be dropped in the resulting ``Target`` object.
