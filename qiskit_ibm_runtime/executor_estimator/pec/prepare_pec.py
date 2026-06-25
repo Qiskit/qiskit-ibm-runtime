@@ -15,104 +15,30 @@
 from __future__ import annotations
 
 import logging
-import math
 import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from qiskit import QuantumCircuit
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.pec_options import PecOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ...options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
+    from ...options_models.pec_options import PecOptions
+    from ...options_models.twirling_options import TwirlingOptions
 
 import numpy as np
-from samplomatic import InjectNoise, build
-from samplomatic.utils import get_annotation
+from samplomatic import build
 
-from ..exceptions import IBMInputValueError
-from ..executor.passthrough_utils import validate_and_extract_metadata
-from ..quantum_program import QuantumProgram
-from ..quantum_program.quantum_program import SamplexItem
-from .prepare import box_circuit, compute_samplex_arguments, make_samplex_arguments
-from .trex_utils import create_trex_calibration_circuit
+from ...exceptions import IBMInputValueError
+from ...quantum_program import QuantumProgram
+from ...quantum_program.quantum_program import SamplexItem
+from ..trex_utils import create_trex_calibration_circuit
+from ..utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from .utils import calculate_gamma, calculate_pec_twirling_shots
 
 logger = logging.getLogger(__name__)
-
-
-def calculate_gamma(
-    boxed_circuit: QuantumCircuit,
-    noise_model_mapping: dict[str, PauliLindbladMap],
-    noise_factor: float,
-) -> float:
-    """Calculate the PEC gamma factor of a circuit based on a noise model.
-
-    The returned gamma is that associated with the inverse noise maps needed
-    to cancel the noise in the circuit.
-
-    Args:
-        boxed_circuit: The annotated circuit to calculate the PEC gamma for.
-        noise_model_mapping: Mapping between layer ref to a noise model
-        noise_factor: The noise factor of the noise amplification.
-
-    Returns:
-        The PEC gamma factor.
-    """
-    gamma = 1.0
-    for instr in boxed_circuit:
-        if annot := get_annotation(instr.operation, InjectNoise):
-            plm = noise_model_mapping[annot.ref]
-            # scale the noise by noise_factor
-            plm = plm.scale_rates(noise_factor)
-            gamma *= plm.inverse().gamma()
-    return gamma
-
-
-def calculate_pec_twirling_shots(
-    pub_shots: int,
-    num_randomizations: int | str,
-    shots_per_randomization: int | str,
-) -> tuple[int, int]:
-    """Calculate num_randomizations and shots_per_randomization for twirling.
-
-    Implements the logic from TwirlingOptions documentation:
-
-    - If both "auto": shots_per_randomization = 64
-                     num_randomizations = ceil(shots/shots_per_randomization)
-    - If only num_randomizations "auto": num_randomizations = ceil(shots/shots_per_randomization)
-    - If only ``shots_per_randomization`` "auto":
-      shots_per_randomization = ceil(shots/num_randomizations)
-
-    Args:
-        pub_shots: Total shots requested for the pub.
-        num_randomizations: Number of randomizations (or "auto").
-        shots_per_randomization: Shots per randomization (or "auto").
-
-    Returns:
-        Tuple of (num_randomizations, shots_per_randomization).
-    """
-    if num_randomizations == "auto" and shots_per_randomization == "auto":
-        # Both auto: shots_per_rand = max(64, ceil(shots/32))
-        shots_per_rand = 64
-        num_rand = math.ceil(pub_shots / shots_per_rand)
-    elif num_randomizations == "auto":
-        # Only num_rand auto
-        shots_per_rand = int(shots_per_randomization)
-        num_rand = math.ceil(pub_shots / shots_per_rand)
-    elif shots_per_randomization == "auto":
-        # Only shots_per_rand auto
-        num_rand = int(num_randomizations)
-        shots_per_rand = math.ceil(pub_shots / num_rand)
-    else:
-        # Both specified
-        num_rand = int(num_randomizations)
-        shots_per_rand = int(shots_per_randomization)
-
-    return num_rand, shots_per_rand
 
 
 def prepare_pec(
@@ -120,7 +46,7 @@ def prepare_pec(
     twirling_options: TwirlingOptions,
     shots: int,
     pec_options: PecOptions,
-    noise_model_mapping: Sequence[dict[str, PauliLindbladMap]],
+    noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program with PEC mitigation.
@@ -134,9 +60,9 @@ def prepare_pec(
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
         pec_options: The options for PEC mitigation.
-        noise_model_mapping: List of mapping between layer ref to a noise model to use for PEC
-            mitigation method. The list must contain a map for each pub. Assumes that the
-            unique layers used for noise learning were extracted using the ``get_layers`` method.
+        noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
+            method. The dict contains layers from all pubs. Assumes that the unique layers
+            used for noise learning were extracted using the ``get_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -147,20 +73,14 @@ def prepare_pec(
         IBMInputValueError: If pubs have mismatched precision,
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
-        IBMInputValueError: If the length of noise_model_mapping and the length of the pubs
-            mismatched.
+        IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
+            the pubs layers.
     """
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
-
-    # validate noise_model_mapping length
-    if noise_model_mapping is None or len(noise_model_mapping) != len(pubs):
-        raise IBMInputValueError(
-            "If PEC mitigation is used, the input must contain noise_model_mapping for each pub"
-        )
 
     # set max_overhead
     max_overhead = pec_options.max_overhead
@@ -195,7 +115,7 @@ def prepare_pec(
         # add samplex_arguments related to noise injection
         if pec_options.noise_gain == "auto":
             # calculate the gamma factor without scaling it by noise_factor
-            gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], 1)
+            gamma = calculate_gamma(boxed_circuit, noise_model_mapping, 1)
             # calculate the noise factor based on gamma and max_overhead
             noise_gain = 1 - np.log(max_overhead) / np.log(gamma**2)
             # Truncate noise_gain to [0, 1]
@@ -213,10 +133,23 @@ def prepare_pec(
         noise_scale = noise_gain - 1
         # The sampling scaling is proportional to 1 - noise_gain, as 0 is full PEC and 1 is no PEC
         noise_factor = 1 - noise_gain
-        for ref in noise_model_mapping[i]:
+
+        # Create a noise model map containing only the layers relevant for the current pub
+        specs = samplex.inputs().get_specs("pauli_lindblad_maps")
+        pub_noise_model = {}
+        for spec in specs:
+            ref = spec.name.split(".")[-1]
+            try:
+                pub_noise_model[ref] = noise_model_mapping[ref]
+            except KeyError:
+                raise IBMInputValueError(
+                    f"noise_model_mapping is missing noise map for layer reference {ref}"
+                )
+            # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
-        samplex_arguments["pauli_lindblad_maps"] = noise_model_mapping[i]
-        scaled_gamma = calculate_gamma(boxed_circuit, noise_model_mapping[i], noise_factor)
+
+        samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
+        scaled_gamma = calculate_gamma(boxed_circuit, pub_noise_model, noise_factor)
         pec_gamma_list.append(scaled_gamma)
         # Scale the amount of randomizations by gamma**2
         sampling_overhead = scaled_gamma**2
@@ -240,13 +173,10 @@ def prepare_pec(
         param_basis_pairs_list.append(param_basis_pairs)
         param_shapes_list.append(pub.parameter_values.shape)
 
-    # Collect and validate circuit metadata from each pub
-    circuits_metadata = validate_and_extract_metadata(pubs)
-
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
-            "circuits_metadata": circuits_metadata,
+            "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,

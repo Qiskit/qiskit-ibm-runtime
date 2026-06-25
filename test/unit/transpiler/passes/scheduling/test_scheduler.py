@@ -27,9 +27,7 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
     ALAPScheduleAnalysis,
     ASAPScheduleAnalysis,
 )
-from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
-    DynamicCircuitInstructionDurations,
-)
+from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import DynamicCircuitInstructionDurations
 
 from .....ibm_test_case import IBMTestCase
 

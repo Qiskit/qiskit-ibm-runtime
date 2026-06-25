@@ -12,8 +12,6 @@
 
 """Tests for job related runtime functions."""
 
-import random
-import time
 import warnings
 from unittest.mock import patch
 
@@ -139,7 +137,6 @@ class TestRuntimeJob(IBMTestCase):
     def test_cancel_job(self, service):
         """Test canceling a job."""
         job = run_program(service, job_classes=CancelableRuntimeJob)
-        time.sleep(1)
         job.cancel()
         self.assertEqual(job.status(), "CANCELLED")
         rjob = service.job(job.job_id())
@@ -160,7 +157,6 @@ class TestRuntimeJob(IBMTestCase):
     def test_job_status(self, service):
         """Test job status."""
         job = run_program(service)
-        time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
 
     @run_cloud_fake

@@ -30,12 +30,8 @@ from ibm_quantum_schemas.executor.version_1_1 import (
     QuantumProgramResultModel as QuantumProgramResultModel_1_1,
 )
 
-from ..executor_estimator.post_processor_v0_1 import (
-    estimator_v2_post_processor_v0_1,
-)
-from ..executor_sampler.post_processor_v0_1 import (
-    sampler_v2_post_processor_v0_1,
-)
+from ..executor_estimator.post_processor_v0_1 import estimator_v2_post_processor_v0_1
+from ..executor_sampler.post_processor_v0_1 import sampler_v2_post_processor_v0_1
 from ..result_decoder import ResultDecoder
 from .converters import (
     quantum_program_result_from_0_1,
