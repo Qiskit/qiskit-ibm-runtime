@@ -99,6 +99,7 @@ class TestExecutor(IBMIntegrationTestCase):
         pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
         boxed_isa_circuit = pm.run(circuit)
 
