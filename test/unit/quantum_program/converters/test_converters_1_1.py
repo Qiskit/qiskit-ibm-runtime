@@ -233,18 +233,6 @@ class TestQuantumProgramConverters(IBMTestCase):
         circuit1 = QuantumCircuit(1)
         quantum_program.append_circuit_item(circuit1)
 
-        passthrough_data = {
-            "str": "ciao",
-            "float": 1.2,
-            "int": 1,
-            "bool": True,
-            "none": None,
-            "list": [1, 2, 3],
-            "array": np.array([1.0, 2.0]),
-            "nested": {"array2": np.array([3.0, 4.0])},
-        }
-        quantum_program.passthrough_data = passthrough_data
-
         circuit2 = QuantumCircuit(2)
         with circuit2.box(annotations=[Twirl()]):
             circuit2.cx(0, 1)
@@ -256,6 +244,18 @@ class TestQuantumProgramConverters(IBMTestCase):
             template_circuit,
             samplex=samplex,
         )
+
+        passthrough_data = {
+            "str": "ciao",
+            "float": 1.2,
+            "int": 1,
+            "bool": True,
+            "none": None,
+            "list": [1, 2, 3],
+            "array": np.array([1.0, 2.0]),
+            "nested": {"array2": np.array([3.0, 4.0])},
+        }
+        quantum_program.passthrough_data = passthrough_data
 
         options = ExecutorOptions()
         options.execution.init_qubits = False

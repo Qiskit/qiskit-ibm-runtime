@@ -38,7 +38,7 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
 if TYPE_CHECKING:
-    from ibm_quantum_schemas.executor.version_1_0.models import DataTree as DataTreeModel
+    from ibm_quantum_schemas.executor.version_1_1.models import DataTree as DataTreeModel
     from qiskit.circuit import QuantumCircuit
 
     from ..datatree import DataTree
