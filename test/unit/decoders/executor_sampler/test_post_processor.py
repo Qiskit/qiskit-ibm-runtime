@@ -52,11 +52,14 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         )
 
         item = QuantumProgramItemResult({"c1": meas_data_c1, "c2": meas_data_c2})
-        pub_result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        pub_result = quantum_program_item_result_to_sampler_pub_result(item, (num_rands,), 0)
 
         # Verify both registers are present
         self.assertIn("c1", pub_result.data)
         self.assertIn("c2", pub_result.data)
+
+        # Verify DataBin has the supplied PUB shape
+        self.assertEqual(pub_result.data.shape, (num_rands,))
 
         # Verify BitArrays
         self.assertEqual(pub_result.data.c1.num_bits, 2)
@@ -67,7 +70,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         """Test that circuit metadata is attached correctly to the result."""
         item = QuantumProgramItemResult({"c": np.array([[5]], dtype=np.uint8)})
         result = quantum_program_item_result_to_sampler_pub_result(
-            item, 0, "kerneled", circuit_metadata
+            item, (), 0, "kerneled", circuit_metadata
         )
 
         # Verify metadata is present
@@ -81,7 +84,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         item = QuantumProgramItemResult(
             {"meas": np.random.randint(0, 2, size=(num_shots, num_bits), dtype=np.uint8)}
         )
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
 
         bit_array = result.data.meas
 
@@ -110,7 +113,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         register_name_with_suffix = f"meas{suffix}"
 
         item = QuantumProgramItemResult({register_name_with_suffix: meas_data})
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0, meas_type=meas_type)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0, meas_type=meas_type)
 
         # Verify suffix was removed and data is accessible without suffix
         self.assertIn("meas", result.data)
@@ -133,7 +136,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         )
 
         # Prepare the output.
-        result = quantum_program_item_result_to_sampler_pub_result(item, 0)
+        result = quantum_program_item_result_to_sampler_pub_result(item, (), 0)
         # Strech values should contain lists instead of tuples in `expanded_values`.
         expected_stretch_values = [asdict(stretch_values[0])]
         expected_stretch_values[0]["expanded_values"] = [
@@ -152,6 +155,7 @@ class TestQuantumProgramItemResultToSamplerPubResult(unittest.TestCase):
         self.assertEqual(result.metadata["compilation"]["stretch_values"], expected_stretch_values)
 
 
+@ddt
 class TestSamplerV2PostProcessor(unittest.TestCase):
     """Test SamplerV2 post-processor function.
 
@@ -159,32 +163,46 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
     works correctly and delegates to the static method appropriately.
     """
 
-    def test_post_processor_with_multiple_pubs(self):
+    @data("classified", "kerneled", "avg_kerneled")
+    def test_post_processor_with_multiple_pubs(self, meas_type):
         """Test that post-processor handles multiple pubs correctly."""
+        twirling = meas_type == "classified"
         num_rands = 10
-        num_shots_per_rand = 5
-        meas_data_1 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
-        )
-        meas_data_2 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
-        )
+        shots = 5
+        suffix = {"classified": "", "kerneled": "_iq", "avg_kerneled": "_avg_iq"}[meas_type]
+
+        def make_data(pub_shape, num_bits):
+            # The array layout the executor returns for this mode.
+            if meas_type == "classified":  # twirled: (num_rands, *pub_shape, shots, num_bits)
+                return np.random.randint(
+                    0, 2, size=(num_rands, *pub_shape, shots, num_bits), dtype=np.uint8
+                )
+            if meas_type == "kerneled":  # (*pub_shape, num_shots, num_bits)
+                shape = (*pub_shape, shots, num_bits)
+                return np.arange(np.prod(shape), dtype=np.complex128).reshape(shape)
+            # avg_kerneled: averaged over shots -> (*pub_shape, num_bits), no shots axis
+            shape = (*pub_shape, num_bits)
+            return np.arange(np.prod(shape), dtype=np.complex128).reshape(shape)
+
+        meas_data_1 = make_data((), 2)  # scalar PUB
+        meas_data_2 = make_data((4,), 3)  # 1-D parameter sweep
 
         options = SamplerOptions()
-        options.twirling.enable_gates = True
+        options.twirling.enable_gates = twirling
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
                 "options": asdict(options),
-                "twirling": True,
-                "meas_type": "classified",
+                "twirling": twirling,
+                "meas_type": meas_type,
+                "shots": shots,
             }
         }
 
         qp_result = QuantumProgramResult(
             data=[
-                {"meas": meas_data_1},
-                {"meas": meas_data_2},
+                {f"meas{suffix}": meas_data_1},
+                {f"meas{suffix}": meas_data_2},
             ],
             metadata=Metadata(),
             passthrough_data=passthrough_data,
@@ -195,8 +213,16 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
 
         # Verify multiple pubs are handled
         self.assertEqual(len(result), 2)
-        self.assertEqual(result[0].data.meas.num_bits, 2)
-        self.assertEqual(result[1].data.meas.num_bits, 3)
+        self.assertEqual(result[0].data.shape, ())
+        self.assertEqual(result[1].data.shape, (4,))
+
+        if meas_type == "classified":
+            self.assertEqual(result[0].data.meas.num_bits, 2)
+            self.assertEqual(result[1].data.meas.num_bits, 3)
+        else:
+            # kerneled / avg_kerneled IQ arrays pass through unchanged (suffix stripped).
+            np.testing.assert_array_equal(result[0].data.meas, meas_data_1)
+            np.testing.assert_array_equal(result[1].data.meas, meas_data_2)
 
     def test_post_processor_with_multiple_circuit_metadata(self):
         """Test that post-processor handles circuit metadata for multiple pubs."""
@@ -222,6 +248,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
                 "circuits_metadata": circuits_metadata,
             }
         }
@@ -262,6 +289,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": False,
                 "meas_type": "classified",
+                "shots": num_shots,
                 "circuits_metadata": circuits_metadata,
             }
         }
@@ -303,6 +331,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -350,6 +379,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -392,6 +422,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": True,
                 "meas_type": "classified",
+                "shots": num_shots_per_rand,
             }
         }
 
@@ -433,13 +464,14 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
     ``pub_shapes`` stored in ``passthrough_data``.
     """
 
-    def _make_result(self, data, twirling_enabled=False, meas_type="classified"):
+    def _make_result(self, data, twirling_enabled=False, meas_type="classified", shots=128):
         """Helper to build a QuantumProgramResult with twirling flag.
 
         Args:
             data: Measurement data for the result
             twirling_enabled: Whether twirling is enabled
             meas_type: Measurement type
+            shots: shots
         """
         options = SamplerOptions()
         options.twirling.enable_gates = twirling_enabled
@@ -449,6 +481,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
                 "options": asdict(options),
                 "twirling": twirling_enabled,
                 "meas_type": meas_type,
+                "shots": shots,
             }
         }
 
@@ -534,6 +567,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
             "version": "v0.1",
             "options": options_dict,
             "meas_type": "classified",
+            "shots": shots_per_rand,
             # Intentionally omit twirling flag
         }
         qp_result = QuantumProgramResult(
