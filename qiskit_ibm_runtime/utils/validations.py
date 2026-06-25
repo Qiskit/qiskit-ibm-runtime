@@ -82,6 +82,7 @@ def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
 
     Raises:
         IBMInputValueError: If any observable array is of size 0
+        IBMInputValueError: If any precision value is not greater than 0
     """
     for pub in pubs:
         if pub.precision is not None and pub.precision <= 0:
