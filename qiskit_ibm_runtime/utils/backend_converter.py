@@ -19,7 +19,9 @@ import math
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from qiskit.circuit import Instruction
+import numpy as np
+
+from qiskit.circuit import Instruction, Qubit
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
     ForLoopOp,
@@ -31,6 +33,7 @@ from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
+from qiskit.transpiler import passes as transpiler_passes
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
@@ -318,4 +321,33 @@ def convert_to_target(
                 name=inst_name,
                 angle_bounds=[(0, math.pi / 2)] if inst_name == "rzz" else None,
             )
+            # Register the FoldRzzAngle callback for the WrapAngles pass so that when the
+            # transpiler encounters an out-of-bounds Rzz angle it knows how to fold it.
+            if inst_name == "rzz" and (
+                wrap_angles_cls := getattr(transpiler_passes, "WrapAngles", None)
+            ) is not None:
+                from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
+
+                _fold_rzz = FoldRzzAngle()
+
+                def _rzz_wrapper(angles, qubits):
+                    angle = float(angles[0])
+                    wrap_angle = np.angle(np.exp(1j * angle))
+                    fresh_qubits = (Qubit(), Qubit())
+                    if 0 <= wrap_angle <= math.pi / 2:
+                        dag = _fold_rzz._quad1(wrap_angle, fresh_qubits)
+                    elif math.pi / 2 < wrap_angle <= math.pi:
+                        dag = _fold_rzz._quad2(wrap_angle, fresh_qubits)
+                    elif -math.pi <= wrap_angle <= -math.pi / 2:
+                        dag = _fold_rzz._quad3(wrap_angle, fresh_qubits)
+                    else:
+                        dag = _fold_rzz._quad4(wrap_angle, fresh_qubits)
+                    windings = round((angle - wrap_angle) / (2 * math.pi))
+                    if windings % 2:
+                        from qiskit.circuit.library.standard_gates import GlobalPhaseGate
+
+                        dag.apply_operation_back(GlobalPhaseGate(math.pi))
+                    return dag
+
+                wrap_angles_cls.DEFAULT_REGISTRY.add_wrapper("rzz", _rzz_wrapper)
     return target
