@@ -45,6 +45,7 @@ class TestParamsConverters(IBMTestCase):
         boxing_pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
         boxed_circuit = boxing_pm.run(circuit)
         instructions = find_unique_box_instructions(boxed_circuit)
