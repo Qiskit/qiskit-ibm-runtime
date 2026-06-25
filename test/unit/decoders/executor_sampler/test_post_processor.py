@@ -689,3 +689,47 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         np.testing.assert_array_equal(
             param2_shots[shots_per_rand:], np.ones(shots_per_rand, dtype=bool)
         )
+
+    def test_twirled_avg_kerneled_averages_randomizations(self):
+        """Twirled ``avg_kerneled`` data must be averaged over the randomization axis.
+
+        Unlike ``classified``/``kerneled`` data, ``avg_kerneled`` has no shot axis to
+        flatten, so the leading ``num_randomizations`` axis is averaged out (axis 0)
+        instead of being merged into a flattened shots axis.
+        """
+        num_rand, shots_per_rand, num_components = 4, 8, 2
+        meas_data = np.random.rand(num_rand, shots_per_rand, num_components) + 1j * np.random.rand(
+            num_rand, shots_per_rand, num_components
+        )
+        result = sampler_v2_post_processor_v0_1(
+            self._make_result(
+                [{"meas_avg_iq": meas_data}],
+                twirling_enabled=True,
+                meas_type="avg_kerneled",
+            )
+        )
+
+        # The ``_avg_iq`` suffix is stripped and the array is averaged over axis 0.
+        self.assertIn("meas", result[0].data)
+        self.assertNotIn("meas_avg_iq", result[0].data)
+        np.testing.assert_array_equal(result[0].data.meas, meas_data.mean(axis=0))
+
+    def test_twirled_avg_kerneled_not_flattened(self):
+        """Twirled ``avg_kerneled`` collapses the randomization axis, not flattens it.
+
+        ``flatten_twirling_axes`` would have produced a flattened
+        ``num_rand * shots_per_rand`` axis; averaging instead drops axis 0 entirely.
+        """
+        num_rand, shots_per_rand, num_components = 4, 8, 2
+        meas_data = np.random.rand(num_rand, shots_per_rand, num_components) + 1j * np.random.rand(
+            num_rand, shots_per_rand, num_components
+        )
+        result = sampler_v2_post_processor_v0_1(
+            self._make_result(
+                [{"meas_avg_iq": meas_data}],
+                twirling_enabled=True,
+                meas_type="avg_kerneled",
+            )
+        )
+
+        self.assertEqual(result[0].data.meas.shape, (shots_per_rand, num_components))
