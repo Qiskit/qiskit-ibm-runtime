@@ -466,17 +466,3 @@ class AdvancedSession(Session):
             )
             return session.get("id")
         return None
-
-    @classmethod
-    def from_id(
-        cls,
-        session_id: str,
-        service: QiskitRuntimeService,
-        use_fractional_gates: bool = False,
-        calibration_id: str | None = None,
-        **kwargs: Any,
-    ) -> AdvancedSession:
-        """Construct an AdvancedSession object with a given ``session_id``."""
-        raise NotImplementedError(
-            "The ``from_id`` method is not yet supported for ``AdvancedSession`` objects."
-        )
