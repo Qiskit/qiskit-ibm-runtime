@@ -302,6 +302,7 @@ class SamplerV2(BaseSamplerV2):
                 "version": "v0.1",
                 "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
                 "meas_type": options.execution.meas_type,
+                "shots": program_shots,
                 "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             }
         }
