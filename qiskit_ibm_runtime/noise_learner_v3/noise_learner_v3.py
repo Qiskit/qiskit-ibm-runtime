@@ -81,7 +81,7 @@ class NoiseLearnerV3:
         # Coerced to `NoiseLearnerV3Options` via `__setattr__()`.
         self.options = options if options is not None else NoiseLearnerV3Options()  # type: ignore[assignment]
         self.options.environment.image = (
-            "qiskit-ibm-primitives:25b6a117efcf583d1f07338308ba6c7f01066ad1"
+            ""qiskit-ibm-primitives:25b6a117efcf583d1f07338308ba6c7f01066ad1"
         )
 
         self._session, self._service, self._backend = get_mode_service_backend(mode)
