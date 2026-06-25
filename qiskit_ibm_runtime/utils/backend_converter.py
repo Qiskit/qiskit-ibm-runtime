@@ -20,7 +20,6 @@ import warnings
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-
 from qiskit.circuit import Instruction, Qubit
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
@@ -323,9 +322,10 @@ def convert_to_target(
             )
             # Register the FoldRzzAngle callback for the WrapAngles pass so that when the
             # transpiler encounters an out-of-bounds Rzz angle it knows how to fold it.
-            if inst_name == "rzz" and (
-                wrap_angles_cls := getattr(transpiler_passes, "WrapAngles", None)
-            ) is not None:
+            if (
+                inst_name == "rzz"
+                and (wrap_angles_cls := getattr(transpiler_passes, "WrapAngles", None)) is not None
+            ):
                 from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
 
                 _fold_rzz = FoldRzzAngle()
