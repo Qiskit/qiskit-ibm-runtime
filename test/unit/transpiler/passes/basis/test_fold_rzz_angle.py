@@ -126,7 +126,6 @@ class TestFoldRzzAngle(IBMTestCase):
             translation_method="ibm_dynamic_and_fractional",
         )
         isa_circ = pm.run(circ)
-        print(isa_circ)
 
         self.assertEqual(len(isa_circ.data), 3)
         self.assertEqual(isa_circ.data[1].operation.name, "rzz")
