@@ -84,6 +84,9 @@ def validate_estimator_pubs(pubs: list[EstimatorPub]) -> None:
         IBMInputValueError: If any observable array is of size 0
     """
     for pub in pubs:
+        if pub.precision is not None and pub.precision <= 0:
+            raise IBMInputValueError("The precision value must be strictly greater than 0.")
+
         if pub.observables.shape == (0,):
             raise IBMInputValueError("Empty observables array is not allowed")
 
