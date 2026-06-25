@@ -31,6 +31,7 @@ from qiskit.circuit.controlflow import (
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
+from qiskit.dagcircuit import DAGCircuit
 from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler import passes as transpiler_passes
 from qiskit.transpiler.target import InstructionProperties, Target
@@ -330,7 +331,7 @@ def convert_to_target(
 
                 _fold_rzz = FoldRzzAngle()
 
-                def _rzz_wrapper(angles, qubits):
+                def _rzz_wrapper(angles: list[float], qubits: list[Qubit]) -> DAGCircuit:
                     angle = float(angles[0])
                     wrap_angle = np.angle(np.exp(1j * angle))
                     fresh_qubits = (Qubit(), Qubit())
