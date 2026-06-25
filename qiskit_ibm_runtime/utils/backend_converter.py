@@ -29,7 +29,7 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+from qiskit.circuit.library.standard_gates import GlobalPhaseGate, get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler import passes as transpiler_passes
@@ -346,8 +346,6 @@ def convert_to_target(
                         dag = _fold_rzz._quad4(wrap_angle, fresh_qubits)
                     windings = round((angle - wrap_angle) / (2 * math.pi))
                     if windings % 2:
-                        from qiskit.circuit.library.standard_gates import GlobalPhaseGate
-
                         dag.apply_operation_back(GlobalPhaseGate(math.pi))
                     return dag
 
