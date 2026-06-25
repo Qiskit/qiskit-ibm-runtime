@@ -739,9 +739,8 @@ class TestPrepareTwirling(unittest.TestCase):
                 options.twirling.enable_measure = True
                 options.execution.meas_type = meas_type
                 sampler = create_sampler_for_prepare_tests(options=options)
-                with self.assertRaises(IBMInputValueError) as ctx:
+                with self.assertRaisesRegex(IBMInputValueError, "not compatible"):
                     sampler.prepare([pub], default_shots=1024)
-                self.assertIn("twirling", str(ctx.exception).lower())
 
         # The same kerneled meas_type is allowed when measurement twirling is off.
         options = SamplerOptions()
