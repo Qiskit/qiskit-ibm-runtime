@@ -31,7 +31,6 @@ from qiskit.circuit.controlflow import (
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
-from qiskit.dagcircuit import DAGCircuit
 from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler import passes as transpiler_passes
 from qiskit.transpiler.target import InstructionProperties, Target
@@ -40,6 +39,8 @@ from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
 from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
+    from qiskit.dagcircuit import DAGCircuit
+
     from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 
 
