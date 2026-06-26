@@ -166,10 +166,12 @@ def box_circuit(
     twirl_measurements: bool = False,
     inject_noise: bool = False,
 ) -> QuantumCircuit:
-    """Box a circuit based on the given input options.
+    """Group the operations in the given ``circuit`` into boxes.
 
-    Removes the final measurement layer and adds a new measurement layer with dedicated
-    register name.
+    This function removes the final measurement layer from the given circuit and adds a new
+    measurement layer with a dedicated register name. Then, it uses the
+    :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` to group the operations in a
+    circuit into boxes.
 
     Args:
         circuit: Quantum circuit to box.
@@ -178,7 +180,7 @@ def box_circuit(
         inject_noise: Whether to inject noise.
 
     Returns:
-        boxed circuit.
+        The boxed circuit.
 
     """
     # Remove any existing final measurements
