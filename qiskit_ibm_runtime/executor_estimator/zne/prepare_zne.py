@@ -120,12 +120,15 @@ def prepare_zne(
                 case _:
                     # This should never happen due to prior validation
                     folding_method = "random"
-            folded_circuit = PassManager([GateFolding(noise_factor, folding_method)]).run(
-                pub.circuit
-            )
+
+            folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
+            folded_circuit = folding_pm.run(pub.circuit)
 
             boxed_circuit = box_circuit(
-                folded_circuit, twirling_options, measure_noise_learning is not None
+                circuit=folded_circuit,
+                enable_gates=twirling_options.enable_gates,
+                twirling_options=twirling_options,
+                twirl_measurements=measure_noise_learning is not None,
             )
 
             # Build the template and the samplex

@@ -100,7 +100,11 @@ def prepare_pec(
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
         boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None, True
+            circuit=pub.circuit,
+            enable_gates=True,
+            twirling_options=twirling_options,
+            twirl_measurements=measure_noise_learning is not None,
+            inject_noise=True,
         )
 
         # Build the template and the samplex

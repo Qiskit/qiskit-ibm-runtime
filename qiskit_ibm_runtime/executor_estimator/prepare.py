@@ -84,7 +84,10 @@ def prepare(
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
         boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
+            circuit=pub.circuit,
+            enable_gates=twirling_options.enable_gates,
+            twirling_options=twirling_options,
+            twirl_measurements=measure_noise_learning is not None,
         )
 
         # Build the template and the samplex

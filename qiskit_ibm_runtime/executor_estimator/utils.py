@@ -162,6 +162,7 @@ def resolve_precision(
 
 def box_circuit(
     circuit: QuantumCircuit,
+    enable_gates: bool,
     twirling_options: TwirlingOptions,
     twirl_measurements: bool = False,
     inject_noise: bool = False,
@@ -174,14 +175,16 @@ def box_circuit(
     circuit into boxes.
 
     Args:
-        circuit: Quantum circuit to box.
+        circuit: The quantum circuit to box.
+        enable_gates: Whether to group gates into boxes. This value is passed directly to the
+            ``enable_gates`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
         twirling_options: Twirling options.
         twirl_measurements: Whether to twirl measurements.
         inject_noise: Whether to inject noise.
 
     Returns:
         The boxed circuit.
-
     """
     # Remove any existing final measurements
     prepared_circuit = circuit.remove_final_measurements(inplace=False)
@@ -233,7 +236,13 @@ def get_layers(
     """
     return [
         find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
+            box_circuit(
+                circuit=pub.circuit,
+                enable_gates=twirling_options.enable_gates,
+                twirling_options=twirling_options,
+                twirl_measurements=twirl_measurements,
+                inject_noise=inject_noise,
+            ).data,
             normalize_annotations=None,
             undress_boxes=True,
         )
