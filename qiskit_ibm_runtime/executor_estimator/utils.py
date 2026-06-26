@@ -200,7 +200,7 @@ def box_circuit(
 
     # Add boxes
     boxing_pm = generate_boxing_pass_manager(
-        enable_gates=twirling_options.enable_gates or inject_noise,
+        enable_gates=enable_gates,
         enable_measures=True,
         twirling_strategy=twirling_options.strategy.replace("-", "_"),
         measure_annotations="all"
@@ -238,7 +238,7 @@ def get_layers(
         find_unique_box_instructions(
             box_circuit(
                 circuit=pub.circuit,
-                enable_gates=twirling_options.enable_gates,
+                enable_gates=twirling_options.enable_gates or inject_noise,
                 twirling_options=twirling_options,
                 twirl_measurements=twirl_measurements,
                 inject_noise=inject_noise,
