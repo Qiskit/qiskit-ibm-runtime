@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from qiskit.primitives import EstimatorPub
     from samplomatic.samplex import Samplex
 
+    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
     from ..options_models.twirling_options import TwirlingOptions
 
 from collections import defaultdict
@@ -165,8 +166,6 @@ def box_circuit(
     enable_gates: bool,
     measure_annotations: str,
     twirling_strategy: str,
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
     inject_noise: bool = False,
 ) -> QuantumCircuit:
     """Group the operations in the given ``circuit`` into boxes.
@@ -189,8 +188,6 @@ def box_circuit(
             include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
             argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
         inject_noise: Whether to inject noise.
 
     Returns:
@@ -225,7 +222,7 @@ def box_circuit(
 def get_layers(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
 ) -> list[list[CircuitInstruction]]:
     """Find unique layers of the circuit of each pub.
@@ -235,7 +232,8 @@ def get_layers(
     Args:
         pubs: list of estimators pubs.
         twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
         inject_noise: Whether to inject noise.
 
     Returns:
@@ -247,11 +245,12 @@ def get_layers(
             box_circuit(
                 circuit=pub.circuit,
                 enable_gates=twirling_options.enable_gates or inject_noise,
-                measure_annotations="all" if twirling_options.enable_measure else "change_basis",
+                measure_annotations="all"
+                if twirling_options.enable_measure or (measure_noise_learning is not None)
+                else "change_basis",
                 twirling_strategy=twirling_options.strategy.replace("-", "_"),
-                twirling_options=twirling_options,
                 inject_noise=inject_noise,
-            ).data,
+            ),
             normalize_annotations=None,
             undress_boxes=True,
         )

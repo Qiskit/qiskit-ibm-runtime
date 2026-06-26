@@ -100,16 +100,13 @@ def prepare_pea(
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        twirl_measurements = measure_noise_learning is not None
         boxed_circuit = box_circuit(
             circuit=pub.circuit,
             enable_gates=True,
             measure_annotations="all"
-            if twirling_options.enable_measure or twirl_measurements
+            if twirling_options.enable_measure or (measure_noise_learning is not None)
             else "change_basis",
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            twirling_options=twirling_options,
-            twirl_measurements=measure_noise_learning is not None,
             inject_noise=True,
         )
 

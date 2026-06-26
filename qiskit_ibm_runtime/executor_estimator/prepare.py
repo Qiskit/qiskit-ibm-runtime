@@ -91,8 +91,6 @@ def prepare(
             if twirling_options.enable_measure or twirl_measurements
             else "change_basis",
             twirling_strategy=twirling_options.strategy.replace("-", "_"),
-            twirling_options=twirling_options,
-            twirl_measurements=measure_noise_learning is not None,
         )
 
         # Build the template and the samplex
