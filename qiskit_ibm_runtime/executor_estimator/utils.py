@@ -180,15 +180,23 @@ def box_circuit(
         enable_gates: Whether to group gates into boxes. This value is passed directly to the
             ``enable_gates`` argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
-        measure_annotations: The annotations placed on the measurement boxes when
-            ``enable_measures`` is ``True``. This value is passed directly to the
-            ``measure_annotations`` argument of
-            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
+        measure_annotations: The annotations placed on the measurement boxes. The measurements
+            are grouped into boxes by default, and the value of ``measure_annotations`` passed
+            directly to the ``measure_annotations`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
+            API docs for a full list of the supported values.
         twirling_strategy: The strategy for whether and how twirling boxes are extended to
             include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
             argument of
-            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
-        inject_noise: Whether to inject noise.
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
+            API docs for a full list of the supported values.
+        inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
+            of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
+            called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
+            ``"gates"`` and ``"uniform_modification"`` respectively; if ``False``, it is called with
+            ``inject_noise_targets`` and ``inject_noise_strategy`` set to ``"none"`` and
+            ``"no_modification"``. See the Samplomatic API docs for more details regarding these
+            values.
 
     Returns:
         The boxed circuit.
@@ -205,7 +213,6 @@ def box_circuit(
     prepared_circuit.barrier()
     prepared_circuit.measure(prepared_circuit.qubits, creg)
 
-    # Add boxes
     boxing_pm = generate_boxing_pass_manager(
         enable_gates=enable_gates,
         enable_measures=True,
