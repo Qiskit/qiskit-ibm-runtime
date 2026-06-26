@@ -58,7 +58,16 @@ class TestExecutor(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=self.backend, optimization_level=0)
         isa_circuit = pm.run(circuit)
 
-        passthrough_data = {"key": "value"}
+        passthrough_data = {
+            "str": "ciao",
+            "float": 1.2,
+            "int": 1,
+            "bool": True,
+            "none": None,
+            "list": [1, 2, 3],
+            "array": np.array([1.0, 2.0]),
+            "nested": {"array2": np.array([3.0, 4.0])},
+        }
         program = QuantumProgram(shots := 123, passthrough_data=passthrough_data)
         program.append_circuit_item(isa_circuit, circuit_arguments=circuit_arguments)
 
@@ -73,13 +82,18 @@ class TestExecutor(IBMIntegrationTestCase):
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results.passthrough_data, passthrough_data)
 
         result = results[0]
         self.assertIsInstance(result, QuantumProgramItemResult)
         self.assertEqual(list(result.keys()), ["meas"])
         self.assertIsInstance(result["meas"], np.ndarray)
         self.assertEqual(result["meas"].shape, shape + (shots, circuit.num_qubits))
+
+        self.assertEqual(passthrough_data.keys(), results.passthrough_data.keys())
+        for key in ["str", "float", "int", "bool", "none", "list"]:
+            self.assertEqual(passthrough_data[key], results.passthrough_data[key])
+        self.assertIsInstance(results.passthrough_data["array"], np.ndarray)
+        np.testing.assert_array_equal(passthrough_data["array"], results.passthrough_data["array"])
 
     def test_executor_with_samplex_item(self):
         """Test sampler with a single samplex item."""
