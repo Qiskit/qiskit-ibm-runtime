@@ -103,6 +103,7 @@ def prepare_pea(
         boxed_circuit = box_circuit(
             circuit=pub.circuit,
             enable_gates=True,
+            twirling_strategy=twirling_options.strategy.replace("-", "_"),
             twirling_options=twirling_options,
             twirl_measurements=measure_noise_learning is not None,
             inject_noise=True,

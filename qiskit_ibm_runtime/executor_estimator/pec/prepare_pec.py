@@ -103,6 +103,7 @@ def prepare_pec(
             circuit=pub.circuit,
             enable_gates=True,
             twirling_options=twirling_options,
+            twirling_strategy=twirling_options.strategy.replace("-", "_"),
             twirl_measurements=measure_noise_learning is not None,
             inject_noise=True,
         )

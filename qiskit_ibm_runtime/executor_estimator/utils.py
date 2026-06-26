@@ -163,6 +163,7 @@ def resolve_precision(
 def box_circuit(
     circuit: QuantumCircuit,
     enable_gates: bool,
+    twirling_strategy: str,
     twirling_options: TwirlingOptions,
     twirl_measurements: bool = False,
     inject_noise: bool = False,
@@ -178,6 +179,10 @@ def box_circuit(
         circuit: The quantum circuit to box.
         enable_gates: Whether to group gates into boxes. This value is passed directly to the
             ``enable_gates`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
+        twirling_strategy: The strategy for whether and how twirling boxes are extended to
+            include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
+            argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
         twirling_options: Twirling options.
         twirl_measurements: Whether to twirl measurements.
@@ -202,7 +207,7 @@ def box_circuit(
     boxing_pm = generate_boxing_pass_manager(
         enable_gates=enable_gates,
         enable_measures=True,
-        twirling_strategy=twirling_options.strategy.replace("-", "_"),
+        twirling_strategy=twirling_strategy,
         measure_annotations="all"
         if twirling_options.enable_measure or twirl_measurements
         else "change_basis",
@@ -239,6 +244,7 @@ def get_layers(
             box_circuit(
                 circuit=pub.circuit,
                 enable_gates=twirling_options.enable_gates or inject_noise,
+                twirling_strategy=twirling_options.strategy.replace("-", "_"),
                 twirling_options=twirling_options,
                 twirl_measurements=twirl_measurements,
                 inject_noise=inject_noise,

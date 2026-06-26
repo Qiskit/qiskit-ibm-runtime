@@ -127,6 +127,7 @@ def prepare_zne(
             boxed_circuit = box_circuit(
                 circuit=folded_circuit,
                 enable_gates=twirling_options.enable_gates,
+                twirling_strategy=twirling_options.strategy.replace("-", "_"),
                 twirling_options=twirling_options,
                 twirl_measurements=measure_noise_learning is not None,
             )

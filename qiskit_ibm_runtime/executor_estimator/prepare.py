@@ -86,6 +86,7 @@ def prepare(
         boxed_circuit = box_circuit(
             circuit=pub.circuit,
             enable_gates=twirling_options.enable_gates,
+            twirling_strategy=twirling_options.strategy.replace("-", "_"),
             twirling_options=twirling_options,
             twirl_measurements=measure_noise_learning is not None,
         )
