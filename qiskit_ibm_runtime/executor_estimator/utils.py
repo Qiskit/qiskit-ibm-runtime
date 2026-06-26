@@ -226,6 +226,31 @@ def box_circuit(
     return boxed_circuit
 
 
+def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
+    twirling_options: TwirlingOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None,
+    inject_noise: bool,
+):
+    """A helper to map options to kwargs for the boxing passmanager.
+
+    Args:
+        twirling_options: Twirling options.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be used.
+        inject_noise: Whether to inject noise.
+
+    Returns:
+        Unique layers for each pub.
+    """
+    return {
+        "enable_gates": twirling_options.enable_gates or inject_noise,
+        "measure_annotations": "all"
+        if twirling_options.enable_measure or (measure_noise_learning is not None)
+        else "change_basis",
+        "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+    }
+
+
 def get_layers(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
@@ -241,21 +266,19 @@ def get_layers(
         twirling_options: Twirling options.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
-        inject_noise: Whether to inject noise.
+        inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
+            of gates.
 
     Returns:
         Unique layers for each pub.
-
     """
     return [
         find_unique_box_instructions(
             box_circuit(
                 circuit=pub.circuit,
-                enable_gates=twirling_options.enable_gates or inject_noise,
-                measure_annotations="all"
-                if twirling_options.enable_measure or (measure_noise_learning is not None)
-                else "change_basis",
-                twirling_strategy=twirling_options.strategy.replace("-", "_"),
+                **options_to_boxing_pm_kwargs(
+                    twirling_options, measure_noise_learning, inject_noise
+                ),
                 inject_noise=inject_noise,
             ),
             normalize_annotations=None,

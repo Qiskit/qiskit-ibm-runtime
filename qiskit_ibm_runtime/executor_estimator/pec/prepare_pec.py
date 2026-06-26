@@ -35,7 +35,12 @@ from ...exceptions import IBMInputValueError
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
 from ..trex_utils import create_trex_calibration_circuit
-from ..utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from ..utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 from .utils import calculate_gamma, calculate_pec_twirling_shots
 
 logger = logging.getLogger(__name__)
@@ -101,11 +106,9 @@ def prepare_pec(
 
         boxed_circuit = box_circuit(
             circuit=pub.circuit,
-            enable_gates=True,
-            measure_annotations="all"
-            if twirling_options.enable_measure or (measure_noise_learning is not None)
-            else "change_basis",
-            twirling_strategy=twirling_options.strategy.replace("-", "_"),
+            **options_to_boxing_pm_kwargs(
+                twirling_options, measure_noise_learning, inject_noise=True
+            ),
             inject_noise=True,
         )
 
