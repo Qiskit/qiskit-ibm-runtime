@@ -163,6 +163,7 @@ def resolve_precision(
 def box_circuit(
     circuit: QuantumCircuit,
     enable_gates: bool,
+    measure_annotations: str,
     twirling_strategy: str,
     twirling_options: TwirlingOptions,
     twirl_measurements: bool = False,
@@ -179,6 +180,10 @@ def box_circuit(
         circuit: The quantum circuit to box.
         enable_gates: Whether to group gates into boxes. This value is passed directly to the
             ``enable_gates`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
+        measure_annotations: The annotations placed on the measurement boxes when
+            ``enable_measures`` is ``True``. This value is passed directly to the
+            ``measure_annotations`` argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
         twirling_strategy: The strategy for whether and how twirling boxes are extended to
             include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
@@ -208,9 +213,7 @@ def box_circuit(
         enable_gates=enable_gates,
         enable_measures=True,
         twirling_strategy=twirling_strategy,
-        measure_annotations="all"
-        if twirling_options.enable_measure or twirl_measurements
-        else "change_basis",
+        measure_annotations=measure_annotations,
         inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
         inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
@@ -244,9 +247,9 @@ def get_layers(
             box_circuit(
                 circuit=pub.circuit,
                 enable_gates=twirling_options.enable_gates or inject_noise,
+                measure_annotations="all" if twirling_options.enable_measure else "change_basis",
                 twirling_strategy=twirling_options.strategy.replace("-", "_"),
                 twirling_options=twirling_options,
-                twirl_measurements=twirl_measurements,
                 inject_noise=inject_noise,
             ).data,
             normalize_annotations=None,
