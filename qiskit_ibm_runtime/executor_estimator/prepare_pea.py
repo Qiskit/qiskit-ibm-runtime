@@ -102,14 +102,19 @@ def prepare_pea(
     param_basis_pairs_list = []
     param_shapes_list = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=True,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
         boxed_circuit = box_circuit(
             circuit=pub.circuit,
-            **options_to_boxing_pm_kwargs(
-                twirling_options, measure_noise_learning, inject_noise=True
-            ),
+            enable_gates=pm_kwargs["enable_gates"],
+            measure_annotations=pm_kwargs["measure_annotations"],
+            twirling_strategy=pm_kwargs["twirling_strategy"],
             inject_noise=True,
         )
 

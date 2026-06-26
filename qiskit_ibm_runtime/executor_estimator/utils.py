@@ -272,13 +272,18 @@ def get_layers(
     Returns:
         Unique layers for each pub.
     """
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise,
+    )
     return [
         find_unique_box_instructions(
             box_circuit(
                 circuit=pub.circuit,
-                **options_to_boxing_pm_kwargs(
-                    twirling_options, measure_noise_learning, inject_noise
-                ),
+                enable_gates=pm_kwargs["enable_gates"],
+                measure_annotations=pm_kwargs["measure_annotations"],
+                twirling_strategy=pm_kwargs["twirling_strategy"],
                 inject_noise=inject_noise,
             ),
             normalize_annotations=None,

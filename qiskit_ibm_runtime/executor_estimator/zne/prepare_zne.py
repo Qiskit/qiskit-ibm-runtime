@@ -105,6 +105,11 @@ def prepare_zne(
     param_shapes_list = []
     item_id = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=False,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
@@ -131,9 +136,10 @@ def prepare_zne(
 
             boxed_circuit = box_circuit(
                 circuit=folded_circuit,
-                **options_to_boxing_pm_kwargs(
-                    twirling_options, measure_noise_learning, inject_noise=False
-                ),
+                enable_gates=pm_kwargs["enable_gates"],
+                measure_annotations=pm_kwargs["measure_annotations"],
+                twirling_strategy=pm_kwargs["twirling_strategy"],
+                inject_noise=False,
             )
 
             # Build the template and the samplex
