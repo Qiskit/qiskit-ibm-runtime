@@ -19,7 +19,7 @@ import warnings
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from numpy.polynomial.polynomial import polyval as _polyval
+from numpy.polynomial.polynomial import polyval
 from qiskit.primitives import EstimatorResult
 from scipy.optimize import curve_fit
 
@@ -107,7 +107,7 @@ def process_extrapolated_expectation_values(
 
         # Get 2D array of extrapolated EVs and associated metadata.
         # Array shape: (# extrapolators, # extrapolated noise factors)
-        fit_values, fit_metadata = _fit_extrapolation_models(
+        fit_values, fit_metadata = fit_extrapolation_models(
             raw_values,
             raw_metadata,
             models=extrapolator,
@@ -115,11 +115,11 @@ def process_extrapolated_expectation_values(
         )
         # Stack the selected EVs for each noise scale in the top row of fit_values and
         # adjust metadata to account for the new shape of output.
-        fit_values, fit_metadata = _select_zne_extrapolated_result(fit_values, fit_metadata)
-        fit_values, fit_metadata = _stack_unextrapolated_result(
+        fit_values, fit_metadata = select_zne_extrapolated_result(fit_values, fit_metadata)
+        fit_values, fit_metadata = stack_unextrapolated_result(
             fit_values, fit_metadata, raw_values, raw_metadata
         )
-        fit_values, fit_metadata = _format_extrapolated(fit_values, fit_metadata)
+        fit_values, fit_metadata = format_extrapolated(fit_values, fit_metadata)
 
         result_values.append(fit_values)
         result_metadata.append(fit_metadata)
@@ -127,7 +127,7 @@ def process_extrapolated_expectation_values(
     return EstimatorResult(result_values, result_metadata)
 
 
-def _fit_extrapolation_models(
+def fit_extrapolation_models(
     values: ArrayLike,
     metadata: dict[str, Any],
     models: Sequence[str],
@@ -138,7 +138,7 @@ def _fit_extrapolation_models(
     Returns ``(fit_values, fit_metadata)`` where ``fit_values`` is a 2D array whose
     first axis indexes the model and second axis the extrapolated noise factor.
     """
-    fit_metadata = _copy_metadata(metadata)
+    fit_metadata = copy_metadata(metadata)
     if "resilience" not in fit_metadata:
         raise ValueError("`resilience` metadata is missing.")
 
@@ -148,16 +148,16 @@ def _fit_extrapolation_models(
     fit_metadata.pop("ensemble_standard_error", None)
 
     # Make noise factor(s) arrays
-    x_eval = _as_noise_factors(extrapolated_noise_factor)
+    x_eval = as_noise_factors(extrapolated_noise_factor)
 
     # Clamp negative/0.0 stds to min(y_std). Clamp inf/NaN stds to max(y_std).
     # If no valid stds, function returns None
-    fit_stds = _clamp_degenerate_stds(y_std)
+    fit_stds = clamp_degenerate_stds(y_std)
 
     # Ensure the extrapolators are valid
     names = list(models)
     for name in names:
-        if name not in _NON_POLYNOMIAL_MODELS and _poly_degree(name) is None:
+        if name not in _NON_POLYNOMIAL_MODELS and poly_degree(name) is None:
             raise ValueError(
                 f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}"
             )
@@ -170,7 +170,7 @@ def _fit_extrapolation_models(
     fit_values = np.empty((len(names), x_eval.size))
     fit_stderrs = np.empty_like(fit_values)
     for i, name in enumerate(names):
-        fit_values[i], fit_stderrs[i] = _extrapolate(
+        fit_values[i], fit_stderrs[i] = extrapolate(
             name, x_data, y_data, y_std, fit_stds, x_eval, fallback_idx
         )
 
@@ -187,7 +187,7 @@ def _fit_extrapolation_models(
     return fit_values, fit_metadata
 
 
-def _clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
+def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
     """Per-point standard errors for fitting, with degenerate errors clamped.
 
     Standard errors of ``0`` or negative are clamped up to the smallest finite error
@@ -207,7 +207,7 @@ def _clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
     return np.clip(np.nan_to_num(y_std, nan=np.inf), finite.min(), finite.max())
 
 
-def _select_zne_extrapolated_result(
+def select_zne_extrapolated_result(
     zne_values: np.ndarray, zne_metadata: dict[str, Any]
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Choose the best extrapolated values and stack them in the top row of the values/metadata.
@@ -286,7 +286,7 @@ def _select_zne_extrapolated_result(
     return res_values, zne_metadata
 
 
-def _extrapolate(
+def extrapolate(
     name: str,
     x: np.ndarray,
     y: np.ndarray,
@@ -308,19 +308,19 @@ def _extrapolate(
         # LSE solution for polynomial models, but we still pass to curve_fit to
         # get the covariances.
         weights = None if fit_stds is None else 1.0 / fit_stds
-        func, p0, bounds = _build_model_spec(name, x, y, weights)
+        func, p0, bounds = build_model_spec(name, x, y, weights)
 
         # Get the optimized params and covariances from curve_fit
-        # _evaluate_model_with_stderr will calculate the target EVs and variance estimates
+        # evaluate_model_with_stderr will calculate the target EVs and variance estimates
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             popt, pcov = curve_fit(func, x, y, p0=p0, sigma=fit_stds, bounds=bounds)
-            return _evaluate_model_with_stderr(func, popt, pcov, x_eval)
+            return evaluate_model_with_stderr(func, popt, pcov, x_eval)
     except Exception:  # pylint: disable=broad-except
         return np.full(x_eval.shape, np.nan), np.full(x_eval.shape, np.nan)
 
 
-def _evaluate_model_with_stderr(
+def evaluate_model_with_stderr(
     func: Callable[..., np.ndarray], popt: np.ndarray, pcov: np.ndarray, x_eval: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
     """Evaluate ``func`` and its delta-method uncertainty ``sqrt(J^T pcov J)`` at ``x_eval``.
@@ -346,7 +346,7 @@ def _evaluate_model_with_stderr(
     return y, np.sqrt(np.clip(var, 0.0, None))
 
 
-def _build_model_spec(
+def build_model_spec(
     name: str, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None
 ) -> tuple[
     Callable[..., np.ndarray], list[float], tuple[float, float] | tuple[list[float], list[float]]
@@ -356,27 +356,27 @@ def _build_model_spec(
     # exact weighted least-squares solution. We still hand it to curve_fit (as p0)
     # so the covariance is computed the same way as the exponential models.
     # Coefficients are reversed to lowest-order-first for Numpy polyval convention.
-    degree = _poly_degree(name)
+    degree = poly_degree(name)
     if degree is not None:
         p0 = list(np.polyfit(x, y, degree, w=weights)[::-1])
-        return _poly, p0, (-np.inf, np.inf)
+        return poly, p0, (-np.inf, np.inf)
     # Exponential: Nonlinear, fit by curve_fit from a log-linear seed. double_exponential sums
     # two terms and constrains every rate <= 0 (decay only).
     if name in ("exponential", "double_exponential"):
         n = 1 if name == "exponential" else 2
         decay_only = name == "double_exponential"
-        p0 = _seed_exp_from_log_fit(x, y, weights, n, decay_only)
+        p0 = seed_exp_from_log_fit(x, y, weights, n, decay_only)
         bounds = ([-np.inf, -np.inf] * n, [np.inf, 0.0] * n) if decay_only else (-np.inf, np.inf)
-        return _multi_exp, p0, bounds
+        return multi_exp, p0, bounds
     raise ValueError(f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}")
 
 
-def _poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
+def poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
     """Polynomial model, coeffs should be ordered lowest-order-first."""
-    return _polyval(np.asarray(x, dtype=float), coeffs)
+    return polyval(np.asarray(x, dtype=float), coeffs)
 
 
-def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
+def multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
     """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``.
 
     The parameter ordering should be [amp1, rate1, ...ampN, rateN].
@@ -388,7 +388,7 @@ def _multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
     return out
 
 
-def _seed_exp_from_log_fit(
+def seed_exp_from_log_fit(
     x: np.ndarray, y: np.ndarray, weights: np.ndarray | None, n: int, decay_only: bool
 ) -> list[float]:
     """Seed ``n`` exponentials from a weight-aware log-linear fit (handles sign)."""
@@ -417,7 +417,7 @@ def _seed_exp_from_log_fit(
     return [v for i in range(n) for v in (amp / n, rate * (i + 1))]
 
 
-def _stack_unextrapolated_result(
+def stack_unextrapolated_result(
     zne_values: np.ndarray,
     zne_metadata: dict[str, Any],
     raw_values: np.ndarray,
@@ -425,35 +425,35 @@ def _stack_unextrapolated_result(
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Concatenate the un-extrapolated noise-factor data onto the extrapolated result."""
 
-    def _concatenate_rows(arr: np.ndarray, row: np.ndarray) -> np.ndarray:
+    def concatenate_rows(arr: np.ndarray, row: np.ndarray) -> np.ndarray:
         if arr.size == 0:
             return row
         bcast = np.broadcast_to(row, arr.shape[:-1] + row.shape)
         return np.concatenate([arr, bcast], axis=-1)
 
-    stacked_values = _concatenate_rows(zne_values, raw_values)
+    stacked_values = concatenate_rows(zne_values, raw_values)
     stacked_metadata = zne_metadata
-    stacked_metadata["standard_error"] = _concatenate_rows(
+    stacked_metadata["standard_error"] = concatenate_rows(
         zne_metadata["standard_error"], raw_metadata["standard_error"]
     )
     if "ensemble_standard_error" in raw_metadata:
         # The ZNE extrapolated data doesn't define an ensemble standard error so we set it to NaN.
-        stacked_metadata["ensemble_standard_error"] = _concatenate_rows(
+        stacked_metadata["ensemble_standard_error"] = concatenate_rows(
             np.nan * np.ones_like(zne_values), raw_metadata["ensemble_standard_error"]
         )
-    stacked_metadata["resilience"]["zne_noise_factors"] = _concatenate_rows(
+    stacked_metadata["resilience"]["zne_noise_factors"] = concatenate_rows(
         zne_metadata["resilience"]["zne_noise_factors"],
         raw_metadata["resilience"]["zne_noise_factors"],
     )
     # The extrapolator field has no value for the raw (un-extrapolated) rows, so pad with None.
     none_vals = np.array(len(raw_values) * [None], dtype=object)
-    stacked_metadata["resilience"]["zne_extrapolator"] = _concatenate_rows(
+    stacked_metadata["resilience"]["zne_extrapolator"] = concatenate_rows(
         zne_metadata["resilience"]["zne_extrapolator"], none_vals
     )
     return stacked_values, stacked_metadata
 
 
-def _as_noise_factors(nf: float | ArrayLike | None) -> np.ndarray:
+def as_noise_factors(nf: float | ArrayLike | None) -> np.ndarray:
     """Coerce the extrapolated-noise-factor argument to a 1D float array."""
     if nf is None:
         return np.zeros(0)
@@ -465,7 +465,7 @@ def _as_noise_factors(nf: float | ArrayLike | None) -> np.ndarray:
     return arr
 
 
-def _poly_degree(name: str) -> int | None:
+def poly_degree(name: str) -> int | None:
     """Polynomial degree for a builtin name, or ``None`` if not a polynomial."""
     if name == "linear":
         return 1
@@ -473,7 +473,7 @@ def _poly_degree(name: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
-def _format_extrapolated(
+def format_extrapolated(
     fit_values: np.ndarray, fit_metadata: dict[str, Any]
 ) -> tuple[float | np.ndarray, dict[str, Any]]:
     """Reshape size-1 results to floats to avoid returning shaped results in that case."""
@@ -491,9 +491,9 @@ def _format_extrapolated(
     return fit_values, fit_metadata
 
 
-def _copy_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+def copy_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
     """Safer shallow copy of nested metadata."""
     return {
-        key: _copy_metadata(value) if isinstance(value, dict) else value
+        key: copy_metadata(value) if isinstance(value, dict) else value
         for key, value in metadata.items()
     }

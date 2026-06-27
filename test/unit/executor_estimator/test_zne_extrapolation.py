@@ -20,37 +20,37 @@ from ddt import data, ddt, unpack
 from qiskit.primitives import EstimatorResult
 
 from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
-    _as_noise_factors,
-    _build_model_spec,
-    _clamp_degenerate_stds,
-    _evaluate_model_with_stderr,
-    _extrapolate,
-    _fit_extrapolation_models,
-    _format_extrapolated,
-    _multi_exp,
-    _poly,
-    _poly_degree,
-    _seed_exp_from_log_fit,
-    _select_zne_extrapolated_result,
-    _stack_unextrapolated_result,
+    as_noise_factors,
+    build_model_spec,
+    clamp_degenerate_stds,
+    evaluate_model_with_stderr,
+    extrapolate,
+    fit_extrapolation_models,
+    format_extrapolated,
+    multi_exp,
+    poly,
+    poly_degree,
     process_extrapolated_expectation_values,
+    seed_exp_from_log_fit,
+    select_zne_extrapolated_result,
+    stack_unextrapolated_result,
 )
 
 
 @ddt
 class TestPolyDegree(unittest.TestCase):
-    """Tests for ``_poly_degree``."""
+    """Tests for ``poly_degree``."""
 
     @data(*[(f"polynomial_degree_{k}", k) for k in range(1, 8)], ("linear", 1))
     @unpack
     def test_recognized_polynomials(self, name, degree):
         """Recognized polynomial names (including ``linear``) return their degree."""
-        self.assertEqual(_poly_degree(name), degree)
+        self.assertEqual(poly_degree(name), degree)
 
     @data("exponential", "double_exponential", "fallback")
     def test_non_polynomial_models(self, name):
         """Other builtin model names return ``None``."""
-        self.assertIsNone(_poly_degree(name))
+        self.assertIsNone(poly_degree(name))
 
     @data(
         "polynomial_degree_0",  # below the supported range
@@ -65,12 +65,12 @@ class TestPolyDegree(unittest.TestCase):
     )
     def test_unrecognized_returns_none(self, name):
         """Out-of-range, malformed, or unrelated names return ``None``."""
-        self.assertIsNone(_poly_degree(name))
+        self.assertIsNone(poly_degree(name))
 
 
 @ddt
 class TestPoly(unittest.TestCase):
-    """Tests for ``_poly`` (polynomial model with ascending-order coefficients)."""
+    """Tests for ``poly`` (polynomial model with ascending-order coefficients)."""
 
     @data(1, 2, 3, 4, 5, 6, 7)
     def test_matches_ascending_polynomial(self, degree):
@@ -78,12 +78,12 @@ class TestPoly(unittest.TestCase):
         coeffs = [0.5, -0.3, 0.1, -0.05, 0.02, -0.008, 0.003, -0.001][: degree + 1]
         x = np.array([0.0, 1.0, 1.5, 2.0, 3.0])
         expected = sum(c * x**i for i, c in enumerate(coeffs))
-        np.testing.assert_allclose(_poly(x, *coeffs), expected)
+        np.testing.assert_allclose(poly(x, *coeffs), expected)
 
 
 @ddt
 class TestMultiExp(unittest.TestCase):
-    """Tests for ``_multi_exp`` (sum of ``amp * exp(rate * x)`` over ``[amp, rate, ...]`` pairs)."""
+    """Tests for ``multi_exp`` (sum of ``amp * exp(rate * x)`` over ``[amp, rate, ...]`` pairs)."""
 
     @data(
         (0.6, -0.3),  # single exponential (n=1)
@@ -94,12 +94,12 @@ class TestMultiExp(unittest.TestCase):
         x = np.array([0.0, 1.0, 1.5, 2.0, 3.0])
         amps, rates = params[::2], params[1::2]
         expected = sum(a * np.exp(b * x) for a, b in zip(amps, rates))
-        np.testing.assert_allclose(_multi_exp(x, *params), expected)
+        np.testing.assert_allclose(multi_exp(x, *params), expected)
 
 
 @ddt
 class TestSeedExpFromLogFit(unittest.TestCase):
-    """Tests for ``_seed_exp_from_log_fit`` (seed parameters for an exponential ``curve_fit``)."""
+    """Tests for ``seed_exp_from_log_fit`` (seed parameters for an exponential ``curve_fit``)."""
 
     @data(
         # (amp, rate, n, decay_only, weights, expected)
@@ -117,14 +117,14 @@ class TestSeedExpFromLogFit(unittest.TestCase):
         x = np.array([0.0, 1.0, 2.0])
         y = amp * np.exp(rate * x)
         w = None if weights is None else np.array(weights)
-        result = _seed_exp_from_log_fit(x, y, w, n, decay_only)
+        result = seed_exp_from_log_fit(x, y, w, n, decay_only)
         np.testing.assert_allclose(result, expected)
 
     def test_zero_at_min_noise_defaults_sign_positive(self):
         """When the point nearest zero noise is 0, the amplitude sign defaults to +1."""
         x = np.array([0.0, 1.0])
         y = np.array([0.0, 1.0])
-        result = _seed_exp_from_log_fit(x, y, None, 1, False)
+        result = seed_exp_from_log_fit(x, y, None, 1, False)
         # |y| is clipped to 1e-15 at x=0, so the log-linear seed is exact:
         # rate = 15*ln(10), amp = +exp(-15*ln(10)) = +1e-15 (positive via the sign guard)
         np.testing.assert_allclose(result, [1e-15, 15.0 * np.log(10.0)])
@@ -132,10 +132,10 @@ class TestSeedExpFromLogFit(unittest.TestCase):
 
 @ddt
 class TestEvaluateModelWithStderr(unittest.TestCase):
-    """Tests for ``_evaluate_model_with_stderr`` (model values + delta-method standard errors)."""
+    """Tests for ``evaluate_model_with_stderr`` (model values + delta-method standard errors)."""
 
     @data(
-        # popt are _poly ascending coeffs; pcov is the parameter covariance
+        # popt are poly ascending coeffs; pcov is the parameter covariance
         (
             [1.0, 2.0],  # y = 1 + 2x
             [[0.04, 0.01], [0.01, 0.09]],
@@ -151,7 +151,7 @@ class TestEvaluateModelWithStderr(unittest.TestCase):
         popt, pcov = np.array(popt), np.array(pcov)
         x_eval = np.array([0.0, 1.0, 2.0])
         # The delta method is exact for polynomials
-        y, stderr = _evaluate_model_with_stderr(_poly, popt, pcov, x_eval)
+        y, stderr = evaluate_model_with_stderr(poly, popt, pcov, x_eval)
         expected_y = sum(c * x_eval**i for i, c in enumerate(popt))
         # The Jacobian can be written down exactly for polynomials, and
         # the first-order variance calculation is exact for models linear
@@ -164,28 +164,28 @@ class TestEvaluateModelWithStderr(unittest.TestCase):
 
 @ddt
 class TestBuildModelSpec(unittest.TestCase):
-    """Tests for ``_build_model_spec`` (model name -> ``(fit function, p0, bounds)``)."""
+    """Tests for ``build_model_spec`` (model name -> ``(fit function, p0, bounds)``)."""
 
     @data(("linear", 1), *[(f"polynomial_degree_{k}", k) for k in range(1, 8)])
     @unpack
     def test_polynomial(self, name, degree):
-        """Polynomial names return ``_poly``, unbounded params, and an ascending-order seed."""
+        """Polynomial names return ``poly``, unbounded params, and an ascending-order seed."""
         coeffs = [1.0, -0.5, 0.25, -0.1, 0.05, -0.02, 0.01, -0.004][: degree + 1]
         x = np.linspace(0.0, 3.0, degree + 2)
         y = sum(c * x**i for i, c in enumerate(coeffs))
-        func, p0, bounds = _build_model_spec(name, x, y, None)
-        self.assertIs(func, _poly)
+        func, p0, bounds = build_model_spec(name, x, y, None)
+        self.assertIs(func, poly)
         self.assertEqual(bounds, (-np.inf, np.inf))
-        # p0 is lowest-order-first, so feeding it back through _poly reproduces the data
+        # p0 is lowest-order-first, so feeding it back through poly reproduces the data
         # (a descending-order seed would not).
-        np.testing.assert_allclose(_poly(x, *p0), y, atol=1e-9)
+        np.testing.assert_allclose(poly(x, *p0), y, atol=1e-9)
 
     def test_exponential(self):
-        """``exponential`` returns ``_multi_exp``, a 2-parameter seed, and unbounded params."""
+        """``exponential`` returns ``multi_exp``, a 2-parameter seed, and unbounded params."""
         x = np.array([0.0, 1.0, 2.0])
         y = 2.0 * np.exp(-0.5 * x)
-        func, p0, bounds = _build_model_spec("exponential", x, y, None)
-        self.assertIs(func, _multi_exp)
+        func, p0, bounds = build_model_spec("exponential", x, y, None)
+        self.assertIs(func, multi_exp)
         self.assertEqual(len(p0), 2)
         self.assertEqual(bounds, (-np.inf, np.inf))
 
@@ -193,8 +193,8 @@ class TestBuildModelSpec(unittest.TestCase):
         """``double_exponential`` returns a 4-parameter seed and constrains every rate <= 0."""
         x = np.array([0.0, 1.0, 2.0])
         y = 2.0 * np.exp(-0.5 * x)
-        func, p0, bounds = _build_model_spec("double_exponential", x, y, None)
-        self.assertIs(func, _multi_exp)
+        func, p0, bounds = build_model_spec("double_exponential", x, y, None)
+        self.assertIs(func, multi_exp)
         self.assertEqual(len(p0), 4)
         lower, upper = bounds
         self.assertEqual(lower, [-np.inf, -np.inf, -np.inf, -np.inf])
@@ -205,12 +205,12 @@ class TestBuildModelSpec(unittest.TestCase):
         x = np.array([0.0, 1.0, 2.0])
         y = np.array([1.0, 0.9, 0.8])
         with self.assertRaises(ValueError):
-            _build_model_spec("fallback", x, y, None)
+            build_model_spec("fallback", x, y, None)
 
 
 @ddt
 class TestSelectZneExtrapolatedResult(unittest.TestCase):
-    """Tests for ``_select_zne_extrapolated_result`` (per-column model selection heuristic)."""
+    """Tests for ``select_zne_extrapolated_result`` (per-column model selection heuristic)."""
 
     @staticmethod
     def _metadata(stderrs, extraps, basis):
@@ -280,7 +280,7 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
         metadata = self._metadata(
             np.array(stderrs, dtype=float), np.array(extraps, dtype=object), basis
         )
-        res_values, res_metadata = _select_zne_extrapolated_result(values, metadata)
+        res_values, res_metadata = select_zne_extrapolated_result(values, metadata)
         self.assertEqual(res_values[0, 0], expected_value)
         self.assertEqual(
             res_metadata["resilience"]["zne_extrapolator"][0, 0], expected_extrapolator
@@ -292,7 +292,7 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
         stderrs = np.array([[0.1, 0.1], [0.1, 0.1]])
         extraps = np.array([["exponential", "exponential"], ["linear", "linear"]], dtype=object)
         metadata = self._metadata(stderrs, extraps, "Z")
-        res_values, res_metadata = _select_zne_extrapolated_result(values, metadata)
+        res_values, res_metadata = select_zne_extrapolated_result(values, metadata)
         # col 0: model 0 valid -> 0.2; col 1: model 0 is NaN -> model 1 -> 0.4
         np.testing.assert_array_equal(res_values[0], [0.2, 0.4])
         np.testing.assert_array_equal(
@@ -306,14 +306,14 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
 
 @ddt
 class TestExtrapolate(unittest.TestCase):
-    """Tests for ``_extrapolate`` (one model's extrapolated values + stderrs)."""
+    """Tests for ``extrapolate`` (one model's extrapolated values + stderrs)."""
 
     def test_fallback_broadcasts_lowest_noise_data(self):
         """``fallback`` returns the chosen raw point's value/stderr at every eval point."""
         y = np.array([1.0, 0.8, 0.6])
         y_std = np.array([0.1, 0.2, 0.3])
         x_eval = np.array([0.0, 0.5])
-        values, stderrs = _extrapolate(
+        values, stderrs = extrapolate(
             "fallback", np.array([1.0, 3.0, 5.0]), y, y_std, None, x_eval, fallback_idx=0
         )
         np.testing.assert_array_equal(values, [1.0, 1.0])
@@ -325,9 +325,7 @@ class TestExtrapolate(unittest.TestCase):
         x = np.array([1.0, 3.0, 5.0])
         y = 2.0 - 0.25 * x  # exactly linear -> intercept at x=0 is 2.0
         fit_stds = None if fit_stds is None else np.array(fit_stds)
-        values, stderrs = _extrapolate(
-            "linear", x, y, np.full(3, 0.1), fit_stds, np.array([0.0]), 0
-        )
+        values, stderrs = extrapolate("linear", x, y, np.full(3, 0.1), fit_stds, np.array([0.0]), 0)
         np.testing.assert_allclose(values, [2.0])
         self.assertTrue(np.all(np.isfinite(stderrs)))
 
@@ -336,7 +334,7 @@ class TestExtrapolate(unittest.TestCase):
         x_eval = np.array([0.0, 1.0])
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            values, stderrs = _extrapolate(
+            values, stderrs = extrapolate(
                 "exponential", np.array([1.0]), np.array([0.5]), np.array([0.1]), None, x_eval, 0
             )
         self.assertEqual(values.shape, x_eval.shape)
@@ -345,22 +343,22 @@ class TestExtrapolate(unittest.TestCase):
 
 
 class TestAsNoiseFactors(unittest.TestCase):
-    """Tests for ``_as_noise_factors`` (coerce the noise-factor argument to a 1D float array)."""
+    """Tests for ``as_noise_factors`` (coerce the noise-factor argument to a 1D float array)."""
 
     def test_none_returns_empty(self):
         """``None`` returns an empty 1D array (no extrapolation points)."""
-        out = _as_noise_factors(None)
+        out = as_noise_factors(None)
         self.assertEqual(out.shape, (0,))
 
     def test_multidimensional_raises(self):
         """A 2D (or higher) input raises ``ValueError``."""
         with self.assertRaises(ValueError):
-            _as_noise_factors([[0.0, 1.0]])
+            as_noise_factors([[0.0, 1.0]])
 
 
 @ddt
 class TestClampDegenerateStds(unittest.TestCase):
-    """Tests for ``_clamp_degenerate_stds``."""
+    """Tests for ``clamp_degenerate_stds``."""
 
     @data(
         # all positive-finite -> unchanged (each value already within [min, max] of the set)
@@ -373,19 +371,19 @@ class TestClampDegenerateStds(unittest.TestCase):
     @unpack
     def test_clamps_degenerate_to_finite_range(self, y_std, expected):
         """Degenerate stds are clamped into the finite range; valid ones are unchanged."""
-        result = _clamp_degenerate_stds(np.array(y_std))
+        result = clamp_degenerate_stds(np.array(y_std))
         np.testing.assert_allclose(result, expected)
 
     def test_all_degenerate_returns_none_with_warning(self):
         """When no std is positive and finite, returns ``None`` and warns."""
         y_std = np.array([0.0, -1.0, np.inf, np.nan])
         with self.assertWarns(UserWarning):
-            result = _clamp_degenerate_stds(y_std)
+            result = clamp_degenerate_stds(y_std)
         self.assertIsNone(result)
 
 
 class TestFitExtrapolationModels(unittest.TestCase):
-    """Tests for ``_fit_extrapolation_models`` (fit every model and assemble the metadata)."""
+    """Tests for ``fit_extrapolation_models`` (fit every model and assemble the metadata)."""
 
     @staticmethod
     def _metadata():
@@ -399,7 +397,7 @@ class TestFitExtrapolationModels(unittest.TestCase):
         """Each model is fit/evaluated into a row, and the metadata is rebuilt to match."""
         values = np.array([1.75, 1.25, 0.75])  # exactly linear in the noise factors
         metadata = self._metadata()
-        fit_values, fit_metadata = _fit_extrapolation_models(
+        fit_values, fit_metadata = fit_extrapolation_models(
             values, metadata, models=["linear", "fallback"], extrapolated_noise_factor=0
         )
         # row 0 = linear extrapolation to x=0 (intercept 2.0); row 1 = fallback to the
@@ -419,20 +417,20 @@ class TestFitExtrapolationModels(unittest.TestCase):
     def test_missing_resilience_raises(self):
         """Metadata without a ``resilience`` entry raises ``ValueError``."""
         with self.assertRaises(ValueError):
-            _fit_extrapolation_models(
+            fit_extrapolation_models(
                 np.array([1.0]), {"standard_error": np.array([0.1])}, models=["linear"]
             )
 
     def test_unsupported_model_name_raises(self):
         """An unrecognized extrapolator name raises ``ValueError``."""
         with self.assertRaises(ValueError):
-            _fit_extrapolation_models(
+            fit_extrapolation_models(
                 np.array([1.75, 1.25, 0.75]), self._metadata(), models=["not_a_model"]
             )
 
 
 class TestStackUnextrapolatedResult(unittest.TestCase):
-    """Tests for ``_stack_unextrapolated_result`` (append raw noise-factor data).
+    """Tests for ``stack_unextrapolated_result`` (append raw noise-factor data).
 
     The normal (non-empty) path is covered end-to-end; only the empty-extrapolation
     short-circuit (unreachable except via empty eval factors) is exercised here.
@@ -453,7 +451,7 @@ class TestStackUnextrapolatedResult(unittest.TestCase):
             "standard_error": np.array([0.05, 0.05, 0.05]),
             "resilience": {"zne_noise_factors": np.array([1.0, 3.0, 5.0])},
         }
-        stacked_values, stacked_metadata = _stack_unextrapolated_result(
+        stacked_values, stacked_metadata = stack_unextrapolated_result(
             zne_values, zne_metadata, raw_values, raw_metadata
         )
         np.testing.assert_array_equal(stacked_values, raw_values)
@@ -464,7 +462,7 @@ class TestStackUnextrapolatedResult(unittest.TestCase):
 
 
 class TestFormatExtrapolated(unittest.TestCase):
-    """Tests for ``_format_extrapolated`` (collapse a size-1 result to a scalar).
+    """Tests for ``format_extrapolated`` (collapse a size-1 result to a scalar).
 
     The normal (size > 1) passthrough is covered end-to-end; only the size-1 collapse
     (unreachable except via a single measurement with no eval factors) is exercised here.
@@ -480,7 +478,7 @@ class TestFormatExtrapolated(unittest.TestCase):
                 "zne_extrapolator": np.array([["linear"]], dtype=object),
             },
         }
-        values, metadata = _format_extrapolated(np.array([[0.65]]), fit_metadata)
+        values, metadata = format_extrapolated(np.array([[0.65]]), fit_metadata)
         self.assertEqual(values, 0.65)
         self.assertEqual(metadata["standard_error"], 0.05)
         self.assertEqual(metadata["ensemble_standard_error"], 0.02)
@@ -493,7 +491,7 @@ class TestFormatExtrapolated(unittest.TestCase):
             "standard_error": np.array([[0.05]]),
             "resilience": {"zne_noise_factors": np.array([[0.0]])},  # no zne_extrapolator
         }
-        values, metadata = _format_extrapolated(np.array([[0.65]]), fit_metadata)
+        values, metadata = format_extrapolated(np.array([[0.65]]), fit_metadata)
         self.assertEqual(values, 0.65)
         self.assertEqual(metadata["standard_error"], 0.05)
         self.assertNotIn("ensemble_standard_error", metadata)
