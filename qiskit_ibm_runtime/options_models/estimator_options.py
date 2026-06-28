@@ -22,18 +22,16 @@ from pydantic.dataclasses import dataclass
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
+from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
+from .resilience_options import ResilienceOptions
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
 class EstimatorOptions:
-    """Options for the executor-based EstimatorV2.
-
-    This is a minimal implementation without twirling, dynamical decoupling,
-    or error mitigation features.
-    """
+    """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625
     """The default precision for expectation value estimates if not specified in the PUBs
@@ -63,16 +61,26 @@ class EstimatorOptions:
     execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
     """Execution options.
 
-    See :class:`.ExecutionOptions` for all available options."""
+    See :class:`.ExecutionOptions` for all available options.
+    """
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Twirling options.
 
     Currently only enable_measure=False is supported.
 
-    See :class:`.TwirlingOptions` for all available options."""
+    See :class:`.TwirlingOptions` for all available options.
+    """
 
-    experimental: dict | None = None
+    dynamical_decoupling: DynamicalDecouplingOptions = Field(
+        default_factory=DynamicalDecouplingOptions
+    )
+    """Dynamical decoupling options.
+
+    See :class:`~.DynamicalDecouplingOptions` for all available options.
+    """
+
+    experimental: dict = Field(default_factory=dict)
     """Experimental options."""
 
     max_execution_time: int | None = None
@@ -80,6 +88,12 @@ class EstimatorOptions:
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
     """Options related to the execution environment."""
+
+    resilience: ResilienceOptions = Field(default_factory=ResilienceOptions)
+    """Advanced resilience options to fine-tune the resilience strategy.
+
+    See :class:`.~ResilienceOptions` for all available options.
+    """
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.

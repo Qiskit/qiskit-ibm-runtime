@@ -23,7 +23,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from ..base_primitive import get_mode_service_backend
-from ..decoders.defaults import DEFAULT_DECODERS
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..ibm_backend import IBMBackend
 from ..options.estimator_options import EstimatorOptions
@@ -195,7 +194,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 inputs=inputs,
                 options=runtime_options,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 
@@ -209,7 +207,6 @@ class NoiseLearner:
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 

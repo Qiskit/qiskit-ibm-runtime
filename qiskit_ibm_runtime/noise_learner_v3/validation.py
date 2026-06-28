@@ -17,12 +17,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from qiskit.circuit import (
-    BoxOp,
-    ControlFlowOp,
-    ParameterExpression,
-    QuantumRegister,
-)
+from qiskit.circuit import BoxOp, ControlFlowOp, ParameterExpression, QuantumRegister
 from samplomatic.annotations import Twirl
 from samplomatic.utils import get_annotation
 
@@ -31,9 +26,7 @@ from ..options_models.post_selection_options import DEFAULT_X_PULSE_TYPE
 from .find_learning_protocol import find_learning_protocol
 
 if TYPE_CHECKING:
-    from qiskit.circuit import (
-        CircuitInstruction,
-    )
+    from qiskit.circuit import CircuitInstruction
     from qiskit.transpiler import Target
 
     from ..models.backend_configuration import BackendConfiguration

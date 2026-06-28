@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
 from qiskit_ibm_runtime.api.rest.program_job import ProgramJob
 from qiskit_ibm_runtime.utils import local_to_utc
 
-from ...utils import RuntimeEncoder
+from ...json import RuntimeEncoder
 from .cloud_backend import CloudBackend
 from .runtime_session import RuntimeSession
 

@@ -16,14 +16,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import (
-    Clbit,
-    ControlFlowOp,
-    Gate,
-    IfElseOp,
-    Measure,
-    Qubit,
-)
+from qiskit.circuit import Clbit, ControlFlowOp, Gate, IfElseOp, Measure, Qubit
 from qiskit.circuit.controlflow import condition_resources
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.library import Barrier
@@ -38,10 +31,7 @@ from .utils import block_order_op_nodes
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from qiskit.circuit import (
-        Bit,
-        Instruction,
-    )
+    from qiskit.circuit import Bit, Instruction
     from qiskit.dagcircuit import DAGNode
     from qiskit.transpiler import Target
 
