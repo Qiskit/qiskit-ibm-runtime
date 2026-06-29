@@ -46,13 +46,13 @@ class ConvertToMidCircuitInstructions(TransformationPass):
     into a ``Measure``.
 
     Args:
-        target: Backend's target instance that contains one or more ``measure_`` instructions.
-        mcm_name: Name of the ``measure`` instruction that terminal measure instructions in
-            non-terminal locations will be replaced with. This instruction must be contained in
-            the target. Defaults to ``measure_2``.
-        mcr_name: Name of the ``reset`` instruction that terminal reset instructions in
-            non-terminal locations will be replaced with. This instruction must be contained in
-            the target. Defaults to ``reset_2``.
+        target: Backend's target instance.
+        mcm_name: Name of the instruction used to replace non-terminal Measure instructions. The
+            name must start with "measure", and the instruction must be contained in the target.
+            The default name is ``measure_2``.
+        mcr_name: Name of the instruction used to replace non-terminal Reset instructions. The
+            name must start with "reset", and the instruction must be contained in the target.
+            The default name is ``reset_2``.
 
     Raises:
         ValueError: If the specified ``mcm_name`` does not conform to the ``measure_`` pattern
@@ -136,10 +136,10 @@ class ConvertToMidCircuitMeasure(TransformationPass):
     into a ``Measure``.
 
     Args:
-        target: Backend's target instance that contains one or more ``measure_`` instructions.
-        mcm_name: Name of the ``measure`` instruction that terminal measure instructions in
-            non-terminal locations will be replaced with. This instruction must be contained in
-            the target. Defaults to ``measure_2``.
+        target: Backend's target instance.
+        mcm_name: Name of the instruction used to replace non-terminal Measure instructions. The
+            name must start with "measure", and the instruction must be contained in the target.
+            The default name is ``measure_2``.
 
     Raises:
         ValueError: If the specified ``mcm_name`` does not conform to the ``measure_`` pattern
