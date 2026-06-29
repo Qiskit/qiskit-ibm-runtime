@@ -56,7 +56,8 @@ class ConvertToMidCircuitInstructions(TransformationPass):
 
     Raises:
         ValueError: If the specified ``mcm_name`` does not start with "measure", or the specified
-            ``mcr_name`` does not start with "reset", or the specified instructions are not contained in the provided target.
+            ``mcr_name`` does not start with "reset", or the specified instructions are not
+            contained in the provided target.
     """
 
     def __init__(
