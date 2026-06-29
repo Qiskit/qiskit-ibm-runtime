@@ -279,13 +279,7 @@ def get_layers(
     )
     return [
         find_unique_box_instructions(
-            box_circuit(
-                circuit=pub.circuit,
-                enable_gates=pm_kwargs["enable_gates"],
-                measure_annotations=pm_kwargs["measure_annotations"],
-                twirling_strategy=pm_kwargs["twirling_strategy"],
-                inject_noise=inject_noise,
-            ),
+            box_circuit(circuit=pub.circuit, inject_noise=inject_noise, **pm_kwargs),
             normalize_annotations=None,
             undress_boxes=True,
         )

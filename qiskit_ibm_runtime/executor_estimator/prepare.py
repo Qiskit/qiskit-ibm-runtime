@@ -93,13 +93,7 @@ def prepare(
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            circuit=pub.circuit,
-            enable_gates=pm_kwargs["enable_gates"],
-            measure_annotations=pm_kwargs["measure_annotations"],
-            twirling_strategy=pm_kwargs["twirling_strategy"],
-            inject_noise=False,
-        )
+        boxed_circuit = box_circuit(circuit=pub.circuit, inject_noise=False, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
