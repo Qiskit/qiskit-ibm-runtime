@@ -55,8 +55,8 @@ class ConvertToMidCircuitInstructions(TransformationPass):
             The default name is ``reset_2``.
 
     Raises:
-        ValueError: If the specified ``mcm_name`` does not conform to the ``measure_`` pattern
-            or is not contained in the provided target.
+        ValueError: If the specified ``mcm_name`` does not start with "measure", or the specified
+            ``mcr_name`` does not start with "reset", or the specified instructions are not contained in the provided target.
     """
 
     def __init__(
@@ -142,8 +142,8 @@ class ConvertToMidCircuitMeasure(TransformationPass):
             The default name is ``measure_2``.
 
     Raises:
-        ValueError: If the specified ``mcm_name`` does not conform to the ``measure_`` pattern
-            or is not contained in the provided target.
+        ValueError: If the specified ``mcm_name`` does not start with ``measure`` or is not
+            contained in the provided target.
     """
 
     def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
