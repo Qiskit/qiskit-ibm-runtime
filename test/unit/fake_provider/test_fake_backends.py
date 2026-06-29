@@ -12,14 +12,23 @@
 
 """Test of generated fake backends."""
 
+import json
 import math
+import os
+import tempfile
 import unittest
+from unittest import mock
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
+from qiskit_ibm_runtime.fake_provider import (
+    FakeAthensV2,
+    FakePerth,
+    FakeProviderForBackendV2,
+)
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 from ...ibm_test_case import IBMTestCase
 
@@ -76,3 +85,97 @@ class FakeBackendsTest(IBMTestCase):
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
         self.assertEqual(backend.name, backend_name)
+
+
+class FakeBackendDataCacheTest(IBMTestCase):
+    """Tests for the local caching of refreshed fake backend data.
+
+    These guard against regressing the behavior where :meth:`.FakeBackendV2.refresh` must not
+    write into the installed package directory (often read-only, e.g. ``site-packages``) and
+    instead caches data under the user-writable ``~/.qiskit`` directory.
+    """
+
+    def test_resolve_data_path_without_cache_uses_bundled(self):
+        """Without a cached copy, data files resolve to the bundled package location."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(
+                fake_backend, "_LOCAL_DATA_DIR", os.path.join(tmp, "fp")
+            ):
+                backend = FakeAthensV2()
+                self.assertEqual(
+                    backend._resolve_data_path(backend.conf_filename),
+                    os.path.join(backend.dirname, backend.conf_filename),
+                )
+
+    def test_cached_data_takes_precedence_over_bundled(self):
+        """A cached copy in the local data dir is loaded in preference to the bundled file."""
+        with tempfile.TemporaryDirectory() as tmp:
+            local_root = os.path.join(tmp, "fp")
+            with mock.patch.object(fake_backend, "_LOCAL_DATA_DIR", local_root):
+                backend = FakeAthensV2()
+                conf = backend._load_json(backend.conf_filename)
+                conf["backend_version"] = "9.9.9-cached"
+
+                local_dir = os.path.join(local_root, backend.backend_name)
+                os.makedirs(local_dir)
+                with open(
+                    os.path.join(local_dir, backend.conf_filename),
+                    "w",
+                    encoding="utf-8",
+                ) as fd:
+                    json.dump(conf, fd)
+
+                # A freshly constructed backend should pick up the cached data.
+                cached_backend = FakeAthensV2()
+                self.assertEqual(
+                    cached_backend._resolve_data_path(cached_backend.conf_filename),
+                    os.path.join(local_dir, cached_backend.conf_filename),
+                )
+                self.assertEqual(
+                    cached_backend._conf_dict["backend_version"], "9.9.9-cached"
+                )
+
+    def test_refresh_writes_to_local_cache_not_package(self):
+        """refresh() writes data to the local cache dir and leaves the package files untouched."""
+        with tempfile.TemporaryDirectory() as tmp:
+            local_root = os.path.join(tmp, "fp")
+            with mock.patch.object(fake_backend, "_LOCAL_DATA_DIR", local_root):
+                backend = FakeAthensV2()
+
+                # Reuse the bundled data to stand in for the "real" backend response, so the test
+                # needs no network access.
+                real_config = backend.configuration()
+                real_props = backend.properties()
+
+                # Snapshot the bundled files so we can assert they are never modified.
+                pkg_conf = os.path.join(backend.dirname, backend.conf_filename)
+                pkg_props = os.path.join(backend.dirname, backend.props_filename)
+                pkg_conf_before = (pkg_conf, os.stat(pkg_conf).st_mtime_ns)
+                pkg_props_before = (pkg_props, os.stat(pkg_props).st_mtime_ns)
+
+                fake_real_backend = mock.MagicMock()
+                fake_real_backend.properties.return_value = real_props
+                service = mock.MagicMock(spec=QiskitRuntimeService)
+                service.backends.return_value = [fake_real_backend]
+
+                with mock.patch.object(
+                    fake_backend,
+                    "configuration_from_server_data",
+                    return_value=real_config,
+                ):
+                    with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+                        backend.refresh(service)
+
+                self.assertIn("has been updated", "".join(logs.output))
+
+                local_dir = os.path.join(local_root, backend.backend_name)
+                self.assertTrue(
+                    os.path.exists(os.path.join(local_dir, backend.conf_filename))
+                )
+                self.assertTrue(
+                    os.path.exists(os.path.join(local_dir, backend.props_filename))
+                )
+
+                # The bundled package files must remain untouched.
+                self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_before[1])
+                self.assertEqual(os.stat(pkg_props).st_mtime_ns, pkg_props_before[1])
