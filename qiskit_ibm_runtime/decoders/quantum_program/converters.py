@@ -31,6 +31,10 @@ from ...results.quantum_program import (
 if TYPE_CHECKING:
     from ibm_quantum_schemas.executor.version_0_1 import QuantumProgramResultModel
 
+from ...quantum_program.converters.converters_0_2 import passthrough_data_from_0_2
+from ...quantum_program.converters.converters_1_0 import passthrough_data_from_1_0
+from ...quantum_program.converters.converters_1_1 import passthrough_data_from_1_1
+
 
 def quantum_program_result_from_0_1(model: QuantumProgramResultModel) -> QuantumProgramResult:
     """Convert a V0.1 model to a :class:`QuantumProgramResult`."""
@@ -84,7 +88,9 @@ def quantum_program_result_from_0_2(model: QuantumProgramResultModel) -> Quantum
         )
 
     return QuantumProgramResult(
-        data=data, metadata=metadata, passthrough_data=model.passthrough_data
+        data=data,
+        metadata=metadata,
+        passthrough_data=passthrough_data_from_0_2(model.passthrough_data),
     )
 
 
@@ -119,7 +125,9 @@ def quantum_program_result_from_1_0(model: QuantumProgramResultModel) -> Quantum
         )
 
     result = QuantumProgramResult(
-        data=data, metadata=metadata, passthrough_data=model.passthrough_data
+        data=data,
+        metadata=metadata,
+        passthrough_data=passthrough_data_from_1_0(model.passthrough_data),
     )
     result._semantic_role = model.semantic_role
     return result
@@ -156,7 +164,9 @@ def quantum_program_result_from_1_1(model: QuantumProgramResultModel) -> Quantum
         )
 
     result = QuantumProgramResult(
-        data=data, metadata=metadata, passthrough_data=model.passthrough_data
+        data=data,
+        metadata=metadata,
+        passthrough_data=passthrough_data_from_1_1(model.passthrough_data),
     )
     result._semantic_role = model.semantic_role
     return result

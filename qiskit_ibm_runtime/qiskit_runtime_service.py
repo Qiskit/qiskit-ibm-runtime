@@ -561,11 +561,13 @@ class QiskitRuntimeService:
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.max_shots > 50000
+                        filters=lambda backend: (
+                            (status := backend.status()).operational
+                            and status.status_msg == "active"
+                        )
                     )
-                    QiskitRuntimeService.backends(
-                        filters=lambda x: ("rz" in x.basis_gates )
-                    )
+
+                will only return backends that are operational and active.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Note that our backends now
                 support dynamic circuits and fractional gates simultaneously.
@@ -922,6 +924,20 @@ class QiskitRuntimeService:
         calibration_id: str | None = None,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
+
+        Note that backend availability is only verified upon circuit submission.
+        To check the backend status ahead of time, use the
+        :meth:`~.IBMBackend.status` method on the backend object:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            service = QiskitRuntimeService()
+            backend = service.backend()
+
+            status = backend.status()
+            assert status.operational and status.status_msg == "active"
 
         Args:
             name: Name of the backend.

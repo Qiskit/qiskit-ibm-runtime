@@ -843,6 +843,7 @@ class TestRuntimeDecoder(IBMTestCase):
         boxing_pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
 
         circuit = QuantumCircuit(3, name="GHZ with params")
