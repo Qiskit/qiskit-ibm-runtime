@@ -62,7 +62,7 @@ def process_extrapolated_expectation_values(
 
     The standard errors reported for the extrapolated values are first-order estimates
     propagated from the fit covariance. For details see the confidence and prediction intervals
-    section of this kapteyn tutorial, `link`
+    section of this kapteyn tutorial, `link
     <https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals>`_.
 
     Args:
