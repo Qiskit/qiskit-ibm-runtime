@@ -31,7 +31,6 @@ Result classes (:mod:`qiskit_ibm_runtime.results`)
    ChunkPart
    ChunkSpan
    ChunkTiming
-   DataTree
    ItemMetadata
    Metadata
    Metadata
@@ -46,7 +45,6 @@ from .quantum_program import (
     ChunkPart,
     ChunkSpan,
     ChunkTiming,
-    DataTree,
     ItemMetadata,
     Metadata,
     QuantumProgramItemResult,
