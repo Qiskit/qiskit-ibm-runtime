@@ -27,8 +27,8 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeAthensV2,
     FakePerth,
     FakeProviderForBackendV2,
+    fake_backend,
 )
-from qiskit_ibm_runtime.fake_provider import fake_backend
 
 from ...ibm_test_case import IBMTestCase
 
@@ -98,9 +98,7 @@ class FakeBackendDataCacheTest(IBMTestCase):
     def test_resolve_data_path_without_cache_uses_bundled(self):
         """Without a cached copy, data files resolve to the bundled package location."""
         with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.object(
-                fake_backend, "_LOCAL_DATA_DIR", os.path.join(tmp, "fp")
-            ):
+            with mock.patch.object(fake_backend, "_LOCAL_DATA_DIR", os.path.join(tmp, "fp")):
                 backend = FakeAthensV2()
                 self.assertEqual(
                     backend._resolve_data_path(backend.conf_filename),
@@ -131,9 +129,7 @@ class FakeBackendDataCacheTest(IBMTestCase):
                     cached_backend._resolve_data_path(cached_backend.conf_filename),
                     os.path.join(local_dir, cached_backend.conf_filename),
                 )
-                self.assertEqual(
-                    cached_backend._conf_dict["backend_version"], "9.9.9-cached"
-                )
+                self.assertEqual(cached_backend._conf_dict["backend_version"], "9.9.9-cached")
 
     def test_refresh_writes_to_local_cache_not_package(self):
         """refresh() writes data to the local cache dir and leaves the package files untouched."""
@@ -169,12 +165,8 @@ class FakeBackendDataCacheTest(IBMTestCase):
                 self.assertIn("has been updated", "".join(logs.output))
 
                 local_dir = os.path.join(local_root, backend.backend_name)
-                self.assertTrue(
-                    os.path.exists(os.path.join(local_dir, backend.conf_filename))
-                )
-                self.assertTrue(
-                    os.path.exists(os.path.join(local_dir, backend.props_filename))
-                )
+                self.assertTrue(os.path.exists(os.path.join(local_dir, backend.conf_filename)))
+                self.assertTrue(os.path.exists(os.path.join(local_dir, backend.props_filename)))
 
                 # The bundled package files must remain untouched.
                 self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_before[1])
