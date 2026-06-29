@@ -24,11 +24,7 @@ from typing import TYPE_CHECKING, Any
 from .api.exceptions import RequestsApiError
 from .decoders.defaults import DEFAULT_DECODERS
 from .decoders.result_decoder import ResultDecoder
-from .exceptions import (
-    IBMApiError,
-    IBMError,
-    IBMRuntimeError,
-)
+from .exceptions import IBMApiError, IBMError, IBMRuntimeError
 from .utils import utc_to_local, validate_job_tags
 
 if TYPE_CHECKING:
@@ -61,7 +57,10 @@ class BaseRuntimeJob(ABC):
         job_id: Job ID.
         program_id: ID of the program this job is for.
         creation_date: Job creation date, in UTC.
-        result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+        result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+            of such subclasses. If more than one decoder is specified, they will be called in
+            chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+            decoder. If not specified, the default ``ResultDecoder`` is used.
         image: Runtime image used for this job: image_name:tag.
         service: Runtime service.
         session_id: Job ID of the first job in a runtime session.
@@ -108,11 +107,12 @@ class BaseRuntimeJob(ABC):
         self._status: RuntimeJobStatus | str = None
         self._private = private
 
+        # Store the list of decoders for this job.
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
-        if isinstance(decoder, Sequence):
-            _, self._final_result_decoder = decoder
+        if not isinstance(decoder, Sequence):
+            self._result_decoders: Sequence[type[ResultDecoder]] = [decoder]
         else:
-            self._final_result_decoder = decoder
+            self._result_decoders = decoder
 
     @property
     def private(self) -> bool:
@@ -123,11 +123,31 @@ class BaseRuntimeJob(ABC):
         """Return a unique id identifying the job."""
         return self._job_id
 
-    def usage(self) -> float:
-        """Return job usage in seconds."""
+    def usage(self, partial: bool = False) -> float:
+        """Return job usage in seconds.
+
+        By default, the job usage returned is ``0`` until the usage calculation is
+        completed. Accumulated intermediate usage can be returned by the method by using the
+        ``partial`` flag.
+
+        .. note::
+            When using ``partial``, note that is not guaranteed that the final usage is returned as
+            soon as the job is completed. It is recommended to invoke the method with
+            ``partial=False`` for guarantees that the usage returned is final, or to use the
+            :meth:`.metrics` method for details on the completion status.
+
+        Args:
+            partial: if ``True``, return the accumulated intermediate usage thus far until final
+                usage is reached.
+        """
         try:
             metrics = self._api_client.job_metadata(self.job_id())
-            return metrics.get("usage", {}).get("quantum_seconds")
+            usage = metrics.get("usage", {})
+            if partial:
+                return usage.get("qpu_charge_time_seconds")
+            if usage.get("status", "pending") == "pending":
+                return 0
+            return usage.get("qpu_charge_time_seconds")
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 

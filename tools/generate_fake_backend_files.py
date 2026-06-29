@@ -42,7 +42,7 @@ from pathlib import Path
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.exceptions import AccountsError
-from qiskit_ibm_runtime.utils.backend_encoder import BackendEncoder
+from qiskit_ibm_runtime.fake_provider.backend_encoder import BackendEncoder
 
 tools_dir = Path(__file__).parent
 backends_dir = tools_dir.parent / "qiskit_ibm_runtime" / "fake_provider" / "backends"

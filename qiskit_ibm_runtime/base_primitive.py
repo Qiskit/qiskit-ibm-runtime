@@ -21,14 +21,9 @@ from typing import TYPE_CHECKING, Generic, TypeVar
 
 from qiskit.providers.backend import BackendV2
 
-from .decoders.defaults import DEFAULT_DECODERS
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options_v2
-from .utils import (
-    validate_isa_circuits,
-    validate_no_dd_with_dynamic_circuits,
-    validate_rzz_pubs,
-)
+from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits, validate_rzz_pubs
 from .utils.default_session import get_cm_session
 from .utils.utils import is_simulator
 
@@ -169,7 +164,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 
@@ -192,7 +186,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                 calibration_id=calibration_id,
             )
 

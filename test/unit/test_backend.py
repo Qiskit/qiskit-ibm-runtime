@@ -22,17 +22,9 @@ from qiskit.transpiler import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.circuit import MidCircuitMeasure
-from qiskit_ibm_runtime.fake_provider import (
-    FakeFractionalBackend,
-    FakeManilaV2,
-    FakeSherbrooke,
-)
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeManilaV2, FakeSherbrooke
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import (
-    BackendConfiguration,
-    BackendProperties,
-    BackendStatus,
-)
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
@@ -267,9 +259,9 @@ class TestBackend(IBMTestCase):
         """Test handling of non-unitary ISA operations."""
         target = convert_to_target(FakeSherbrooke().configuration())
 
-        assert isinstance(target.get("reset"), dict)
-        assert isinstance(target.get("measure"), dict)
-        assert target.get("measure_2") is None
+        self.assertIsInstance(target.get("reset"), dict)
+        self.assertIsInstance(target.get("measure"), dict)
+        self.assertIsNone(target.get("measure_2"))
 
     def test_convert_to_target_with_filter(self):
         """Test converting legacy data structure to V2 target model with faulty qubits.

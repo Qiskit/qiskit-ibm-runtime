@@ -561,11 +561,13 @@ class QiskitRuntimeService:
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.max_shots > 50000
+                        filters=lambda backend: (
+                            (status := backend.status()).operational
+                            and status.status_msg == "active"
+                        )
                     )
-                    QiskitRuntimeService.backends(
-                        filters=lambda x: ("rz" in x.basis_gates )
-                    )
+
+                will only return backends that are operational and active.
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates. Note that our backends now
                 support dynamic circuits and fractional gates simultaneously.
@@ -923,6 +925,20 @@ class QiskitRuntimeService:
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
+        Note that backend availability is only verified upon circuit submission.
+        To check the backend status ahead of time, use the
+        :meth:`~.IBMBackend.status` method on the backend object:
+
+        .. code-block:: python
+
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
+            service = QiskitRuntimeService()
+            backend = service.backend()
+
+            status = backend.status()
+            assert status.operational and status.status_msg == "active"
+
         Args:
             name: Name of the backend.
             instance: Specify the IBM Cloud account CRN.
@@ -983,10 +999,11 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-                If more than one decoder is specified, the first is used for interim results and
-                the second final results. If not specified, a program-specific decoder or the
-                default ``ResultDecoder`` is used.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results, or a list
+                of such subclasses. If more than one decoder is specified, they will be called in
+                chain, with the output of the ``n-th`` decoder as the input of the ``n+1-th``
+                decoder. If not specified, a program-specific decoder or the default
+                ``ResultDecoder`` is used.
             session_id: Job ID of the first job in a runtime session.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             calibration_id: The calibration id to use for the IBM backend.

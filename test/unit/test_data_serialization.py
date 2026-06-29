@@ -51,6 +51,7 @@ from qiskit_ibm_runtime.execution_span import (
     TwirledSliceSpanV2,
 )
 from qiskit_ibm_runtime.fake_provider import FakeNairobiV2
+from qiskit_ibm_runtime.json import RuntimeDecoder, RuntimeEncoder
 from qiskit_ibm_runtime.noise_learner_v3.params_converters import NOISE_LEARNER_V3_PARAMS_CONVERTERS
 from qiskit_ibm_runtime.options_models import ExecutorOptions, NoiseLearnerV3Options
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
@@ -61,15 +62,10 @@ from qiskit_ibm_runtime.results.noise_learner import (
     NoiseLearnerResult,
     PauliLindbladError,
 )
-from qiskit_ibm_runtime.utils import RuntimeDecoder, RuntimeEncoder
 
 from ..ibm_test_case import IBMTestCase
 from ..program import run_program
-from ..serialization import (
-    SerializableClass,
-    SerializableClassDecoder,
-    get_complex_types,
-)
+from ..serialization import SerializableClass, SerializableClassDecoder, get_complex_types
 from ..utils import bell, mock_wait_for_final_state
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -808,8 +804,8 @@ class TestRuntimeDecoder(IBMTestCase):
         encoded = json.dumps(params, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        assert isinstance(decoded["params"]["quantum_program"], QuantumProgram)
-        assert decoded["params"]["options"] == ExecutorOptions()
+        self.assertIsInstance(decoded["params"]["quantum_program"], QuantumProgram)
+        self.assertEqual(decoded["params"]["options"], ExecutorOptions())
 
     @data(*list(QUANTUM_PROGRAM_PARAMS_CONVERTERS))
     def test_decoding_incorrect_executor_params_warns(self, schema_version):
@@ -832,8 +828,8 @@ class TestRuntimeDecoder(IBMTestCase):
         with self.assertWarnsRegex(Warning, "Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        assert decoded["params"]["quantum_program"] == "foo"
-        assert decoded["params"]["options"] == "bar"
+        self.assertEqual(decoded["params"]["quantum_program"], "foo")
+        self.assertEqual(decoded["params"]["options"], "bar")
 
     @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
     def test_decoding_noise_learner_v3_params(self, schema_version):
@@ -847,6 +843,7 @@ class TestRuntimeDecoder(IBMTestCase):
         boxing_pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
 
         circuit = QuantumCircuit(3, name="GHZ with params")
@@ -875,8 +872,8 @@ class TestRuntimeDecoder(IBMTestCase):
         encoded = json.dumps(params, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        assert decoded["params"]["instructions"] == instructions
-        assert decoded["params"]["options"] == options
+        self.assertEqual(decoded["params"]["instructions"], instructions)
+        self.assertEqual(decoded["params"]["options"], options)
 
     @data(*list(NOISE_LEARNER_V3_PARAMS_CONVERTERS))
     def test_decoding_incorrect_noise_learner_v3_params_warns(self, schema_version):
@@ -896,5 +893,5 @@ class TestRuntimeDecoder(IBMTestCase):
         with self.assertWarnsRegex(Warning, "Unable to convert"):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
 
-        assert decoded["params"]["instructions"] == "foo"
-        assert decoded["params"]["options"] == "bar"
+        self.assertEqual(decoded["params"]["instructions"], "foo")
+        self.assertEqual(decoded["params"]["options"], "bar")

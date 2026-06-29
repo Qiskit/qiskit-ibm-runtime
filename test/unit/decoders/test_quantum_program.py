@@ -14,8 +14,8 @@
 
 import json
 import unittest
-from dataclasses import asdict
 from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 from ibm_quantum_schemas.common import TensorModel
@@ -29,11 +29,7 @@ from ibm_quantum_schemas.executor.version_0_1 import (
 from qiskit.primitives import PrimitiveResult
 
 from qiskit_ibm_runtime.decoders.quantum_program.decoder import QuantumProgramResultDecoder
-from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from qiskit_ibm_runtime.results.quantum_program import (
-    Metadata,
-    QuantumProgramResult,
-)
+from qiskit_ibm_runtime.results.quantum_program import Metadata, QuantumProgramResult
 
 from ...ibm_test_case import IBMTestCase
 
@@ -109,41 +105,56 @@ class TestDecoder(IBMTestCase):
 
 
 class TestDecoderPostProcessing(unittest.TestCase):
-    """Test QuantumProgram to Sampler V2 decoder post-processing logic."""
+    """Test QuantumProgram decoder post-processing logic."""
 
     def setUp(self):
         """Set up test fixtures."""
-        num_rands = 10
-        num_shots_per_rand = 10
-        meas_data_c1 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 2), dtype=np.uint8
-        )
-        meas_data_c2 = np.random.randint(
-            0, 2, size=(num_rands, num_shots_per_rand, 3), dtype=np.uint8
-        )
-
-        options = SamplerOptions()
-        options.twirling.enable_gates = True
+        # Create minimal passthrough data
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
-                "twirling": True,
-                "meas_type": "classified",
             }
         }
 
         self.qp_result = QuantumProgramResult(
-            data=[{"c1": meas_data_c1, "c2": meas_data_c2}],
+            data=[{"dummy": np.array([1, 2, 3])}],
             metadata=Metadata(),
             passthrough_data=passthrough_data,
         )
 
-    def test_valid_result(self):
+    def test_sampler_valid_result(self):
         """A QuantumProgramResult from a Sampler job should be post-processed."""
-        self.qp_result._semantic_role = "sampler_v2"
-        processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
-        self.assertIsInstance(processed, PrimitiveResult)
+        mock_result = PrimitiveResult([])
+        mock_post_processor = MagicMock(return_value=mock_result)
+
+        with patch.dict(
+            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
+            {"sampler_v2": {"v0.1": mock_post_processor}},
+            clear=False,
+        ):
+            self.qp_result._semantic_role = "sampler_v2"
+            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+
+            # Verify the post-processor was called with the result
+            mock_post_processor.assert_called_once_with(self.qp_result)
+            self.assertIs(processed, mock_result)
+
+    def test_estimator_valid_result(self):
+        """A QuantumProgramResult from an Estimator job should be post-processed."""
+        mock_result = PrimitiveResult([])
+        mock_post_processor = MagicMock(return_value=mock_result)
+
+        with patch.dict(
+            "qiskit_ibm_runtime.decoders.quantum_program.decoder.SUPPORTED_POST_PROCESSORS",
+            {"estimator_v2": {"v0.1": mock_post_processor}},
+            clear=False,
+        ):
+            self.qp_result._semantic_role = "estimator_v2"
+            processed = QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
+
+            # Verify the post-processor was called with the result
+            mock_post_processor.assert_called_once_with(self.qp_result)
+            self.assertIs(processed, mock_result)
 
     def test_no_semantic_role(self):
         """A QuantumProgramResult with unset semantic role is returned unchanged."""
@@ -157,14 +168,14 @@ class TestDecoderPostProcessing(unittest.TestCase):
         self.assertEqual(processed, self.qp_result)
 
     def test_passthrough_data_missing_version(self):
-        """A QuantumProgramResult with no post_processor version is returned unchanged."""
+        """A QuantumProgramResult with no post_processor version raises ValueError."""
         self.qp_result._semantic_role = "sampler_v2"
         self.qp_result.passthrough_data["post_processor"].pop("version")
         with self.assertRaises(ValueError):
             QuantumProgramResultDecoder._apply_post_processing(self.qp_result)
 
     def test_passthrough_data_unsupported_version(self):
-        """A QuantumProgramResult with no post_processor version is returned unchanged."""
+        """A QuantumProgramResult with unsupported post_processor version raises ValueError."""
         self.qp_result._semantic_role = "sampler_v2"
         self.qp_result.passthrough_data["post_processor"]["version"] = "non-existing"
         with self.assertRaises(ValueError):

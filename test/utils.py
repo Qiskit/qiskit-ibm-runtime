@@ -29,21 +29,11 @@ from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.quantum_info import Pauli, SparsePauliOp
 
-from qiskit_ibm_runtime import (
-    Batch,
-    EstimatorV2,
-    QiskitRuntimeService,
-    SamplerV2,
-    Session,
-)
+from qiskit_ibm_runtime import Batch, EstimatorV2, QiskitRuntimeService, SamplerV2, Session
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.models import (
-    BackendConfiguration,
-    BackendProperties,
-    BackendStatus,
-)
+from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties, BackendStatus
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
 if TYPE_CHECKING:
@@ -127,9 +117,10 @@ def cancel_job_safe(job: RuntimeJobV2, logger: logging.Logger) -> bool:
     try:
         job.cancel()
         status = job.status()
-        assert status == "CANCELLED", (
-            f"cancel() was successful for job {job.job_id()} but its status is {status}."
-        )
+        if status != "CANCELLED":
+            raise AssertionError(
+                f"cancel() was successful for job {job.job_id()} but its status is {status}."
+            )
         return True
     except RuntimeInvalidStateError:
         if job.status() in ["DONE", "CANCELLED", "ERROR"]:

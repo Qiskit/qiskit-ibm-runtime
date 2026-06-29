@@ -23,9 +23,16 @@ from ibm_quantum_schemas.noise_learner_v3.version_0_1 import (
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import (
     NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_2,
 )
+from ibm_quantum_schemas.noise_learner_v3.version_0_3 import (
+    NoiseLearnerV3ResultsModel as NoiseLearnerV3ResultsModel_0_3,
+)
 
 from ..result_decoder import ResultDecoder
-from .converters import noise_learner_v3_result_from_0_1, noise_learner_v3_result_from_0_2
+from .converters import (
+    noise_learner_v3_result_from_0_1,
+    noise_learner_v3_result_from_0_2,
+    noise_learner_v3_result_from_0_3,
+)
 
 if TYPE_CHECKING:
     from qiskit_ibm_runtime.results.noise_learner_v3 import NoiseLearnerV3Results
@@ -35,6 +42,7 @@ logger = logging.getLogger(__name__)
 AVAILABLE_DECODERS = {
     "v0.1": (noise_learner_v3_result_from_0_1, NoiseLearnerV3ResultsModel_0_1),
     "v0.2": (noise_learner_v3_result_from_0_2, NoiseLearnerV3ResultsModel_0_2),
+    "v0.3": (noise_learner_v3_result_from_0_3, NoiseLearnerV3ResultsModel_0_3),
 }
 
 
