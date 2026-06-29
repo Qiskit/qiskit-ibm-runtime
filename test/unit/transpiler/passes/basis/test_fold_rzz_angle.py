@@ -115,10 +115,11 @@ class TestFoldRzzAngle(IBMTestCase):
 
         self.assertEqual(isa, expected)
 
-    def test_fractional_plugin(self):
+    @data(-1, -1 + 4 * np.pi)
+    def test_fractional_plugin(self, rzz_angle):
         """Verify that a pass manager for a fractional backend applies the rzz folding pass."""
         circ = QuantumCircuit(2)
-        circ.rzz(-1, 0, 1)
+        circ.rzz(rzz_angle, 0, 1)
 
         pm = generate_preset_pass_manager(
             optimization_level=2,
