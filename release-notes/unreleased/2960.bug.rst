@@ -1,0 +1,6 @@
+Fixed the folding of out-of-bounds ``rzz`` angles during transpilation. The backend's
+target now declares ``angle_bounds`` of ``(0, pi/2)`` for the ``rzz`` gate, and
+registers an ``rzz`` wrapper with the transpiler's ``WrapAngles`` pass, so that
+``rzz`` gates with angles outside ``[0, pi/2]`` are folded into the supported range.
+This mechanism replaces the usage of the ``IBMDynamicFractionalTranslationPlugin``
+plugin and the :class:`.FoldRzzAngle` transpiler pass.
