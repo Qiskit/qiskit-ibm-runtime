@@ -25,11 +25,10 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from ..executor import Executor
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
-from ..executor.passthrough_utils import validate_and_extract_metadata
 from ..options_models.sampler_options import SamplerOptions
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
-from .utils import extract_shots_from_pubs, validate_no_boxes
+from .utils import extract_shots_from_pubs, validate_meas_type_twirling, validate_no_boxes
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -205,10 +204,17 @@ class SamplerV2(BaseSamplerV2):
             ValueError: If backend is not provided or if dynamical decoupling is enabled
                 with dynamic circuits.
             IBMInputValueError: If circuits contain :class:`~qiskit.circuit.BoxOp` instructions
-                (when twirling is disabled) or if shots are not properly specified.
+                (when twirling is disabled), if shots are not properly specified, or if
+                measurement twirling is enabled with a non-classified ``meas_type``.
         """
         # Use instance options
         options = self.options
+
+        # Reject measurement twirling combined with a kerneled meas_type before submission
+        validate_meas_type_twirling(
+            options.execution.meas_type,
+            options.twirling.enable_measure,
+        )
 
         # Extract and validate shots from pubs
         shots = extract_shots_from_pubs(pubs, default_shots)
@@ -261,6 +267,7 @@ class SamplerV2(BaseSamplerV2):
                 enable_gates=bool(options.twirling.enable_gates),
                 enable_measures=bool(options.twirling.enable_measure),
                 twirling_strategy=options.twirling.strategy.replace("-", "_"),
+                inject_noise_site="after",
             )
 
             for i, pub in enumerate(pubs):
@@ -290,15 +297,13 @@ class SamplerV2(BaseSamplerV2):
                     )
                 )
 
-        # Collect and validate circuit metadata from each pub
-        circuits_metadata = validate_and_extract_metadata(pubs)
-
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
                 "twirling": options.twirling.enable_gates or options.twirling.enable_measure,
                 "meas_type": options.execution.meas_type,
-                "circuits_metadata": circuits_metadata,
+                "shots": program_shots,
+                "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             }
         }
 

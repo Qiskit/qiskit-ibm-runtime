@@ -22,15 +22,11 @@ from typing import TYPE_CHECKING, TypeAlias
 from qiskit.circuit import ControlFlowOp, Measure, Parameter, Reset
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
 from qiskit.transpiler.exceptions import TranspilerError
-from qiskit.transpiler.instruction_durations import (
-    InstructionDurations,
-)
+from qiskit.transpiler.instruction_durations import InstructionDurations
 
 if TYPE_CHECKING:
     from qiskit.providers import Backend
-    from qiskit.transpiler.instruction_durations import (
-        InstructionDurationsType,
-    )
+    from qiskit.transpiler.instruction_durations import InstructionDurationsType
     from qiskit.transpiler.target import Target
 
 BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
@@ -330,7 +326,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
     def _get_odd_cycle_correction(self) -> int:
         """Determine the amount of the odd cycle correction to apply.
 
-        For devices with short gates with odd lenghts we add an extra 16dt to the measurement.
+        For devices with short gates with odd lengths we add an extra 16dt to the measurement.
 
         TODO: Eliminate the need for this correction
         """

@@ -45,7 +45,8 @@ class SamplerOptions:
     execution: SamplerExecutionOptions = Field(default_factory=SamplerExecutionOptions)
     """Execution options.
 
-    See :class:`~.SamplerExecutionOptions` for all available options."""
+    See :class:`~.SamplerExecutionOptions` for all available options.
+    """
 
     twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
     """Pauli twirling options.
@@ -53,12 +54,11 @@ class SamplerOptions:
     See :class:`~.TwirlingOptions` for all available options.
     """
 
-    experimental: dict | None = None
+    experimental: dict = Field(default_factory=dict)
     """Experimental options."""
 
     max_execution_time: int | None = None
-    """Maximum execution time in seconds, based on system execution time (not wall clock time).
-    """
+    """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
 
     environment: SamplerEnvironmentOptions = Field(default_factory=SamplerEnvironmentOptions)
     """Options related to the execution environment."""

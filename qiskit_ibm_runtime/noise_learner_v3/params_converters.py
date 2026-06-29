@@ -18,12 +18,15 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from ibm_quantum_schemas.noise_learner_v3.version_0_1 import ParamsModel as ParamsModel_0_1
 from ibm_quantum_schemas.noise_learner_v3.version_0_2 import ParamsModel as ParamsModel_0_2
+from ibm_quantum_schemas.noise_learner_v3.version_0_3 import ParamsModel as ParamsModel_0_3
 
 from .converters import (
     noise_learner_v3_inputs_from_0_1,
     noise_learner_v3_inputs_from_0_2,
+    noise_learner_v3_inputs_from_0_3,
     noise_learner_v3_inputs_to_0_1,
     noise_learner_v3_inputs_to_0_2,
+    noise_learner_v3_inputs_to_0_3,
 )
 
 if TYPE_CHECKING:
@@ -54,6 +57,9 @@ NOISE_LEARNER_V3_PARAMS_CONVERTERS = {
     ),
     "v0.2": ParamsConverter(
         ParamsModel_0_2, noise_learner_v3_inputs_from_0_2, noise_learner_v3_inputs_to_0_2
+    ),
+    "v0.3": ParamsConverter(
+        ParamsModel_0_3, noise_learner_v3_inputs_from_0_3, noise_learner_v3_inputs_to_0_3
     ),
 }
 """Converter to/from schema model for the inputs of NLV3."""

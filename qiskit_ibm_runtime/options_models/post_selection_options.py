@@ -57,6 +57,4 @@ class PostSelectionOptions:
 
     See the dosctrings of :class:`.PostSelector` and :meth:`.PostSelector.compute_mask` for more
     details.
-
-    Defaults to ``node``.
     """

@@ -41,6 +41,7 @@ def expanded_values_to_lists(key_value_pairs: Iterable[tuple[str, Any]]) -> dict
 
 def quantum_program_item_result_to_sampler_pub_result(
     item: QuantumProgramItemResult,
+    pub_shape: list[tuple[int, ...]],
     num_randomizations: int,
     meas_type: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
     circuit_metadata: dict | None = None,
@@ -49,6 +50,7 @@ def quantum_program_item_result_to_sampler_pub_result(
 
     Args:
         item: The result of a single item of a quantum program.
+        pub_shape: The PUB (parameter-sweep) shape, used as the resulting DataBin shape.
         num_randomizations: The number of randomizations.
         meas_type: The measurement type.
         circuit_metadata: The metadata attached to the circuit in the input PUB.
@@ -56,15 +58,10 @@ def quantum_program_item_result_to_sampler_pub_result(
     Returns:
         A sampler pub result.
     """
-    # Infer pub_shape from the first classical register's data
-    # meas_data shape: (...pub_shape..., num_shots, num_bits)
-    first_meas_data = next(iter(item.values()))
-    pub_shape = first_meas_data.shape[:-2]
-
     arrays = {}
     for creg_name, meas_data in item.items():
         if meas_type == "classified":
-            arrays[creg_name] = BitArray.from_bool_array(meas_data)
+            arrays[creg_name] = BitArray.from_bool_array(meas_data, order="little")
         elif meas_type == "kerneled":
             arrays[creg_name.removesuffix("_iq")] = meas_data
         elif meas_type == "avg_kerneled":

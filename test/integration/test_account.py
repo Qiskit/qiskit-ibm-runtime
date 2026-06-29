@@ -20,10 +20,7 @@ from unittest.mock import patch
 import requests
 from ibm_cloud_sdk_core import ApiException
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import (
-    GlobalSearchV2,
-    ResourceControllerV2,
-)
+from ibm_platform_services import GlobalSearchV2, ResourceControllerV2
 
 from qiskit_ibm_runtime import IBMInputValueError, QiskitRuntimeService
 from qiskit_ibm_runtime.accounts.utils import (

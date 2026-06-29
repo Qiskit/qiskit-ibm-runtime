@@ -37,7 +37,9 @@ class PecOptions:
     """
 
     noise_gain: NonNegativeFloat | Literal["auto"] = "auto"
-    """The amount by which to scale the noise, where:
+    """The amount by which to scale the noise.
+
+    The amount by which to scale the noise, where:
 
     * A value of ``0`` corresponds to removing the full learned noise.
     * A value of ``1`` corresponds to no removal of the learned noise.
