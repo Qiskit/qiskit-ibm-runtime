@@ -184,7 +184,7 @@ def box_circuit(
             are grouped into boxes by default, and the value of ``measure_annotations`` passed
             directly to the ``measure_annotations`` argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
-            API docs for a full list of the supported values.
+            API docs for a full list of supported values.
         twirling_strategy: The strategy for whether and how twirling boxes are extended to
             include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
             argument of
