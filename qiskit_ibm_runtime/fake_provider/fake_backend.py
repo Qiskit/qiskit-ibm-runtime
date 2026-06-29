@@ -44,6 +44,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# User-writable directory where refreshed fake backend data is cached. Updates are
+# stored here instead of inside the package installation (e.g. ``site-packages``),
+# which is often read-only and should not be modified at runtime.
+_LOCAL_DATA_DIR = os.path.join(os.path.expanduser("~"), ".qiskit", "fake_provider")
+
 
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend snapshots."""
@@ -116,8 +121,23 @@ class FakeBackendV2(BackendV2):
         supported_features = self._conf_dict.get("supported_features") or []
         return "qasm3" in supported_features
 
+    def _local_data_dir(self) -> str:
+        """Return the user-writable directory where refreshed data for this backend is cached."""
+        return os.path.join(_LOCAL_DATA_DIR, self.backend_name)  # type: ignore[arg-type]
+
+    def _resolve_data_path(self, filename: str) -> str:
+        """Return the path to a data file.
+
+        A locally cached copy (written by :meth:`refresh`) in the user's home directory takes
+        precedence over the copy bundled with the package.
+        """
+        local_path = os.path.join(self._local_data_dir(), filename)
+        if os.path.exists(local_path):
+            return local_path
+        return os.path.join(self.dirname, filename)  # type: ignore[arg-type]
+
     def _load_json(self, filename: str) -> dict:
-        with open(os.path.join(self.dirname, filename)) as f_json:
+        with open(self._resolve_data_path(filename)) as f_json:
             the_json = json.load(f_json)
         return the_json
 
@@ -372,15 +392,17 @@ class FakeBackendV2(BackendV2):
     def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
         """Update the data files from its real counterpart.
 
-        This method pulls the latest backend data files from their real counterpart and
-        overwrites the corresponding files in the local installation:
+        This method pulls the latest backend data from its real counterpart and writes it to a
+        user-writable cache directory:
 
-        *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
-        *  ``../fake_provider/backends/{backend_name}/defs_{backend_name}.json``
-        *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
+        *  ``~/.qiskit/fake_provider/{backend_name}/conf_{backend_name}.json``
+        *  ``~/.qiskit/fake_provider/{backend_name}/props_{backend_name}.json``
 
-        The new data files will persist through sessions so the files will stay updated unless they
-        are manually reverted locally or when ``qiskit-ibm-runtime`` is upgraded or reinstalled.
+        The cached files take precedence over the copies bundled with the package and persist
+        through sessions, so the backend stays updated until the cache is manually removed.
+        Writing to ``~/.qiskit`` rather than the package installation means refreshing works even
+        when ``qiskit-ibm-runtime`` is installed in a read-only location (e.g. ``site-packages``)
+        and avoids modifying the installed package itself.
 
         Args:
             service: A :class:`QiskitRuntimeService` instance
@@ -415,13 +437,16 @@ class FakeBackendV2(BackendV2):
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
+            local_dir = self._local_data_dir()
+            os.makedirs(local_dir, exist_ok=True)
+
             if real_config:
-                config_path = os.path.join(self.dirname, self.conf_filename)
+                config_path = os.path.join(local_dir, self.conf_filename)  # type: ignore[arg-type]
                 with open(config_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
             if real_props:
-                props_path = os.path.join(self.dirname, self.props_filename)
+                props_path = os.path.join(local_dir, self.props_filename)  # type: ignore[arg-type]
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
