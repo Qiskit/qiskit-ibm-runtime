@@ -120,7 +120,7 @@ class ConvertToMidCircuitInstructions(TransformationPass):
 
 
 class ConvertToMidCircuitMeasure(TransformationPass):
-    """Transpiler pass replacing mid-circuit terminal measure instructions.
+    """Transpiler pass replacing mid-circuit measure instructions.
 
     Transpiler pass that replaces terminal measure instructions in non-terminal locations
     with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
