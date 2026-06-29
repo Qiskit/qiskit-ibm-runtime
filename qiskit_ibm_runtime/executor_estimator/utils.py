@@ -189,7 +189,7 @@ def box_circuit(
             include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
             argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
-            API docs for a full list of the supported values.
+            API docs for a full list of supported values.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
             called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
