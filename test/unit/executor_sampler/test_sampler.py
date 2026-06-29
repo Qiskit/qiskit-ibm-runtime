@@ -723,6 +723,34 @@ class TestPrepareTwirling(unittest.TestCase):
                 self.assertEqual(call_kwargs["enable_gates"], bool(enable_gates))
                 self.assertEqual(call_kwargs["enable_measures"], bool(enable_measure))
 
+    def test_prepare_rejects_measurement_twirling_with_kerneled(self):
+        """prepare() rejects measurement twirling combined with a kerneled meas_type.
+
+        Measurement twirling flips bits and XOR-corrects them in post-processing, which is only
+        defined for classified bit results -- not the complex IQ data of kerneled/avg_kerneled.
+        """
+        circuit = QuantumCircuit(1, 1)
+        circuit.h(0)
+        circuit.measure_all()
+        pub = SamplerPub.coerce(circuit, shots=1024)
+
+        # enable_measure + kerneled / avg_kerneled is rejected up front.
+        for meas_type in ("kerneled", "avg_kerneled"):
+            with self.subTest(meas_type=meas_type):
+                options = SamplerOptions()
+                options.twirling.enable_measure = True
+                options.execution.meas_type = meas_type
+                sampler = create_sampler_for_prepare_tests(options=options)
+                with self.assertRaisesRegex(IBMInputValueError, "not compatible"):
+                    sampler.prepare([pub], default_shots=1024)
+
+        # The same kerneled meas_type is allowed when measurement twirling is off.
+        options = SamplerOptions()
+        options.twirling.enable_measure = False
+        options.execution.meas_type = "kerneled"
+        sampler = create_sampler_for_prepare_tests(options=options)
+        sampler.prepare([pub], default_shots=1024)  # must not raise
+
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.build")
     @patch("qiskit_ibm_runtime.executor_sampler.sampler.generate_boxing_pass_manager")
     def test_prepare_calls_samplomatic_build(self, mock_boxing_pm, mock_build):
