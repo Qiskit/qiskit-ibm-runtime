@@ -1,0 +1,5 @@
+Added :class:`~qiskit_ibm_runtime.circuit.library.MidCircuitReset` instruction and
+:class:`~qiskit_ibm_runtime.transpiler.passes.ConvertToMidCircuitInstructions` transpiler pass.
+The new pass extends the existing :class:`~qiskit_ibm_runtime.transpiler.passes.ConvertToMidCircuitMeasure`
+functionality by also replacing non-terminal ``reset`` instructions with hardware-specific
+mid-circuit reset implementations.
