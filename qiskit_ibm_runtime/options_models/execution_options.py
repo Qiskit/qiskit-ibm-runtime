@@ -14,13 +14,10 @@
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ExecutionOptions:
+class ExecutionOptions(OptionsModel):
     """Low-level execution options."""
 
     init_qubits: bool = True
@@ -57,7 +54,6 @@ class ExecutionOptions:
     """
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
 class SamplerExecutionOptions(ExecutionOptions):
     """Execution options for the sampler primitive.
 

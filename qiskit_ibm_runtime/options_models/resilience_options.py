@@ -15,14 +15,12 @@
 from __future__ import annotations
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ResilienceOptions:
+class ResilienceOptions(OptionsModel):
     """Resilience options for V2 Estimator."""
 
     measure_mitigation: bool = True

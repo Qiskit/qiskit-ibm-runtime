@@ -16,13 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class TwirlingOptions:
+class TwirlingOptions(OptionsModel):
     """Twirling options."""
 
     enable_gates: bool = False

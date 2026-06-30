@@ -17,7 +17,6 @@ from __future__ import annotations
 from dataclasses import asdict
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
@@ -26,11 +25,10 @@ from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .resilience_options import ResilienceOptions
 from .twirling_options import TwirlingOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class EstimatorOptions:
+class EstimatorOptions(OptionsModel):
     """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625

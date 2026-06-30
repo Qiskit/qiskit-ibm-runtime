@@ -18,9 +18,8 @@ from collections.abc import Sequence  # noqa: TC003
 from typing import Annotated, Literal
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 ExtrapolatorType = Literal[
     "linear",
@@ -43,8 +42,7 @@ ZNE_DEFAULT_NOISE_FACTORS = (1, 3, 5)
 """The values of ``noise_factors`` used by default when gate folding is selected."""
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ZneOptions:
+class ZneOptions(OptionsModel):
     """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.
 
     .. note::

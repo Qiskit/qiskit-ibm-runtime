@@ -17,16 +17,14 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .post_selection_options import PostSelectionOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class NoiseLearnerV3Options:
+class NoiseLearnerV3Options(OptionsModel):
     """Options for :class:`.NoiseLearnerV3`."""
 
     shots_per_randomization: Annotated[int, Field(ge=1)] = 128

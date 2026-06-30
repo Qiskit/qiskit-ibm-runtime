@@ -16,13 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic.dataclasses import dataclass
-
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class MeasureNoiseLearningOptions:
+class MeasureNoiseLearningOptions(OptionsModel):
     """Options for measurement noise learning. This is only used by V2 Estimator.
 
     .. note::

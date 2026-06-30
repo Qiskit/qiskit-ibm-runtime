@@ -15,15 +15,13 @@
 from __future__ import annotations
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class ExecutorOptions:
+class ExecutorOptions(OptionsModel):
     """Options for the executor."""
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)

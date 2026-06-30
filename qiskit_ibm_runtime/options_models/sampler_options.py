@@ -17,18 +17,16 @@ from __future__ import annotations
 from dataclasses import asdict
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
 from .execution_options import ExecutionOptions, SamplerExecutionOptions
 from .executor_options import ExecutorOptions
 from .twirling_options import TwirlingOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class SamplerOptions:
+class SamplerOptions(OptionsModel):
     """Options for the executor-based SamplerV2."""
 
     default_shots: int | None = 4096

@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 """Custom ``ConfigDict`` for pydantic dataclasses.
@@ -22,3 +22,9 @@ PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 These config settings ensure we get validation on attribute mutation, not just at construction
 time, and also that we get a validation error if someone spells an attribute name wrong.
 """
+
+
+class OptionsModel(BaseModel):
+    """Base class for options models."""
+
+    model_config = PRIMITIVES_CONFIG
