@@ -173,16 +173,13 @@ class EstimatorV2(BaseEstimatorV2):
                         "(circuits with control flow operations)."
                     )
 
-        # Validate PEC requirements
+        # Route to appropriate prepare function
         if self.options.resilience.pec_mitigation:
             if self.options.resilience.noise_model_mapping is None:
                 raise IBMInputValueError(
                     "When PEC mitigation is enabled, you must provide a noise model "
                     "via options.resilience.noise_model_mapping"
                 )
-
-        # Route to appropriate prepare function
-        if self.options.resilience.pec_mitigation:
             quantum_program = prepare_pec(
                 pubs=coerced_pubs,
                 twirling_options=self.options.twirling,
