@@ -56,10 +56,6 @@ class TestCalibratorOptions(IBMTestCase):
 class TestCalibrator(IBMTestCase):
     """Tests the ``Calibrator`` class."""
 
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-
     def test_run_of_session_is_selected(self):
         """Test ``Calibrator.run`` selects the service ``run`` method, if session is specified."""
         backend_name = "ibm_hello"
