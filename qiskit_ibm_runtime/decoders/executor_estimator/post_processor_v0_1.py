@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...results.quantum_program import QuantumProgramItemResult
     from ...options_models.zne_options import ExtrapolatorType
+    from ...results.quantum_program import QuantumProgramItemResult
 
 import numpy as np
 from qiskit.primitives import DataBin, PrimitiveResult
@@ -30,6 +30,7 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
+from ...executor_estimator.zne.extrapolation import process_extrapolated_expectation_values
 from ...results.estimator_pub import EstimatorPubResult
 from ...results.quantum_program import QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
@@ -187,30 +188,32 @@ def process_expectation_values(
         measure_noise_data,
     )
 
+
 def calculate_expectation_values(
     data: np.ndarray,
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
-    measure_noise_data: PauliLindbladMap | np.ndarray | None,):
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
     """Calculate expectation values for given data, observables and params.
 
-        Args:
-            data: The measured data result.
-            observables: The observables to calculate expectation values for.
-            param_shape: The shape of the parameter values in the original PUB.
-            param_basis_pairs: The map between params ndindexes to basis.
-            measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
-                PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+    Args:
+        data: The measured data result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
-        Returns:
-            A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
-            ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
 
-        Raises:
-            ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
-                each other.
-        """
+    Raises:
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
     # Get number of randomizations and shots per randomization
     num_randomizations = data.shape[0]
     shots_per_randomization = data.shape[-2]
@@ -430,7 +433,7 @@ def process_expectation_values_pea(
     extrapolated_noise_factors: list[float],
     extrapolator: list[ExtrapolatorType],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
     """Process expectation values for a single item result.
 
     Args:
@@ -440,7 +443,8 @@ def process_expectation_values_pea(
         param_basis_pairs: The map between params ndindexes to basis.
         noise_factors: The noise factors used to amplify the noise.
         extrapolated_noise_factors: Noise factors to evaluate the fits at.
-        extrapolator: The extrapolator model or models to use. Models will be tried in priority order.
+        extrapolator: The extrapolator model or models to use.
+            Models will be tried in priority order.
             Supported models (each fits the named function of the noise factor ``x``):
             - ``linear``: ``a + b*x``
             - ``polynomial_degree_k`` (1 <= k <= 7): a degree-k polynomial
@@ -491,12 +495,19 @@ def process_expectation_values_pea(
         factors_stds.append(factor_stds)
         factors_ensemble_stds.append(factor_ensemble_stds)
 
+    factors_exp_vals = np.array(factors_exp_vals)
+    factors_stds = np.array(factors_stds)
+    factors_ensemble_stds = np.array(factors_ensemble_stds)
+
     # Each of factors_exp_vals, factors_stds and factors_ensemble_stds is a list of ndarray -
     # each item in the list is the results for each observable for each parameter,
     # for a different noise factor
-    return fit_extrapolation_models(
+    return process_extrapolated_expectation_values(
         factors_exp_vals,
         factors_stds,
         factors_ensemble_stds,
+        observables,
+        noise_factors,
         extrapolator,
-        extrapolated_noise_factors,)
+        extrapolated_noise_factors,
+    )
