@@ -350,10 +350,7 @@ class SamplerV2(BaseSamplerV2):
             shots: The number of shots to run.
 
         Returns:
-            A LocalRuntimeJob wrapping the BackendSamplerV2 job.
-
-        Raises:
-            ValueError: If using IBMBackend in local mode.
+            A LocalRuntimeJob.
         """
         # Prepare options dict - this goes in the inputs["options"] field
         options_dict = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
@@ -368,7 +365,6 @@ class SamplerV2(BaseSamplerV2):
         # Prepare runtime options with backend
         runtime_options = {"backend": self._backend}
 
-        # Call the centralized _run method from local_service
         return self._service._run(
             program_id="sampler",
             inputs=inputs,
