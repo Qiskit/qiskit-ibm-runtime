@@ -32,7 +32,12 @@ from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit
-from .utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from .utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +85,15 @@ def prepare(
     param_basis_pairs_list = []
     param_shapes_list = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=False,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
-        )
+        boxed_circuit = box_circuit(circuit=pub.circuit, inject_noise=False, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
