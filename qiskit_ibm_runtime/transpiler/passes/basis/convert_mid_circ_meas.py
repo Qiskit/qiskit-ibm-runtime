@@ -10,13 +10,17 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Pass to replace mid-circuit terminal measures with MidCircuitMeasure instructions."""
+"""Pass to replace `measure` and `reset` instructions in non-terminal locations.
+
+This pass replaces them with their mid-circuit versions.
+"""
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
-from qiskit.circuit import Measure
+from qiskit.circuit import Measure, Reset
 from qiskit.transpiler import TransformationPass
 from qiskit.transpiler.passes.utils.remove_final_measurements import calc_final_ops
 
@@ -25,54 +29,131 @@ if TYPE_CHECKING:
     from qiskit.transpiler import Target
 
 
-class ConvertToMidCircuitMeasure(TransformationPass):
-    """Transpiler pass replacing mid-circuit terminal measure instructions.
+class ConvertToMidCircuitInstructions(TransformationPass):
+    """Transpiler pass replacing mid-circuit measure and reset instructions.
 
     Transpiler pass that replaces terminal measure instructions in non-terminal locations
     with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
     pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
     it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
 
-    Note that the pass will only act on non-terminal ``Measure`` instances, and won't replace
-    existing mid-circuit measurement instructions (e.g., ``"measure_2" -> "measure_3"``) or
-    convert any ``MidCircuitMeasure`` instance into a ``Measure``.
+    Similarly, the pass will replace terminal reset instructions in non-terminal locations
+    with ``MidCircuitReset`` instructions, defaulting to ``reset_2``.
+
+    Note that the pass will only act on non-terminal ``measure`` and ``reset`` instances,
+    and won't replace existing mid-circuit measurement instructions
+    (e.g., ``"measure_2" -> "measure_3"``) or convert any ``MidCircuitMeasure`` instance
+    into a ``Measure``.
 
     Args:
-        target: Backend's target instance that contains one or more ``measure_`` instructions.
-        mcm_name: Name of the ``measure_`` instruction that terminal measure instructions in
-            non-terminal locations will be replaced with. This instruction must be contained in
-            the target. Defaults to ``measure_2``.
+        target: Backend's target instance.
+        mcm_name: Name of the instruction used to replace non-terminal Measure instructions. The
+            name must start with "measure", and the instruction must be contained in the target.
+            The default name is ``measure_2``.
+        mcr_name: Name of the instruction used to replace non-terminal Reset instructions. The
+            name must start with "reset", and the instruction must be contained in the target.
+            The default name is ``reset_2``.
 
     Raises:
-        ValueError: If the specifcied ``mcm_name`` does not conform to the ``measure_`` pattern
-            or is not contained in the provided target.
+        ValueError: If the specified ``mcm_name`` does not start with "measure", or the specified
+            ``mcr_name`` does not start with "reset", or the specified instructions are not
+            contained in the provided target.
     """
 
-    def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
+    def __init__(
+        self, target: Target, mcm_name: str = "measure_2", mcr_name: str = "reset_2"
+    ) -> None:
         super().__init__()
         self.target = target
-        if not mcm_name.startswith("measure_"):
+        if not mcm_name.startswith("measure"):
             raise ValueError(
-                "Invalid name for mid-circuit measure instruction."
-                "The provided name must start with `measure_`."
+                "Invalid name for a measure instruction."
+                "The provided name must start with `measure`."
+            )
+        if not mcr_name.startswith("reset"):
+            raise ValueError(
+                "Invalid name for a reset instruction.The provided name must start with `reset`."
             )
         if mcm_name not in target.operation_names:
             raise ValueError(
                 f"{mcm_name} is not supported by the given target. "
                 f"Supported operations are: {target.operation_names}"
             )
+        if mcr_name not in target.operation_names:
+            raise ValueError(
+                f"{mcr_name} is not supported by the given target. "
+                f"Supported operations are: {target.operation_names}"
+            )
         self.mcm_name = mcm_name
+        self.mcr_name = mcr_name
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
         """Run the pass on a dag."""
-        final_measure_nodes = calc_final_ops(dag, {"measure"})
-        for node in dag.op_nodes(Measure):
-            if node not in final_measure_nodes:
-                node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
-                # only replace Measure with MidCircuitMeasure if MidCircuitMeasure
-                # is supported in the corresponding qargs
-                if self.target.instruction_supported(self.mcm_name, node_indices):
-                    mid_circ_measure = self.target.operation_from_name(self.mcm_name)
-                    dag.substitute_node(node, mid_circ_measure, inplace=True)
+        if self.mcm_name != "measure":
+            final_measure_nodes = set(calc_final_ops(dag, {"measure"}))
+            for node in dag.op_nodes(Measure):
+                if node not in final_measure_nodes:
+                    node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                    if self.target.instruction_supported(self.mcm_name, node_indices):
+                        mid_circ_measure = self.target.operation_from_name(self.mcm_name)
+                        dag.substitute_node(node, mid_circ_measure, inplace=True)
+                    else:
+                        warnings.warn(
+                            f"{self.mcm_name} with qubits {node_indices} is not supported "
+                            f"by the given target."
+                        )
+
+        if self.mcr_name != "reset":
+            final_reset_nodes = set(calc_final_ops(dag, {"reset"}))
+            for node in dag.op_nodes(Reset):
+                if node not in final_reset_nodes:
+                    node_indices = [dag.find_bit(qarg).index for qarg in node.qargs]
+                    if self.target.instruction_supported(self.mcr_name, node_indices):
+                        mid_circ_reset = self.target.operation_from_name(self.mcr_name)
+                        dag.substitute_node(node, mid_circ_reset, inplace=True)
+                    else:
+                        warnings.warn(
+                            f"{self.mcr_name} with qubits {node_indices} is not supported "
+                            f"by the given target."
+                        )
 
         return dag
+
+
+class ConvertToMidCircuitMeasure(TransformationPass):
+    """Transpiler pass replacing mid-circuit measure instructions.
+
+    Transpiler pass that replaces terminal measure instructions in non-terminal locations
+    with ``MidCircuitMeasure`` instructions. By default, these will be ``measure_2``, but the
+    pass accepts custom ``measure_`` definitions. This pass is expected to run after routing, as
+    it will check that ``MidCircuitMeasure`` is supported in the corresponding physical qubit.
+
+    This pass is similar to ``ConvertToMidCircuitInstructions`` but only handles measurements,
+    not resets. It internally calls ``ConvertToMidCircuitInstructions`` with a no-op reset name.
+
+    Note that the pass will only act on non-terminal ``measure`` instances,
+    and won't replace existing mid-circuit measurement instructions
+    (e.g., ``"measure_2" -> "measure_3"``) or convert any ``MidCircuitMeasure`` instance
+    into a ``Measure``.
+
+    Args:
+        target: Backend's target instance.
+        mcm_name: Name of the instruction used to replace non-terminal Measure instructions. The
+            name must start with "measure", and the instruction must be contained in the target.
+            The default name is ``measure_2``.
+
+    Raises:
+        ValueError: If the specified ``mcm_name`` does not start with ``measure`` or is not
+            contained in the provided target.
+    """
+
+    def __init__(self, target: Target, mcm_name: str = "measure_2") -> None:
+        super().__init__()
+        # Use "reset" as the mcr_name to ensure no reset conversion happens
+        self._inner_pass = ConvertToMidCircuitInstructions(
+            target=target, mcm_name=mcm_name, mcr_name="reset"
+        )
+
+    def run(self, dag: DAGCircuit) -> DAGCircuit:
+        """Run the pass on a dag."""
+        return self._inner_pass.run(dag)
