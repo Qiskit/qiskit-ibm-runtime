@@ -201,6 +201,7 @@ def box_circuit(
         measure_annotations="all"
         if twirling_options.enable_measure or twirl_measurements
         else "change_basis",
+        inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
         inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
     )
@@ -249,7 +250,7 @@ def compute_samplex_arguments(
            be measured for each subset, applying broadcasting rules to params and observables.
         2. It replaces the observables in that map with the minimal set of Pauli basis that
            can be used to measure all such observables.
-        3. It flattens the map into two 1D arrays of equal lenght, containing the subsets of
+        3. It flattens the map into two 1D arrays of equal length, containing the subsets of
            parameters and basis changing gates respectively. When a subset of parameter maps
            to more than one basis changing gate, the flattened array contains multiple copies
            of it.

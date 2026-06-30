@@ -245,6 +245,18 @@ class TestQuantumProgramConverters(IBMTestCase):
             samplex=samplex,
         )
 
+        passthrough_data = {
+            "str": "ciao",
+            "float": 1.2,
+            "int": 1,
+            "bool": True,
+            "none": None,
+            "list": [1, 2, 3],
+            "array": np.array([1.0, 2.0]),
+            "nested": {"array2": np.array([3.0, 4.0])},
+        }
+        quantum_program.passthrough_data = passthrough_data
+
         options = ExecutorOptions()
         options.execution.init_qubits = False
         options.experimental = {"key": "value"}
@@ -252,11 +264,19 @@ class TestQuantumProgramConverters(IBMTestCase):
         params_model = quantum_program_to_1_1(quantum_program, options)
         quantum_program_out, options_out = quantum_program_from_1_1(params_model)
 
-        assert options_out == options
+        self.assertEqual(options_out, options)
 
         items = quantum_program_out.items
-        assert len(items) == 2
-        assert isinstance(items[0], CircuitItem)
-        assert items[0].circuit == quantum_program.items[0].circuit
-        assert isinstance(items[1], SamplexItem)
-        assert items[1].circuit == quantum_program.items[1].circuit
+        self.assertEqual(len(items), 2)
+        self.assertIsInstance(items[0], CircuitItem)
+        self.assertEqual(items[0].circuit, quantum_program.items[0].circuit)
+        self.assertIsInstance(items[1], SamplexItem)
+        self.assertEqual(items[1].circuit, quantum_program.items[1].circuit)
+
+        self.assertEqual(passthrough_data.keys(), quantum_program_out.passthrough_data.keys())
+        for key in ["str", "float", "int", "bool", "none", "list"]:
+            self.assertEqual(passthrough_data[key], quantum_program_out.passthrough_data[key])
+        self.assertIsInstance(quantum_program_out.passthrough_data["array"], np.ndarray)
+        np.testing.assert_array_equal(
+            passthrough_data["array"], quantum_program_out.passthrough_data["array"]
+        )
