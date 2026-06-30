@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -189,9 +188,9 @@ class EstimatorV2(BaseEstimatorV2):
 
         # Serialize options (assuming passthrough is correctly configured)
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
-            "twirling": asdict(self.options.twirling),  # type: ignore[call-overload]
-            "dynamical_decoupling": asdict(self.options.dynamical_decoupling),  # type: ignore[call-overload]
-            "resilience": asdict(self.options.resilience),  # type: ignore[call-overload]
+            "twirling": self.options.twirling.model_dump(),
+            "dynamical_decoupling": self.options.dynamical_decoupling.model_dump(),
+            "resilience": self.options.resilience.model_dump(),
         }
 
         executor_options = self.options.to_executor_options()

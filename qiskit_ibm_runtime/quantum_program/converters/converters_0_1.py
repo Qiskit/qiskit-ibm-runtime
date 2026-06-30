@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
 import numpy as np
 from ibm_quantum_schemas.common import (
     F64TensorModel,
@@ -129,5 +127,5 @@ def quantum_program_to_0_1(program: QuantumProgram, options: ExecutorOptions) ->
 
     return ParamsModel(
         quantum_program=QuantumProgramModel(shots=program.shots, items=model_items),
-        options=asdict(options.execution),  # type: ignore[call-overload]
+        options=options.execution.model_dump(),
     )

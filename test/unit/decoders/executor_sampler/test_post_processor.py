@@ -192,7 +192,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": twirling,
                 "meas_type": meas_type,
                 "shots": shots,
@@ -245,7 +245,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -286,7 +286,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": False,
                 "meas_type": "classified",
                 "shots": num_shots,
@@ -328,7 +328,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -376,7 +376,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -419,7 +419,7 @@ class TestSamplerV2PostProcessor(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": True,
                 "meas_type": "classified",
                 "shots": num_shots_per_rand,
@@ -478,7 +478,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
-                "options": asdict(options),
+                "options": options.model_dump(),
                 "twirling": twirling_enabled,
                 "meas_type": meas_type,
                 "shots": shots,
@@ -560,7 +560,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         # Create options with twirling enabled
         options = SamplerOptions()
         options.twirling.enable_gates = True
-        options_dict = asdict(options)
+        options_dict = options.model_dump()
 
         # Build result with options but WITHOUT twirling flag
         post_processor_data = {
@@ -593,7 +593,7 @@ class TestSamplerV2PostProcessorFlattening(unittest.TestCase):
         # Create options with twirling enabled
         options = SamplerOptions()
         options.twirling.enable_gates = True
-        options_dict = asdict(options)
+        options_dict = options.model_dump()
 
         # Build result with options but WITHOUT meas_type
         post_processor_data = {

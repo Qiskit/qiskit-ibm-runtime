@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
 from pydantic import Field
 
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
@@ -101,8 +99,8 @@ class EstimatorOptions(OptionsModel):
         """
         executor_options = ExecutorOptions()
 
-        environment_options = asdict(self.environment)  # type: ignore[call-overload]
-        execution_options = asdict(self.execution)  # type: ignore[call-overload]
+        environment_options = self.environment.model_dump()
+        execution_options = self.execution.model_dump()
         executor_options.environment = EnvironmentOptions(**environment_options)
         executor_options.execution = ExecutionOptions(**execution_options)
 

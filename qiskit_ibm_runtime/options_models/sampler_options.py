@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-
 from pydantic import Field
 
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
@@ -69,8 +67,8 @@ class SamplerOptions(OptionsModel):
         """
         executor_options = ExecutorOptions()
 
-        environment_options = asdict(self.environment)  # type: ignore[call-overload]
-        execution_options = asdict(self.execution)  # type: ignore[call-overload]
+        environment_options = self.environment.model_dump()  # type: ignore[call-overload]
+        execution_options = self.execution.model_dump()  # type: ignore[call-overload]
         execution_options.pop("meas_type")
         executor_options.environment = EnvironmentOptions(**environment_options)
         executor_options.execution = ExecutionOptions(**execution_options)

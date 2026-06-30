@@ -15,9 +15,8 @@
 from typing import Annotated, Literal
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
-from .utils import PRIMITIVES_CONFIG, OptionsModel
+from .utils import OptionsModel
 
 LogLevelType = Literal[
     "DEBUG",
@@ -73,8 +72,7 @@ class EnvironmentOptions(OptionsModel):
     """Runtime image used for this job."""
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class SamplerEnvironmentOptions:
+class SamplerEnvironmentOptions(OptionsModel):
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
