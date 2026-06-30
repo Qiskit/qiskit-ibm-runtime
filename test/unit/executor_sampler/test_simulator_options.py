@@ -13,14 +13,20 @@
 """Tests for SimulatorOptions in executor-based SamplerV2."""
 
 import unittest
+from unittest.mock import patch
 
+from ddt import data, ddt
+from pydantic import ValidationError
+from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
+from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
 from test.utils import get_mocked_backend
 
 
+@ddt
 class TestSimulatorOptions(unittest.TestCase):
     """Tests for SimulatorOptions in SamplerOptions."""
 
@@ -46,7 +52,7 @@ class TestSimulatorOptions(unittest.TestCase):
         coupling_map = [[0, 1], [1, 2], [2, 3]]
         options.simulator.coupling_map = coupling_map
 
-        self.assertEqual(options.simulator.coupling_map, coupling_map)
+        self.assertEqual(options.simulator.coupling_map, CouplingMap(coupling_map))
 
     def test_simulator_options_set_coupling_map_from_qiskit(self):
         """Test setting coupling map from Qiskit CouplingMap object."""
@@ -54,8 +60,7 @@ class TestSimulatorOptions(unittest.TestCase):
         qiskit_coupling_map = CouplingMap([[0, 1], [1, 2]])
         options.simulator.coupling_map = qiskit_coupling_map
 
-        # Should be converted to list format
-        self.assertEqual(options.simulator.coupling_map, [[0, 1], [1, 2]])
+        self.assertEqual(options.simulator.coupling_map, qiskit_coupling_map)
 
     def test_simulator_options_set_basis_gates(self):
         """Test setting basis gates."""
@@ -78,4 +83,21 @@ class TestSimulatorOptions(unittest.TestCase):
 
         self.assertEqual(sampler.options.simulator.seed_simulator, 123)
         self.assertEqual(sampler.options.simulator.basis_gates, ["h", "cx", "rz"])
-        self.assertEqual(sampler.options.simulator.coupling_map, [[0, 1], [1, 2]])
+        self.assertEqual(sampler.options.simulator.coupling_map, CouplingMap([[0, 1], [1, 2]]))
+
+    @data("bad_input", [1, 2, 3], [[0, 1], [-1, 0]])
+    def test_coupling_map_invalid_type_raises(self, input):
+        """Non-list, non-CouplingMap, non-None value should raise ValidationError."""
+        with self.assertRaises(ValidationError):
+            SimulatorOptions(coupling_map=input)
+
+    def test_noise_model_invalid_type_no_aer_raises(self):
+        """Passing a non-dict noise_model raises when Aer is not installed."""
+        with patch("qiskit_ibm_runtime.options_models.simulator_options.optionals.HAS_AER", False):
+            with self.assertRaises(MissingOptionalLibraryError):
+                SimulatorOptions(noise_model=object())
+
+    def test_noise_model_invalid_type_with_aer_raises(self):
+        """A non-dict, non-AerNoiseModel value raises ValidationError."""
+        with self.assertRaises(ValidationError):
+            SimulatorOptions(noise_model=12345)
