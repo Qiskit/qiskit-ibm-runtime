@@ -41,7 +41,8 @@ class Calibrator:
 
     .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Calibrator
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime.calibrator import Calibrator
 
         service = QiskitRuntimeService()
         backend = service.backend("ibm_boston")
