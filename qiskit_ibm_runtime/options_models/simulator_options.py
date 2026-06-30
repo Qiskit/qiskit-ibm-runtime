@@ -42,16 +42,10 @@ class SimulatorOptions:
     """
 
     noise_model: dict | NoiseModel | None = None
-    """Noise model for the simulator.
-
-    Default: ``None``.
-    """
+    """Noise model for the simulator."""
 
     seed_simulator: int | None = None
-    """Random seed to control sampling.
-
-    Default: ``None``.
-    """
+    """Random seed to control sampling."""
 
     coupling_map: list[list[int]] | CouplingMap | None = None
     """Directed coupling map to target in mapping.
@@ -59,16 +53,13 @@ class SimulatorOptions:
     If the coupling map is symmetric, both directions need to be specified.
     Each entry in the list specifies a directed two-qubit interaction,
     e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
-
-    Default: ``None``, which implies no connectivity constraints.
+    ``None`` implies no connectivity constraints.
     """
 
     basis_gates: list[str] | None = None
     """List of basis gate names to unroll to.
 
     For example, ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
-
-    Default: all basis gates supported by the simulator.
     """
 
     @field_validator("coupling_map", mode="plain")
