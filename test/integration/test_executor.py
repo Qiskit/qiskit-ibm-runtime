@@ -66,8 +66,9 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        assert params["options"] == executor.options
-        assert isinstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["options"], executor.options)
+        self.assertIsInstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)
@@ -98,6 +99,7 @@ class TestExecutor(IBMIntegrationTestCase):
         pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
         boxed_isa_circuit = pm.run(circuit)
 
@@ -113,8 +115,9 @@ class TestExecutor(IBMIntegrationTestCase):
         job = executor.run(program)
 
         params = job.inputs
-        assert params["options"] == executor.options
-        assert isinstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["options"], executor.options)
+        self.assertIsInstance(params["quantum_program"], QuantumProgram)
+        self.assertEqual(params["schema_version"], Executor._SCHEMA_VERSION)
 
         results = job.result()
         self.assertIsInstance(results, QuantumProgramResult)

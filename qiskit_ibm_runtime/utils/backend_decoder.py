@@ -18,10 +18,7 @@ import traceback
 import dateutil.parser
 from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
 
-from ..models import (
-    BackendProperties,
-    QasmBackendConfiguration,
-)
+from ..models import BackendProperties, QasmBackendConfiguration
 from .converters import utc_to_local_all
 from .utils import is_fractional_gate
 

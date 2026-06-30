@@ -23,10 +23,7 @@ from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.noise_learner_v3 import NoiseLearnerV3
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
-from qiskit_ibm_runtime.results import (
-    NoiseLearnerV3Result,
-    NoiseLearnerV3Results,
-)
+from qiskit_ibm_runtime.results import NoiseLearnerV3Result, NoiseLearnerV3Results
 from qiskit_ibm_runtime.results.noise_learner import NoiseLearnerResult
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -40,7 +37,7 @@ class TestSmokePrimitives(IBMIntegrationTestCase):
         super().setUp()
         self._backend = self.service.backend(self.dependencies.qpu)
         self.pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-        self.boxing_pm = generate_boxing_pass_manager()
+        self.boxing_pm = generate_boxing_pass_manager(inject_noise_site="after")
 
         # bell circuit
         bell = QuantumCircuit(2, name="Bell")

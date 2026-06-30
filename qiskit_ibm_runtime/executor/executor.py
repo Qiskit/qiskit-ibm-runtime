@@ -78,7 +78,7 @@ class Executor:
     """
 
     _PROGRAM_ID = "executor"
-    _SCHEMA_VERSION = "v1.0"
+    _SCHEMA_VERSION = "v1.1"
 
     options: ExecutorOptions
     """The options of this executor."""
