@@ -63,9 +63,17 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         return result
 
     def test_post_processor_multiple_pubs(self):
-        """Test post-processor with multiple pubs."""
+        """Test post-processor with multiple pubs.
+
+        Pub 0 has a single observable (broadcast shape ``(1,)``); pub 1 broadcasts over two
+        observables (shape ``(2,)``). Besides the expectation values, this asserts each
+        ``DataBin.shape`` equals the pub broadcast shape: the post-processor must pass
+        ``shape=`` when building the bin, otherwise ``DataBin.shape`` defaults to ``()`` even
+        though ``evs.shape`` is correct -- a parity divergence against the legacy estimator,
+        which always reports the broadcast shape.
+        """
         meas_data_1 = np.zeros((1, 1, 10, 2)).astype(bool)  # All 00 -> +1
-        meas_data_2 = np.ones((1, 1, 10, 2)).astype(bool)  # All 11 -> +1
+        meas_data_2 = np.ones((1, 2, 10, 2)).astype(bool)  # All 11 -> +1 for ZZ and XX configs
 
         result_data = [
             QuantumProgramItemResult({"_meas": meas_data_1}),
@@ -75,9 +83,9 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
             "post_processor": {
                 "version": "v0.1",
                 "circuits_metadata": [None, None],
-                "observables": [[{"ZZ": 1.0}], [{"ZZ": 1.0}]],
-                "measure_bases": [["ZZ"], ["ZZ"]],
-                "param_basis_pairs": [[([], "ZZ")], [([], "ZZ")]],
+                "observables": [[{"ZZ": 1.0}], [{"ZZ": 1.0}, {"XX": 1.0}]],
+                "measure_bases": [["ZZ"], ["ZZ", "XX"]],
+                "param_basis_pairs": [[([], "ZZ")], [([], "ZZ"), ([], "XX")]],
                 "param_shapes": [[], []],
             },
         }
@@ -91,6 +99,11 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         self.assertEqual(len(primitive_result), 2)
         self.assertAlmostEqual(primitive_result[0].data.evs[0], 1.0)
         self.assertAlmostEqual(primitive_result[1].data.evs[0], 1.0)
+        self.assertAlmostEqual(primitive_result[1].data.evs[1], 1.0)
+
+        # The DataBin shape must track the pub broadcast shape (not default to ``()``).
+        self.assertEqual(primitive_result[0].data.shape, (1,))
+        self.assertEqual(primitive_result[1].data.shape, (2,))
 
     def test_post_processor_missing_passthrough_data(self):
         """Test post-processor raises error with missing passthrough data."""
