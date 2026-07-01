@@ -78,9 +78,6 @@ def noise_learner_v3_inputs_from_0_3(
         exclude_none=True, include=EXECUTION_FIELDS
     )
 
-    # Pop bit-flip checks options, until they are fully supported
-    top_level_dump.pop("bit_flip_checks")
-
     options = NoiseLearnerV3Options(**top_level_dump)
     return instructions, options
 
