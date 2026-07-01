@@ -375,5 +375,22 @@ class TestEstimatorV2Run(unittest.TestCase):
 
         with self.assertRaises(IBMInputValueError) as context:
             estimator.run([pub1, pub2])
-
         self.assertIn("same precision", str(context.exception))
+
+    def test_run_raises_error_when_pec_enabled_without_noise_model(self):
+        """Test that run raises error when PEC is enabled but noise_model_mapping isn't."""
+        estimator = EstimatorV2(mode=self.backend)
+
+        # Enable PEC without providing noise model
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.noise_model_mapping = None
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "When PEC mitigation is enabled, you must provide a noise model",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
