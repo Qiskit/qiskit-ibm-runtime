@@ -23,8 +23,8 @@ from qiskit.quantum_info import random_pauli_list
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
     estimator_v2_post_processor_v0_1,
     process_expectation_values,
-    process_expectation_values_pec,
     process_expectation_values_pea,
+    process_expectation_values_pec,
 )
 from qiskit_ibm_runtime.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from qiskit_ibm_runtime.results.quantum_program import (
