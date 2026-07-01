@@ -57,9 +57,11 @@ class TestEstimatorV2Run(unittest.TestCase):
         """Clean up patches."""
         self.executor_patcher.stop()
 
-    def test_run_single_pub_no_parameters(self):
+    @data(True, False)
+    def test_run_single_pub_no_parameters(self, measure_mitigation):
         """Test run with single pub without parameters."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.measure_mitigation = measure_mitigation
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -77,14 +79,17 @@ class TestEstimatorV2Run(unittest.TestCase):
         quantum_program = call_args[0][0]
         self.assertIsInstance(quantum_program, QuantumProgram)
         # precision=0.03125 -> shots = ceil(1/0.03125^2) = 1024
-        self.assertEqual(quantum_program.shots, 1024)
+        # if trex is on twirling is applied and we get 64 shots per randomization
+        self.assertEqual(quantum_program.shots, 64 if measure_mitigation else 1024)
 
         # Verify job was returned
         self.assertEqual(job, self.mock_job)
 
-    def test_run_with_pub_level_precision(self):
+    @data(True, False)
+    def test_run_with_pub_level_precision(self, measure_mitigation):
         """Test that EstimatorPub.coerce is called with precision parameter."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.measure_mitigation = measure_mitigation
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -97,12 +102,14 @@ class TestEstimatorV2Run(unittest.TestCase):
         # precision=0.01 -> shots = ceil(1/0.01^2) = 10000
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
-        self.assertEqual(quantum_program.shots, 10000)
+        self.assertEqual(quantum_program.shots, 313 if measure_mitigation else 10000)
         self.assertEqual(job, self.mock_job)
 
-    def test_run_uses_default_precision_from_options(self):
+    @data(True, False)
+    def test_run_uses_default_precision_from_options(self, measure_mitigation):
         """Test that run uses default_precision from options when precision not specified."""
         options = EstimatorOptions()
+        options.resilience.measure_mitigation = measure_mitigation
 
         options.default_precision = 0.01
 
@@ -120,12 +127,14 @@ class TestEstimatorV2Run(unittest.TestCase):
         # Verify shots from precision were calculated
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
-        self.assertEqual(quantum_program.shots, 10000)
+        self.assertEqual(quantum_program.shots, 313 if measure_mitigation else 10000)
 
-    def test_run_precision_parameter_overrides_options(self):
+    @data(True, False)
+    def test_run_precision_parameter_overrides_options(self, measure_mitigation):
         """Test that precision parameter in run() overrides options.default_precision."""
         options = EstimatorOptions()
         options.default_precision = 0.022097  # sqrt(1/2048)
+        options.resilience.measure_mitigation = measure_mitigation
 
         estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -139,7 +148,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
-        self.assertEqual(quantum_program.shots, 4096)
+        self.assertEqual(quantum_program.shots, 128 if measure_mitigation else 4096)
 
     def test_run_with_parametric_circuit(self):
         """Test run with parametric circuit."""
@@ -183,10 +192,12 @@ class TestEstimatorV2Run(unittest.TestCase):
         quantum_program = call_args[0][0]
         self.assertEqual(len(quantum_program.items), 2 + measure_mitigation)
 
-    def test_run_with_default_precision(self):
+    @data(True, False)
+    def test_run_with_default_precision(self, measure_mitigation):
         """Test that run uses the default precision value from options."""
         options = EstimatorOptions()
         # default_precision is 0.015625 by default
+        options.resilience.measure_mitigation = measure_mitigation
 
         estimator = EstimatorV2(mode=self.backend, options=options)
 
@@ -203,7 +214,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         # precision=0.015625 -> shots = ceil(1/0.015625^2) = 4096
         call_args = self.mock_executor_instance.run.call_args
         quantum_program = call_args[0][0]
-        self.assertEqual(quantum_program.shots, 4096)
+        self.assertEqual(quantum_program.shots, 128 if measure_mitigation else 4096)
 
     def test_run_sets_executor_options(self):
         """Test that run sets executor options correctly."""

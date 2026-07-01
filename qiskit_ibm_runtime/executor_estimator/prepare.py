@@ -69,7 +69,11 @@ def prepare(
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
     """
-    if twirling_options.enable_gates or twirling_options.enable_measure:
+    if (
+        twirling_options.enable_gates
+        or twirling_options.enable_measure
+        or measure_noise_learning is not None
+    ):
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
             shots,
             twirling_options.num_randomizations,
