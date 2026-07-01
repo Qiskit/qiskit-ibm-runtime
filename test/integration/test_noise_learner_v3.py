@@ -35,6 +35,7 @@ class TestNoiseLearnerV3(IBMIntegrationTestCase):
         self.boxing_pm.post_scheduling = generate_boxing_pass_manager(
             enable_gates=True,
             enable_measures=True,
+            inject_noise_site="after",
         )
 
     def test_noise_learner_v3(self):

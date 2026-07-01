@@ -94,6 +94,22 @@ class TestEstimatorV2(IBMTestCase):
             estimator.run(**get_primitive_inputs(estimator), precision=0)
         self.assertIn("The precision value must be strictly greater than 0", str(exc.exception))
 
+    def test_invalid_estimator_pub_precision(self):
+        """Test exception when a pub specifies a precision that is not strictly greater than 0."""
+        backend = get_mocked_backend()
+        backend.configuration().simulator = True
+
+        estimator = EstimatorV2(mode=backend)
+        # Precision supplied at the pub level (4th element) must also be guarded client-side,
+        # not just the run() kwarg -- otherwise a pub-level precision=0 reaches the server and
+        # raises a bare ZeroDivisionError when it converts precision to shots.
+        pub = get_primitive_inputs(estimator)["pubs"][0]
+        pub_with_zero_precision = (*pub, 0)
+        with self.assertRaisesRegex(
+            ValueError, "The precision value must be strictly greater than 0"
+        ):
+            estimator.run([pub_with_zero_precision])
+
     def test_pec_simulator(self):
         """Test error is raised when using pec on simulator without coupling map."""
         backend = get_mocked_backend()

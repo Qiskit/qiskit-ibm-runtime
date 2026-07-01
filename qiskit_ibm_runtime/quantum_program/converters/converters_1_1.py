@@ -38,7 +38,32 @@ from ...utils.utils import get_qpy_version, get_ssv_version
 from ..quantum_program import CircuitItem, QuantumProgram, SamplexItem
 
 if TYPE_CHECKING:
+    from ibm_quantum_schemas.executor.version_1_1.models import DataTree as DataTreeModel
     from qiskit.circuit import QuantumCircuit
+
+    from ..datatree import DataTree
+
+
+def passthrough_data_to_1_1(passthrough_data: DataTree) -> DataTreeModel:
+    """Convert passthrough data to schema model."""
+    if isinstance(passthrough_data, dict):
+        return {k: passthrough_data_to_1_1(v) for k, v in passthrough_data.items()}
+    if isinstance(passthrough_data, (list, tuple)):
+        return [passthrough_data_to_1_1(v) for v in passthrough_data]
+    if isinstance(passthrough_data, np.ndarray):
+        return TensorModel.from_numpy(passthrough_data)
+    return passthrough_data
+
+
+def passthrough_data_from_1_1(passthrough_data: DataTree) -> DataTreeModel:
+    """Convert passthrough data to schema model."""
+    if isinstance(passthrough_data, TensorModel):
+        return passthrough_data.to_numpy()
+    if isinstance(passthrough_data, dict):
+        return {k: passthrough_data_from_1_1(v) for k, v in passthrough_data.items()}
+    if isinstance(passthrough_data, list):
+        return [passthrough_data_from_1_1(el) for el in passthrough_data]
+    return passthrough_data
 
 
 def quantum_program_from_1_1(model: ParamsModel) -> tuple[QuantumProgram, ExecutorOptions]:
@@ -84,7 +109,7 @@ def quantum_program_from_1_1(model: ParamsModel) -> tuple[QuantumProgram, Execut
         shots=program_model.shots,
         items=items,
         meas_level=program_model.meas_level,
-        passthrough_data=program_model.passthrough_data,
+        passthrough_data=passthrough_data_from_1_1(program_model.passthrough_data),
     )
     quantum_program._semantic_role = program_model.semantic_role
 
@@ -144,7 +169,7 @@ def quantum_program_to_1_1(program: QuantumProgram, options: ExecutorOptions) ->
             circuits=QpyDataV13ToV17Model.from_python(circuits, qpy_version=get_qpy_version(17)),
             items=model_items,
             meas_level=program.meas_level,
-            passthrough_data=program.passthrough_data,
+            passthrough_data=passthrough_data_to_1_1(program.passthrough_data),
             semantic_role=program._semantic_role,
         ),
         options=options_dict,
