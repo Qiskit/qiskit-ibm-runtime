@@ -50,8 +50,6 @@ class ResilienceOptions:
     See :class:`PecOptions` for additional PEC-related options.
 
     You must also provide a noise model via :attr:`~noise_model_mapping` when enabling PEC.
-
-    Default: False.
     """
 
     pec: PecOptions = Field(default_factory=PecOptions)
@@ -66,8 +64,6 @@ class ResilienceOptions:
     Maps layer references (strings) to :class:`~qiskit.quantum_info.PauliLindbladMap`
     objects that describe the noise characteristics of that layer. The dict contains
     layers from all PUBs. This is required when using PEC mitigation.
-
-    Default: ``None``.
     """
 
     @field_validator("noise_model_mapping", mode="plain")

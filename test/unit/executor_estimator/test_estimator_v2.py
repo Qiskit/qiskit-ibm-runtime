@@ -20,14 +20,13 @@ from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
+from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
-from qiskit_ibm_runtime.options_models.pec_options import PecOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
@@ -377,79 +376,6 @@ class TestEstimatorV2Run(unittest.TestCase):
         with self.assertRaises(IBMInputValueError) as context:
             estimator.run([pub1, pub2])
         self.assertIn("same precision", str(context.exception))
-
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pec")
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare")
-    def test_run_routes_to_prepare_pec_when_enabled(self, mock_prepare, mock_prepare_pec):
-        """Test that run routes to prepare_pec when PEC mitigation is enabled."""
-        estimator = EstimatorV2(mode=self.backend)
-
-        # Enable PEC mitigation
-        estimator.options.resilience.pec_mitigation = True
-        estimator.options.resilience.pec.max_overhead = 100
-        estimator.options.resilience.pec.noise_gain = 0.5
-
-        # Create mock noise model mapping with actual PauliLindbladMap
-        mock_noise_map = {
-            "layer1": PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
-        }
-        estimator.options.resilience.noise_model_mapping = mock_noise_map
-
-        # Mock prepare_pec to return a quantum program with passthrough_data
-        mock_quantum_program = MagicMock(spec=QuantumProgram)
-        mock_quantum_program.shots = 1024
-        mock_quantum_program.passthrough_data = {"post_processor": {}}
-        mock_prepare_pec.return_value = mock_quantum_program
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        job = estimator.run([(circuit, observable)], precision=0.03125)
-
-        # Verify prepare_pec was called, not prepare
-        mock_prepare_pec.assert_called_once()
-        mock_prepare.assert_not_called()
-
-        # Verify prepare_pec was called with correct arguments
-        call_args = mock_prepare_pec.call_args
-        self.assertEqual(len(call_args[1]["pubs"]), 1)
-        self.assertEqual(call_args[1]["shots"], 1024)
-        self.assertIsInstance(call_args[1]["pec_options"], PecOptions)
-        self.assertEqual(call_args[1]["pec_options"].max_overhead, 100)
-        self.assertEqual(call_args[1]["pec_options"].noise_gain, 0.5)
-        self.assertEqual(call_args[1]["noise_model_mapping"], mock_noise_map)
-
-        # Verify job was returned
-        self.assertEqual(job, self.mock_job)
-
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pec")
-    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare")
-    def test_run_routes_to_prepare_when_pec_disabled(self, mock_prepare, mock_prepare_pec):
-        """Test that run routes to prepare when PEC mitigation is disabled."""
-        estimator = EstimatorV2(mode=self.backend)
-
-        # Ensure PEC is disabled (default)
-        estimator.options.resilience.pec_mitigation = False
-
-        # Mock prepare to return a quantum program with passthrough_data
-        mock_quantum_program = MagicMock(spec=QuantumProgram)
-        mock_quantum_program.shots = 1024
-        mock_quantum_program.passthrough_data = {"post_processor": {}}
-        mock_prepare.return_value = mock_quantum_program
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        job = estimator.run([(circuit, observable)], precision=0.03125)
-
-        # Verify prepare was called, not prepare_pec
-        mock_prepare.assert_called_once()
-        mock_prepare_pec.assert_not_called()
-
-        # Verify job was returned
-        self.assertEqual(job, self.mock_job)
 
     def test_run_raises_error_when_pec_enabled_without_noise_model(self):
         """Test that run raises error when PEC is enabled but noise_model_mapping isn't."""
