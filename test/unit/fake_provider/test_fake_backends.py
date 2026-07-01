@@ -134,12 +134,8 @@ class FakeBackendRefreshTest(IBMTestCase):
         # ``dirname`` now points at a temporary directory holding the refreshed files.
         self.assertNotEqual(backend.dirname, pkg_dir)
         self.assertEqual(backend.dirname, backend._tmp_data_dir.name)
-        self.assertTrue(
-            os.path.exists(os.path.join(backend.dirname, backend.conf_filename))
-        )
-        self.assertTrue(
-            os.path.exists(os.path.join(backend.dirname, backend.props_filename))
-        )
+        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.conf_filename)))
+        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.props_filename)))
 
         # The backend was updated in-session.
         self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
