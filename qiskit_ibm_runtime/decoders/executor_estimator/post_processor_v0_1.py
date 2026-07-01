@@ -502,12 +502,12 @@ def process_expectation_values_pea(
     # Each of factors_exp_vals, factors_stds and factors_ensemble_stds is a list of ndarray -
     # each item in the list is the results for each observable for each parameter,
     # for a different noise factor
-    return process_extrapolated_expectation_values(
+    extrap_exp_vals, extrap_stds, sel_extrapolators = process_extrapolated_expectation_values(
         factors_exp_vals,
         factors_stds,
-        factors_ensemble_stds,
         observables,
         noise_factors,
         extrapolator,
         extrapolated_noise_factors,
     )
+    return extrap_exp_vals, extrap_stds, factors_ensemble_stds, sel_extrapolators

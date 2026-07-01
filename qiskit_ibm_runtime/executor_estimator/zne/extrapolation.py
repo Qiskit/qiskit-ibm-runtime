@@ -44,12 +44,11 @@ _NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponenti
 def process_extrapolated_expectation_values(
     exp_vals: npt.NDArray[float],
     standard_errors: npt.NDArray[float],
-    ensemble_standard_errors: npt.NDArray[float],
     observables: ObservablesArray,
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
     r"""Apply zero-noise extrapolation (ZNE) to an estimator result.
 
     For each entry, the requested model(s) are fit to the expectation values measured at
@@ -75,8 +74,6 @@ def process_extrapolated_expectation_values(
             is a 1D array of expectation values, one per noise factor.
         standard_errors: Raw standard deviations of the results. Have the same shape as
             ``exp_vals``.
-        ensemble_standard_errors: Raw ensemble standard errors of the results. Have the same shape
-            as ``exp_vals``.
         observables: The observables to calculate expectation values for. Determine the ideal-value
             range used to judge extrapolation validity.
         zne_noise_factors: The noise factors used to amplify the noise.
@@ -95,10 +92,9 @@ def process_extrapolated_expectation_values(
         ValueError: If an extrapolator name is not recognized.
 
     Returns:
-        A tuple ``(exp_vals, stds, ensemble_stds, extrapolators)``, where ``exp_vals`` are
+        A tuple ``(exp_vals, stds, extrapolators)``, where ``exp_vals`` are
         expectation values evaluated at ``extrapolated_noise_factors``, ``stds`` are
-        standard deviations, and ``ensemble_stds`` are ensemble standard errors.
-        ``extrapolators`` are the valid extrapolation methods selected.
+        standard deviations. ``extrapolators`` are the valid extrapolation methods selected.
     """
     if isinstance(extrapolators, str):
         extrapolators = [extrapolators]
@@ -107,11 +103,14 @@ def process_extrapolated_expectation_values(
         extrapolated_noise_factors = [extrapolated_noise_factors]
 
     # exp_vals is a list of expectation value results for each noise factor
-    output_shape = exp_vals.shape
+    # The first axis is the noise factors axis
+    output_shape = exp_vals.shape[1:]
 
     result_values = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
     result_stderrs = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
-    result_extrapolators = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
+    result_extrapolators = np.empty(
+        shape=(len(extrapolated_noise_factors),) + output_shape, dtype=object
+    )
 
     for bcast_index in np.ndindex(output_shape):
         amplified_exp_vals = exp_vals[(slice(None), *bcast_index)]
@@ -146,9 +145,7 @@ def process_extrapolated_expectation_values(
         result_stderrs[(slice(None), *bcast_index)] = selected_stderr
         result_extrapolators[(slice(None), *bcast_index)] = selected_extrap
 
-    ensemble_standard_errors = ensemble_standard_errors.reshape(result_values.shape)
-
-    return result_values, result_stderrs, ensemble_standard_errors, result_extrapolators
+    return result_values, result_stderrs, result_extrapolators
 
 
 def fit_extrapolation_models(
@@ -293,10 +290,11 @@ def select_zne_extrapolated_result(
     accept_extrap = np.zeros_like(accept_values, dtype=object)
     for idx, col in enumerate(accept.T):
         accepted = np.where(col)[0]
-        fits_idx = (accepted[0], idx) if accepted.size else (fallback_indices[idx], idx)
+        accepted_idx = accepted[0] if accepted.size else fallback_indices[idx]
+        fits_idx = (accepted_idx, idx)
         accept_values[idx] = zne_values[fits_idx]
         accept_stderrs[idx] = zne_std_errors[fits_idx]
-        accept_extrap[idx] = zne_extrapolator[accepted[0]]
+        accept_extrap[idx] = zne_extrapolator[accepted_idx]
 
     return accept_values, accept_stderrs, accept_extrap
 
