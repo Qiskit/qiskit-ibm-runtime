@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 
-import copy
 import logging
 from dataclasses import asdict
 from typing import TYPE_CHECKING
@@ -353,7 +352,7 @@ class SamplerV2(BaseSamplerV2):
             A LocalRuntimeJob.
         """
         # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = copy.deepcopy(asdict(self.options))  # type: ignore[call-overload]
+        options_dict = asdict(self.options)  # type: ignore[call-overload]
         options_dict["default_shots"] = shots
 
         # Prepare inputs dict with pubs and options
