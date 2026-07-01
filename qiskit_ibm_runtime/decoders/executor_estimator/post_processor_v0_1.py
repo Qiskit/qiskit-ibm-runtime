@@ -124,7 +124,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         exp_vals, stds, ensemble_stds = process_expectation_values(
             item_result, observables, param_shape, param_basis_pairs, readout_noise_data
         )
-        data_bin = DataBin(evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds)
+        data_bin = DataBin(
+            evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
+        )
 
         # Get circuit metadata for this pub if available
         pub_metadata = {}
