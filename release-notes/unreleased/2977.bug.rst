@@ -1,8 +1,0 @@
-Fixed :meth:`.FakeBackendV2.refresh` so that it no longer attempts to overwrite the data
-files bundled with the installed package. Previously the refreshed configuration and
-properties were written back into the package installation directory (e.g.
-``site-packages``), which fails with a ``PermissionError`` when the package is installed
-system-wide and is generally undesirable. The refreshed data is now cached under
-``~/.qiskit/fake_provider/{backend_name}/`` instead, and the fake backends load these
-cached files in preference to the bundled ones. Refreshed data still persists across
-sessions and can be reverted by deleting the cached directory.
