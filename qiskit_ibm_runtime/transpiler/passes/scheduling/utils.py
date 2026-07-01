@@ -326,7 +326,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
     def _get_odd_cycle_correction(self) -> int:
         """Determine the amount of the odd cycle correction to apply.
 
-        For devices with short gates with odd lenghts we add an extra 16dt to the measurement.
+        For devices with short gates with odd lengths we add an extra 16dt to the measurement.
 
         TODO: Eliminate the need for this correction
         """

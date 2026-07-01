@@ -14,12 +14,15 @@
 
 import unittest
 
-from qiskit import QuantumCircuit
+from ddt import data, ddt
+from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
+from samplomatic.transpiler import generate_boxing_pass_manager
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
+    box_circuit,
     get_pauli_basis,
     pauli_to_ints,
     resolve_precision,
@@ -143,3 +146,127 @@ class TestResolvePrecision(unittest.TestCase):
             resolve_precision([pub1, pub2, pub3])
 
         self.assertIn("same precision", str(context.exception))
+
+
+@ddt
+class TestBoxCircuit(unittest.TestCase):
+    """Tests for ``box_circuit``."""
+
+    @data(True, False)
+    def test_enable_gates(self, enable_gates):
+        """Tests for the ``enable_gates`` argument."""
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        circuit_out = box_circuit(
+            circuit,
+            enable_gates=enable_gates,
+            measure_annotations="all",
+            twirling_strategy="all",
+        )
+
+        pm = generate_boxing_pass_manager(
+            enable_gates=enable_gates,
+            measure_annotations="all",
+            twirling_strategy="all",
+        )
+
+        expected_circuit = circuit.remove_final_measurements(inplace=False)
+        expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
+        expected_circuit.measure(range(3), range(3))
+        expected_circuit = pm.run(expected_circuit)
+
+        self.assertEqual(circuit_out, expected_circuit)
+
+    @data("change_basis", "all")
+    def test_measure_annotations(self, measure_annotations):
+        """Tests for the ``measure_annotations`` argument."""
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        circuit_out = box_circuit(
+            circuit,
+            enable_gates=True,
+            measure_annotations=measure_annotations,
+            twirling_strategy="all",
+        )
+
+        pm = generate_boxing_pass_manager(
+            enable_gates=True,
+            measure_annotations=measure_annotations,
+            twirling_strategy="all",
+        )
+
+        expected_circuit = circuit.remove_final_measurements(inplace=False)
+        expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
+        expected_circuit.measure(range(3), range(3))
+        expected_circuit = pm.run(expected_circuit)
+
+        self.assertEqual(circuit_out, expected_circuit)
+
+    @data("active", "active_accum", "active_circuit", "all")
+    def test_twirling_strategy(self, twirling_strategy):
+        """Tests for the ``twirling_strategy`` argument."""
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        circuit_out = box_circuit(
+            circuit,
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy=twirling_strategy,
+        )
+
+        pm = generate_boxing_pass_manager(
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy=twirling_strategy,
+        )
+
+        expected_circuit = circuit.remove_final_measurements(inplace=False)
+        expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
+        expected_circuit.measure(range(3), range(3))
+        expected_circuit = pm.run(expected_circuit)
+
+        self.assertEqual(circuit_out, expected_circuit)
+
+    @data(True, False)
+    def test_inject_noise(self, inject_noise):
+        """Tests for the ``inject_noise`` argument."""
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        circuit_out = box_circuit(
+            circuit,
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy="all",
+            inject_noise=inject_noise,
+        )
+
+        pm = generate_boxing_pass_manager(
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy="all",
+            inject_noise_targets="gates" if inject_noise else "none",
+            inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+        )
+
+        expected_circuit = circuit.remove_final_measurements(inplace=False)
+        expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
+        expected_circuit.measure(range(3), range(3))
+        expected_circuit = pm.run(expected_circuit)
+
+        self.assertEqual(circuit_out, expected_circuit)

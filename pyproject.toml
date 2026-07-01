@@ -155,6 +155,7 @@ dependencies = [
     "requests>=2.32.4",
     "requests-ntlm>=1.1.0",
     "numpy>=1.26.2",
+    "scipy>=1.5.0",
     "urllib3>=2.4.0",
     "python-dateutil>=2.9.0",
     "ibm-platform-services>=0.61.1",
@@ -186,7 +187,6 @@ common = [
     "nbqa==1.5.3",
     "matplotlib>=2.1",
     "jupyter",
-    "scipy>=1.0",
     "nbformat>=4.4.0",
     "nbconvert>=5.3.1",
     "qiskit-aer>=0.17.0",
@@ -224,7 +224,6 @@ visualization = [
 
 performance = [
     "qiskit-aer>=0.17.0",
-    "scipy>=1.15",
 ]
 
 # Developer extras.

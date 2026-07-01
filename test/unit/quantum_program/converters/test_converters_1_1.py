@@ -245,6 +245,18 @@ class TestQuantumProgramConverters(IBMTestCase):
             samplex=samplex,
         )
 
+        passthrough_data = {
+            "str": "ciao",
+            "float": 1.2,
+            "int": 1,
+            "bool": True,
+            "none": None,
+            "list": [1, 2, 3],
+            "array": np.array([1.0, 2.0]),
+            "nested": {"array2": np.array([3.0, 4.0])},
+        }
+        quantum_program.passthrough_data = passthrough_data
+
         options = ExecutorOptions()
         options.execution.init_qubits = False
         options.experimental = {"key": "value"}
@@ -260,3 +272,11 @@ class TestQuantumProgramConverters(IBMTestCase):
         self.assertEqual(items[0].circuit, quantum_program.items[0].circuit)
         self.assertIsInstance(items[1], SamplexItem)
         self.assertEqual(items[1].circuit, quantum_program.items[1].circuit)
+
+        self.assertEqual(passthrough_data.keys(), quantum_program_out.passthrough_data.keys())
+        for key in ["str", "float", "int", "bool", "none", "list"]:
+            self.assertEqual(passthrough_data[key], quantum_program_out.passthrough_data[key])
+        self.assertIsInstance(quantum_program_out.passthrough_data["array"], np.ndarray)
+        np.testing.assert_array_equal(
+            passthrough_data["array"], quantum_program_out.passthrough_data["array"]
+        )
