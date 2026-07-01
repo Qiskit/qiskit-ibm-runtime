@@ -13,13 +13,22 @@
 """Test of generated fake backends."""
 
 import math
+import os
+import shutil
+import tempfile
 import unittest
+from unittest import mock
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeAthensV2, FakePerth, FakeProviderForBackendV2
+from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2
+from qiskit_ibm_runtime.fake_provider import (
+    FakeAthensV2,
+    FakePerth,
+    FakeProviderForBackendV2,
+    fake_backend,
+)
 
 from ...ibm_test_case import IBMTestCase
 
@@ -76,3 +85,92 @@ class FakeBackendsTest(IBMTestCase):
         backend_name = "fake_jakarta"
         backend = provider.backend(backend_name)
         self.assertEqual(backend.name, backend_name)
+
+
+class FakeBackendRefreshTest(IBMTestCase):
+    """Tests for the ``use_temp_dir`` behavior of :meth:`.FakeBackendV2.refresh`.
+
+    With ``use_temp_dir=True`` the refreshed data must be written to a temporary directory rather
+    than into the installed package directory (often read-only, e.g. ``site-packages``), so that
+    :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
+    """
+
+    def _make_refresh_service(self, backend):
+        """Build a mocked service that returns ``backend``'s own bundled data as the real data.
+
+        This lets ``refresh`` run without any network access. A distinctive ``backend_version`` is
+        injected so tests can assert the in-session update actually took effect.
+        """
+        real_config = backend.configuration()
+        real_config.backend_version = "9.9.9-refreshed"
+        real_props = backend.properties()
+
+        fake_real_backend = mock.MagicMock()
+        fake_real_backend.properties.return_value = real_props
+        service = mock.MagicMock(spec=QiskitRuntimeService)
+        service.backends.return_value = [fake_real_backend]
+
+        patcher = mock.patch.object(
+            fake_backend, "configuration_from_server_data", return_value=real_config
+        )
+        return service, patcher
+
+    def test_refresh_use_temp_dir_leaves_package_untouched(self):
+        """``use_temp_dir=True`` writes to a temp dir and never modifies the bundled files."""
+        backend = FakeAthensV2()
+        pkg_dir = backend.dirname
+        pkg_conf = os.path.join(pkg_dir, backend.conf_filename)
+        pkg_props = os.path.join(pkg_dir, backend.props_filename)
+        pkg_conf_mtime = os.stat(pkg_conf).st_mtime_ns
+        pkg_props_mtime = os.stat(pkg_props).st_mtime_ns
+
+        service, patcher = self._make_refresh_service(backend)
+        with patcher:
+            with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+                backend.refresh(service, use_temp_dir=True)
+
+        self.assertIn("has been updated", "".join(logs.output))
+
+        # ``dirname`` now points at a temporary directory holding the refreshed files.
+        self.assertNotEqual(backend.dirname, pkg_dir)
+        self.assertEqual(backend.dirname, backend._tmp_data_dir.name)
+        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.conf_filename)))
+        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.props_filename)))
+
+        # The backend was updated in-session.
+        self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
+
+        # The bundled package files must remain untouched.
+        self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_mtime)
+        self.assertEqual(os.stat(pkg_props).st_mtime_ns, pkg_props_mtime)
+
+    def test_refresh_default_writes_in_place(self):
+        """The default (``use_temp_dir=False``) writes back into ``dirname`` without a temp dir.
+
+        ``dirname`` is redirected to a writable copy of the bundled data so the test never touches
+        the real installed package files.
+        """
+        backend = FakeAthensV2()
+        with tempfile.TemporaryDirectory() as data_dir:
+            shutil.copy(os.path.join(backend.dirname, backend.conf_filename), data_dir)
+            shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
+            backend.dirname = data_dir
+
+            service, patcher = self._make_refresh_service(backend)
+            with patcher:
+                with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+                    backend.refresh(service)
+
+            self.assertIn("has been updated", "".join(logs.output))
+
+            # No temporary directory is created and ``dirname`` is unchanged.
+            self.assertEqual(backend.dirname, data_dir)
+            self.assertFalse(hasattr(backend, "_tmp_data_dir"))
+
+            # The in-place data file was overwritten with the refreshed data, and a freshly
+            # constructed backend pointed at the same directory picks up the update.
+            reloaded = FakeAthensV2()
+            reloaded.dirname = data_dir
+            reloaded._conf_dict = reloaded._get_conf_dict_from_json()
+            self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
+            self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
