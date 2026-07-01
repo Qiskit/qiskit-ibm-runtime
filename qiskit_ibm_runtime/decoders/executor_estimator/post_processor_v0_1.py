@@ -455,12 +455,14 @@ def process_expectation_values_pea(
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
     Returns:
-        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
-        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+        A tuple ``(exp_vals, stds, ensemble_stds, selected_extrapolators)``, where ``exp_vals``
+        are expectation values, ``stds`` are standard deviations, and ``ensemble_stds`` are
+        ensemble standard errors. ``selected_extrapolators`` is a list of the valid extrapolators
+        used to extrapolate the data.
 
     Raises:
         ValueError: If ``item_result`` has no ``'_meas'`` key.
-        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``4``.
+        ValueError: If ``item_result['_meas']`` has a number of axis not equal to ``5``.
         ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
             each other.
     """
