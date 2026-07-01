@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+from typing import TypeAlias
+
 from pydantic import field_validator
 from pydantic.dataclasses import dataclass
 from qiskit.exceptions import MissingOptionalLibraryError
@@ -23,15 +25,13 @@ from qiskit.utils import optionals
 
 from .utils import PRIMITIVES_CONFIG
 
+# We avoid a forced dependency on qiskit-aer
+if optionals.HAS_AER:
+    from qiskit_aer.noise import NoiseModel as AerNoiseModel
 
-class NoiseModel:
-    """Fake noise model class for pydantic.
-
-    This is needed to avoid a direct dependency on qiskit-aer, as pydantic needs to
-    resolve the annotation at class definition time.
-    """
-
-    pass
+    noise_model_type: TypeAlias = dict | AerNoiseModel | None
+else:
+    noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
@@ -41,7 +41,7 @@ class SimulatorOptions:
     Used to control local mode simulation.
     """
 
-    noise_model: dict | NoiseModel | None = None
+    noise_model: noise_model_type = None
     """Noise model for the simulator."""
 
     seed_simulator: int | None = None
@@ -66,7 +66,7 @@ class SimulatorOptions:
     @classmethod
     def _validate_coupling_map(
         cls, coupling_map: list[list[int]] | CouplingMap | None
-    ) -> CouplingMap:
+    ) -> CouplingMap | None:
         """Validate and coerce a coupling map into a :class:`.CouplingMap`."""
         if coupling_map is None:
             return None
@@ -79,19 +79,21 @@ class SimulatorOptions:
                 raise ValueError(f"Cannot create a valid CouplingMap from the provided list. {exc}")
         else:
             raise ValueError(
-                f"Expected a CouplingMap or list[list[int]] instead got {coupling_map}"
+                "Expected a CouplingMap or list[list[int]] instead got"
+                f"{type(coupling_map).__name__}"
             )
 
     @field_validator("noise_model", mode="plain")
     @classmethod
-    def _validate_noise_model(cls, model: dict | NoiseModel | None) -> dict | NoiseModel | None:
+    def _validate_noise_model(cls, model: noise_model_type) -> noise_model_type:
         """Validate noise model."""
         if model is None:
             return model
         if not isinstance(model, dict):
             if not optionals.HAS_AER:
-                raise MissingOptionalLibraryError(
-                    "qiskit-aer", "Aer provider", "pip install qiskit-aer"
+                raise ValueError(
+                    "When qiskit-aer is not installed, the only allowed values for"
+                    f"noise_model are dict and None, instead got {type(model).__name__}"
                 )
 
             from qiskit_aer.noise import NoiseModel as AerNoiseModel

@@ -17,7 +17,6 @@ from unittest.mock import patch
 
 from ddt import data, ddt
 from pydantic import ValidationError
-from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -94,7 +93,7 @@ class TestSimulatorOptions(unittest.TestCase):
     def test_noise_model_invalid_type_no_aer_raises(self):
         """Passing a non-dict noise_model raises when Aer is not installed."""
         with patch("qiskit_ibm_runtime.options_models.simulator_options.optionals.HAS_AER", False):
-            with self.assertRaises(MissingOptionalLibraryError):
+            with self.assertRaises(ValidationError):
                 SimulatorOptions(noise_model=object())
 
     def test_noise_model_invalid_type_with_aer_raises(self):
