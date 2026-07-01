@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import tempfile
 import warnings
 from typing import TYPE_CHECKING, Any
 
@@ -43,11 +44,6 @@ if TYPE_CHECKING:
     from ..qiskit_runtime_service import QiskitRuntimeService
 
 logger = logging.getLogger(__name__)
-
-# User-writable directory where refreshed fake backend data is cached. Updates are
-# stored here instead of inside the package installation (e.g. ``site-packages``),
-# which is often read-only and should not be modified at runtime.
-_LOCAL_DATA_DIR = os.path.join(os.path.expanduser("~"), ".qiskit", "fake_provider")
 
 
 class FakeBackendV2(BackendV2):
@@ -121,23 +117,8 @@ class FakeBackendV2(BackendV2):
         supported_features = self._conf_dict.get("supported_features") or []
         return "qasm3" in supported_features
 
-    def _local_data_dir(self) -> str:
-        """Return the user-writable directory where refreshed data for this backend is cached."""
-        return os.path.join(_LOCAL_DATA_DIR, self.backend_name)  # type: ignore[arg-type]
-
-    def _resolve_data_path(self, filename: str) -> str:
-        """Return the path to a data file.
-
-        A locally cached copy (written by :meth:`refresh`) in the user's home directory takes
-        precedence over the copy bundled with the package.
-        """
-        local_path = os.path.join(self._local_data_dir(), filename)
-        if os.path.exists(local_path):
-            return local_path
-        return os.path.join(self.dirname, filename)  # type: ignore[arg-type]
-
     def _load_json(self, filename: str) -> dict:
-        with open(self._resolve_data_path(filename)) as f_json:
+        with open(os.path.join(self.dirname, filename)) as f_json:  # type: ignore[arg-type]
             the_json = json.load(f_json)
         return the_json
 
@@ -389,25 +370,40 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
-    def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
+    def refresh(
+        self,
+        service: QiskitRuntimeService,
+        use_fractional_gates: bool = False,
+        use_temp_dir: bool = False,
+    ) -> None:
         """Update the data files from its real counterpart.
 
-        This method pulls the latest backend data from its real counterpart and writes it to a
-        user-writable cache directory:
+        This method pulls the latest backend data files from their real counterpart and,
+        by default (``use_temp_dir=False``), overwrites the corresponding files in the local
+        installation:
 
-        *  ``~/.qiskit/fake_provider/{backend_name}/conf_{backend_name}.json``
-        *  ``~/.qiskit/fake_provider/{backend_name}/props_{backend_name}.json``
+        *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
+        *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
 
-        The cached files take precedence over the copies bundled with the package and persist
-        through sessions, so the backend stays updated until the cache is manually removed.
-        Writing to ``~/.qiskit`` rather than the package installation means refreshing works even
-        when ``qiskit-ibm-runtime`` is installed in a read-only location (e.g. ``site-packages``)
-        and avoids modifying the installed package itself.
+        The new data files will persist through sessions so the files will stay updated unless they
+        are manually reverted locally or when ``qiskit-ibm-runtime`` is upgraded or reinstalled.
+
+        Overwriting the installed data files fails, however, when the package is installed in a
+        read-only location (e.g. a system-wide ``site-packages`` directory). In that case, or
+        whenever modifying the installed package is undesirable, pass ``use_temp_dir=True`` to write
+        the refreshed data to a temporary directory instead. The backend is still updated for the
+        current session, but the changes are not persisted to disk and are lost once the backend is
+        garbage collected or the process exits.
 
         Args:
             service: A :class:`QiskitRuntimeService` instance
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates.
+            use_temp_dir: If ``False`` (default), the refreshed data files overwrite the copies
+                bundled with the installed package so the update persists across sessions. If
+                ``True``, the data is written to a temporary directory instead, which allows
+                :meth:`refresh` to succeed even when the package is installed in a read-only
+                location, at the cost of the update not persisting between sessions.
 
         Raises:
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
@@ -437,16 +433,26 @@ class FakeBackendV2(BackendV2):
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
-            local_dir = self._local_data_dir()
-            os.makedirs(local_dir, exist_ok=True)
+            if not use_temp_dir:
+                target_dir = self.dirname
+            else:
+                # Write to a temporary directory so that refresh() succeeds even when the
+                # package is installed in a read-only location. Keep a reference to the
+                # directory on the instance so it lives as long as the backend and is cleaned
+                # up automatically when the backend is garbage collected. Point ``dirname`` at
+                # it so subsequent data loads use the refreshed files.
+                self._tmp_data_dir = tempfile.TemporaryDirectory(  # pylint: disable=attribute-defined-outside-init
+                    prefix="qiskit_fake_backend_"
+                )
+                target_dir = self.dirname = self._tmp_data_dir.name
 
             if real_config:
-                config_path = os.path.join(local_dir, self.conf_filename)  # type: ignore[arg-type]
+                config_path = os.path.join(target_dir, self.conf_filename)  # type: ignore[arg-type]
                 with open(config_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
             if real_props:
-                props_path = os.path.join(local_dir, self.props_filename)  # type: ignore[arg-type]
+                props_path = os.path.join(target_dir, self.props_filename)  # type: ignore[arg-type]
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
