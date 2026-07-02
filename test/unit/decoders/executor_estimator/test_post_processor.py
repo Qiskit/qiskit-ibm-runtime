@@ -63,15 +63,7 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
         return result
 
     def test_post_processor_multiple_pubs(self):
-        """Test post-processor with multiple pubs.
-
-        Pub 0 has a single observable (broadcast shape ``(1,)``); pub 1 broadcasts over two
-        observables (shape ``(2,)``). Besides the expectation values, this asserts each
-        ``DataBin.shape`` equals the pub broadcast shape: the post-processor must pass
-        ``shape=`` when building the bin, otherwise ``DataBin.shape`` defaults to ``()`` even
-        though ``evs.shape`` is correct -- a parity divergence against the legacy estimator,
-        which always reports the broadcast shape.
-        """
+        """Test post-processor with multiple pubs."""
         meas_data_1 = np.zeros((1, 1, 10, 2)).astype(bool)  # All 00 -> +1
         meas_data_2 = np.ones((1, 2, 10, 2)).astype(bool)  # All 11 -> +1 for ZZ and XX configs
 
