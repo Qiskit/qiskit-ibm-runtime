@@ -251,7 +251,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
     }
 
 
-def get_layers(
+def find_unique_layers(
     pubs: Sequence[EstimatorPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
