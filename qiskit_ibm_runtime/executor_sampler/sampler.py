@@ -32,7 +32,6 @@ from .utils import extract_shots_from_pubs, validate_meas_type_twirling, validat
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-    from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
@@ -97,7 +96,7 @@ class SamplerV2(BaseSamplerV2):
             for all available options.
     """
 
-    options: SamplerOptions
+    _options_class: SamplerOptions
     """The options of this Sampler."""
 
     def __init__(
@@ -109,23 +108,18 @@ class SamplerV2(BaseSamplerV2):
 
         self._executor = Executor(mode=mode)
 
-        # Coerced to `SamplerOptions` via `__setattr__()`.
-        self.options = options if options is not None else SamplerOptions()  # type: ignore[assignment]
+        self._options: SamplerOptions
+        if options is None:
+            self._options = SamplerOptions()
+        elif isinstance(options, dict):
+            self._options = SamplerOptions(**options)
+        else:
+            self._options = options
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute ``name`` to ``value``.
-
-        Handle ``options`` as a special case, ensuring it is set to an ``SamplerOptions`` instance.
-        This is an alternative to using ``@setter``, as the setter causes issues in ``ipython``
-        autocomplete features.
-        """
-        if name == "options":
-            if isinstance(value, dict):
-                value = SamplerOptions(**value)
-            elif not isinstance(value, SamplerOptions):
-                raise TypeError(f"Expected SamplerOptions or dict, got {type(value)}")
-
-        super().__setattr__(name, value)
+    @property
+    def options(self) -> SamplerOptions:
+        """The options in this sampler."""
+        return self._options
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
