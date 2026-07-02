@@ -26,11 +26,12 @@ from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .prepare import prepare
-from .utils import resolve_precision
+from .utils import find_unique_layers, resolve_precision
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
 
@@ -120,6 +121,27 @@ class EstimatorV2(BaseEstimatorV2):
                 raise TypeError(f"Expected EstimatorOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
+        """Return the list of instructions that contain unique boxes.
+
+        Args:
+            pubs: The list of PUBs to return a list of unique boxes for.
+            twirling_options: Twirling options.
+            measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+                Error eXtinction (TREX) mitigation method will be accounted for in boxing.
+            inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
+                of gates.
+
+        Returns:
+            Unique layers for each pub.
+        """
+        return find_unique_layers(
+            pubs,
+            twirling_options=self.options.twirling,
+            measure_noise_learning=self.options.resilience.measure_noise_learning,
+            inject_noise=False,  # TODO: Change after introducing PEA and PEC options
+        )
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None

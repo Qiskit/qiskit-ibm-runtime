@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
@@ -252,7 +252,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
 
 
 def find_unique_layers(
-    pubs: Sequence[EstimatorPub],
+    pubs: Iterable[EstimatorPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
