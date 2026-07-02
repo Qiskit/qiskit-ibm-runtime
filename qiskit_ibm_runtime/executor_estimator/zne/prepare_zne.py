@@ -36,7 +36,12 @@ from ...options_models.zne_options import ZNE_DEFAULT_NOISE_FACTORS
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
 from ..trex_utils import create_trex_calibration_circuit
-from ..utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from ..utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 from .gate_folding import GateFolding
 
 logger = logging.getLogger(__name__)
@@ -100,6 +105,11 @@ def prepare_zne(
     param_shapes_list = []
     item_id = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=False,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
@@ -120,13 +130,11 @@ def prepare_zne(
                 case _:
                     # This should never happen due to prior validation
                     folding_method = "random"
-            folded_circuit = PassManager([GateFolding(noise_factor, folding_method)]).run(
-                pub.circuit
-            )
 
-            boxed_circuit = box_circuit(
-                folded_circuit, twirling_options, measure_noise_learning is not None
-            )
+            folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
+            folded_circuit = folding_pm.run(pub.circuit)
+
+            boxed_circuit = box_circuit(circuit=folded_circuit, inject_noise=False, **pm_kwargs)
 
             # Build the template and the samplex
             template, samplex = build(boxed_circuit)
