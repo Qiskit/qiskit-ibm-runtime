@@ -217,7 +217,7 @@ class TestPreparePecFunction(unittest.TestCase):
         # find layers first to extract the layers ref
         layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -291,10 +291,9 @@ class TestPreparePecFunction(unittest.TestCase):
         # find layers first to extract the layers ref
         layers = get_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
         noise_layer_refs = []
-        for pub_layers in layers:
-            for layer in pub_layers:
-                if annot := get_annotation(layer.operation, InjectNoise):
-                    noise_layer_refs.append(annot.ref)
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_refs.append(annot.ref)
 
         noise_model_mapping = {
             noise_layer_refs[0]: noise_model_1,
@@ -356,7 +355,7 @@ class TestPreparePecFunction(unittest.TestCase):
         # find layers first to extract the layers ref
         layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -417,7 +416,7 @@ class TestPreparePecFunction(unittest.TestCase):
         # find layers first to extract the layers ref
         layers = get_layers([pub1], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -444,7 +443,7 @@ class TestPreparePecFunction(unittest.TestCase):
         # find layers first to extract the layers ref
         layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
