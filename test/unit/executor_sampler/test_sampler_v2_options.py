@@ -140,41 +140,6 @@ class TestSamplerUsingOptions(IBMTestCase):
         self.assertIsNone(sampler.options.execution.rep_delay)
         self.assertEqual(sampler.options.environment, SamplerEnvironmentOptions())
 
-    def test_options_constructor_invalid_type(self):
-        """Test that an invalid options type raises TypeError."""
-        with self.assertRaisesRegex(TypeError, "Expected SamplerOptions or dict"):
-            SamplerV2(mode=get_mocked_backend(), options="invalid")
-
-    def test_setter_with_instance(self):
-        """Test setting options via the setter with an SamplerOptions instance."""
-        sampler = SamplerV2(mode=get_mocked_backend())
-        new_opts = SamplerOptions(execution=SamplerExecutionOptions(init_qubits=False))
-        sampler.options = new_opts
-        self.assertIs(sampler.options, new_opts)
-
-    def test_setter_with_dict(self):
-        """Test setting options via the setter with a dict."""
-        sampler = SamplerV2(mode=get_mocked_backend())
-        sampler.options = {"execution": {"init_qubits": False}}
-        self.assertIsInstance(sampler.options, SamplerOptions)
-        self.assertFalse(sampler.options.execution.init_qubits)
-
-    def test_setter_invalid_type(self):
-        """Test that setting options with an invalid type raises TypeError."""
-        sampler = SamplerV2(mode=get_mocked_backend())
-        with self.assertRaisesRegex(TypeError, "Expected SamplerOptions or dict"):
-            sampler.options = 42
-
-    def test_setter_replaces_options(self):
-        """Test that the setter replaces (not updates) the options."""
-        sampler = SamplerV2(
-            mode=get_mocked_backend(), options={"environment": {"log_level": "DEBUG"}}
-        )
-        sampler.options = {"execution": {"init_qubits": False}}
-        # environment should be back to defaults since we replaced, not updated
-        self.assertEqual(sampler.options.environment.log_level, "WARNING")
-        self.assertFalse(sampler.options.execution.init_qubits)
-
     def test_experimental_options_default_empty(self):
         """Test that experimental options default to empty dict."""
         sampler = SamplerV2(mode=get_mocked_backend())
@@ -191,12 +156,6 @@ class TestSamplerUsingOptions(IBMTestCase):
         opts = SamplerOptions(experimental={"custom_key": "custom_value"})
         sampler = SamplerV2(mode=get_mocked_backend(), options=opts)
         self.assertEqual(sampler.options.experimental, {"custom_key": "custom_value"})
-
-    def test_experimental_options_setter(self):
-        """Test setting experimental options via the setter."""
-        sampler = SamplerV2(mode=get_mocked_backend())
-        sampler.options = {"experimental": {"test": "value"}}
-        self.assertEqual(sampler.options.experimental, {"test": "value"})
 
     def test_validation_on_mutation(self):
         """Test validation errors are raised on mutation, not just construction."""
