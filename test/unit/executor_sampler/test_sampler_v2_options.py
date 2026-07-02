@@ -28,6 +28,19 @@ from ...ibm_test_case import IBMTestCase
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
     """Tests for SamplerOptions.to_executor_options() method."""
 
+    def test_init_types(self):
+        """Test the various types that can be set at init time."""
+        estimator = SamplerV2(mode=get_mocked_backend())
+        self.assertEqual(estimator.options, SamplerOptions())
+
+        options = SamplerOptions()
+        options.twirling.strategy = "all"
+        estimator = SamplerV2(mode=get_mocked_backend(), options=options)
+        self.assertEqual(estimator.options, options)
+
+        estimator = SamplerV2(mode=get_mocked_backend(), options={"twirling": {"strategy": "all"}})
+        self.assertEqual(estimator.options, options)
+
     def test_default_options_mapping(self):
         """Test that default options are correctly mapped."""
         options = SamplerOptions()
