@@ -21,11 +21,6 @@ from qiskit.quantum_info import PauliLindbladMap
 from qiskit_ibm_runtime.options_models.resilience_options import ResilienceOptions
 
 
-def _plm() -> PauliLindbladMap:
-    """Return a minimal valid PauliLindbladMap."""
-    return PauliLindbladMap.identity(num_qubits=1)
-
-
 class TestResilienceOptionsDefaults(unittest.TestCase):
     """Tests for ResilienceOptions default values and basic instantiation."""
 
@@ -42,7 +37,10 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
 
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""
-        mapping = {"layer_0": _plm(), "layer_1": _plm()}
+        mapping = {
+            "layer_0": PauliLindbladMap.identity(num_qubits=1),
+            "layer_1": PauliLindbladMap.identity(num_qubits=1),
+        }
         opts = ResilienceOptions(
             measure_mitigation=False,
             measure_noise_learning={"num_randomizations": 64, "shots_per_randomization": 1024},
@@ -67,12 +65,11 @@ class TestNoiseModelMappingValidation(unittest.TestCase):
         # (value, fragment expected in the error message)
         "not_a_dict",
         42,
-        {0: _plm()},  # non-string key
+        {0: PauliLindbladMap.identity(num_qubits=1)},  # non-string key
         {"layer_0": "bad_value"},  # non-PauliLindbladMap value
         {"layer_0": None},  # None as a value
     )
     def test_invalid_noise_model_mapping(self, value):
         """Invalid noise_model_mapping values raise ValidationError."""
-        with self.assertRaises(ValidationError) as ctx:
+        with self.assertRaisesRegex(ValidationError, "noise_model_mapping"):
             ResilienceOptions(noise_model_mapping=value)
-        self.assertIn("noise_model_mapping", str(ctx.exception))
