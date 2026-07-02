@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
+from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
+
 from .base_primitive import BasePrimitiveV2
 from .options import SamplerOptions
 from .utils import validate_classical_registers
@@ -105,6 +107,16 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             ValueError: Invalid arguments are given.
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+
+        if len({pub.shots for pub in coerced_pubs}) > 1:
+            issue_deprecation_msg(
+                msg="Specifying different 'shots' across pubs is deprecated",
+                version="0.48.0",
+                remedy="Use a single run-level value instead, e.g. sampler.run(pubs, shots=...). "
+                "The executor-backed primitives use a single global shot budget per submission, "
+                "so shots that vary between pubs are not supported.",
+                stacklevel=2,
+            )
 
         validate_classical_registers(coerced_pubs)
 
