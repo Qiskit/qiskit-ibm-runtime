@@ -280,9 +280,7 @@ def get_layers(
     )
     instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
     return find_unique_box_instructions(
-        instructions,
-        normalize_annotations=None,
-        undress_boxes=True,
+        instructions=instructions, normalize_annotations=None, undress_boxes=True
     )
 
 
