@@ -25,7 +25,8 @@ from qiskit.utils import optionals
 
 from .utils import PRIMITIVES_CONFIG
 
-# We avoid a forced dependency on qiskit-aer
+# Dynamically define the `noise_model` field type at runtime, as `NoiseModel`
+# is only a valid alternative if `qiskit_aer` is installed.
 if optionals.HAS_AER:
     from qiskit_aer.noise import NoiseModel as AerNoiseModel
 
