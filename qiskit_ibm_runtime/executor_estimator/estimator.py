@@ -123,7 +123,12 @@ class EstimatorV2(BaseEstimatorV2):
         super().__setattr__(name, value)
 
     def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
-        """Return the list of instructions that contain unique boxes.
+        """Return the unique boxed layers found across the given PUBs.
+
+        The returned list contains one instance of each distinct boxed layer (represented as a
+        :class:`~.CircuitInstruction`) appearing in the input PUBs. This list can be passed
+        directly to the :meth:`~.qiskit_ibm_runtime.noise_learner_v3.NoiseLearner.run` method
+        for characterization, avoiding redundant learning of identical layers.
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.

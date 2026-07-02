@@ -257,7 +257,7 @@ def find_unique_layers(
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
 ) -> list[CircuitInstruction]:
-    """Return the list of instructions that contain unique boxes.
+    """Return the unique boxed layers found across the given PUBs.
 
     Args:
         pubs: The list of PUBs to return a list of unique boxes for.
