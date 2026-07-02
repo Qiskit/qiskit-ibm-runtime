@@ -95,6 +95,21 @@ class TestEstimatorOptions(unittest.TestCase):
 class TestEstimatorUsingOptions(IBMTestCase):
     """Tests option setting on the ``Estimator`` class."""
 
+    def test_init_types(self):
+        """Test the various types that can be set at init time."""
+        estimator = EstimatorV2(mode=get_mocked_backend())
+        self.assertEqual(estimator.options, EstimatorOptions())
+
+        options = EstimatorOptions()
+        options.twirling.strategy = "all"
+        estimator = EstimatorV2(mode=get_mocked_backend(), options=options)
+        self.assertEqual(estimator.options, options)
+
+        estimator = EstimatorV2(
+            mode=get_mocked_backend(), options={"twirling": {"strategy": "all"}}
+        )
+        self.assertEqual(estimator.options, options)
+
     def test_default_options(self):
         """Test that default options are set when none are provided."""
         estimator = EstimatorV2(mode=get_mocked_backend())
