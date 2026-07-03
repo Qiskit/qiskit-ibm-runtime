@@ -116,10 +116,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
+        # scipy is handled as a special case, as it does not provide wheels for our supported Python
+        # versions until 1.14.1.
         run: |
           python -m pip install --upgrade pip
           pip install extremal-python-dependencies==0.1.0
           extremal-python-dependencies pin-dependencies-to-minimum --inplace
+          perl -pi -e 's/scipy==[0-9.]*/scipy==1.14.1/g' pyproject.toml
           pip install -e '.[test,performance,visualization]'
       - name: Run unit tests
         run: make unit-test-coverage
