@@ -23,6 +23,7 @@ from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
 from .execution_options import ExecutionOptions, SamplerExecutionOptions
 from .executor_options import ExecutorOptions
+from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions
 from .utils import PRIMITIVES_CONFIG
 
@@ -54,6 +55,12 @@ class SamplerOptions:
     See :class:`~.TwirlingOptions` for all available options.
     """
 
+    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
+    """Simulator options.
+
+    See :class:`~.SimulatorOptions` for all available options.
+    """
+
     experimental: dict = Field(default_factory=dict)
     """Experimental options."""
 
@@ -65,6 +72,9 @@ class SamplerOptions:
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map sampler options to executor options, ignoring all irrelevant fields.
+
+        .. note::
+            Simulator options are ignored as executor does not support local mode.
 
         Returns:
             Mapped executor options.
