@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from pydantic import Field, field_validator
-from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
+from qiskit.quantum_info import PauliLindbladMap
 
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .pec_options import PecOptions

@@ -17,13 +17,12 @@ from __future__ import annotations
 from typing import TypeAlias
 
 from pydantic import field_validator
-from pydantic.dataclasses import dataclass
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import optionals
 
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 # Dynamically define the `noise_model` field type at runtime, as `NoiseModel`
 # is only a valid alternative if `qiskit_aer` is installed.
@@ -35,8 +34,7 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class SimulatorOptions:
+class SimulatorOptions(OptionsModel):
     """Simulator options.
 
     Used to control local mode simulation.

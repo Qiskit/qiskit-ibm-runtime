@@ -76,9 +76,6 @@ source = ["qiskit_ibm_runtime"]
 line-length = 100
 target-version = "py310"
 
-[tool.ruff.lint.isort]
-split-on-trailing-comma = false
-
 [tool.ruff.lint]
 future-annotations = true
 select = [
@@ -100,6 +97,12 @@ ignore = [
     "D105",   # undocumented-magic-method
     "D107",   # undocumented-public-init
 ]
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["qiskit_ibm_runtime.options_models.utils.OptionsModel", "pydantic.BaseModel"]
+
+[tool.ruff.lint.isort]
+split-on-trailing-comma = false
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
