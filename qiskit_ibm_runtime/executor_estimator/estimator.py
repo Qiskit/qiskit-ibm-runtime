@@ -142,7 +142,7 @@ class EstimatorV2(BaseEstimatorV2):
             pubs,
             twirling_options=self.options.twirling,
             measure_noise_learning=self.options.resilience.measure_noise_learning,
-            inject_noise=False,  # TODO: Change after introducing PEA and PEC options
+            inject_noise=self.options.resilience.pec_mitigation,  # TODO: Add PEA once available
         )
 
     def run(
