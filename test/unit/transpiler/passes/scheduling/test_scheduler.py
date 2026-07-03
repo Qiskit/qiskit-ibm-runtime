@@ -3385,7 +3385,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     def test_scheduling_nonuniform_durations(self, use_target):
         """Test scheduling uses the instruction durations correctly.
 
-        Test that scheduling withing control flow blocks uses the instruction durations on the
+        Test that scheduling within control flow blocks uses the instruction durations on the
         correct qubit indices.
         """
         backend = FakeJakartaV2()

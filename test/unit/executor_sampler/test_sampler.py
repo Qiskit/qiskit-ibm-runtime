@@ -20,6 +20,8 @@ from ddt import data, ddt
 from qiskit import QuantumCircuit
 from qiskit.circuit import BoxOp, Parameter
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.providers.fake_provider import GenericBackendV2
+from qiskit_aer.noise import NoiseModel, depolarizing_error
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
@@ -1055,3 +1057,151 @@ class TestSamplerV2DynamicalDecoupling(unittest.TestCase):
         self.assertIn(
             "Dynamical decoupling is not compatible with dynamic circuits", str(context.exception)
         )
+
+
+class TestSamplerV2SimulatorMode(unittest.TestCase):
+    """Tests for SamplerV2 with simulator backends (local mode)."""
+
+    def test_simulator_mode_uses_backend_sampler(self):
+        """Test that simulator mode uses BackendSamplerV2 instead of Executor."""
+        backend = GenericBackendV2(num_qubits=5)
+
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.measure_all()
+
+        sampler = SamplerV2(mode=backend)
+
+        # Verify executor is not created for simulator
+        self.assertIsNone(sampler._executor)
+
+        # Run should work and return results
+        job = sampler.run([circuit], shots=100)
+        result = job.result()
+
+        # Verify we got results
+        self.assertEqual(len(result), 1)
+        self.assertIsNotNone(result[0].data)
+
+        # Verify the results are valid Bell state measurements
+        counts = result[0].data.c.get_counts()
+        # Should only have |00> and |11> states
+        for bitstring in counts.keys():
+            self.assertIn(bitstring, ["00", "11"])
+        # Total counts should equal shots
+        self.assertEqual(sum(counts.values()), 100)
+
+    def test_simulator_options_seed(self):
+        """Test that simulator seed option produces deterministic results."""
+        backend = GenericBackendV2(num_qubits=5)
+
+        # Create circuit with Hadamards (don't pre-allocate classical bits)
+        circuit = QuantumCircuit(3)
+        circuit.h([0, 1, 2])
+        circuit.measure_all()
+
+        # First sampler with seed
+        sampler1 = SamplerV2(mode=backend)
+        sampler1.options.simulator.seed_simulator = 42
+        sampler1.options.default_shots = 200
+
+        job1 = sampler1.run([circuit])
+        result1 = job1.result()
+        counts1 = result1[0].data.meas.get_counts()
+
+        # Second sampler with same seed
+        sampler2 = SamplerV2(mode=backend)
+        sampler2.options.simulator.seed_simulator = 42
+        sampler2.options.default_shots = 200
+
+        job2 = sampler2.run([circuit])
+        result2 = job2.result()
+        counts2 = result2[0].data.meas.get_counts()
+
+        # Results should be identical with same seed
+        self.assertEqual(counts1, counts2)
+
+        # Third sampler with different seed should give different results
+        sampler3 = SamplerV2(mode=backend)
+        sampler3.options.simulator.seed_simulator = 123
+        sampler3.options.default_shots = 200
+
+        job3 = sampler3.run([circuit])
+        result3 = job3.result()
+        counts3 = result3[0].data.meas.get_counts()
+
+        # Results should be different with different seed
+        self.assertNotEqual(counts1, counts3)
+
+    def test_simulator_with_general_test_case(self):
+        """Test simulator mode with comprehensive simulator options.
+
+        This test exercises all available simulator options:
+        - Parametric circuit with parameter sweep
+        - Noise model
+        - Coupling map
+        - Basis gates
+        - Seed simulator for reproducibility
+        """
+        backend = GenericBackendV2(num_qubits=5)
+
+        # Create a parametric circuit with multiple parameters
+        theta = Parameter("θ")
+        phi = Parameter("φ")
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.rx(theta, 1)
+        circuit.ry(phi, 2)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        # Parameter sweep with multiple parameter value sets
+        param_values = [
+            [0.0, 0.0],  # First parameter set
+            [np.pi / 2, np.pi / 4],  # Second parameter set
+            [np.pi, np.pi / 2],  # Third parameter set
+        ]
+
+        # Create sampler with all simulator options
+        sampler = SamplerV2(mode=backend)
+
+        # Set noise model (simple depolarizing noise)
+
+        noise_model = NoiseModel()
+        # Add depolarizing error to single-qubit gates
+        error_1q = depolarizing_error(0.001, 1)
+        noise_model.add_all_qubit_quantum_error(error_1q, ["h", "rx", "ry"])
+        # Add depolarizing error to two-qubit gates
+        error_2q = depolarizing_error(0.01, 2)
+        noise_model.add_all_qubit_quantum_error(error_2q, ["cx"])
+
+        sampler.options.simulator.noise_model = noise_model
+
+        # Set coupling map (linear topology for 3 qubits)
+        sampler.options.simulator.coupling_map = [[0, 1], [1, 0], [1, 2], [2, 1]]
+
+        # Set basis gates
+        sampler.options.simulator.basis_gates = ["h", "rx", "ry", "cx", "id"]
+
+        # Set seed for reproducibility
+        sampler.options.simulator.seed_simulator = 42
+
+        # Run with parameter sweep
+        job = sampler.run([(circuit, param_values)], shots=1000)
+        result = job.result()
+
+        # Verify results structure
+        self.assertEqual(len(result), 1)
+        self.assertIsNotNone(result[0].data)
+
+        # Verify we got results for all parameter sets
+        pub_result = result[0]
+        self.assertIsNotNone(pub_result.data.meas)
+
+        # Get counts and verify basic properties
+        counts = pub_result.data.meas.get_counts()
+
+        # Total counts should equal shots × number of parameter sets
+        self.assertEqual(sum(counts.values()), 3000)

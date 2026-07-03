@@ -21,9 +21,11 @@ import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
+from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
 from .utils import resolve_precision
 
@@ -165,19 +167,37 @@ class EstimatorV2(BaseEstimatorV2):
         if self.options.dynamical_decoupling.enable:
             for pub in coerced_pubs:
                 if pub.circuit.has_control_flow_op():
-                    raise ValueError(
+                    raise IBMInputValueError(
                         "Dynamical decoupling is not compatible with dynamic circuits "
                         "(circuits with control flow operations)."
                     )
 
-        quantum_program = prepare(
-            pubs=coerced_pubs,
-            twirling_options=self.options.twirling,
-            shots=shots,
-            measure_noise_learning=self.options.resilience.measure_noise_learning
-            if self.options.resilience.measure_mitigation
-            else None,
-        )
+        # Route to appropriate prepare function
+        if self.options.resilience.pec_mitigation:
+            if self.options.resilience.noise_model_mapping is None:
+                raise IBMInputValueError(
+                    "When PEC mitigation is enabled, you must provide a noise model "
+                    "via options.resilience.noise_model_mapping"
+                )
+            quantum_program = prepare_pec(
+                pubs=coerced_pubs,
+                twirling_options=self.options.twirling,
+                shots=shots,
+                pec_options=self.options.resilience.pec,
+                noise_model_mapping=self.options.resilience.noise_model_mapping,
+                measure_noise_learning=self.options.resilience.measure_noise_learning
+                if self.options.resilience.measure_mitigation
+                else None,
+            )
+        else:
+            quantum_program = prepare(
+                pubs=coerced_pubs,
+                twirling_options=self.options.twirling,
+                shots=shots,
+                measure_noise_learning=self.options.resilience.measure_noise_learning
+                if self.options.resilience.measure_mitigation
+                else None,
+            )
 
         if self.options.dynamical_decoupling.enable:
             quantum_program = apply_dynamical_decoupling(
@@ -185,12 +205,11 @@ class EstimatorV2(BaseEstimatorV2):
                 dd_options=self.options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
-
         # Serialize options (assuming passthrough is correctly configured)
         quantum_program.passthrough_data["post_processor"]["options"] = {  # type: ignore[index, call-overload]
             "twirling": self.options.twirling.model_dump(),
             "dynamical_decoupling": self.options.dynamical_decoupling.model_dump(),
-            "resilience": self.options.resilience.model_dump(),
+            "resilience": self.options.resilience.model_dump(exclude={"noise_model_mapping"}),
         }
 
         executor_options = self.options.to_executor_options()
