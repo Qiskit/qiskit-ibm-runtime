@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from warnings import warn
 
 from pydantic import BaseModel, ConfigDict
 
@@ -41,3 +42,22 @@ class OptionsModel(BaseModel):
         prevent auto-completing in interactive shells to display all ``BaseModel`` methods.
         """
         return list(self.__class__.model_fields.keys())
+
+    def update(self, **kwargs: Any) -> None:
+        """Update the options."""
+        warn(
+            "The `update` method of the option models is deprecated as of qiskit_ibm_runtime "
+            "v0.48.0 and will be removed in a future release. Please update the model fields "
+            "directly (`options.foo = bar`) or create a copy of the options "
+            '(`options.model_copy(update={"foo": "bar"})`).',
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        for key, value in kwargs.items():
+            current_field_value = getattr(self, key, None)
+            if isinstance(current_field_value, OptionsModel):
+                # If the field is a nested model, recursively update.
+                current_field_value.update(**value)
+            else:
+                setattr(self, key, value)

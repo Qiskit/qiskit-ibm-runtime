@@ -14,15 +14,16 @@
 
 import unittest
 
+from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.environment_options import SamplerEnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution_options import SamplerExecutionOptions
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from test.utils import get_mocked_backend
 
 from ...ibm_test_case import IBMTestCase
+from ...utils import dict_keys_equal, flat_dict_partially_equal, get_mocked_backend
 
 
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
@@ -103,6 +104,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         self.assertEqual(executor_options.execution.scheduler_timing, True)
 
 
+@ddt
 class TestSamplerUsingOptions(IBMTestCase):
     """Tests option setting on the ``Sampler`` class."""
 
@@ -209,3 +211,26 @@ class TestSamplerUsingOptions(IBMTestCase):
         options = SamplerExecutionOptions()
         with self.assertRaises(ValidationError):
             options.not_a_variable = 0
+
+    @data(
+        {"default_shots": 4000},
+        {"max_execution_time": 200},
+        {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
+        {
+            "dynamical_decoupling": {"sequence_type": "XX"},
+            "environment": {"log_level": "INFO"},
+        },
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
+    )
+    def test_update_options(self, new_opts):
+        """Test update method."""
+        options = SamplerOptions()
+        options.update(**new_opts)
+
+        # Make sure the values are equal.
+        self.assertTrue(
+            flat_dict_partially_equal(options.model_dump(), new_opts),
+            f"new_opts={new_opts}, combined={options}",
+        )
+        # Make sure the structure didn't change.
+        self.assertTrue(dict_keys_equal(options.model_dump(), SamplerOptions().model_dump()))
