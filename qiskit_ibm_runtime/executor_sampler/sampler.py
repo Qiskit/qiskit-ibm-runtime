@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseSamplerV2
@@ -352,7 +351,7 @@ class SamplerV2(BaseSamplerV2):
             A LocalRuntimeJob.
         """
         # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
+        options_dict = self.options.model_dump()
         options_dict["default_shots"] = shots
 
         # Prepare inputs dict with pubs and options
