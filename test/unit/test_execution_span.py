@@ -111,12 +111,12 @@ class TestSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method."""
+        """Test the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method."""
+        """Test the filter_by_pub method."""
         self.assertEqual(self.span1.filter_by_pub([]), SliceSpan(self.start1, self.stop1, {}))
         self.assertEqual(self.span2.filter_by_pub([]), SliceSpan(self.start2, self.stop2, {}))
 
@@ -210,12 +210,12 @@ class TestDoubleSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method."""
+        """Test the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method."""
+        """Test the filter_by_pub method."""
         self.assertEqual(self.span1.filter_by_pub([]), DoubleSliceSpan(self.start1, self.stop1, {}))
         self.assertEqual(self.span2.filter_by_pub([]), DoubleSliceSpan(self.start2, self.stop2, {}))
 
@@ -337,12 +337,12 @@ class TestTwirledSliceSpan(IBMTestCase):
     )
     @ddt.unpack
     def test_contains_pub(self, idx, span1_expected_res, span2_expected_res):
-        """The the contains_pub method."""
+        """Test the contains_pub method."""
         self.assertEqual(self.span1.contains_pub(idx), span1_expected_res)
         self.assertEqual(self.span2.contains_pub(idx), span2_expected_res)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method."""
+        """Test the filter_by_pub method."""
         self.assertEqual(
             self.span1.filter_by_pub([]), TwirledSliceSpan(self.start1, self.stop1, {})
         )
@@ -392,7 +392,7 @@ class TestExecutionSpans(IBMTestCase):
         self.assertEqual(self.spans.duration, 8.5)
 
     def test_filter_by_pub(self):
-        """The the filter_by_pub method."""
+        """Test the filter_by_pub method."""
         self.assertEqual(
             self.spans.filter_by_pub([]),
             ExecutionSpans(
