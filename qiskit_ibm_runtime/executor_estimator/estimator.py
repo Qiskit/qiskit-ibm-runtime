@@ -129,7 +129,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         The returned list contains one instance of each distinct boxed layer (represented as a
         :class:`~.CircuitInstruction`) appearing in the input PUBs. This list can be passed
-        directly to the :meth:`~.qiskit_ibm_runtime.noise_learner_v3.NoiseLearner.run` method
+        directly to the :meth:`~.qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.run` method
         for characterization, avoiding redundant learning of identical layers.
 
         Args:
