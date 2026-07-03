@@ -14,7 +14,12 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel, ConfigDict
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 """Custom ``ConfigDict`` for pydantic dataclasses.
@@ -28,3 +33,11 @@ class OptionsModel(BaseModel):
     """Base class for options models."""
 
     model_config = PRIMITIVES_CONFIG
+
+    def __dir__(self) -> Iterable[str]:
+        """Return the list of public attributes.
+
+        Custom implementation that returns only the attributes that are field names, in order to
+        prevent auto-completing in interactive shells to display all ``BaseModel`` methods.
+        """
+        return list(self.__class__.model_fields.keys())
