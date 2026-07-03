@@ -132,14 +132,9 @@ class EstimatorV2(BaseEstimatorV2):
 
         Args:
             pubs: The list of PUBs to return a list of unique boxes for.
-            twirling_options: Twirling options.
-            measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
-                Error eXtinction (TREX) mitigation method will be accounted for in boxing.
-            inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
-                of gates.
 
         Returns:
-            Unique layers for each pub.
+            The unique boxed layers found across the given PUBs.
         """
         return find_unique_layers(
             pubs,
