@@ -12,12 +12,14 @@
 
 """Tests for runtime data serialization."""
 
+import base64
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import warnings
+import zlib
 from datetime import datetime
 
 import numpy as np
@@ -25,6 +27,7 @@ import qiskit.quantum_info as qi
 from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
+from qiskit.exceptions import QiskitError
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
@@ -895,3 +898,39 @@ class TestRuntimeDecoder(IBMTestCase):
 
         self.assertEqual(decoded["params"]["instructions"], "foo")
         self.assertEqual(decoded["params"]["options"], "bar")
+
+
+class TestQpyQiskitVersionValidation(IBMTestCase):
+    """Tests for QPY Qiskit version validation during deserialization."""
+
+    def test_newer_qpy_qiskit_version_raises_clear_error(self):
+        """A newer embedded Qiskit version raises a clear runtime error."""
+        circuit = QuantumCircuit(1)
+        encoded = json.dumps(circuit, cls=RuntimeEncoder)
+        payload = json.loads(encoded)
+        qpy_bytes = bytearray(zlib.decompress(base64.standard_b64decode(payload["__value__"])))
+        qpy_bytes[7] = 99
+        qpy_bytes[8] = 0
+        qpy_bytes[9] = 0
+        payload["__value__"] = base64.standard_b64encode(zlib.compress(bytes(qpy_bytes))).decode(
+            "utf-8"
+        )
+
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            with self.assertRaises(QiskitError) as context:
+                json.loads(json.dumps(payload), cls=RuntimeDecoder)
+
+        self.assertIn("pip install -U qiskit", str(context.exception))
+        self.assertIn("newer than your installed version", str(context.exception))
+        self.assertFalse(
+            any("provided QPY file" in str(warning.message) for warning in caught_warnings)
+        )
+
+    def test_matching_qpy_qiskit_version_still_decodes(self):
+        """Circuits encoded with the installed Qiskit version still decode."""
+        circuit = QuantumCircuit(1)
+        encoded = json.dumps(circuit, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertIsInstance(decoded, QuantumCircuit)
+        self.assertEqual(decoded.num_qubits, 1)

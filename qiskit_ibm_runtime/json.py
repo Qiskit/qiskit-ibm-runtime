@@ -20,14 +20,18 @@ import importlib
 import inspect
 import io
 import json
+import re
+import struct
 import sys
 import warnings
 import zlib
 from datetime import date
-from typing import TYPE_CHECKING, Any, get_args
+from typing import TYPE_CHECKING, Any, BinaryIO, get_args
 
 import dateutil.parser
 import numpy as np
+from qiskit import __version__ as QISKIT_VERSION
+from qiskit.exceptions import QiskitError
 
 from qiskit_ibm_runtime.quantum_program.params_converters import QUANTUM_PROGRAM_PARAMS_CONVERTERS
 
@@ -125,6 +129,76 @@ def _serialize_and_encode(
     if compress:
         serialized_data = zlib.compress(serialized_data)
     return base64.standard_b64encode(serialized_data).decode("utf-8")
+
+
+def _installed_qiskit_version() -> tuple[int, int, int]:
+    """Return the installed Qiskit release as a (major, minor, patch) tuple."""
+    version_match = re.search(r"(\d+)\.(\d+)\.(\d+)", QISKIT_VERSION)
+    if version_match is None:
+        return (0, 0, 0)
+    return (
+        int(version_match.group(1)),
+        int(version_match.group(2)),
+        int(version_match.group(3)),
+    )
+
+
+_QPY_QISKIT_VERSION_WARNING = "The qiskit version used to generate the provided QPY"
+
+
+def _read_qpy_header(file_obj: BinaryIO) -> tuple[int, tuple[int, int, int]]:
+    """Return the QPY format and Qiskit versions from the file header prefix."""
+    offset = file_obj.tell()
+    file_obj.seek(0)
+    try:
+        preface, qpy_version, major, minor, patch = struct.unpack("!6sBBBB", file_obj.read(10))
+        if preface != b"QISKIT":
+            raise QiskitError("Input is not a valid QPY payload.")
+        return qpy_version, (major, minor, patch)
+    finally:
+        file_obj.seek(offset)
+
+
+def _warn_on_qpy_version_mismatch(file_obj: BinaryIO) -> bool:
+    """Warn on version mismatches before loading QPY data.
+
+    Returns:
+        Whether a Qiskit version mismatch warning was emitted.
+    """
+    qpy_version, qiskit_version = _read_qpy_header(file_obj)
+    if qpy_version > QISKIT_QPY_VERSION:
+        raise QiskitError(
+            f"This job uses QPY format version {qpy_version}, which is not supported "
+            f"by your installed Qiskit ({QISKIT_VERSION}). "
+            "Upgrade with 'pip install -U qiskit' to load the job's circuits."
+        )
+
+    installed_version = _installed_qiskit_version()
+    if qiskit_version > installed_version:
+        version_str = ".".join(str(value) for value in qiskit_version)
+        warnings.warn(
+            "This job was serialized with Qiskit "
+            f"{version_str}, which is newer than your installed version "
+            f"({QISKIT_VERSION}). Loading may still succeed, but if it fails, "
+            "upgrade with 'pip install -U qiskit'.",
+            UserWarning,
+            stacklevel=3,
+        )
+        return True
+    return False
+
+
+def _load_qpy(file_obj: BinaryIO) -> list:
+    """Load circuits from QPY with clearer version mismatch warnings."""
+    warned_qiskit = _warn_on_qpy_version_mismatch(file_obj)
+    with warnings.catch_warnings():
+        if warned_qiskit:
+            warnings.filterwarnings(
+                "ignore",
+                message=_QPY_QISKIT_VERSION_WARNING,
+                category=UserWarning,
+            )
+        return load(file_obj)
 
 
 def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
@@ -505,14 +579,14 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "set":
                 return set(obj_val)
             if obj_type == "QuantumCircuit":
-                return _decode_and_deserialize(obj_val, load)[0]
+                return _decode_and_deserialize(obj_val, _load_qpy)[0]
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "Instruction":
                 # Standalone instructions are encoded as the sole instruction in a QPY serialized
                 # circuit to deserialize load qpy circuit and return first instruction object in
                 # that circuit.
-                circuit = _decode_and_deserialize(obj_val, load)[0]
+                circuit = _decode_and_deserialize(obj_val, _load_qpy)[0]
                 return circuit.data[0].operation
             if obj_type == "settings":
                 if obj["__module__"].startswith(
