@@ -139,8 +139,9 @@ class EstimatorV2(BaseEstimatorV2):
         Returns:
             The unique boxed layers found across the given PUBs.
         """
+        coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
         return find_unique_layers(
-            pubs,
+            pubs=coerced_pubs,
             twirling_options=self.options.twirling,
             measure_noise_learning=self.options.resilience.measure_noise_learning,
             inject_noise=self.options.resilience.pec_mitigation,  # TODO: Add PEA once available
