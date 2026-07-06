@@ -512,7 +512,7 @@ class TestSamplerV2(IBMTestCase):
         ([100, 20, 34], 50, 1),
     )
     @unpack
-    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, expected_warnings):
+    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, num_appearances):
         """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1, 1)
@@ -526,5 +526,5 @@ class TestSamplerV2(IBMTestCase):
             for shots in pub_shots
         ]
 
-        with self.assert_warning_appears(DeprecationWarning, warning_msg, expected_warnings):
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, shots=run_shots)

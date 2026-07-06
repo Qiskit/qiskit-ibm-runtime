@@ -310,7 +310,7 @@ class TestEstimatorV2(IBMTestCase):
         ([0.01, 0.02, 0.03], 0.04, 1),
     )
     @unpack
-    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, expected_warnings):
+    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, num_appearances):
         """Conflicting pub-level precision emits one DeprecationWarning."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1)
@@ -326,5 +326,5 @@ class TestEstimatorV2(IBMTestCase):
             for precision in pub_precisions
         ]
 
-        with self.assert_warning_appears(DeprecationWarning, warning_msg, expected_warnings):
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
             inst.run(pubs, precision=run_precision)
