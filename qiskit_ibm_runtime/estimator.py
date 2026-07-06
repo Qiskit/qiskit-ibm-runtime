@@ -153,7 +153,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             issue_deprecation_msg(
                 msg="Specifying different 'precision' across pubs is deprecated",
                 version="0.48.0",
-                remedy="Submit one job for each desired shot count instead. "
+                remedy="Submit one job for each desired precision instead. "
                 "To reduce overhead, Consider submitting these jobs inside a Batch execution mode.",
                 stacklevel=2,
             )
