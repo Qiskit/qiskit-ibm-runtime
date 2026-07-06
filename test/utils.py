@@ -450,7 +450,7 @@ def transpile_pubs(in_pubs, backend, program):
 
 
 def remap_observables(observables, isa_circuit):
-    """Remap observables based on input cirucit."""
+    """Remap observables based on input circuit."""
 
     def _convert_paul_or_str(_obs):
         if isinstance(_obs, str):
