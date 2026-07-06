@@ -130,7 +130,7 @@ class CircuitItem(QuantumProgramItem):
 
         chunk_size = "" if self.chunk_size is None else f", chunk_size={self.chunk_size}"
 
-        return f"QuantumProgramSimpleItem({circuit}{circuit_args}{chunk_size})"
+        return f"CircuitItem({circuit}{circuit_args}{chunk_size})"
 
 
 class SamplexItem(QuantumProgramItem):
@@ -205,7 +205,7 @@ class SamplexItem(QuantumProgramItem):
         shape = f", shape={self.shape}"
         chunk_size = "" if self.chunk_size is None else f", chunk_size={self.chunk_size}"
 
-        return f"QuantumProgramSamplexItem({circuit}{samplex}{samplex_args}{shape}{chunk_size})"
+        return f"SamplexItem({circuit}{samplex}{samplex_args}{shape}{chunk_size})"
 
 
 class QuantumProgram:
