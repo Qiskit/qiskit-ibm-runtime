@@ -70,6 +70,10 @@ def prepare_pea(
             amplification. The dict contains layers from all pubs. Assumes that the unique
             layers used for noise learning were extracted using the ``get_layers`` method.
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,

@@ -18,7 +18,7 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -167,7 +167,7 @@ def box_circuit(
     measure_annotations: str,
     twirling_strategy: str,
     inject_noise: bool = False,
-    add_tags: str = "none",
+    add_tags: Literal["none", "unique_box", "unique_instance", "noise_ref"] = "none",
 ) -> QuantumCircuit:
     """Group the operations in the given ``circuit`` into boxes.
 
@@ -242,7 +242,10 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to inject noise.
-        add_tags: Whether to include tags for the boxes.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
+            with the twirled boxes hash to be added (using the "unique_box" value of the relevant
+            attribute). These tags can help injecting noise in simulators.
 
     Returns:
         Options to the boxing passmanager.
