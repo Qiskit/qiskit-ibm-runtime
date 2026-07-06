@@ -166,6 +166,7 @@ def box_circuit(
     enable_gates: bool,
     measure_annotations: str,
     twirling_strategy: str,
+    twirling_group: str,
     inject_noise: bool = False,
 ) -> QuantumCircuit:
     """Group the operations in the given ``circuit`` into boxes.
@@ -190,6 +191,7 @@ def box_circuit(
             argument of
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
             API docs for a full list of supported values.
+        twirling_group: The group to use for the twirling boxes.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
             called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
@@ -217,6 +219,7 @@ def box_circuit(
         enable_gates=enable_gates,
         enable_measures=True,
         twirling_strategy=twirling_strategy,
+        twirling_group=twirling_group,
         measure_annotations=measure_annotations,
         inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
@@ -230,6 +233,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None,
     inject_noise: bool,
+    twirling_group: str = "balanced_pauli",
 ):
     """A helper to map options to kwargs for the boxing passmanager.
 
@@ -238,6 +242,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to inject noise.
+        twirling_group: The group to use for the twirling boxes.
 
     Returns:
         Unique layers for each pub.
@@ -248,6 +253,7 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         if twirling_options.enable_measure or (measure_noise_learning is not None)
         else "change_basis",
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+        "twirling_group": twirling_group,
     }
 
 
