@@ -525,93 +525,71 @@ class TestSamplerV2(IBMTestCase):
                 if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
             ]
 
-        # Run-level shots only must not warn.
-        self.assertEqual(
-            len(matching_warnings(lambda: inst.run([t_circ, t_circ], shots=100))),
-            0,
-        )
-
-        # Pub-level shots that agree with run-level shots must not warn.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, None, 100),
-                            SamplerPub(t_circ, shots=100),
-                        ],
-                        shots=100,
-                    )
-                )
+        cases = [
+            (
+                "run-level shots only",
+                [t_circ, t_circ],
+                {"shots": 100},
+                0,
             ),
-            0,
-        )
-
-        # Pub-level shots that agree with each other must not warn, even if they
-        # disagree with run-level shots.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, None, 20),
-                            SamplerPub(t_circ, shots=20),
-                        ],
-                        shots=100,
-                    )
-                )
+            (
+                "pub-level shots agree with run-level shots",
+                [
+                    (t_circ, None, 100),
+                    SamplerPub(t_circ, shots=100),
+                ],
+                {"shots": 100},
+                0,
             ),
-            0,
-        )
-
-        # A pub without explicit shots inherits the run-level shots, so matching
-        # pub-level and run-level shots must not warn.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, None, 20),
-                            SamplerPub(t_circ),
-                        ],
-                        shots=20,
-                    )
-                )
+            (
+                "pub-level shots agree but disagree with run-level shots",
+                [
+                    (t_circ, None, 20),
+                    SamplerPub(t_circ, shots=20),
+                ],
+                {"shots": 100},
+                0,
             ),
-            0,
-        )
-
-        # An explicit pub-level shot value that conflicts with inherited run-level
-        # shots on another pub warns once.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, None, 20),
-                            SamplerPub(t_circ),
-                        ],
-                        shots=100,
-                    )
-                )
+            (
+                "pub without shots inherits matching run-level shots",
+                [
+                    (t_circ, None, 20),
+                    SamplerPub(t_circ),
+                ],
+                {"shots": 20},
+                0,
             ),
-            1,
-        )
-
-        # Multiple conflicting pub-level shot values warn once, even if they also
-        # disagree with the run-level shots.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, None, 100),
-                            SamplerPub(t_circ, shots=20),
-                            SamplerPub(t_circ, shots=34),
-                        ],
-                        shots=50,
-                    )
-                )
+            (
+                "pub without shots inherits conflicting run-level shots",
+                [
+                    (t_circ, None, 20),
+                    SamplerPub(t_circ),
+                ],
+                {"shots": 100},
+                1,
             ),
-            1,
-        )
+            (
+                "multiple conflicting pub-level shots warn once",
+                [
+                    (t_circ, None, 100),
+                    SamplerPub(t_circ, shots=20),
+                    SamplerPub(t_circ, shots=34),
+                ],
+                {"shots": 50},
+                1,
+            ),
+        ]
+
+        for name, pubs, run_kwargs, expected_warnings in cases:
+            with self.subTest(name=name):
+                self.assertEqual(
+                    len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
+                    expected_warnings,
+                )
+
+            for description, pubs, run_kwargs, expected_warnings in cases:
+                with self.subTest(description):
+                    self.assertEqual(
+                        len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
+                        expected_warnings,
+                    )

@@ -324,103 +324,67 @@ class TestEstimatorV2(IBMTestCase):
                 if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
             ]
 
-        # Run-level precision only must not warn.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable),
-                            (t_circ, observable),
-                        ],
-                        precision=0.01,
-                    )
-                )
+        cases = [
+            (
+                "run-level precision only",
+                [
+                    (t_circ, observable),
+                    (t_circ, observable),
+                ],
+                {"precision": 0.01},
+                0,
             ),
-            0,
-        )
+            (
+                "pub-level precision agrees with run-level precision",
+                [
+                    (t_circ, observable, None, 0.01),
+                    EstimatorPub.coerce((t_circ, observable, None, 0.01)),
+                ],
+                {"precision": 0.01},
+                0,
+            ),
+            (
+                "pub-level precision agrees but disagrees with run-level precision",
+                [
+                    (t_circ, observable, None, 0.02),
+                    EstimatorPub.coerce((t_circ, observable, None, 0.02)),
+                ],
+                {"precision": 0.01},
+                0,
+            ),
+            (
+                "pub without precision inherits matching run-level precision",
+                [
+                    (t_circ, observable, None, 0.02),
+                    EstimatorPub.coerce((t_circ, observable)),
+                ],
+                {"precision": 0.02},
+                0,
+            ),
+            (
+                "pub without precision inherits conflicting run-level precision",
+                [
+                    (t_circ, observable, None, 0.02),
+                    EstimatorPub.coerce((t_circ, observable)),
+                ],
+                {"precision": 0.01},
+                1,
+            ),
+            (
+                "multiple conflicting pub-level precision values warn once",
+                [
+                    (t_circ, observable, None, 0.01),
+                    EstimatorPub.coerce((t_circ, observable, None, 0.02)),
+                    EstimatorPub.coerce((t_circ, observable, None, 0.03)),
+                ],
+                {"precision": 0.04},
+                1,
+            ),
+        ]
 
-        # Pub-level precision that agrees with run-level precision must not warn.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable, None, 0.01),
-                            EstimatorPub.coerce((t_circ, observable, None, 0.01)),
-                        ],
-                        precision=0.01,
-                    )
+        for name, pubs, run_kwargs, expected_warnings in cases:
+            with self.subTest(name=name):
+                self.assertEqual(
+                    len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
+                    expected_warnings,
                 )
-            ),
-            0,
-        )
-
-        # Pub-level precision that agrees across pubs must not warn, even if it
-        # disagrees with run-level precision.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable, None, 0.02),
-                            EstimatorPub.coerce((t_circ, observable, None, 0.02)),
-                        ],
-                        precision=0.01,
-                    )
-                )
-            ),
-            0,
-        )
-
-        # A pub without explicit precision inherits the run-level precision, so
-        # matching pub-level and run-level precision must not warn.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable, None, 0.02),
-                            EstimatorPub.coerce((t_circ, observable)),
-                        ],
-                        precision=0.02,
-                    )
-                )
-            ),
-            0,
-        )
-
-        # An explicit pub-level precision value that conflicts with inherited
-        # run-level precision on another pub warns once.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable, None, 0.02),
-                            EstimatorPub.coerce((t_circ, observable)),
-                        ],
-                        precision=0.01,
-                    )
-                )
-            ),
-            1,
-        )
-
-        # Multiple conflicting pub-level precision values warn once, even if they
-        # also disagree with the run-level precision.
-        self.assertEqual(
-            len(
-                matching_warnings(
-                    lambda: inst.run(
-                        [
-                            (t_circ, observable, None, 0.01),
-                            EstimatorPub.coerce((t_circ, observable, None, 0.02)),
-                            EstimatorPub.coerce((t_circ, observable, None, 0.03)),
-                        ],
-                        precision=0.04,
-                    )
-                )
-            ),
-            1,
-        )
