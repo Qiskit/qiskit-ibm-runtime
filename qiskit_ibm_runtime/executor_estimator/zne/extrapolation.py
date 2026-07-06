@@ -49,7 +49,7 @@ def process_extrapolated_expectation_values(
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | npt.ArrayLike = 0,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
-    r"""Apply zero-noise extrapolation (ZNE) to an estimator result.
+    r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
     For each entry, the requested model(s) are fit to the expectation values measured at
     the entry's noise factors and evaluated at the target noise factor(s) (``0`` for zero
@@ -57,7 +57,7 @@ def process_extrapolated_expectation_values(
     with a valid extrapolation. An extrapolation is valid when its value and standard
     error are finite, the standard error is within the basis threshold, and
     :math:`value \pm stderr` lies within the observable's ideal range widened by that threshold.
-    The range vary based on the observable: ``[0, 1]`` for projector-only observables,
+    The range varies based on the observable: ``[0, 1]`` for projector-only observables,
     ``[-1, 1]`` for observables containing Paulis, and unbounded when the observable is absent or
     unrecognized. If no model produces a valid extrapolation for a point, the candidate with the
     smallest standard error is used (non-finite errors are treated as infinite). Include
@@ -74,8 +74,8 @@ def process_extrapolated_expectation_values(
             is a 1D array of expectation values, one per noise factor.
         standard_errors: Raw standard deviations of the results. Have the same shape as
             ``exp_vals``.
-        observables: The observables to calculate expectation values for. Determine the ideal-value
-            range used to judge extrapolation validity.
+        observables: The observables to calculate expectation values for. The observables determine
+            the ideal-value range used to judge extrapolation validity.
         zne_noise_factors: The noise factors used to amplify the noise.
         extrapolators: A builtin model name, or a sequence of names tried in priority order.
             Supported (each fits the named function of the noise factor ``x``):
@@ -238,8 +238,8 @@ def select_zne_extrapolated_result(
     Args:
         zne_values: Extrapolated expectation values.
         zne_std_errors: Standard errors of the extrapolated expectation values.
-        observable: The observables to calculate expectation values for. Determine the ideal-value
-            range used to judge extrapolation validity.
+        observable: The observables to calculate expectation values for. The observables determine
+            the ideal-value range used to judge extrapolation validity.
         zne_extrapolator: The extrapolators used.
 
     Returns:
