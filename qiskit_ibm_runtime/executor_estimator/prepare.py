@@ -96,7 +96,7 @@ def prepare(
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(circuit=pub.circuit, inject_noise=False, **pm_kwargs)
+        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)

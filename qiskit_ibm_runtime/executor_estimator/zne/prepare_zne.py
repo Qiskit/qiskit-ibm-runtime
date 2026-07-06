@@ -137,7 +137,7 @@ def prepare_zne(
             folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
             folded_circuit = folding_pm.run(pub.circuit)
 
-            boxed_circuit = box_circuit(circuit=folded_circuit, inject_noise=False, **pm_kwargs)
+            boxed_circuit = box_circuit(circuit=folded_circuit, **pm_kwargs)
 
             # Build the template and the samplex
             template, samplex = build(boxed_circuit)

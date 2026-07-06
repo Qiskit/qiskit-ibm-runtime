@@ -286,9 +286,7 @@ def get_layers(
         inject_noise,
         add_tags=add_tags,
     )
-    boxed_circuits = (
-        box_circuit(circuit=pub.circuit, inject_noise=inject_noise, **pm_kwargs) for pub in pubs
-    )
+    boxed_circuits = (box_circuit(circuit=pub.circuit, **pm_kwargs) for pub in pubs)
     instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
