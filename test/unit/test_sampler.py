@@ -12,7 +12,6 @@
 
 """Tests for sampler class."""
 
-import warnings
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -504,7 +503,16 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(used_run_options["meas_return"], "avg")
             self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
 
-    def test_deprecate_pub_level_shots(self):
+    @data(
+        ([None, None], 100, 0),
+        ([100, 100], 100, 0),
+        ([20, 20], 100, 0),
+        ([20, None], 20, 0),
+        ([20, None], 100, 1),
+        ([100, 20, 34], 50, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, expected_warnings):
         """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1, 1)
@@ -513,83 +521,10 @@ class TestSamplerV2(IBMTestCase):
         inst = SamplerV2(mode=backend)
 
         warning_msg = "Specifying different 'shots' across pubs is deprecated"
-
-        def matching_warnings(call):
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always", DeprecationWarning)
-                call()
-
-            return [
-                w
-                for w in caught
-                if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
-            ]
-
-        cases = [
-            (
-                "run-level shots only",
-                [t_circ, t_circ],
-                {"shots": 100},
-                0,
-            ),
-            (
-                "pub-level shots agree with run-level shots",
-                [
-                    (t_circ, None, 100),
-                    SamplerPub(t_circ, shots=100),
-                ],
-                {"shots": 100},
-                0,
-            ),
-            (
-                "pub-level shots agree but disagree with run-level shots",
-                [
-                    (t_circ, None, 20),
-                    SamplerPub(t_circ, shots=20),
-                ],
-                {"shots": 100},
-                0,
-            ),
-            (
-                "pub without shots inherits matching run-level shots",
-                [
-                    (t_circ, None, 20),
-                    SamplerPub(t_circ),
-                ],
-                {"shots": 20},
-                0,
-            ),
-            (
-                "pub without shots inherits conflicting run-level shots",
-                [
-                    (t_circ, None, 20),
-                    SamplerPub(t_circ),
-                ],
-                {"shots": 100},
-                1,
-            ),
-            (
-                "multiple conflicting pub-level shots warn once",
-                [
-                    (t_circ, None, 100),
-                    SamplerPub(t_circ, shots=20),
-                    SamplerPub(t_circ, shots=34),
-                ],
-                {"shots": 50},
-                1,
-            ),
+        pubs = [
+            (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
+            for shots in pub_shots
         ]
 
-        for name, pubs, run_kwargs, expected_warnings in cases:
-            with self.subTest(name=name):
-                self.assertEqual(
-                    len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
-                    expected_warnings,
-                )
-
-            for description, pubs, run_kwargs, expected_warnings in cases:
-                with self.subTest(description):
-                    self.assertEqual(
-                        len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
-                        expected_warnings,
-                    )
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, expected_warnings):
+            inst.run(pubs, shots=run_shots)

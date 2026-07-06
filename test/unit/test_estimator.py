@@ -12,10 +12,8 @@
 
 """Tests for estimator class."""
 
-import warnings
-
 import numpy as np
-from ddt import data, ddt
+from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
@@ -303,7 +301,16 @@ class TestEstimatorV2(IBMTestCase):
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             estimator.run(pubs=[(circ, observable)])
 
-    def test_deprecate_pub_level_precision(self):
+    @data(
+        ([None, None], 0.01, 0),
+        ([0.01, 0.01], 0.01, 0),
+        ([0.02, 0.02], 0.01, 0),
+        ([0.02, None], 0.02, 0),
+        ([0.02, None], 0.01, 1),
+        ([0.01, 0.02, 0.03], 0.04, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_precision(self, pub_precisions, run_precision, expected_warnings):
         """Conflicting pub-level precision emits one DeprecationWarning."""
         backend = get_mocked_backend()
         circ = QuantumCircuit(1)
@@ -312,79 +319,12 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(mode=backend)
 
         warning_msg = "Specifying different 'precision' across pubs is deprecated"
-
-        def matching_warnings(call):
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always", DeprecationWarning)
-                call()
-
-            return [
-                w
-                for w in caught
-                if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
-            ]
-
-        cases = [
-            (
-                "run-level precision only",
-                [
-                    (t_circ, observable),
-                    (t_circ, observable),
-                ],
-                {"precision": 0.01},
-                0,
-            ),
-            (
-                "pub-level precision agrees with run-level precision",
-                [
-                    (t_circ, observable, None, 0.01),
-                    EstimatorPub.coerce((t_circ, observable, None, 0.01)),
-                ],
-                {"precision": 0.01},
-                0,
-            ),
-            (
-                "pub-level precision agrees but disagrees with run-level precision",
-                [
-                    (t_circ, observable, None, 0.02),
-                    EstimatorPub.coerce((t_circ, observable, None, 0.02)),
-                ],
-                {"precision": 0.01},
-                0,
-            ),
-            (
-                "pub without precision inherits matching run-level precision",
-                [
-                    (t_circ, observable, None, 0.02),
-                    EstimatorPub.coerce((t_circ, observable)),
-                ],
-                {"precision": 0.02},
-                0,
-            ),
-            (
-                "pub without precision inherits conflicting run-level precision",
-                [
-                    (t_circ, observable, None, 0.02),
-                    EstimatorPub.coerce((t_circ, observable)),
-                ],
-                {"precision": 0.01},
-                1,
-            ),
-            (
-                "multiple conflicting pub-level precision values warn once",
-                [
-                    (t_circ, observable, None, 0.01),
-                    EstimatorPub.coerce((t_circ, observable, None, 0.02)),
-                    EstimatorPub.coerce((t_circ, observable, None, 0.03)),
-                ],
-                {"precision": 0.04},
-                1,
-            ),
+        pubs = [
+            (t_circ, observable, None, precision)
+            if precision is not None
+            else EstimatorPub.coerce((t_circ, observable))
+            for precision in pub_precisions
         ]
 
-        for name, pubs, run_kwargs, expected_warnings in cases:
-            with self.subTest(name=name):
-                self.assertEqual(
-                    len(matching_warnings(lambda: inst.run(pubs, **run_kwargs))),
-                    expected_warnings,
-                )
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, expected_warnings):
+            inst.run(pubs, precision=run_precision)
