@@ -53,6 +53,7 @@ def prepare_zne(
     shots: int,
     zne_options: ZneOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -65,6 +66,7 @@ def prepare_zne(
         zne_options: The options for ZNE mitigation.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -109,6 +111,7 @@ def prepare_zne(
         twirling_options,
         measure_noise_learning,
         inject_noise=False,
+        add_tags=add_tags,
     )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
