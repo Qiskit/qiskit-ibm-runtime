@@ -20,15 +20,14 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from numpy.polynomial.polynomial import polyval
+from qiskit.primitives import EstimatorResult
 from scipy.optimize import curve_fit
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Sequence
 
-    import numpy.typing as npt
-    from qiskit.primitives import ObservablesArray
+    from numpy.typing import ArrayLike
 
-from ...executor_estimator.utils import unbroadcast_index
 
 _VALID_NAMES = [
     "linear",
@@ -42,23 +41,20 @@ _NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponenti
 
 
 def process_extrapolated_expectation_values(
-    exp_vals: npt.NDArray[float],
-    standard_errors: npt.NDArray[float],
-    observables: ObservablesArray,
-    zne_noise_factors: Sequence[float],
-    extrapolators: str | Sequence[str],
-    extrapolated_noise_factors: float | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
-    r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
+    result: EstimatorResult,
+    extrapolator: str | Sequence[str],
+    extrapolated_noise_factors: float | ArrayLike = 0,
+) -> EstimatorResult:
+    r"""Apply zero-noise extrapolation (ZNE) to an estimator result.
 
     For each entry, the requested model(s) are fit to the expectation values measured at
     the entry's noise factors and evaluated at the target noise factor(s) (``0`` for zero
     noise). Models are tried in priority order: each point takes the result of the first model
     with a valid extrapolation. An extrapolation is valid when its value and standard
     error are finite, the standard error is within the basis threshold, and
-    :math:`value \pm stderr` lies within the observable's ideal range widened by that threshold.
-    The range varies based on the observable: ``[0, 1]`` for projector-only observables,
-    ``[-1, 1]`` for observables containing Paulis, and unbounded when the observable is absent or
+    :math:`value \pm stderr` lies within the basis's ideal range widened by that threshold. The
+    range comes from the entry's ``ev_basis`` metadata: ``[0, 1]`` for projector-only bases,
+    ``[-1, 1]`` for bases containing Paulis, and unbounded when ``ev_basis`` is absent or
     unrecognized. If no model produces a valid extrapolation for a point, the candidate with the
     smallest standard error is used (non-finite errors are treated as infinite). Include
     ``fallback`` in ``extrapolator`` to add the lowest-noise measured value as a candidate, so it
@@ -70,14 +66,12 @@ def process_extrapolated_expectation_values(
     <https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals>`_.
 
     Args:
-        exp_vals: Raw expectation value result. Each element of measured observable and parameter
-            is a 1D array of expectation values, one per noise factor.
-        standard_errors: Raw standard deviations of the results. Have the same shape as
-            ``exp_vals``.
-        observables: The observables to calculate expectation values for. The observables determine
-            the ideal-value range used to judge extrapolation validity.
-        zne_noise_factors: The noise factors used to amplify the noise.
-        extrapolators: A builtin model name, or a sequence of names tried in priority order.
+        result: Estimator result. Each entry's ``values`` is a 1D array of expectation values,
+            one per noise factor, aligned with the ``standard_error`` and
+            ``resilience["zne_noise_factors"]`` arrays in its metadata. An optional ``ev_basis``
+            string sets the ideal-value range used to judge extrapolation validity; an optional
+            ``ensemble_standard_error`` array is carried through to the output.
+        extrapolator: A builtin model name, or a sequence of names tried in priority order.
             Supported (each fits the named function of the noise factor ``x``):
 
             - ``linear``: ``a + b*x``
@@ -89,89 +83,69 @@ def process_extrapolated_expectation_values(
             at; defaults to ``0`` (zero-noise extrapolation).
 
     Raises:
-        ValueError: If an extrapolator name is not recognized.
+        ValueError: If an entry is missing ``standard_error`` or ``zne_noise_factors``
+            metadata, or if an extrapolator name is not recognized.
 
     Returns:
-        A tuple ``(exp_vals, stds, extrapolators)``, where ``exp_vals`` are
-        expectation values evaluated at ``extrapolated_noise_factors``, ``stds`` are
-        standard deviations. ``extrapolators`` are the valid extrapolation methods selected.
+        A new estimator result. Per entry, ``values`` is a 2D array stacking the selected
+        extrapolation (row 0) above each model's extrapolation (rows 1+), with the raw
+        measured noise-factor values appended along the last axis; ``standard_error`` and the
+        ``resilience`` ``zne_noise_factors``/``zne_extrapolator`` fields are reshaped to match,
+        and ``ensemble_standard_error`` (when present in the input) is appended with NaN in the
+        extrapolated columns.
     """
-    if isinstance(extrapolators, str):
-        extrapolators = [extrapolators]
+    if isinstance(extrapolator, str):
+        extrapolator = [extrapolator]
 
-    if isinstance(extrapolated_noise_factors, float):
-        extrapolated_noise_factors = [extrapolated_noise_factors]
+    result_values = []
+    result_metadata = []
+    for raw_values, raw_metadata in zip(result.values, result.metadata):
+        if "zne_noise_factors" not in raw_metadata.get("resilience", {}):
+            raise ValueError("`zne_noise_factors` is missing from the `resilience` metadata")
+        if "standard_error" not in raw_metadata:
+            raise ValueError("`standard_error` is missing from the result metadata")
 
-    # exp_vals is a list of expectation value results for each noise factor
-    # The first axis is the noise factors axis
-    output_shape = exp_vals.shape[1:]
-
-    result_values = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
-    result_stderrs = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
-    result_extrapolators = np.empty(
-        shape=(len(extrapolated_noise_factors),) + output_shape, dtype=object
-    )
-
-    for bcast_index in np.ndindex(output_shape):
-        amplified_exp_vals = exp_vals[(slice(None), *bcast_index)]
-        amplified_stds = standard_errors[(slice(None), *bcast_index)]
-
-        # Get 2D arrays of extrapolated expectation values and extrapolated stds, with shape:
-        # (# extrapolators, # extrapolated_noise_factors)
-        extrapolated_values, extrapolated_stderr = fit_extrapolation_models(
-            amplified_exp_vals,
-            amplified_stds,
-            zne_noise_factors,
-            models=extrapolators,
+        # Get 2D array of extrapolated EVs and associated metadata.
+        # Array shape: (# extrapolators, # extrapolated noise factors)
+        fit_values, fit_metadata = fit_extrapolation_models(
+            raw_values,
+            raw_metadata,
+            models=extrapolator,
             extrapolated_noise_factor=extrapolated_noise_factors,
         )
-
-        # choose the best extrapolated result
-        obs_index = unbroadcast_index(bcast_index, observables.shape)
-        observable = observables[obs_index]
-        selected_values, selected_stderr, selected_extrap = select_zne_extrapolated_result(
-            extrapolated_values,
-            extrapolated_stderr,
-            observable,
-            extrapolators,
+        # Stack the selected EVs for each noise scale in the top row of fit_values and
+        # adjust metadata to account for the new shape of output.
+        fit_values, fit_metadata = select_zne_extrapolated_result(fit_values, fit_metadata)
+        fit_values, fit_metadata = stack_unextrapolated_result(
+            fit_values, fit_metadata, raw_values, raw_metadata
         )
+        fit_values, fit_metadata = format_extrapolated(fit_values, fit_metadata)
 
-        # Reshape size 1 results to floats to avoid returning shaped results in this case
-        if selected_values.size == 1:
-            selected_values = selected_values.flat[0]
-            selected_stderr = selected_stderr.flat[0]
+        result_values.append(fit_values)
+        result_metadata.append(fit_metadata)
 
-        result_values[(slice(None), *bcast_index)] = selected_values
-        result_stderrs[(slice(None), *bcast_index)] = selected_stderr
-        result_extrapolators[(slice(None), *bcast_index)] = selected_extrap
-
-    return result_values, result_stderrs, result_extrapolators
+    return EstimatorResult(result_values, result_metadata)
 
 
 def fit_extrapolation_models(
-    values: npt.NDArray[float],
-    standard_error: npt.NDArray[float],
-    zne_noise_factors: Sequence[float],
+    values: ArrayLike,
+    metadata: dict[str, Any],
     models: Sequence[str],
-    extrapolated_noise_factor: float | npt.ArrayLike = 0,
-) -> tuple[npt.NDArray[float], npt.NDArray[float]]:
+    extrapolated_noise_factor: float | ArrayLike = 0,
+) -> tuple[np.ndarray, dict[str, Any]]:
     """Fit each model to the noise-scaled data and evaluate at the extrapolation points.
 
-    Args:
-        values: Expectation values used for the extrapolation.
-        standard_error: Standard errors of the expectation values.
-        zne_noise_factors: Amplification factors used for fitting the noise.
-        models: Models to use for fitting.
-        extrapolated_noise_factor: Points to extrapolate to.
-
-    Returns:
-        A tuple ``(fit_values, fit_stderrs)`` where ``fit_values`` and ``fit_stderrs``
-        are 2D arrays whose first axis indexes the model and second axis the extrapolated
-        noise factor.
+    Returns ``(fit_values, fit_metadata)`` where ``fit_values`` is a 2D array whose
+    first axis indexes the model and second axis the extrapolated noise factor.
     """
+    fit_metadata = copy_metadata(metadata)
+    if "resilience" not in fit_metadata:
+        raise ValueError("`resilience` metadata is missing.")
+
     y_data = np.asarray(values, dtype=float)
-    y_std = np.asarray(standard_error, dtype=float)
-    x_data = np.asarray(zne_noise_factors, dtype=float)
+    y_std = np.asarray(fit_metadata.pop("standard_error"), dtype=float)
+    x_data = np.asarray(fit_metadata["resilience"].pop("zne_noise_factors"), dtype=float)
+    fit_metadata.pop("ensemble_standard_error", None)
 
     # Make noise factor(s) arrays
     x_eval = as_noise_factors(extrapolated_noise_factor)
@@ -200,7 +174,17 @@ def fit_extrapolation_models(
             name, x_data, y_data, y_std, fit_stds, x_eval, fallback_idx
         )
 
-    return fit_values, fit_stderrs
+    # Set up metadata arrays
+    extrapolators = np.empty((len(names), x_eval.size), dtype=object)
+    for i, name in enumerate(names):
+        extrapolators[i] = name
+    fit_metadata["standard_error"] = fit_stderrs
+    fit_metadata["resilience"]["zne_noise_factors"] = np.broadcast_to(
+        x_eval, fit_values.shape
+    ).copy()
+    fit_metadata["resilience"]["zne_extrapolator"] = extrapolators
+
+    return fit_values, fit_metadata
 
 
 def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
@@ -224,44 +208,34 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: np.ndarray,
-    zne_std_errors: np.ndarray,
-    observable: ObservablesArray | Mapping[str, float],
-    zne_extrapolator: Sequence[str],
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
-    """Choose the best extrapolated values.
+    zne_values: np.ndarray, zne_metadata: dict[str, Any]
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Choose the best extrapolated values and stack them in the top row of the values/metadata.
 
     The best value is the valid value produced by the highest-priority model. Valid values are
     those that are finite, have a standard error within the measurement-basis threshold, and lie
     within the basis's range to within that standard error.
 
-    Args:
-        zne_values: Extrapolated expectation values.
-        zne_std_errors: Standard errors of the extrapolated expectation values.
-        observable: The observables to calculate expectation values for. The observables determine
-            the ideal-value range used to judge extrapolation validity.
-        zne_extrapolator: The extrapolators used.
-
-    Returns:
-        A tuple ``(accept_values, accept_stderrs, accept_extrap)`` of the chosen best expectation
-        values, and the associated standard errors and extrapolator.
+    Modifies metadata in place.
     """
     # Patterns for matching ev bases for range of ideal outcomes.
     # Range [0, 1] for basis containing only I and projectors.
     # Range [-1, 1] for bases containing non-I Paulis.
     _pattern_ylim_01 = re.compile(r"^[I01lr+\-]+$")
     _pattern_ylim_pm1 = re.compile(r"^[XYZI01lr+\-]+$")
+    zne_stderrs = zne_metadata["standard_error"]
+    zne_nfs = zne_metadata["resilience"]["zne_noise_factors"]
+    zne_extrap = zne_metadata["resilience"]["zne_extrapolator"]
 
     # Determine ideal value limits for standard basis projectors. If there is any
-    # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
-    # For missing or non-standard basis don't constrain values
-    val_min, val_max = (-np.inf, np.inf)
-    for observable_term in observable.keys():
-        if re.search(_pattern_ylim_01, observable_term):
-            val_min, val_max = (0, 1)
-        elif re.search(_pattern_ylim_pm1, observable_term):
-            val_min, val_max = (-1, 1)
-            break
+    # Pauli in the basis term we assume ideal <B> in [-1, 1], otherwise [0, 1].
+    basis = zne_metadata.get("ev_basis", "")
+    if re.search(_pattern_ylim_01, basis):
+        val_min, val_max = (0, 1)
+    elif re.search(_pattern_ylim_pm1, basis):
+        val_min, val_max = (-1, 1)
+    else:
+        val_min, val_max = (-np.inf, np.inf)
 
     # Filter candidate values that have non-finite values/std errors and values
     # with standard errors outside the basis threshold.
@@ -269,10 +243,10 @@ def select_zne_extrapolated_result(
     reject_conditions = np.stack(
         [
             np.logical_not(np.isfinite(zne_values)),
-            np.logical_not(np.isfinite(zne_std_errors)),
-            zne_std_errors > stderr_threshold,
-            zne_values - zne_std_errors < val_min - stderr_threshold,
-            zne_values + zne_std_errors > val_max + stderr_threshold,
+            np.logical_not(np.isfinite(zne_stderrs)),
+            zne_stderrs > stderr_threshold,
+            zne_values - zne_stderrs < val_min - stderr_threshold,
+            zne_values + zne_stderrs > val_max + stderr_threshold,
         ],
         axis=-1,
     )
@@ -280,7 +254,7 @@ def select_zne_extrapolated_result(
 
     # Fallback index is the lowest stderror result if none satisfy acceptance
     # criteria. Here we map NaN to Inf since argmin treats NaN < 0.
-    fallback_indices = np.argmin(np.nan_to_num(zne_std_errors, nan=np.inf), axis=0)
+    fallback_indices = np.argmin(np.nan_to_num(zne_stderrs, nan=np.inf), axis=0)
 
     # Iterate across each extrapolated noise scale and select the output from the
     # highest-priority (lowest indexed) model that produced a valid output.
@@ -288,16 +262,28 @@ def select_zne_extrapolated_result(
     # stderr will be chosen.
     accept_values = np.zeros(zne_values.shape[1:], dtype=float)
     accept_stderrs = np.zeros_like(accept_values)
+    accept_nfs = np.zeros_like(accept_values)
     accept_extrap = np.zeros_like(accept_values, dtype=object)
     for idx, col in enumerate(accept.T):
         accepted = np.where(col)[0]
-        accepted_idx = accepted[0] if accepted.size else fallback_indices[idx]
-        fits_idx = (accepted_idx, idx)
+        fits_idx = (accepted[0], idx) if accepted.size else (fallback_indices[idx], idx)
         accept_values[idx] = zne_values[fits_idx]
-        accept_stderrs[idx] = zne_std_errors[fits_idx]
-        accept_extrap[idx] = zne_extrapolator[accepted_idx]
+        accept_stderrs[idx] = zne_stderrs[fits_idx]
+        accept_extrap[idx] = zne_extrap[fits_idx]
+        accept_nfs[idx] = zne_nfs[fits_idx]
 
-    return accept_values, accept_stderrs, accept_extrap
+    # Stack the row of selected extrapolated values on top of the original values.
+    res_values = np.vstack([[accept_values], zne_values])
+    res_stderrs = np.vstack([[accept_stderrs], zne_stderrs])
+    res_nfs = np.vstack([[accept_nfs], zne_nfs])
+    res_extrap = np.vstack([[accept_extrap], zne_extrap])
+
+    # Update the metadata to contain the data with the selected values in the first row
+    zne_metadata["standard_error"] = res_stderrs
+    zne_metadata["resilience"]["zne_noise_factors"] = res_nfs
+    zne_metadata["resilience"]["zne_extrapolator"] = res_extrap
+
+    return res_values, zne_metadata
 
 
 def extrapolate(
@@ -385,12 +371,12 @@ def build_model_spec(
     raise ValueError(f"Unsupported extrapolator name: {name}, must be one of {_VALID_NAMES}")
 
 
-def poly(x: npt.ArrayLike, *coeffs: float) -> np.ndarray:
+def poly(x: ArrayLike, *coeffs: float) -> np.ndarray:
     """Polynomial model, coeffs should be ordered lowest-order-first."""
     return polyval(np.asarray(x, dtype=float), coeffs)
 
 
-def multi_exp(x: npt.ArrayLike, *params: float) -> np.ndarray:
+def multi_exp(x: ArrayLike, *params: float) -> np.ndarray:
     """Sum of exponentials ``sum_i (a_i * exp(b_i * x))``.
 
     The parameter ordering should be [amp1, rate1, ...ampN, rateN].
@@ -431,7 +417,43 @@ def seed_exp_from_log_fit(
     return [v for i in range(n) for v in (amp / n, rate * (i + 1))]
 
 
-def as_noise_factors(nf: float | npt.ArrayLike | None) -> np.ndarray:
+def stack_unextrapolated_result(
+    zne_values: np.ndarray,
+    zne_metadata: dict[str, Any],
+    raw_values: np.ndarray,
+    raw_metadata: dict[str, Any],
+) -> tuple[np.ndarray, dict[str, Any]]:
+    """Concatenate the un-extrapolated noise-factor data onto the extrapolated result."""
+
+    def concatenate_rows(arr: np.ndarray, row: np.ndarray) -> np.ndarray:
+        if arr.size == 0:
+            return row
+        bcast = np.broadcast_to(row, arr.shape[:-1] + row.shape)
+        return np.concatenate([arr, bcast], axis=-1)
+
+    stacked_values = concatenate_rows(zne_values, raw_values)
+    stacked_metadata = zne_metadata
+    stacked_metadata["standard_error"] = concatenate_rows(
+        zne_metadata["standard_error"], raw_metadata["standard_error"]
+    )
+    if "ensemble_standard_error" in raw_metadata:
+        # The ZNE extrapolated data doesn't define an ensemble standard error so we set it to NaN.
+        stacked_metadata["ensemble_standard_error"] = concatenate_rows(
+            np.nan * np.ones_like(zne_values), raw_metadata["ensemble_standard_error"]
+        )
+    stacked_metadata["resilience"]["zne_noise_factors"] = concatenate_rows(
+        zne_metadata["resilience"]["zne_noise_factors"],
+        raw_metadata["resilience"]["zne_noise_factors"],
+    )
+    # The extrapolator field has no value for the raw (un-extrapolated) rows, so pad with None.
+    none_vals = np.array(len(raw_values) * [None], dtype=object)
+    stacked_metadata["resilience"]["zne_extrapolator"] = concatenate_rows(
+        zne_metadata["resilience"]["zne_extrapolator"], none_vals
+    )
+    return stacked_values, stacked_metadata
+
+
+def as_noise_factors(nf: float | ArrayLike | None) -> np.ndarray:
     """Coerce the extrapolated-noise-factor argument to a 1D float array."""
     if nf is None:
         return np.zeros(0)
@@ -449,6 +471,24 @@ def poly_degree(name: str) -> int | None:
         return 1
     match = re.fullmatch(r"polynomial_degree_([1-7])", name)
     return int(match.group(1)) if match else None
+
+
+def format_extrapolated(
+    fit_values: np.ndarray, fit_metadata: dict[str, Any]
+) -> tuple[float | np.ndarray, dict[str, Any]]:
+    """Reshape size-1 results to floats to avoid returning shaped results in that case."""
+    if fit_values.size == 1:
+        fit_values = fit_values.flat[0]
+        fit_metadata["standard_error"] = fit_metadata["standard_error"].flat[0]
+        if "ensemble_standard_error" in fit_metadata:
+            fit_metadata["ensemble_standard_error"] = fit_metadata["ensemble_standard_error"].flat[
+                0
+            ]
+        res = fit_metadata["resilience"]
+        for field in ["zne_noise_factors", "zne_extrapolator"]:
+            if field in res:
+                res[field] = res[field].flat[0]
+    return fit_values, fit_metadata
 
 
 def copy_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
