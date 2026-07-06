@@ -268,7 +268,7 @@ def find_unique_layers(
             of gates.
 
     Returns:
-        Unique layers for each pub.
+        Unique boxed layers found across the given PUBs.
     """
     pm_kwargs = options_to_boxing_pm_kwargs(
         twirling_options,
