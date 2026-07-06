@@ -153,9 +153,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             issue_deprecation_msg(
                 msg="Specifying different 'precision' across pubs is deprecated",
                 version="0.48.0",
-                remedy="Use a single run-level value instead, e.g. estimator.run(pubs, precision=...). "  # noqa: E501
-                "The executor-backed primitives use a single global shot budget per submission, "
-                "so precision that varies between pubs is not supported.",
+                remedy="Submit one job for each desired shot count instead. "
+                "To reduce overhead, Consider submitting these jobs inside a Batch execution mode.",
                 stacklevel=2,
             )
 

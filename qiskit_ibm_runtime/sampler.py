@@ -112,9 +112,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             issue_deprecation_msg(
                 msg="Specifying different 'shots' across pubs is deprecated",
                 version="0.48.0",
-                remedy="Use a single run-level value instead, e.g. sampler.run(pubs, shots=...). "
-                "The executor-backed primitives use a single global shot budget per submission, "
-                "so shots that vary between pubs are not supported.",
+                remedy="Submit one job for each desired shot count instead. "
+                "To reduce overhead, Consider submitting these jobs inside a Batch execution mode.",
                 stacklevel=2,
             )
 

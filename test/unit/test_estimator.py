@@ -12,6 +12,8 @@
 
 """Tests for estimator class."""
 
+import warnings
+
 import numpy as np
 from ddt import data, ddt
 from qiskit import QuantumCircuit, transpile
@@ -300,3 +302,125 @@ class TestEstimatorV2(IBMTestCase):
 
         with self.assertRaisesRegex(IBMInputValueError, " h "):
             estimator.run(pubs=[(circ, observable)])
+
+    def test_deprecate_pub_level_precision(self):
+        """Conflicting pub-level precision emits one DeprecationWarning."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1)
+        t_circ = transpile(circ, backend=backend)
+        observable = remap_observables("Z", t_circ)
+        inst = EstimatorV2(mode=backend)
+
+        warning_msg = "Specifying different 'precision' across pubs is deprecated"
+
+        def matching_warnings(call):
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always", DeprecationWarning)
+                call()
+
+            return [
+                w
+                for w in caught
+                if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
+            ]
+
+        # Run-level precision only must not warn.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable),
+                            (t_circ, observable),
+                        ],
+                        precision=0.01,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # Pub-level precision that agrees with run-level precision must not warn.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable, None, 0.01),
+                            EstimatorPub.coerce((t_circ, observable, None, 0.01)),
+                        ],
+                        precision=0.01,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # Pub-level precision that agrees across pubs must not warn, even if it
+        # disagrees with run-level precision.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable, None, 0.02),
+                            EstimatorPub.coerce((t_circ, observable, None, 0.02)),
+                        ],
+                        precision=0.01,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # A pub without explicit precision inherits the run-level precision, so
+        # matching pub-level and run-level precision must not warn.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable, None, 0.02),
+                            EstimatorPub.coerce((t_circ, observable)),
+                        ],
+                        precision=0.02,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # An explicit pub-level precision value that conflicts with inherited
+        # run-level precision on another pub warns once.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable, None, 0.02),
+                            EstimatorPub.coerce((t_circ, observable)),
+                        ],
+                        precision=0.01,
+                    )
+                )
+            ),
+            1,
+        )
+
+        # Multiple conflicting pub-level precision values warn once, even if they
+        # also disagree with the run-level precision.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, observable, None, 0.01),
+                            EstimatorPub.coerce((t_circ, observable, None, 0.02)),
+                            EstimatorPub.coerce((t_circ, observable, None, 0.03)),
+                        ],
+                        precision=0.04,
+                    )
+                )
+            ),
+            1,
+        )

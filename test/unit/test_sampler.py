@@ -12,11 +12,12 @@
 
 """Tests for sampler class."""
 
+import warnings
 from unittest.mock import MagicMock
 
 import numpy as np
 from ddt import data, ddt, named_data, unpack
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -502,3 +503,115 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(used_run_options["meas_level"], 1)
             self.assertEqual(used_run_options["meas_return"], "avg")
             self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+
+    def test_deprecate_pub_level_shots(self):
+        """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1, 1)
+        circ.measure(0, 0)
+        t_circ = transpile(circ, backend=backend)
+        inst = SamplerV2(mode=backend)
+
+        warning_msg = "Specifying different 'shots' across pubs is deprecated"
+
+        def matching_warnings(call):
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always", DeprecationWarning)
+                call()
+
+            return [
+                w
+                for w in caught
+                if issubclass(w.category, DeprecationWarning) and warning_msg in str(w.message)
+            ]
+
+        # Run-level shots only must not warn.
+        self.assertEqual(
+            len(matching_warnings(lambda: inst.run([t_circ, t_circ], shots=100))),
+            0,
+        )
+
+        # Pub-level shots that agree with run-level shots must not warn.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, None, 100),
+                            SamplerPub(t_circ, shots=100),
+                        ],
+                        shots=100,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # Pub-level shots that agree with each other must not warn, even if they
+        # disagree with run-level shots.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, None, 20),
+                            SamplerPub(t_circ, shots=20),
+                        ],
+                        shots=100,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # A pub without explicit shots inherits the run-level shots, so matching
+        # pub-level and run-level shots must not warn.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, None, 20),
+                            SamplerPub(t_circ),
+                        ],
+                        shots=20,
+                    )
+                )
+            ),
+            0,
+        )
+
+        # An explicit pub-level shot value that conflicts with inherited run-level
+        # shots on another pub warns once.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, None, 20),
+                            SamplerPub(t_circ),
+                        ],
+                        shots=100,
+                    )
+                )
+            ),
+            1,
+        )
+
+        # Multiple conflicting pub-level shot values warn once, even if they also
+        # disagree with the run-level shots.
+        self.assertEqual(
+            len(
+                matching_warnings(
+                    lambda: inst.run(
+                        [
+                            (t_circ, None, 100),
+                            SamplerPub(t_circ, shots=20),
+                            SamplerPub(t_circ, shots=34),
+                        ],
+                        shots=50,
+                    )
+                )
+            ),
+            1,
+        )
