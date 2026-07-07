@@ -22,9 +22,11 @@ import numpy as np
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+from ..base_primitive import get_mode_service_backend
 from ..exceptions import IBMInputValueError
 from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
+from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
@@ -38,6 +40,7 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
+    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -104,9 +107,16 @@ class EstimatorV2(BaseEstimatorV2):
     ):
         super().__init__()
 
-        self._executor = Executor(mode=mode)
+        # Store mode, service, and backend for simulator detection
+        self._mode, self._service, self._backend = get_mode_service_backend(mode)
 
-        # Coerced to `SampEstimatorOptionslerOptions` via `__setattr__()`.
+        # Only create executor for non-local backends
+        # For local simulators (QiskitRuntimeLocalService), we'll use BackendEstimatorV2 directly
+        self._executor = None
+        if not isinstance(self._service, QiskitRuntimeLocalService):
+            self._executor = Executor(mode=mode)
+
+        # Coerced to `EstimatorOptions` via `__setattr__()`.
         self.options = options if options is not None else EstimatorOptions()  # type: ignore[assignment]
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -155,9 +165,6 @@ class EstimatorV2(BaseEstimatorV2):
         # Coerce pubs to EstimatorPub objects
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
 
-        # Convert pubs to QuantumProgram and map options using the selected prepare function
-        logger.info("Starting pre-processing")
-
         resolved_precision = resolve_precision(coerced_pubs, precision)
         if resolved_precision is not None:
             shots = int(np.ceil(1.0 / (resolved_precision**2)))
@@ -165,6 +172,14 @@ class EstimatorV2(BaseEstimatorV2):
             shots = int(self.options.default_shots)
         else:
             shots = int(np.ceil(1.0 / (self.options.default_precision**2)))
+
+        # Check if we're in local simulator mode
+        if self._executor is None:
+            logger.info("Running in local simulator mode")
+            return self._run_simulator(coerced_pubs, shots)
+
+        # Convert pubs to QuantumProgram and map options using the selected prepare function
+        logger.info("Starting pre-processing")
 
         if self.options.dynamical_decoupling.enable:
             for pub in coerced_pubs:
@@ -213,7 +228,7 @@ class EstimatorV2(BaseEstimatorV2):
 
         if self.options.dynamical_decoupling.enable:
             quantum_program = apply_dynamical_decoupling(
-                backend=self._executor._backend,
+                backend=self._backend,
                 dd_options=self.options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
@@ -240,3 +255,30 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
         return self._executor.run(quantum_program)
+
+    def _run_simulator(self, pubs: list[EstimatorPub], shots: int) -> LocalRuntimeJob:
+        """Run estimator in local simulator mode using BackendEstimatorV2.
+
+        Args:
+            pubs: List of estimator PUBs to run.
+            shots: The number of shots to use.
+
+        Returns:
+            A LocalRuntimeJob.
+        """
+        options_dict = asdict(self.options)  # type: ignore[call-overload]
+        options_dict["default_shots"] = shots
+
+        inputs = {
+            "pubs": pubs,
+            "options": options_dict,
+        }
+
+        runtime_options = {"backend": self._backend}
+
+        return self._service._run(
+            program_id="estimator",
+            inputs=inputs,
+            options=runtime_options,
+            calibration_id=None,
+        )

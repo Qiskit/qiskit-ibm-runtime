@@ -20,15 +20,27 @@ from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
+
+def create_mock_backend():
+    """Create a mock IBMBackend for testing (non-local, executor path)."""
+    backend = MagicMock(spec=IBMBackend)
+    backend.name = "fake_backend"
+    backend._instance = "ibm-q/open/main"
+    backend.service = MagicMock()
+    backend.target = FakeManilaV2().target
+    return backend
 
 
 @ddt
@@ -37,13 +49,13 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = FakeManilaV2()
+        self.backend = create_mock_backend()
 
         # Create a mock job to return from executor.run()
         self.mock_job = MagicMock(spec=RuntimeJobV2)
         self.mock_job.job_id.return_value = "test-job-id"
 
-        # Patch Executor to avoid local mode error
+        # Patch Executor
         self.executor_patcher = patch("qiskit_ibm_runtime.executor_estimator.estimator.Executor")
         self.mock_executor_class = self.executor_patcher.start()
 
@@ -443,3 +455,82 @@ class TestEstimatorV2Run(unittest.TestCase):
         mock_prepare_zne.assert_called_once()
         call_kwargs = mock_prepare_zne.call_args
         self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
+
+
+class TestEstimatorV2SimulatorMode(unittest.TestCase):
+    """Tests for EstimatorV2 with local simulator backends."""
+
+    def test_simulator_mode_skips_executor(self):
+        """Test that a local backend (non-IBMBackend) skips the Executor."""
+        backend = GenericBackendV2(num_qubits=5)
+        estimator = EstimatorV2(mode=backend)
+
+        self.assertIsNone(estimator._executor)
+
+    def test_simulator_mode_returns_result(self):
+        """Test that local mode returns expectation values close to the ideal.
+
+        The Bell state (|00> + |11>)/sqrt(2) has <ZZ> = 1.0 exactly.
+        With enough shots the noisy simulator should be within 0.1 of that.
+        """
+        backend = GenericBackendV2(num_qubits=5, seed=42)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator = EstimatorV2(mode=backend)
+        estimator.options.default_shots = 10_000
+        estimator.options.simulator.seed_simulator = 42
+        result = estimator.run([(circuit, observable)]).result()
+
+        self.assertEqual(len(result), 1)
+        self.assertAlmostEqual(result[0].data.evs, 1.0, delta=0.1)
+
+    def test_simulator_mode_seed_is_deterministic(self):
+        """Test that seed_simulator produces deterministic expectation values."""
+        backend = GenericBackendV2(num_qubits=5)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator1 = EstimatorV2(mode=backend)
+        estimator1.options.simulator.seed_simulator = 42
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(circuit, observable)]).result()
+
+        estimator2 = EstimatorV2(mode=backend)
+        estimator2.options.simulator.seed_simulator = 42
+        estimator2.options.default_shots = 100
+        result2 = estimator2.run([(circuit, observable)]).result()
+
+        np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
+
+    def test_simulator_mode_different_seeds_differ(self):
+        """Test that different seeds produce different expectation values.
+
+        Uses a single-qubit H gate whose <Z>=0 expectation value has shot-noise
+        variance, so results differ between seeds with high probability.
+        """
+        backend = GenericBackendV2(num_qubits=5)
+
+        # H|0> gives <Z>=0 with shot noise - results vary by seed
+        circuit = QuantumCircuit(1)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("Z", 1)])
+
+        estimator1 = EstimatorV2(mode=backend)
+        estimator1.options.simulator.seed_simulator = 42
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(circuit, observable)]).result()
+
+        estimator2 = EstimatorV2(mode=backend)
+        estimator2.options.simulator.seed_simulator = 99
+        estimator2.options.default_shots = 100
+        result2 = estimator2.run([(circuit, observable)]).result()
+
+        self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
