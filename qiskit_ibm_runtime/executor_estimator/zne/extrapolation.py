@@ -47,7 +47,7 @@ def process_extrapolated_expectation_values(
     observables: ObservablesArray,
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
-    extrapolated_noise_factors: float | npt.ArrayLike = 0,
+    extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
 ) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
@@ -101,7 +101,7 @@ def process_extrapolated_expectation_values(
     if isinstance(extrapolators, str):
         extrapolators = [extrapolators]
 
-    if isinstance(extrapolated_noise_factors, float):
+    if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]
 
     # exp_vals is a list of expectation value results for each noise factor
@@ -137,11 +137,6 @@ def process_extrapolated_expectation_values(
             observable,
             extrapolators,
         )
-
-        # Reshape size 1 results to floats to avoid returning shaped results in this case
-        if selected_values.size == 1:
-            selected_values = selected_values.flat[0]
-            selected_stderr = selected_stderr.flat[0]
 
         result_values[(slice(None), *bcast_index)] = selected_values
         result_stderrs[(slice(None), *bcast_index)] = selected_stderr
@@ -257,13 +252,17 @@ def select_zne_extrapolated_result(
     # Determine ideal value limits for standard basis projectors. If there is any
     # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
     # For missing or non-standard basis don't constrain values
-    val_min, val_max = (-np.inf, np.inf)
-    for observable_term in observable.keys():
+    val_min = 0
+    val_max = 0
+    for observable_term, coeff in observable.items():
         if re.search(_pattern_ylim_01, observable_term):
-            val_min, val_max = (0, 1)
+            val_max += coeff
         elif re.search(_pattern_ylim_pm1, observable_term):
-            val_min, val_max = (-1, 1)
-            break
+            val_min -= coeff
+            val_max += coeff
+        else:
+            val_min = -np.inf
+            val_max = np.inf
 
     # Filter candidate values that have non-finite values/std errors and values
     # with standard errors outside the basis threshold.
@@ -451,11 +450,3 @@ def poly_degree(name: str) -> int | None:
         return 1
     match = re.fullmatch(r"polynomial_degree_([1-7])", name)
     return int(match.group(1)) if match else None
-
-
-def copy_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
-    """Safer shallow copy of nested metadata."""
-    return {
-        key: copy_metadata(value) if isinstance(value, dict) else value
-        for key, value in metadata.items()
-    }
