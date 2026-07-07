@@ -232,7 +232,7 @@ class QuantumProgram:
                     data point (resulting from kerneling the measurement trace) in arbitrary units.
                 * "avg_kerneled": Classical register data is returned as a complex array with the
                     intrinsic shape ``(creg_size,)``, where data is equivalent to "kerneled" except
-                    additionally averagedover shots.
+                    additionally averaged over shots.
 
             passthrough_data: Arbitrary nested data passed through execution without modification.
     """
