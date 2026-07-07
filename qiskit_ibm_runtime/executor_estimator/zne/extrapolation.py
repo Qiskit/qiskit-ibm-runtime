@@ -252,8 +252,8 @@ def select_zne_extrapolated_result(
     # Determine ideal value limits for standard basis projectors. If there is any
     # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
     # For missing or non-standard basis don't constrain values
-    val_min = 0.0
-    val_max = 0.0
+    val_min = 0.0 if observable else -np.inf
+    val_max = 0.0 if observable else np.inf
     for observable_term, coeff in observable.items():
         if re.search(_pattern_ylim_01, observable_term):
             val_max += coeff
