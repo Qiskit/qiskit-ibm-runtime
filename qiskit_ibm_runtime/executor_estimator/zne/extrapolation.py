@@ -71,7 +71,9 @@ def process_extrapolated_expectation_values(
 
     Args:
         exp_vals: Raw expectation value result. Each element of measured observable and parameter
-            is a 1D array of expectation values, one per noise factor.
+            is a 1D array of expectation values, one per noise factor. The total shape is an
+            arbitrary np.array shape defined as:
+            (zne_noise_factors, pub.shape)
         standard_errors: Raw standard deviations of the results. Have the same shape as
             ``exp_vals``.
         observables: The observables to calculate expectation values for. The observables determine
@@ -224,8 +226,8 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 
 
 def select_zne_extrapolated_result(
-    zne_values: np.ndarray,
-    zne_std_errors: np.ndarray,
+    zne_values: npt.NDArray[float],
+    zne_std_errors: npt.NDArray[float],
     observable: ObservablesArray | Mapping[str, float],
     zne_extrapolator: Sequence[str],
 ) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
