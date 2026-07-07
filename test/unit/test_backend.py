@@ -71,9 +71,9 @@ class TestBackend(IBMTestCase):
         sampler = SamplerV2(ibm_backend)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run([transpiled])
+            sampler.run(transpiled)
 
-        self.assertIn("inhomogeneous", str(err.exception))
+        self.assertIn("faulty", str(err.exception))
 
     def test_raise_faulty_edge(self):
         """Test faulty edge is raised."""
