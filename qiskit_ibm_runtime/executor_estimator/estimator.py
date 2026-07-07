@@ -28,12 +28,13 @@ from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
-from .utils import resolve_precision
+from .utils import find_unique_layers, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from qiskit.circuit import CircuitInstruction
     from qiskit.primitives.containers.estimator_pub import EstimatorPubLike
     from qiskit.providers import BackendV2
 
@@ -123,6 +124,28 @@ class EstimatorV2(BaseEstimatorV2):
                 raise TypeError(f"Expected EstimatorOptions or dict, got {type(value)}")
 
         super().__setattr__(name, value)
+
+    def find_unique_layers(self, pubs: Iterable[EstimatorPubLike]) -> list[CircuitInstruction]:
+        """Return the unique boxed layers found across the given PUBs.
+
+        The returned list contains one instance of each distinct boxed layer (represented as a
+        :class:`~.CircuitInstruction`) appearing in the input PUBs. This list can be passed
+        directly to the :meth:`~.qiskit_ibm_runtime.noise_learner_v3.NoiseLearnerV3.run` method
+        for characterization, avoiding redundant learning of identical layers.
+
+        Args:
+            pubs: The list of PUBs to return a list of unique boxes for.
+
+        Returns:
+            The unique boxed layers found across the given PUBs.
+        """
+        coerced_pubs = [EstimatorPub.coerce(pub, None) for pub in pubs]
+        return find_unique_layers(
+            pubs=coerced_pubs,
+            twirling_options=self.options.twirling,
+            measure_noise_learning=self.options.resilience.measure_noise_learning,
+            inject_noise=self.options.resilience.pec_mitigation,  # TODO: Add PEA once available
+        )
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None

@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
@@ -251,18 +251,16 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
     }
 
 
-def get_layers(
-    pubs: Sequence[EstimatorPub],
+def find_unique_layers(
+    pubs: Iterable[EstimatorPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
-) -> list[list[CircuitInstruction]]:
-    """Find unique layers of the circuit of each pub.
-
-    Uses the input options to box the circuit, and find its unique layers.
+) -> list[CircuitInstruction]:
+    """Return the unique boxed layers found across the given PUBs.
 
     Args:
-        pubs: list of estimators pubs.
+        pubs: The list of PUBs to return a list of unique boxes for.
         twirling_options: Twirling options.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
@@ -270,21 +268,20 @@ def get_layers(
             of gates.
 
     Returns:
-        Unique layers for each pub.
+        Unique boxed layers found across the given PUBs.
     """
     pm_kwargs = options_to_boxing_pm_kwargs(
         twirling_options,
         measure_noise_learning,
         inject_noise,
     )
-    return [
-        find_unique_box_instructions(
-            box_circuit(circuit=pub.circuit, inject_noise=inject_noise, **pm_kwargs),
-            normalize_annotations=None,
-            undress_boxes=True,
-        )
-        for pub in pubs
-    ]
+    boxed_circuits = (
+        box_circuit(circuit=pub.circuit, inject_noise=inject_noise, **pm_kwargs) for pub in pubs
+    )
+    instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
+    return find_unique_box_instructions(
+        instructions=instructions, normalize_annotations=None, undress_boxes=True
+    )
 
 
 def compute_samplex_arguments(

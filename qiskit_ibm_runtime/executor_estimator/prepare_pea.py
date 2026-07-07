@@ -67,7 +67,7 @@ def prepare_pea(
         zne_options: The options for PEA mitigation (which have the same options as ZNE).
         noise_model_mapping: Mapping between layer ref to a noise model to use for noise
             amplification. The dict contains layers from all pubs. Assumes that the unique
-            layers used for noise learning were extracted using the ``get_layers`` method.
+            layers used for noise learning were extracted using the ``find_unique_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
