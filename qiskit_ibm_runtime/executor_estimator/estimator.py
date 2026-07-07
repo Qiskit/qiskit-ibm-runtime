@@ -29,6 +29,7 @@ from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
 from .utils import resolve_precision
+from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -186,6 +187,16 @@ class EstimatorV2(BaseEstimatorV2):
                 shots=shots,
                 pec_options=self.options.resilience.pec,
                 noise_model_mapping=self.options.resilience.noise_model_mapping,
+                measure_noise_learning=self.options.resilience.measure_noise_learning
+                if self.options.resilience.measure_mitigation
+                else None,
+            )
+        elif self.options.resilience.zne_mitigation:
+            quantum_program = prepare_zne(
+                pubs=coerced_pubs,
+                twirling_options=self.options.twirling,
+                shots=shots,
+                zne_options=self.options.resilience.zne,
                 measure_noise_learning=self.options.resilience.measure_noise_learning
                 if self.options.resilience.measure_mitigation
                 else None,

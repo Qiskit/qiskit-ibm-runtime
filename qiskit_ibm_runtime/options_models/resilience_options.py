@@ -21,6 +21,7 @@ from qiskit.quantum_info import PauliLindbladMap  # noqa: TC002
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .pec_options import PecOptions
 from .utils import PRIMITIVES_CONFIG
+from .zne_options import ZneOptions
 
 
 @dataclass(config=PRIMITIVES_CONFIG)
@@ -56,6 +57,19 @@ class ResilienceOptions:
     """Additional probabalistic error cancellation mitigation options.
 
     See :class:`PecOptions` for all options.
+    """
+
+    zne_mitigation: bool = False
+    """Whether to turn on Zero Noise Extrapolation error mitigation method.
+
+    If you enable ZNE, you can fine-tune its options by using :attr:`~zne`.
+    See :class:`ZneOptions` for additional ZNE-related options.
+    """
+
+    zne: ZneOptions = Field(default_factory=ZneOptions)
+    """Additional zero noise extrapolation mitigation options.
+
+    See :class:`ZneOptions` for all options.
     """
 
     noise_model_mapping: dict[str, PauliLindbladMap] | None = None
