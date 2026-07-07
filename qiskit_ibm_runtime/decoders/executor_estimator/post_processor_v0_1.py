@@ -78,6 +78,9 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract options if present
     options_metadata = post_processor_data.get("options", {})
 
+    # Check if PEC mitigation was used
+    pec_gammas = post_processor_data.get("pec_gammas", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
@@ -121,9 +124,19 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         param_shape = tuple(param_shape)
 
         # Calculate exp vals and place them in a databin
-        exp_vals, stds, ensemble_stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise_data
-        )
+        if pec_gammas is not None:
+            exp_vals, stds, ensemble_stds = process_expectation_values_pec(
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                pec_gamma=pec_gammas[idx],
+            )
+        else:
+            exp_vals, stds, ensemble_stds = process_expectation_values(
+                item_result, observables, param_shape, param_basis_pairs, readout_noise_data
+            )
         data_bin = DataBin(
             evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
         )
