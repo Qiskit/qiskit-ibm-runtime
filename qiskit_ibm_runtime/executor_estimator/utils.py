@@ -192,6 +192,7 @@ def box_circuit(
             :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
             API docs for a full list of supported values.
         twirling_group: The group to use for the twirling boxes.
+            Check the :meth:`~.samplomatic.transpiler.generate_boxing_pass_manager` documentation for supported values.
         inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
             of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
             called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
