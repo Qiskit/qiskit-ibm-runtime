@@ -174,6 +174,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=enable_gates,
             measure_annotations="all",
             twirling_strategy="all",
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -203,6 +204,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations=measure_annotations,
             twirling_strategy="all",
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -232,6 +234,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy=twirling_strategy,
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -264,6 +267,7 @@ class TestBoxCircuit(unittest.TestCase):
             twirling_strategy="all",
             inject_noise_targets="gates" if inject_noise else "none",
             inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -301,6 +305,7 @@ class TestBoxCircuit(unittest.TestCase):
             measure_annotations="all",
             twirling_strategy="all",
             add_tags=add_tags,
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)

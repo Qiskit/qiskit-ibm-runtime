@@ -125,7 +125,7 @@ class TestNoiseLearnerV3Results(IBMTestCase):
             NoiseLearnerV3Result.from_generators(self.generators, rates) for rates in self.rates
         ]
         self.pauli_lindblad_maps = [result.to_pauli_lindblad_map() for result in self.results]
-        self.inject_noise_annotations = [InjectNoise(ref) for ref in ["hi", "bye"]]
+        self.inject_noise_annotations = [InjectNoise(ref, site="after") for ref in ["hi", "bye"]]
 
     def test_properties_of_iterable(self):
         """Test elementary methods of ``NoiseLearnerV3Results``.
