@@ -172,6 +172,7 @@ def prepare_zne(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
+            "mitigation": "zne",
             "zne_noise_factors": noise_factors,
             "item_id": item_id,
         },

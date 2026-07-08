@@ -21,9 +21,9 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import random_pauli_list
 
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
+    create_pub_result,
+    create_pub_result_pec,
     estimator_v2_post_processor_v0_1,
-    process_expectation_values,
-    process_expectation_values_pec,
 )
 from qiskit_ibm_runtime.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from qiskit_ibm_runtime.results.quantum_program import (
@@ -360,8 +360,8 @@ class TestEstimatorV2PostProcessor(unittest.TestCase):
 
 
 @ddt
-class TestProcessExpectationValues(unittest.TestCase):
-    """Tests for the ``process_expectation_values`` method."""
+class TestCreatePubResult(unittest.TestCase):
+    """Tests for the ``create_pub_result`` function."""
 
     def get_param_basis_pairs(self, observables, param_shape):
         """Helper to compute values for ``param_basis_pairs``.
@@ -383,7 +383,7 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
         item_result = QuantumProgramItemResult({"meas": data})
         with self.assertRaisesRegex(ValueError, "Dedicated creg ``'_meas'``"):
-            process_expectation_values(
+            create_pub_result(
                 item_result=item_result,
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
@@ -396,7 +396,7 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.random.randint(0, 2, size=(3, 3)).astype(bool)
         item_result = QuantumProgramItemResult({"_meas": data})
         with self.assertRaisesRegex(ValueError, "has ``2`` axes"):
-            process_expectation_values(
+            create_pub_result(
                 item_result=item_result,
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
@@ -409,7 +409,7 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.random.randint(0, 2, size=(1, 1, 1, 10)).astype(bool)
         item_result = QuantumProgramItemResult({"_meas": data})
         with self.assertRaisesRegex(ValueError, "cannot reshape"):
-            process_expectation_values(
+            create_pub_result(
                 item_result=item_result,
                 observables=ObservablesArray({"ZZ": 1, "XX": 19}).reshape(1, 2),
                 param_shape=(3, 10),
@@ -425,13 +425,14 @@ class TestProcessExpectationValues(unittest.TestCase):
         item_result = QuantumProgramItemResult({"_meas": data})
 
         coeff = 1.3
-        evs, _, _ = process_expectation_values(
+        pub_result = create_pub_result(
             item_result=item_result,
             observables=ObservablesArray({"ZZ": coeff}),
             param_shape=(),
             param_basis_pairs=[((), "ZZ")],
             measure_noise_data=None,
         )
+        evs = pub_result.data.evs
 
         # Verify result: coeff * (8 * (+1) + 2 * (-1)) = coeff * 6, average =  coeff * 6 / 10
         self.assertAlmostEqual(evs, 0.6 * 1.3)
@@ -443,13 +444,14 @@ class TestProcessExpectationValues(unittest.TestCase):
         item_result = QuantumProgramItemResult({"_meas": data})
 
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
-        evs, _, _ = process_expectation_values(
+        pub_result = create_pub_result(
             item_result=item_result,
             observables=observables,
             param_shape=(),
             param_basis_pairs=[([], "ZZ"), ([], "XX")],
             measure_noise_data=None,
         )
+        evs = pub_result.data.evs
 
         self.assertTrue(all(evs == np.ones(observables.shape, dtype=bool)))
 
@@ -470,13 +472,14 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.zeros((1, 4, 10, observables.num_qubits), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
-        evs, _, _ = process_expectation_values(
+        pub_result = create_pub_result(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
             param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
             measure_noise_data=None,
         )
+        evs = pub_result.data.evs
         self.assertTrue(np.all(evs == expected_evs), msg=evs)
 
     @data(
@@ -500,13 +503,14 @@ class TestProcessExpectationValues(unittest.TestCase):
             {"_meas": twirled_data, "measurement_flips._meas": flips}
         )
 
-        evs, _, _ = process_expectation_values(
+        pub_result = create_pub_result(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
             param_basis_pairs=self.get_param_basis_pairs(observables, param_shape),
             measure_noise_data=None,
         )
+        evs = pub_result.data.evs
         self.assertTrue(np.all(evs == expected_evs), msg=evs)
 
     @data(
@@ -530,7 +534,7 @@ class TestProcessExpectationValues(unittest.TestCase):
         data = np.zeros((1, num_basis, 10, num_qubits), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
-        evs, stds, ensemble_stds = process_expectation_values(
+        pub_result = create_pub_result(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -539,13 +543,13 @@ class TestProcessExpectationValues(unittest.TestCase):
         )
 
         expected_shape = np.broadcast_shapes(obs_shape, param_shape)
-        self.assertTupleEqual(evs.shape, expected_shape)
-        self.assertTupleEqual(stds.shape, expected_shape)
+        self.assertTupleEqual(pub_result.data.evs.shape, expected_shape)
+        self.assertTupleEqual(pub_result.data.stds.shape, expected_shape)
 
 
 @ddt
-class TestProcessExpectationValuesPEC(unittest.TestCase):
-    """Tests for the ``process_expectation_values_pec`` method."""
+class TestCreatePubResultPec(unittest.TestCase):
+    """Tests for the ``create_pub_result_pec`` function."""
 
     def get_param_basis_pairs(self, observables, param_shape):
         """Helper to compute values for ``param_basis_pairs``.
@@ -572,7 +576,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         pec_gamma = 2.0
 
         with self.assertRaisesRegex(ValueError, "pauli_signs"):
-            process_expectation_values_pec(
+            create_pub_result_pec(
                 item_result=item_result,
                 observables=observables,
                 param_shape=(),
@@ -600,7 +604,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0
 
-        evs, _, _ = process_expectation_values_pec(
+        pub_result = create_pub_result_pec(
             item_result=item_result,
             observables=observables,
             param_shape=(),
@@ -608,6 +612,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
+        evs = pub_result.data.evs
 
         # Expected:
         # - ZZ: all measurements are 00 with net +1 signs (even sum) -> ev = +1 * gamma = +2.0
@@ -626,7 +631,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         pec_gamma = 2.0  # Example gamma value
 
-        evs, _, _ = process_expectation_values_pec(
+        pub_result = create_pub_result_pec(
             item_result=item_result,
             observables=observables,
             param_shape=(),
@@ -634,6 +639,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
+        evs = pub_result.data.evs
 
         # Expected: all measurements are 00, so expectation value is +1, scaled by gamma
         expected = np.ones(observables.shape) * pec_gamma
@@ -660,7 +666,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 1.5  # Example gamma value
 
-        evs, _, _ = process_expectation_values_pec(
+        pub_result = create_pub_result_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -668,6 +674,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
+        evs = pub_result.data.evs
 
         # Expected values should be scaled by gamma
         expected_evs = expected_evs_base * pec_gamma
@@ -698,7 +705,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 2.5  # Example gamma value
 
-        evs, _, _ = process_expectation_values_pec(
+        pub_result = create_pub_result_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -706,6 +713,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
             measure_noise_data=None,
             pec_gamma=pec_gamma,
         )
+        evs = pub_result.data.evs
 
         # Expected values should be scaled by gamma
         expected_evs = expected_evs_base * pec_gamma
@@ -736,7 +744,7 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
 
         pec_gamma = 1.8  # Example gamma value
 
-        evs, stds, ensemble_stds = process_expectation_values_pec(
+        pub_result = create_pub_result_pec(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -746,9 +754,9 @@ class TestProcessExpectationValuesPEC(unittest.TestCase):
         )
 
         expected_shape = np.broadcast_shapes(obs_shape, param_shape)
-        self.assertTupleEqual(evs.shape, expected_shape)
-        self.assertTupleEqual(stds.shape, expected_shape)
-        self.assertTupleEqual(ensemble_stds.shape, expected_shape)
+        self.assertTupleEqual(pub_result.data.evs.shape, expected_shape)
+        self.assertTupleEqual(pub_result.data.stds.shape, expected_shape)
+        self.assertTupleEqual(pub_result.data.ensemble_standard_error.shape, expected_shape)
 
 
 @ddt
@@ -781,6 +789,7 @@ class TestEstimatorV2PostProcessorPEC(unittest.TestCase):
         passthrough_data = {
             "post_processor": {
                 "version": "v0.1",
+                "mitigation": "pec",
                 "circuits_metadata": [None] * len(meas_data_list),
                 "observables": observables_list,
                 "param_basis_pairs": param_basis_pairs_list,

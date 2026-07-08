@@ -189,6 +189,7 @@ def prepare_pec(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "mitigation": "pec",
             "pec_gammas": pec_gamma_list,
         },
     }
