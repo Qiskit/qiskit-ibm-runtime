@@ -18,7 +18,9 @@ from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
+from samplomatic import Tag
 from samplomatic.transpiler import generate_boxing_pass_manager
+from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
@@ -278,3 +280,62 @@ class TestBoxCircuit(unittest.TestCase):
         expected_circuit = pm.run(expected_circuit)
 
         self.assertEqual(circuit_out, expected_circuit)
+
+    @data("none", "unique_box", "unique_instance", "noise_ref")
+    def test_add_tags(self, add_tags):
+        """Tests for the ``add_tags`` argument.
+
+        Checks that the circuit produced by ``box_circuit`` matches the expected circuit
+        produced by ``generate_boxing_pass_manager`` with the same ``add_tags`` value, and
+        that boxes carry :class:`~samplomatic.Tag` annotations if and only if ``add_tags``
+        is not ``"none"``.
+        """
+        circuit = QuantumCircuit(3)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        circuit.cx(1, 2)
+        circuit.measure_all()
+
+        circuit_out = box_circuit(
+            circuit,
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy="all",
+            add_tags=add_tags,
+        )
+
+        pm = generate_boxing_pass_manager(
+            enable_gates=True,
+            measure_annotations="all",
+            twirling_strategy="all",
+            add_tags=add_tags,
+        )
+
+        expected_circuit = circuit.remove_final_measurements(inplace=False)
+        expected_circuit.add_register(ClassicalRegister(expected_circuit.num_qubits, "_meas"))
+        expected_circuit.barrier()
+        expected_circuit.measure(range(3), range(3))
+        expected_circuit = pm.run(expected_circuit)
+
+        self.assertEqual(circuit_out, expected_circuit)
+
+        # Verify Tag annotations on box instructions.
+        # "noise_ref" only tags boxes that are paired with injected-noise boxes; without
+        # inject_noise=True there are no such pairs, so no tags are produced.
+        box_instructions = [instr for instr in circuit_out if instr.operation.name == "box"]
+        tagged_boxes = [
+            instr for instr in box_instructions if get_annotation(instr.operation, Tag) is not None
+        ]
+        if add_tags in ("none", "noise_ref"):
+            self.assertEqual(
+                len(tagged_boxes),
+                0,
+                msg=f"Expected no tagged boxes for add_tags={add_tags!r} (without inject_noise), "
+                f"but found {len(tagged_boxes)}.",
+            )
+        else:
+            self.assertGreater(
+                len(tagged_boxes),
+                0,
+                msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
+            )
