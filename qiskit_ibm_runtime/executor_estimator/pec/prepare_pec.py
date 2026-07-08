@@ -67,7 +67,7 @@ def prepare_pec(
         pec_options: The options for PEC mitigation.
         noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
-            used for noise learning were extracted using the ``get_layers`` method.
+            used for noise learning were extracted using the ``find_unique_layers`` method.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
