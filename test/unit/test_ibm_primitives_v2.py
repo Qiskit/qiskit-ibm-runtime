@@ -261,6 +261,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single circuit."""
         circ = real_amplitudes(num_qubits=2, reps=1)
+        circ.measure_all()
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
 
@@ -293,6 +294,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_nd_parameters(self, primitive):
         """Test with parameters of different dimensions."""
         circ = real_amplitudes(num_qubits=2, reps=1)
+        circ.measure_all()
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
         inst = primitive(mode=backend)
@@ -312,10 +314,16 @@ class TestPrimitivesV2(IBMTestCase):
     def test_parameters_multiple_circuits(self, primitive):
         """Test multiple parameters for multiple circuits."""
         backend = get_mocked_backend()
+        qc2 = QuantumCircuit(2)
+        qc2.measure_all()
+        ra2 = real_amplitudes(num_qubits=2, reps=1)
+        ra2.measure_all()
+        ra3 = real_amplitudes(num_qubits=3, reps=1)
+        ra3.measure_all()
         circuits = [
-            transpile(QuantumCircuit(2), backend=backend),
-            transpile(real_amplitudes(num_qubits=2, reps=1), backend=backend),
-            transpile(real_amplitudes(num_qubits=3, reps=1), backend=backend),
+            transpile(qc2, backend=backend),
+            transpile(ra2, backend=backend),
+            transpile(ra3, backend=backend),
         ]
 
         param_vals = [

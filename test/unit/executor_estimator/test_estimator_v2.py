@@ -20,7 +20,7 @@ from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
@@ -394,3 +394,52 @@ class TestEstimatorV2Run(unittest.TestCase):
             "When PEC mitigation is enabled, you must provide a noise model",
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
+
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pec")
+    def test_run_dispatches_to_prepare_pec_when_pec_enabled(self, mock_prepare_pec):
+        """Test that run calls prepare_pec when pec_mitigation is enabled."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.pec_mitigation = True
+        noise_model_mapping = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
+        estimator.options.resilience.noise_model_mapping = noise_model_mapping
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        # Mock prepare_pec to return a valid QuantumProgram
+        mock_qp = MagicMock(spec=QuantumProgram)
+        mock_qp.shots = 1024
+        mock_qp.passthrough_data = {"post_processor": {}}
+        mock_qp.items = []
+        mock_prepare_pec.return_value = mock_qp
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        mock_prepare_pec.assert_called_once()
+        call_kwargs = mock_prepare_pec.call_args
+        self.assertEqual(call_kwargs.kwargs["pec_options"], estimator.options.resilience.pec)
+        self.assertEqual(call_kwargs.kwargs["noise_model_mapping"], noise_model_mapping)
+
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_zne")
+    def test_run_dispatches_to_prepare_zne_when_zne_enabled(self, mock_prepare_zne):
+        """Test that run calls prepare_zne when zne_mitigation is enabled."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.zne_mitigation = True
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        # Mock prepare_zne to return a valid QuantumProgram
+        mock_qp = MagicMock(spec=QuantumProgram)
+        mock_qp.shots = 1024
+        mock_qp.passthrough_data = {"post_processor": {}}
+        mock_qp.items = []
+        mock_prepare_zne.return_value = mock_qp
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        mock_prepare_zne.assert_called_once()
+        call_kwargs = mock_prepare_zne.call_args
+        self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)

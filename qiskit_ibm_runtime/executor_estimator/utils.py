@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
@@ -256,23 +256,22 @@ def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
         if twirling_options.enable_measure or (measure_noise_learning is not None)
         else "change_basis",
         "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+        "inject_noise": inject_noise,
         "add_tags": "unique_box" if add_tags else "none",
     }
 
 
-def get_layers(
-    pubs: Sequence[EstimatorPub],
+def find_unique_layers(
+    pubs: Iterable[EstimatorPub],
     twirling_options: TwirlingOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
     inject_noise: bool = False,
     add_tags: bool = False,
 ) -> list[CircuitInstruction]:
-    """Find unique layers of the circuit of each pub.
-
-    Uses the input options to box the circuit, and find its unique layers.
+    """Return the unique boxed layers found across the given PUBs.
 
     Args:
-        pubs: list of estimators pubs.
+        pubs: The list of PUBs to return a list of unique boxes for.
         twirling_options: Twirling options.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be accounted for in boxing.
@@ -281,7 +280,7 @@ def get_layers(
         add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
 
     Returns:
-        Unique layers for each pub.
+        Unique boxed layers found across the given PUBs.
     """
     pm_kwargs = options_to_boxing_pm_kwargs(
         twirling_options,
@@ -289,7 +288,9 @@ def get_layers(
         inject_noise,
         add_tags=add_tags,
     )
-    boxed_circuits = (box_circuit(circuit=pub.circuit, **pm_kwargs) for pub in pubs)
+    boxed_circuits = (
+        box_circuit(circuit=pub.circuit, **pm_kwargs) for pub in pubs
+    )
     instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
     return find_unique_box_instructions(
         instructions=instructions, normalize_annotations=None, undress_boxes=True
