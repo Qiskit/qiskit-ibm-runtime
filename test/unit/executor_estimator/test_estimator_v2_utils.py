@@ -329,6 +329,5 @@ class TestBoxCircuit(unittest.TestCase):
             self.assertGreater(
                 len(tagged_boxes),
                 0,
-                msg=f"Expected at least one tagged box for add_tags={add_tags!r}, "
-                f"but found none.",
+                msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
             )
