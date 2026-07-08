@@ -301,6 +301,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="balanced_pauli",
             add_tags=add_tags,
         )
 
