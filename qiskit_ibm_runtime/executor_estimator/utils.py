@@ -18,10 +18,10 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable
 
     import numpy.typing as npt
     from qiskit import QuantumCircuit
@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from qiskit.primitives import EstimatorPub
     from samplomatic.samplex import Samplex
 
+    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
     from ..options_models.twirling_options import TwirlingOptions
 
 from collections import defaultdict
@@ -149,7 +150,7 @@ def resolve_precision(
         IBMInputValueError: If pubs have different precision values.
     """
     # Extract precision from pubs
-    pub_precisions = {pub.precision or run_precision for pub in pubs}
+    pub_precisions = {pub.precision if pub.precision is not None else run_precision for pub in pubs}
 
     if len(pub_precisions) != 1:
         raise IBMInputValueError(
@@ -157,29 +158,53 @@ def resolve_precision(
             "(possibly via the run provided precision parameter)"
         )
 
-    return next(iter(pub_precisions))
+    if (precision := next(iter(pub_precisions))) is not None and precision <= 0:
+        raise IBMInputValueError("The precision value must be strictly greater than 0.")
+
+    return precision
 
 
 def box_circuit(
     circuit: QuantumCircuit,
-    twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
+    enable_gates: bool,
+    measure_annotations: str,
+    twirling_strategy: str,
     inject_noise: bool = False,
+    add_tags: Literal["none", "unique_box", "unique_instance", "noise_ref"] = "none",
 ) -> QuantumCircuit:
-    """Box a circuit based on the given input options.
+    """Group the operations in the given ``circuit`` into boxes.
 
-    Removes the final measurement layer and adds a new measurement layer with dedicated
-    register name.
+    This function removes the final measurement layer from the given circuit and adds a new
+    measurement layer with a dedicated register name. Then, it uses the
+    :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` to group the operations in a
+    circuit into boxes.
 
     Args:
-        circuit: Quantum circuit to box.
-        twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
-        inject_noise: Whether to inject noise.
+        circuit: The quantum circuit to box.
+        enable_gates: Whether to group gates into boxes. This value is passed directly to the
+            ``enable_gates`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`.
+        measure_annotations: The annotations placed on the measurement boxes. The measurements
+            are grouped into boxes by default, and the value of ``measure_annotations`` passed
+            directly to the ``measure_annotations`` argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
+            API docs for a full list of supported values.
+        twirling_strategy: The strategy for whether and how twirling boxes are extended to
+            include eligible idle qubits. This value is passed directly to the ``twirling_strategy``
+            argument of
+            :meth:`~samplomatic.transpiler.generate_boxing_pass_manager`. See the Samplomatic
+            API docs for a full list of supported values.
+        inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
+            of gates. If ``True``, :meth:`~samplomatic.transpiler.generate_boxing_pass_manager` is
+            called with arguments ``inject_noise_targets`` and ``inject_noise_strategy`` set to
+            ``"gates"`` and ``"uniform_modification"`` respectively; if ``False``, it is called with
+            ``inject_noise_targets`` and ``inject_noise_strategy`` set to ``"none"`` and
+            ``"no_modification"``. See the Samplomatic API docs for more details regarding these
+            values.
+        add_tags: Whether to include tags for the boxes.
 
     Returns:
-        boxed circuit.
-
+        The boxed circuit.
     """
     # Remove any existing final measurements
     prepared_circuit = circuit.remove_final_measurements(inplace=False)
@@ -193,50 +218,84 @@ def box_circuit(
     prepared_circuit.barrier()
     prepared_circuit.measure(prepared_circuit.qubits, creg)
 
-    # Add boxes
     boxing_pm = generate_boxing_pass_manager(
-        enable_gates=twirling_options.enable_gates or inject_noise,
+        enable_gates=enable_gates,
         enable_measures=True,
-        twirling_strategy=twirling_options.strategy.replace("-", "_"),
-        measure_annotations="all"
-        if twirling_options.enable_measure or twirl_measurements
-        else "change_basis",
+        twirling_strategy=twirling_strategy,
+        measure_annotations=measure_annotations,
         inject_noise_site="after",
         inject_noise_targets="gates" if inject_noise else "none",
         inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+        add_tags=add_tags,
     )
     boxed_circuit = boxing_pm.run(prepared_circuit)
     return boxed_circuit
 
 
-def get_layers(
-    pubs: Sequence[EstimatorPub],
+def options_to_boxing_pm_kwargs(  # type: ignore[no-untyped-def]
     twirling_options: TwirlingOptions,
-    twirl_measurements: bool = False,
-    inject_noise: bool = False,
-) -> list[list[CircuitInstruction]]:
-    """Find unique layers of the circuit of each pub.
-
-    Uses the input options to box the circuit, and find its unique layers.
+    measure_noise_learning: MeasureNoiseLearningOptions | None,
+    inject_noise: bool,
+    add_tags: bool = False,
+) -> dict[str, Any]:
+    """A helper to map options to kwargs for the boxing passmanager.
 
     Args:
-        pubs: list of estimators pubs.
         twirling_options: Twirling options.
-        twirl_measurements: Whether to twirl measurements.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be accounted for in boxing.
         inject_noise: Whether to inject noise.
+        add_tags: Whether to include tags for the boxes. ``False`` will cause no tags to be added
+            (will pass the "none" value to the relevant attribute), while ``True`` will cause tags
+            with the twirled boxes hash to be added (using the "unique_box" value of the relevant
+            attribute). These tags can help injecting noise in simulators.
 
     Returns:
-        Unique layers for each pub.
-
+        Options to the boxing passmanager.
     """
-    return [
-        find_unique_box_instructions(
-            box_circuit(pub.circuit, twirling_options, twirl_measurements, inject_noise).data,
-            normalize_annotations=None,
-            undress_boxes=True,
-        )
-        for pub in pubs
-    ]
+    return {
+        "enable_gates": twirling_options.enable_gates or inject_noise,
+        "measure_annotations": "all"
+        if twirling_options.enable_measure or (measure_noise_learning is not None)
+        else "change_basis",
+        "twirling_strategy": twirling_options.strategy.replace("-", "_"),
+        "inject_noise": inject_noise,
+        "add_tags": "unique_box" if add_tags else "none",
+    }
+
+
+def find_unique_layers(
+    pubs: Iterable[EstimatorPub],
+    twirling_options: TwirlingOptions,
+    measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    inject_noise: bool = False,
+    add_tags: bool = False,
+) -> list[CircuitInstruction]:
+    """Return the unique boxed layers found across the given PUBs.
+
+    Args:
+        pubs: The list of PUBs to return a list of unique boxes for.
+        twirling_options: Twirling options.
+        measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
+            Error eXtinction (TREX) mitigation method will be accounted for in boxing.
+        inject_noise: Whether to add :class:`~samplomatic.InjectNoise` annotations to the boxes
+            of gates.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+
+    Returns:
+        Unique boxed layers found across the given PUBs.
+    """
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise,
+        add_tags=add_tags,
+    )
+    boxed_circuits = (box_circuit(circuit=pub.circuit, **pm_kwargs) for pub in pubs)
+    instructions = (box for boxed_circuit in boxed_circuits for box in boxed_circuit)
+    return find_unique_box_instructions(
+        instructions=instructions, normalize_annotations=None, undress_boxes=True
+    )
 
 
 def compute_samplex_arguments(

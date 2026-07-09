@@ -42,10 +42,11 @@ def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:
     Raises:
         IBMInputValueError: If ``instruction`` does not contain a box.
     """
-    if (name := instruction.operation.name) != "box":
+    box = instruction.operation
+    if (name := box.name) != "box":
         raise IBMInputValueError(f"Expected a 'box' but found '{name}'.")
 
-    undressed_box = undress_box(instruction.operation)
+    undressed_box = undress_box(box)
 
     if len(undressed_box.body) == 0:
         return LearningProtocol.PAULI_LINDBLAD
@@ -56,22 +57,22 @@ def find_learning_protocol(instruction: BoxOp) -> LearningProtocol | None:
     ]
     is_layer = len(active_qubits) == len(set(active_qubits))
 
-    # Check if the undressed box only contains two-qubit Clifford gates
-    has_only_2q_clifford_gates = all(
-        (op.is_standard_gate() and op.operation.num_qubits == 2) or op.name == "barrier"
-        for op in undressed_box.body
+    # Check if the dressed box is Clifford
+    is_clifford = all(
+        (op.is_standard_gate() and op.operation.num_qubits <= 2) or op.name == "barrier"
+        for op in box.body
     )
-    if has_only_2q_clifford_gates:
+    if is_clifford:
         try:
-            Clifford(undressed_box.body)
+            Clifford(box.body)
         except QiskitError:
-            has_only_2q_clifford_gates = False
+            is_clifford = False
+
+    if is_layer and is_clifford:
+        return LearningProtocol.PAULI_LINDBLAD
 
     # Check if the undressed box only contains measurements
     has_only_meas = all(op.name in ["measure", "barrier"] for op in undressed_box.body)
-
-    if is_layer and has_only_2q_clifford_gates:
-        return LearningProtocol.PAULI_LINDBLAD
 
     if is_layer and has_only_meas and len(instruction.qubits) == len(active_qubits):
         return LearningProtocol.TREX

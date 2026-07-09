@@ -32,7 +32,12 @@ from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit
-from .utils import box_circuit, compute_samplex_arguments, make_samplex_arguments
+from .utils import (
+    box_circuit,
+    compute_samplex_arguments,
+    make_samplex_arguments,
+    options_to_boxing_pm_kwargs,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +47,7 @@ def prepare(
     twirling_options: TwirlingOptions,
     shots: int,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -53,6 +59,11 @@ def prepare(
             and twirling is on.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -80,12 +91,16 @@ def prepare(
     param_basis_pairs_list = []
     param_shapes_list = []
 
+    pm_kwargs = options_to_boxing_pm_kwargs(
+        twirling_options,
+        measure_noise_learning,
+        inject_noise=False,
+        add_tags=add_tags,
+    )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(
-            pub.circuit, twirling_options, measure_noise_learning is not None
-        )
+        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
@@ -120,6 +135,7 @@ def prepare(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "mitigation": None,
         },
     }
 

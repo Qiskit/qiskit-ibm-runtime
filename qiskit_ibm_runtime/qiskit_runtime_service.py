@@ -1016,7 +1016,6 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        self._check_instance_usage()
         qrt_options: RuntimeOptions = options  # type: ignore[assignment]
         if options is None:
             qrt_options = RuntimeOptions()
@@ -1028,6 +1027,18 @@ class QiskitRuntimeService:
         backend = qrt_options.backend
         if isinstance(backend, str):
             backend = self.backend(name=qrt_options.get_backend_name())
+
+        # Set the active client to match the backend.
+        try:
+            self._active_api_client = self._api_clients[backend._instance]
+        except KeyError:
+            raise IBMRuntimeError(
+                f"The backend crn ({backend._instance}) is not among the instances supported by "
+                "this QiskitRuntimeService object. Please ensure the backend object was retrieved "
+                "from this object."
+            )
+
+        self._check_instance_usage()
 
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
