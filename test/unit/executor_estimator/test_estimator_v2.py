@@ -460,6 +460,18 @@ class TestEstimatorV2Run(unittest.TestCase):
 class TestEstimatorV2SimulatorMode(unittest.TestCase):
     """Tests for EstimatorV2 with local simulator backends."""
 
+    def setUp(self):
+        """Test level setup."""
+        import warnings
+
+        self._warning_filter = warnings.catch_warnings()
+        self._warning_filter.__enter__()
+        warnings.filterwarnings("ignore", message=".*have no effect in local testing mode.*")
+
+    def tearDown(self):
+        """Test level tear down."""
+        self._warning_filter.__exit__(None, None, None)
+
     def test_simulator_mode_skips_executor(self):
         """Test that a local backend (non-IBMBackend) skips the Executor."""
         backend = GenericBackendV2(num_qubits=5)
