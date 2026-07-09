@@ -44,7 +44,7 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation for a circuit with a single noisy two-qubit gate."""
         # Create a simple circuit with one two-qubit gate annotated with noise
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
 
@@ -65,10 +65,10 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation for a circuit with multiple noisy gates."""
         # Create a circuit with multiple gates
         circuit = QuantumCircuit(3)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
-        with circuit.box(annotations=[InjectNoise(ref="layer_1")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_1", site="after")]):
             circuit.cx(1, 2)
 
         # Create noise models
@@ -89,10 +89,10 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation for a circuit with multiple noisy gates."""
         # Create a circuit with multiple gates
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
 
@@ -127,7 +127,7 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation with noise factor amplification."""
         # Create a circuit with one noisy two-qubit gate
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
 
@@ -154,13 +154,13 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation for circuit with both noisy and noiseless gates."""
         # Create a circuit with multiple gates, only some annotated
         circuit = QuantumCircuit(3)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)  # This will be noisy
             circuit.cx(0, 1)
         with circuit.box():  # Box without InjectNoise annotation
             circuit.x(1)  # This will be noiseless
             circuit.cx(0, 2)
-        with circuit.box(annotations=[InjectNoise(ref="layer_1")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_1", site="after")]):
             circuit.cx(1, 2)  # This will be noisy
 
         noise_model_0 = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=3)
@@ -180,7 +180,7 @@ class TestCalculateGamma(unittest.TestCase):
         """Test gamma calculation with zero noise factor."""
         # Create a circuit with one noisy two-qubit gate
         circuit = QuantumCircuit(2)
-        with circuit.box(annotations=[InjectNoise(ref="layer_0")]):
+        with circuit.box(annotations=[InjectNoise(ref="layer_0", site="after")]):
             circuit.h(0)
             circuit.cx(0, 1)
 
