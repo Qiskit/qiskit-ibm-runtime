@@ -27,7 +27,7 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.pec.prepare_pec import prepare_pec
 from qiskit_ibm_runtime.executor_estimator.pec.utils import calculate_gamma
-from qiskit_ibm_runtime.executor_estimator.utils import get_layers
+from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
@@ -215,9 +215,9 @@ class TestPreparePecFunction(unittest.TestCase):
             [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
         )
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -289,12 +289,11 @@ class TestPreparePecFunction(unittest.TestCase):
         noise_model_2b = PauliLindbladMap.from_sparse_list([("ZX", [1, 2], 0.2)], num_qubits=3)
 
         # find layers first to extract the layers ref
-        layers = get_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
         noise_layer_refs = []
-        for pub_layers in layers:
-            for layer in pub_layers:
-                if annot := get_annotation(layer.operation, InjectNoise):
-                    noise_layer_refs.append(annot.ref)
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_refs.append(annot.ref)
 
         noise_model_mapping = {
             noise_layer_refs[0]: noise_model_1,
@@ -354,9 +353,9 @@ class TestPreparePecFunction(unittest.TestCase):
         max_overhead = 10
         noise_model = PauliLindbladMap.from_sparse_list([("IX", [0, 1], err_rate)], num_qubits=2)
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -415,9 +414,9 @@ class TestPreparePecFunction(unittest.TestCase):
         # Only provide noise model for one pub, but we have two pubs
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
         # find layers first to extract the layers ref
-        layers = get_layers([pub1], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub1], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -442,9 +441,9 @@ class TestPreparePecFunction(unittest.TestCase):
 
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 

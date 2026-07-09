@@ -39,9 +39,12 @@ class TestFindLearningProtocol(IBMTestCase):
             circuit.cx(1, 2)
         with circuit.box([Twirl()]):
             circuit.rzz(0.01, 0, 1)
+        with circuit.box([Twirl()]):
+            circuit.rz(1.2, 0)
+            circuit.cz(0, 1)
 
         protocols = [find_learning_protocol(instr) for instr in circuit]
-        self.assertEqual(protocols, ["pauli_lindblad"] * 2 + [None] * 2)
+        self.assertEqual(protocols, ["pauli_lindblad"] * 2 + [None] * 3)
 
     def test_measure_instructions(self):
         """Test measure instructions."""

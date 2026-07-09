@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 from ddt import data, ddt, named_data, unpack
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import real_amplitudes
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -519,3 +519,29 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(used_run_options["meas_level"], 1)
             self.assertEqual(used_run_options["meas_return"], "avg")
             self.assertTrue(np.array_equal(result[0].data.c, np.zeros((1,))))
+
+    @data(
+        ([None, None], 100, 0),
+        ([100, 100], 100, 0),
+        ([20, 20], 100, 0),
+        ([20, None], 20, 0),
+        ([20, None], 100, 1),
+        ([100, 20, 34], 50, 1),
+    )
+    @unpack
+    def test_deprecate_pub_level_shots(self, pub_shots, run_shots, num_appearances):
+        """Conflicting pub-level shots emit one DeprecationWarning; matching shots do not."""
+        backend = get_mocked_backend()
+        circ = QuantumCircuit(1, 1)
+        circ.measure(0, 0)
+        t_circ = transpile(circ, backend=backend)
+        inst = SamplerV2(mode=backend)
+
+        warning_msg = "Specifying different 'shots' across pubs is deprecated"
+        pubs = [
+            (t_circ, None, shots) if shots is not None else SamplerPub(t_circ)
+            for shots in pub_shots
+        ]
+
+        with self.assert_warning_appears(DeprecationWarning, warning_msg, num_appearances):
+            inst.run(pubs, shots=run_shots)
