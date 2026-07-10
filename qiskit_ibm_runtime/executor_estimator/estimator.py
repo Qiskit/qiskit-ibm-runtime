@@ -259,7 +259,10 @@ class EstimatorV2(BaseEstimatorV2):
         # Coerce pubs to EstimatorPub objects
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
 
-        # finalize options
+        # Finalize the options dynamically by:
+        #   * Generating new options according to the specified resilience level
+        #   * Combining these options with the user-provided options
+        #   * Enforcing required dependencies between option values
         options = self.finalize_options()
 
         # Convert pubs to QuantumProgram and map options using the selected prepare function
