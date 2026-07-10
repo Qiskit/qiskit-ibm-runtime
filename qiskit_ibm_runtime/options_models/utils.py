@@ -24,18 +24,16 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from dataclasses import Field
 
-PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
-"""Custom ``ConfigDict`` for pydantic dataclasses.
-
-These config settings ensure we get validation on attribute mutation, not just at construction
-time, and also that we get a validation error if someone spells an attribute name wrong.
-"""
-
 
 class OptionsModel(BaseModel):
     """Base class for options models."""
 
-    model_config = PRIMITIVES_CONFIG
+    model_config = ConfigDict(validate_assignment=True, extra="forbid")
+    """Custom ``ConfigDict`` for pydantic dataclasses.
+
+    These config settings ensure we get validation on attribute mutation, not just at construction
+    time, and also that we get a validation error if someone spells an attribute name wrong.
+    """
 
     def __dir__(self) -> Iterable[str]:
         """Return the list of public attributes.

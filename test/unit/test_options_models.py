@@ -23,14 +23,16 @@ from ..ibm_test_case import IBMTestCase
 
 class Nested(OptionsModel):
     """Nested options model, for testing."""
+
     b: str = "b"
     n: int | None = None
 
+
 class Options(OptionsModel):
     """Options model for testing."""
+
     a: str = "a"
     nested: Nested = Nested()
-
 
 
 class TestOptionsModel(IBMTestCase):
