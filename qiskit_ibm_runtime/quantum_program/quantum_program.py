@@ -242,7 +242,7 @@ class QuantumProgram:
         shots: int,
         items: Iterable[QuantumProgramItem] | None = None,
         noise_maps: dict[str, PauliLindbladMap] | None = None,
-        meas_level: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
+        meas_level: Literal["classified", "kerneled", "avg_kerneled", "both"] = "classified",
         passthrough_data: DataTree | None = None,
     ):
         self.shots = shots
