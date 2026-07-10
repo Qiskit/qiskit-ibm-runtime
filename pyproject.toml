@@ -99,7 +99,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-type-checking]
-runtime-evaluated-base-classes = ["qiskit_ibm_runtime.options_models.utils.OptionsModel", "pydantic.BaseModel"]
+runtime-evaluated-base-classes = ["qiskit_ibm_runtime.options_models.base.BaseOptionsModel", "pydantic.BaseModel"]
 
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false

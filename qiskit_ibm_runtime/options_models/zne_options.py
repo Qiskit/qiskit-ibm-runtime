@@ -19,7 +19,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 ExtrapolatorType = Literal[
     "linear",
@@ -42,7 +42,7 @@ ZNE_DEFAULT_NOISE_FACTORS = (1, 3, 5)
 """The values of ``noise_factors`` used by default when gate folding is selected."""
 
 
-class ZneOptions(OptionsModel):
+class ZneOptions(BaseOptionsModel):
     """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.
 
     .. note::

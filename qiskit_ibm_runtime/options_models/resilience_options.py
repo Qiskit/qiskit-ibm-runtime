@@ -19,13 +19,13 @@ from typing import Annotated
 from pydantic import InstanceOf
 from qiskit.quantum_info import PauliLindbladMap
 
+from .base import BaseOptionsModel
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .pec_options import PecOptions
-from .utils import OptionsModel
 from .zne_options import ZneOptions
 
 
-class ResilienceOptions(OptionsModel):
+class ResilienceOptions(BaseOptionsModel):
     """Resilience options for V2 Estimator."""
 
     measure_mitigation: bool = True

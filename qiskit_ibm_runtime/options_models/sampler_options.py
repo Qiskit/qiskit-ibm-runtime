@@ -14,16 +14,16 @@
 
 from __future__ import annotations
 
+from .base import BaseOptionsModel
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
 from .execution_options import ExecutionOptions, SamplerExecutionOptions
 from .executor_options import ExecutorOptions
 from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions
-from .utils import OptionsModel
 
 
-class SamplerOptions(OptionsModel):
+class SamplerOptions(BaseOptionsModel):
     """Options for the executor-based SamplerV2."""
 
     default_shots: int | None = 4096

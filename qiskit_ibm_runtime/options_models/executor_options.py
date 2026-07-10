@@ -14,12 +14,12 @@
 
 from __future__ import annotations
 
+from .base import BaseOptionsModel
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
-from .utils import OptionsModel
 
 
-class ExecutorOptions(OptionsModel):
+class ExecutorOptions(BaseOptionsModel):
     """Options for the executor."""
 
     environment: EnvironmentOptions = EnvironmentOptions()

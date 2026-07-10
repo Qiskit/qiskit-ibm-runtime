@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from dataclasses import Field
 
 
-class OptionsModel(BaseModel):
+class BaseOptionsModel(BaseModel):
     """Base class for options models."""
 
     model_config = ConfigDict(validate_assignment=True, extra="forbid")
@@ -56,7 +56,7 @@ class OptionsModel(BaseModel):
 
         for key, value in kwargs.items():
             current_field_value = getattr(self, key, None)
-            if isinstance(current_field_value, OptionsModel):
+            if isinstance(current_field_value, BaseOptionsModel):
                 # If the field is a nested model, recursively update.
                 current_field_value.update(**value)
             else:

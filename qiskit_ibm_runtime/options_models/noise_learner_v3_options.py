@@ -18,13 +18,13 @@ from typing import Annotated
 
 from pydantic import Field
 
+from .base import BaseOptionsModel
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .post_selection_options import PostSelectionOptions
-from .utils import OptionsModel
 
 
-class NoiseLearnerV3Options(OptionsModel):
+class NoiseLearnerV3Options(BaseOptionsModel):
     """Options for :class:`.NoiseLearnerV3`."""
 
     shots_per_randomization: Annotated[int, Field(ge=1)] = 128

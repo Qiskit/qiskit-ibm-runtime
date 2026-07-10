@@ -22,7 +22,7 @@ from qiskit.providers import BackendV2
 from qiskit.transpiler import CouplingMap
 from qiskit.utils import optionals
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 # Dynamically define the `noise_model` field type at runtime, as `NoiseModel`
 # is only a valid alternative if `qiskit_aer` is installed.
@@ -34,7 +34,7 @@ else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
 
-class SimulatorOptions(OptionsModel):
+class SimulatorOptions(BaseOptionsModel):
     """Simulator options.
 
     Used to control local mode simulation.

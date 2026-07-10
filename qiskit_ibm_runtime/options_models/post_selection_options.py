@@ -14,13 +14,13 @@
 
 from typing import Literal
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 DEFAULT_X_PULSE_TYPE = "xslow"
 """The default for :meth:`.PostSelectionOptions.x_pulse_type`."""
 
 
-class PostSelectionOptions(OptionsModel):
+class PostSelectionOptions(BaseOptionsModel):
     """Options for post selecting results."""
 
     enable: bool = False

@@ -16,10 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 
-class DynamicalDecouplingOptions(OptionsModel):
+class DynamicalDecouplingOptions(BaseOptionsModel):
     """Options for dynamical decoupling (DD)."""
 
     enable: bool = False

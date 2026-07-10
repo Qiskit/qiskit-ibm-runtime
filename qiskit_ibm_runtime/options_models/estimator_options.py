@@ -17,14 +17,14 @@ from __future__ import annotations
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
+from .base import BaseOptionsModel
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .resilience_options import ResilienceOptions
 from .twirling_options import TwirlingOptions
-from .utils import OptionsModel
 
 
-class EstimatorOptions(OptionsModel):
+class EstimatorOptions(BaseOptionsModel):
     """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625

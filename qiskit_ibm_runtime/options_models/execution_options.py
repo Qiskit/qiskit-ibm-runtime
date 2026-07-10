@@ -14,10 +14,10 @@
 
 from typing import Literal
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 
-class ExecutionOptions(OptionsModel):
+class ExecutionOptions(BaseOptionsModel):
     """Low-level execution options."""
 
     init_qubits: bool = True

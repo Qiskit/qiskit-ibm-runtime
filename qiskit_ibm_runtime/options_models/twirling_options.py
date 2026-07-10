@@ -16,10 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 
-class TwirlingOptions(OptionsModel):
+class TwirlingOptions(BaseOptionsModel):
     """Twirling options."""
 
     enable_gates: bool = False

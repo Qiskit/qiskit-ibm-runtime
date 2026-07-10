@@ -14,11 +14,11 @@
 
 from __future__ import annotations
 
+from .base import BaseOptionsModel
 from .environment_options import EnvironmentOptions
-from .utils import OptionsModel
 
 
-class CalibratorOptions(OptionsModel):
+class CalibratorOptions(BaseOptionsModel):
     """Options for the Calibrator."""
 
     environment: EnvironmentOptions = EnvironmentOptions()

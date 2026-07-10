@@ -16,10 +16,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 
-class MeasureNoiseLearningOptions(OptionsModel):
+class MeasureNoiseLearningOptions(BaseOptionsModel):
     """Options for measurement noise learning. This is only used by V2 Estimator.
 
     .. note::

@@ -16,19 +16,19 @@ from dataclasses import asdict, astuple
 
 from pydantic import ValidationError
 
-from qiskit_ibm_runtime.options_models.utils import OptionsModel
+from qiskit_ibm_runtime.options_models.base import BaseOptionsModel
 
 from ..ibm_test_case import IBMTestCase
 
 
-class Nested(OptionsModel):
+class Nested(BaseOptionsModel):
     """Nested options model, for testing."""
 
     b: str = "b"
     n: int | None = None
 
 
-class Options(OptionsModel):
+class Options(BaseOptionsModel):
     """Options model for testing."""
 
     a: str = "a"

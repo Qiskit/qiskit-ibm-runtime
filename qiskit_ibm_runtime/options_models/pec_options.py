@@ -18,12 +18,12 @@ from typing import Annotated, Literal
 
 from pydantic import Field
 
-from .utils import OptionsModel
+from .base import BaseOptionsModel
 
 NonNegativeFloat = Annotated[float, Field(ge=0)]
 
 
-class PecOptions(OptionsModel):
+class PecOptions(BaseOptionsModel):
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
     max_overhead: NonNegativeFloat | None = 100
