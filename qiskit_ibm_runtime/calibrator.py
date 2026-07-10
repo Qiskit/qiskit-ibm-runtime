@@ -15,7 +15,6 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
@@ -92,7 +91,7 @@ class Calibrator:
         Returns:
             A calibration job.
         """
-        runtime_options = asdict(self.options.environment)  # type: ignore[call-overload]
+        runtime_options = self.options.environment.model_dump()
         runtime_options["backend"] = self._backend.name
         runtime_options["instance"] = self._backend._instance
 

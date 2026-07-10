@@ -15,14 +15,12 @@
 from __future__ import annotations
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
 
 from .environment_options import EnvironmentOptions
-from .utils import PRIMITIVES_CONFIG
+from .utils import OptionsModel
 
 
-@dataclass(config=PRIMITIVES_CONFIG)
-class CalibratorOptions:
+class CalibratorOptions(OptionsModel):
     """Options for the calibrator."""
 
     environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
