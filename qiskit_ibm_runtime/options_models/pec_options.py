@@ -30,7 +30,8 @@ class PecOptions(OptionsModel):
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
     In order to remove the full learned noise, the number of randomizations should be
-    multiplied by the sampling overhead, which is gamma^2.
+    multiplied by the sampling overhead, which is ``gamma^2``.
+
     The maximum overhead limits the sampling overhead allowed.
     """
 

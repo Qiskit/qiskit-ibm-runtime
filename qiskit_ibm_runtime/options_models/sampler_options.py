@@ -30,28 +30,16 @@ class SamplerOptions(OptionsModel):
     """The default number of shots to use if none are specified in the PUBs or in the run method."""
 
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
-    """Suboptions for dynamical decoupling.
-
-    See :class:`~.DynamicalDecouplingOptions` for all available options.
-    """
+    """Suboptions for dynamical decoupling."""
 
     execution: SamplerExecutionOptions = SamplerExecutionOptions()
-    """Execution options.
-
-    See :class:`~.SamplerExecutionOptions` for all available options.
-    """
+    """Execution options."""
 
     twirling: TwirlingOptions = TwirlingOptions()
-    """Pauli twirling options.
-
-    See :class:`~.TwirlingOptions` for all available options.
-    """
+    """Pauli twirling options."""
 
     simulator: SimulatorOptions = SimulatorOptions()
-    """Simulator options.
-
-    See :class:`~.SimulatorOptions` for all available options.
-    """
+    """Simulator options."""
 
     experimental: dict = {}
     """Experimental options."""

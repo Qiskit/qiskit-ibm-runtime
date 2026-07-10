@@ -31,10 +31,7 @@ class EnvironmentOptions(OptionsModel):
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    """logging level to set in the execution environment.
-
-    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-    """
+    """Logging level to set in the execution environment."""
 
     job_tags: list[str] = []
     """Tags to be assigned to the job.
@@ -76,10 +73,7 @@ class SamplerEnvironmentOptions(OptionsModel):
     """Options related to the execution environment."""
 
     log_level: LogLevelType = "WARNING"
-    """logging level to set in the execution environment.
-
-    The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-    """
+    """Logging level to set in the execution environment."""
 
     job_tags: list[str] = []
     """Tags to be assigned to the job.
@@ -91,8 +85,8 @@ class SamplerEnvironmentOptions(OptionsModel):
     private: bool = False
     """Boolean that indicates whether the job is marked as private.
 
-    When set to true, input parameters are not returned, and the results can only be read once.
+    When set to ``True``, input parameters are not returned, and the results can only be read once.
     After the job is completed, input parameters are deleted from the service. After the results are
-    read, these are also deleted from the service. When set to false, the input parameters and
+    read, these are also deleted from the service. When set to ``False``, the input parameters and
     results follow the standard retention behavior of the API.
     """

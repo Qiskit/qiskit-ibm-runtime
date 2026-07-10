@@ -53,24 +53,16 @@ class EstimatorOptions(OptionsModel):
     """
 
     execution: ExecutionOptions = ExecutionOptions()
-    """Execution options.
-
-    See :class:`.ExecutionOptions` for all available options.
-    """
+    """Execution options."""
 
     twirling: TwirlingOptions = TwirlingOptions()
     """Twirling options.
 
-    Currently only enable_measure=False is supported.
-
-    See :class:`.TwirlingOptions` for all available options.
+    Currently only ``enable_measure=False`` is supported.
     """
 
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
-    """Dynamical decoupling options.
-
-    See :class:`~.DynamicalDecouplingOptions` for all available options.
-    """
+    """Dynamical decoupling options."""
 
     experimental: dict = {}
     """Experimental options."""
@@ -82,10 +74,7 @@ class EstimatorOptions(OptionsModel):
     """Options related to the execution environment."""
 
     resilience: ResilienceOptions = ResilienceOptions()
-    """Advanced resilience options to fine-tune the resilience strategy.
-
-    See :class:`.~ResilienceOptions` for all available options.
-    """
+    """Advanced resilience options to fine-tune the resilience strategy."""
 
     def to_executor_options(self) -> ExecutorOptions:
         """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.

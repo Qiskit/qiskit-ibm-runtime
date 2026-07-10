@@ -37,10 +37,7 @@ class ResilienceOptions(OptionsModel):
     """
 
     measure_noise_learning: MeasureNoiseLearningOptions = MeasureNoiseLearningOptions()
-    """Additional measurement noise learning options.
-
-    See :class:`~.MeasureNoiseLearningOptions` for all options.
-    """
+    """Additional measurement noise learning options."""
 
     pec_mitigation: bool = False
     """Whether to turn on Probabilistic Error Cancellation error mitigation method.
@@ -52,10 +49,7 @@ class ResilienceOptions(OptionsModel):
     """
 
     pec: PecOptions = PecOptions()
-    """Additional probabalistic error cancellation mitigation options.
-
-    See :class:`PecOptions` for all options.
-    """
+    """Additional probabalistic error cancellation mitigation options."""
 
     zne_mitigation: bool = False
     """Whether to turn on Zero Noise Extrapolation error mitigation method.
@@ -65,10 +59,7 @@ class ResilienceOptions(OptionsModel):
     """
 
     zne: ZneOptions = ZneOptions()
-    """Additional zero noise extrapolation mitigation options.
-
-    See :class:`ZneOptions` for all options.
-    """
+    """Additional zero noise extrapolation mitigation options."""
 
     noise_model_mapping: dict[str, Annotated[PauliLindbladMap, InstanceOf]] | None = None
     """A noise model mapping for PEC mitigation.

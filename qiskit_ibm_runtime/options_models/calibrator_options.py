@@ -19,7 +19,7 @@ from .utils import OptionsModel
 
 
 class CalibratorOptions(OptionsModel):
-    """Options for the calibrator."""
+    """Options for the Calibrator."""
 
     environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
