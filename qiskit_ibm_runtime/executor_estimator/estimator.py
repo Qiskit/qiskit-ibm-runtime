@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
@@ -28,7 +29,7 @@ from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
-from .utils import finalize_options, find_unique_layers, resolve_precision
+from .utils import find_unique_layers, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
 if TYPE_CHECKING:
@@ -43,6 +44,35 @@ if TYPE_CHECKING:
     from ..session import Session
 
 logger = logging.getLogger(__name__)
+
+RESILIENCE_LEVEL_DEFAULTS = {
+    0: {
+        "enable_gates": False,
+        "enable_measure": False,
+        "measure_mitigation": False,
+        "zne_mitigation": False,
+    },
+    1: {
+        "enable_gates": False,
+        "enable_measure": True,
+        "measure_mitigation": True,
+        "zne_mitigation": False,
+    },
+    2: {
+        "enable_gates": True,
+        "enable_measure": True,
+        "measure_mitigation": True,
+        "zne_mitigation": True,
+    },
+}
+"""Default configuration for resilience levels used to finalize estimator options.
+
+Fields:
+* ``enable_gates``: Whether to enable twirling for gates.
+* ``enable_measure``: Whether to enable twirling for measurements.
+* ``measure_mitigation``: Whether to apply measurement error mitigation.
+* ``zne_mitigation``: Whether to apply zero-noise extrapolation (ZNE).
+"""
 
 
 class EstimatorV2(BaseEstimatorV2):
@@ -169,7 +199,34 @@ class EstimatorV2(BaseEstimatorV2):
         Returns:
             The finalized :class:`~.EstimatorOptions` object.
         """
-        return finalize_options(self.options)
+        finalized_options = deepcopy(self.options)
+
+        # Begin by initializing options based on resilience level
+        defults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
+
+        if finalized_options.twirling.enable_gates is None:
+            finalized_options.twirling.enable_gates = defults["enable_gates"]
+        if finalized_options.twirling.enable_measure is None:
+            finalized_options.twirling.enable_measure = defults["enable_measure"]
+        if finalized_options.resilience.measure_mitigation is None:
+            finalized_options.resilience.measure_mitigation = defults["measure_mitigation"]
+        if finalized_options.resilience.zne_mitigation is None:
+            finalized_options.resilience.zne_mitigation = defults["zne_mitigation"]
+
+        # Force-set some values based on mitigation
+        if finalized_options.resilience.measure_mitigation is True:
+            finalized_options.twirling.enable_measure = True
+        if (
+            finalized_options.resilience.zne_mitigation is True
+            and finalized_options.resilience.zne.amplifier == "pea"
+        ):
+            finalized_options.twirling.enable_gates = True
+            finalized_options.twirling.enable_measure = True
+        if finalized_options.resilience.pec_mitigation is True:
+            finalized_options.twirling.enable_gates = True
+            finalized_options.twirling.enable_measure = True
+
+        return finalized_options
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None

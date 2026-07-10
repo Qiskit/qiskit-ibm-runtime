@@ -18,7 +18,6 @@ permanent location (qiskit-addons or qiskit core) in the future.
 
 from __future__ import annotations
 
-from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
@@ -30,7 +29,6 @@ if TYPE_CHECKING:
     from qiskit.primitives import EstimatorPub
     from samplomatic.samplex import Samplex
 
-    from ..options_models.estimator_options import EstimatorOptions
     from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
     from ..options_models.twirling_options import TwirlingOptions
 
@@ -49,35 +47,6 @@ from ..exceptions import IBMInputValueError
 
 # Lookup table for converting Pauli characters to samplomatic integers
 LOOKUP_TABLE = {"I": 0, "Z": 1, "X": 2, "Y": 3}
-
-RESILIENCE_LEVEL_DEFAULTS = {
-    0: {
-        "enable_gates": False,
-        "enable_measure": False,
-        "measure_mitigation": False,
-        "zne_mitigation": False,
-    },
-    1: {
-        "enable_gates": False,
-        "enable_measure": True,
-        "measure_mitigation": True,
-        "zne_mitigation": False,
-    },
-    2: {
-        "enable_gates": True,
-        "enable_measure": True,
-        "measure_mitigation": True,
-        "zne_mitigation": True,
-    },
-}
-"""Default configuration for resilience levels used by the execution pipeline.
-
-Fields:
-* ``enable_gates``: Whether to enable twirling for gates.
-* ``enable_measure``: Whether to enable twirling for measurements.
-* ``measure_mitigation``: Whether to apply measurement error mitigation.
-* ``zne_mitigation``: Whether to apply zero-noise extrapolation (ZNE).
-"""
 
 
 def get_pauli_basis(basis: str) -> Pauli:
@@ -468,54 +437,3 @@ def make_samplex_arguments(
         raise ValueError("Could not find a change basis annotation.")
 
     return samplex_arguments
-
-
-def finalize_options(options: EstimatorOptions) -> EstimatorOptions:
-    """Construct and finalize the estimator options.
-
-    This method combines the configured resilience level with the user-provided option
-    to produce the final :class:`~.EstimatorOptions` instance used inside a call to
-    :meth:`~.Estimator.run`.
-
-    The process used to produce the finalized options is as follows:
-
-    1. Initialize a new :class:`~.EstimatorOptions` object with defaults determined by
-        :attr:`~.EstimatorOptions.resilience_level`.
-    2. Apply user-specified options, skipping the fields left as ``None`` that are intended to
-        inherit the resilience-level defaults.
-    3. Enforce required option dependencies. Specifically:
-        * Enabling measurement mitigation automatically enables measurement twirling.
-        * Enabling gate-based mitigation techniques (such as PEA-based ZNE or PEC) automatically
-            enables both gate and measurement twirling.
-
-    Returns:
-        The finalized :class:`~.EstimatorOptions` object.
-    """
-    finalized_options = deepcopy(options)
-
-    # Begin by initializing options based on resilience level
-    defults = RESILIENCE_LEVEL_DEFAULTS[finalized_options.resilience_level]
-
-    if finalized_options.twirling.enable_gates is None:
-        finalized_options.twirling.enable_gates = defults["enable_gates"]
-    if finalized_options.twirling.enable_measure is None:
-        finalized_options.twirling.enable_measure = defults["enable_measure"]
-    if finalized_options.resilience.measure_mitigation is None:
-        finalized_options.resilience.measure_mitigation = defults["measure_mitigation"]
-    if finalized_options.resilience.zne_mitigation is None:
-        finalized_options.resilience.zne_mitigation = defults["zne_mitigation"]
-
-    # Force-set some values based on mitigation
-    if finalized_options.resilience.measure_mitigation is True:
-        finalized_options.twirling.enable_measure = True
-    if (
-        finalized_options.resilience.zne_mitigation is True
-        and finalized_options.resilience.zne.amplifier == "pea"
-    ):
-        finalized_options.twirling.enable_gates = True
-        finalized_options.twirling.enable_measure = True
-    if finalized_options.resilience.pec_mitigation is True:
-        finalized_options.twirling.enable_gates = True
-        finalized_options.twirling.enable_measure = True
-
-    return finalized_options

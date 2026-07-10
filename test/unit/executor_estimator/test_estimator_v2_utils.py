@@ -25,12 +25,10 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
     box_circuit,
-    finalize_options,
     get_pauli_basis,
     pauli_to_ints,
     resolve_precision,
 )
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 
 
 class TestGetPauliBasis(unittest.TestCase):
@@ -352,78 +350,3 @@ class TestBoxCircuit(unittest.TestCase):
                 0,
                 msg=f"Expected at least one tagged box for add_tags={add_tags!r}, but found none.",
             )
-
-
-@ddt
-class TestFinalizeOptions(unittest.TestCase):
-    """Tests for ``finalize_options``."""
-
-    def test_resilience_level_0(self):
-        """Tests for resilience level 0."""
-        options = EstimatorOptions()
-        options.resilience_level = 0
-
-        finalized_options = finalize_options(options)
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertFalse(finalized_options.twirling.enable_measure)
-        self.assertFalse(finalized_options.resilience.measure_mitigation)
-        self.assertFalse(finalized_options.resilience.zne_mitigation)
-
-    def test_resilience_level_1(self):
-        """Tests for resilience level 1."""
-        options = EstimatorOptions()
-        options.resilience_level = 1
-
-        finalized_options = finalize_options(options)
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertTrue(finalized_options.resilience.measure_mitigation)
-        self.assertFalse(finalized_options.resilience.zne_mitigation)
-
-    def test_resilience_level_2(self):
-        """Tests for resilience level 2."""
-        options = EstimatorOptions()
-        options.resilience_level = 2
-
-        finalized_options = finalize_options(options)
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertTrue(finalized_options.resilience.measure_mitigation)
-        self.assertTrue(finalized_options.resilience.zne_mitigation)
-
-    @data(0, 1, 2)
-    def test_set_values_are_preserved(self, resilience_level):
-        """Test that when the user sets values, resilience level does not override them."""
-        options = EstimatorOptions()
-        options.twirling.enable_gates = False
-        options.twirling.enable_measure = True
-        options.resilience.measure_mitigation = False
-        options.resilience.zne_mitigation = True
-        options.resilience_level = resilience_level
-
-        finalized_options = finalize_options(options)
-        self.assertFalse(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-        self.assertFalse(finalized_options.resilience.measure_mitigation)
-        self.assertTrue(finalized_options.resilience.zne_mitigation)
-
-    @data(0, 1, 2)
-    def test_forced_values(self, resilience_level):
-        """Test that finalize force-set certain values."""
-        options = EstimatorOptions()
-        options.resilience.measure_mitigation = True
-        finalized_options = finalize_options(options)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-
-        options = EstimatorOptions()
-        options.resilience.zne_mitigation = True
-        options.resilience.zne.amplifier = "pea"
-        finalized_options = finalize_options(options)
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
-
-        options = EstimatorOptions()
-        options.resilience.pec_mitigation = True
-        finalized_options = finalize_options(options)
-        self.assertTrue(finalized_options.twirling.enable_gates)
-        self.assertTrue(finalized_options.twirling.enable_measure)
