@@ -14,9 +14,9 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias
+from typing import Annotated, TypeAlias
 
-from pydantic import field_validator
+from pydantic import Field, InstanceOf
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV2
 from qiskit.transpiler import CouplingMap
@@ -27,9 +27,9 @@ from .utils import OptionsModel
 # Dynamically define the `noise_model` field type at runtime, as `NoiseModel`
 # is only a valid alternative if `qiskit_aer` is installed.
 if optionals.HAS_AER:
-    from qiskit_aer.noise import NoiseModel as AerNoiseModel
+    from qiskit_aer.noise import NoiseModel
 
-    noise_model_type: TypeAlias = dict | AerNoiseModel | None
+    noise_model_type: TypeAlias = dict | Annotated[NoiseModel, InstanceOf] | None
 else:
     noise_model_type: TypeAlias = dict | None  # type: ignore[no-redef, misc]
 
@@ -46,7 +46,9 @@ class SimulatorOptions(OptionsModel):
     seed_simulator: int | None = None
     """Random seed to control sampling."""
 
-    coupling_map: list[list[int]] | CouplingMap | None = None
+    coupling_map: (
+        list[list[Annotated[int, Field(ge=0)]]] | Annotated[CouplingMap, InstanceOf] | None
+    ) = None
     """Directed coupling map to target in mapping.
 
     If the coupling map is symmetric, both directions need to be specified.
@@ -60,48 +62,6 @@ class SimulatorOptions(OptionsModel):
 
     For example, ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
     """
-
-    @field_validator("coupling_map", mode="plain")
-    @classmethod
-    def _validate_coupling_map(
-        cls, coupling_map: list[list[int]] | CouplingMap | None
-    ) -> CouplingMap | None:
-        """Validate and coerce a coupling map into a :class:`.CouplingMap`."""
-        if coupling_map is None:
-            return None
-        elif isinstance(coupling_map, CouplingMap):
-            return coupling_map
-        elif isinstance(coupling_map, list):
-            try:
-                return CouplingMap(coupling_map)
-            except Exception as exc:
-                raise ValueError(f"Cannot create a valid CouplingMap from the provided list. {exc}")
-        else:
-            raise ValueError(
-                "Expected a CouplingMap or list[list[int]] instead got"
-                f"{type(coupling_map).__name__}"
-            )
-
-    @field_validator("noise_model", mode="plain")
-    @classmethod
-    def _validate_noise_model(cls, model: noise_model_type) -> noise_model_type:
-        """Validate noise model."""
-        if model is None:
-            return model
-        if not isinstance(model, dict):
-            if not optionals.HAS_AER:
-                raise ValueError(
-                    "When qiskit-aer is not installed, the only allowed values for"
-                    f"noise_model are dict and None, instead got {type(model).__name__}"
-                )
-
-            from qiskit_aer.noise import NoiseModel as AerNoiseModel
-
-            if not isinstance(model, AerNoiseModel):
-                raise ValueError(
-                    "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
-                )
-        return model
 
     def set_backend(self, backend: BackendV2) -> None:
         """Set backend for simulation.

@@ -51,7 +51,7 @@ class TestSimulatorOptions(unittest.TestCase):
         coupling_map = [[0, 1], [1, 2], [2, 3]]
         options.simulator.coupling_map = coupling_map
 
-        self.assertEqual(options.simulator.coupling_map, CouplingMap(coupling_map))
+        self.assertEqual(options.simulator.coupling_map, coupling_map)
 
     def test_simulator_options_set_coupling_map_from_qiskit(self):
         """Test setting coupling map from Qiskit CouplingMap object."""
@@ -82,7 +82,7 @@ class TestSimulatorOptions(unittest.TestCase):
 
         self.assertEqual(sampler.options.simulator.seed_simulator, 123)
         self.assertEqual(sampler.options.simulator.basis_gates, ["h", "cx", "rz"])
-        self.assertEqual(sampler.options.simulator.coupling_map, CouplingMap([[0, 1], [1, 2]]))
+        self.assertEqual(sampler.options.simulator.coupling_map, [[0, 1], [1, 2]])
 
     @data("bad_input", [1, 2, 3], [[0, 1], [-1, 0]])
     def test_coupling_map_invalid_type_raises(self, input):
