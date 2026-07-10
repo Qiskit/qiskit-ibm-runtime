@@ -780,6 +780,7 @@ class QiskitRuntimeService:
 
                 self._backend_configs[backend_name] = config
         except Exception as ex:
+            logger.warning("Unable to create configuration for %s. %s ", backend_name, ex)
             raise QiskitBackendNotFoundError(
                 f"Unable to create configuration for {backend_name}, assuming backend is retired"
             ) from ex
