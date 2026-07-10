@@ -78,6 +78,10 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     # Extract options if present
     options_metadata = post_processor_data.get("options", {})
 
+    # Extract mitigation data
+    mitigation = post_processor_data.get("mitigation", None)
+    pec_gammas = post_processor_data.get("pec_gammas", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
@@ -120,26 +124,32 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
         observables = ObservablesArray(observables_label)
         param_shape = tuple(param_shape)
 
-        # Calculate exp vals and place them in a databin
-        exp_vals, stds, ensemble_stds = process_expectation_values(
-            item_result, observables, param_shape, param_basis_pairs, readout_noise_data
-        )
-        data_bin = DataBin(
-            evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
-        )
+        # Calculate exp vals and build an EstimatorPubResult
+        if mitigation == "pec":
+            pub_result = create_pub_result_pec(
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                pec_gamma=pec_gammas[idx],
+            )
+        elif mitigation is not None:
+            raise ValueError(f"Unknown mitigation technique {mitigation}")
+        else:
+            pub_result = create_pub_result(
+                item_result, observables, param_shape, param_basis_pairs, readout_noise_data
+            )
 
-        # Get circuit metadata for this pub if available
-        pub_metadata = {}
+        # Attach circuit metadata (shared across all branches — metadata is mutable)
         if (circuit_meta := circuits_metadata[idx]) is not None:
-            pub_metadata["circuit_metadata"] = circuit_meta
-
-        pub_result = EstimatorPubResult(data=data_bin, metadata=pub_metadata)
+            pub_result.metadata["circuit_metadata"] = circuit_meta
         pub_results.append(pub_result)
 
     return PrimitiveResult(pub_results, metadata=options_metadata)
 
 
-def process_expectation_values(
+def _process_expectation_values(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
@@ -261,7 +271,7 @@ def process_expectation_values(
     return exp_vals, stds, ensemble_stds
 
 
-def process_expectation_values_pec(
+def _process_expectation_values_pec(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
@@ -388,3 +398,61 @@ def process_expectation_values_pec(
         stds[bcast_index] = np.sqrt(twirl_variance * pec_gamma**2 / num_randomizations)
 
     return exp_vals, stds, ensemble_stds
+
+
+def create_pub_result(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+) -> EstimatorPubResult:
+    """Calculate expectation values and errors, and return pub result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation.
+
+    Returns:
+        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
+    """
+    exp_vals, stds, ensemble_stds = _process_expectation_values(
+        item_result, observables, param_shape, param_basis_pairs, measure_noise_data
+    )
+    data_bin = DataBin(
+        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
+    )
+    return EstimatorPubResult(data=data_bin)
+
+
+def create_pub_result_pec(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+    pec_gamma: float,
+) -> EstimatorPubResult:
+    """Calculate expectation values and errors with PEC, and return pub result.
+
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation.
+        pec_gamma: Gamma factor for PEC mitigation.
+
+    Returns:
+        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
+    """
+    exp_vals, stds, ensemble_stds = _process_expectation_values_pec(
+        item_result, observables, param_shape, param_basis_pairs, measure_noise_data, pec_gamma
+    )
+    data_bin = DataBin(
+        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
+    )
+    return EstimatorPubResult(data=data_bin)

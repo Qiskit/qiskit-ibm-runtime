@@ -48,10 +48,10 @@ class TestQuantumProgram(IBMTestCase):
         )
 
         circuit2 = QuantumCircuit(2)
-        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl0")]):
+        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl0", site="after")]):
             circuit2.rx(Parameter("p"), 0)
             circuit2.cx(0, 1)
-        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1")]):
+        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1", site="after")]):
             circuit2.measure_all()
 
         template_circuit, samplex = build(circuit2)
@@ -126,7 +126,7 @@ class TestQuantumProgram(IBMTestCase):
         )
 
         circuit2 = QuantumCircuit(2)
-        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1")]):
+        with circuit2.box(annotations=[Twirl(), InjectNoise(ref="pl1", site="after")]):
             circuit2.measure_all()
 
         template_circuit, samplex = build(circuit2)
