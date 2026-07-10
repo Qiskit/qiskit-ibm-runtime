@@ -87,12 +87,7 @@ def prepare_pec(
         IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
             the pubs layers.
     """
-    if twirling_options.enable_gates is None:
-        raise ValueError(
-            "Expected twirling options field ``enable_measure`` set to ``True`` or ``False``, "
-            "found ``None``."
-        )
-    if twirling_options.enable_gates is not True:
+    if not twirling_options.enable_gates:
         raise ValueError("PEC requires enabling twirling for gates.")
     if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
