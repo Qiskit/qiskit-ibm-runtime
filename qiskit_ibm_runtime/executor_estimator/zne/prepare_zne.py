@@ -84,7 +84,7 @@ def prepare_zne(
         IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
         ``gate_folding_front`` or ``gate_folding_back``.
     """
-    if measure_noise_learning is not None and twirling_options.enable_measure is not True:
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier not in ["gate_folding", "gate_folding_front", "gate_folding_back"]:
         raise IBMInputValueError(

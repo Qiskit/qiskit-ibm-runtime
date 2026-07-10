@@ -95,7 +95,7 @@ def prepare_pea(
         )
     if twirling_options.enable_gates is not True:
         raise ValueError("PEA requires enabling twirling for gates.")
-    if measure_noise_learning is not None and twirling_options.enable_measure is not True:
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier != "pea":
         raise IBMInputValueError("PEA mitigation must be used with ``pea`` as noise amplification.")

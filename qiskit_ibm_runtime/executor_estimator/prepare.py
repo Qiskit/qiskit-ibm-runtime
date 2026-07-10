@@ -81,7 +81,7 @@ def prepare(
             "``True`` or ``False``, found ``None``."
         )
 
-    if measure_noise_learning is not None and twirling_options.enable_measure is not True:
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
 
     if twirling_options.enable_gates or twirling_options.enable_measure:

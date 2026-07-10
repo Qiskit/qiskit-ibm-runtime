@@ -94,7 +94,7 @@ def prepare_pec(
         )
     if twirling_options.enable_gates is not True:
         raise ValueError("PEC requires enabling twirling for gates.")
-    if measure_noise_learning is not None and twirling_options.enable_measure is not True:
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
         raise ValueError("Measure noise learning requires enabling twirling for measurements.")
 
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
