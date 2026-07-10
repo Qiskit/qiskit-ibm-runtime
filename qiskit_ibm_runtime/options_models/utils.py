@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+from dataclasses import _FIELD, field  # type: ignore[attr-defined]
 from typing import TYPE_CHECKING, Any
 from warnings import warn
 
@@ -21,6 +22,7 @@ from pydantic import BaseModel, ConfigDict
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from dataclasses import Field
 
 PRIMITIVES_CONFIG = ConfigDict(validate_assignment=True, extra="forbid")
 """Custom ``ConfigDict`` for pydantic dataclasses.
@@ -61,3 +63,29 @@ class OptionsModel(BaseModel):
                 current_field_value.update(**value)
             else:
                 setattr(self, key, value)
+
+    @property
+    def __dataclass_fields__(self) -> dict[str, Field]:
+        """Generate dataclass fields for faux compatibility with `dataclasses.asdict()`.
+
+        This provides support for applying `dataclasses.asdict()` by simulating that the model has
+        dataclass fields (populating the variable inspected by `asdict()`). It is a brittle
+        approach and only intended to provide some level of supports while users transition to
+        using `model_dump()` directly.
+        """
+        warn(
+            "Using `dataclasses.asdict()` on option models is deprecated as of qiskit_ibm_runtime "
+            "v0.48.0 and will be removed in a future release. Please use Pydantic features for "
+            "converting to dict (`options.model_dump()`) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+        fields = {}
+        for name in self.__class__.model_fields:
+            field_ = field()
+            # `.name` and `.field_type` are required by `asdict()` logic.
+            field_.name = name
+            field_._field_type = _FIELD
+            fields[name] = field_
+        return fields
