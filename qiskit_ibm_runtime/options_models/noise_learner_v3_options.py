@@ -43,7 +43,7 @@ class NoiseLearnerV3Options(OptionsModel):
     :attr:`~shots_per_randomization` each.
     """
 
-    layer_pair_depths: list[Annotated[int, Field(ge=0)]] = (0, 1, 2, 4, 16, 32)  # type: ignore[assignment]
+    layer_pair_depths: list[Annotated[int, Field(ge=0)]] = [0, 1, 2, 4, 16, 32]
     """The circuit depths (measured in number of pairs) to use in Pauli Lindblad experiments.
 
     Pairs are used as the unit because we exploit the order-2 nature of our entangling gates in
@@ -54,17 +54,17 @@ class NoiseLearnerV3Options(OptionsModel):
         This field is ignored by TREX experiments.
     """
 
-    post_selection: PostSelectionOptions = Field(default_factory=PostSelectionOptions)
+    post_selection: PostSelectionOptions = PostSelectionOptions()
     """Options for post selecting the results of noise learning circuits."""
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options.
 
     These options are subject to change without notification, and stability is not guaranteed.
     """
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    execution: ExecutionOptions = ExecutionOptions()
     """Low-level execution options."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""

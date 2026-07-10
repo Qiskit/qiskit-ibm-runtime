@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from .environment_options import EnvironmentOptions
 from .utils import OptionsModel
 
@@ -23,8 +21,8 @@ from .utils import OptionsModel
 class CalibratorOptions(OptionsModel):
     """Options for the calibrator."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options that are passed to the executor."""

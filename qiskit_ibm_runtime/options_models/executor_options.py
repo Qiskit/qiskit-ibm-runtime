@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .utils import OptionsModel
@@ -24,11 +22,11 @@ from .utils import OptionsModel
 class ExecutorOptions(OptionsModel):
     """Options for the executor."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    execution: ExecutionOptions = ExecutionOptions()
     """Low-level execution options."""
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options that are passed to the executor."""

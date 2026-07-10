@@ -14,8 +14,6 @@
 
 from __future__ import annotations
 
-from pydantic import Field
-
 from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
 from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
@@ -54,13 +52,13 @@ class EstimatorOptions(OptionsModel):
     :attr:`~twirling` options.
     """
 
-    execution: ExecutionOptions = Field(default_factory=ExecutionOptions)
+    execution: ExecutionOptions = ExecutionOptions()
     """Execution options.
 
     See :class:`.ExecutionOptions` for all available options.
     """
 
-    twirling: TwirlingOptions = Field(default_factory=TwirlingOptions)
+    twirling: TwirlingOptions = TwirlingOptions()
     """Twirling options.
 
     Currently only enable_measure=False is supported.
@@ -68,24 +66,22 @@ class EstimatorOptions(OptionsModel):
     See :class:`.TwirlingOptions` for all available options.
     """
 
-    dynamical_decoupling: DynamicalDecouplingOptions = Field(
-        default_factory=DynamicalDecouplingOptions
-    )
+    dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
     """Dynamical decoupling options.
 
     See :class:`~.DynamicalDecouplingOptions` for all available options.
     """
 
-    experimental: dict = Field(default_factory=dict)
+    experimental: dict = {}
     """Experimental options."""
 
     max_execution_time: int | None = None
     """Maximum execution time in seconds, based on system execution time (not wall clock time)."""
 
-    environment: EnvironmentOptions = Field(default_factory=EnvironmentOptions)
+    environment: EnvironmentOptions = EnvironmentOptions()
     """Options related to the execution environment."""
 
-    resilience: ResilienceOptions = Field(default_factory=ResilienceOptions)
+    resilience: ResilienceOptions = ResilienceOptions()
     """Advanced resilience options to fine-tune the resilience strategy.
 
     See :class:`.~ResilienceOptions` for all available options.

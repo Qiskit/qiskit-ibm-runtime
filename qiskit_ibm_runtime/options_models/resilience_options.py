@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import field_validator
 from qiskit.quantum_info import PauliLindbladMap
 
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
@@ -34,9 +34,7 @@ class ResilienceOptions(OptionsModel):
     for all measurement mitigation noise learning options.
     """
 
-    measure_noise_learning: MeasureNoiseLearningOptions = Field(
-        default_factory=MeasureNoiseLearningOptions
-    )
+    measure_noise_learning: MeasureNoiseLearningOptions = MeasureNoiseLearningOptions()
     """Additional measurement noise learning options.
 
     See :class:`~.MeasureNoiseLearningOptions` for all options.
@@ -51,7 +49,7 @@ class ResilienceOptions(OptionsModel):
     You must also provide a noise model via :attr:`~noise_model_mapping` when enabling PEC.
     """
 
-    pec: PecOptions = Field(default_factory=PecOptions)
+    pec: PecOptions = PecOptions()
     """Additional probabalistic error cancellation mitigation options.
 
     See :class:`PecOptions` for all options.
@@ -64,7 +62,7 @@ class ResilienceOptions(OptionsModel):
     See :class:`ZneOptions` for additional ZNE-related options.
     """
 
-    zne: ZneOptions = Field(default_factory=ZneOptions)
+    zne: ZneOptions = ZneOptions()
     """Additional zero noise extrapolation mitigation options.
 
     See :class:`ZneOptions` for all options.

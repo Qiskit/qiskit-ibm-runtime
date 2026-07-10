@@ -36,7 +36,7 @@ class EnvironmentOptions(OptionsModel):
     The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
     """
 
-    job_tags: list[str] = Field(default_factory=list)
+    job_tags: list[str] = []
     """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
@@ -81,7 +81,7 @@ class SamplerEnvironmentOptions(OptionsModel):
     The valid log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
     """
 
-    job_tags: list[str] = Field(default_factory=list)
+    job_tags: list[str] = []
     """Tags to be assigned to the job.
 
     The tags can subsequently be used as a filter in the
