@@ -131,11 +131,14 @@ class FakeBackendRefreshTest(IBMTestCase):
 
         self.assertIn("has been updated", "".join(logs.output))
 
-        # ``dirname`` now points at a temporary directory holding the refreshed files.
-        self.assertNotEqual(backend.dirname, pkg_dir)
-        self.assertEqual(backend.dirname, backend._tmp_data_dir.name)
-        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.conf_filename)))
-        self.assertTrue(os.path.exists(os.path.join(backend.dirname, backend.props_filename)))
+        # ``dirname`` is left untouched (still pointing at the bundled files).
+        # The refreshed data is written to and read from the temporary directory instead.
+        self.assertEqual(backend.dirname, pkg_dir)
+        self.assertIsNotNone(backend._tmp_data_dir)
+        tmp_dir = backend._tmp_data_dir.name
+        self.assertNotEqual(tmp_dir, pkg_dir)
+        self.assertTrue(os.path.exists(os.path.join(tmp_dir, backend.conf_filename)))
+        self.assertTrue(os.path.exists(os.path.join(tmp_dir, backend.props_filename)))
 
         # The backend was updated in-session.
         self.assertEqual(backend._conf_dict["backend_version"], "9.9.9-refreshed")
@@ -143,6 +146,32 @@ class FakeBackendRefreshTest(IBMTestCase):
         # The bundled package files must remain untouched.
         self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_mtime)
         self.assertEqual(os.stat(pkg_props).st_mtime_ns, pkg_props_mtime)
+
+    def test_refresh_in_place_after_temp_dir_targets_bundled_files(self):
+        """A default ``refresh()`` after a ``use_temp_dir=True`` one still targets ``dirname``.
+
+        Since ``use_temp_dir=True`` no longer overwrites ``dirname``, a subsequent in-place
+        ``refresh()`` writes back into the (writable copy of the) bundled directory as expected.
+        """
+        backend = FakeAthensV2()
+        with tempfile.TemporaryDirectory() as data_dir:
+            shutil.copy(os.path.join(backend.dirname, backend.conf_filename), data_dir)
+            shutil.copy(os.path.join(backend.dirname, backend.props_filename), data_dir)
+            backend.dirname = data_dir
+
+            service, patcher = self._make_refresh_service(backend)
+            with patcher:
+                backend.refresh(service, use_temp_dir=True)
+                self.assertIsNotNone(backend._tmp_data_dir)
+
+                backend.refresh(service)
+
+            # The in-place refresh writes back into ``dirname`` (the writable copy).
+            self.assertEqual(backend.dirname, data_dir)
+            reloaded = FakeAthensV2()
+            reloaded.dirname = data_dir
+            reloaded._conf_dict = reloaded._get_conf_dict_from_json()
+            self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
 
     def test_refresh_default_writes_in_place(self):
         """The default (``use_temp_dir=False``) writes back into ``dirname`` without a temp dir.
@@ -165,7 +194,7 @@ class FakeBackendRefreshTest(IBMTestCase):
 
             # No temporary directory is created and ``dirname`` is unchanged.
             self.assertEqual(backend.dirname, data_dir)
-            self.assertFalse(hasattr(backend, "_tmp_data_dir"))
+            self.assertIsNone(backend._tmp_data_dir)
 
             # The in-place data file was overwritten with the refreshed data, and a freshly
             # constructed backend pointed at the same directory picks up the update.

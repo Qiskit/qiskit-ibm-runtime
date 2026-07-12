@@ -55,6 +55,11 @@ class FakeBackendV2(BackendV2):
     props_filename: str | None = None
     backend_name: str | None = None
 
+    # When ``refresh(use_temp_dir=True)`` is called, the refreshed snapshots are written to this
+    # temporary directory instead of ``dirname``. While it is set, snapshot data is read from here,
+    # so ``dirname`` is left untouched and keeps pointing at the files bundled with the package.
+    _tmp_data_dir: tempfile.TemporaryDirectory | None = None
+
     def __init__(self) -> None:
         self._conf_dict = self._get_conf_dict_from_json()
         self._props_dict: dict | None = None
@@ -118,7 +123,8 @@ class FakeBackendV2(BackendV2):
         return "qasm3" in supported_features
 
     def _load_json(self, filename: str) -> dict:
-        with open(os.path.join(self.dirname, filename)) as f_json:  # type: ignore[arg-type]
+        dirname = self._tmp_data_dir.name if self._tmp_data_dir else self.dirname
+        with open(os.path.join(dirname, filename)) as f_json:  # type: ignore[arg-type]
             the_json = json.load(f_json)
         return the_json
 
@@ -433,18 +439,25 @@ class FakeBackendV2(BackendV2):
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
+            # Explicitly clean up and drop any temporary directory left over from a previous
+            # ``use_temp_dir=True`` call so it is removed now rather than being left to garbage
+            # collection, and ``_load_json`` reads the files written by this call.
+            if self._tmp_data_dir is not None:
+                self._tmp_data_dir.cleanup()
+                self._tmp_data_dir = None
+
             if not use_temp_dir:
+                # Persist to (and read back from) the bundled ``dirname``.
                 target_dir = self.dirname
             else:
                 # Write to a temporary directory so that refresh() succeeds even when the
                 # package is installed in a read-only location. Keep a reference to the
                 # directory on the instance so it lives as long as the backend and is cleaned
-                # up automatically when the backend is garbage collected. Point ``dirname`` at
-                # it so subsequent data loads use the refreshed files.
-                self._tmp_data_dir = tempfile.TemporaryDirectory(  # pylint: disable=attribute-defined-outside-init
-                    prefix="qiskit_fake_backend_"
-                )
-                target_dir = self.dirname = self._tmp_data_dir.name
+                # up automatically when the backend is garbage collected. ``_load_json`` reads
+                # from ``_tmp_data_dir`` while it is set, so ``dirname`` is left unchanged and a
+                # later ``refresh()`` without ``use_temp_dir`` still targets the bundled files.
+                self._tmp_data_dir = tempfile.TemporaryDirectory(prefix="qiskit_fake_backend_")
+                target_dir = self._tmp_data_dir.name
 
             if real_config:
                 config_path = os.path.join(target_dir, self.conf_filename)  # type: ignore[arg-type]
