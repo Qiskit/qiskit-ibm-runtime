@@ -448,7 +448,7 @@ class FakeBackendV2(BackendV2):
 
             if not use_temp_dir:
                 # Persist to (and read back from) the bundled ``dirname``.
-                target_dir = self.dirname
+                snapshots_dir = self.dirname
             else:
                 # Write to a temporary directory so that refresh() succeeds even when the
                 # package is installed in a read-only location. Keep a reference to the
@@ -457,15 +457,15 @@ class FakeBackendV2(BackendV2):
                 # from ``_tmp_data_dir`` while it is set, so ``dirname`` is left unchanged and a
                 # later ``refresh()`` without ``use_temp_dir`` still targets the bundled files.
                 self._tmp_data_dir = tempfile.TemporaryDirectory(prefix="qiskit_fake_backend_")
-                target_dir = self._tmp_data_dir.name
+                snapshots_dir = self._tmp_data_dir.name
 
             if real_config:
-                config_path = os.path.join(target_dir, self.conf_filename)  # type: ignore[arg-type]
+                config_path = os.path.join(snapshots_dir, self.conf_filename)  # type: ignore[arg-type]
                 with open(config_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
             if real_props:
-                props_path = os.path.join(target_dir, self.props_filename)  # type: ignore[arg-type]
+                props_path = os.path.join(snapshots_dir, self.props_filename)  # type: ignore[arg-type]
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
