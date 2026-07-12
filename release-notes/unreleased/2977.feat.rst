@@ -1,7 +1,7 @@
-Added an optional ``use_temp_dir`` parameter to :meth:`.FakeBackendV2.refresh`. By default
-(``use_temp_dir=False``) the behavior is unchanged: the refreshed configuration and properties
+Added an optional ``persist`` parameter to :meth:`.FakeBackendV2.refresh`. By default
+(``persist=True``) the behavior is unchanged: the refreshed configuration and properties
 overwrite the data files bundled with the installed package so the update persists across
-sessions. Passing ``use_temp_dir=True`` instead writes the refreshed data to a temporary
+sessions. Passing ``persist=False`` instead writes the refreshed data to a temporary
 directory, which allows :meth:`~.FakeBackendV2.refresh` to succeed even when the package is
 installed in a read-only location (e.g. a system-wide ``site-packages`` directory) where
 overwriting the bundled files would otherwise raise a ``PermissionError``. In that mode the

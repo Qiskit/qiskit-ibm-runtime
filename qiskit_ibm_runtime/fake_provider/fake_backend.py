@@ -55,7 +55,7 @@ class FakeBackendV2(BackendV2):
     props_filename: str | None = None
     backend_name: str | None = None
 
-    # When ``refresh(use_temp_dir=True)`` is called, the refreshed snapshots are written to this
+    # When ``refresh(persist=False)`` is called, the refreshed snapshots are written to this
     # temporary directory instead of ``dirname``. While it is set, snapshot data is read from here,
     # so ``dirname`` is left untouched and keeps pointing at the files bundled with the package.
     _tmp_data_dir: tempfile.TemporaryDirectory | None = None
@@ -380,12 +380,12 @@ class FakeBackendV2(BackendV2):
         self,
         service: QiskitRuntimeService,
         use_fractional_gates: bool = False,
-        use_temp_dir: bool = False,
+        persist: bool = True,
     ) -> None:
         """Update the data files from its real counterpart.
 
         This method pulls the latest backend data files from their real counterpart and,
-        by default (``use_temp_dir=False``), overwrites the corresponding files in the local
+        by default (``persist=True``), overwrites the corresponding files in the local
         installation:
 
         *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
@@ -396,7 +396,7 @@ class FakeBackendV2(BackendV2):
 
         Overwriting the installed data files fails, however, when the package is installed in a
         read-only location (e.g. a system-wide ``site-packages`` directory). In that case, or
-        whenever modifying the installed package is undesirable, pass ``use_temp_dir=True`` to write
+        whenever modifying the installed package is undesirable, pass ``persist=False`` to write
         the refreshed data to a temporary directory instead. The backend is still updated for the
         current session, but the changes are not persisted to disk and are lost once the backend is
         garbage collected or the process exits.
@@ -405,9 +405,9 @@ class FakeBackendV2(BackendV2):
             service: A :class:`QiskitRuntimeService` instance
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates.
-            use_temp_dir: If ``False`` (default), the refreshed data files overwrite the copies
+            persist: If ``True`` (default), the refreshed data files overwrite the copies
                 bundled with the installed package so the update persists across sessions. If
-                ``True``, the data is written to a temporary directory instead, which allows
+                ``False``, the data is written to a temporary directory instead, which allows
                 :meth:`refresh` to succeed even when the package is installed in a read-only
                 location, at the cost of the update not persisting between sessions.
 
@@ -440,13 +440,13 @@ class FakeBackendV2(BackendV2):
             updated_config["backend_name"] = self.backend_name
 
             # Explicitly clean up and drop any temporary directory left over from a previous
-            # ``use_temp_dir=True`` call so it is removed now rather than being left to garbage
+            # ``persist=False`` call so it is removed now rather than being left to garbage
             # collection, and ``_load_json`` reads the files written by this call.
             if self._tmp_data_dir is not None:
                 self._tmp_data_dir.cleanup()
                 self._tmp_data_dir = None
 
-            if not use_temp_dir:
+            if persist:
                 # Persist to (and read back from) the bundled ``dirname``.
                 snapshots_dir = self.dirname
             else:
@@ -455,7 +455,7 @@ class FakeBackendV2(BackendV2):
                 # directory on the instance so it lives as long as the backend and is cleaned
                 # up automatically when the backend is garbage collected. ``_load_json`` reads
                 # from ``_tmp_data_dir`` while it is set, so ``dirname`` is left unchanged and a
-                # later ``refresh()`` without ``use_temp_dir`` still targets the bundled files.
+                # later ``refresh()`` with ``persist=True`` still targets the bundled files.
                 self._tmp_data_dir = tempfile.TemporaryDirectory(prefix="qiskit_fake_backend_")
                 snapshots_dir = self._tmp_data_dir.name
 

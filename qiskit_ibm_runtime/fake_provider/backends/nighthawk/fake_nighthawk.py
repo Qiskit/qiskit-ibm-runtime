@@ -87,7 +87,7 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
         self,
         service: QiskitRuntimeService,
         use_fractional_gates: bool = False,
-        use_temp_dir: bool = False,
+        persist: bool = True,
     ) -> None:
         """Retrieve the newest backend configuration and refresh the current backend target."""
         raise NotImplementedError("fake_nighthawk does not have calibration data to pull.")

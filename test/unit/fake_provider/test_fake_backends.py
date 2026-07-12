@@ -88,9 +88,9 @@ class FakeBackendsTest(IBMTestCase):
 
 
 class FakeBackendRefreshTest(IBMTestCase):
-    """Tests for the ``use_temp_dir`` behavior of :meth:`.FakeBackendV2.refresh`.
+    """Tests for the ``persist`` behavior of :meth:`.FakeBackendV2.refresh`.
 
-    With ``use_temp_dir=True`` the refreshed data must be written to a temporary directory rather
+    With ``persist=False`` the refreshed data must be written to a temporary directory rather
     than into the installed package directory (often read-only, e.g. ``site-packages``), so that
     :meth:`~.FakeBackendV2.refresh` succeeds without modifying the installed package.
     """
@@ -115,8 +115,8 @@ class FakeBackendRefreshTest(IBMTestCase):
         )
         return service, patcher
 
-    def test_refresh_use_temp_dir_leaves_package_untouched(self):
-        """``use_temp_dir=True`` writes to a temp dir and never modifies the bundled files."""
+    def test_refresh_no_persist_leaves_package_untouched(self):
+        """``persist=False`` writes to a temp dir and never modifies the bundled files."""
         backend = FakeAthensV2()
         pkg_dir = backend.dirname
         pkg_conf = os.path.join(pkg_dir, backend.conf_filename)
@@ -127,7 +127,7 @@ class FakeBackendRefreshTest(IBMTestCase):
         service, patcher = self._make_refresh_service(backend)
         with patcher:
             with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
-                backend.refresh(service, use_temp_dir=True)
+                backend.refresh(service, persist=False)
 
         self.assertIn("has been updated", "".join(logs.output))
 
@@ -147,10 +147,10 @@ class FakeBackendRefreshTest(IBMTestCase):
         self.assertEqual(os.stat(pkg_conf).st_mtime_ns, pkg_conf_mtime)
         self.assertEqual(os.stat(pkg_props).st_mtime_ns, pkg_props_mtime)
 
-    def test_refresh_in_place_after_temp_dir_targets_bundled_files(self):
-        """A default ``refresh()`` after a ``use_temp_dir=True`` one still targets ``dirname``.
+    def test_refresh_persist_after_no_persist_targets_bundled_files(self):
+        """A ``persist=True`` ``refresh()`` after a ``persist=False`` one still targets ``dirname``.
 
-        Since ``use_temp_dir=True`` no longer overwrites ``dirname``, a subsequent in-place
+        Since ``persist=False`` no longer overwrites ``dirname``, a subsequent persisting
         ``refresh()`` writes back into the (writable copy of the) bundled directory as expected.
         """
         backend = FakeAthensV2()
@@ -161,7 +161,7 @@ class FakeBackendRefreshTest(IBMTestCase):
 
             service, patcher = self._make_refresh_service(backend)
             with patcher:
-                backend.refresh(service, use_temp_dir=True)
+                backend.refresh(service, persist=False)
                 self.assertIsNotNone(backend._tmp_data_dir)
 
                 backend.refresh(service)
@@ -174,7 +174,7 @@ class FakeBackendRefreshTest(IBMTestCase):
             self.assertEqual(reloaded._conf_dict["backend_version"], "9.9.9-refreshed")
 
     def test_refresh_default_writes_in_place(self):
-        """The default (``use_temp_dir=False``) writes back into ``dirname`` without a temp dir.
+        """The default (``persist=True``) writes back into ``dirname`` without a temp dir.
 
         ``dirname`` is redirected to a writable copy of the bundled data so the test never touches
         the real installed package files.
