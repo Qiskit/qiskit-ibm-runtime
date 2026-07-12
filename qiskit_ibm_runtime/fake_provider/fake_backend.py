@@ -50,10 +50,10 @@ class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
     # directory and file names for real backend snapshots.
-    dirname: str | None = None
-    conf_filename: str | None = None
-    props_filename: str | None = None
-    backend_name: str | None = None
+    dirname: str
+    conf_filename: str
+    props_filename: str
+    backend_name: str
 
     # When ``refresh(persist=False)`` is called, the refreshed snapshots are written to this
     # temporary directory instead of ``dirname``. While it is set, snapshot data is read from here,
@@ -107,14 +107,14 @@ class FakeBackendV2(BackendV2):
     def _get_conf_dict_from_json(self) -> dict:
         if not self.conf_filename:
             return None
-        conf_dict = self._load_json(self.conf_filename)  # type: ignore
+        conf_dict = self._load_json(self.conf_filename)
         decode_backend_configuration(conf_dict)
         conf_dict["backend_name"] = self.backend_name
         return conf_dict
 
     def _set_props_dict_from_json(self) -> None:
         if self.props_filename:
-            props_dict = self._load_json(self.props_filename)  # type: ignore
+            props_dict = self._load_json(self.props_filename)
             properties_from_server_data(props_dict)
             self._props_dict = props_dict
 
@@ -124,7 +124,7 @@ class FakeBackendV2(BackendV2):
 
     def _load_json(self, filename: str) -> dict:
         dirname = self._tmp_data_dir.name if self._tmp_data_dir else self.dirname
-        with open(os.path.join(dirname, filename)) as f_json:  # type: ignore[arg-type]
+        with open(os.path.join(dirname, filename)) as f_json:
             the_json = json.load(f_json)
         return the_json
 
@@ -425,7 +425,7 @@ class FakeBackendV2(BackendV2):
                 "properties and settings."
             )
 
-        prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]
+        prod_name = self.backend_name.replace("fake", "ibm")
         try:
             backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
             real_backend = backends[0]
@@ -460,12 +460,12 @@ class FakeBackendV2(BackendV2):
                 snapshots_dir = self._tmp_data_dir.name
 
             if real_config:
-                config_path = os.path.join(snapshots_dir, self.conf_filename)  # type: ignore[arg-type]
+                config_path = os.path.join(snapshots_dir, self.conf_filename)
                 with open(config_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
             if real_props:
-                props_path = os.path.join(snapshots_dir, self.props_filename)  # type: ignore[arg-type]
+                props_path = os.path.join(snapshots_dir, self.props_filename)
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
