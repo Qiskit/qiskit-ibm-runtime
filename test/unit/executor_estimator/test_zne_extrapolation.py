@@ -17,7 +17,6 @@ import warnings
 
 import numpy as np
 from ddt import data, ddt, unpack
-from qiskit.primitives import ObservablesArray
 
 from qiskit_ibm_runtime.executor_estimator.zne.extrapolation import (
     as_noise_factors,
@@ -210,13 +209,8 @@ class TestBuildModelSpec(unittest.TestCase):
 class TestSelectZneExtrapolatedResult(unittest.TestCase):
     """Tests for ``select_zne_extrapolated_result`` (per-column model selection heuristic)."""
 
-    @staticmethod
-    def _observable(basis):
-        """Return a plain dict observable keyed by ``basis`` (empty dict for empty basis)."""
-        return {basis: 1.0} if basis else {}
-
     @data(
-        # (basis, values, stderrs, extraps, expected_value, expected_extrapolator)
+        # (observable_term, values, stderrs, extraps, expected_value, expected_extrapolator)
         # Pauli basis -> range (-1, 1): highest-priority model with a non-finite value is skipped
         (
             "Z",
@@ -253,7 +247,7 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
             0.5,
             "c",
         ),
-        # empty observable -> range (-inf, inf): infinite threshold accepts any finite value
+        # empty observable term -> range (-inf, inf): infinite threshold accepts any finite value
         (
             "",
             [[5.0], [1.0]],
@@ -265,14 +259,13 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
     )
     @unpack
     def test_selects_valid_or_fallback(
-        self, basis, values, stderrs, extraps, expected_value, expected_extrapolator
+        self, observable_term, values, stderrs, extraps, expected_value, expected_extrapolator
     ):
         """Picks the highest-priority valid model, else the lowest-stderr fallback."""
         values = np.array(values, dtype=float)
         stderrs = np.array(stderrs, dtype=float)
-        observable = self._observable(basis)
         res_values, res_stderrs, res_extraps = select_zne_extrapolated_result(
-            values, stderrs, observable, extraps
+            values, stderrs, observable_term, extraps
         )
         self.assertEqual(res_values[0], expected_value)
         self.assertEqual(res_extraps[0], expected_extrapolator)
@@ -282,9 +275,8 @@ class TestSelectZneExtrapolatedResult(unittest.TestCase):
         values = np.array([[0.2, np.nan], [0.3, 0.4]])  # basis "Z" -> range (-1, 1)
         stderrs = np.array([[0.1, 0.1], [0.1, 0.1]])
         extraps = ["exponential", "linear"]
-        observable = {"Z": 1.0}
         res_values, res_stderrs, res_extraps = select_zne_extrapolated_result(
-            values, stderrs, observable, extraps
+            values, stderrs, "Z", extraps
         )
         # col 0: model 0 valid -> 0.2; col 1: model 0 is NaN -> model 1 -> 0.4
         np.testing.assert_array_equal(res_values, [0.2, 0.4])
@@ -411,54 +403,54 @@ class TestProcessExtrapolatedExpectationValues(unittest.TestCase):
     """Tests for ``process_extrapolated_expectation_values`` (public entry point, end-to-end)."""
 
     # Measured values are exactly linear in the noise factors -> intercept 0.65 at x=0.
-    _EXP_VALS = np.array([[0.6], [0.5], [0.4]])  # shape (3 noise factors, 1 observable)
-    _STDERRS = np.array([[0.05], [0.05], [0.05]])
+    _EXP_VALS = np.array([0.6, 0.5, 0.4])  # shape: (3 noise factors,)
+    _STDERRS = np.array([0.05, 0.05, 0.05])
     _NOISE_FACTORS = [1.0, 3.0, 5.0]
-    _OBSERVABLES = ObservablesArray([{"Z": 1.0}])
+    _OBSERVABLE_TERM = "Z"
 
     def test_end_to_end_returns_selected_values(self):
         """Returns the selected extrapolated value at the target noise factor."""
         result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
             self._EXP_VALS,
             self._STDERRS,
-            self._OBSERVABLES,
+            self._OBSERVABLE_TERM,
             self._NOISE_FACTORS,
             ["linear", "fallback"],
             extrapolated_noise_factors=0.0,
         )
-        # shape: (1 extrapolated noise factor, 1 observable)
-        self.assertEqual(result_vals.shape, (1, 1))
-        np.testing.assert_allclose(result_vals[0, 0], 0.65, rtol=1e-6)
+        # shape: (1 extrapolated noise factor,)
+        self.assertEqual(result_vals.shape, (1,))
+        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
         self.assertTrue(np.all(np.isfinite(result_stds)))
-        np.testing.assert_array_equal(result_extraps[0, 0], "linear")
+        np.testing.assert_array_equal(result_extraps[0], "linear")
 
     def test_string_extrapolator_is_wrapped(self):
         """A single model name (not a list) is accepted."""
         result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
             self._EXP_VALS,
             self._STDERRS,
-            self._OBSERVABLES,
+            self._OBSERVABLE_TERM,
             self._NOISE_FACTORS,
             "linear",
             extrapolated_noise_factors=0.0,
         )
-        self.assertEqual(result_vals.shape, (1, 1))
-        np.testing.assert_allclose(result_vals[0, 0], 0.65, rtol=1e-6)
+        self.assertEqual(result_vals.shape, (1,))
+        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
 
     def test_multiple_extrapolated_noise_factors(self):
-        """When multiple extrapolation targets are given, output has one row per target."""
+        """When multiple extrapolation targets are given, output has one entry per target."""
         result_vals, result_stds, result_extraps = process_extrapolated_expectation_values(
             self._EXP_VALS,
             self._STDERRS,
-            self._OBSERVABLES,
+            self._OBSERVABLE_TERM,
             self._NOISE_FACTORS,
             ["linear"],
             extrapolated_noise_factors=[0.0, 1.0],
         )
-        # shape: (2 extrapolated noise factors, 1 observable)
-        self.assertEqual(result_vals.shape, (2, 1))
-        np.testing.assert_allclose(result_vals[0, 0], 0.65, rtol=1e-6)
-        np.testing.assert_allclose(result_vals[1, 0], 0.6, rtol=1e-6)
+        # shape: (2 extrapolated noise factors,)
+        self.assertEqual(result_vals.shape, (2,))
+        np.testing.assert_allclose(result_vals[0], 0.65, rtol=1e-6)
+        np.testing.assert_allclose(result_vals[1], 0.6, rtol=1e-6)
 
     def test_unsupported_model_name_raises(self):
         """An unrecognized extrapolator name raises ``ValueError``."""
@@ -466,7 +458,7 @@ class TestProcessExtrapolatedExpectationValues(unittest.TestCase):
             process_extrapolated_expectation_values(
                 self._EXP_VALS,
                 self._STDERRS,
-                self._OBSERVABLES,
+                self._OBSERVABLE_TERM,
                 self._NOISE_FACTORS,
                 ["not_a_model"],
                 extrapolated_noise_factors=0.0,

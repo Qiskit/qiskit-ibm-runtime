@@ -23,12 +23,10 @@ from numpy.polynomial.polynomial import polyval
 from scipy.optimize import curve_fit
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Sequence
 
     import numpy.typing as npt
-    from qiskit.primitives import ObservablesArray
 
-from ...executor_estimator.utils import unbroadcast_index
 
 _VALID_NAMES = [
     "linear",
@@ -42,9 +40,9 @@ _NON_POLYNOMIAL_MODELS = frozenset({"fallback", "exponential", "double_exponenti
 
 
 def process_extrapolated_expectation_values(
-    exp_vals: npt.NDArray[float],
-    standard_errors: npt.NDArray[float],
-    observables: ObservablesArray,
+    noise_scaled_exp_vals: npt.ArrayLike,
+    noise_scaled_standard_errors: npt.ArrayLike,
+    observable_term: str,
     zne_noise_factors: Sequence[float],
     extrapolators: str | Sequence[str],
     extrapolated_noise_factors: float | int | npt.ArrayLike = 0,
@@ -70,14 +68,12 @@ def process_extrapolated_expectation_values(
     <https://www.astro.rug.nl/software/kapteyn/kmpfittutorial.html#confidence-and-prediction-intervals>`_.
 
     Args:
-        exp_vals: Raw expectation value result. Each element of measured observable and parameter
-            is a 1D array of expectation values, one per noise factor. The total shape is an
-            arbitrary np.array shape defined as:
-            (zne_noise_factors, pub.shape)
-        standard_errors: Raw standard deviations of the results. Have the same shape as
-            ``exp_vals``.
-        observables: The observables to calculate expectation values for. The observables determine
-            the ideal-value range used to judge extrapolation validity.
+        noise_scaled_exp_vals: Noise amplified expectation value result for a single observable
+            term. The scaled exp vals is a 1D array with the same length as ``zne_noise_factors``.
+        noise_scaled_standard_errors: Standard deviations of the Noise amplified results. Have the
+            same shape as ``noise_scaled_exp_vals``.
+        observable_term: The observable term to calculate expectation values for. The observable
+            term determine the ideal-value range used to judge extrapolation validity.
         zne_noise_factors: The noise factors used to amplify the noise.
         extrapolators: A builtin model name, or a sequence of names tried in priority order.
             Supported (each fits the named function of the noise factor ``x``):
@@ -104,50 +100,36 @@ def process_extrapolated_expectation_values(
     if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]
 
-    # exp_vals is a list of expectation value results for each noise factor
-    # The first axis is the noise factors axis
-    output_shape = exp_vals.shape[1:]
+    if {
+        len(noise_scaled_exp_vals),
+        len(noise_scaled_standard_errors),
+    } != {len(zne_noise_factors)}:
+        raise ValueError(
+            f"Number of expectation value items ({len(noise_scaled_exp_vals)}), "
+            f" and standard deviation items ({len(noise_scaled_standard_errors)}) "
+            f" must be equal to the number noise factors ({len(zne_noise_factors)})."
+        )
 
-    result_values = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
-    result_stderrs = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape)
-    result_extrapolators = np.empty(
-        shape=(len(extrapolated_noise_factors),) + output_shape, dtype=object
+    extrapolated_values, extrapolated_stderr = fit_extrapolation_models(
+        noise_scaled_exp_vals,
+        noise_scaled_standard_errors,
+        zne_noise_factors,
+        models=extrapolators,
+        extrapolated_noise_factor=extrapolated_noise_factors,
     )
 
-    for bcast_index in np.ndindex(output_shape):
-        amplified_exp_vals = exp_vals[(slice(None), *bcast_index)]
-        amplified_stds = standard_errors[(slice(None), *bcast_index)]
-
-        # Get 2D arrays of extrapolated expectation values and extrapolated stds, with shape:
-        # (# extrapolators, # extrapolated_noise_factors)
-        extrapolated_values, extrapolated_stderr = fit_extrapolation_models(
-            amplified_exp_vals,
-            amplified_stds,
-            zne_noise_factors,
-            models=extrapolators,
-            extrapolated_noise_factor=extrapolated_noise_factors,
-        )
-
-        # choose the best extrapolated result
-        obs_index = unbroadcast_index(bcast_index, observables.shape)
-        observable = observables[obs_index]
-        selected_values, selected_stderr, selected_extrap = select_zne_extrapolated_result(
-            extrapolated_values,
-            extrapolated_stderr,
-            observable,
-            extrapolators,
-        )
-
-        result_values[(slice(None), *bcast_index)] = selected_values
-        result_stderrs[(slice(None), *bcast_index)] = selected_stderr
-        result_extrapolators[(slice(None), *bcast_index)] = selected_extrap
-
-    return result_values, result_stderrs, result_extrapolators
+    # choose the best extrapolated result
+    return select_zne_extrapolated_result(
+        extrapolated_values,
+        extrapolated_stderr,
+        observable_term,
+        extrapolators,
+    )
 
 
 def fit_extrapolation_models(
-    values: npt.NDArray[float],
-    standard_error: npt.NDArray[float],
+    values: Sequence[float],
+    standard_error: Sequence[float],
     zne_noise_factors: Sequence[float],
     models: Sequence[str],
     extrapolated_noise_factor: float | npt.ArrayLike = 0,
@@ -223,7 +205,7 @@ def clamp_degenerate_stds(y_std: np.ndarray) -> np.ndarray | None:
 def select_zne_extrapolated_result(
     zne_values: npt.NDArray[float],
     zne_std_errors: npt.NDArray[float],
-    observable: ObservablesArray | Mapping[str, float],
+    observable_term: str,
     zne_extrapolator: Sequence[str],
 ) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
     """Choose the best extrapolated values.
@@ -235,8 +217,8 @@ def select_zne_extrapolated_result(
     Args:
         zne_values: Extrapolated expectation values.
         zne_std_errors: Standard errors of the extrapolated expectation values.
-        observable: The observables to calculate expectation values for. The observables determine
-            the ideal-value range used to judge extrapolation validity.
+        observable_term: The observable term to calculate expectation values for. The observable
+            determine the ideal-value range used to judge extrapolation validity.
         zne_extrapolator: The extrapolators used.
 
     Returns:
@@ -252,17 +234,12 @@ def select_zne_extrapolated_result(
     # Determine ideal value limits for standard basis projectors. If there is any
     # Pauli in the basis term we assume ideal <B> in [-1, 1], for only projectors [0, 1].
     # For missing or non-standard basis don't constrain values
-    val_min = 0.0 if observable else -np.inf
-    val_max = 0.0 if observable else np.inf
-    for observable_term, coeff in observable.items():
-        if re.search(_pattern_ylim_01, observable_term):
-            val_max += coeff
-        elif re.search(_pattern_ylim_pm1, observable_term):
-            val_min -= coeff
-            val_max += coeff
-        else:
-            val_min = -np.inf
-            val_max = np.inf
+    if re.search(_pattern_ylim_01, observable_term):
+        val_min, val_max = (0, 1)
+    elif re.search(_pattern_ylim_pm1, observable_term):
+        val_min, val_max = (-1, 1)
+    else:
+        val_min, val_max = (-np.inf, np.inf)
 
     # Filter candidate values that have non-finite values/std errors and values
     # with standard errors outside the basis threshold.
