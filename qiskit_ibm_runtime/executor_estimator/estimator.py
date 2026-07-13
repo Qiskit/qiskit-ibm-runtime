@@ -289,7 +289,7 @@ class EstimatorV2(BaseEstimatorV2):
         # Check if we're in local simulator mode
         if self._executor is None:
             logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, shots)
+            return self._run_simulator(coerced_pubs, options, shots)
 
         # Convert pubs to QuantumProgram and map options using the selected prepare function
         logger.info("Starting pre-processing")
@@ -369,17 +369,20 @@ class EstimatorV2(BaseEstimatorV2):
 
         return self._executor.run(quantum_program)
 
-    def _run_simulator(self, pubs: list[EstimatorPub], shots: int) -> LocalRuntimeJob:
+    def _run_simulator(
+        self, pubs: list[EstimatorPub], options: EstimatorOptions, shots: int
+    ) -> LocalRuntimeJob:
         """Run estimator in local simulator mode using BackendEstimatorV2.
 
         Args:
             pubs: List of estimator PUBs to run.
+            options: The user options, finalized.
             shots: The number of shots to use.
 
         Returns:
             A LocalRuntimeJob.
         """
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
+        options_dict = asdict(options)  # type: ignore[call-overload]
         options_dict["default_shots"] = shots
 
         inputs = {
