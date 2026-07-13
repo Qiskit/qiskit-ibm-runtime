@@ -182,6 +182,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=enable_gates,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="pauli",
         )
 
         pm = generate_boxing_pass_manager(
@@ -189,6 +190,7 @@ class TestBoxCircuit(unittest.TestCase):
             measure_annotations="all",
             twirling_strategy="all",
             inject_noise_site="after",
+            twirling_group="pauli",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -212,6 +214,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations=measure_annotations,
             twirling_strategy="all",
+            twirling_group="pauli",
         )
 
         pm = generate_boxing_pass_manager(
@@ -219,6 +222,7 @@ class TestBoxCircuit(unittest.TestCase):
             measure_annotations=measure_annotations,
             twirling_strategy="all",
             inject_noise_site="after",
+            twirling_group="pauli",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -242,6 +246,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy=twirling_strategy,
+            twirling_group="pauli",
         )
 
         pm = generate_boxing_pass_manager(
@@ -249,6 +254,7 @@ class TestBoxCircuit(unittest.TestCase):
             measure_annotations="all",
             twirling_strategy=twirling_strategy,
             inject_noise_site="after",
+            twirling_group="pauli",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -272,6 +278,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="pauli",
             inject_noise=inject_noise,
         )
 
@@ -279,6 +286,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="pauli",
             inject_noise_targets="gates" if inject_noise else "none",
             inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
             inject_noise_site="after",
@@ -311,6 +319,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy="all",
+            twirling_group="balanced_pauli",
             add_tags=add_tags,
         )
 
