@@ -1,4 +1,4 @@
-Improve the error shown when a retrieved job was serialized with a newer
+Improve the warning shown when a retrieved job was serialized with a newer
 version of Qiskit than is installed locally. Instead of a cryptic QPY
 warning from ``qiskit.qpy.load``, users now see a clear message that
 explains the version mismatch and suggests upgrading with
