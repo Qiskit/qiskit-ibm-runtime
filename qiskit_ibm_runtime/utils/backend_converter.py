@@ -15,10 +15,12 @@
 from __future__ import annotations
 
 import logging
+import math
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from qiskit.circuit import Instruction
+import numpy as np
+from qiskit.circuit import Instruction, Qubit
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
     ForLoopOp,
@@ -27,15 +29,18 @@ from qiskit.circuit.controlflow import (
     WhileLoopOp,
 )
 from qiskit.circuit.gate import Gate
-from qiskit.circuit.library.standard_gates import get_standard_gate_name_mapping
+from qiskit.circuit.library.standard_gates import GlobalPhaseGate, get_standard_gate_name_mapping
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
+from qiskit.transpiler.passes.utils.wrap_angles import WrapAngles
 from qiskit.transpiler.target import InstructionProperties, Target
 
 from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
 from qiskit_ibm_runtime.utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
+    from qiskit.dagcircuit import DAGCircuit
+
     from qiskit_ibm_runtime.models import BackendConfiguration, BackendProperties
 
 
@@ -47,6 +52,35 @@ NON_UNITARY_ISA_INSTRUCTIONS = frozenset(("measure", "delay", "reset"))
 Not every backend supports the full set of non-unitary instructions. To know which instructions
 are supported by a given backend, one can inspect ``backend.supported_operations``.
 """
+
+
+def rzz_wrapper(angles: list[float], qubits: list[Qubit]) -> DAGCircuit:
+    """A wrapper to instruct the transpiler how to fold out-of-bounds Rzz angles."""
+    from qiskit_ibm_runtime.transpiler.passes.basis.fold_rzz_angle import FoldRzzAngle
+
+    fold_rzz = FoldRzzAngle()
+    angle = float(angles[0])
+    wrap_angle = np.angle(np.exp(1j * angle))
+    fresh_qubits = (Qubit(), Qubit())
+    if 0 <= wrap_angle <= math.pi / 2:
+        dag = fold_rzz._quad1(wrap_angle, fresh_qubits)
+    elif math.pi / 2 < wrap_angle <= math.pi:
+        dag = fold_rzz._quad2(wrap_angle, fresh_qubits)
+    elif -math.pi <= wrap_angle <= -math.pi / 2:
+        dag = fold_rzz._quad3(wrap_angle, fresh_qubits)
+    else:
+        dag = fold_rzz._quad4(wrap_angle, fresh_qubits)
+    windings = round((angle - wrap_angle) / (2 * math.pi))
+    if windings % 2:
+        dag.apply_operation_back(GlobalPhaseGate(math.pi))
+    return dag
+
+
+wrap_angles_registry = WrapAngles.DEFAULT_REGISTRY
+"""A registry of wrappers, to instruct the transpiler what to do when it encounters
+out-of-bounds angles."""
+
+wrap_angles_registry.add_wrapper("rzz", rzz_wrapper)
 
 
 def convert_to_target(
@@ -70,7 +104,7 @@ def convert_to_target(
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
         include_control_flow: Set True to include control flow instructions.
-        include_fractional_gates: Set True to include fractioanl gates.
+        include_fractional_gates: Set True to include fractional gates.
         custom_name_mapping: A name mapping must be supplied for the operation
             not included in Qiskit Standard Gate name mapping, otherwise the operation
             will be dropped in the resulting ``Target`` object.
@@ -315,5 +349,7 @@ def convert_to_target(
                 instruction=inst_name_map[inst_name],
                 properties=prop_name_map.get(inst_name, None),
                 name=inst_name,
+                angle_bounds=[(0, math.pi / 2)] if inst_name == "rzz" else None,
             )
+
     return target

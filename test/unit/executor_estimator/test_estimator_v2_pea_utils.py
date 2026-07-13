@@ -18,7 +18,7 @@ from typing import Any, cast
 
 import numpy as np
 from ddt import ddt
-from qiskit import QuantumCircuit
+from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 from samplomatic import InjectNoise
@@ -26,7 +26,7 @@ from samplomatic.utils import get_annotation
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.prepare_pea import prepare_pea
-from qiskit_ibm_runtime.executor_estimator.utils import get_layers
+from qiskit_ibm_runtime.executor_estimator.utils import find_unique_layers
 from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
     MeasureNoiseLearningOptions,
 )
@@ -54,9 +54,9 @@ class TestPreparePeaFunction(unittest.TestCase):
             [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
         )
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -67,9 +67,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)
@@ -135,12 +139,11 @@ class TestPreparePeaFunction(unittest.TestCase):
         noise_model_2b = PauliLindbladMap.from_sparse_list([("ZX", [1, 2], 0.2)], num_qubits=3)
 
         # find layers first to extract the layers ref
-        layers = get_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub1, pub2], TwirlingOptions(), inject_noise=True)
         noise_layer_refs = []
-        for pub_layers in layers:
-            for layer in pub_layers:
-                if annot := get_annotation(layer.operation, InjectNoise):
-                    noise_layer_refs.append(annot.ref)
+        for layer in layers:
+            if annot := get_annotation(layer.operation, InjectNoise):
+                noise_layer_refs.append(annot.ref)
 
         noise_model_mapping = {
             noise_layer_refs[0]: noise_model_1,
@@ -153,9 +156,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 2048
         quantum_program = prepare_pea(
-            [pub1, pub2], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub1, pub2], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertEqual(len(quantum_program.items), 2)
@@ -227,8 +234,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub], TwirlingOptions(), 1024, zne_options, {})
+            prepare_pea([pub], twirling_options, 1024, zne_options, {})
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -249,9 +260,9 @@ class TestPreparePeaFunction(unittest.TestCase):
         # Only provide noise model for one pub, but we have two pubs
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
         # find layers first to extract the layers ref
-        layers = get_layers([pub1], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub1], TwirlingOptions(), inject_noise=True)
         noise_layer_ref_pub1 = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref_pub1 = annot.ref
 
@@ -262,8 +273,12 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         with self.assertRaises(IBMInputValueError) as context:
-            prepare_pea([pub1, pub2], TwirlingOptions(), 1024, zne_options, noise_model_mapping)
+            prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model_mapping)
 
         self.assertIn("noise_model_mapping", str(context.exception))
 
@@ -278,10 +293,14 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         noise_model = PauliLindbladMap.from_sparse_list([("XX", [0, 1], 0.1)], num_qubits=2)
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], twirling_options, inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -297,7 +316,7 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         quantum_program = prepare_pea(
             [pub],
-            TwirlingOptions(),
+            twirling_options,
             1024,
             zne_options,
             noise_model_mapping,
@@ -335,8 +354,6 @@ class TestPreparePeaFunction(unittest.TestCase):
 
     def test_prepare_pea_with_parameters(self):
         """Test prepare_pea with a pub containing parameters and validate final shape."""
-        from qiskit.circuit import Parameter
-
         # Create a parameterized circuit with rz gates (supported by samplomatic)
         circuit = QuantumCircuit(2)
         theta = Parameter("theta")
@@ -358,9 +375,9 @@ class TestPreparePeaFunction(unittest.TestCase):
             [("XX", [0, 1], 0.1), ("ZZ", [0, 1], 0.05)], num_qubits=2
         )
         # find layers first to extract the layers ref
-        layers = get_layers([pub], TwirlingOptions(), inject_noise=True)
+        layers = find_unique_layers([pub], TwirlingOptions(), inject_noise=True)
         noise_layer_ref = ""
-        for layer in layers[0]:
+        for layer in layers:
             if annot := get_annotation(layer.operation, InjectNoise):
                 noise_layer_ref = annot.ref
 
@@ -371,9 +388,13 @@ class TestPreparePeaFunction(unittest.TestCase):
         zne_options.amplifier = "pea"
         zne_options.noise_factors = noise_factors
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         shots = 1024
         quantum_program = prepare_pea(
-            [pub], TwirlingOptions(), shots, zne_options, noise_model_mapping
+            [pub], twirling_options, shots, zne_options, noise_model_mapping
         )
 
         self.assertIsInstance(quantum_program, QuantumProgram)

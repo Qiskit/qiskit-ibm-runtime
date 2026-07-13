@@ -1,0 +1,2 @@
+Added a user warning when a user sets the `shots_per_randomization` field of `MeasureNoiseLearningOptions`
+to an `int`.

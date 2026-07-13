@@ -130,7 +130,7 @@ class CircuitItem(QuantumProgramItem):
 
         chunk_size = "" if self.chunk_size is None else f", chunk_size={self.chunk_size}"
 
-        return f"QuantumProgramSimpleItem({circuit}{circuit_args}{chunk_size})"
+        return f"CircuitItem({circuit}{circuit_args}{chunk_size})"
 
 
 class SamplexItem(QuantumProgramItem):
@@ -205,7 +205,7 @@ class SamplexItem(QuantumProgramItem):
         shape = f", shape={self.shape}"
         chunk_size = "" if self.chunk_size is None else f", chunk_size={self.chunk_size}"
 
-        return f"QuantumProgramSamplexItem({circuit}{samplex}{samplex_args}{shape}{chunk_size})"
+        return f"SamplexItem({circuit}{samplex}{samplex_args}{shape}{chunk_size})"
 
 
 class QuantumProgram:
@@ -220,7 +220,21 @@ class QuantumProgram:
         shots: The number of shots for each circuit execution.
         items: Items that comprise the program.
         noise_maps: Noise maps to use with samplex items.
-        passthrough_data: Arbitrary nested data passed through execution without modification.
+        meas_level: The level at which to return all classical register measurement results. This
+            value sets the return type of all classical registers in all quantum program items and
+            determines whether the raw complex data from low-level measurement devices is
+            discriminated into bits or not. The supported values are
+
+                * "classified": Classical register data is returned as boolean arrays with the
+                    intrinsic shape ``(num_shots, creg_size)``.
+                * "kerneled": Classical register data is returned as a complex array with the
+                    intrinsic shape ``(num_shots, creg_size)``, where each entry represents an IQ
+                    data point (resulting from kerneling the measurement trace) in arbitrary units.
+                * "avg_kerneled": Classical register data is returned as a complex array with the
+                    intrinsic shape ``(creg_size,)``, where data is equivalent to "kerneled" except
+                    additionally averaged over shots.
+
+            passthrough_data: Arbitrary nested data passed through execution without modification.
     """
 
     def __init__(
@@ -228,7 +242,7 @@ class QuantumProgram:
         shots: int,
         items: Iterable[QuantumProgramItem] | None = None,
         noise_maps: dict[str, PauliLindbladMap] | None = None,
-        meas_level: Literal["classified", "kerneled", "avg_kerneled"] = "classified",
+        meas_level: Literal["classified", "kerneled", "avg_kerneled", "both"] = "classified",
         passthrough_data: DataTree | None = None,
     ):
         self.shots = shots

@@ -91,7 +91,7 @@ def _heavy_hex_coords(
         rows: A sequence of rows, sorted from top to bottom. Rows are specified as an iterable of
             integers, where every integer represents a column index.
         row_major: Whether qubits should be labelled in row-major order (by ``x`` first and, in
-            case of a tie, by ``y``) or in colum-major order.
+            case of a tie, by ``y``) or in column-major order.
 
     Returns:
         A list of qubit coordinates, where list position corresponds with qubit index.
@@ -104,7 +104,7 @@ def _heavy_hex_coords(
         for col_idx in row:
             coordinates += [(row_idx, col_idx)]
 
-    # Sort if colum-major order is required
+    # Sort if column-major order is required
     if not row_major:
         coordinates = sorted(coordinates, key=lambda p: (p[1], p[0]))
 

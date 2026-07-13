@@ -20,6 +20,8 @@ from typing import TYPE_CHECKING
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
+
 from .base_primitive import BasePrimitiveV2
 from .options.estimator_options import EstimatorOptions
 from .utils import validate_estimator_pubs
@@ -146,6 +148,16 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             if precision <= 0:
                 raise ValueError("The precision value must be strictly greater than 0.")
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+
+        if len({pub.precision for pub in coerced_pubs}) > 1:
+            issue_deprecation_msg(
+                msg="Specifying different 'precision' across pubs is deprecated",
+                version="0.48.0",
+                remedy="Submit one job for each desired precision instead. "
+                "To reduce overhead, Consider submitting these jobs inside a Batch execution mode.",
+                stacklevel=2,
+            )
+
         validate_estimator_pubs(coerced_pubs)
         return self._run(coerced_pubs)
 

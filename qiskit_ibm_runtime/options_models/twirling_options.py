@@ -25,13 +25,25 @@ from .utils import PRIMITIVES_CONFIG
 class TwirlingOptions:
     """Twirling options."""
 
-    enable_gates: bool = False
-    """Whether to apply 2-qubit Clifford gate twirling."""
+    enable_gates: bool | None = None
+    """Whether to apply 2-qubit Clifford gate twirling.
 
-    enable_measure: bool = False
+    If ``None``:
+    - For the Sampler, it defaults to ``False``.
+    - For the Estimator, it is determined by the server according to the resilience level: it is
+    ``False`` for resilience levels ``0`` and ``1``, and ``True`` for resilience level ``2``.
+    """
+
+    enable_measure: bool | None = None
     """Whether to enable twirling of measurement instructions.
 
-    Twirling is only applied to measurements that are not involved in a conditional block.
+    .. note::
+        Twirling is only applied to measurements that are not involved in a conditional block.
+
+    If ``None``:
+    - For the Sampler, it defaults to ``False``.
+    - For the Estimator, it is determined by the server according to the resilience level: it is
+    ``False`` for resilience level ``0``, and ``True`` for resilience levels ``1`` and ``2``.
     """
 
     num_randomizations: int | Literal["auto"] = "auto"
