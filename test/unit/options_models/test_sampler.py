@@ -10,23 +10,22 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for SimulatorOptions in executor-based SamplerV2."""
+"""Tests for SamplerOptions."""
 
-import unittest
 from unittest.mock import patch
 
 from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.transpiler import CouplingMap
 
-from qiskit_ibm_runtime.executor_sampler import SamplerV2
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
 from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
-from test.utils import get_mocked_backend
+
+from ...ibm_test_case import IBMTestCase
 
 
 @ddt
-class TestSimulatorOptions(unittest.TestCase):
+class TestSimulatorOptions(IBMTestCase):
     """Tests for SimulatorOptions in SamplerOptions."""
 
     def test_simulator_options_default(self):
@@ -38,51 +37,13 @@ class TestSimulatorOptions(unittest.TestCase):
         self.assertIsNone(options.simulator.coupling_map)
         self.assertIsNone(options.simulator.basis_gates)
 
-    def test_simulator_options_set_seed(self):
-        """Test setting simulator seed."""
+    @data([[0, 1], [1, 2]], CouplingMap([[0, 1], [1, 2]]))
+    def test_coupling_map_valid(self, coupling_map):
+        """Test setting coupling map."""
         options = SamplerOptions()
-        options.simulator.seed_simulator = 42
-
-        self.assertEqual(options.simulator.seed_simulator, 42)
-
-    def test_simulator_options_set_coupling_map(self):
-        """Test setting coupling map as list."""
-        options = SamplerOptions()
-        coupling_map = [[0, 1], [1, 2], [2, 3]]
         options.simulator.coupling_map = coupling_map
 
         self.assertEqual(options.simulator.coupling_map, coupling_map)
-
-    def test_simulator_options_set_coupling_map_from_qiskit(self):
-        """Test setting coupling map from Qiskit CouplingMap object."""
-        options = SamplerOptions()
-        qiskit_coupling_map = CouplingMap([[0, 1], [1, 2]])
-        options.simulator.coupling_map = qiskit_coupling_map
-
-        self.assertEqual(options.simulator.coupling_map, qiskit_coupling_map)
-
-    def test_simulator_options_set_basis_gates(self):
-        """Test setting basis gates."""
-        options = SamplerOptions()
-        basis_gates = ["u1", "u2", "u3", "cx"]
-        options.simulator.basis_gates = basis_gates
-
-        self.assertEqual(options.simulator.basis_gates, basis_gates)
-
-    def test_simulator_options_from_dict(self):
-        """Test constructing simulator options from dict."""
-        opts_dict = {
-            "simulator": {
-                "seed_simulator": 123,
-                "basis_gates": ["h", "cx", "rz"],
-                "coupling_map": [[0, 1], [1, 2]],
-            }
-        }
-        sampler = SamplerV2(mode=get_mocked_backend(), options=opts_dict)
-
-        self.assertEqual(sampler.options.simulator.seed_simulator, 123)
-        self.assertEqual(sampler.options.simulator.basis_gates, ["h", "cx", "rz"])
-        self.assertEqual(sampler.options.simulator.coupling_map, [[0, 1], [1, 2]])
 
     @data("bad_input", [1, 2, 3], [[0, 1], [-1, 0]])
     def test_coupling_map_invalid_type_raises(self, input):

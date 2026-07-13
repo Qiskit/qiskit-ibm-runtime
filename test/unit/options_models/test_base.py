@@ -10,9 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for the base OptionsModel class."""
+"""Tests for the BaseOptionsModel class."""
 
-from dataclasses import asdict, astuple
+from dataclasses import asdict
 
 from pydantic import ValidationError
 
@@ -35,8 +35,8 @@ class Options(BaseOptionsModel):
     nested: Nested = Nested()
 
 
-class TestOptionsModel(IBMTestCase):
-    """Tests for the base OptionsModel class."""
+class TestBaseOptionsModel(IBMTestCase):
+    """Tests for the BaseOptionsModel class."""
 
     def test_update(self):
         """Test the `update()` method."""
@@ -65,4 +65,3 @@ class TestOptionsModel(IBMTestCase):
         """Test the ability to use `dataclass.asdict()` in an OptionsModel."""
         options = Options()
         self.assertEqual(asdict(options), options.model_dump())
-

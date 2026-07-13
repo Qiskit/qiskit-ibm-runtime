@@ -10,9 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests for ResilienceOptions."""
-
-import unittest
+"""Tests for ResilienceOptions."""
 
 from ddt import data, ddt
 from pydantic import ValidationError
@@ -20,8 +18,11 @@ from qiskit.quantum_info import PauliLindbladMap
 
 from qiskit_ibm_runtime.options_models.resilience_options import ResilienceOptions
 
+from ...ibm_test_case import IBMTestCase
 
-class TestResilienceOptionsDefaults(unittest.TestCase):
+
+@ddt
+class TestResilienceOptionsDefaults(IBMTestCase):
     """Tests for ResilienceOptions default values and basic instantiation."""
 
     def test_defaults(self):
@@ -40,10 +41,6 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
 
     def test_set_all_options(self):
         """All fields accept explicit non-default values."""
-        mapping = {
-            "layer_0": PauliLindbladMap.identity(num_qubits=1),
-            "layer_1": PauliLindbladMap.identity(num_qubits=1),
-        }
         opts = ResilienceOptions(
             measure_mitigation=False,
             measure_noise_learning={"num_randomizations": 64, "shots_per_randomization": 1024},
@@ -51,7 +48,10 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
             pec={"max_overhead": 50, "noise_gain": 0.5},
             zne_mitigation=True,
             zne={"amplifier": "gate_folding_front", "noise_factors": [1, 3, 5]},
-            noise_model_mapping=mapping,
+            noise_model_mapping={
+                "layer_0": PauliLindbladMap.identity(num_qubits=1),
+                "layer_1": PauliLindbladMap.identity(num_qubits=1),
+            },
         )
         self.assertFalse(opts.measure_mitigation)
         self.assertEqual(opts.measure_noise_learning.num_randomizations, 64)
@@ -64,13 +64,7 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
         self.assertEqual(list(opts.zne.noise_factors), [1, 3, 5])
         self.assertEqual(set(opts.noise_model_mapping.keys()), {"layer_0", "layer_1"})
 
-
-@ddt
-class TestNoiseModelMappingValidation(unittest.TestCase):
-    """Tests for the noise_model_mapping field validator."""
-
     @data(
-        # (value, fragment expected in the error message)
         "not_a_dict",
         42,
         {0: PauliLindbladMap.identity(num_qubits=1)},  # non-string key
