@@ -163,7 +163,7 @@ dependencies = [
     "pydantic>=2.11.0",
     "qiskit>=2.3.0",
     "pybase64>=1.4.0",
-    "samplomatic>=0.17.0"
+    "samplomatic>=0.18.0"
 ]
 
 [project.entry-points."qiskit.transpiler.translation"]
