@@ -20,13 +20,11 @@ from pydantic import Field
 
 from .base import BaseOptionsModel
 
-NonNegativeFloat = Annotated[float, Field(ge=0)]
-
 
 class PecOptions(BaseOptionsModel):
     """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator."""
 
-    max_overhead: NonNegativeFloat | None = 100
+    max_overhead: Annotated[float, Field(ge=0)] | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
     In order to remove the full learned noise, the number of randomizations should be
@@ -35,7 +33,7 @@ class PecOptions(BaseOptionsModel):
     The maximum overhead limits the sampling overhead allowed.
     """
 
-    noise_gain: NonNegativeFloat | Literal["auto"] = "auto"
+    noise_gain: Annotated[float, Field(ge=0)] | Literal["auto"] = "auto"
     """The amount by which to scale the noise.
 
     The amount by which to scale the noise, where:

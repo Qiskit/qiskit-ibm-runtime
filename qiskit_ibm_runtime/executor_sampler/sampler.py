@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 from qiskit.primitives.base import BaseSamplerV2

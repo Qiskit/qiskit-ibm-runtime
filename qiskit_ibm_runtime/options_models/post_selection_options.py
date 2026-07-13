@@ -16,9 +16,6 @@ from typing import Literal
 
 from .base import BaseOptionsModel
 
-DEFAULT_X_PULSE_TYPE = "xslow"
-"""The default for :meth:`.PostSelectionOptions.x_pulse_type`."""
-
 
 class PostSelectionOptions(BaseOptionsModel):
     """Options for post selecting results."""

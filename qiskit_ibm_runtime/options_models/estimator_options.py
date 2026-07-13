@@ -14,18 +14,15 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Literal
 
 from pydantic import Field
-from pydantic.dataclasses import dataclass
-
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
-from qiskit_ibm_runtime.options_models.executor_options import ExecutorOptions
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
+from .execution_options import ExecutionOptions
+from .executor_options import ExecutorOptions
 from .resilience_options import ResilienceOptions
 from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions

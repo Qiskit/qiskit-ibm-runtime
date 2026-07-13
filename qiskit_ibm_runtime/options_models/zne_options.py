@@ -35,12 +35,6 @@ ExtrapolatorType = Literal[
     "fallback",
 ]
 
-PEA_DEFAULT_NOISE_FACTORS = (1, 1.5, 2, 2.5, 3)
-"""The values of ``noise_factors`` used by default when PEA is selected."""
-
-ZNE_DEFAULT_NOISE_FACTORS = (1, 3, 5)
-"""The values of ``noise_factors`` used by default when gate folding is selected."""
-
 
 class ZneOptions(BaseOptionsModel):
     """Zero noise extrapolation mitigation options. This is only used by the V2 Estimator.

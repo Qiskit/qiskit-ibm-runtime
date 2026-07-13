@@ -32,7 +32,6 @@ from samplomatic import build
 
 from ..exceptions import IBMInputValueError
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
-from ..options_models.zne_options import PEA_DEFAULT_NOISE_FACTORS
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import SamplexItem
 from .trex_utils import create_trex_calibration_circuit
@@ -44,6 +43,9 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+PEA_DEFAULT_NOISE_FACTORS = (1, 1.5, 2, 2.5, 3)
+"""The values of ``noise_factors`` used by default when PEA is selected."""
 
 
 def prepare_pea(
