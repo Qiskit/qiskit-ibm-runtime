@@ -465,23 +465,6 @@ class TestEstimatorV2Run(unittest.TestCase):
         ):
             estimator.run([(circuit, observable)], precision=0.03125)
 
-    def test_run_raises_error_when_pea_enabled_without_noise_model(self):
-        """Test that run raises error when PEA is used without noise_model_mapping."""
-        estimator = EstimatorV2(mode=self.backend)
-        estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne.amplifier = "pea"
-        estimator.options.resilience.noise_model_mapping = None
-
-        circuit = QuantumCircuit(2)
-        circuit.h(0)
-        observable = SparsePauliOp.from_list([("ZZ", 1)])
-
-        with self.assertRaisesRegex(
-            IBMInputValueError,
-            "When PEA mitigation is enabled, you must provide a noise model",
-        ):
-            estimator.run([(circuit, observable)], precision=0.03125)
-
     @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pea")
     def test_run_dispatches_to_prepare_pea_when_pea_amplifier_selected(self, mock_prepare_pea):
         """Test that run calls prepare_pea when zne_mitigation is enabled with amplifier='pea'."""

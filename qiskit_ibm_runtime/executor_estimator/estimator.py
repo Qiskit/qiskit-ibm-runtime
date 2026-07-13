@@ -186,7 +186,8 @@ class EstimatorV2(BaseEstimatorV2):
             pubs=coerced_pubs,
             twirling_options=options.twirling,
             measure_noise_learning=options.resilience.measure_noise_learning,
-            inject_noise=options.resilience.pec_mitigation,  # TODO: Add PEA once available
+            inject_noise=options.resilience.pec_mitigation
+            or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
         )
 
     def finalize_options(self) -> EstimatorOptions:
@@ -327,17 +328,12 @@ class EstimatorV2(BaseEstimatorV2):
             )
         elif options.resilience.zne_mitigation:
             if options.resilience.zne.amplifier == "pea":
-                if options.resilience.noise_model_mapping is None:
-                    raise IBMInputValueError(
-                        "When PEA mitigation is enabled, you must provide a noise model "
-                        "via options.resilience.noise_model_mapping"
-                    )
                 quantum_program = prepare_pea(
                     pubs=coerced_pubs,
                     twirling_options=options.twirling,
                     shots=shots,
                     zne_options=options.resilience.zne,
-                    noise_model_mapping=options.resilience.noise_model_mapping,
+                    noise_model_mapping=options.resilience.noise_model_mapping or {},
                     measure_noise_learning=options.resilience.measure_noise_learning
                     if options.resilience.measure_mitigation
                     else None,
