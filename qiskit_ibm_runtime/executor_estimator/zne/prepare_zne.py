@@ -53,6 +53,7 @@ def prepare_zne(
     shots: int,
     zne_options: ZneOptions,
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program.
 
@@ -65,6 +66,11 @@ def prepare_zne(
         zne_options: The options for ZNE mitigation.
         measure_noise_learning: The measure noise learning options. If provided, Twirled Readout
             Error eXtinction (TREX) mitigation method will be used.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -78,6 +84,8 @@ def prepare_zne(
         IBMInputValueError: If the amplifier in the ZneOptions is not one of ``gate_folding``,
         ``gate_folding_front`` or ``gate_folding_back``.
     """
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
     if zne_options.amplifier not in ["gate_folding", "gate_folding_front", "gate_folding_back"]:
         raise IBMInputValueError(
             "ZNE mitigation must be used with a gate folding noise amplification."
@@ -109,6 +117,7 @@ def prepare_zne(
         twirling_options,
         measure_noise_learning,
         inject_noise=False,
+        add_tags=add_tags,
     )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
@@ -134,7 +143,7 @@ def prepare_zne(
             folding_pm = PassManager([GateFolding(noise_factor, folding_method)])
             folded_circuit = folding_pm.run(pub.circuit)
 
-            boxed_circuit = box_circuit(circuit=folded_circuit, inject_noise=False, **pm_kwargs)
+            boxed_circuit = box_circuit(circuit=folded_circuit, **pm_kwargs)
 
             # Build the template and the samplex
             template, samplex = build(boxed_circuit)
@@ -172,6 +181,7 @@ def prepare_zne(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
+            "mitigation": "zne",
             "zne_noise_factors": noise_factors,
             "item_id": item_id,
         },

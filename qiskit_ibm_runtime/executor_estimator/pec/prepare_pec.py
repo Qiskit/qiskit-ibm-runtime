@@ -53,6 +53,7 @@ def prepare_pec(
     pec_options: PecOptions,
     noise_model_mapping: dict[str, PauliLindbladMap],
     measure_noise_learning: MeasureNoiseLearningOptions | None = None,
+    add_tags: bool = False,
 ) -> QuantumProgram:
     """Convert estimator PUBs to a quantum program with PEC mitigation.
 
@@ -67,7 +68,12 @@ def prepare_pec(
         pec_options: The options for PEC mitigation.
         noise_model_mapping: Mapping between layer ref to a noise model to use for PEC mitigation
             method. The dict contains layers from all pubs. Assumes that the unique layers
-            used for noise learning were extracted using the ``get_layers`` method.
+            used for noise learning were extracted using the ``find_unique_layers`` method.
+        add_tags: Whether to include tags for the boxes. Relevant mainly for debugging.
+            ``False`` will cause no tags to be added (will pass the "none" value to the relevant
+            attribute), while ``True`` will cause tags with the twirled boxes hash to be added
+            (using the "unique_box" value of the relevant attribute). These tags can help
+            injecting noise in simulators.
 
     Returns:
         :class:`~.QuantumProgram` with :class:`~.SamplexItem` objects for each pub,
@@ -81,6 +87,11 @@ def prepare_pec(
         IBMInputValueError: If ``noise_model_mapping`` is missing a noise map for at least one of
             the pubs layers.
     """
+    if not twirling_options.enable_gates:
+        raise ValueError("PEC requires enabling twirling for gates.")
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
+
     num_randomizations, shots_per_randomization = calculate_pec_twirling_shots(
         shots,
         twirling_options.num_randomizations,
@@ -105,11 +116,12 @@ def prepare_pec(
         twirling_options,
         measure_noise_learning,
         inject_noise=True,
+        add_tags=add_tags,
     )
     for i, pub in enumerate(pubs):
         logger.info("Processing pub %d/%d", i + 1, len(pubs))
 
-        boxed_circuit = box_circuit(circuit=pub.circuit, inject_noise=True, **pm_kwargs)
+        boxed_circuit = box_circuit(circuit=pub.circuit, **pm_kwargs)
 
         # Build the template and the samplex
         template, samplex = build(boxed_circuit)
@@ -189,6 +201,7 @@ def prepare_pec(
             "param_basis_pairs": param_basis_pairs_list,
             "param_shapes": param_shapes_list,
             "measure_mitigation": "False",
+            "mitigation": "pec",
             "pec_gammas": pec_gamma_list,
         },
     }
