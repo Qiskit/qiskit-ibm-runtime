@@ -27,8 +27,8 @@ class PecOptions(BaseOptionsModel):
     max_overhead: Annotated[float, Field(ge=0)] | None = 100
     """The maximum circuit sampling overhead allowed, or ``None`` for no maximum.
 
-    In order to remove the full learned noise, the number of randomizations should be
-    multiplied by the sampling overhead, which is ``gamma^2``.
+    In order to remove the full learned noise, the number of randomizations should be multiplied by
+    the sampling overhead, which is ``gamma^2``.
 
     The maximum overhead limits the sampling overhead allowed.
     """
@@ -43,6 +43,6 @@ class PecOptions(BaseOptionsModel):
     * A value between ``0`` and ``1`` corresponds to partially removing the learned noise.
     * A value greater than one corresponds to amplifying the learned noise.
 
-    If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically
-    for each input PUB by the formula `1 - log(max_overhead) / log(gamma^2)`.
+    If ``"auto"``, the value in the range ``[0, 1]`` will be chosen automatically for each input
+    PUB by the formula ``1 - log(max_overhead) / log(gamma^2)``.
     """

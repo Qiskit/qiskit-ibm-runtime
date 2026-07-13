@@ -63,8 +63,7 @@ class SamplerExecutionOptions(ExecutionOptions):
     This option sets the return type of all classical registers in all sampler pub results.
 
     * ``"classified"``: Returns a BitArray with classified measurement outcomes.
-    * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement
-        trace, in arbitrary units.
-    * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots,
-        in arbitrary units.
+    * ``"kerneled"``: Returns complex IQ data points from kerneling the measurement trace, in
+        arbitrary units.
+    * ``"avg_kerneled"``: Returns complex IQ data points averaged over shots, in arbitrary units.
     """

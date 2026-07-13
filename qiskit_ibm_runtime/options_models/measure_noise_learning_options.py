@@ -23,8 +23,8 @@ class MeasureNoiseLearningOptions(BaseOptionsModel):
     """Options for measurement noise learning. This is only used by V2 Estimator.
 
     .. note::
-        These options are only used when the resilience level or options specify a
-        technique that requires measurement noise learning.
+        These options are only used when the resilience level or options specify a technique that
+        requires measurement noise learning.
     """
 
     num_randomizations: int = 32

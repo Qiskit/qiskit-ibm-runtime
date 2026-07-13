@@ -35,11 +35,11 @@ class NoiseLearnerV3Options(BaseOptionsModel):
 
     For TREX experiments, a configuration is a measurement basis.
 
-    For Pauli Lindblad experiments, a configuration is a measurement basis and depth setting.
-    For example, if your experiment has six depths, then setting this value to ``32`` will result
-    in a total of ``32 * 9 * 6`` circuits that need to be executed (where ``9`` is the number
-    of circuits that need to be implemented to measure all the required observables, see the
-    note in the docstring for :class:`~.NoiseLearnerOptions` for mode details), at
+    For Pauli Lindblad experiments, a configuration is a measurement basis and depth setting. For
+    example, if your experiment has six depths, then setting this value to ``32`` will result in a
+    total of ``32 * 9 * 6`` circuits that need to be executed (where ``9`` is the number of
+    circuits that need to be implemented to measure all the required observables, see the note in
+    the docstring for :class:`~.NoiseLearnerOptions` for mode details), at
     :attr:`~shots_per_randomization` each.
     """
 

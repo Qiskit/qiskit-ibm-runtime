@@ -362,10 +362,8 @@ class EstimatorV2(BaseEstimatorV2):
             "resilience": self.options.resilience.model_dump(exclude={"noise_model_mapping"}),
         }
 
-        executor_options = estimator_options_to_executor_options(options)
-
         # Set executor options
-        self._executor.options = executor_options
+        self._executor.options = estimator_options_to_executor_options(options)
 
         # Submit to executor
         logger.info(

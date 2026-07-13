@@ -53,8 +53,8 @@ class EnvironmentOptions(BaseOptionsModel):
     """Maximum execution time in seconds.
 
     This value bounds system execution time (not wall clock time). System execution time is the
-    amount of time that the system is dedicated to processing your job. If a job exceeds
-    this time limit, it is forcibly cancelled.
+    amount of time that the system is dedicated to processing your job. If a job exceeds this time
+    limit, it is forcibly cancelled.
     """
 
     image: (

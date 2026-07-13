@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for OptionsModels classes."""
+"""Tests for the base OptionsModel class."""
 
 from dataclasses import asdict, astuple
 
@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from qiskit_ibm_runtime.options_models.base import BaseOptionsModel
 
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 class Nested(BaseOptionsModel):
@@ -53,11 +53,11 @@ class TestOptionsModel(IBMTestCase):
         options_dict["nested"].update(**{"n": 42})
         self.assertEqual(options_dict, options.model_dump())
 
-        # Fail when trying to update a non-existing field.
+        # Should fail when trying to update a non-existing field.
         with self.assertRaises(ValidationError):
             options.update(**{"z": None})
 
-        # Fail when trying to update a field with an invalid value.
+        # Should fail when trying to update a field with an invalid value.
         with self.assertRaises(ValidationError):
             options.update(**{"a": None})
 
@@ -65,5 +65,4 @@ class TestOptionsModel(IBMTestCase):
         """Test the ability to use `dataclass.asdict()` in an OptionsModel."""
         options = Options()
         self.assertEqual(asdict(options), options.model_dump())
-        print(asdict(options))
-        print(astuple(options))
+

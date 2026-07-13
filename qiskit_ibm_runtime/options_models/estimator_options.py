@@ -31,7 +31,9 @@ class EstimatorOptions(BaseOptionsModel):
     """Options for the executor-based EstimatorV2."""
 
     default_precision: float = 0.015625
-    """The default precision for expectation value estimates if not specified in the PUBs
+    """The default precision to use for any PUB or ``run()`` call that does not specify one.
+
+    The default precision for expectation value estimates if not specified in the PUBs
     or in the run method.
 
     The default value of ``0.015625``, equivalent to ``4096**-0.5``, represents the precision
@@ -44,15 +46,13 @@ class EstimatorOptions(BaseOptionsModel):
     .. note::
         If set, this value overrides :attr:`~default_precision`.
 
-    A configuration is a combination of a specific parameter value binding set and a
-    physical measurement basis. A physical measurement basis groups together some
-    collection of qubit-wise commuting observables for some specific circuit/parameter
-    value set to create a single measurement with basis rotations that is inserted into
-    hardware executions.
+    A configuration is a combination of a specific parameter value binding set and a physical
+    measurement basis. A physical measurement basis groups together some collection of qubit-wise
+    commuting observables for some specific circuit/parameter value set to create a single
+    measurement with basis rotations that is inserted into hardware executions.
 
-    If twirling is enabled, the value of this option will be divided over circuit
-    randomizations, with a smaller number of shots per randomization. See the
-    :attr:`~twirling` options.
+    If twirling is enabled, the value of this option will be divided over circuit randomizations,
+    with a smaller number of shots per randomization. See the :attr:`~twirling` options.
     """
 
     execution: ExecutionOptions = ExecutionOptions()
@@ -85,8 +85,8 @@ class EstimatorOptions(BaseOptionsModel):
     resilience_level: Literal[0, 1, 2] = 1
     """How much resilience to build against errors.
 
-    Higher levels generate more accurate results, at the expense of longer processing times.
-    The supported values are:
+    Higher levels generate more accurate results, at the expense of longer processing times. The
+    supported values are:
     * 0: No mitigation.
     * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
     * 2: Medium mitigation costs. Typically reduces bias in estimators but is not guaranteed to be
@@ -94,6 +94,6 @@ class EstimatorOptions(BaseOptionsModel):
 
     Refer to the
     `Configure error mitigation for Qiskit Runtime
-    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
-    for more information about the error mitigation methods used at each level.
+    <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide for more
+    information about the error mitigation methods used at each level.
     """

@@ -3261,7 +3261,6 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         backend = FakeJakartaV2()
 
         if use_target:
-            print("USE TARGET")
             # here we would use backend.target, but DynamicCircuitInstructionDurations
             # modifies the values so we are adapting the target durations to match the
             # resuls. Replace with backend.target once DynamicCircuitInstructionDurations

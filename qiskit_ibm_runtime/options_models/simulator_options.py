@@ -51,10 +51,10 @@ class SimulatorOptions(BaseOptionsModel):
     ) = None
     """Directed coupling map to target in mapping.
 
-    If the coupling map is symmetric, both directions need to be specified.
-    Each entry in the list specifies a directed two-qubit interaction,
-    e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
-    ``None`` implies no connectivity constraints.
+    If the coupling map is symmetric, both directions need to be specified. Each entry in the list
+    specifies a directed two-qubit interaction, e.g:
+    ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``. ``None`` implies no connectivity
+    constraints.
     """
 
     basis_gates: list[str] | None = None
