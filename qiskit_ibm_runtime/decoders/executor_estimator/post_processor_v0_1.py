@@ -473,7 +473,8 @@ def calculate_extrapolated_expectation_values(
     """Calculate expectation values for given data, observables and params.
 
     Args:
-        noise_amplified_data: The measured data result.
+        noise_amplified_data: The measured data result. Its shape should be:
+            (noise_factors, num_randomizations, num_configs, shots, num_bits)
         observables: The observables to calculate expectation values for.
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
