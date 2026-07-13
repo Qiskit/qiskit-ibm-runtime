@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for SamplerOptions.to_executor_options() mapping method."""
+"""Tests for SamplerOptions to ExecutorOptions mapping method."""
 
 import unittest
 
@@ -18,6 +18,7 @@ from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_sampler import SamplerV2
+from qiskit_ibm_runtime.options_models.converters import sampler_option_to_executor_options
 from qiskit_ibm_runtime.options_models.environment_options import SamplerEnvironmentOptions
 from qiskit_ibm_runtime.options_models.execution_options import SamplerExecutionOptions
 from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
@@ -27,12 +28,12 @@ from ...utils import dict_keys_equal, flat_dict_partially_equal, get_mocked_back
 
 
 class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
-    """Tests for SamplerOptions.to_executor_options() method."""
+    """Tests for SamplerOptions to ExecutorOptions method."""
 
     def test_default_options_mapping(self):
         """Test that default options are correctly mapped."""
         options = SamplerOptions()
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         # Check default execution options
         self.assertEqual(executor_options.execution.init_qubits, True)
@@ -49,7 +50,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that image is None when experimental is empty."""
         options = SamplerOptions()
         options.experimental = {}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         self.assertIsNone(executor_options.environment.image)
 
@@ -57,7 +58,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that other experimental keys don't affect mapping."""
         options = SamplerOptions()
         options.experimental = {"image": "test:v1", "other_key": "value"}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         # Only image should be mapped
         self.assertEqual(executor_options.environment.image, "test:v1")
@@ -73,7 +74,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         options.max_execution_time = 300
         options.experimental = {"image": "test-image:latest"}
 
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         self.assertEqual(executor_options.execution.init_qubits, False)
         self.assertEqual(executor_options.execution.rep_delay, 0.0002)
@@ -87,7 +88,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Test that experimental dict is carried over to executor options."""
         options = SamplerOptions()
         options.experimental = {"custom_key": "custom_value", "another_key": 123}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         # Check that experimental dict is carried over
         self.assertEqual(executor_options.experimental["custom_key"], "custom_value")
@@ -97,7 +98,7 @@ class TestSamplerOptionsToExecutorOptions(unittest.TestCase):
         """Execution-related entries in `experimental.execution` must map to executor options."""
         options = SamplerOptions()
         options.experimental = {"execution": {"stretch_values": True, "scheduler_timing": True}}
-        executor_options = options.to_executor_options()
+        executor_options = sampler_option_to_executor_options(options)
 
         # Check that experimental dict options map to executor options.
         self.assertEqual(executor_options.execution.stretch_values, True)

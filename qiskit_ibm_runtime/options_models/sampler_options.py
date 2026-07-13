@@ -16,9 +16,8 @@ from __future__ import annotations
 
 from .base import BaseOptionsModel
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-from .environment_options import EnvironmentOptions, SamplerEnvironmentOptions
-from .execution_options import ExecutionOptions, SamplerExecutionOptions
-from .executor_options import ExecutorOptions
+from .environment_options import SamplerEnvironmentOptions
+from .execution_options import SamplerExecutionOptions
 from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions
 
@@ -49,33 +48,3 @@ class SamplerOptions(BaseOptionsModel):
 
     environment: SamplerEnvironmentOptions = SamplerEnvironmentOptions()
     """Options related to the execution environment."""
-
-    def to_executor_options(self) -> ExecutorOptions:
-        """Map sampler options to executor options, ignoring all irrelevant fields.
-
-        .. note::
-            Simulator options are ignored as executor does not support local mode.
-
-        Returns:
-            Mapped executor options.
-        """
-        executor_options = ExecutorOptions()
-
-        environment_options = self.environment.model_dump()  # type: ignore[call-overload]
-        execution_options = self.execution.model_dump()  # type: ignore[call-overload]
-        execution_options.pop("meas_type")
-        executor_options.environment = EnvironmentOptions(**environment_options)
-        executor_options.execution = ExecutionOptions(**execution_options)
-
-        executor_options.environment.max_execution_time = self.max_execution_time
-        if self.experimental:
-            executor_options.environment.image = self.experimental.get("image", None)
-            executor_options.experimental.update(self.experimental)
-
-            if execution_key := self.experimental.get("execution", {}):
-                if execution_key.get("scheduler_timing", False):
-                    executor_options.execution.scheduler_timing = True
-                if execution_key.get("stretch_values", False):
-                    executor_options.execution.stretch_values = True
-
-        return executor_options

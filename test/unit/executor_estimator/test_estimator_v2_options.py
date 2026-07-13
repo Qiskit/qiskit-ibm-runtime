@@ -17,6 +17,7 @@ import unittest
 from pydantic import ValidationError
 
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
+from qiskit_ibm_runtime.options_models.converters import estimator_options_to_executor_options
 from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
     DynamicalDecouplingOptions,
 )
@@ -75,7 +76,7 @@ class TestEstimatorOptions(unittest.TestCase):
         options.execution.init_qubits = True
         options.execution.rep_delay = 0.001
 
-        executor_options = options.to_executor_options()
+        executor_options = estimator_options_to_executor_options(options)
 
         self.assertIsInstance(executor_options, ExecutorOptions)
         self.assertTrue(executor_options.execution.init_qubits)
@@ -86,7 +87,7 @@ class TestEstimatorOptions(unittest.TestCase):
         """Test conversion with experimental options."""
         options = EstimatorOptions(experimental={"image": "custom:image", "other": "value"})
 
-        executor_options = options.to_executor_options()
+        executor_options = estimator_options_to_executor_options(options)
 
         self.assertEqual(executor_options.environment.image, "custom:image")
         self.assertEqual(executor_options.experimental.get("other"), "value")

@@ -29,14 +29,13 @@ from ..options_models.sampler_options import SamplerOptions
 from .prepare import prepare
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterable
     from typing import Any
 
     from qiskit.primitives.containers.sampler_pub import SamplerPubLike
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -168,7 +167,16 @@ class SamplerV2(BaseSamplerV2):
         # Check if we're in local simulator mode
         if self._executor is None:
             logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, options, default_shots)
+
+            options_dict = options.model_dump()
+            options_dict["default_shots"] = shots
+
+            return self._service._run(
+                program_id="sampler",
+                inputs={"pubs": coerced_pubs, "options": options_dict},
+                options={"backend": self._backend},
+                calibration_id=None,
+            )
 
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
@@ -196,36 +204,3 @@ class SamplerV2(BaseSamplerV2):
         )
 
         return self._executor.run(quantum_program)
-
-    def _run_simulator(
-        self, pubs: Sequence[SamplerPub], options: SamplerOptions, shots: int
-    ) -> LocalRuntimeJob:
-        """Run sampler in local simulator mode using BackendSamplerV2.
-
-        Args:
-            pubs: List of sampler PUBs to run.
-            options: The user options, finalized.
-            shots: The number of shots to run.
-
-        Returns:
-            A LocalRuntimeJob.
-        """
-        # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = options.model_dump()
-        options_dict["default_shots"] = shots
-
-        # Prepare inputs dict with pubs and options
-        inputs = {
-            "pubs": pubs,
-            "options": options_dict,
-        }
-
-        # Prepare runtime options with backend
-        runtime_options = {"backend": self._backend}
-
-        return self._service._run(
-            program_id="sampler",
-            inputs=inputs,
-            options=runtime_options,
-            calibration_id=None,
-        )

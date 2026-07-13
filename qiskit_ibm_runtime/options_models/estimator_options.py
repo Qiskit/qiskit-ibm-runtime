@@ -22,7 +22,6 @@ from .base import BaseOptionsModel
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
-from .executor_options import ExecutorOptions
 from .resilience_options import ResilienceOptions
 from .simulator_options import SimulatorOptions
 from .twirling_options import TwirlingOptions
@@ -98,26 +97,3 @@ class EstimatorOptions(BaseOptionsModel):
     <https://quantum.cloud.ibm.com/docs/guides/configure-error-mitigation>`_ guide
     for more information about the error mitigation methods used at each level.
     """
-
-    def to_executor_options(self) -> ExecutorOptions:
-        """Map EstimatorOptions to ExecutorOptions, ignoring all irrelevant fields.
-
-        .. note::
-            Simulator options are ignored as executor does not support local mode.
-
-        Returns:
-            Mapped executor options.
-        """
-        executor_options = ExecutorOptions()
-
-        environment_options = self.environment.model_dump()
-        execution_options = self.execution.model_dump()
-        executor_options.environment = EnvironmentOptions(**environment_options)
-        executor_options.execution = ExecutionOptions(**execution_options)
-
-        executor_options.environment.max_execution_time = self.max_execution_time
-        if self.experimental:
-            executor_options.environment.image = self.experimental.get("image", None)
-            executor_options.experimental.update(self.experimental)
-
-        return executor_options
