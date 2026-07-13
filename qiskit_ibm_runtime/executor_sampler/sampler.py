@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
@@ -156,25 +157,31 @@ class SamplerV2(BaseSamplerV2):
         # Coerce pubs to SamplerPub objects
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
+        # Finalize the options--namely, resolve the ``None`` in the twirling options
+        # as documented.
+        options = deepcopy(self.options)
+        options.twirling.enable_gates = options.twirling.enable_gates or False
+        options.twirling.enable_measure = options.twirling.enable_measure or False
+
         # Determine default shots: run parameter takes precedence over options.default_shots
-        default_shots = shots if shots is not None else self.options.default_shots
+        default_shots = shots if shots is not None else options.default_shots
 
         # Check if we're in local simulator mode
         if self._executor is None:
             logger.info("Running in local simulator mode")
-            return self._run_simulator(coerced_pubs, default_shots)
+            return self._run_simulator(coerced_pubs, options, default_shots)
 
         # Non-simulator path: use executor
         # Convert pubs to QuantumProgram and map options using the prepare method
         logger.info("Starting pre-processing")
-        quantum_program, executor_options = prepare(coerced_pubs, self.options, default_shots)
+        quantum_program, executor_options = prepare(coerced_pubs, options, default_shots)
 
         # Apply dynamical decoupling if enabled
-        if self.options.dynamical_decoupling.enable:
+        if options.dynamical_decoupling.enable:
             logger.info("Apply dynamical decoupling")
             quantum_program = apply_dynamical_decoupling(
                 backend=self._backend,
-                dd_options=self.options.dynamical_decoupling,
+                dd_options=options.dynamical_decoupling,
                 quantum_program=quantum_program,
             )
 
@@ -191,18 +198,21 @@ class SamplerV2(BaseSamplerV2):
 
         return self._executor.run(quantum_program)
 
-    def _run_simulator(self, pubs: Sequence[SamplerPub], shots: int) -> LocalRuntimeJob:
+    def _run_simulator(
+        self, pubs: Sequence[SamplerPub], options: SamplerOptions, shots: int
+    ) -> LocalRuntimeJob:
         """Run sampler in local simulator mode using BackendSamplerV2.
 
         Args:
             pubs: List of sampler PUBs to run.
+            options: The user options, finalized.
             shots: The number of shots to run.
 
         Returns:
             A LocalRuntimeJob.
         """
         # Prepare options dict - this goes in the inputs["options"] field
-        options_dict = asdict(self.options)  # type: ignore[call-overload]
+        options_dict = asdict(options)  # type: ignore[call-overload]
         options_dict["default_shots"] = shots
 
         # Prepare inputs dict with pubs and options

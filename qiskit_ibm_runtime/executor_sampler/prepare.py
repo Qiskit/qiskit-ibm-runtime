@@ -23,7 +23,12 @@ from samplomatic.transpiler import generate_boxing_pass_manager
 from ..executor.calculate_twirling_shots import calculate_twirling_shots
 from ..quantum_program import QuantumProgram
 from ..quantum_program.quantum_program import CircuitItem, SamplexItem
-from .utils import extract_shots_from_pubs, validate_meas_type_twirling, validate_no_boxes
+from .utils import (
+    extract_shots_from_pubs,
+    validate_meas_type_twirling,
+    validate_no_boxes,
+    validate_twirling_option_fileds_are_not_none,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -67,11 +72,8 @@ def prepare(
             (when twirling is disabled), if shots are not properly specified, or if
             measurement twirling is enabled with a non-classified ``meas_type``.
     """
-    # Reject measurement twirling combined with a kerneled meas_type before submission
-    validate_meas_type_twirling(
-        options.execution.meas_type,
-        options.twirling.enable_measure,
-    )
+    validate_twirling_option_fileds_are_not_none(options.twirling)
+    validate_meas_type_twirling(options.execution.meas_type, options.twirling.enable_measure)
 
     # Extract and validate shots from pubs
     shots = extract_shots_from_pubs(pubs, default_shots)

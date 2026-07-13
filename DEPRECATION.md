@@ -209,8 +209,8 @@ def deprecated_function():
 ```
 
 
-You should also document the deprecation in the changelog by using Reno. Explain the deprecation
-and how to migrate.
+You should also document the deprecation in the changelog by using `towncrier`. Explain the
+deprecation and how to migrate.
 
 In particular situations where a deprecation or change might be a major disruptor for users, a
 *migration guide* might be needed. Please write these guides in Qiskit's documentation at
