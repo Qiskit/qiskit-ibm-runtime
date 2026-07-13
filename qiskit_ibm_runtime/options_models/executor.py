@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from .base import BaseOptionsModel
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
+from .execution import ExecutionOptions
 
 
 class ExecutorOptions(BaseOptionsModel):

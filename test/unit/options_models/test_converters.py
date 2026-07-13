@@ -16,8 +16,8 @@ from qiskit_ibm_runtime.options_models.converters import (
     estimator_options_to_executor_options,
     sampler_option_to_executor_options,
 )
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
-from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
 
 from ...ibm_test_case import IBMTestCase
 

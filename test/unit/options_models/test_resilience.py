@@ -16,7 +16,7 @@ from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.quantum_info import PauliLindbladMap
 
-from qiskit_ibm_runtime.options_models.resilience_options import ResilienceOptions
+from qiskit_ibm_runtime.options_models.resilience import ResilienceOptions
 
 from ...ibm_test_case import IBMTestCase
 

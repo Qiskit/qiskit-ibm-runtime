@@ -20,8 +20,8 @@ from pydantic import Field
 
 from .base import BaseOptionsModel
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .post_selection_options import PostSelectionOptions
+from .execution import ExecutionOptions
+from .post_selection import PostSelectionOptions
 
 
 class NoiseLearnerV3Options(BaseOptionsModel):

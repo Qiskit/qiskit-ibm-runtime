@@ -29,8 +29,8 @@ if TYPE_CHECKING:
     from qiskit.primitives import EstimatorPub
     from samplomatic.samplex import Samplex
 
-    from ..options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ..options_models.twirling_options import TwirlingOptions
+    from ..options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ..options_models.twirling import TwirlingOptions
 
 from collections import defaultdict
 from functools import lru_cache

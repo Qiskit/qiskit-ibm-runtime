@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 from .base_primitive import get_mode_service_backend
 from .fake_provider.local_service import QiskitRuntimeLocalService
-from .options_models.calibrator_options import CalibratorOptions
+from .options_models.calibrator import CalibratorOptions
 from .options_models.converters import to_runtime_options
 from .utils.default_session import get_cm_session
 

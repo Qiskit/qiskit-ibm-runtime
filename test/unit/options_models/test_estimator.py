@@ -12,12 +12,10 @@
 
 """Tests for EstimatorOptions."""
 
-from qiskit_ibm_runtime.options_models.dynamical_decoupling_options import (
-    DynamicalDecouplingOptions,
-)
+from qiskit_ibm_runtime.options_models.dynamical_decoupling import DynamicalDecouplingOptions
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
-from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
-from qiskit_ibm_runtime.options_models.execution_options import ExecutionOptions
+from qiskit_ibm_runtime.options_models.estimator import EstimatorOptions
+from qiskit_ibm_runtime.options_models.execution import ExecutionOptions
 
 from ...ibm_test_case import IBMTestCase
 

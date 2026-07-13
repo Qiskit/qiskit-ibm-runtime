@@ -15,11 +15,11 @@
 from __future__ import annotations
 
 from .base import BaseOptionsModel
-from .dynamical_decoupling_options import DynamicalDecouplingOptions
+from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment_options import SamplerEnvironmentOptions
-from .execution_options import SamplerExecutionOptions
-from .simulator_options import SimulatorOptions
-from .twirling_options import TwirlingOptions
+from .execution import SamplerExecutionOptions
+from .simulator import SimulatorOptions
+from .twirling import TwirlingOptions
 
 
 class SamplerOptions(BaseOptionsModel):

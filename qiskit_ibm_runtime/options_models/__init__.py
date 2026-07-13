@@ -48,8 +48,8 @@ Suboptions
 """
 
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .executor_options import ExecutorOptions
-from .noise_learner_v3_options import NoiseLearnerV3Options
-from .post_selection_options import PostSelectionOptions
-from .sampler_options import SamplerOptions
+from .execution import ExecutionOptions
+from .executor import ExecutorOptions
+from .noise_learner_v3 import NoiseLearnerV3Options
+from .post_selection import PostSelectionOptions
+from .sampler import SamplerOptions

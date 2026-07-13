@@ -31,7 +31,7 @@ from qiskit.quantum_info import PauliLindbladMap
 from samplomatic import InjectNoise, Twirl, build
 
 from qiskit_ibm_runtime.decoders.quantum_program.converters import quantum_program_result_from_0_2
-from qiskit_ibm_runtime.options_models.executor_options import ExecutionOptions, ExecutorOptions
+from qiskit_ibm_runtime.options_models.executor import ExecutionOptions, ExecutorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.quantum_program.converters import (
     quantum_program_from_0_2,

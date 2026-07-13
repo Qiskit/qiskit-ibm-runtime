@@ -17,13 +17,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .executor_options import ExecutorOptions
+from .execution import ExecutionOptions
+from .executor import ExecutorOptions
 
 if TYPE_CHECKING:
     from ..ibm_backend import IBMBackend
-    from .estimator_options import EstimatorOptions
-    from .sampler_options import SamplerOptions
+    from .estimator import EstimatorOptions
+    from .sampler import SamplerOptions
 
 
 def to_runtime_options(options: EnvironmentOptions, backend: IBMBackend) -> dict:

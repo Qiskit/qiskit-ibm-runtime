@@ -19,12 +19,12 @@ from typing import Literal
 from pydantic import Field
 
 from .base import BaseOptionsModel
-from .dynamical_decoupling_options import DynamicalDecouplingOptions
+from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .resilience_options import ResilienceOptions
-from .simulator_options import SimulatorOptions
-from .twirling_options import TwirlingOptions
+from .execution import ExecutionOptions
+from .resilience import ResilienceOptions
+from .simulator import SimulatorOptions
+from .twirling import TwirlingOptions
 
 
 class EstimatorOptions(BaseOptionsModel):

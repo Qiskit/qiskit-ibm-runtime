@@ -24,9 +24,9 @@ if TYPE_CHECKING:
     from qiskit.primitives.containers.estimator_pub import EstimatorPub
     from qiskit.quantum_info import PauliLindbladMap
 
-    from ...options_models.measure_noise_learning_options import MeasureNoiseLearningOptions
-    from ...options_models.pec_options import PecOptions
-    from ...options_models.twirling_options import TwirlingOptions
+    from ...options_models.measure_noise_learning import MeasureNoiseLearningOptions
+    from ...options_models.pec import PecOptions
+    from ...options_models.twirling import TwirlingOptions
 
 import numpy as np
 from samplomatic import build

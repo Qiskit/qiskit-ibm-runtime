@@ -29,7 +29,7 @@ from ..executor import Executor
 from ..executor.dynamical_decoupling import apply_dynamical_decoupling
 from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.converters import estimator_options_to_executor_options
-from ..options_models.estimator_options import EstimatorOptions
+from ..options_models.estimator import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
 from .utils import find_unique_layers, resolve_precision

@@ -19,9 +19,7 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime.executor_estimator.trex_utils import create_trex_calibration_circuit
-from qiskit_ibm_runtime.options_models.measure_noise_learning_options import (
-    MeasureNoiseLearningOptions,
-)
+from qiskit_ibm_runtime.options_models.measure_noise_learning import MeasureNoiseLearningOptions
 from qiskit_ibm_runtime.quantum_program.quantum_program import SamplexItem
 
 

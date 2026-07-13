@@ -18,8 +18,8 @@ from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.transpiler import CouplingMap
 
-from qiskit_ibm_runtime.options_models.sampler_options import SamplerOptions
-from qiskit_ibm_runtime.options_models.simulator_options import SimulatorOptions
+from qiskit_ibm_runtime.options_models.sampler import SamplerOptions
+from qiskit_ibm_runtime.options_models.simulator import SimulatorOptions
 
 from ...ibm_test_case import IBMTestCase
 
@@ -53,7 +53,7 @@ class TestSimulatorOptions(IBMTestCase):
 
     def test_noise_model_invalid_type_no_aer_raises(self):
         """Passing a non-dict noise_model raises when Aer is not installed."""
-        with patch("qiskit_ibm_runtime.options_models.simulator_options.optionals.HAS_AER", False):
+        with patch("qiskit_ibm_runtime.options_models.simulator.optionals.HAS_AER", False):
             with self.assertRaises(ValidationError):
                 SimulatorOptions(noise_model=object())
 

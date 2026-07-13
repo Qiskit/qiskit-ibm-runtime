@@ -20,9 +20,9 @@ from pydantic import InstanceOf
 from qiskit.quantum_info import PauliLindbladMap
 
 from .base import BaseOptionsModel
-from .measure_noise_learning_options import MeasureNoiseLearningOptions
-from .pec_options import PecOptions
-from .zne_options import ZneOptions
+from .measure_noise_learning import MeasureNoiseLearningOptions
+from .pec import PecOptions
+from .zne import ZneOptions
 
 
 class ResilienceOptions(BaseOptionsModel):

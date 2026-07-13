@@ -15,7 +15,7 @@
 from unittest.mock import patch
 
 from qiskit_ibm_runtime.calibrator import Calibrator
-from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
+from qiskit_ibm_runtime.options_models.calibrator import CalibratorOptions
 from qiskit_ibm_runtime.options_models.environment_options import EnvironmentOptions
 from test.utils import get_mocked_backend, get_mocked_session
 
