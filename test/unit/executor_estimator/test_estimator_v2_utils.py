@@ -149,6 +149,20 @@ class TestResolvePrecision(unittest.TestCase):
 
         self.assertIn("same precision", str(context.exception))
 
+    def test_pub_level_zero_precision_raises(self):
+        """Test that a pub-level precision of 0 is rejected."""
+        pub = EstimatorPub.coerce((self.circuit, self.observable), precision=0)
+
+        with self.assertRaisesRegex(IBMInputValueError, "must be strictly greater than 0"):
+            resolve_precision([pub])
+
+    def test_run_level_zero_precision_raises(self):
+        """Test that a run-level precision of 0 is rejected when pubs have no precision."""
+        pub = EstimatorPub.coerce((self.circuit, self.observable))
+
+        with self.assertRaisesRegex(IBMInputValueError, "must be strictly greater than 0"):
+            resolve_precision([pub], run_precision=0)
+
 
 @ddt
 class TestBoxCircuit(unittest.TestCase):
@@ -175,6 +189,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=enable_gates,
             measure_annotations="all",
             twirling_strategy="all",
+            inject_noise_site="after",
             twirling_group="pauli",
         )
 
@@ -206,6 +221,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations=measure_annotations,
             twirling_strategy="all",
+            inject_noise_site="after",
             twirling_group="pauli",
         )
 
@@ -237,6 +253,7 @@ class TestBoxCircuit(unittest.TestCase):
             enable_gates=True,
             measure_annotations="all",
             twirling_strategy=twirling_strategy,
+            inject_noise_site="after",
             twirling_group="pauli",
         )
 
@@ -272,6 +289,7 @@ class TestBoxCircuit(unittest.TestCase):
             twirling_group="pauli",
             inject_noise_targets="gates" if inject_noise else "none",
             inject_noise_strategy="uniform_modification" if inject_noise else "no_modification",
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)
@@ -310,6 +328,7 @@ class TestBoxCircuit(unittest.TestCase):
             measure_annotations="all",
             twirling_strategy="all",
             add_tags=add_tags,
+            inject_noise_site="after",
         )
 
         expected_circuit = circuit.remove_final_measurements(inplace=False)

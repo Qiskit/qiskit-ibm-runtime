@@ -41,7 +41,7 @@ class TestEstimatorOptions(unittest.TestCase):
         self.assertEqual(options.experimental, {})
         self.assertIsNone(options.max_execution_time)
         self.assertIsInstance(options.environment, EnvironmentOptions)
-        self.assertTrue(options.resilience.measure_mitigation)
+        self.assertIsNone(options.resilience.measure_mitigation)
         self.assertEqual(options.resilience.measure_noise_learning.num_randomizations, 32)
         self.assertEqual(options.resilience.measure_noise_learning.shots_per_randomization, "auto")
 

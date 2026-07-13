@@ -30,6 +30,8 @@ from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
 
+from ...utils import get_mocked_backend
+
 
 @ddt
 class TestEstimatorV2Run(unittest.TestCase):
@@ -60,6 +62,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_single_pub_no_parameters(self):
         """Test run with single pub without parameters."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -85,6 +88,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_with_pub_level_precision(self):
         """Test that EstimatorPub.coerce is called with precision parameter."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -102,11 +106,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_uses_default_precision_from_options(self):
         """Test that run uses default_precision from options when precision not specified."""
-        options = EstimatorOptions()
-
-        options.default_precision = 0.01
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.default_precision = 0.01
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -128,6 +130,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         options.default_precision = 0.022097  # sqrt(1/2048)
 
         estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -185,10 +188,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
-        options = EstimatorOptions()
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
         # default_precision is 0.015625 by default
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -443,3 +445,85 @@ class TestEstimatorV2Run(unittest.TestCase):
         mock_prepare_zne.assert_called_once()
         call_kwargs = mock_prepare_zne.call_args
         self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
+
+
+@ddt
+class TestFinalizeOptions(unittest.TestCase):
+    """Tests for ``finalize_options``."""
+
+    def setUp(self):
+        """Test level setup."""
+        self.backend = get_mocked_backend()
+
+    def test_resilience_level_0(self):
+        """Tests for resilience level 0."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 0
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertFalse(finalized_options.twirling.enable_measure)
+        self.assertFalse(finalized_options.resilience.measure_mitigation)
+        self.assertFalse(finalized_options.resilience.zne_mitigation)
+
+    def test_resilience_level_1(self):
+        """Tests for resilience level 1."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 1
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertTrue(finalized_options.resilience.measure_mitigation)
+        self.assertFalse(finalized_options.resilience.zne_mitigation)
+
+    def test_resilience_level_2(self):
+        """Tests for resilience level 2."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 2
+
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertTrue(finalized_options.resilience.measure_mitigation)
+        self.assertTrue(finalized_options.resilience.zne_mitigation)
+
+    @data(0, 1, 2)
+    def test_set_values_are_preserved(self, resilience_level):
+        """Test that when the user sets values, resilience level does not override them."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_gates = False
+        estimator.options.twirling.enable_measure = True
+        estimator.options.resilience.measure_mitigation = False
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience_level = resilience_level
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertFalse(finalized_options.resilience.measure_mitigation)
+        self.assertTrue(finalized_options.resilience.zne_mitigation)
+
+    @data(0, 1, 2)
+    def test_forced_values(self, resilience_level):
+        """Test that finalize force-set certain values."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.measure_mitigation = True
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_measure)
+
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "pea"
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.pec_mitigation = True
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)

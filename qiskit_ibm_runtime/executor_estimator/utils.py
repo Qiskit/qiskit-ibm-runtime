@@ -150,7 +150,7 @@ def resolve_precision(
         IBMInputValueError: If pubs have different precision values.
     """
     # Extract precision from pubs
-    pub_precisions = {pub.precision or run_precision for pub in pubs}
+    pub_precisions = {pub.precision if pub.precision is not None else run_precision for pub in pubs}
 
     if len(pub_precisions) != 1:
         raise IBMInputValueError(
@@ -158,7 +158,10 @@ def resolve_precision(
             "(possibly via the run provided precision parameter)"
         )
 
-    return next(iter(pub_precisions))
+    if (precision := next(iter(pub_precisions))) is not None and precision <= 0:
+        raise IBMInputValueError("The precision value must be strictly greater than 0.")
+
+    return precision
 
 
 def box_circuit(

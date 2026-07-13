@@ -1,0 +1,2 @@
+Added support ``QuantumProgram.meas_level = "both"``, which can be used to request that
+both classified and kerneled measurements be present in the quantum program results.
