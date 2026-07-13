@@ -516,36 +516,20 @@ def process_expectation_values_pea(
     if "measurement_flips._meas" in item_result:
         data ^= item_result["measurement_flips._meas"]
 
-    # calculate exp_val and std for each noise factor
-    factors_exp_vals = []
-    factors_stds = []
-    factors_ensemble_stds = []
-    for factor_idx, noise_factor in enumerate(noise_factors):
-        factor_data = data[:, factor_idx, :, :, :]
-        factor_exp_vals, factor_stds, factor_ensemble_stds = calculate_expectation_values(
-            factor_data,
-            observables,
-            param_shape,
-            param_basis_pairs,
-            measure_noise_data,
-        )
-        factors_exp_vals.append(factor_exp_vals)
-        factors_stds.append(factor_stds)
-        factors_ensemble_stds.append(factor_ensemble_stds)
+    if isinstance(extrapolated_noise_factors, (float, int)):
+        extrapolated_noise_factors = [extrapolated_noise_factors]
 
-    factors_exp_vals = np.array(factors_exp_vals)
-    factors_stds = np.array(factors_stds)
-    factors_ensemble_stds = np.array(factors_ensemble_stds)
+    # Rearrange the axes of the data to match the required shape of:
+    # (noise_factors, num_randomizations, num_configs, shots, num_bits)
+    noise_amplified_data = np.swapaxes(data, 0, 1)
 
-    # Each of factors_exp_vals, factors_stds and factors_ensemble_stds is a list of ndarray -
-    # each item in the list is the results for each observable for each parameter,
-    # for a different noise factor
-    extrap_exp_vals, extrap_stds, sel_extrapolators = process_extrapolated_expectation_values(
-        factors_exp_vals,
-        factors_stds,
+    return calculate_extrapolated_expectation_values(
+        noise_amplified_data,
         observables,
+        param_shape,
+        param_basis_pairs,
         noise_factors,
-        extrapolator,
         extrapolated_noise_factors,
+        extrapolator,
+        measure_noise_data,
     )
-    return extrap_exp_vals, extrap_stds, factors_ensemble_stds, sel_extrapolators
