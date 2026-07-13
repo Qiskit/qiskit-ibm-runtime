@@ -28,7 +28,6 @@ from ddt import data, ddt
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import CXGate, PhaseGate, U2Gate, efficient_su2
 from qiskit.exceptions import QiskitError
-from qiskit.qpy import QPY_VERSION
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
@@ -40,6 +39,7 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.qpy import QPY_VERSION
 from qiskit.quantum_info import Pauli, PauliLindbladMap, PauliList, SparsePauliOp
 from qiskit.result import Counts, Result
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
