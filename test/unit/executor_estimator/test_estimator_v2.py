@@ -20,15 +20,17 @@ from ddt import data, ddt, unpack
 from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.providers.fake_provider import GenericBackendV2
 from qiskit.quantum_info import PauliLindbladMap, SparsePauliOp
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor import Executor
 from qiskit_ibm_runtime.executor_estimator.estimator import EstimatorV2
-from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 from qiskit_ibm_runtime.options_models.estimator_options import EstimatorOptions
 from qiskit_ibm_runtime.quantum_program import QuantumProgram
 from qiskit_ibm_runtime.runtime_job_v2 import RuntimeJobV2
+
+from ...utils import get_mocked_backend
 
 
 @ddt
@@ -37,13 +39,13 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.backend = FakeManilaV2()
+        self.backend = get_mocked_backend()
 
         # Create a mock job to return from executor.run()
         self.mock_job = MagicMock(spec=RuntimeJobV2)
         self.mock_job.job_id.return_value = "test-job-id"
 
-        # Patch Executor to avoid local mode error
+        # Patch Executor
         self.executor_patcher = patch("qiskit_ibm_runtime.executor_estimator.estimator.Executor")
         self.mock_executor_class = self.executor_patcher.start()
 
@@ -60,6 +62,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_single_pub_no_parameters(self):
         """Test run with single pub without parameters."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -85,6 +88,7 @@ class TestEstimatorV2Run(unittest.TestCase):
     def test_run_with_pub_level_precision(self):
         """Test that EstimatorPub.coerce is called with precision parameter."""
         estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -102,11 +106,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_uses_default_precision_from_options(self):
         """Test that run uses default_precision from options when precision not specified."""
-        options = EstimatorOptions()
-
-        options.default_precision = 0.01
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.default_precision = 0.01
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -128,6 +130,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         options.default_precision = 0.022097  # sqrt(1/2048)
 
         estimator = EstimatorV2(mode=self.backend, options=options)
+        estimator.options.resilience_level = 0
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -185,10 +188,9 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     def test_run_with_default_precision(self):
         """Test that run uses the default precision value from options."""
-        options = EstimatorOptions()
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience_level = 0
         # default_precision is 0.015625 by default
-
-        estimator = EstimatorV2(mode=self.backend, options=options)
 
         circuit = QuantumCircuit(2)
         circuit.h(0)
@@ -229,7 +231,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         """Test that run adds options metadata to quantum program passthrough data."""
         options = EstimatorOptions()
         options.twirling.enable_gates = True
-        options.dynamical_decoupling.enable = True
+        options.dynamical_decoupling.enable = False
         options.resilience.measure_mitigation = True
 
         estimator = EstimatorV2(mode=self.backend, options=options)
@@ -255,7 +257,7 @@ class TestEstimatorV2Run(unittest.TestCase):
         # Verify options content
         options_metadata = quantum_program.passthrough_data["post_processor"]["options"]
         self.assertEqual(options_metadata["twirling"]["enable_gates"], True)
-        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], True)
+        self.assertEqual(options_metadata["dynamical_decoupling"]["enable"], False)
         self.assertEqual(options_metadata["resilience"]["measure_mitigation"], True)
 
     def test_run_with_multiple_observables(self):
@@ -443,3 +445,164 @@ class TestEstimatorV2Run(unittest.TestCase):
         mock_prepare_zne.assert_called_once()
         call_kwargs = mock_prepare_zne.call_args
         self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
+
+
+class TestEstimatorV2SimulatorMode(unittest.TestCase):
+    """Tests for EstimatorV2 with local simulator backends."""
+
+    def test_simulator_mode_skips_executor(self):
+        """Test that a local backend (non-IBMBackend) skips the Executor."""
+        backend = GenericBackendV2(num_qubits=5)
+        estimator = EstimatorV2(mode=backend)
+
+        self.assertIsNone(estimator._executor)
+
+    def test_simulator_mode_returns_result(self):
+        """Test that local mode returns expectation values close to the ideal.
+
+        The Bell state (|00> + |11>)/sqrt(2) has <ZZ> = 1.0 exactly.
+        With enough shots the noisy simulator should be within 0.1 of that.
+        """
+        backend = GenericBackendV2(num_qubits=5, seed=42)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator = EstimatorV2(mode=backend)
+        estimator.options.default_shots = 10_000
+        estimator.options.simulator.seed_simulator = 42
+        result = estimator.run([(circuit, observable)]).result()
+
+        self.assertEqual(len(result), 1)
+        self.assertAlmostEqual(result[0].data.evs, 1.0, delta=0.1)
+
+    def test_simulator_mode_seed_is_deterministic(self):
+        """Test that seed_simulator produces deterministic expectation values."""
+        backend = GenericBackendV2(num_qubits=5)
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        circuit.cx(0, 1)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        estimator1 = EstimatorV2(mode=backend)
+        estimator1.options.simulator.seed_simulator = 42
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(circuit, observable)]).result()
+
+        estimator2 = EstimatorV2(mode=backend)
+        estimator2.options.simulator.seed_simulator = 42
+        estimator2.options.default_shots = 100
+        result2 = estimator2.run([(circuit, observable)]).result()
+
+        np.testing.assert_array_equal(result1[0].data.evs, result2[0].data.evs)
+
+    def test_simulator_mode_different_seeds_differ(self):
+        """Test that different seeds produce different expectation values.
+
+        Uses a single-qubit H gate whose <Z>=0 expectation value has shot-noise
+        variance, so results differ between seeds with high probability.
+        """
+        backend = GenericBackendV2(num_qubits=5)
+
+        # H|0> gives <Z>=0 with shot noise - results vary by seed
+        circuit = QuantumCircuit(1)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("Z", 1)])
+
+        estimator1 = EstimatorV2(mode=backend)
+        estimator1.options.simulator.seed_simulator = 42
+        estimator1.options.default_shots = 100
+        result1 = estimator1.run([(circuit, observable)]).result()
+
+        estimator2 = EstimatorV2(mode=backend)
+        estimator2.options.simulator.seed_simulator = 99
+        estimator2.options.default_shots = 100
+        result2 = estimator2.run([(circuit, observable)]).result()
+
+        self.assertFalse(np.array_equal(result1[0].data.evs, result2[0].data.evs))
+
+
+@ddt
+class TestFinalizeOptions(unittest.TestCase):
+    """Tests for ``finalize_options``."""
+
+    def setUp(self):
+        """Test level setup."""
+        self.backend = get_mocked_backend()
+
+    def test_resilience_level_0(self):
+        """Tests for resilience level 0."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 0
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertFalse(finalized_options.twirling.enable_measure)
+        self.assertFalse(finalized_options.resilience.measure_mitigation)
+        self.assertFalse(finalized_options.resilience.zne_mitigation)
+
+    def test_resilience_level_1(self):
+        """Tests for resilience level 1."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 1
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertTrue(finalized_options.resilience.measure_mitigation)
+        self.assertFalse(finalized_options.resilience.zne_mitigation)
+
+    def test_resilience_level_2(self):
+        """Tests for resilience level 2."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = 2
+
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertTrue(finalized_options.resilience.measure_mitigation)
+        self.assertTrue(finalized_options.resilience.zne_mitigation)
+
+    @data(0, 1, 2)
+    def test_set_values_are_preserved(self, resilience_level):
+        """Test that when the user sets values, resilience level does not override them."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.twirling.enable_gates = False
+        estimator.options.twirling.enable_measure = True
+        estimator.options.resilience.measure_mitigation = False
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience_level = resilience_level
+
+        finalized_options = estimator.finalize_options()
+        self.assertFalse(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+        self.assertFalse(finalized_options.resilience.measure_mitigation)
+        self.assertTrue(finalized_options.resilience.zne_mitigation)
+
+    @data(0, 1, 2)
+    def test_forced_values(self, resilience_level):
+        """Test that finalize force-set certain values."""
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.measure_mitigation = True
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_measure)
+
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "pea"
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)
+
+        estimator = EstimatorV2(self.backend)
+        estimator.options.resilience_level = resilience_level
+        estimator.options.resilience.pec_mitigation = True
+        finalized_options = estimator.finalize_options()
+        self.assertTrue(finalized_options.twirling.enable_gates)
+        self.assertTrue(finalized_options.twirling.enable_measure)

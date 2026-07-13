@@ -265,9 +265,13 @@ class TestPrepareZneFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 16
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         quantum_program = prepare_zne(
             [pub],
-            TwirlingOptions(),
+            twirling_options,
             1024,
             zne_options,
             measure_noise_learning=measure_noise_learning,
@@ -304,9 +308,13 @@ class TestPrepareZneFunction(unittest.TestCase):
         measure_noise_learning = MeasureNoiseLearningOptions()
         measure_noise_learning.num_randomizations = 32
 
+        twirling_options = TwirlingOptions()
+        twirling_options.enable_gates = True
+        twirling_options.enable_measure = True
+
         quantum_program = prepare_zne(
             [pub1, pub2],
-            TwirlingOptions(),
+            twirling_options,
             1024,
             zne_options,
             measure_noise_learning=measure_noise_learning,

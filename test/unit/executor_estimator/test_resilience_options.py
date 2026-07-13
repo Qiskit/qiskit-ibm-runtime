@@ -27,7 +27,7 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
     def test_defaults(self):
         """All fields carry their documented default values."""
         opts = ResilienceOptions()
-        self.assertTrue(opts.measure_mitigation)
+        self.assertIsNone(opts.measure_mitigation)
         self.assertEqual(opts.measure_noise_learning.num_randomizations, 32)
         self.assertEqual(opts.measure_noise_learning.shots_per_randomization, "auto")
         self.assertFalse(opts.pec_mitigation)

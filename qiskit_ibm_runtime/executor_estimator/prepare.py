@@ -75,6 +75,15 @@ def prepare(
             if a circuit contains mid-circuit measurements, or if a circuit already uses the
             reserved classical register name ``_meas``.
     """
+    if twirling_options.enable_gates is None or twirling_options.enable_measure is None:
+        raise ValueError(
+            "Expected twirling options fields ``enable_gates`` and ``enable_measure`` set to "
+            "``True`` or ``False``, found ``None``."
+        )
+
+    if measure_noise_learning is not None and not twirling_options.enable_measure:
+        raise ValueError("Measure noise learning requires enabling twirling for measurements.")
+
     if twirling_options.enable_gates or twirling_options.enable_measure:
         num_randomizations, shots_per_randomization = calculate_twirling_shots(
             shots,
