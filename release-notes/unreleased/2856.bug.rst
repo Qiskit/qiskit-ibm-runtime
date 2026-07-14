@@ -1,5 +1,0 @@
-Fixed a bug in the :class:`.FoldRzzAngle` transpiler pass where ``Rzz`` gates whose angle
-wraps exactly onto the ``+-pi`` boundary (for example ``3*pi``, ``-3*pi``, ``7*pi``) were
-folded into a circuit that differed from the original by a global phase of ``pi``. The
-pass now derives the dropped ``2*pi`` winding parity directly from the wrapped angle, so
-the folded circuit preserves the full unitary (including global phase) for all angles.
