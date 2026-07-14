@@ -5,10 +5,6 @@ Upgrade Notes
 -------------
 
 - The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
-- Added a user warning when a user sets ``pub.shots`` in SamplerV2, and ``pub.precision`` in EstimatorV2. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
-- Added a user warning when a user sets the ``shots_per_randomization`` field of ``MeasureNoiseLearningOptions``
-  to an ``int``. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
-
 
 Deprecation Notes
 -----------------
@@ -22,6 +18,10 @@ Deprecation Notes
 
   Importing from the previous locations is deprecated, and the references will be removed in a future
   release. (`2835 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2835>`__)
+- Running a :class:`.SamplerV2` job with different ``pub.shots`` values across PUBs is deprecated. Similarly, running an
+  :class:`.EstimatorV2` job with different ``pub.precision`` values across PUBs is deprecated. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
+- Setting :attr:`.MeasureNoiseLearningOptions.shots_per_randomization` to an ``int`` value is deprecated and will be removed
+  in future releases. Please use ``"auto"`` instead. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
 
 
 New Features
