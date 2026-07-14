@@ -386,7 +386,7 @@ class TestPrepareFunction(unittest.TestCase):
         )
 
     def test_prepare_with_measure_noise_learning_default_num_randomizations(self):
-        """Test that TREX item uses default num_randomizations=32 when not specified."""
+        """With num_randomizations="auto" (default), TREX follows the twirling randomizations."""
         circuit = QuantumCircuit(2)
         circuit.h(0)
         circuit.cx(0, 1)
@@ -395,7 +395,7 @@ class TestPrepareFunction(unittest.TestCase):
         pub = EstimatorPub.coerce((circuit, observable))
 
         shots = 1024
-        # Create MeasureNoiseLearningOptions without setting num_randomizations
+        # Create MeasureNoiseLearningOptions without setting num_randomizations ("auto")
         measure_noise_learning = MeasureNoiseLearningOptions()
 
         twirling_options = TwirlingOptions()
@@ -404,15 +404,16 @@ class TestPrepareFunction(unittest.TestCase):
 
         quantum_program = prepare([pub], twirling_options, shots, measure_noise_learning)
 
-        # Get the TREX calibration item (last item)
+        # The estimation item's randomization count (its shape's first dimension).
+        estimation_num_randomizations = quantum_program.items[0].shape[0]
+
+        # TREX item (last item) should use the same number of randomizations as twirling.
         trex_item = quantum_program.items[-1]
         self.assertIsInstance(trex_item, SamplexItem)
-
-        # Verify the shape uses default value of 32
         self.assertEqual(
             trex_item.shape,
-            (32,),
-            "Expected TREX item shape (32,) when num_randomizations is not set",
+            (estimation_num_randomizations,),
+            'Expected TREX to follow the twirling randomizations when num_randomizations="auto"',
         )
 
     def test_prepare_with_measure_noise_learning_multiple_pubs_num_randomizations(self):

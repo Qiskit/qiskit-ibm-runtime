@@ -34,7 +34,7 @@ from samplomatic import build
 from ...exceptions import IBMInputValueError
 from ...quantum_program import QuantumProgram
 from ...quantum_program.quantum_program import SamplexItem
-from ..trex_utils import create_trex_calibration_circuit
+from ..trex_utils import create_trex_calibration_circuit, resolve_trex_num_randomizations
 from ..utils import (
     box_circuit,
     compute_samplex_arguments,
@@ -97,6 +97,10 @@ def prepare_pec(
         twirling_options.num_randomizations,
         twirling_options.shots_per_randomization,
     )
+    # Preserve the twirling randomization count: ``num_randomizations`` is scaled
+    # per-pub by the PEC sampling overhead below, but the TREX calibration should
+    # follow the (unscaled) twirling value.
+    twirling_num_randomizations = num_randomizations
 
     # set max_overhead
     max_overhead = pec_options.max_overhead
@@ -222,7 +226,10 @@ def prepare_pec(
             raise IBMInputValueError(
                 "shots_per_randomization must be the same for twirling and measure_noise_learning"
             )
-        trex_item = create_trex_calibration_circuit(pubs, measure_noise_learning)
+        trex_num_randomizations = resolve_trex_num_randomizations(
+            measure_noise_learning, twirling_num_randomizations
+        )
+        trex_item = create_trex_calibration_circuit(pubs, trex_num_randomizations)
         quantum_program.items.append(trex_item)
         passthrough_data["post_processor"]["measure_mitigation"] = "True"
 

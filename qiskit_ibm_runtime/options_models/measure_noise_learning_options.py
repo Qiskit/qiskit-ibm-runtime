@@ -30,8 +30,12 @@ class MeasureNoiseLearningOptions:
         technique that requires measurement noise learning.
     """
 
-    num_randomizations: int = 32
-    """The number of random circuits to draw for the measurement learning experiment."""
+    num_randomizations: int | Literal["auto"] = "auto"
+    """The number of random circuits to draw for the measurement learning experiment.
+
+    If "auto", the calibration uses the same number of randomizations
+    as specified in the estimator's twirling options.
+    """
 
     shots_per_randomization: int | Literal["auto"] = "auto"
     """The number of shots to use for the learning experiment per random circuit.

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     import numpy.typing as npt
     from qiskit.quantum_info import PauliLindbladMap
 
+    from ...options_models.zne_options import ExtrapolatorType
     from ...results.quantum_program import QuantumProgramItemResult
 
 import numpy as np
@@ -29,6 +30,7 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import Pauli
 
 from ...executor_estimator.utils import get_pauli_basis, unbroadcast_index
+from ...executor_estimator.zne.extrapolation import process_extrapolated_expectation_values
 from ...results.estimator_pub import EstimatorPubResult
 from ...results.quantum_program import QuantumProgramResult
 from .trex_utils import calculate_trex_factor, get_processed_calibration_data
@@ -456,3 +458,157 @@ def create_pub_result_pec(
         evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
     )
     return EstimatorPubResult(data=data_bin)
+
+
+def calculate_extrapolated_expectation_values(
+    noise_amplified_data: np.ndarray,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    noise_factors: list[float],
+    extrapolated_noise_factors: list[float],
+    extrapolator: list[ExtrapolatorType],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], list[list[str]]]:
+    """Calculate expectation values for given data, observables and params.
+
+    Args:
+        noise_amplified_data: The measured data result. Its shape should be:
+            ``(noise_factors, num_randomizations, num_configs, shots, num_bits)``
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        noise_factors: The noise factors used to amplify the noise.
+        extrapolated_noise_factors: Noise factors to evaluate the fits at.
+        extrapolator: The extrapolator model or models to use. Models will be tried in priority
+            order. Supported models (each fits the named function of the noise factor ``x``):
+            - ```"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
+        measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
+            PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
+
+    Returns:
+        A tuple ``(exp_vals, stds, ensemble_stds)``, where ``exp_vals`` are expectation values,
+        ``stds`` are standard deviations, and ``ensemble_stds`` are ensemble standard errors.
+
+    Raises:
+        ValueError: If ``param_shape`` and ``observables.shape`` cannot be broadcasted against
+            each other.
+    """
+    # Get number of randomizations and shots per randomization
+    num_randomizations = noise_amplified_data.shape[1]
+
+    # Build efficient lookup: param_ndindex -> list of (measurement_basis, config_idx)
+    # This allows us to find all available measurement bases for a given parameter
+    config_lookup = defaultdict(list)
+    for config_idx, (param_ndindex, basis_label) in enumerate(param_basis_pairs):
+        config_lookup[tuple(param_ndindex)].append((Pauli(basis_label), config_idx))
+
+    try:
+        output_shape = np.broadcast_shapes(param_shape, observables.shape)
+    except ValueError:
+        raise ValueError(
+            f"Cannot broadcast ``param_shape`` {param_shape} and ``observables`` shape "
+            f"{observables.shape}"
+        )
+
+    # Compute expectation values for all observables
+    exp_vals = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape, dtype=float)
+    stds = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape, dtype=float)
+    ensemble_stds = np.empty(shape=(len(extrapolated_noise_factors),) + output_shape, dtype=float)
+    selected_extrapolators = []
+
+    # Loop over the broadcast output shape
+    for bcast_index in np.ndindex(output_shape):
+        # Unbroadcast to get the actual parameter and observable indices
+        param_index = unbroadcast_index(bcast_index, param_shape)
+        obs_index = unbroadcast_index(bcast_index, observables.shape)
+
+        # Get the observable for this index
+        observable = observables[obs_index]
+
+        # Get the available (measurement_basis, config_idx) pairs for this parameter index
+        try:
+            param_basis_list = config_lookup[param_index]  # type: ignore[index]
+        except KeyError:
+            raise ValueError(
+                f"No measurement basis configurations found for parameter index {param_index}"
+            )
+
+        # each item should contain results for each point in extrapolated_noise_factors
+        exp_vals_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
+        ensemble_std_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
+        twirl_variance_extrapolated = np.zeros(len(extrapolated_noise_factors), dtype=float)
+        selected_extrapolators_per_term = []
+
+        for observable_term, coeff in observable.items():
+            # Find which basis can measure this term
+            pauli_basis = Pauli(get_pauli_basis(observable_term))
+
+            # Use identify_measure_basis to find the configuration index directly
+            config_idx = identify_measure_basis(pauli_basis, param_basis_list)
+
+            noise_scaled_exp_vals = []
+            noise_scaled_ensemble_std = []
+            non_amplified_twirl_var = 0.0
+            for noise_factor_index in range(len(noise_factors)):
+                noise_factor_data = noise_amplified_data[noise_factor_index]
+                # Get measurement data for this configuration
+                # datum shape: (num_randomizations, shots_per_randomization, num_qubits)
+                datum = noise_factor_data[:, config_idx, :, :]
+                term_exp_val, term_ensemble_variance, term_twirl_variance = compute_exp_val(
+                    observable_term, datum
+                )
+                noise_scaled_exp_vals.append(term_exp_val)
+                noise_scaled_ensemble_std.append(np.sqrt(term_ensemble_variance))
+                if noise_factors[noise_factor_index] == 1:
+                    non_amplified_twirl_var = term_twirl_variance
+
+            extrap_exp_vals, extrap_stds, sel_extrapolators = (
+                process_extrapolated_expectation_values(
+                    noise_scaled_exp_vals,
+                    noise_scaled_ensemble_std,
+                    observable_term,
+                    noise_factors,
+                    extrapolator,
+                    extrapolated_noise_factors,
+                )
+            )
+
+            selected_extrapolators_per_term.append(sel_extrapolators)
+
+            # Calculate scale factor in case TREX mitigation is used
+            term_scale_factor = (
+                calculate_trex_factor(measure_noise_data, observable_term)
+                if measure_noise_data is not None
+                else 1
+            )
+            for extrap_index, (extrap_exp_val, extrap_std) in enumerate(
+                zip(extrap_exp_vals, extrap_stds)
+            ):
+                # Accumulate with coefficient
+                exp_vals_extrapolated[extrap_index] += coeff * extrap_exp_val * term_scale_factor
+                # failed extrapolation might return NaN as std
+                if not np.isnan(extrap_std):
+                    ensemble_std_extrapolated[extrap_index] += (
+                        coeff * extrap_std * term_scale_factor
+                    )
+                twirl_variance_extrapolated[extrap_index] += (
+                    (coeff**2) * non_amplified_twirl_var * (term_scale_factor**2)
+                )
+
+        exp_vals[(slice(None), *bcast_index)] = exp_vals_extrapolated
+        ensemble_stds[(slice(None), *bcast_index)] = ensemble_std_extrapolated
+        # When twirling is off (num_randomizations=1), stds equals ensemble_standard_error
+        if num_randomizations == 1:
+            stds[(slice(None), *bcast_index)] = ensemble_stds[(slice(None), *bcast_index)]
+        else:
+            stds[(slice(None), *bcast_index)] = np.sqrt(
+                twirl_variance_extrapolated / num_randomizations
+            )
+        selected_extrapolators.append(selected_extrapolators_per_term)
+
+    return exp_vals, stds, ensemble_stds, selected_extrapolators

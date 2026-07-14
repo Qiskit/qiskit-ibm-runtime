@@ -28,7 +28,7 @@ class TestResilienceOptionsDefaults(unittest.TestCase):
         """All fields carry their documented default values."""
         opts = ResilienceOptions()
         self.assertIsNone(opts.measure_mitigation)
-        self.assertEqual(opts.measure_noise_learning.num_randomizations, 32)
+        self.assertEqual(opts.measure_noise_learning.num_randomizations, "auto")
         self.assertEqual(opts.measure_noise_learning.shots_per_randomization, "auto")
         self.assertFalse(opts.pec_mitigation)
         self.assertEqual(opts.pec.max_overhead, 100)
