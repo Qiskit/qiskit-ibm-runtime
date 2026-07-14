@@ -4,7 +4,9 @@
 Upgrade Notes
 -------------
 
-- The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
+- The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``.
+  Users of ``Executor`` can now twirl their circuits with the ``"local_c1"`` twirling group, which is
+  supported by Samplomatic version ``0.17.0`` and above. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
 
 Deprecation Notes
 -----------------
