@@ -21,10 +21,10 @@ from qiskit.primitives.containers.estimator_pub import ObservablesArray
 from qiskit.quantum_info import random_pauli_list
 
 from qiskit_ibm_runtime.decoders.executor_estimator.post_processor_v0_1 import (
+    _process_expectation_values_pea,
     create_pub_result,
     create_pub_result_pec,
     estimator_v2_post_processor_v0_1,
-    process_expectation_values_pea,
 )
 from qiskit_ibm_runtime.executor_estimator.utils import get_pauli_basis, unbroadcast_index
 from qiskit_ibm_runtime.results.quantum_program import (
@@ -910,7 +910,7 @@ class TestEstimatorV2PostProcessorPEC(unittest.TestCase):
 
 @ddt
 class TestProcessExpectationValuesPEA(unittest.TestCase):
-    """Tests for the ``process_expectation_values_pea`` method."""
+    """Tests for the ``_process_expectation_values_pea`` method."""
 
     def get_param_basis_pairs(self, observables, param_shape):
         """Helper to compute values for ``param_basis_pairs``.
@@ -932,7 +932,7 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         data = np.random.randint(0, 2, size=(3, 3, 3, 3, 2)).astype(bool)
         item_result = QuantumProgramItemResult({"meas": data})
         with self.assertRaisesRegex(ValueError, "Dedicated creg ``'_meas'``"):
-            process_expectation_values_pea(
+            _process_expectation_values_pea(
                 item_result=item_result,
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
@@ -949,7 +949,7 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         data = np.random.randint(0, 2, size=(1, 1, 10, 2)).astype(bool)
         item_result = QuantumProgramItemResult({"_meas": data})
         with self.assertRaisesRegex(ValueError, "has ``4`` axes, expected ``5``"):
-            process_expectation_values_pea(
+            _process_expectation_values_pea(
                 item_result=item_result,
                 observables=ObservablesArray({"ZZ": 1}),
                 param_shape=(),
@@ -966,14 +966,14 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         Uses ZZ observable with all-zero measurements (ideal +1) at two noise factors.
         A linear fit of [1.0, 1.0] extrapolated to 0 should remain 1.0.
         """
-        # Shape: (num_randomizations=1, num_noise_scales=2, num_configs=1, shots=10, num_qubits=2)
-        data = np.zeros((1, 2, 1, 10, 2), dtype=bool)
+        # Shape: (num_noise_scales=2, num_randomizations=1, num_configs=1, shots=10, num_qubits=2)
+        data = np.zeros((2, 1, 1, 10, 2), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         noise_factors = [1.0, 2.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -996,6 +996,7 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         so at x=0 the extrapolated value is 2.0.
         """
         # At noise factor 1: all 00 -> ev = +1
+        # Shape per noise factor: (num_randomizations=1, num_configs=1, shots=10, num_qubits=2)
         data_nf1 = np.zeros((1, 1, 10, 2), dtype=bool)
         # At noise factor 2: ev = 0
         # For ZZ: 00->+1, 11->+1, 01->-1, 10->-1
@@ -1004,14 +1005,15 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         data_nf2[0, 0, 5:8, 0] = True  # 3 shots with bit0 flipped -> 10 -> -1
         data_nf2[0, 0, 8:10, 1] = True  # 2 shots with bit1 flipped -> 01 -> -1
 
-        # Stack both noise factors: shape (1, 2, 1, 10, 2)
-        data = np.stack([data_nf1, data_nf2], axis=1)
+        # Stack both noise factors: shape
+        # (num_noise_scales=2, num_randomizations=1, num_configs=1, shots=10, num_qubits=2)
+        data = np.stack([data_nf1, data_nf2], axis=0)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         noise_factors = [1.0, 2.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -1029,15 +1031,15 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
     def test_evs_2d_obs_no_params_pea(self):
         """Test PEA with 2D observables and no params."""
         # Two configs: one for ZZ, one for XX (all 00 measurements at two noise factors)
-        # Shape: (num_randomizations=1, num_noise_scales=2, num_configs=2, shots=10, num_qubits=2)
-        data = np.zeros((1, 2, 2, 10, 2), dtype=bool)
+        # Shape: (num_noise_scales=2, num_randomizations=1, num_configs=2, shots=10, num_qubits=2)
+        data = np.zeros((2, 1, 2, 10, 2), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         observables = ObservablesArray([{"ZZ": 1.0}, {"XX": 1.0}])
         noise_factors = [1.0, 2.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=observables,
             param_shape=(),
@@ -1070,7 +1072,8 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         observables = ObservablesArray(obs_like).reshape(obs_shape)
 
         num_noise_scales = 3
-        data_shape = (18, num_noise_scales, 4, 10, observables.num_qubits)
+        # Shape: (num_noise_scales, num_randomizations=18, num_configs=4, shots=10, num_qubits)
+        data_shape = (num_noise_scales, 18, 4, 10, observables.num_qubits)
         flips = np.random.randint(0, 2, size=data_shape).astype(bool)
         # twirled_data == flips so XOR cancels => underlying meas == all zeros
         twirled_data = flips
@@ -1081,7 +1084,7 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         noise_factors = [1.0, 2.0, 3.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -1116,14 +1119,14 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
 
         num_basis = sum(len(basis) for _param_idx, basis in param_basis_pairs)
         num_noise_scales = 3
-        # Shape: (num_randomizations=1, num_noise_scales, num_configs, shots=10, num_qubits)
-        data = np.zeros((1, num_noise_scales, num_basis, 10, num_qubits), dtype=bool)
+        # Shape: (num_noise_scales, num_randomizations=1, num_configs, shots=10, num_qubits)
+        data = np.zeros((num_noise_scales, 1, num_basis, 10, num_qubits), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         noise_factors = [1.0, 2.0, 3.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=observables,
             param_shape=param_shape,
@@ -1135,25 +1138,25 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         )
 
         expected_broadcast_shape = np.broadcast_shapes(obs_shape, param_shape)
-        # evs has leading axis for num extrapolated noise factors
+        # evs, stds and ensemble_stds all have leading axis for num extrapolated noise factors
         expected_evs_shape = (len(extrapolated_noise_factors),) + expected_broadcast_shape
-        expected_ensemble_stds_shape = (len(noise_factors),) + expected_broadcast_shape
         self.assertTupleEqual(evs.shape, expected_evs_shape)
         self.assertTupleEqual(stds.shape, expected_evs_shape)
-        self.assertTupleEqual(ensemble_stds.shape, expected_ensemble_stds_shape)
-        self.assertTupleEqual(sel_extrapolators.shape, expected_evs_shape)
+        self.assertTupleEqual(ensemble_stds.shape, expected_evs_shape)
+        # sel_extrapolators is a nested list with shape (output_shape, num_terms_per_observable)
+        self.assertEqual(len(sel_extrapolators), int(np.prod(expected_broadcast_shape)))
 
     def test_multiple_extrapolated_noise_factors_pea(self):
         """Test that multiple extrapolated noise factors produce the correct output shape."""
         # ZZ observable, 1 config, all-zero meas at 3 noise factors
-        # Shape: (num_randomizations=1, num_noise_scales=3, num_configs=1, shots=10, num_qubits=2)
-        data = np.zeros((1, 3, 1, 10, 2), dtype=bool)
+        # Shape: (num_noise_scales=3, num_randomizations=1, num_configs=1, shots=10, num_qubits=2)
+        data = np.zeros((3, 1, 1, 10, 2), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         noise_factors = [1.0, 2.0, 3.0]
         extrapolated_noise_factors = [0.0, 0.5, 1.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -1167,19 +1170,19 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         # Three extrapolation points -> leading dimension is 3
         self.assertEqual(evs.shape[0], len(extrapolated_noise_factors))
         self.assertEqual(stds.shape[0], len(extrapolated_noise_factors))
-        self.assertEqual(sel_extrapolators.shape[0], len(extrapolated_noise_factors))
         # All-zero measurements at every noise factor: linear fit is flat at 1.0
         self.assertTrue(np.allclose(evs, 1.0), msg=f"Expected all 1.0, got {evs}")
 
     def test_sel_extrapolators_dtype_pea(self):
         """Test that sel_extrapolators contains string extrapolator names."""
-        data = np.zeros((1, 2, 1, 10, 2), dtype=bool)
+        # Shape: (num_noise_scales=2, num_randomizations=1, num_configs=1, shots=10, num_qubits=2)
+        data = np.zeros((2, 1, 1, 10, 2), dtype=bool)
         item_result = QuantumProgramItemResult({"_meas": data})
 
         noise_factors = [1.0, 2.0]
         extrapolated_noise_factors = [0.0]
 
-        evs, stds, ensemble_stds, sel_extrapolators = process_expectation_values_pea(
+        evs, stds, ensemble_stds, sel_extrapolators = _process_expectation_values_pea(
             item_result=item_result,
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -1190,9 +1193,10 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
             measure_noise_data=None,
         )
 
-        # sel_extrapolators should contain names like "linear"
-        self.assertIsInstance(sel_extrapolators.flat[0], str)
-        self.assertEqual(sel_extrapolators.flat[0], "linear")
+        # sel_extrapolators is a nested list: [per_bcast_index][per_term][per_extrap_point]
+        # For a scalar observable with one term, the first element contains the chosen name
+        self.assertIsInstance(sel_extrapolators[0][0][0], str)
+        self.assertEqual(sel_extrapolators[0][0][0], "linear")
 
     def test_multiple_extrapolators_selects_highest_priority_pea(self):
         """Test that with multiple extrapolators the highest-priority valid one is selected.
@@ -1206,20 +1210,19 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
         # Build noisy ZZ data with linearly decaying expectation values across noise factors.
         # ZZ: 00->+1, 01->-1; flip qubit1 on a fraction of shots to control ev.
         # nf=1: ev=0.8 (18/20 shots are 00), nf=2: ev=0.4 (14/20), nf=3: ev=0.0 (10/20)
-        # Shape: (num_randomizations=10, num_noise_scales=3, num_configs=1, shots=20, num_qubits=2)
+        # Shape: (num_noise_scales=3, num_randomizations=10, num_configs=1, shots=20, num_qubits=2)
         num_rand, shots = 10, 20
         ev_targets = [0.8, 0.4, 0.0]
-        data = np.zeros((num_rand, 3, 1, shots, 2), dtype=bool)
-        for r in range(num_rand):
-            for nf_idx, ev_target in enumerate(ev_targets):
-                n_plus = int((ev_target + 1) / 2 * shots)
-                data[r, nf_idx, 0, n_plus:, 1] = True  # flip qubit1 -> 01 -> -1 for ZZ
+        data = np.zeros((3, num_rand, 1, shots, 2), dtype=bool)
+        for nf_idx, ev_target in enumerate(ev_targets):
+            n_plus = int((ev_target + 1) / 2 * shots)
+            data[nf_idx, :, 0, n_plus:, 1] = True  # flip qubit1 -> 01 -> -1 for ZZ
 
         noise_factors = [1.0, 2.0, 3.0]
         extrapolated_noise_factors = [0.0]
 
         # "linear" first: linear fit is valid -> "linear" selected
-        evs_first, _, _, sel_first = process_expectation_values_pea(
+        evs_first, _, _, sel_first = _process_expectation_values_pea(
             item_result=QuantumProgramItemResult({"_meas": data.copy()}),
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -1229,11 +1232,12 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
             extrapolator=["linear", "exponential"],
             measure_noise_data=None,
         )
-        self.assertEqual(sel_first.flat[0], "linear")
+        # sel_extrapolators is a nested list: [per_bcast_index][per_term][per_extrap_point]
+        self.assertEqual(sel_first[0][0][0], "linear")
 
         # "exponential" first: exponential fit is rejected (value way outside [-1,1]);
         # selection falls through to "linear" which is valid
-        evs_second, _, _, sel_second = process_expectation_values_pea(
+        evs_second, _, _, sel_second = _process_expectation_values_pea(
             item_result=QuantumProgramItemResult({"_meas": data.copy()}),
             observables=ObservablesArray({"ZZ": 1.0}),
             param_shape=(),
@@ -1243,7 +1247,7 @@ class TestProcessExpectationValuesPEA(unittest.TestCase):
             extrapolator=["exponential", "linear"],
             measure_noise_data=None,
         )
-        self.assertEqual(sel_second.flat[0], "linear")
+        self.assertEqual(sel_second[0][0][0], "linear")
 
         # Both orderings resolve to "linear" and give the same extrapolated value
         self.assertAlmostEqual(float(evs_first[0]), float(evs_second[0]), places=5)

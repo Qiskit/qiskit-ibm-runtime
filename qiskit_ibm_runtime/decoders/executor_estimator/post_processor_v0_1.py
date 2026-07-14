@@ -475,6 +475,7 @@ def create_pub_result_pec(
     )
     return EstimatorPubResult(data=data_bin)
 
+
 def create_pub_result_pea(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
@@ -524,16 +525,17 @@ def create_pub_result_pea(
     )
     return EstimatorPubResult(data=data_bin)
 
+
 def _process_expectation_values_pea(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
     param_basis_pairs: list[tuple[tuple[int, ...], str]],
     noise_factors: list[float],
-    extrapolated_noise_factors: list[float],
+    extrapolated_noise_factors: float | int | list[float],
     extrapolator: list[ExtrapolatorType],
     measure_noise_data: PauliLindbladMap | np.ndarray | None,
-) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
+) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[float], list[list[str]]]:
     """Process expectation values for a single item result.
 
     Args:

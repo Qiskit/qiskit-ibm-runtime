@@ -85,8 +85,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertIsInstance(item, SamplexItem)
         # Check samplex shape
         auto_num_rand = math.ceil(shots / (max(64, math.ceil(shots / 32))))
-        # The expected shape is (num_randomizations, num_noise_factors, bases * num_param_sets)
-        expected_shape = (auto_num_rand, len(noise_factors), 1)
+        # The expected shape is (num_noise_factors, num_randomizations, bases * num_param_sets)
+        expected_shape = (len(noise_factors), auto_num_rand, 1)
         self.assertEqual(item.shape, expected_shape)
 
         # Check that samplex_arguments contains pauli_lindblad_maps
@@ -98,8 +98,8 @@ class TestPreparePeaFunction(unittest.TestCase):
 
         # Check that samplex_arguments contains noise_scales for the layer
         self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
-        # noise_scales = noise_factors - 1
-        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
+        # noise_scales = noise_factors - 1, shape is (num_noise_factors, 1, 1)
+        expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
         self.assertTrue(
             np.all(
                 item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
@@ -176,7 +176,8 @@ class TestPreparePeaFunction(unittest.TestCase):
             noise_model_mapping[noise_layer_refs[0]],
         )
         self.assertIn(f"noise_scales.{noise_layer_refs[0]}", item1.samplex_arguments)
-        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
+        # noise_scales shape is (num_noise_factors, 1, 1)
+        expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
         self.assertTrue(
             np.all(
                 item1.samplex_arguments[f"noise_scales.{noise_layer_refs[0]}"]
@@ -335,7 +336,8 @@ class TestPreparePeaFunction(unittest.TestCase):
             noise_model_mapping[noise_layer_ref],
         )
         self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
-        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
+        # noise_scales shape is (num_noise_factors, 1, 1)
+        expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
         self.assertTrue(
             np.all(
                 item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
@@ -405,14 +407,14 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertIsInstance(item, SamplexItem)
 
         # Check the shape of the program item
-        # The expected shape is (num_randomizations, num_noise_factors, bases * num_param_sets)
+        # The expected shape is (num_noise_factors, num_randomizations, bases * num_param_sets)
         # num_randomizations is calculated automatically based on shots
         auto_num_rand = math.ceil(shots / (max(64, math.ceil(shots / 32))))
         num_param_sets = parameter_values.shape[0]  # 3
         num_observables = 1  # Single observable
         num_noise_factors = len(noise_factors)  # 5
 
-        expected_shape = (auto_num_rand, num_noise_factors, num_param_sets * num_observables)
+        expected_shape = (num_noise_factors, auto_num_rand, num_param_sets * num_observables)
         self.assertEqual(
             item.shape,
             expected_shape,
@@ -436,8 +438,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         self.assertIn(f"pauli_lindblad_maps.{noise_layer_ref}", item.samplex_arguments)
         self.assertIn(f"noise_scales.{noise_layer_ref}", item.samplex_arguments)
 
-        # Verify noise_scales are correct (noise_factors - 1)
-        expected_noise_scales = np.array([[factor - 1] for factor in noise_factors])
+        # Verify noise_scales are correct (noise_factors - 1), shape is (num_noise_factors, 1, 1)
+        expected_noise_scales = np.array([[[factor - 1]] for factor in noise_factors])
         self.assertTrue(
             np.all(
                 item.samplex_arguments[f"noise_scales.{noise_layer_ref}"] == expected_noise_scales
