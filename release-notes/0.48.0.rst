@@ -77,6 +77,6 @@ Bug Fixes
 Other Notes
 -----------
 
-- The library now uses the version ``2026-04-15`` of the Quantum Runtime REST API. (`2845 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2845>`__)
+- The library now uses the version ``2026-04-15`` of the Qiskit Runtime REST API. (`2845 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2845>`__)
 - The deprecated transpiler plugin ``IBMFractionalTranslationPlugin`` has been removed. (`2880 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2880>`__)
 - The default schema version for Executor is now ``1.1``. (`2911 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2911>`__)
