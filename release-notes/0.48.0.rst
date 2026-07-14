@@ -13,8 +13,8 @@ Upgrade Notes
 Deprecation Notes
 -----------------
 
-- All classes that represent results are now available via the ``qiskit_ibm_runtime.results`` package,
-  resulting in the following classes being moved to the results package:
+- All classes that represent results are now available via the ``qiskit_ibm_runtime.results`` package;
+ consequently, the following classes moved to the results package:
 
   * ``PauliLindbladError``, ``LayerError``, ``NoiseLearnerResult`` (previously part of
     ``qiskit_ibm_runtime.utils.noise_learner_result``)
@@ -44,11 +44,11 @@ New Features
 - Added a ``use_fractional_gates`` parameter to :meth:`.QiskitRuntimeService.least_busy`,
   matching the behavior of the same parameter in :meth:`.QiskitRuntimeService.backend`.
   When set to ``True``, only backends that include fractional gates in their basis gates are
-  considered; backends without it are skipped in favor of the next least busy qualifying
+  considered; backends without it are skipped in favor of the next least-busy qualifying
   backend. (`2855 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2855>`__)
 - Support for passing multiple result decoders to :class:`qiskit_ibm_runtime.RuntimeJobV2` and
   :meth:`qiskit_ibm_runtime.RuntimeJobV2.result` has been reintroduced. (`2899 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2899>`__)
-- Added support ``QuantumProgram.meas_level = "both"``, which can be used to request that
+- Added support for ``QuantumProgram.meas_level = "both"``, which can be used to request that
   both classified and kerneled measurements be present in the quantum program results. (`2973 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2973>`__)
 
 
@@ -61,7 +61,7 @@ Bug Fixes
   pass now derives the dropped ``2*pi`` winding parity directly from the wrapped angle, so
   the folded circuit preserves the full unitary (including global phase) for all angles. (`2856 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2856>`__)
 - When using backends from different instances, the service used by :meth:`.SamplerV2.run`,
-  :meth:`.EstimatorV2.run` and other primitives' ``.run()`` methods now ensures that the API client
+  :meth:`.EstimatorV2.run`, and other primitives' ``.run()`` methods now ensures that the API client
   used for submitting the job is the one belonging to the backend, instead of always using the
   active API client. (`2931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2931>`__)
 - Fixed the folding of out-of-bounds ``rzz`` angles during transpilation.
