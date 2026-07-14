@@ -519,12 +519,8 @@ def process_expectation_values_pea(
     if isinstance(extrapolated_noise_factors, (float, int)):
         extrapolated_noise_factors = [extrapolated_noise_factors]
 
-    # Rearrange the axes of the data to match the required shape of:
-    # (noise_factors, num_randomizations, num_configs, shots, num_bits)
-    noise_amplified_data = np.swapaxes(data, 0, 1)
-
     return calculate_extrapolated_expectation_values(
-        noise_amplified_data,
+        data,
         observables,
         param_shape,
         param_basis_pairs,

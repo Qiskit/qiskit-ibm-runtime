@@ -155,8 +155,8 @@ def prepare_pea(
 
         samplex_arguments["pauli_lindblad_maps"] = pub_noise_model
 
-        # Create SamplexItem
-        shape = (num_randomizations, len(noise_scales), change_basis.shape[0])
+        # Create SamplexItem with noise_factors as first axis
+        shape = (len(noise_scales), num_randomizations, change_basis.shape[0])
         items.append(
             SamplexItem(
                 circuit=template,
