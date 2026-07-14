@@ -49,15 +49,15 @@ def process_extrapolated_expectation_values(
 ) -> tuple[npt.NDArray[float], npt.NDArray[float], npt.NDArray[str]]:
     r"""Calculate extrapolated expectation values based on noise-amplified expectation values.
 
-    For each entry, the requested model(s) are fit to the expectation values measured at
-    the entry's noise factors and evaluated at the target noise factor(s) (``0`` for zero
-    noise). Models are tried in priority order: each point takes the result of the first model
-    with a valid extrapolation. An extrapolation is valid when its value and standard
+    The requested model(s) are fit to the expectation values measured at the noise factors for
+    the single given observable term and evaluated at the target noise factor(s) (``0`` for zero
+    noise). Models are tried in priority order: each target noise factor takes the result of the
+    first model with a valid extrapolation. An extrapolation is valid when its value and standard
     error are finite, the standard error is within the basis threshold, and
     :math:`value \pm stderr` lies within the observable's ideal range widened by that threshold.
-    The range varies based on the observable: ``[0, 1]`` for projector-only observables,
-    ``[-1, 1]`` for observables containing Paulis, and unbounded when the observable is absent or
-    unrecognized. If no model produces a valid extrapolation for a point, the candidate with the
+    The range varies based on the observable term: ``[0, 1]`` for projector-only observable terms,
+    ``[-1, 1]`` for observable terms containing Paulis, and unbounded when the observable term is
+    absent or unrecognized. If no model produces a valid extrapolation, the candidate with the
     smallest standard error is used (non-finite errors are treated as infinite). Include
     ``fallback`` in ``extrapolator`` to add the lowest-noise measured value as a candidate, so it
     is selected when the fitted models fail.

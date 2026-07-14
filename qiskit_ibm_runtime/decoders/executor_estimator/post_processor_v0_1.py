@@ -474,7 +474,7 @@ def calculate_extrapolated_expectation_values(
 
     Args:
         noise_amplified_data: The measured data result. Its shape should be:
-            (noise_factors, num_randomizations, num_configs, shots, num_bits)
+            ``(noise_factors, num_randomizations, num_configs, shots, num_bits)``
         observables: The observables to calculate expectation values for.
         param_shape: The shape of the parameter values in the original PUB.
         param_basis_pairs: The map between params ndindexes to basis.
@@ -482,11 +482,11 @@ def calculate_extrapolated_expectation_values(
         extrapolated_noise_factors: Noise factors to evaluate the fits at.
         extrapolator: The extrapolator model or models to use. Models will be tried in priority
             order. Supported models (each fits the named function of the noise factor ``x``):
-            - ``linear``: ``a + b*x``
-            - ``polynomial_degree_k`` (1 <= k <= 7): a degree-k polynomial
-            - ``exponential``: ``a*exp(b*x)``
-            - ``double_exponential``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``fallback``: no fit; the measured value at the lowest noise factor
+            - ```"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
         measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 
