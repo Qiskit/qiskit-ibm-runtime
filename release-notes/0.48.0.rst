@@ -28,11 +28,12 @@ New Features
 ------------
 
 - The :meth:`qiskit-ibm-runtime.RuntimeJobV2.usage` method now supports an optional ``partial``
-  parameter:
+  parameter (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__):
+
   * if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
     calculation is completed.
   * if the ``partial`` flag is ``True``, the method will return the incremential partial job usage
-    regardless of the calculation being completed. (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__)
+    regardless of the calculation being completed.
 - Added options to request circuit schedule timing and to return numeric resolutions of
   stretches for individual circuits when running Executor jobs. (`2790 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2790>`__) (`2789 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2789>`__)
 - Added support for ``instance="auto"`` in :class:`.QiskitRuntimeService` and
@@ -59,8 +60,8 @@ Bug Fixes
   folded into a circuit that differed from the original by a global phase of ``pi``. The
   pass now derives the dropped ``2*pi`` winding parity directly from the wrapped angle, so
   the folded circuit preserves the full unitary (including global phase) for all angles. (`2856 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2856>`__)
-- When using backends from different instances, the service used by :meth:`.Sampler.run``,
-  :meth:`.Estimator.run`` and other primitives' ``.run()`` methods now ensures that the API client
+- When using backends from different instances, the service used by :meth:`.SamplerV2.run`,
+  :meth:`.EstimatorV2.run` and other primitives' ``.run()`` methods now ensures that the API client
   used for submitting the job is the one belonging to the backend, instead of always using the
   active API client. (`2931 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2931>`__)
 - Fixed the folding of out-of-bounds ``rzz`` angles during transpilation.
