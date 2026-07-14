@@ -6,7 +6,7 @@ Upgrade Notes
 
 - The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
 - Added a user warning when a user sets ``pub.shots`` in SamplerV2, and ``pub.precision`` in EstimatorV2. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
-- Added a user warning when a user sets the ``shots_per_randomization`` field of ``MeasureNoiseLearningOptions```
+- Added a user warning when a user sets the ``shots_per_randomization`` field of ``MeasureNoiseLearningOptions``
   to an ``int``. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
 
 
@@ -27,7 +27,7 @@ Deprecation Notes
 New Features
 ------------
 
-- The :meth:`qiskit-ibm-runtime.RuntimeJobV2.usage` method now supports an optional ``partial``
+- The :meth:`.RuntimeJobV2.usage` method now supports an optional ``partial``
   parameter (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__):
 
   * if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
@@ -46,8 +46,8 @@ New Features
   When set to ``True``, only backends that include fractional gates in their basis gates are
   considered; backends without it are skipped in favor of the next least-busy qualifying
   backend. (`2855 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2855>`__)
-- Support for passing multiple result decoders to :class:`qiskit_ibm_runtime.RuntimeJobV2` and
-  :meth:`qiskit_ibm_runtime.RuntimeJobV2.result` has been reintroduced. (`2899 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2899>`__)
+- Support for passing multiple result decoders to :class:`.RuntimeJobV2` and
+  :meth:`.RuntimeJobV2.result` has been reintroduced. (`2899 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2899>`__)
 - Added support for ``QuantumProgram.meas_level = "both"``, which can be used to request that
   both classified and kerneled measurements be present in the quantum program results. (`2973 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2973>`__)
 
