@@ -174,6 +174,7 @@ def prepare_pea(
     passthrough_data = {
         "post_processor": {
             "version": "v0.1",
+            "mitigation": "pea",
             "circuits_metadata": [pub.circuit.metadata for pub in pubs],
             "observables": observables_list,
             "param_basis_pairs": param_basis_pairs_list,

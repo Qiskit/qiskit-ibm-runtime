@@ -425,7 +425,10 @@ class TestEstimatorV2Run(unittest.TestCase):
 
     @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_zne")
     def test_run_dispatches_to_prepare_zne_when_zne_enabled(self, mock_prepare_zne):
-        """Test that run calls prepare_zne when zne_mitigation is enabled."""
+        """Test that run calls prepare_zne when zne_mitigation is enabled.
+
+        with non-pea amplifier.
+        """
         estimator = EstimatorV2(mode=self.backend)
         estimator.options.resilience.zne_mitigation = True
 
@@ -445,6 +448,49 @@ class TestEstimatorV2Run(unittest.TestCase):
         mock_prepare_zne.assert_called_once()
         call_kwargs = mock_prepare_zne.call_args
         self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
+
+    def test_run_raises_error_when_pec_and_zne_both_enabled(self):
+        """Test that run raises error when both pec_mitigation and zne_mitigation are enabled."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.zne_mitigation = True
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "PEC mitigation and ZNE mitigation are incompatible with one another",
+        ):
+            estimator.run([(circuit, observable)], precision=0.03125)
+
+    @patch("qiskit_ibm_runtime.executor_estimator.estimator.prepare_pea")
+    def test_run_dispatches_to_prepare_pea_when_pea_amplifier_selected(self, mock_prepare_pea):
+        """Test that run calls prepare_pea when zne_mitigation is enabled with amplifier='pea'."""
+        estimator = EstimatorV2(mode=self.backend)
+        estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "pea"
+        noise_model_mapping = {"layer_0": PauliLindbladMap.identity(num_qubits=2)}
+        estimator.options.resilience.noise_model_mapping = noise_model_mapping
+
+        circuit = QuantumCircuit(2)
+        circuit.h(0)
+        observable = SparsePauliOp.from_list([("ZZ", 1)])
+
+        # Mock prepare_pea to return a valid QuantumProgram
+        mock_qp = MagicMock(spec=QuantumProgram)
+        mock_qp.shots = 1024
+        mock_qp.passthrough_data = {"post_processor": {}}
+        mock_qp.items = []
+        mock_prepare_pea.return_value = mock_qp
+
+        estimator.run([(circuit, observable)], precision=0.03125)
+
+        mock_prepare_pea.assert_called_once()
+        call_kwargs = mock_prepare_pea.call_args
+        self.assertEqual(call_kwargs.kwargs["zne_options"], estimator.options.resilience.zne)
+        self.assertEqual(call_kwargs.kwargs["noise_model_mapping"], noise_model_mapping)
 
 
 class TestEstimatorV2SimulatorMode(unittest.TestCase):
