@@ -115,6 +115,7 @@ class TestPreparePeaFunction(unittest.TestCase):
                 np.array(noise_factors),
             )
         )
+        self.assertTrue(passthrough["post_processor"]["mitigation"] == "pea")
 
     def test_prepare_pea_multiple_pubs(self):
         """Test prepare_pea with multiple pubs and different noise models."""

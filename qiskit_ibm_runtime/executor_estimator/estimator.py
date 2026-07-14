@@ -31,6 +31,7 @@ from ..fake_provider.local_service import QiskitRuntimeLocalService
 from ..options_models.estimator_options import EstimatorOptions
 from .pec.prepare_pec import prepare_pec
 from .prepare import prepare
+from .prepare_pea import prepare_pea
 from .utils import find_unique_layers, resolve_precision
 from .zne.prepare_zne import prepare_zne
 
@@ -185,7 +186,8 @@ class EstimatorV2(BaseEstimatorV2):
             pubs=coerced_pubs,
             twirling_options=options.twirling,
             measure_noise_learning=options.resilience.measure_noise_learning,
-            inject_noise=options.resilience.pec_mitigation,  # TODO: Add PEA once available
+            inject_noise=options.resilience.pec_mitigation
+            or (options.resilience.zne_mitigation and options.resilience.zne.amplifier == "pea"),
         )
 
     def finalize_options(self) -> EstimatorOptions:
@@ -302,6 +304,11 @@ class EstimatorV2(BaseEstimatorV2):
                         "(circuits with control flow operations)."
                     )
 
+        if options.resilience.pec_mitigation and options.resilience.zne_mitigation:
+            raise IBMInputValueError(
+                "PEC mitigation and ZNE mitigation are incompatible with one another."
+            )
+
         # Route to appropriate prepare function
         if options.resilience.pec_mitigation:
             if options.resilience.noise_model_mapping is None:
@@ -320,15 +327,27 @@ class EstimatorV2(BaseEstimatorV2):
                 else None,
             )
         elif options.resilience.zne_mitigation:
-            quantum_program = prepare_zne(
-                pubs=coerced_pubs,
-                twirling_options=options.twirling,
-                shots=shots,
-                zne_options=options.resilience.zne,
-                measure_noise_learning=options.resilience.measure_noise_learning
-                if options.resilience.measure_mitigation
-                else None,
-            )
+            if options.resilience.zne.amplifier == "pea":
+                quantum_program = prepare_pea(
+                    pubs=coerced_pubs,
+                    twirling_options=options.twirling,
+                    shots=shots,
+                    zne_options=options.resilience.zne,
+                    noise_model_mapping=options.resilience.noise_model_mapping or {},
+                    measure_noise_learning=options.resilience.measure_noise_learning
+                    if options.resilience.measure_mitigation
+                    else None,
+                )
+            else:
+                quantum_program = prepare_zne(
+                    pubs=coerced_pubs,
+                    twirling_options=options.twirling,
+                    shots=shots,
+                    zne_options=options.resilience.zne,
+                    measure_noise_learning=options.resilience.measure_noise_learning
+                    if options.resilience.measure_mitigation
+                    else None,
+                )
         else:
             quantum_program = prepare(
                 pubs=coerced_pubs,
