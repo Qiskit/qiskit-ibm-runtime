@@ -84,6 +84,11 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
     mitigation = post_processor_data.get("mitigation", None)
     pec_gammas = post_processor_data.get("pec_gammas", None)
 
+    # Extract pea mitigation data if present
+    pea_noise_factors = post_processor_data.get("pea_noise_factors", None)
+    extrapolated_noise_factors = post_processor_data.get("extrapolated_noise_factors", None)
+    extrapolator = post_processor_data.get("extrapolator", None)
+
     # Check if measure_mitigation was used
     measure_mitigation = post_processor_data.get("measure_mitigation", None)
     readout_noise_data = None
@@ -135,6 +140,17 @@ def estimator_v2_post_processor_v0_1(result: QuantumProgramResult) -> PrimitiveR
                 param_basis_pairs,
                 readout_noise_data,
                 pec_gamma=pec_gammas[idx],
+            )
+        elif mitigation == "pea":
+            pub_result = create_pub_result_pea(
+                item_result,
+                observables,
+                param_shape,
+                param_basis_pairs,
+                readout_noise_data,
+                noise_factors=pea_noise_factors,
+                extrapolated_noise_factors=extrapolated_noise_factors,
+                extrapolator=extrapolator,
             )
         elif mitigation is not None:
             raise ValueError(f"Unknown mitigation technique {mitigation}")
@@ -459,8 +475,56 @@ def create_pub_result_pec(
     )
     return EstimatorPubResult(data=data_bin)
 
+def create_pub_result_pea(
+    item_result: QuantumProgramItemResult,
+    observables: ObservablesArray,
+    param_shape: tuple[int, ...],
+    param_basis_pairs: list[tuple[tuple[int, ...], str]],
+    measure_noise_data: PauliLindbladMap | np.ndarray | None,
+    noise_factors: list[float],
+    extrapolated_noise_factors: list[float],
+    extrapolator: list[ExtrapolatorType],
+) -> EstimatorPubResult:
+    """Calculate expectation values and errors with PEA, and return pub result.
 
-def process_expectation_values_pea(
+    Args:
+        item_result: The item result.
+        observables: The observables to calculate expectation values for.
+        param_shape: The shape of the parameter values in the original PUB.
+        param_basis_pairs: The map between params ndindexes to basis.
+        measure_noise_data: Measurement noise calibration data for TREX mitigation.
+        noise_factors: The noise factors used to amplify the noise.
+        extrapolated_noise_factors: Noise factors to evaluate the fits at.
+        extrapolator: The extrapolator model or models to use.
+            Models will be tried in priority order.
+            Supported models (each fits the named function of the noise factor ``x``):
+            - ``"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
+
+    Returns:
+        An :class:`~qiskit_ibm_runtime.results.EstimatorPubResult` with an empty metadata dict.
+    """
+    # The last returned value is the selected extrapolators, that should be saved in the
+    # metadata
+    exp_vals, stds, ensemble_stds, _ = _process_expectation_values_pea(
+        item_result,
+        observables,
+        param_shape,
+        param_basis_pairs,
+        noise_factors,
+        extrapolated_noise_factors,
+        extrapolator,
+        measure_noise_data,
+    )
+    data_bin = DataBin(
+        evs=exp_vals, stds=stds, ensemble_standard_error=ensemble_stds, shape=exp_vals.shape
+    )
+    return EstimatorPubResult(data=data_bin)
+
+def _process_expectation_values_pea(
     item_result: QuantumProgramItemResult,
     observables: ObservablesArray,
     param_shape: tuple[int, ...],
@@ -482,11 +546,11 @@ def process_expectation_values_pea(
         extrapolator: The extrapolator model or models to use.
             Models will be tried in priority order.
             Supported models (each fits the named function of the noise factor ``x``):
-            - ``linear``: ``a + b*x``
-            - ``polynomial_degree_k`` (1 <= k <= 7): a degree-k polynomial
-            - ``exponential``: ``a*exp(b*x)``
-            - ``double_exponential``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
-            - ``fallback``: no fit; the measured value at the lowest noise factor
+            - ``"linear"``: ``a + b*x``
+            - ``"polynomial_degree_k"`` (1 <= k <= 7): a degree-k polynomial
+            - ``"exponential"``: ``a*exp(b*x)``
+            - ``"double_exponential"``: ``a*exp(b*x) + c*exp(d*x)`` (rates constrained to decay)
+            - ``"fallback"``: no fit; the measured value at the lowest noise factor
         measure_noise_data: Measurement noise calibration data for TREX mitigation. Can be either a
             PauliLindbladMap of a noise model learned upfront, or a result of a calibration circuit.
 

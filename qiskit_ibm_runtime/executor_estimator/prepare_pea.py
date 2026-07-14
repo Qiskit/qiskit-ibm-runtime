@@ -180,6 +180,8 @@ def prepare_pea(
             "param_shapes": param_shapes_list,
             "measure_mitigation": measure_noise_learning is not None,
             "pea_noise_factors": noise_factors,
+            "extrapolated_noise_factors": zne_options.extrapolated_noise_factors,
+            "extrapolator": zne_options.extrapolator,
         },
     }
 
