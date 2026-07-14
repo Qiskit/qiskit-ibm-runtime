@@ -4,11 +4,10 @@
 Upgrade Notes
 -------------
 
-- Switched default schema version for executor to `1.1`. (`2911 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2911>`__)
 - The minimal version of Qiskit required is now ``2.3.0``, and that of Samplomatic is ``0.18.0``. (`2925 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2925>`__)
-- Added a user warning when a user sets `pub.shots` in SamplerV2, and `pub.precision` in EstimatorV2. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
-- Added a user warning when a user sets the `shots_per_randomization` field of `MeasureNoiseLearningOptions`
-  to an `int`. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
+- Added a user warning when a user sets ``pub.shots`` in SamplerV2, and ``pub.precision`` in EstimatorV2. (`2992 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2992>`__)
+- Added a user warning when a user sets the ``shots_per_randomization`` field of ``MeasureNoiseLearningOptions```
+  to an ``int``. (`3004 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/3004>`__)
 
 
 Deprecation Notes
@@ -28,8 +27,14 @@ Deprecation Notes
 New Features
 ------------
 
+- The :meth:`qiskit-ibm-runtime.RuntimeJobV2.usage` method now supports an optional ``partial``
+  parameter:
+  * if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
+    calculation is completed.
+  * if the ``partial`` flag is ``True``, the method will return the incremential partial job usage
+    regardless of the calculation being completed. (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__)
 - Added options to request circuit schedule timing and to return numeric resolutions of
-  stretches for individual circuits when running executor jobs. (`2790 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2790>`__) (`2789 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2789>`__)
+  stretches for individual circuits when running Executor jobs. (`2790 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2790>`__) (`2789 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2789>`__)
 - Added support for ``instance="auto"`` in :class:`.QiskitRuntimeService` and
   :meth:`.QiskitRuntimeService.save_account`. Passing ``instance="auto"`` explicitly
   opts in to automatic instance selection without triggering the "instance was not set"
@@ -40,13 +45,6 @@ New Features
   When set to ``True``, only backends that include fractional gates in their basis gates are
   considered; backends without it are skipped in favor of the next least busy qualifying
   backend. (`2855 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2855>`__)
-- The :meth:`qiskit-ibm-runtime.RuntimeJobV2.usage` method now supports an optional ``partial``
-  parameter:
-  * if the ``partial`` flag is ``False``, the method will return ``0`` until the job usage
-    calculation is completed.
-  * if the ``partial`` flag is ``True``, the method will return the incremential partial job usage
-    regardless of the calculation being completed. (`2884 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2884>`__)
-- Added converters to/from schema models version 1.1 for executor. (`2890 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2890>`__)
 - Support for passing multiple result decoders to :class:`qiskit_ibm_runtime.RuntimeJobV2` and
   :meth:`qiskit_ibm_runtime.RuntimeJobV2.result` has been reintroduced. (`2899 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2899>`__)
 - Added support ``QuantumProgram.meas_level = "both"``, which can be used to request that
@@ -80,3 +78,4 @@ Other Notes
 
 - The library now uses the version ``2026-04-15`` of the Quantum Runtime REST API. (`2845 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2845>`__)
 - The deprecated transpiler plugin ``IBMFractionalTranslationPlugin`` has been removed. (`2880 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2880>`__)
+- The default schema version for Executor is now ``1.1``. (`2911 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/2911>`__)
