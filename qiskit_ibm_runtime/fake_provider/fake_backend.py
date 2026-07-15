@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import tempfile
 import warnings
 from typing import TYPE_CHECKING, Any
 
@@ -48,11 +49,25 @@ logger = logging.getLogger(__name__)
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
-    # directory and file names for real backend snapshots.
-    dirname: str | None = None
-    conf_filename: str | None = None
-    props_filename: str | None = None
-    backend_name: str | None = None
+    dirname: str
+    """Directory for the real backend snapshots."""
+
+    conf_filename: str
+    """Filename for the backend configuration."""
+
+    props_filename: str
+    """Filename for the backend properties."""
+
+    backend_name: str
+    """Name of the backend."""
+
+    _tmp_data_dir: tempfile.TemporaryDirectory | None = None
+    """Temporary directory for the real backend snapshots, if using ``refresh(persist=False)``.
+
+    If set, snapshot data is read from this temporary directory instead of ``dirname``. This
+    attribute stores a reference to ensure the temporary directory is bound to the lifetime of
+    the instance (cleaned up automatically when the backend is garbage collected).
+    """
 
     def __init__(self) -> None:
         self._conf_dict = self._get_conf_dict_from_json()
@@ -101,14 +116,14 @@ class FakeBackendV2(BackendV2):
     def _get_conf_dict_from_json(self) -> dict:
         if not self.conf_filename:
             return None
-        conf_dict = self._load_json(self.conf_filename)  # type: ignore
+        conf_dict = self._load_json(self.conf_filename)
         decode_backend_configuration(conf_dict)
         conf_dict["backend_name"] = self.backend_name
         return conf_dict
 
     def _set_props_dict_from_json(self) -> None:
         if self.props_filename:
-            props_dict = self._load_json(self.props_filename)  # type: ignore
+            props_dict = self._load_json(self.props_filename)
             properties_from_server_data(props_dict)
             self._props_dict = props_dict
 
@@ -117,7 +132,8 @@ class FakeBackendV2(BackendV2):
         return "qasm3" in supported_features
 
     def _load_json(self, filename: str) -> dict:
-        with open(os.path.join(self.dirname, filename)) as f_json:
+        dirname = self._tmp_data_dir.name if self._tmp_data_dir else self.dirname
+        with open(os.path.join(dirname, filename)) as f_json:
             the_json = json.load(f_json)
         return the_json
 
@@ -369,23 +385,40 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
-    def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
+    def refresh(
+        self,
+        service: QiskitRuntimeService,
+        use_fractional_gates: bool = False,
+        persist: bool = True,
+    ) -> None:
         """Update the data files from its real counterpart.
 
-        This method pulls the latest backend data files from their real counterpart and
-        overwrites the corresponding files in the local installation:
+        This method pulls the latest backend data files from their real counterpart and,
+        by default (``persist=True``), overwrites the corresponding files in the local
+        installation:
 
         *  ``../fake_provider/backends/{backend_name}/conf_{backend_name}.json``
-        *  ``../fake_provider/backends/{backend_name}/defs_{backend_name}.json``
         *  ``../fake_provider/backends/{backend_name}/props_{backend_name}.json``
 
         The new data files will persist through sessions so the files will stay updated unless they
         are manually reverted locally or when ``qiskit-ibm-runtime`` is upgraded or reinstalled.
 
+        Overwriting the installed data files fails, however, when the package is installed in a
+        read-only location (e.g. a system-wide ``site-packages`` directory). In that case, or
+        whenever modifying the installed package is undesirable, pass ``persist=False`` to write
+        the refreshed data to a temporary directory instead. The backend is still updated for the
+        current session, but the changes are not persisted to disk and are lost once the backend is
+        garbage collected or the process exits.
+
         Args:
             service: A :class:`QiskitRuntimeService` instance
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates.
+            persist: If ``True`` (default), the refreshed data files overwrite the copies
+                bundled with the installed package so the update persists across sessions. If
+                ``False``, the data is written to a temporary directory instead, which allows
+                :meth:`refresh` to succeed even when the package is installed in a read-only
+                location, at the cost of the update not persisting between sessions.
 
         Raises:
             ValueError: if the provided service is a non-QiskitRuntimeService instance.
@@ -401,7 +434,7 @@ class FakeBackendV2(BackendV2):
                 "properties and settings."
             )
 
-        prod_name = self.backend_name.replace("fake", "ibm")  # type: ignore[attr-defined]
+        prod_name = self.backend_name.replace("fake", "ibm")
         try:
             backends = service.backends(prod_name, use_fractional_gates=use_fractional_gates)
             real_backend = backends[0]
@@ -415,13 +448,26 @@ class FakeBackendV2(BackendV2):
             updated_config = real_config.to_dict()
             updated_config["backend_name"] = self.backend_name
 
+            # Clean up and drop any temporary directory left over from a previous call.
+            if self._tmp_data_dir is not None:
+                self._tmp_data_dir.cleanup()
+                self._tmp_data_dir = None
+
+            if persist:
+                # Persist to (and read back from) the bundled ``dirname``.
+                snapshots_dir = self.dirname
+            else:
+                # Use a temporary directory instead of persisting to ``dirname``.
+                self._tmp_data_dir = tempfile.TemporaryDirectory(prefix="qiskit_fake_backend_")
+                snapshots_dir = self._tmp_data_dir.name
+
             if real_config:
-                config_path = os.path.join(self.dirname, self.conf_filename)
+                config_path = os.path.join(snapshots_dir, self.conf_filename)
                 with open(config_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
 
             if real_props:
-                props_path = os.path.join(self.dirname, self.props_filename)
+                props_path = os.path.join(snapshots_dir, self.props_filename)
                 with open(props_path, "w", encoding="utf-8") as fd:
                     fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 

@@ -1,0 +1,8 @@
+Added an optional ``persist`` parameter to :meth:`.FakeBackendV2.refresh`. By default
+(``persist=True``) the behavior is unchanged: the refreshed configuration and properties
+overwrite the data files bundled with the installed package so the update persists across
+sessions. Passing ``persist=False`` instead writes the refreshed data to a temporary
+directory, which allows :meth:`~.FakeBackendV2.refresh` to succeed even when the package is
+installed in a read-only location (e.g. a system-wide ``site-packages`` directory) where
+overwriting the bundled files would otherwise raise a ``PermissionError``. In that mode the
+backend is updated for the current session only and the changes are not persisted to disk.

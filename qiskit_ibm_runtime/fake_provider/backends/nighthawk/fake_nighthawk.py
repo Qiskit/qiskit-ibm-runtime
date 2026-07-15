@@ -83,6 +83,11 @@ class FakeNighthawk(fake_backend.FakeBackendV2):
 
         super().__init__(*args, **kwargs)
 
-    def refresh(self, service: QiskitRuntimeService, use_fractional_gates: bool = False) -> None:
+    def refresh(
+        self,
+        service: QiskitRuntimeService,
+        use_fractional_gates: bool = False,
+        persist: bool = True,
+    ) -> None:
         """Retrieve the newest backend configuration and refresh the current backend target."""
         raise NotImplementedError("fake_nighthawk does not have calibration data to pull.")
