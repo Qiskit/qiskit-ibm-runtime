@@ -167,9 +167,7 @@ def prepare_pec(
             try:
                 pub_noise_model[ref] = noise_model_mapping[ref]
             except KeyError:
-                raise IBMInputValueError(
-                    f"noise_model_mapping is missing noise map for layer reference {ref}"
-                )
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # noise_scales and pauli_lindblad_maps should have the same refs
             samplex_arguments[f"noise_scales.{ref}"] = noise_scale
 

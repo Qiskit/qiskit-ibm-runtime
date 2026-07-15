@@ -18,6 +18,8 @@ import logging
 import math
 from typing import TYPE_CHECKING
 
+from ...exceptions import IBMInputValueError
+
 if TYPE_CHECKING:
     from qiskit import QuantumCircuit
     from qiskit.quantum_info import PauliLindbladMap
@@ -50,10 +52,14 @@ def calculate_gamma(
     gamma = 1.0
     for instr in boxed_circuit:
         if annot := get_annotation(instr.operation, InjectNoise):
-            plm = noise_model_mapping[annot.ref]
+            ref = annot.ref
+            try:
+                noise_model = noise_model_mapping[ref]
+            except KeyError:
+                raise IBMInputValueError(f"Noise model is missing for layer with reference {ref}")
             # scale the noise by noise_factor
-            plm = plm.scale_rates(noise_factor)
-            gamma *= plm.inverse().gamma()
+            noise_model = noise_model.scale_rates(noise_factor)
+            gamma *= noise_model.inverse().gamma()
     return gamma
 
 

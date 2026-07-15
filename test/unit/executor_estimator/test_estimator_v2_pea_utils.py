@@ -239,10 +239,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pea([pub], twirling_options, 1024, zne_options, {})
-
-        self.assertIn("noise_model_mapping", str(context.exception))
 
     def test_prepare_pea_raises_error_with_missing_noise_model_key(self):
         """Test that prepare_pea raises error when noise_model_mapping is missing a noise model."""
@@ -278,10 +276,8 @@ class TestPreparePeaFunction(unittest.TestCase):
         twirling_options.enable_gates = True
         twirling_options.enable_measure = True
 
-        with self.assertRaises(IBMInputValueError) as context:
+        with self.assertRaisesRegex(IBMInputValueError, "Noise model is missing"):
             prepare_pea([pub1, pub2], twirling_options, 1024, zne_options, noise_model_mapping)
-
-        self.assertIn("noise_model_mapping", str(context.exception))
 
     def test_prepare_pea_with_measure_noise_learning(self):
         """Test prepare_pea with measure noise learning (TREX)."""
