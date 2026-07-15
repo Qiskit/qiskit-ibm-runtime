@@ -49,16 +49,25 @@ logger = logging.getLogger(__name__)
 class FakeBackendV2(BackendV2):
     """A fake backend class for testing and noisy simulation using real backend snapshots."""
 
-    # directory and file names for real backend snapshots.
     dirname: str
-    conf_filename: str
-    props_filename: str
-    backend_name: str
+    """Directory for the real backend snapshots."""
 
-    # When ``refresh(persist=False)`` is called, the refreshed snapshots are written to this
-    # temporary directory instead of ``dirname``. While it is set, snapshot data is read from here,
-    # so ``dirname`` is left untouched and keeps pointing at the files bundled with the package.
+    conf_filename: str
+    """Filename for the backend configuration."""
+
+    props_filename: str
+    """Filename for the backend properties."""
+
+    backend_name: str
+    """Name of the backend."""
+
     _tmp_data_dir: tempfile.TemporaryDirectory | None = None
+    """Temporary directory for the real backend snapshots, if using ``refresh(persist=False)``.
+
+    If set, snapshot data is read from this temporary directory instead of ``dirname``. This
+    attribute stores a reference to ensure the temporary directory is bound to the lifetime of
+    the instance (cleaned up automatically when the backend is garbage collected).
+    """
 
     def __init__(self) -> None:
         self._conf_dict = self._get_conf_dict_from_json()
