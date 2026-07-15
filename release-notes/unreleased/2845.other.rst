@@ -1,1 +1,0 @@
-The library now uses the version ``2026-04-15`` of the Quantum Runtime REST API.

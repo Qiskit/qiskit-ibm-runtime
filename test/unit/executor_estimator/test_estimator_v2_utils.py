@@ -14,8 +14,10 @@
 
 import unittest
 
+import numpy as np
 from ddt import data, ddt
 from qiskit import ClassicalRegister, QuantumCircuit
+from qiskit.circuit import Parameter
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.quantum_info import Pauli, SparsePauliOp
 from samplomatic import Tag
@@ -25,10 +27,40 @@ from samplomatic.utils import get_annotation
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.executor_estimator.utils import (
     box_circuit,
+    compute_samplex_arguments,
     get_pauli_basis,
     pauli_to_ints,
     resolve_precision,
 )
+
+
+class TestComputeSamplexArguments(unittest.TestCase):
+    """Tests for compute_samplex_arguments function."""
+
+    def test_binding_array_key_order_bound_by_circuit_parameters(self):
+        """Parameter values must be ordered by ``circuit.parameters``.
+
+        Regression: ``compute_samplex_arguments`` used to call ``as_array()``
+        without passing the circuit's parameters, so a dict/BindingsArray whose
+        key order differed from ``circuit.parameters`` bound values to the wrong
+        parameters silently.
+        """
+        a = Parameter("a")
+        b = Parameter("b")
+        circuit = QuantumCircuit(1)
+        circuit.rx(a, 0)
+        circuit.rz(b, 0)
+        # circuit.parameters is canonically sorted -> (a, b).
+        self.assertEqual([p.name for p in circuit.parameters], ["a", "b"])
+
+        # Key the bindings in the opposite order (b, a); intended a=0.1, b=0.7.
+        pub = EstimatorPub.coerce((circuit, SparsePauliOp("Z"), {("b", "a"): [0.7, 0.1]}))
+
+        flat_parameter_values, _, _ = compute_samplex_arguments(pub)
+
+        # A single observable term "Z" -> one measurement basis -> one flattened
+        # row, ordered by circuit.parameters (a, b), not by the dict key order (b, a).
+        np.testing.assert_array_equal(flat_parameter_values, [[0.1, 0.7]])
 
 
 class TestGetPauliBasis(unittest.TestCase):
