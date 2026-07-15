@@ -16,8 +16,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import Field
-
 from .base import BaseOptionsModel
 from .dynamical_decoupling import DynamicalDecouplingOptions
 from .environment_options import EnvironmentOptions
@@ -67,7 +65,7 @@ class EstimatorOptions(BaseOptionsModel):
     dynamical_decoupling: DynamicalDecouplingOptions = DynamicalDecouplingOptions()
     """Dynamical decoupling options."""
 
-    simulator: SimulatorOptions = Field(default_factory=SimulatorOptions)
+    simulator: SimulatorOptions = SimulatorOptions()
     """Simulator options."""
 
     experimental: dict = {}

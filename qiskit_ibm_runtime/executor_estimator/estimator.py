@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
@@ -44,7 +43,6 @@ if TYPE_CHECKING:
     from qiskit.providers import BackendV2
 
     from ..batch import Batch
-    from ..fake_provider.local_runtime_job import LocalRuntimeJob
     from ..runtime_job_v2 import RuntimeJobV2
     from ..session import Session
 
@@ -393,33 +391,3 @@ class EstimatorV2(BaseEstimatorV2):
         )
 
         return self._executor.run(quantum_program)
-
-    def _run_simulator(
-        self, pubs: list[EstimatorPub], options: EstimatorOptions, shots: int
-    ) -> LocalRuntimeJob:
-        """Run estimator in local simulator mode using BackendEstimatorV2.
-
-        Args:
-            pubs: List of estimator PUBs to run.
-            options: The user options, finalized.
-            shots: The number of shots to use.
-
-        Returns:
-            A LocalRuntimeJob.
-        """
-        options_dict = asdict(options)  # type: ignore[call-overload]
-        options_dict["default_shots"] = shots
-
-        inputs = {
-            "pubs": pubs,
-            "options": options_dict,
-        }
-
-        runtime_options = {"backend": self._backend}
-
-        return self._service._run(
-            program_id="estimator",
-            inputs=inputs,
-            options=runtime_options,
-            calibration_id=None,
-        )
