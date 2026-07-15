@@ -18,10 +18,10 @@ import logging
 from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
-from qiskit_ibm_runtime.base_primitive import get_mode_service_backend
-from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
-from qiskit_ibm_runtime.options_models.calibrator_options import CalibratorOptions
-from qiskit_ibm_runtime.utils.default_session import get_cm_session
+from .base_primitive import get_mode_service_backend
+from .fake_provider.local_service import QiskitRuntimeLocalService
+from .options_models.calibrator_options import CalibratorOptions
+from .utils.default_session import get_cm_session
 
 if TYPE_CHECKING:
     from qiskit.providers import BackendV2

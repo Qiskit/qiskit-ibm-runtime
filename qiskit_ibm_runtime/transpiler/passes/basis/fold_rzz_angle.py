@@ -34,7 +34,8 @@ from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.transpiler.basepasses import TransformationPass
 
-from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from ....estimator import EstimatorV2
+from ....sampler import SamplerV2
 
 if TYPE_CHECKING:
     from qiskit.circuit import Qubit

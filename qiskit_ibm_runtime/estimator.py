@@ -20,11 +20,10 @@ from typing import TYPE_CHECKING
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
-
 from .base_primitive import BasePrimitiveV2
 from .options.estimator_options import EstimatorOptions
 from .utils import validate_estimator_pubs
+from .utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

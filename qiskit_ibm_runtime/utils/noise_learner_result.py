@@ -14,11 +14,7 @@
 
 import warnings
 
-from qiskit_ibm_runtime.results import (  # noqa: F401
-    LayerError,
-    NoiseLearnerResult,
-    PauliLindbladError,
-)
+from ..results import LayerError, NoiseLearnerResult, PauliLindbladError  # noqa: F401
 
 warnings.warn(
     "The `NoiseLearnerResult`, `LayerError` and `PauliLindbladError` classes has been moved to the "

@@ -35,8 +35,8 @@ from qiskit.providers.backend import QubitProperties
 from qiskit.transpiler.passes.utils.wrap_angles import WrapAngles
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from qiskit_ibm_runtime.models.exceptions import BackendPropertyError
-from qiskit_ibm_runtime.utils.utils import is_fractional_gate
+from ..models.exceptions import BackendPropertyError
+from ..utils.utils import is_fractional_gate
 
 if TYPE_CHECKING:
     from qiskit.dagcircuit import DAGCircuit

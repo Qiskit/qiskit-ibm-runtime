@@ -20,11 +20,10 @@ from typing import TYPE_CHECKING
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
-
 from .base_primitive import BasePrimitiveV2
 from .options import SamplerOptions
 from .utils import validate_classical_registers
+from .utils.deprecation import issue_deprecation_msg
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

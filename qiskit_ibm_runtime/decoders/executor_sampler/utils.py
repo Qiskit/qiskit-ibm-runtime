@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from qiskit_ibm_runtime.execution_span import DoubleSliceSpan, TwirledSliceSpanV2
+from ...execution_span import DoubleSliceSpan, TwirledSliceSpanV2
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
